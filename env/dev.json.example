@@ -1,8 +1,16 @@
 {
+  "environment": "*",
+  "chainId": "*",
+  "cheerBooAddress": "*",
+  "minimumCheerBooAmount": "0.01",
+  "cheerBooTimeMultiplication": "30",
   "projectId": "*",
   "cometChatAppId": "*",
   "cometChatRegion": "*",
   "cometChatAuthKey": "*",
-  "cometChatRestApiKey": "*"
-  "chainId": "*"
+  "cometChatRestApiKey": "*",
+  "particleProjectId": "*",
+  "particleClientKey": "*",
+  "particleAppId": "*",
+  "jitsiServerUrl": "*"
 }

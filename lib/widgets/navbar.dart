@@ -147,6 +147,7 @@ Widget _buildNavItem({
                   ),
                 ),
           child: Stack(
+            alignment: Alignment.center,
             children: [
               AnimatedScale(
                 scale: isActive ? 1.3 : 1,

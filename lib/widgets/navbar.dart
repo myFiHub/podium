@@ -56,21 +56,21 @@ class PodiumNavbar extends GetWidget<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: navbarHeight,
-      color: ColorName.navbarBackground,
-      child: Obx(() {
-        final activeRoute = controller.activeRoute.value;
-        if (_routesWithoutNavbar.contains(activeRoute)) {
-          return Container(
-            height: 0,
-          );
-        }
-        return BottomNav(
-          activeRoute: activeRoute,
+    return Obx(() {
+      final activeRoute = controller.activeRoute.value;
+      if (_routesWithoutNavbar.contains(activeRoute)) {
+        return Container(
+          height: 0,
         );
-      }),
-    );
+      }
+      return Container(
+        height: navbarHeight,
+        color: ColorName.navbarBackground,
+        child: BottomNav(
+          activeRoute: activeRoute,
+        ),
+      );
+    });
   }
 }
 

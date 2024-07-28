@@ -3,9 +3,13 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/groupsParser.dart';
+import 'package:podium/app/modules/global/utils/usersParser.dart';
 
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/firebase_Session_model.dart';
+import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -233,6 +237,155 @@ mixin FireBaseUtils {
       await databaseRef.set(currentList);
     } else {
       await databaseRef.set([]);
+    }
+  }
+
+  Future<Map<String, FirebaseGroup>> searchForGroupByName(
+      String groupName) async {
+    if (groupName.isEmpty) return {};
+    try {
+      final DatabaseReference _database = FirebaseDatabase.instance.ref();
+      Query query = _database
+          .child(FireBaseConstants.groupsRef)
+          .orderByChild(FirebaseGroup.nameKey)
+          .startAt(groupName)
+          .endAt('$groupName\uf8ff');
+      DataSnapshot snapshot = await query.get();
+      if (snapshot.value != null) {
+        try {
+          return groupsParser(snapshot.value);
+        } catch (e) {
+          log.e(e);
+          return {};
+        }
+      }
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  Future<Map<String, UserInfoModel>> searchForUserByName(String name) async {
+    try {
+      final DatabaseReference _database = FirebaseDatabase.instance.ref();
+      Query query = _database
+          .child(FireBaseConstants.usersRef)
+          .orderByChild(UserInfoModel.fullNameKey)
+          .startAt(name)
+          .endAt('$name\uf8ff');
+      DataSnapshot snapshot = await query.get();
+      if (snapshot.value != null) {
+        return usersParser(snapshot.value) as Map<String, UserInfoModel>;
+      }
+      return {};
+    } catch (e) {
+      log.e(e);
+      return {};
+    }
+  }
+
+  sendNotification({required FirebaseNotificationModel notification}) async {
+    final databaseRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.notificationsRef + notification.id);
+    await databaseRef.set(
+      notification.toJson(),
+    );
+  }
+
+  Future<List<FirebaseNotificationModel>> getMyNotifications() async {
+    try {
+      final globalController = Get.find<GlobalController>();
+      final myUser = globalController.currentUserInfo.value!;
+      final DatabaseReference _database = FirebaseDatabase.instance.ref();
+      final Query query = _database
+          .child(FireBaseConstants.notificationsRef)
+          .orderByChild(FirebaseNotificationModel.targetUserIdKey)
+          .equalTo(myUser.id);
+      final List<FirebaseNotificationModel> notificationsList = [];
+      final snapshot = await query.get();
+      final notifications = snapshot.value as dynamic;
+      if (notifications != null) {
+        final list = List.from(notifications.values);
+        list.forEach((value) {
+          final notification = FirebaseNotificationModel(
+            id: value[FirebaseNotificationModel.idKey],
+            title: value[FirebaseNotificationModel.titleKey],
+            body: value[FirebaseNotificationModel.bodyKey],
+            type: value[FirebaseNotificationModel.typeKey],
+            targetUserId: value[FirebaseNotificationModel.targetUserIdKey],
+            isRead: value[FirebaseNotificationModel.isReadKey],
+            image: value[FirebaseNotificationModel.imageKey],
+            timestamp: value[FirebaseNotificationModel.timestampKey],
+          );
+          notificationsList.add(notification);
+        });
+        final sortedNotifs = notificationsList
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        return sortedNotifs;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      log.e(e);
+      return [];
+    }
+  }
+
+  startListeningToMyNotifications(
+      void Function(List<FirebaseNotificationModel>) onData) {
+    try {
+      final globalController = Get.find<GlobalController>();
+      final myUser = globalController.currentUserInfo.value!;
+      final Query query = FirebaseDatabase.instance
+          .ref(FireBaseConstants.notificationsRef)
+          .orderByChild(FirebaseNotificationModel.targetUserIdKey)
+          .equalTo(myUser.id);
+      query.onValue.listen((event) {
+        final notifications = event.snapshot.value as dynamic;
+        if (notifications != null) {
+          final List<FirebaseNotificationModel> notificationsList = [];
+          final list = List.from(notifications.values);
+          list.forEach((value) {
+            final notification = FirebaseNotificationModel(
+              id: value[FirebaseNotificationModel.idKey],
+              title: value[FirebaseNotificationModel.titleKey],
+              body: value[FirebaseNotificationModel.bodyKey],
+              type: value[FirebaseNotificationModel.typeKey],
+              targetUserId: value[FirebaseNotificationModel.targetUserIdKey],
+              isRead: value[FirebaseNotificationModel.isReadKey],
+              image: value[FirebaseNotificationModel.imageKey],
+              timestamp: value[FirebaseNotificationModel.timestampKey],
+            );
+            notificationsList.add(notification);
+          });
+
+          onData(notificationsList);
+        } else {
+          onData([]);
+        }
+      });
+    } catch (e) {
+      log.e(e);
+    }
+  }
+
+  markNotificationAsRead({required String notificationId}) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance
+          .ref(FireBaseConstants.notificationsRef + notificationId);
+      await databaseRef.child(FirebaseNotificationModel.isReadKey).set(true);
+    } catch (e) {
+      log.e(e);
+    }
+  }
+
+  deleteNotification({required String notificationId}) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance
+          .ref(FireBaseConstants.notificationsRef + notificationId);
+      await databaseRef.remove();
+    } catch (e) {
+      log.e(e);
     }
   }
 }

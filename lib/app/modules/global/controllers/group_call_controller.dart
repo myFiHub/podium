@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
+import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
@@ -52,6 +53,7 @@ class GroupCallController extends GetxController with FireBaseUtils {
     sessionSubscription = null;
     haveOngoingCall.value = false;
     jitsiMembers.value = [];
+    jitsiMeet.hangUp();
   }
 
   startCall(FirebaseGroup g) async {

@@ -122,6 +122,18 @@ class WalletConnect extends GetWidget<GlobalController> {
                   blockButton: true,
                   text: 'Connect Wallet',
                 ),
+          space10,
+          space10,
+          Button(
+            onPressed: () {
+              final globalController = Get.find<GlobalController>();
+              globalController.setLoggedIn(false);
+            },
+            type: ButtonType.solid,
+            blockButton: true,
+            color: ButtonColors.DANGER,
+            text: 'Logout',
+          ),
         ],
       );
     });

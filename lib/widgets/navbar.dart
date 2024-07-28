@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -15,11 +16,13 @@ class NavbarItem {
   final String route;
   final IconData icon;
   final String label;
+  final Widget? overlay;
 
   NavbarItem({
     required this.route,
     required this.icon,
     required this.label,
+    this.overlay,
   });
 }
 
@@ -43,6 +46,7 @@ final List<NavbarItem> navbarItems = [
     route: Routes.NOTIFICATIONS,
     icon: Icons.notifications_outlined,
     label: 'Notifications',
+    overlay: NotificationBadge(),
   ),
   NavbarItem(
     route: Routes.MY_PROFILE,
@@ -89,6 +93,7 @@ class BottomNav extends StatelessWidget {
               route: item.route,
               icon: item.icon,
               label: item.label,
+              overlay: item.overlay,
             ),
           ),
         ),
@@ -102,6 +107,7 @@ Widget _buildNavItem({
   required String route,
   required IconData icon,
   required String label,
+  Widget? overlay,
 }) {
   final activeRoute = Get.find<GlobalController>().activeRoute.value;
   final isActive = activeRoute == route;
@@ -140,8 +146,7 @@ Widget _buildNavItem({
                     bottomLeft: Radius.circular(0),
                   ),
                 ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
             children: [
               AnimatedScale(
                 scale: isActive ? 1.3 : 1,
@@ -151,6 +156,7 @@ Widget _buildNavItem({
                 ),
                 duration: _animationDuration,
               ),
+              if (overlay != null) overlay!,
             ],
           ),
         ),
@@ -158,4 +164,41 @@ Widget _buildNavItem({
       ],
     ),
   );
+}
+
+class NotificationBadge extends GetWidget<NotificationsController> {
+  const NotificationBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final numberOfUnreadNotifications =
+          controller.numberOfUnreadNotifications.value;
+      return numberOfUnreadNotifications > 0
+          ? Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 20,
+                  minHeight: 20,
+                ),
+                child: Text(
+                  numberOfUnreadNotifications.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : Container();
+    });
+  }
 }

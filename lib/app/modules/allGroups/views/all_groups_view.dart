@@ -29,7 +29,7 @@ class AllGroupsView extends GetView<AllGroupsController> {
             ),
           ),
           Input(
-            hintText: "search . . .",
+            hintText: "search a group",
             onChanged: (v) {
               controller.searchValue.value = v;
             },

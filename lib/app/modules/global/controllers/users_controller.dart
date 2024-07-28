@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -91,26 +92,7 @@ class UsersController extends GetxController with FireBaseUtils {
       subscription = databaseReference.onValue.listen((event) {
         final data = event.snapshot.value as Map<dynamic, dynamic>?;
         if (data != null) {
-          Map<String, UserInfoModel> usersMap = {};
-          // Iterate through the data
-          data.forEach((key, value) {
-            final name = value[UserInfoModel.fullNameKey];
-            final email = value[UserInfoModel.emailKey];
-            final String id = value[UserInfoModel.idKey];
-            final avatar = value[UserInfoModel.avatarUrlKey];
-            final user = UserInfoModel(
-              fullName: name,
-              email: email,
-              id: id,
-              avatar: avatar,
-              localWalletAddress:
-                  value[UserInfoModel.localWalletAddressKey] ?? '',
-              following: List.from(value[UserInfoModel.followingKey] ?? []),
-              numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,
-            );
-            final lowercasedId = id.toLowerCase();
-            usersMap[lowercasedId] = user;
-          });
+          final usersMap = usersParser(data);
           users.assignAll(usersMap);
           groupsController.getRealtimeGroups(true);
         } else {

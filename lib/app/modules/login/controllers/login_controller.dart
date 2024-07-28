@@ -11,11 +11,15 @@ import 'package:podium/utils/storage.dart';
 class LoginController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final isLoggingIn = false.obs;
+  final isAutoLoggingIn = false.obs;
   final email = ''.obs;
   final password = ''.obs;
 
   @override
   void onInit() {
+    globalController.isAutoLoggingIn.listen((v) {
+      isAutoLoggingIn.value = v;
+    });
     super.onInit();
   }
 

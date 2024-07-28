@@ -53,7 +53,7 @@ class GlobalController extends GetxController {
   final firebaseUser = Rxn<User>();
   final currentUserInfo = Rxn<UserInfoModel>();
   final activeRoute = AppPages.INITIAL.obs;
-
+  final isAutoLoggingIn = false.obs;
   W3MService web3ModalService = w3mService;
   final loggedIn = false.obs;
 
@@ -114,6 +114,7 @@ class GlobalController extends GetxController {
   }
 
   checkLogin() async {
+    isAutoLoggingIn.value = true;
     final isLoggedIn = FirebaseAuth.instance.currentUser != null;
     if (isLoggedIn) {
       final user = FirebaseAuth.instance.currentUser;
@@ -129,20 +130,24 @@ class GlobalController extends GetxController {
           storage.write(StorageKeys.userFullName, userInfo.fullName);
           storage.write(StorageKeys.userEmail, userInfo.email);
           loggedIn.value = true;
-
+          isAutoLoggingIn.value = false;
           Navigate.to(
             type: NavigationTypes.offAllNamed,
             route: Routes.HOME,
           );
         }
       } catch (e) {
+        isAutoLoggingIn.value = false;
+
         Navigate.to(
           type: NavigationTypes.offAllNamed,
           route: Routes.LOGIN,
         );
         return;
       }
-    } else {}
+    } else {
+      isAutoLoggingIn.value = false;
+    }
   }
 
   setLoggedIn(bool value) {

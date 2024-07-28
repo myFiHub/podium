@@ -3,7 +3,6 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 
 import 'package:get/get.dart';
-import 'package:getwidget/components/text_field/gf_text_field_rounded.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -74,7 +73,8 @@ class LoginView extends GetView<LoginController> {
                   ),
                   space10,
                   Obx(() {
-                    final loading = controller.isLoggingIn.value;
+                    final loading = controller.isLoggingIn.value ||
+                        controller.isAutoLoggingIn.value;
                     return Button(
                       loading: loading,
                       type: ButtonType.gradient,

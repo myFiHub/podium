@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:podium/app/modules/global/controllers/users_controller.dart';
+import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/styles.dart';
+import 'package:podium/widgets/button/button.dart';
 
 import '../controllers/profile_controller.dart';
 
@@ -21,10 +25,36 @@ class ProfileView extends GetView<ProfileController> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               UserInfo(),
+              FollowButton(userId: controller.userInfo.value!.id),
+              space10,
+              BuyTicket(
+                user: controller.userInfo.value!,
+              )
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class BuyTicket extends GetView<UsersController> {
+  final UserInfoModel user;
+  const BuyTicket({super.key, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      type: ButtonType.gradient,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Buy Ticket'),
+        ],
+      ),
+      onPressed: () {
+        controller.buyTicket(user: user);
+      },
     );
   }
 }

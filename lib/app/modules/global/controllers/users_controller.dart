@@ -46,6 +46,10 @@ class UsersController extends GetxController with FireBaseUtils {
     return users[lowercasedId];
   }
 
+  buyTicket({required UserInfoModel user}) {
+    final myUser = currentUserInfo.value;
+  }
+
   followUnfollow(String id, bool startFollowing) async {
     final user = getUserById(id);
     if (user != null) {

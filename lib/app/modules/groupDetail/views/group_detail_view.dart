@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:getwidget/getwidget.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/utils/styles.dart';
@@ -14,8 +12,6 @@ class GroupDetailView extends GetView<GroupDetailController> {
   const GroupDetailView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final globalController = Get.find<GlobalController>();
-    final myId = globalController.currentUserInfo.value!.id;
     return Scaffold(
       body: Obx(
         () {

@@ -127,11 +127,12 @@ class NotificationsView extends GetView<NotificationsController> {
                 }),
               ),
             ),
-            Button(
-                onPressed: () {
-                  controller.sendTestNotif();
-                },
-                text: 'add notification'),
+            // Button(
+            //   onPressed: () {
+            //     controller.sendTestNotif();
+            //   },
+            //   text: 'add notification',
+            // ),
           ],
         ),
       ),

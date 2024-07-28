@@ -9,8 +9,10 @@ import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/navigation/navigation.dart';
+import 'package:uuid/uuid.dart';
 
 class UsersController extends GetxController with FireBaseUtils {
   final globalController = Get.find<GlobalController>();
@@ -62,6 +64,17 @@ class UsersController extends GetxController with FireBaseUtils {
         final myUser = globalController.currentUserInfo.value;
         if (startFollowing) {
           myUser!.following.add(id);
+          final notifId = Uuid().v4();
+          sendNotification(
+            notification: FirebaseNotificationModel(
+                id: id,
+                title: 'New follower',
+                body: '${myUser.fullName} followed you',
+                type: NotificationTypes.follow.toString(),
+                targetUserId: id,
+                isRead: false,
+                timestamp: DateTime.now().millisecondsSinceEpoch),
+          );
         } else {
           myUser!.following.remove(id);
         }

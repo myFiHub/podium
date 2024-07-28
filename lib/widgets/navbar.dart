@@ -156,7 +156,7 @@ Widget _buildNavItem({
                 ),
                 duration: _animationDuration,
               ),
-              if (overlay != null) overlay!,
+              if (overlay != null) overlay,
             ],
           ),
         ),

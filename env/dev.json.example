@@ -1,0 +1,8 @@
+{
+  "projectId": "*",
+  "cometChatAppId": "*",
+  "cometChatRegion": "*",
+  "cometChatAuthKey": "*",
+  "cometChatRestApiKey": "*"
+  "chainId": "*"
+}

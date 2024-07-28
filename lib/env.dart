@@ -1,7 +1,7 @@
 class Env {
   static const chainId = String.fromEnvironment("chainId");
-  // static const starsArenaAddress = String.fromEnvironment("starsArenaAddress");
-  // static const proxyAddress = String.fromEnvironment("proxyAddress");
+  static const starsArenaAddress = String.fromEnvironment("starsArenaAddress");
+  static const proxyAddress = String.fromEnvironment("proxyAddress");
   static const cheerBooAddress = String.fromEnvironment("cheerBooAddress");
   static const minimumCheerBooAmount =
       String.fromEnvironment("minimumCheerBooAmount");

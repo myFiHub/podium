@@ -164,6 +164,7 @@ class FollowButton extends GetWidget<UsersController> {
             horizontal: 10,
             vertical: 10,
           ),
+          size: ButtonSize.MEDIUM,
           child: isLoading
               ? Center(
                   child: const CircularProgressIndicator(
@@ -178,7 +179,7 @@ class FollowButton extends GetWidget<UsersController> {
                       const Icon(
                         Icons.add,
                         color: Colors.green,
-                        size: 24,
+                        size: 14,
                       ),
                   ],
                 ));

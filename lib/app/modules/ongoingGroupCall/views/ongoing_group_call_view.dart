@@ -4,9 +4,11 @@ import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/popListener.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widgetWrapper.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/dateUtils.dart';
+import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/widgets/popListener.dart';
 import '../controllers/ongoing_group_call_controller.dart';
 
 class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
@@ -28,6 +30,12 @@ class GroupCall extends GetView<GroupCallController> {
       children: [
         PopListener(
           warningMessage: "Tap again to leave the room",
+          onPop: () {
+            Navigate.to(
+              type: NavigationTypes.offAllNamed,
+              route: Routes.HOME,
+            );
+          },
         ),
         GroupInfo(),
         SessionInfo(),

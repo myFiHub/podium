@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/widgets/doubleTapWrapper.dart';
 
 class PopListener extends StatelessWidget {
   final String warningMessage;
-  const PopListener({super.key, required this.warningMessage});
+  final void Function() onPop;
+  const PopListener(
+      {super.key, required this.warningMessage, required this.onPop});
 
   @override
   Widget build(BuildContext context) {
@@ -23,10 +22,7 @@ class PopListener extends StatelessWidget {
       ),
       child: SizedBox(),
       onPop: () {
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.HOME,
-        );
+        onPop();
       },
     );
   }

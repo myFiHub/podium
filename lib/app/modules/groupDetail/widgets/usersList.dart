@@ -4,9 +4,10 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:web3modal_flutter/utils/util.dart';
@@ -36,6 +37,13 @@ class UserList extends StatelessWidget {
               child: GestureDetector(
                 onTap: () {
                   final usersController = Get.find<UsersController>();
+                  if (isItME) {
+                    Navigate.to(
+                      type: NavigationTypes.toNamed,
+                      route: Routes.MY_PROFILE,
+                    );
+                    return;
+                  }
                   usersController.openUserProfile(userId);
                 },
                 child: Stack(

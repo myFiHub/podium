@@ -20,5 +20,5 @@ fill the environment variables in the env/dev.json file (like the example file e
 flutter pub get
 dart pub global activate flutterfire_cli
 flutterfire configure
-flutter run
+flutter run --dart-define-from-file=env/dev.json
 ```

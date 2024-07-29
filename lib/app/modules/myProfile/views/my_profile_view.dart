@@ -116,6 +116,7 @@ class WalletConnect extends GetWidget<GlobalController> {
                 )
               : Button(
                   onPressed: () {
+                    controller.web3ModalService.disconnect();
                     controller.web3ModalService.openModal(context);
                   },
                   type: ButtonType.gradient,

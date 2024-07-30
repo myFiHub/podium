@@ -119,14 +119,14 @@ Widget _buildNavItem({
       children: [
         AnimatedContainer(
           duration: _animationDuration,
-          width: 30,
+          width: 24,
           padding: EdgeInsets.only(bottom: 8, top: 18),
           decoration: isActive
               ? BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
                       color: Colors.blue,
-                      width: 5,
+                      width: 2,
                     ),
                   ),
                   borderRadius: BorderRadius.only(

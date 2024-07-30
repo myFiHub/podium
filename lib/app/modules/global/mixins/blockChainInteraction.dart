@@ -179,4 +179,10 @@ DeployedContract getContract(
   );
 }
 
+double bigIntWeiToDouble(BigInt v) {
+  final BigInt weiToEthRatio = BigInt.from(10).pow(18);
+  final double vInEth = v.toDouble() / weiToEthRatio.toDouble();
+  return vInEth;
+}
+
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";

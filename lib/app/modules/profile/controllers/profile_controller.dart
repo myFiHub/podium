@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
 
 class ProfileController extends GetxController with BlockChainInteractions {
   final userInfo = Rxn<UserInfoModel>();
@@ -12,9 +12,11 @@ class ProfileController extends GetxController with BlockChainInteractions {
   final isGettingTicketPrice = true.obs;
   final getPriceError = ''.obs;
   final ticketPriceFor1Share = 0.0.obs;
+  final isBuyingTicket = false.obs;
 
   @override
   void onInit() {
+    connectedWallet.value = globalController.connectedWalletAddress.value;
     userInfo.listen((user) {
       getBuyPriceForOneShare();
     });
@@ -36,8 +38,41 @@ class ProfileController extends GetxController with BlockChainInteractions {
     super.onClose();
   }
 
-  buyTicket() {
-    log.f('implement buy ticket');
+  buyTicket() async {
+    try {
+      isBuyingTicket.value = true;
+      final String? result = await buySharesWithReferrer(
+        sharesSubject: userInfo.value!.localWalletAddress,
+        shareAmount: 1,
+        value: ticketPriceFor1Share.value,
+      );
+      log.d(result);
+      if (result != null) {
+        if (result.startsWith("0x")) {
+          Get.snackbar(
+            'Success',
+            "ticket bought",
+            colorText: ColorName.white,
+          );
+        } else {
+          Get.snackbar(
+            'Error',
+            "Error buying ticket",
+            colorText: ColorName.white,
+          );
+        }
+      } else {
+        Get.snackbar(
+          'Error',
+          "Error buying ticket",
+          colorText: ColorName.white,
+        );
+      }
+    } catch (e) {
+      log.e("error buying ticket ${e.toString()}");
+    } finally {
+      isBuyingTicket.value = false;
+    }
   }
 
   getBuyPriceForOneShare() async {
@@ -56,17 +91,15 @@ class ProfileController extends GetxController with BlockChainInteractions {
         );
         isGettingTicketPrice.value = false;
         if (price != null) {
-          // price is big int, in wei, convert to eth
-          final BigInt priceInWei = price as BigInt;
-          final BigInt weiToEthRatio = BigInt.from(10).pow(18);
-          final double priceInEth =
-              priceInWei.toDouble() / weiToEthRatio.toDouble();
+          final double priceInEth = bigIntWeiToDouble(price);
           final String str = priceInEth.toString();
           ticketPriceFor1Share.value = double.parse(str.toString());
+          isGettingTicketPrice.value = false;
         }
       }
     } catch (e) {
       getPriceError.value = "error getting price, retry?";
+      isGettingTicketPrice.value = false;
     }
   }
 }

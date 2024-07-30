@@ -53,6 +53,7 @@ class BuyTicket extends GetView<ProfileController> {
       final priceError = controller.getPriceError.value;
       final connectedWallet = controller.connectedWallet.value;
       final price = controller.ticketPriceFor1Share.value;
+      final isBuyingTicket = controller.isBuyingTicket.value;
 
       Widget insideButton;
       if (connectedWallet == '') {
@@ -65,11 +66,6 @@ class BuyTicket extends GetView<ProfileController> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text("Buy Ticket "),
-              // Image.network(
-              //   iconUrl,
-              //   width: 20,
-              //   height: 20,
-              // ),
               Text(price.toString()),
               space5,
               Text(W3MChainPresets.chains[Env.chainId]!.tokenName)
@@ -79,7 +75,7 @@ class BuyTicket extends GetView<ProfileController> {
       }
       return Button(
         type: ButtonType.gradient,
-        loading: isLoading,
+        loading: isLoading || isBuyingTicket,
         blockButton: true,
         child: insideButton,
         onPressed: () {

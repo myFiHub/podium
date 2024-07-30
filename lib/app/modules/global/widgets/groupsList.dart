@@ -39,7 +39,10 @@ class GroupList extends StatelessWidget {
                     Container(
                       decoration: BoxDecoration(
                           color: ColorName.cardBackground,
-                          border: Border.all(color: ColorName.cardBorder),
+                          border: Border.all(
+                              color: amICreator
+                                  ? Colors.green
+                                  : ColorName.cardBorder),
                           borderRadius:
                               const BorderRadius.all(const Radius.circular(8))),
                       margin: const EdgeInsets.all(24),
@@ -69,17 +72,22 @@ class GroupList extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text("Created By",
+                                      Text(
+                                          "Created By ${amICreator ? "You" : group.creator.fullName}",
                                           style: TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.w400,
                                               color: ColorName.greyText)),
                                       space5,
-                                      Text(group.creator.fullName,
-                                          style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700,
-                                              color: ColorName.greyText)),
+                                      space5,
+                                      Text(
+                                        group.members.length.toString() +
+                                            " members",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                            color: ColorName.greyText),
+                                      ),
                                     ],
                                   )
                                 ],
@@ -92,20 +100,6 @@ class GroupList extends StatelessWidget {
                               bottom: 0,
                               child: CircularProgressIndicator(),
                             ),
-                          if (amICreator)
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.verified,
-                                  color: Colors.green,
-                                ),
-                                onPressed: () {
-                                  //  show group options
-                                },
-                              ),
-                            )
                         ],
                       ),
                     ),

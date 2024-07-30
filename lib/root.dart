@@ -15,16 +15,59 @@ class Root extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: AnimatedBgbWrapper(
-            child: child,
-          ),
+        Column(
+          children: [
+            Expanded(
+              child: AnimatedBgbWrapper(
+                child: child,
+              ),
+            ),
+            PodiumNavbar(),
+          ],
         ),
-        PodiumNavbar(),
+        InternetConnectionChecker(),
       ],
     );
+  }
+}
+
+class InternetConnectionChecker extends GetWidget<GlobalController> {
+  const InternetConnectionChecker({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final connected = controller.isConnectedToInternet.value;
+      return connected
+          ? const SizedBox()
+          : Positioned(
+              child: Material(
+                child: Container(
+                  color: Colors.black.withOpacity(0.3),
+                  child: Row(
+                    children: [
+                      Text(
+                        'connection issue',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.wifi_off,
+                        color: Colors.red,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              bottom: 70,
+              left: Get.width / 2 - 100,
+            );
+    });
   }
 }
 

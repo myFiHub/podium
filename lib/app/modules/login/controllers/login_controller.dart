@@ -17,6 +17,7 @@ class LoginController extends GetxController {
 
   @override
   void onInit() {
+    isAutoLoggingIn.value = globalController.isAutoLoggingIn.value;
     globalController.isAutoLoggingIn.listen((v) {
       isAutoLoggingIn.value = v;
     });

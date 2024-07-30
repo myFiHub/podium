@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -53,17 +54,32 @@ class GlobalController extends GetxController {
   final firebaseUser = Rxn<User>();
   final currentUserInfo = Rxn<UserInfoModel>();
   final activeRoute = AppPages.INITIAL.obs;
-  final isAutoLoggingIn = false.obs;
+  final isAutoLoggingIn = true.obs;
+  final isConnectedToInternet = true.obs;
   W3MService web3ModalService = w3mService;
   final loggedIn = false.obs;
+  final initializedOnce = false.obs;
+
+  final connectionCheckerInstance = InternetConnection.createInstance(
+    checkInterval: const Duration(seconds: 5),
+    customCheckOptions: [
+      InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
+      InternetCheckOption(uri: Uri.parse('https://icanhazip.com/')),
+      InternetCheckOption(uri: Uri.parse('https://reqres.in/api/users/1')),
+      InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
+    ],
+    useDefaultOptions: false,
+  );
 
   @override
   void onInit() async {
     super.onInit();
     await FirebaseInit.init();
-    checkLogin();
-    initializeW3MService();
-    listenToWalletAddressChange();
+    bool result = await connectionCheckerInstance.hasInternetAccess;
+    if (result) {
+      initializeApp();
+    }
+    initializeInternetConnectionChecker();
   }
 
   @override
@@ -74,6 +90,31 @@ class GlobalController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  initializeApp() async {
+    checkLogin();
+    initializeW3MService();
+    listenToWalletAddressChange();
+    initializedOnce.value = true;
+  }
+
+  initializeInternetConnectionChecker() {
+    connectionCheckerInstance.onStatusChange
+        .listen((InternetStatus status) async {
+      switch (status) {
+        case InternetStatus.connected:
+          if (!initializedOnce.value) {
+            await initializeApp();
+          }
+          isConnectedToInternet.value = true;
+          break;
+        case InternetStatus.disconnected:
+          log.f("Internet disconnected");
+          isConnectedToInternet.value = false;
+          break;
+      }
+    });
   }
 
   listenToWalletAddressChange() async {

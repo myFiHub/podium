@@ -56,4 +56,12 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+    <!-- to connect to internet -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- to read images from gallry -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- to access mic -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- to access camera -->
+    <uses-permission android:name="android.permission.CAMERA"/>
 </manifest>

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
-import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widgetWrapper.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/popListener.dart';
 import '../controllers/ongoing_group_call_controller.dart';
@@ -56,18 +54,39 @@ class SessionInfo extends GetWidget<OngoingGroupCallController> {
       children: [
         Obx(
           () {
+            final isAdmin = controller.amIAdmin.value;
             final remainingTimeInMillisecond =
                 controller.remainingTimeTimer.value ?? 0;
-            if (remainingTimeInMillisecond == double.maxFinite.toInt()) {
+            if (remainingTimeInMillisecond == -1) {
+              return Text(
+                "loading...",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 36,
+                ),
+              );
+            }
+            if (isAdmin) {
               return Container(
                 child: const Center(
                   child: Text('presenting as admin'),
                 ),
               );
             }
+            final list = formatDuration(remainingTimeInMillisecond);
+            final joined = list.join(":");
+            final isSmall = int.parse(list[0]) == 0 && int.parse(list[1]) < 2;
             return remainingTimeInMillisecond != 0
-                ? Text(
-                    formatDuration(remainingTimeInMillisecond),
+                ? Container(
+                    child: Text(
+                      joined,
+                      style: TextStyle(
+                        color: isSmall ? Colors.red : Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 36,
+                      ),
+                    ),
                   )
                 : Container(
                     child: const Center(
@@ -94,15 +113,22 @@ class GroupInfo extends GetWidget<GroupCallController> {
       return group != null
           ? Container(
               padding: const EdgeInsets.all(10),
-              child: Column(
+              child: Row(
                 children: [
                   Text(
                     group.name,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
+                  space5,
+                  Text("by"),
+                  space5,
                   Text(
                     group.creator.fullName,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -129,7 +155,7 @@ class MembersList extends GetWidget<GroupCallController> {
       );
     }
     return Container(
-      height: Get.height - 200,
+      height: Get.height - 190,
       child: Column(
         children: [
           Container(

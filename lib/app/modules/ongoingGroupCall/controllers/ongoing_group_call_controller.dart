@@ -25,7 +25,7 @@ class OngoingGroupCallController extends GetxController
   final mySession = Rxn<FirebaseSessionMember>();
   final jitsiMembers = Rxn<List<JitsiMember>>();
   final amIAdmin = false.obs;
-  final remainingTimeTimer = 0.obs;
+  final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
 
@@ -293,8 +293,7 @@ class OngoingGroupCallController extends GetxController
     final connectedWalletAddress =
         globalController.connectedWalletAddress.value;
     if (connectedWalletAddress == '') {
-      final service = globalController.web3ModalService;
-      service.openModal(Get.context!);
+      globalController.connectToWallet();
       return false;
     }
     return true;

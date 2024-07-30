@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:web3modal_flutter/utils/util.dart';
@@ -116,8 +117,7 @@ class WalletConnect extends GetWidget<GlobalController> {
                 )
               : Button(
                   onPressed: () {
-                    controller.web3ModalService.disconnect();
-                    controller.web3ModalService.openModal(context);
+                    controller.connectToWallet();
                   },
                   type: ButtonType.gradient,
                   blockButton: true,

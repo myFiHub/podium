@@ -113,13 +113,7 @@ class UsersInRoomList extends StatelessWidget {
                                   )
                                 ],
                               ),
-                              if (isItME)
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                )
-                              else
-                                Actions(userId: userId),
+                              Actions(userId: userId),
                             ],
                           ),
                         ],
@@ -188,7 +182,10 @@ class FollowButton extends GetWidget<UsersController> {
 
 class Actions extends GetView<OngoingGroupCallController> {
   final String userId;
-  const Actions({required this.userId, Key? key}) : super(key: key);
+  const Actions({
+    required this.userId,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

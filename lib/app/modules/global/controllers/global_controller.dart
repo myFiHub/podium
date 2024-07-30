@@ -104,10 +104,11 @@ class GlobalController extends GetxController {
         .listen((InternetStatus status) async {
       switch (status) {
         case InternetStatus.connected:
+          isConnectedToInternet.value = true;
+          log.i("Internet connected");
           if (!initializedOnce.value) {
             await initializeApp();
           }
-          isConnectedToInternet.value = true;
           break;
         case InternetStatus.disconnected:
           log.f("Internet disconnected");
@@ -120,17 +121,15 @@ class GlobalController extends GetxController {
   listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       if (newAddress.isNotEmpty) {
-        final savedAddress =
-            GetStorage().read<String?>(StorageKeys.connectedWalletAddress) ??
-                '';
-        if (savedAddress != newAddress) {
-          try {
-            await saveUserWalletAddressOnFirebase(newAddress);
-            GetStorage().write(StorageKeys.connectedWalletAddress, newAddress);
-          } catch (e) {
-            log.e("error saving wallet address");
-            Get.snackbar('Error', 'Error saving wallet address, try again');
-          }
+        try {
+          await saveUserWalletAddressOnFirebase(newAddress);
+          log.d("new wallet address SAVED $newAddress");
+          currentUserInfo.value!.localWalletAddress = newAddress;
+          currentUserInfo.refresh();
+          GetStorage().write(StorageKeys.connectedWalletAddress, newAddress);
+        } catch (e) {
+          log.e("error saving wallet address");
+          Get.snackbar('Error', 'Error saving wallet address, try again');
         }
       }
     });
@@ -257,5 +256,16 @@ class GlobalController extends GetxController {
     }
 
     return null;
+  }
+
+  connectToWallet() async {
+    try {
+      web3ModalService.disconnect();
+      await web3ModalService.openModal(Get.context!);
+      final address = BlockChainUtils.retrieveConnectedWallet(web3ModalService);
+      connectedWalletAddress.value = address;
+    } catch (e) {
+      log.f(e);
+    }
   }
 }

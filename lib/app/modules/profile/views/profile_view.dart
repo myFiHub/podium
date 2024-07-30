@@ -87,8 +87,7 @@ class BuyTicket extends GetView<ProfileController> {
             return;
           }
           if (connectedWallet == '') {
-            final service = controller.globalController.web3ModalService;
-            service.openModal(Get.context!);
+            controller.globalController.connectToWallet();
             return;
           }
           controller.buyTicket();

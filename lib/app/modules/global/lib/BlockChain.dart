@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
@@ -31,21 +32,8 @@ class BlockChainUtils {
         connectedWalletAddress.value = '';
         return;
       }
-      final session = _w3mService.session!;
-      final accounts = session.getAccounts();
-      final currentNamespace = _w3mService.selectedChain?.namespace;
-      if (accounts != null) {
-        final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
-        if (chainsNamespaces.contains(currentNamespace)) {
-          final account = accounts.firstWhere(
-            (account) => account.contains('$currentNamespace:'),
-          );
-          final address = account.replaceFirst('$currentNamespace:', '');
-          connectedWalletAddress.value = address;
-        }
-      } else {
-        connectedWalletAddress.value = '';
-      }
+      final address = retrieveConnectedWallet(_w3mService);
+      connectedWalletAddress.value = address;
       log.i('Connected Wallet Address: ${connectedWalletAddress.value}');
     });
     void _onModalConnect(ModalConnect? event) {
@@ -136,5 +124,28 @@ class BlockChainUtils {
       log.f('Error initializing W3MService', error: e);
     }
     return _w3mService;
+  }
+
+  static String retrieveConnectedWallet(W3MService _w3mService) {
+    if (w3mService.session == null) {
+      return '';
+    }
+    final session = _w3mService.session!;
+    final accounts = session.getAccounts();
+    final currentNamespace = _w3mService.selectedChain?.namespace;
+    if (accounts != null) {
+      final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
+      if (chainsNamespaces.contains(currentNamespace)) {
+        final account = accounts.firstWhere(
+          (account) => account.contains('$currentNamespace:'),
+        );
+        final address = account.replaceFirst('$currentNamespace:', '');
+        return address;
+      } else {
+        return '';
+      }
+    } else {
+      return '';
+    }
   }
 }

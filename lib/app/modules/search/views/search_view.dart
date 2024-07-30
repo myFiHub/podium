@@ -22,7 +22,7 @@ class SearchView extends GetView<SearchController.SearchController> {
           const SizedBox(height: 20),
           Container(
               child: Input(
-            hintText: "search groups / users",
+            hintText: "search room / users",
             autofocus: true,
             onChanged: (v) {
               controller.searchValue.value = v;

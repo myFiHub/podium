@@ -5,14 +5,14 @@ icons_launcher:
       image_path: "assets/images/logo.png"
       notification_image: "assets/images/logo.png"
     ios:
-      enable: true
+      enable: false
       image_path: "assets/images/logo.png"
     web:
-      enable: true
+      enable: false
       image_path: "assets/images/logo.png"
       favicon_path: "assets/images/logo.png"
     macos:
-      enable: true
+      enable: false
       image_path: "assets/images/logo.png"
     windows:
       enable: false

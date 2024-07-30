@@ -5,12 +5,15 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
-class SignUpController extends GetxController {
+class SignUpController extends GetxController with ParticleAuthUtils {
+  final globalController = Get.find<GlobalController>();
   final isSigningUp = false.obs;
   final fullName = ''.obs;
   final email = ''.obs;
@@ -71,6 +74,14 @@ class SignUpController extends GetxController {
     final enteredPassword = password.value;
     final enteredFullName = fullName.value;
     try {
+      final particleUser = await particleLogin(email.value);
+      if (particleUser != null) {
+        globalController.particleAuthUserInfo.value = particleUser;
+      } else {
+        Get.snackbar('Error', 'Error Signing up');
+        return;
+      }
+
       final credential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: enteredEmail,

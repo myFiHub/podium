@@ -2,13 +2,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-
 import 'package:podium/utils/storage.dart';
+import 'package:particle_auth/model/user_info.dart' as ParticleUser;
 
-class LoginController extends GetxController {
+class LoginController extends GetxController with ParticleAuthUtils {
   final globalController = Get.find<GlobalController>();
   final isLoggingIn = false.obs;
   final isAutoLoggingIn = false.obs;
@@ -35,11 +36,17 @@ class LoginController extends GetxController {
   }
 
   login({String? manualEmail, String? manualPassword}) async {
-    isLoggingIn.value = true;
     final enteredEmail = manualEmail == null ? email.value : manualEmail;
     final enteredPassword =
         manualPassword == null ? password.value : manualPassword;
     try {
+      final particleUser = await particleLogin(email.value);
+      if (particleUser != null) {
+        globalController.particleAuthUserInfo.value = particleUser;
+      } else {
+        Get.snackbar('Error', 'Error logging in');
+        return;
+      }
       UserCredential firebaseUserCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: enteredEmail.trim(),

@@ -31,10 +31,18 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
+ //After modification：
+compileOptions {
+  sourceCompatibility JavaVersion.VERSION_11
+  targetCompatibility JavaVersion.VERSION_11
+}
+
+kotlinOptions {
+  jvmTarget = JavaVersion.VERSION_11
+}
+dataBinding {
+  enabled = true
+}
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
@@ -45,6 +53,12 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+
+
+    manifestPlaceholders["PN_PROJECT_ID"] = "2ba651e8-528b-493b-a570-ab62fe2489d6"//your project id
+    manifestPlaceholders["PN_PROJECT_CLIENT_KEY"] = "c1o3pOIT9seszfmH9DSmMb7td8TDi4UNJWZbMmw1" //your project client key
+    manifestPlaceholders["PN_APP_ID"] =  "d28e3658-4a8e-4d4a-aba1-1f7fff6d9038"//your app id
+
     }
 
     buildTypes {

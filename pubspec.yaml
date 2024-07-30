@@ -36,6 +36,7 @@ dependencies:
   cloud_firestore: ^5.1.0
   rxdart: ^0.28.0
   internet_connection_checker_plus: ^2.5.0
+  particle_auth: ^1.4.28
 
 dev_dependencies:
   build_runner: ^2.4.11

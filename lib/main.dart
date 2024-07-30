@@ -104,7 +104,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       isDarkMode: _isDarkMode,
       themeData: _themeData,
       child: GetMaterialApp(
-        title: "Podium",
         theme: darkThemeData,
         builder: (_, child) {
           return SafeArea(

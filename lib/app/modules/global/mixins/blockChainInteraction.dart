@@ -83,24 +83,25 @@ mixin BlockChainInteractions {
   /// You’ll provide the desired share quantity as an argument.
   ///
 
-  getBuyPrice({
+  Future<BigInt?> getBuyPrice({
     required String sharesSubject,
     required num shareAmount,
-  }) {
+  }) async {
     final globalController = Get.find<GlobalController>();
     final service = globalController.web3ModalService;
     final sharesSubjectWallet = parsAddress(sharesSubject);
     // service.launchConnectedWallet();
     try {
-      final response = service.requestReadContract(
+      final response = await service.requestReadContract(
         deployedContract: starsArenaContract,
-        functionName: 'getBuyPrice',
+        functionName: 'getBuyPriceAfterFee',
         parameters: [
           sharesSubjectWallet,
           BigInt.from(shareAmount),
         ],
       );
-      return response;
+      final res = response[0] as BigInt;
+      return res;
     } catch (e) {
       log.e('error : $e');
       return null;

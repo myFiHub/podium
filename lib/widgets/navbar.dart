@@ -113,7 +113,7 @@ Widget _buildNavItem({
   final isActive = activeRoute == route;
   return GestureDetector(
     onTap: () {
-      Navigate.to(type: NavigationTypes.offNamed, route: route);
+      Navigate.to(type: NavigationTypes.offAllAndToNamed, route: route);
     },
     child: Column(
       children: [

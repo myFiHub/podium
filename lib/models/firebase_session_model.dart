@@ -21,8 +21,9 @@ class FirebaseSession {
     data[nameKey] = name;
     data[createdByKey] = createdBy;
     data[idKey] = id;
+    // ignore: unnecessary_null_comparison
     if (members != null) {
-      final membersList = members!.values.map((v) => v.toJson()).toList();
+      final membersList = members.values.map((v) => v.toJson()).toList();
       final mappedMembers = {};
       for (var i = 0; i < membersList.length; i++) {
         mappedMembers[membersList[i][FirebaseSessionMember.idKey]] =
@@ -79,6 +80,7 @@ class FirebaseSessionMember {
     data[remainingTalkTimeKey] = remainingTalkTime;
     data[isMutedKey] = isMuted;
     data[initialTalkTimeKey] = initialTalkTime;
+    // ignore: dead_null_aware_expression
     data[presentKey] = present ?? false;
     return data;
   }

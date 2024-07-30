@@ -12,7 +12,6 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -66,7 +65,7 @@ class UsersController extends GetxController
           final notifId = Uuid().v4();
           sendNotification(
             notification: FirebaseNotificationModel(
-                id: id,
+                id: notifId,
                 title: 'New follower',
                 body: '${myUser.fullName} followed you',
                 type: NotificationTypes.follow.toString(),
@@ -108,10 +107,11 @@ class UsersController extends GetxController
           users.assignAll(usersMap);
           groupsController.getRealtimeGroups(true);
         } else {
-          Get.snackbar('aaaaaaaaaaa', 'something horible happened');
+          Get.snackbar('aaaaaaaaaaa', 'something horrible happened');
         }
       });
     } else {
+      // ignore: dead_code
       subscription?.cancel();
       groupsController.subscription?.cancel();
     }

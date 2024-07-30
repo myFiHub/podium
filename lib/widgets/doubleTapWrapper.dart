@@ -58,6 +58,7 @@ class DoubleBackToCloseAppState extends State<DoubleBackToCloseApp> {
     }());
 
     if (_isAndroid) {
+      // ignore: deprecated_member_use
       return WillPopScope(
         onWillPop: _handleWillPop,
         child: widget.child,
@@ -67,7 +68,6 @@ class DoubleBackToCloseAppState extends State<DoubleBackToCloseApp> {
     }
   }
 
-  /// Handles [WillPopScope.onWillPop].
   Future<bool> _handleWillPop() async {
     if (_isSnackBarVisible || _willHandlePopInternally) {
       widget.onPop();

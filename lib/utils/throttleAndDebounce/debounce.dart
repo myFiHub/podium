@@ -46,10 +46,8 @@ final class Debouncing<T> extends Stream<DebouncingStatus>
     _duration = value;
   }
 
-  /// {@nodoc}
   Timer? _timer;
 
-  /// {@nodoc}
   Completer<T?>? _completer;
 
   /// Is ready to accept new events

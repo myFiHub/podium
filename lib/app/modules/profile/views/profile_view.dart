@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/networkUrl.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:web3modal_flutter/utils/w3m_chains_presets.dart';

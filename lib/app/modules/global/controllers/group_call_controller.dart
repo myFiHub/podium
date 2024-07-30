@@ -61,8 +61,7 @@ class GroupCallController extends GetxController with FireBaseUtils {
     if (myUser.localWalletAddress == '' ||
         globalController.connectedWalletAddress == '') {
       Get.snackbar("Error", "Please connect your wallet first");
-      final service = globalController.web3ModalService;
-      service.openModal(Get.context!);
+      globalController.connectToWallet();
       return;
     }
     group.value = g;

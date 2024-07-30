@@ -90,4 +90,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'podium-fbb5b.appspot.com',
     measurementId: 'G-WDSWJMYZTX',
   );
+
 }

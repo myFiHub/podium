@@ -27,7 +27,7 @@ class JitsiMember {
   late String role;
   late String avatarUrl;
   late String email;
-  late bool isLocal;
+  late String isLocal;
 
   static String participantIdKey = 'participantId';
   static String nameKey = 'name';

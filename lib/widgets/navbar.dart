@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -113,7 +114,11 @@ Widget _buildNavItem({
   final isActive = activeRoute == route;
   return GestureDetector(
     onTap: () {
-      Navigate.to(type: NavigationTypes.offAllAndToNamed, route: route);
+      jitsiMeet.hangUp();
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: route,
+      );
     },
     child: Column(
       children: [

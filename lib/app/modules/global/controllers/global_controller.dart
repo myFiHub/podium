@@ -7,7 +7,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:particle_auth/particle_auth.dart' as ParticleAuth;
 import 'package:particle_auth/model/user_info.dart' as ParticleUser;
-
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/constants/constantKeys.dart';

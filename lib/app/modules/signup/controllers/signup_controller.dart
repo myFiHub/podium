@@ -81,7 +81,6 @@ class SignUpController extends GetxController with ParticleAuthUtils {
         Get.snackbar('Error', 'Error Signing up');
         return;
       }
-
       final credential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: enteredEmail,

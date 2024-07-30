@@ -56,7 +56,7 @@ class SessionInfo extends GetWidget<OngoingGroupCallController> {
           () {
             final isAdmin = controller.amIAdmin.value;
             final remainingTimeInMillisecond =
-                controller.remainingTimeTimer.value ?? 0;
+                controller.remainingTimeTimer.value;
             if (remainingTimeInMillisecond == -1) {
               return Text(
                 "loading...",

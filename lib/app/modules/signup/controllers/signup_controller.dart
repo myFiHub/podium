@@ -103,9 +103,9 @@ class SignUpController extends GetxController with ParticleAuthUtils {
       await usersDatabaseReference.set(userToCreate.toJson());
       final LoginController loginController = Get.put(LoginController());
       loginController.login(
-        manualEmail: enteredEmail,
-        manualPassword: enteredPassword,
-      );
+          manualEmail: enteredEmail,
+          manualPassword: enteredPassword,
+          fromSignUp: true);
     } on FirebaseAuthException catch (e) {
       log.e('firebase auth error :' + e.toString());
       if (e.code == 'email-already-in-use') {

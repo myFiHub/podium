@@ -61,6 +61,7 @@ class GlobalController extends GetxController {
   W3MService web3ModalService = w3mService;
   final loggedIn = false.obs;
   final initializedOnce = false.obs;
+  final isLoggingOut = false.obs;
 
   final connectionCheckerInstance = InternetConnection.createInstance(
     checkInterval: const Duration(seconds: 5),
@@ -159,7 +160,7 @@ class GlobalController extends GetxController {
 
   listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
-      if (newAddress.isNotEmpty) {
+      if (newAddress != '' && newAddress != null) {
         try {
           await saveUserWalletAddressOnFirebase(newAddress);
           log.d("new wallet address SAVED $newAddress");
@@ -239,23 +240,33 @@ class GlobalController extends GetxController {
   }
 
   _logout() async {
-    await ParticleAuth.ParticleAuth.logout();
-    cleanStorage();
+    isLoggingOut.value = true;
     try {
-      web3ModalService.disconnect();
-    } catch (e) {
-      log.e("error disconnecting wallet $e");
-    }
-    Navigate.to(
-      type: NavigationTypes.offAllNamed,
-      route: Routes.LOGIN,
-    );
+      try {
+        await ParticleAuth.ParticleAuth.fastLogout();
+      } catch (e) {
+        log.e(e);
+      }
+      cleanStorage();
+      try {
+        web3ModalService.disconnect();
+      } catch (e) {
+        log.e("error disconnecting wallet $e");
+      }
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: Routes.LOGIN,
+      );
 
-    firebaseUserCredential.value = null;
-    try {
-      await FirebaseAuth.instance.signOut();
+      firebaseUserCredential.value = null;
+      try {
+        await FirebaseAuth.instance.signOut();
+      } catch (e) {
+        log.e("error signing out from firebase $e");
+      }
     } catch (e) {
-      log.e("error signing out from firebase $e");
+    } finally {
+      isLoggingOut.value = false;
     }
   }
 

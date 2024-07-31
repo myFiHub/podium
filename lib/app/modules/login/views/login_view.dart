@@ -88,7 +88,9 @@ class LoginView extends GetView<LoginController> {
                       text: 'LOGIN',
                     );
                   }),
+                  space10,
                   Button(
+                    size: ButtonSize.MEDIUM,
                     onPressed: () {
                       Navigate.to(
                         type: NavigationTypes.toNamed,

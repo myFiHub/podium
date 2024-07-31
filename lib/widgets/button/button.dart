@@ -680,6 +680,9 @@ class _ButtonState extends State<Button> {
         animationDuration: widget.animationDuration,
         clipBehavior: widget.clipBehavior,
         child: InkWell(
+          borderRadius: widget.type == ButtonType.transparent
+              ? BorderRadius.circular(8)
+              : BorderRadius.circular(0),
           focusNode: widget.focusNode,
           canRequestFocus: widget.enabled,
           onFocusChange: _handleFocusedChanged,

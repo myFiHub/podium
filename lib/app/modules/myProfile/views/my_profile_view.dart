@@ -100,10 +100,12 @@ class WalletConnect extends GetWidget<GlobalController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final walletConnected = controller.connectedWalletAddress.value;
+      final isLoggingOut = controller.isLoggingOut.value;
       return Column(
         children: [
           walletConnected != ''
               ? Button(
+                  loading: isLoggingOut,
                   onPressed: () {
                     controller.web3ModalService.disconnect();
                   },

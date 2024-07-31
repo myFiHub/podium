@@ -1,7 +1,10 @@
+
 allprojects {
     repositories {
-        google()
-        mavenCentral()
+    google()
+    mavenCentral()
+    maven { setUrl("https://jitpack.io") }  //add this line 
+
     }
 }
 

@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:particle_auth/particle_auth.dart' as ParticleAuth;
+import 'package:particle_auth/model/user_info.dart' as ParticleUser;
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -51,6 +52,7 @@ class GlobalController extends GetxController {
   final userBalance = ''.obs;
   final connectedChainId = ''.obs;
   final firebaseUserCredential = Rxn<UserCredential>();
+  final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
   final firebaseUser = Rxn<User>();
   final currentUserInfo = Rxn<UserInfoModel>();
   final activeRoute = AppPages.INITIAL.obs;
@@ -74,7 +76,7 @@ class GlobalController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    await FirebaseInit.init();
+    await Future.wait([initializeParticleAuth(), FirebaseInit.init()]);
     bool result = await connectionCheckerInstance.hasInternetAccess;
     if (result) {
       initializeApp();
@@ -97,6 +99,43 @@ class GlobalController extends GetxController {
     initializeW3MService();
     listenToWalletAddressChange();
     initializedOnce.value = true;
+  }
+
+  Future<void> initializeParticleAuth() async {
+    try {
+      final chainId = Env.chainId;
+      final chainName = W3MChainPresets.chains[chainId]!.chainName;
+      final particleChain =
+          ParticleAuth.ChainInfo.getChain(int.parse(chainId), chainName);
+      if (Env.environment != DEV &&
+          Env.environment != STAGE &&
+          Env.environment != PROD) {
+        log.f("unhandled environment");
+        log.f("particle auth not initialized");
+        return Future.error("unhandled environment");
+      }
+      final environment = Env.environment == DEV
+          ? ParticleAuth.Env.dev
+          : Env.environment == STAGE
+              ? ParticleAuth.Env.staging
+              : ParticleAuth.Env.production;
+      if (particleChain != null) {
+        log.i("##########initializing ParticleAuth");
+        ParticleAuth.ParticleInfo.set(
+          Env.particleProjectId,
+          Env.particleClientKey,
+        );
+        ParticleAuth.ParticleAuth.init(
+          particleChain,
+          environment,
+        );
+        log.i('##########particle auth initialized');
+        return Future.value();
+      }
+    } catch (e) {
+      log.f('particle auth initialization failed');
+      return Future.error(e);
+    }
   }
 
   initializeInternetConnectionChecker() {
@@ -155,12 +194,14 @@ class GlobalController extends GetxController {
 
   checkLogin() async {
     isAutoLoggingIn.value = true;
-    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-    if (isLoggedIn) {
-      final user = FirebaseAuth.instance.currentUser;
-      firebaseUser.value = user;
-      final userId = user!.uid;
-      try {
+    try {
+      final particleUserInfo = await ParticleAuth.ParticleAuth.isLoginAsync();
+      particleAuthUserInfo.value = particleUserInfo;
+      final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+      if (isLoggedIn) {
+        final user = FirebaseAuth.instance.currentUser;
+        firebaseUser.value = user;
+        final userId = user!.uid;
         final userInfo = await getUserInfoById(userId);
         currentUserInfo.value = userInfo;
         if (userInfo != null && userInfo.id.isNotEmpty) {
@@ -176,17 +217,17 @@ class GlobalController extends GetxController {
             route: Routes.HOME,
           );
         }
-      } catch (e) {
+      } else {
         isAutoLoggingIn.value = false;
-
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.LOGIN,
-        );
-        return;
       }
-    } else {
+    } catch (e) {
       isAutoLoggingIn.value = false;
+
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: Routes.LOGIN,
+      );
+      return;
     }
   }
 
@@ -198,6 +239,7 @@ class GlobalController extends GetxController {
   }
 
   _logout() async {
+    await ParticleAuth.ParticleAuth.logout();
     cleanStorage();
     try {
       web3ModalService.disconnect();
@@ -212,7 +254,9 @@ class GlobalController extends GetxController {
     firebaseUserCredential.value = null;
     try {
       await FirebaseAuth.instance.signOut();
-    } catch (e) {}
+    } catch (e) {
+      log.e("error signing out from firebase $e");
+    }
   }
 
   Future<UserInfoModel?> getUserInfoById(String userId) async {

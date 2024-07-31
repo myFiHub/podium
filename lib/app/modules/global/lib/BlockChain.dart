@@ -40,6 +40,7 @@ class BlockChainUtils {
       log.i('[initializewm3Service] _onModalConnect ${event?.toString()}');
     }
 
+    // ignore: unused_element
     void _onModalUpdate(ModalConnect? event) {
       log.i('[initializewm3Service] _onModalUpdate ${event?.toString()}');
     }
@@ -111,6 +112,7 @@ class BlockChainUtils {
     try {
       await _w3mService.init();
       const chainId = Env.chainId;
+      // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
         await _w3mService.selectChain(
           W3MChainPresets.chains[chainId],

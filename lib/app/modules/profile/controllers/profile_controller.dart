@@ -83,7 +83,8 @@ class ProfileController extends GetxController with BlockChainInteractions {
       final connectedWalletAddress = globalController.connectedWalletAddress;
       if (user != null &&
           !user.localWalletAddress.isEmpty &&
-          !(user.localWalletAddress == null) &&
+          // ignore: unnecessary_null_comparison
+          user.localWalletAddress != null &&
           !connectedWalletAddress.isEmpty) {
         final price = await getBuyPrice(
           sharesSubject: user.localWalletAddress,

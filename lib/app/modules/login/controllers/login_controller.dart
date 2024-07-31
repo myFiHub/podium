@@ -1,14 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:particle_auth/particle_auth.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-
 import 'package:podium/utils/storage.dart';
 
-class LoginController extends GetxController {
+class LoginController extends GetxController with ParticleAuthUtils {
   final globalController = Get.find<GlobalController>();
   final isLoggingIn = false.obs;
   final isAutoLoggingIn = false.obs;
@@ -34,12 +35,30 @@ class LoginController extends GetxController {
     super.onClose();
   }
 
-  login({String? manualEmail, String? manualPassword}) async {
-    isLoggingIn.value = true;
+  login({String? manualEmail, String? manualPassword, bool? fromSignUp}) async {
     final enteredEmail = manualEmail == null ? email.value : manualEmail;
     final enteredPassword =
         manualPassword == null ? password.value : manualPassword;
     try {
+      if (fromSignUp == true) {
+        try {
+          final particleUserInfo = await ParticleAuth.isLoginAsync();
+          globalController.particleAuthUserInfo.value = particleUserInfo;
+        } catch (e) {
+          log.e('Error logging in from signUp => particle auth: $e');
+          Get.snackbar('Error', 'Error logging in');
+          return;
+        }
+        Get.snackbar('Success', 'Account created successfully, logging in');
+      } else {
+        final particleUser = await particleLogin(email.value);
+        if (particleUser != null) {
+          globalController.particleAuthUserInfo.value = particleUser;
+        } else {
+          Get.snackbar('Error', 'Error logging in');
+          return;
+        }
+      }
       UserCredential firebaseUserCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: enteredEmail.trim(),

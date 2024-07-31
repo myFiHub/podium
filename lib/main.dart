@@ -104,7 +104,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       isDarkMode: _isDarkMode,
       themeData: _themeData,
       child: GetMaterialApp(
-        title: "Podium",
         theme: darkThemeData,
         builder: (_, child) {
           return SafeArea(
@@ -121,10 +120,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
   }
 
+// ignore: unused_element
   void _toggleTheme() => setState(() {
         _themeData = (_themeData == null) ? _customTheme : null;
       });
-
+// ignore: unused_element
   void _toggleBrightness() => setState(() {
         _isDarkMode = !_isDarkMode;
       });

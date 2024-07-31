@@ -30,7 +30,7 @@ class UserInfoModel {
     fullName = json[fullNameKey];
     email = json[emailKey];
     avatar = json[avatarUrlKey];
-    localWalletAddress = json[localWalletAddressKey] ?? ''; // Added null check
+    localWalletAddress = json[localWalletAddressKey] ?? '';
     following = json[followingKey] ?? [];
     numberOfFollowers = json[numberOfFollowersKey] ?? 0;
   }
@@ -41,9 +41,9 @@ class UserInfoModel {
     data[fullNameKey] = fullName;
     data[emailKey] = email;
     data[avatarUrlKey] = avatar;
-    data[localWalletAddressKey] = localWalletAddress ?? ''; // Added null check
-    data[followingKey] = following ?? [];
-    data[numberOfFollowersKey] = numberOfFollowers ?? 0;
+    data[localWalletAddressKey] = localWalletAddress;
+    data[followingKey] = following;
+    data[numberOfFollowersKey] = numberOfFollowers;
     return data;
   }
 }

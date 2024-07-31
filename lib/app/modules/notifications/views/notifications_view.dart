@@ -19,6 +19,7 @@ class NotificationsView extends GetView<NotificationsController> {
           children: [
             Expanded(
               child: Container(
+                width: Get.width - 240,
                 child: Obx(() {
                   final notifications = controller.notifications;
                   if (notifications.isEmpty) {

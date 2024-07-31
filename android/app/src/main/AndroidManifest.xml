@@ -62,6 +62,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <!-- to access mic -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <!-- to access camera -->
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- to access notification -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
 </manifest>

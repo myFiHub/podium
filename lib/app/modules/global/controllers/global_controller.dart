@@ -152,7 +152,7 @@ class GlobalController extends GetxController {
           break;
         case InternetStatus.disconnected:
           log.f("Internet disconnected");
-          isConnectedToInternet.value = false;
+          // isConnectedToInternet.value = false;
           break;
       }
     });
@@ -311,12 +311,15 @@ class GlobalController extends GetxController {
     return null;
   }
 
-  connectToWallet() async {
+  connectToWallet({void Function()? afterConnection}) async {
     try {
-      web3ModalService.disconnect();
+      // web3ModalService.disconnect();
       await web3ModalService.openModal(Get.context!);
       final address = BlockChainUtils.retrieveConnectedWallet(web3ModalService);
       connectedWalletAddress.value = address;
+      if (afterConnection != null) {
+        afterConnection();
+      }
     } catch (e) {
       log.f(e);
     }

@@ -68,50 +68,60 @@ class UsersInRoomList extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(name,
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                      )),
-                                  space10,
-                                  Row(
-                                    children: [
-                                      GFAvatar(
-                                        backgroundImage:
-                                            NetworkImage(user.avatar),
-                                        shape: GFAvatarShape.standard,
-                                        backgroundColor: ColorName.cardBorder,
-                                      ),
-                                      space10,
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            Util.truncate(userId, length: 6),
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              color: ColorName.greyText,
-                                            ),
+                              Container(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(name,
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                        )),
+                                    space10,
+                                    Row(
+                                      children: [
+                                        GFAvatar(
+                                          backgroundImage:
+                                              NetworkImage(user.avatar),
+                                          shape: GFAvatarShape.standard,
+                                          backgroundColor: ColorName.cardBorder,
+                                        ),
+                                        space10,
+                                        Container(
+                                          width: Get.width - 335,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                Util.truncate(userId,
+                                                    length: 6),
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: ColorName.greyText,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              space5,
+                                              Text(
+                                                user.fullName,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: ColorName.greyText,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          space5,
-                                          Text(
-                                            user.fullName,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700,
-                                              color: ColorName.greyText,
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  )
-                                ],
+                                        )
+                                      ],
+                                    )
+                                  ],
+                                ),
                               ),
                               Actions(userId: userId),
                             ],

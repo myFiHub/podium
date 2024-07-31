@@ -135,7 +135,7 @@ class BlockChainUtils {
     final session = _w3mService.session!;
     final accounts = session.getAccounts();
     final currentNamespace = _w3mService.selectedChain?.namespace;
-    if (accounts != null) {
+    if (accounts != null && accounts.isNotEmpty) {
       final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
       if (chainsNamespaces.contains(currentNamespace)) {
         final account = accounts.firstWhere(

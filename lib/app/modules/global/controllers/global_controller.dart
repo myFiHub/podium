@@ -235,6 +235,7 @@ class GlobalController extends GetxController {
   setLoggedIn(bool value) {
     loggedIn.value = value;
     if (value == false) {
+      log.f("logging out");
       _logout();
     }
   }
@@ -254,6 +255,7 @@ class GlobalController extends GetxController {
       log.e("error disconnecting wallet $e");
       isLoggingOut.value = false;
     }
+    log.f('Navigating to login page');
     Navigate.to(
       type: NavigationTypes.offAllNamed,
       route: Routes.LOGIN,
@@ -317,7 +319,7 @@ class GlobalController extends GetxController {
       await web3ModalService.openModal(Get.context!);
       final address = BlockChainUtils.retrieveConnectedWallet(web3ModalService);
       connectedWalletAddress.value = address;
-      if (afterConnection != null) {
+      if (afterConnection != null && address != '') {
         afterConnection();
       }
     } catch (e) {

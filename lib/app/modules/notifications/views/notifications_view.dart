@@ -19,7 +19,6 @@ class NotificationsView extends GetView<NotificationsController> {
           children: [
             Expanded(
               child: Container(
-                width: Get.width - 240,
                 child: Obx(() {
                   final notifications = controller.notifications;
                   if (notifications.isEmpty) {
@@ -46,13 +45,18 @@ class NotificationsView extends GetView<NotificationsController> {
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                    color: ColorName.cardBackground,
-                                    border:
-                                        Border.all(color: ColorName.cardBorder),
-                                    borderRadius: const BorderRadius.all(
-                                        const Radius.circular(8))),
+                                  color: ColorName.cardBackground,
+                                  border: Border.all(
+                                    color: ColorName.cardBorder,
+                                  ),
+                                  borderRadius: const BorderRadius.all(
+                                    const Radius.circular(8),
+                                  ),
+                                ),
                                 margin: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 8),
+                                  horizontal: 24,
+                                  vertical: 8,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(16),
                                   child: Row(
@@ -65,24 +69,20 @@ class NotificationsView extends GetView<NotificationsController> {
                                         children: [
                                           Container(
                                             width: Get.width - 200,
-                                            child: Flexible(
-                                              child: Text(
-                                                notif.title,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                            child: Text(
+                                              notif.title,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ),
                                           Container(
                                             width: Get.width - 200,
-                                            child: Flexible(
-                                              child: Text(
-                                                notif.body,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                ),
+                                            child: Text(
+                                              notif.body,
+                                              style: const TextStyle(
+                                                fontSize: 14,
                                               ),
                                             ),
                                           ),

@@ -249,7 +249,7 @@ class GlobalController extends GetxController {
       }
       cleanStorage();
       try {
-        web3ModalService.disconnect();
+        await web3ModalService.disconnect();
       } catch (e) {
         log.e("error disconnecting wallet $e");
       }

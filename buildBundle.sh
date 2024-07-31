@@ -9,7 +9,7 @@ flutter clean
 
 flutter pub run flutter_native_splash:create
 
-flutter build appbundle  --dart-define-from-file=env/dev.json --release
+ flutter build appbundle --release  --dart-define-from-file=env/prod.json 
 
 #rm -rf ./z_androidApps/*
 

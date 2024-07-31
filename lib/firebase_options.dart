@@ -53,7 +53,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAUa5XtcdM73jMYLSO4Wg7tRvChmbMbqNg',
-    appId: '1:891834977013:android:0b554f20fbf9a0a04593bc',
+    appId: '1:891834977013:android:813d7243ba4456a14593bc',
     messagingSenderId: '891834977013',
     projectId: 'podium-fbb5b',
     databaseURL: 'https://podium-fbb5b-default-rtdb.firebaseio.com',

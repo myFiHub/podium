@@ -36,6 +36,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
   }
 
   login({String? manualEmail, String? manualPassword, bool? fromSignUp}) async {
+    isLoggingIn.value = true;
     final enteredEmail = manualEmail == null ? email.value : manualEmail;
     final enteredPassword =
         manualPassword == null ? password.value : manualPassword;

@@ -98,47 +98,51 @@ class WalletConnect extends GetWidget<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final walletConnected = controller.connectedWalletAddress.value;
-      final isLoggingOut = controller.isLoggingOut.value;
-      return Column(
-        children: [
-          walletConnected != ''
-              ? Button(
-                  loading: isLoggingOut,
-                  onPressed: () {
-                    controller.web3ModalService.disconnect();
-                  },
-                  type: ButtonType.outline,
-                  color: ButtonColors.WARNING,
-                  textColor: Colors.red,
-                  borderSide: const BorderSide(color: Colors.red),
-                  blockButton: true,
-                  text: 'Disconnect Wallet',
-                )
-              : Button(
-                  onPressed: () {
-                    controller.connectToWallet();
-                  },
-                  type: ButtonType.gradient,
-                  blockButton: true,
-                  text: 'Connect Wallet',
-                ),
-          space10,
-          space10,
-          Button(
-            onPressed: () {
-              final globalController = Get.find<GlobalController>();
-              globalController.setLoggedIn(false);
-            },
-            type: ButtonType.solid,
-            blockButton: true,
-            color: ButtonColors.DANGER,
-            text: 'Logout',
-          ),
-        ],
-      );
-    });
+    return Obx(
+      () {
+        final walletConnected = controller.connectedWalletAddress.value;
+        return Column(
+          children: [
+            walletConnected != ''
+                ? Button(
+                    onPressed: () {
+                      controller.web3ModalService.disconnect();
+                    },
+                    type: ButtonType.outline,
+                    color: ButtonColors.WARNING,
+                    textColor: Colors.red,
+                    borderSide: const BorderSide(color: Colors.red),
+                    blockButton: true,
+                    text: 'Disconnect Wallet',
+                  )
+                : Button(
+                    onPressed: () {
+                      controller.connectToWallet();
+                    },
+                    type: ButtonType.gradient,
+                    blockButton: true,
+                    text: 'Connect Wallet',
+                  ),
+            space10,
+            space10,
+            Obx(() {
+              final isLoggingOut = controller.isLoggingOut.value;
+              return Button(
+                loading: isLoggingOut,
+                onPressed: () {
+                  final globalController = Get.find<GlobalController>();
+                  globalController.setLoggedIn(false);
+                },
+                type: ButtonType.solid,
+                blockButton: true,
+                color: ButtonColors.DANGER,
+                text: 'Logout',
+              );
+            })
+          ],
+        );
+      },
+    );
   }
 }
 

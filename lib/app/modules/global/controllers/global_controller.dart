@@ -242,30 +242,28 @@ class GlobalController extends GetxController {
   _logout() async {
     isLoggingOut.value = true;
     try {
-      try {
-        await ParticleAuth.ParticleAuth.fastLogout();
-      } catch (e) {
-        log.e(e);
-      }
-      cleanStorage();
-      try {
-        await web3ModalService.disconnect();
-      } catch (e) {
-        log.e("error disconnecting wallet $e");
-      }
-      Navigate.to(
-        type: NavigationTypes.offAllNamed,
-        route: Routes.LOGIN,
-      );
-
-      firebaseUserCredential.value = null;
-      try {
-        await FirebaseAuth.instance.signOut();
-      } catch (e) {
-        log.e("error signing out from firebase $e");
-      }
+      await ParticleAuth.ParticleAuth.fastLogout();
     } catch (e) {
-    } finally {
+      log.e(e);
+      isLoggingOut.value = false;
+    }
+    cleanStorage();
+    try {
+      await web3ModalService.disconnect();
+    } catch (e) {
+      log.e("error disconnecting wallet $e");
+      isLoggingOut.value = false;
+    }
+    Navigate.to(
+      type: NavigationTypes.offAllNamed,
+      route: Routes.LOGIN,
+    );
+    firebaseUserCredential.value = null;
+    try {
+      await FirebaseAuth.instance.signOut();
+      isLoggingOut.value = false;
+    } catch (e) {
+      log.e("error signing out from firebase $e");
       isLoggingOut.value = false;
     }
   }

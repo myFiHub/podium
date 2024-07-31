@@ -71,13 +71,14 @@ class GroupCallController extends GetxController
         colorText: ColorName.white,
       );
     }
-    if (!hasNotificationPermission) {
-      Get.snackbar(
-        "warning",
-        "notification permission is required in order to join the call",
-        colorText: ColorName.white,
-      );
-    }
+    log.d("notifications allowed: $hasNotificationPermission");
+    // if (!hasNotificationPermission) {
+    //   Get.snackbar(
+    //     "warning",
+    //     "notification permission is required in order to join the call",
+    //     colorText: ColorName.white,
+    //   );
+    // }
     final globalController = Get.find<GlobalController>();
     final myUser = globalController.currentUserInfo.value!;
     if (myUser.localWalletAddress == '' ||

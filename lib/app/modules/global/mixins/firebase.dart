@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
-
+import "package:particle_auth/model/user_info.dart" as ParticleUserInfo;
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -386,6 +386,32 @@ mixin FireBaseUtils {
       await databaseRef.remove();
     } catch (e) {
       log.e(e);
+    }
+  }
+
+  ///////////////////////
+  /// Particle auth /////
+  ///////////////////////
+  saveParticleUserInfoToFirebaseIfNeeded({
+    required ParticleUserInfo.UserInfo particleUser,
+    required String myUserId,
+  }) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.usersRef +
+            myUserId +
+            '/${UserInfoModel.savedParticleUserInfoKey}',
+      );
+
+      final snapshot = await databaseRef.get();
+      final particleUserInfo = snapshot.value as dynamic;
+      if (particleUserInfo != null) {
+        return;
+      } else {
+        await databaseRef.set(particleUser.toJson());
+      }
+    } catch (e) {
+      log.f('Error saving particle user info to firebase: $e');
     }
   }
 }

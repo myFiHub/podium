@@ -2,25 +2,28 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth/particle_auth.dart';
+import "package:particle_auth/model/user_info.dart" as ParticleUserInfo;
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 
-class LoginController extends GetxController with ParticleAuthUtils {
+class LoginController extends GetxController
+    with ParticleAuthUtils, FireBaseUtils {
   final globalController = Get.find<GlobalController>();
   final isLoggingIn = false.obs;
-  final isAutoLoggingIn = false.obs;
+  final $isAutoLoggingIn = false.obs;
   final email = ''.obs;
   final password = ''.obs;
 
   @override
   void onInit() {
-    isAutoLoggingIn.value = globalController.isAutoLoggingIn.value;
+    $isAutoLoggingIn.value = globalController.isAutoLoggingIn.value;
     globalController.isAutoLoggingIn.listen((v) {
-      isAutoLoggingIn.value = v;
+      $isAutoLoggingIn.value = v;
     });
     super.onInit();
   }
@@ -41,10 +44,11 @@ class LoginController extends GetxController with ParticleAuthUtils {
     final enteredPassword =
         manualPassword == null ? password.value : manualPassword;
     try {
+      ParticleUserInfo.UserInfo? particleUser;
       if (fromSignUp == true) {
         try {
-          final particleUserInfo = await ParticleAuth.isLoginAsync();
-          globalController.particleAuthUserInfo.value = particleUserInfo;
+          particleUser = await ParticleAuth.isLoginAsync();
+          globalController.particleAuthUserInfo.value = particleUser;
         } catch (e) {
           log.e('Error logging in from signUp => particle auth: $e');
           Get.snackbar('Error', 'Error logging in');
@@ -52,7 +56,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
         }
         Get.snackbar('Success', 'Account created successfully, logging in');
       } else {
-        final particleUser = await particleLogin(email.value);
+        particleUser = await particleLogin(email.value);
         if (particleUser != null) {
           globalController.particleAuthUserInfo.value = particleUser;
         } else {
@@ -70,6 +74,15 @@ class LoginController extends GetxController with ParticleAuthUtils {
       try {
         final currentUserInfo =
             await globalController.getUserInfoById(user!.uid);
+        if (currentUserInfo == null) {
+          Get.snackbar('Error', 'Error logging in');
+          return;
+        }
+        // await saveParticleUserInfoToFirebaseIfNeeded(
+        //   particleUser: particleUser,
+        //   myUserId: user.uid,
+        // );
+        currentUserInfo.localParticleUserInfo = particleUser;
         globalController.currentUserInfo.value = currentUserInfo;
         final storage = GetStorage();
         storage.write(StorageKeys.userEmail, enteredEmail);

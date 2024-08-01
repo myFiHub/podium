@@ -108,6 +108,7 @@ class GlobalController extends GetxController {
       final chainName = W3MChainPresets.chains[chainId]!.chainName;
       final particleChain =
           ParticleAuth.ChainInfo.getChain(int.parse(chainId), chainName);
+
       if (Env.environment != DEV &&
           Env.environment != STAGE &&
           Env.environment != PROD) {
@@ -121,7 +122,6 @@ class GlobalController extends GetxController {
               ? ParticleAuth.Env.staging
               : ParticleAuth.Env.production;
       if (particleChain != null) {
-        log.i("##########initializing ParticleAuth");
         ParticleAuth.ParticleInfo.set(
           Env.particleProjectId,
           Env.particleClientKey,
@@ -130,7 +130,6 @@ class GlobalController extends GetxController {
           particleChain,
           environment,
         );
-        log.i('##########particle auth initialized');
         return Future.value();
       }
     } catch (e) {

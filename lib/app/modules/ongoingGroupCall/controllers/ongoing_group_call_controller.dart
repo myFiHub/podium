@@ -208,12 +208,12 @@ class OngoingGroupCallController extends GetxController
   }
 
   cheerBoo({required String userId, required bool cheer}) async {
-    final calContinue = checkWalletConnected();
+    final canContinue = checkWalletConnected();
     final target = await getUserLocalWalletAddress(userId);
-    if (calContinue && target != '') {
+    if (canContinue && target != '') {
       late List<String> receiverAddresses;
       final myUser = globalController.currentUserInfo.value!;
-      if (myUser.localWalletAddress == userId) {
+      if (myUser.localWalletAddress == target) {
         receiverAddresses = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );

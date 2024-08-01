@@ -77,6 +77,11 @@ class GlobalController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
+    // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
+    W3MChainPresets.chains.addAll({
+      '30732': movementChain,
+    });
+
     await Future.wait([initializeParticleAuth(), FirebaseInit.init()]);
     bool result = await connectionCheckerInstance.hasInternetAccess;
     if (result) {
@@ -106,8 +111,13 @@ class GlobalController extends GetxController {
     try {
       final chainId = Env.chainId;
       final chainName = W3MChainPresets.chains[chainId]!.chainName;
-      final particleChain =
-          ParticleAuth.ChainInfo.getChain(int.parse(chainId), chainName);
+      final particleChain = Env.chainId == '30732'
+          ? movementChainOnParticle
+          : ParticleAuth.ChainInfo.getChain(int.parse(chainId), chainName);
+      if (particleChain == null) {
+        log.f("${chainId} chain not found on particle");
+        return Future.error("particle chain not initialized");
+      }
       if (Env.environment != DEV &&
           Env.environment != STAGE &&
           Env.environment != PROD) {
@@ -120,19 +130,18 @@ class GlobalController extends GetxController {
           : Env.environment == STAGE
               ? ParticleAuth.Env.staging
               : ParticleAuth.Env.production;
-      if (particleChain != null) {
-        log.i("##########initializing ParticleAuth");
-        ParticleAuth.ParticleInfo.set(
-          Env.particleProjectId,
-          Env.particleClientKey,
-        );
-        ParticleAuth.ParticleAuth.init(
-          particleChain,
-          environment,
-        );
-        log.i('##########particle auth initialized');
-        return Future.value();
-      }
+
+      log.i("##########initializing ParticleAuth");
+      ParticleAuth.ParticleInfo.set(
+        Env.particleProjectId,
+        Env.particleClientKey,
+      );
+      ParticleAuth.ParticleAuth.init(
+        particleChain,
+        environment,
+      );
+      log.i('##########particle auth initialized');
+      return Future.value();
     } catch (e) {
       log.f('particle auth initialization failed');
       return Future.error(e);
@@ -160,6 +169,7 @@ class GlobalController extends GetxController {
 
   listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
+      // ignore: unnecessary_null_comparison
       if (newAddress != '' && newAddress != null) {
         try {
           await saveUserWalletAddressOnFirebase(newAddress);

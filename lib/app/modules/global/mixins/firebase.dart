@@ -331,7 +331,7 @@ mixin FireBaseUtils {
     }
   }
 
-  startListeningToMyNotifications(
+  StreamSubscription<DatabaseEvent>? startListeningToMyNotifications(
       void Function(List<FirebaseNotificationModel>) onData) {
     try {
       final globalController = Get.find<GlobalController>();
@@ -340,7 +340,7 @@ mixin FireBaseUtils {
           .ref(FireBaseConstants.notificationsRef)
           .orderByChild(FirebaseNotificationModel.targetUserIdKey)
           .equalTo(myUser.id);
-      query.onValue.listen((event) {
+      final subscription = query.onValue.listen((event) {
         final notifications = event.snapshot.value as dynamic;
         if (notifications != null) {
           final List<FirebaseNotificationModel> notificationsList = [];
@@ -364,8 +364,10 @@ mixin FireBaseUtils {
           onData([]);
         }
       });
+      return subscription;
     } catch (e) {
       log.e(e);
+      return null;
     }
   }
 

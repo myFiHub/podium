@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:particle_auth/model/chain_info.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
@@ -16,6 +17,20 @@ final movementChain = W3MChainInfo(
     url: 'https://explorer.testnet.imola.movementlabs.xyz',
   ),
 );
+final movementChainOnParticle = ChainInfo(
+  int.parse(movementChain.chainId),
+  'Movement',
+  'evm',
+  movementChain.chainIcon!,
+  movementChain.chainName,
+  movementChain.chainId == '30732' ? 'Testnet' : 'Mainnet',
+  'https://docs.movementnetwork.xyz',
+  ChainInfoNativeCurrency('Movement', 'MOVE', 18),
+  movementChain.rpcUrl,
+  '',
+  movementChain.blockExplorer!.url,
+  [ChainInfoFeature('EIP1559')],
+);
 
 class BlockChainUtils {
   static Future<W3MService> initializewm3Service(
@@ -23,9 +38,6 @@ class BlockChainUtils {
     RxString connectedWalletAddress,
     RxBool w3serviceInitialized,
   ) async {
-    W3MChainPresets.chains.addAll({
-      '30732': movementChain,
-    });
     // W3MChainPresets.chains.addAll(W3MChainPresets.testChains);
     _w3mService.addListener(() {
       if (_w3mService.session == null) {

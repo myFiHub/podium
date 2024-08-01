@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -9,12 +12,15 @@ class NotificationsController extends GetxController with FireBaseUtils {
   final GlobalController globalController = Get.find<GlobalController>();
   final notifications = <FirebaseNotificationModel>[].obs;
   final numberOfUnreadNotifications = 0.obs;
+  StreamSubscription<DatabaseEvent>? notificationsSubscription = null;
+
   @override
   void onInit() {
     super.onInit();
     globalController.loggedIn.listen((loggedIn) {
       if (loggedIn) {
-        startListeningToMyNotifications((notificationList) {
+        notificationsSubscription =
+            startListeningToMyNotifications((notificationList) {
           final sortedNotifs = notificationList
             ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
           int numberOfUnread = 0;
@@ -28,6 +34,9 @@ class NotificationsController extends GetxController with FireBaseUtils {
         });
       } else {
         notifications.clear();
+        numberOfUnreadNotifications.value = 0;
+        notificationsSubscription?.cancel();
+        notificationsSubscription = null;
       }
     });
   }
@@ -40,6 +49,11 @@ class NotificationsController extends GetxController with FireBaseUtils {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  stopNotificationsListener() {
+    notificationsSubscription?.cancel();
+    notificationsSubscription = null;
   }
 
   getNotifications() async {

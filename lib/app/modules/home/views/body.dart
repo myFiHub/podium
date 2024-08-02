@@ -46,7 +46,7 @@ class HomePageGroupsList extends GetView<GroupsController> {
       if (groupsList.isEmpty) {
         return Container(
           child: Center(
-            child: Text('Welcome to podium, try joining some rooms'),
+            child: Text('Welcome to Podium, try joining some rooms'),
           ),
         );
       }

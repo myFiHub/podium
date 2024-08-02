@@ -40,8 +40,16 @@ class HomePageGroupsList extends GetView<GroupsController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final groups = controller.groupsImIn.value;
+
       final List<FirebaseGroup> groupsList =
           groups != null ? groups.values.toList() : [];
+      if (groupsList.isEmpty) {
+        return Container(
+          child: Center(
+            child: Text('Welcome to podium, try joining some rooms'),
+          ),
+        );
+      }
       return GroupList(groupsList: groupsList);
     });
   }

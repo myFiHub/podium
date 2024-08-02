@@ -10,6 +10,10 @@ groupsParser(data) {
     final creator = value[FirebaseGroup.creatorKey];
     final members =
         ((value[FirebaseGroup.membersKey]) as List<dynamic>).cast<String>();
+
+    final following =
+        ((creator[UserInfoModel.followingKey] ?? []) as List<dynamic>)
+            .cast<String>();
     final creatorId = creator[UserInfoModel.idKey];
     final creatorName = creator[UserInfoModel.fullNameKey];
     final creatorEmail = creator[UserInfoModel.emailKey];
@@ -20,7 +24,7 @@ groupsParser(data) {
       id: creatorId,
       avatar: creatorAvatar,
       localWalletAddress: creator[UserInfoModel.localWalletAddressKey] ?? '',
-      following: creator[UserInfoModel.followingKey] ?? [],
+      following: following,
       numberOfFollowers: creator[UserInfoModel.numberOfFollowersKey] ?? 0,
     );
     final group = FirebaseGroup(

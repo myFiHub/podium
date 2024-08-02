@@ -1,0 +1,58 @@
+PODS:
+  - Flutter (1.0.0)
+  - Giphy (2.2.4):
+    - libwebp
+  - integration_test (0.0.1):
+    - Flutter
+  - jitsi_meet_flutter_sdk (0.2.2):
+    - Flutter
+    - JitsiMeetSDK (= 9.2.1)
+  - JitsiMeetSDK (9.2.1):
+    - Giphy (= 2.2.4)
+    - JitsiWebRTC (~> 118.0)
+  - JitsiWebRTC (118.0.0)
+  - libwebp (1.3.2):
+    - libwebp/demux (= 1.3.2)
+    - libwebp/mux (= 1.3.2)
+    - libwebp/sharpyuv (= 1.3.2)
+    - libwebp/webp (= 1.3.2)
+  - libwebp/demux (1.3.2):
+    - libwebp/webp
+  - libwebp/mux (1.3.2):
+    - libwebp/demux
+  - libwebp/sharpyuv (1.3.2)
+  - libwebp/webp (1.3.2):
+    - libwebp/sharpyuv
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - jitsi_meet_flutter_sdk (from `.symlinks/plugins/jitsi_meet_flutter_sdk/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Giphy
+    - JitsiMeetSDK
+    - JitsiWebRTC
+    - libwebp
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
+  jitsi_meet_flutter_sdk:
+    :path: ".symlinks/plugins/jitsi_meet_flutter_sdk/ios"
+
+SPEC CHECKSUMS:
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  Giphy: 6b5f6986c8df4f71e01a8ef86595f426b3439fb5
+  integration_test: 13825b8a9334a850581300559b8839134b124670
+  jitsi_meet_flutter_sdk: 66aa1f029cad25b186926cb1b19033f3842d2c96
+  JitsiMeetSDK: fc33a36b31c68ed98b8931a452d6610887bbd35a
+  JitsiWebRTC: 3a41671ef65a51d7204323814b055a2690b921c7
+  libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
+
+PODFILE CHECKSUM: f6e9bbe1c611753388eef015187d0d762163292d
+
+COCOAPODS: 1.15.2

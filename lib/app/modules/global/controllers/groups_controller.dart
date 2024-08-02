@@ -75,6 +75,7 @@ class GroupsController extends GetxController with FireBaseUtils {
         if (data != null) {
           try {
             final groupsMap = groupsParser(data);
+            log.d('groupsMap $groupsMap');
             groups.value = groupsMap;
           } catch (e) {
             log.e(e);

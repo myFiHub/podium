@@ -1,10 +1,12 @@
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/logger.dart';
 
 class FirebaseGroup {
-  late String name;
-  late String id;
-  late UserInfoModel creator;
-  late List<String> members;
+  String name;
+  String id;
+  UserInfoModel creator;
+  List<String> members;
+
   static String idKey = 'id';
   static String nameKey = 'name';
   static String creatorKey = 'creator';

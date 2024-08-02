@@ -1,4 +1,5 @@
 import "package:particle_auth/model/user_info.dart" as ParticleUser;
+import "package:podium/models/firebase_particle_user.dart";
 
 class UserInfoModel {
   late String id;
@@ -8,7 +9,7 @@ class UserInfoModel {
   late String localWalletAddress;
   late List<String> following;
   late ParticleUser.UserInfo? localParticleUserInfo;
-  late dynamic savedParticleUserInfo;
+  late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
   late int numberOfFollowers;
 
   static String idKey = 'id';

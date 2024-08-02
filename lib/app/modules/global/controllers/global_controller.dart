@@ -67,9 +67,6 @@ class GlobalController extends GetxController {
     checkInterval: const Duration(seconds: 5),
     customCheckOptions: [
       InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
-      InternetCheckOption(uri: Uri.parse('https://icanhazip.com/')),
-      InternetCheckOption(uri: Uri.parse('https://reqres.in/api/users/1')),
-      InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
     ],
     useDefaultOptions: false,
   );
@@ -83,6 +80,7 @@ class GlobalController extends GetxController {
     });
 
     await Future.wait([initializeParticleAuth(), FirebaseInit.init()]);
+
     bool result = await connectionCheckerInstance.hasInternetAccess;
     if (result) {
       initializeApp();

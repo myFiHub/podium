@@ -78,10 +78,10 @@ class LoginController extends GetxController
           Get.snackbar('Error', 'Error logging in');
           return;
         }
-        // await saveParticleUserInfoToFirebaseIfNeeded(
-        //   particleUser: particleUser,
-        //   myUserId: user.uid,
-        // );
+        await saveParticleUserInfoToFirebaseIfNeeded(
+          particleUser: particleUser,
+          myUserId: user.uid,
+        );
         currentUserInfo.localParticleUserInfo = particleUser;
         globalController.currentUserInfo.value = currentUserInfo;
         final storage = GetStorage();

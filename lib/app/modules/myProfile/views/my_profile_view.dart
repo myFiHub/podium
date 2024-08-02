@@ -32,11 +32,74 @@ class MyProfileView extends GetView<MyProfileController> {
               ),
               space10,
               WalletInfo(),
+              ParticleWalletManager(),
               WalletConnect(),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class ParticleWalletManager extends GetWidget<GlobalController> {
+  const ParticleWalletManager({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Obx(() {
+          final particleAuthUserInfo = controller.particleAuthUserInfo.value;
+          final wallets = particleAuthUserInfo?.wallets ?? [];
+          return particleAuthUserInfo == null
+              ? Container()
+              : Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: ColorName.greyText,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Particle Wallets',
+                        style: const TextStyle(
+                          fontSize: 33,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      space10,
+                      ...wallets
+                          .map(
+                            (wallet) => Row(
+                              children: [
+                                Text(
+                                  Util.truncate(
+                                    wallet.publicAddress,
+                                    length: 6,
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.w700,
+                                    color: ColorName.greyText,
+                                  ),
+                                ),
+                                space10,
+                              ],
+                            ),
+                          )
+                          .toList()
+                    ],
+                  ),
+                );
+        }),
+      ],
     );
   }
 }

@@ -9,6 +9,7 @@ import "package:particle_auth/model/user_info.dart" as ParticleUserInfo;
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -410,10 +411,45 @@ mixin FireBaseUtils {
       if (particleUserInfo != null) {
         return;
       } else {
-        await databaseRef.set(particleUser.toJson());
+        final userToSave = FirebaseParticleAuthUserInfo(
+          uuid: particleUser.uuid,
+          wallets: particleUser.wallets.map((e) {
+            return ParticleAuthWallet(
+              address: e.publicAddress,
+              chain: e.chainName,
+            );
+          }).toList(),
+        );
+        await databaseRef.set(userToSave.toJson());
       }
     } catch (e) {
       log.f('Error saving particle user info to firebase: $e');
+    }
+  }
+
+  Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
+      String userId) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.usersRef +
+            userId +
+            '/${UserInfoModel.savedParticleUserInfoKey}',
+      );
+      final snapshot = await databaseRef.get();
+      final particleUserInfo = snapshot.value as dynamic;
+      if (particleUserInfo != null) {
+        final wallets = List.from(particleUserInfo['wallets']);
+        final List<ParticleAuthWallet> walletsList = [];
+        wallets.forEach((element) {
+          walletsList.add(ParticleAuthWallet.fromMap(element));
+        });
+        return walletsList;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      log.f('Error getting particle user info from firebase: $e');
+      return [];
     }
   }
 }

@@ -11,10 +11,10 @@ final movementChain = W3MChainInfo(
   chainId: '30732',
   chainIcon: "https://docs.movementnetwork.xyz/img/logo.svg",
   tokenName: 'MOVE',
-  rpcUrl: 'https://mevm.testnet.imola.movementlabs.xyz',
+  rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
   blockExplorer: W3MBlockExplorer(
     name: 'movement explorer',
-    url: 'https://explorer.testnet.imola.movementlabs.xyz',
+    url: 'https://explorer.devnet.imola.movementlabs.xyz',
   ),
 );
 final movementChainOnParticle = ChainInfo(

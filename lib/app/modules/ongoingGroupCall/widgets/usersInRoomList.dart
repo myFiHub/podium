@@ -10,6 +10,7 @@ import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widg
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -115,6 +116,10 @@ class UsersInRoomList extends StatelessWidget {
                                                       TextOverflow.ellipsis,
                                                 ),
                                               ),
+                                              RemainingTime(
+                                                userId: userId,
+                                                key: Key(user.id),
+                                              ),
                                             ],
                                           ),
                                         )
@@ -137,6 +142,36 @@ class UsersInRoomList extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class RemainingTime extends GetWidget<OngoingGroupCallController> {
+  final String userId;
+  const RemainingTime({super.key, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final timersMap = controller.allRemainingTimesMap.value;
+      final roomCreator = controller.groupCallController.group.value!.creator;
+      final userRemainingTime = timersMap[userId];
+      if (userId == roomCreator.id) {
+        return const Text('Room creator', style: TextStyle(fontSize: 12));
+      }
+      if (userRemainingTime == null) {
+        return const SizedBox();
+      } else {
+        final [hh, mm, ss] = formatDuration(userRemainingTime);
+        return Text(
+          '$hh:$mm:$ss left',
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: ColorName.greyText,
+          ),
+        );
+      }
+    });
   }
 }
 

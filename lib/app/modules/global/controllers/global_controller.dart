@@ -45,6 +45,11 @@ final w3mService = W3MService(
     '38f5d18bd8522c244bdd70cb4a68e0e718865155811c043f052fb9f1c51de662', // Bitget
   },
 );
+final _checkOptions = [
+  // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
+  InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
+  InternetCheckOption(uri: Uri.parse(movementChain.rpcUrl))
+];
 
 class GlobalController extends GetxController {
   final w3serviceInitialized = false.obs;
@@ -65,9 +70,7 @@ class GlobalController extends GetxController {
 
   final connectionCheckerInstance = InternetConnection.createInstance(
     checkInterval: const Duration(seconds: 5),
-    customCheckOptions: [
-      InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
-    ],
+    customCheckOptions: _checkOptions,
     useDefaultOptions: false,
   );
 
@@ -84,6 +87,9 @@ class GlobalController extends GetxController {
     bool result = await connectionCheckerInstance.hasInternetAccess;
     if (result) {
       initializeApp();
+    } else {
+      log.e(
+          "one of the main apis can't be reached: ${_checkOptions.map((e) => e.uri)}");
     }
     initializeInternetConnectionChecker();
   }

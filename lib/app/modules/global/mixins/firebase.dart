@@ -77,6 +77,30 @@ mixin FireBaseUtils {
     }
   }
 
+  StreamSubscription<DatabaseEvent>? startListeningToSessionTimers({
+    required String sessionId,
+    required void Function(Map<String, int>) onData,
+  }) {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.sessionsRef +
+            sessionId +
+            '/${FirebaseSession.membersKey}');
+    return databaseRef.onValue.listen((event) {
+      final members = event.snapshot.value as dynamic;
+      if (members != null) {
+        final Map<String, int> membersMap = {};
+        members.keys.toList().forEach((element) {
+          membersMap[element] =
+              members[element][FirebaseSessionMember.remainingTalkTimeKey];
+        });
+        onData(membersMap);
+      } else {
+        log.i('session not found');
+        return null;
+      }
+    });
+  }
+
   Future<FirebaseSessionMember?> getUserSessionData(
       {required String groupId, required String userId}) async {
     final databaseRef = FirebaseDatabase.instance.ref(

@@ -53,6 +53,7 @@ class BuyTicket extends GetView<ProfileController> {
       final isBuyingTicket = controller.isBuyingTicket.value;
 
       Widget insideButton;
+
       if (connectedWallet == '') {
         insideButton = const Text("connect wallet to buy ticket");
       } else {
@@ -70,12 +71,18 @@ class BuyTicket extends GetView<ProfileController> {
           );
         }
       }
+      if (price == 0.0) {
+        insideButton = const Text('Buying ticket is disabled for now :(');
+      }
       return Button(
         type: ButtonType.gradient,
         loading: isLoading || isBuyingTicket,
         blockButton: true,
         child: insideButton,
         onPressed: () {
+          if (price == 0.0) {
+            return;
+          }
           if (isLoading) {
             return;
           }

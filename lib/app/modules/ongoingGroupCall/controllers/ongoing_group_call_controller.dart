@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -24,10 +25,12 @@ class OngoingGroupCallController extends GetxController
   final firebaseSession = Rxn<FirebaseSession>();
   final mySession = Rxn<FirebaseSessionMember>();
   final jitsiMembers = Rxn<List<JitsiMember>>();
+  final allRemainingTimesMap = Rx<Map<String, int>>({});
   final amIAdmin = false.obs;
   final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
+  StreamSubscription<Map<String, int>>? sessionTimersSubscription = null;
 
   Timer? timer;
 
@@ -50,6 +53,13 @@ class OngoingGroupCallController extends GetxController
       groupId: ongoingGroupCallGroup.id,
       userId: myUser.id,
       onData: onRemainingTimeUpdate,
+    );
+    startListeningToSessionTimers(
+      sessionId: ongoingGroupCallGroup.id,
+      onData: (d) {
+        allRemainingTimesMap.value.addAll(d);
+        allRemainingTimesMap.refresh();
+      },
     );
   }
 

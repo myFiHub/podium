@@ -22,6 +22,9 @@ class Env {
   static const particleAppId = String.fromEnvironment("particleAppId");
   static const environment = String.fromEnvironment("environment");
   static const jitsiServerUrl = String.fromEnvironment("jitsiServerUrl");
+  static const appStoreUrl = String.fromEnvironment("appStoreUrl");
+  static const VERSION =
+      String.fromEnvironment("VERSION", defaultValue: '1.0.0');
 }
 
 const DEV = 'dev';

@@ -8,5 +8,6 @@
   "particleProjectId": "*",
   "particleClientKey": "*",
   "particleAppId": "*",
-  "jitsiServerUrl": "*"
+  "jitsiServerUrl": "*",
+  "appStoreUrl": "https://play.google.com/store/apps/details?id=com.web3podium"
 }

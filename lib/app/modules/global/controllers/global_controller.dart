@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
@@ -10,6 +13,7 @@ import 'package:particle_auth/model/user_info.dart' as ParticleUser;
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
@@ -17,6 +21,7 @@ import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 
 PairingMetadata _pairingMetadata = PairingMetadata(
@@ -86,6 +91,10 @@ class GlobalController extends GetxController {
 
     bool result = await connectionCheckerInstance.hasInternetAccess;
     if (result) {
+      final canContinue = await checkVersion();
+      if (!canContinue) {
+        return;
+      }
       initializeApp();
     } else {
       log.e(
@@ -205,6 +214,45 @@ class GlobalController extends GetxController {
     storage.remove(StorageKeys.userAvatar);
     storage.remove(StorageKeys.userFullName);
     storage.remove(StorageKeys.userEmail);
+  }
+
+  Future<bool> checkVersion() async {
+    try {
+      final localVersion = Env.VERSION;
+      final remoteVersion = await FirebaseDatabase.instance
+          .ref(FireBaseConstants.versionRef)
+          .get();
+      final remoteVersionNumber = remoteVersion.value.toString().split("+")[0];
+      if (localVersion != remoteVersionNumber) {
+        log.f("new version available");
+        Get.defaultDialog(
+          titlePadding: EdgeInsets.all(12),
+          contentPadding: EdgeInsets.all(8),
+          barrierDismissible: false,
+          title: "New version available",
+          titleStyle: TextStyle(color: ColorName.black),
+          middleText: "Please update to the latest version",
+          middleTextStyle: TextStyle(color: ColorName.black),
+          actions: [
+            TextButton(
+              onPressed: () {
+                final Uri _url = Uri.parse(Env.appStoreUrl);
+                launchUrl(_url);
+                // exit the app
+                SystemNavigator.pop();
+                exit(0);
+              },
+              child: Text("Close"),
+            ),
+          ],
+        );
+        return false;
+      }
+    } catch (e) {
+      log.e("error checking version $e");
+      return false;
+    }
+    return true;
   }
 
   checkLogin() async {

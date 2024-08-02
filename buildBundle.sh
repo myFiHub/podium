@@ -1,2 +1,3 @@
 #!/bin/bash
- flutter build appbundle   --release   --obfuscate --split-debug-info=./debug-info --dart-define-from-file=env/prod.json 
+version=`grep 'version: ' pubspec.yaml | sed 's/version: //'`
+flutter build appbundle --obfuscate --split-debug-info=./debug-info  --release  --dart-define-from-file=env/prod.json  --dart-define=VERSION=$version

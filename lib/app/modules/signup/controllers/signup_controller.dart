@@ -91,6 +91,7 @@ class SignUpController extends GetxController with ParticleAuthUtils {
       final downloadUrl = await uploadFile(userId: credential.user!.uid);
       final usersDatabaseReference = FirebaseDatabase.instance
           .ref('${FireBaseConstants.usersRef}$createdUserId');
+
       final UserInfoModel userToCreate = UserInfoModel(
         id: createdUserId,
         fullName: enteredFullName,

@@ -1,3 +1,5 @@
+import "package:particle_auth/model/user_info.dart" as ParticleUser;
+
 class UserInfoModel {
   late String id;
   late String fullName;
@@ -5,6 +7,8 @@ class UserInfoModel {
   late String avatar;
   late String localWalletAddress;
   late List<String> following;
+  late ParticleUser.UserInfo? localParticleUserInfo;
+  late dynamic savedParticleUserInfo;
   late int numberOfFollowers;
 
   static String idKey = 'id';
@@ -14,6 +18,8 @@ class UserInfoModel {
   static String localWalletAddressKey = 'localWalletAddress';
   static String followingKey = 'following';
   static String numberOfFollowersKey = 'numberOfFollowers';
+  static String localParticleUserInfoKey = 'localParticleUserInfo';
+  static String savedParticleUserInfoKey = 'savedParticleUserInfo';
 
   UserInfoModel({
     required this.id,
@@ -23,6 +29,8 @@ class UserInfoModel {
     required this.localWalletAddress,
     required this.following,
     required this.numberOfFollowers,
+    this.localParticleUserInfo,
+    this.savedParticleUserInfo,
   });
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {
@@ -33,6 +41,7 @@ class UserInfoModel {
     localWalletAddress = json[localWalletAddressKey] ?? '';
     following = json[followingKey] ?? [];
     numberOfFollowers = json[numberOfFollowersKey] ?? 0;
+    localParticleUserInfo = json[localParticleUserInfoKey];
   }
 
   Map<String, dynamic> toJson() {
@@ -44,6 +53,7 @@ class UserInfoModel {
     data[localWalletAddressKey] = localWalletAddress;
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
+    data[localParticleUserInfoKey] = localParticleUserInfo;
     return data;
   }
 }

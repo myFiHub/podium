@@ -74,7 +74,7 @@ class LoginView extends GetView<LoginController> {
                   space10,
                   Obx(() {
                     final loading = controller.isLoggingIn.value;
-                    final isAutoLoggingIn = controller.isAutoLoggingIn.value;
+                    final isAutoLoggingIn = controller.$isAutoLoggingIn.value;
                     return Button(
                       loading: loading || isAutoLoggingIn,
                       type: ButtonType.gradient,

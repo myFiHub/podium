@@ -238,9 +238,11 @@ class GlobalController extends GetxController {
       final remoteVersion = await FirebaseDatabase.instance
           .ref(FireBaseConstants.versionRef)
           .get();
-      final intLocalVersion = int.parse(localVersion.split("+")[0]);
+      final intLocalVersion =
+          int.parse(localVersion.split("+")[0].replaceAll('.', ''));
       final remoteVersionNumber = remoteVersion.value.toString();
-      final intRemoteVersion = int.parse(remoteVersionNumber.split("+")[0]);
+      final intRemoteVersion =
+          int.parse(remoteVersionNumber.split("+")[0].replaceAll(".", ""));
 
       if (intLocalVersion < intRemoteVersion) {
         log.f("new version available");

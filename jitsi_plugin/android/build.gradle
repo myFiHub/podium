@@ -6,6 +6,7 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'file:/libs' }
     }
 
     dependencies {
@@ -69,5 +70,6 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation ('org.jitsi.react:jitsi-meet-sdk:9.2.2') { transitive = true }
+    implementation ('org.jitsi.react:jitsi-meet-sdk:+') { transitive = true }
+    // implementation ('org.jitsi.react:jitsi-meet-sdk:9.2.2') { transitive = true }
 }

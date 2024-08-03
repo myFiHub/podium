@@ -217,7 +217,7 @@ class GlobalController extends GetxController {
   Future<bool> checkVersion() async {
     final storage = GetStorage();
     final ignoredOrAcceptedVersion =
-        storage.read(StorageKeys.ignoredOrAcceptedVersion);
+        storage.read<String>(StorageKeys.ignoredOrAcceptedVersion) ?? '';
     final completer = Completer<bool>();
     final versionRef =
         FirebaseDatabase.instance.ref(FireBaseConstants.versionRef);

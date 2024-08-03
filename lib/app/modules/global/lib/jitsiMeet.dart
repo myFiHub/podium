@@ -55,8 +55,11 @@ final jitsiListeners = JitsiMeetEventListener(
       if (Get.isRegistered<OngoingGroupCallController>()) {
         final ongoingGroupCallController =
             Get.find<OngoingGroupCallController>();
+        final myUserId = Get.find<GlobalController>().currentUserInfo.value!.id;
+        final groupCreator =
+            Get.find<GroupCallController>().group.value!.creator.id;
         final remainingTime = ongoingGroupCallController.remainingTimeTimer;
-        if (remainingTime <= 0) {
+        if (remainingTime <= 0 && myUserId != groupCreator) {
           log.e("You have run out of time");
           jitsiMeet.setAudioMuted(true);
           return;

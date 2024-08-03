@@ -91,8 +91,8 @@ class GlobalController extends GetxController {
 
     bool result = await connectionCheckerInstance.hasInternetAccess;
     log.d("has internet access: $result");
+    await checkVersion();
     if (result) {
-      checkVersion();
       initializeApp();
     } else {
       log.e(
@@ -215,7 +215,69 @@ class GlobalController extends GetxController {
   }
 
   Future<bool> checkVersion() async {
-    return true;
+    final storage = GetStorage();
+    final ignoredOrAcceptedVersion =
+        storage.read(StorageKeys.ignoredOrAcceptedVersion);
+    final completer = Completer<bool>();
+    final versionRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.versionRef);
+    // listen to version changes
+    versionRef.onValue.listen((event) async {
+      final data = event.snapshot.value as dynamic;
+      final version = data as String?;
+      if (version == null && completer.isCompleted == false) {
+        log.e('version not found');
+        return completer.complete(true);
+      }
+      final currentVersion = Env.VERSION.split('+')[0];
+      if (version != currentVersion && ignoredOrAcceptedVersion != version) {
+        log.e('New version available');
+        Get.dialog(
+          barrierDismissible: false,
+          AlertDialog(
+            title: const Text('New version available'),
+            content: const Text('A new version of Podium is available',
+                style: TextStyle(color: ColorName.black)),
+            titleTextStyle: const TextStyle(
+              color: ColorName.black,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
+                  Get.back();
+                  if (completer.isCompleted == false) {
+                    completer.complete(true);
+                  }
+                },
+                child: const Text(
+                  'Later',
+                  style: TextStyle(color: ColorName.black),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
+                  launchUrl(
+                    Uri.parse(
+                      Env.appStoreUrl,
+                    ),
+                  );
+                  SystemNavigator.pop();
+                  exit(0);
+                },
+                child: const Text('Update'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        if (completer.isCompleted == false) {
+          completer.complete(true);
+        }
+      }
+    });
+    return completer.future;
   }
 
   checkLogin() async {

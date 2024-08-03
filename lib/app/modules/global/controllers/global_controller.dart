@@ -90,11 +90,9 @@ class GlobalController extends GetxController {
     await Future.wait([initializeParticleAuth(), FirebaseInit.init()]);
 
     bool result = await connectionCheckerInstance.hasInternetAccess;
+    log.d("has internet access: $result");
     if (result) {
-      final canContinue = await checkVersion();
-      if (!canContinue) {
-        return;
-      }
+      checkVersion();
       initializeApp();
     } else {
       log.e(
@@ -217,62 +215,6 @@ class GlobalController extends GetxController {
   }
 
   Future<bool> checkVersion() async {
-    try {
-      final shouldCheckVersion = await FirebaseDatabase.instance
-          .ref(FireBaseConstants.versionCheckRef)
-          .get();
-      if (shouldCheckVersion.value == false) {
-        log.f("version check disabled");
-        return true;
-      }
-      String localVersion = Env.VERSION;
-      if (Env.environment == DEV) {
-        return true;
-      }
-
-      if (localVersion == null || localVersion.isEmpty) {
-        log.e("local version not set");
-        return false;
-      }
-      localVersion = localVersion.split("+")[0];
-      final remoteVersion = await FirebaseDatabase.instance
-          .ref(FireBaseConstants.versionRef)
-          .get();
-      final intLocalVersion =
-          int.parse(localVersion.split("+")[0].replaceAll('.', ''));
-      final remoteVersionNumber = remoteVersion.value.toString();
-      final intRemoteVersion =
-          int.parse(remoteVersionNumber.split("+")[0].replaceAll(".", ""));
-
-      if (intLocalVersion < intRemoteVersion) {
-        log.f("new version available");
-        Get.defaultDialog(
-          titlePadding: EdgeInsets.all(12),
-          contentPadding: EdgeInsets.all(8),
-          barrierDismissible: false,
-          title: "New version available",
-          titleStyle: TextStyle(color: ColorName.black),
-          middleText: "Please update to the latest version",
-          middleTextStyle: TextStyle(color: ColorName.black),
-          actions: [
-            TextButton(
-              onPressed: () {
-                final Uri _url = Uri.parse(Env.appStoreUrl);
-                launchUrl(_url);
-                // exit the app
-                SystemNavigator.pop();
-                exit(0);
-              },
-              child: Text("Close"),
-            ),
-          ],
-        );
-        return false;
-      }
-    } catch (e) {
-      log.e("error checking version $e");
-      return false;
-    }
     return true;
   }
 

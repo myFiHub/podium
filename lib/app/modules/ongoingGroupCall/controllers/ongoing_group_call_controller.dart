@@ -137,9 +137,15 @@ class OngoingGroupCallController extends GetxController
 
   Future<void> addToTimer(
       {required int seconds, required String userId}) async {
-    if (amIAdmin.value) {
+    if (groupCallController.group.value == null) {
+      Get.snackbar("Unknown error", "please join again");
       return;
     }
+    final creatorId = groupCallController.group.value!.creator.id;
+    if (creatorId == userId) {
+      return;
+    }
+    log.d("adding ${seconds} seconds to ${userId}");
     final milliseconds = seconds * 1000;
     final remainingTalkTimeForUser = await getUserRemainingTalkTime(
       groupId: groupCallController.group.value!.id,
@@ -159,7 +165,12 @@ class OngoingGroupCallController extends GetxController
 
   Future<void> reduceFromTimer(
       {required int seconds, required String userId}) async {
-    if (amIAdmin.value) {
+    if (groupCallController.group.value == null) {
+      Get.snackbar("Unknown error", "please join again");
+      return;
+    }
+    final creatorId = groupCallController.group.value!.creator.id;
+    if (creatorId == userId) {
       return;
     }
     final milliseconds = seconds * 1000;

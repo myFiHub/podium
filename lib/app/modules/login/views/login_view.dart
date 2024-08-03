@@ -4,7 +4,9 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 
 import 'package:get/get.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -99,7 +101,16 @@ class LoginView extends GetView<LoginController> {
                     },
                     text: 'CREATE ACCOUNT',
                     type: ButtonType.transparent,
-                  )
+                  ),
+                  space10,
+                  Text(
+                    "Version: " + Env.VERSION,
+                    style: const TextStyle(
+                      color: ColorName.greyText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
             ),

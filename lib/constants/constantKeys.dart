@@ -4,4 +4,5 @@ class FireBaseConstants {
   static final notificationsRef = 'notifications/';
   static final sessionsRef = 'sessions/';
   static final versionRef = 'version';
+  static final versionCheckRef = 'versionCheck';
 }

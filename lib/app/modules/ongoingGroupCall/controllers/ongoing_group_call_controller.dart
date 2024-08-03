@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -15,8 +14,8 @@ import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/utils/logger.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
-const amountToAddForLike = 10 * 1000; // 10 seconds
-const amountToReduceForDislike = 10 * 1000; // 10 seconds
+const amountToAddForLikeInSeconds = 10; // 10 seconds
+const amountToReduceForDislikeInSeconds = 10; // 10 seconds
 
 class OngoingGroupCallController extends GetxController
     with FireBaseUtils, BlockChainInteractions {
@@ -197,7 +196,7 @@ class OngoingGroupCallController extends GetxController
         likeDislikeTimeoutInMilliSeconds;
     timers.refresh();
     await addToTimer(
-      seconds: amountToAddForLike,
+      seconds: amountToAddForLikeInSeconds,
       userId: userId,
     );
   }
@@ -212,7 +211,7 @@ class OngoingGroupCallController extends GetxController
         likeDislikeTimeoutInMilliSeconds;
     timers.refresh();
     await reduceFromTimer(
-      seconds: amountToReduceForDislike,
+      seconds: amountToReduceForDislikeInSeconds,
       userId: userId,
     );
   }

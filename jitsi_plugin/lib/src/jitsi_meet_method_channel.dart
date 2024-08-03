@@ -217,6 +217,36 @@ class MethodChannelJitsiMeet extends JitsiMeetPlatform {
         case "conferenceJoined":
           _listener?.conferenceJoined?.call(data["url"]);
           break;
+        // custom events
+        case "like":
+          _listener?.like?.call(
+            data["email"],
+            data["participantId"],
+          );
+          break;
+
+        case "dislike":
+          _listener?.dislike?.call(
+            data["email"],
+            data["participantId"],
+          );
+          break;
+
+        case "cheer":
+          _listener?.cheer?.call(
+            data["email"],
+            data["participantId"],
+          );
+          break;
+
+        case "boo":
+          _listener?.boo?.call(
+            data["email"],
+            data["participantId"],
+          );
+          break;
+
+        // end of custom events
 
         case "conferenceTerminated":
           _listener?.conferenceTerminated?.call(data["url"], data["error"]);

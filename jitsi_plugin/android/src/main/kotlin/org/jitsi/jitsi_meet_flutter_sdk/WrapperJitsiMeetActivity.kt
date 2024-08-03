@@ -67,6 +67,12 @@ class WrapperJitsiMeetActivity : JitsiMeetActivity() {
             val data = event.data
             when (event.type!!) {
                 BroadcastEvent.Type.CONFERENCE_JOINED -> eventStreamHandler.conferenceJoined(data)
+                // custom event
+                // BroadcastEvent.Type.LIKE -> eventStreamHandler.like(data)
+                // BroadcastEvent.Type.DISLIKE -> eventStreamHandler.dislike(data)
+                // BroadcastEvent.Type.CHEER -> eventStreamHandler.cheer(data)
+                // BroadcastEvent.Type.BOO -> eventStreamHandler.boo(data)
+                // end of custom event
                 BroadcastEvent.Type.CONFERENCE_TERMINATED -> eventStreamHandler.conferenceTerminated(data)
                 BroadcastEvent.Type.CONFERENCE_WILL_JOIN -> eventStreamHandler.conferenceWillJoin(data)
                 BroadcastEvent.Type.PARTICIPANT_JOINED -> eventStreamHandler.participantJoined(data)

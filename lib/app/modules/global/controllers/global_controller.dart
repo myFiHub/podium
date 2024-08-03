@@ -218,7 +218,18 @@ class GlobalController extends GetxController {
 
   Future<bool> checkVersion() async {
     try {
+      final shouldCheckVersion = await FirebaseDatabase.instance
+          .ref(FireBaseConstants.versionCheckRef)
+          .get();
+      if (shouldCheckVersion.value == false) {
+        log.f("version check disabled");
+        return true;
+      }
       String localVersion = Env.VERSION;
+      if (Env.environment == DEV) {
+        return true;
+      }
+
       if (localVersion == null || localVersion.isEmpty) {
         log.e("local version not set");
         return false;
@@ -227,9 +238,11 @@ class GlobalController extends GetxController {
       final remoteVersion = await FirebaseDatabase.instance
           .ref(FireBaseConstants.versionRef)
           .get();
+      final intLocalVersion = int.parse(localVersion.split("+")[0]);
       final remoteVersionNumber = remoteVersion.value.toString();
+      final intRemoteVersion = int.parse(remoteVersionNumber.split("+")[0]);
 
-      if (localVersion != remoteVersionNumber) {
+      if (intLocalVersion < intRemoteVersion) {
         log.f("new version available");
         Get.defaultDialog(
           titlePadding: EdgeInsets.all(12),

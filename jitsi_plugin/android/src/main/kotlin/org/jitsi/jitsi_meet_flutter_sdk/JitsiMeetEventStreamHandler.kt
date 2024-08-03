@@ -21,7 +21,20 @@ class JitsiMeetEventStreamHandler private constructor() : EventChannel.StreamHan
     fun conferenceJoined(data: MutableMap<String, Any>?) {
         eventSink?.success(mapOf("event" to "conferenceJoined", "data" to data))
     }
-
+///custom event
+    fun like(data: MutableMap<String, Any>?) {
+        eventSink?.success(mapOf("event" to "like", "data" to data))
+    }
+    fun dislike(data: MutableMap<String, Any>?) {
+        eventSink?.success(mapOf("event" to "dislike", "data" to data))
+    }
+    fun cheer(data: MutableMap<String, Any>?) {
+        eventSink?.success(mapOf("event" to "cheer", "data" to data))
+    }
+    fun boo(data: MutableMap<String, Any>?) {
+        eventSink?.success(mapOf("event" to "boo", "data" to data))
+    }
+/// end of custom event
     fun conferenceTerminated(data: MutableMap<String, Any>?) {
         eventSink?.success(mapOf("event" to "conferenceTerminated", "data" to data))
     }

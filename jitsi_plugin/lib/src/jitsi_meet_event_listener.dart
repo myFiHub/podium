@@ -29,10 +29,12 @@ class JitsiMeetEventListener {
   ///
   /// [email] : the email of the participant. It may not be set if the remote participant didn't set one.
   /// [participantId] : the id of the participant.
+  // custom events
   final Function(String? email, String? participantId)? like;
   final Function(String? email, String? participantId)? dislike;
   final Function(String? email, String? participantId)? cheer;
   final Function(String? email, String? participantId)? boo;
+  // end of custom events
 
   /// Called when a participant has left the conference.
   ///
@@ -98,9 +100,11 @@ class JitsiMeetEventListener {
     this.chatMessageReceived,
     this.chatToggled,
     this.readyToClose,
+    // custom events
     this.like,
     this.dislike,
     this.cheer,
     this.boo,
+    // end of custom events
   });
 }

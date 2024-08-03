@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -29,7 +30,8 @@ class OngoingGroupCallController extends GetxController
   final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
-  StreamSubscription<Map<String, int>>? sessionTimersSubscription = null;
+  StreamSubscription<DatabaseEvent>? sessionTimersSubscription = null;
+  StreamSubscription<DatabaseEvent>? mySessionSubscription = null;
 
   Timer? timer;
 
@@ -48,12 +50,12 @@ class OngoingGroupCallController extends GetxController
     firebaseSession.value = await getSessionData(
       groupId: ongoingGroupCallGroup.id,
     );
-    startListeningToMyRemainingTalkingTime(
+    mySessionSubscription = startListeningToMyRemainingTalkingTime(
       groupId: ongoingGroupCallGroup.id,
       userId: myUser.id,
       onData: onRemainingTimeUpdate,
     );
-    startListeningToSessionTimers(
+    sessionTimersSubscription = startListeningToSessionTimers(
       sessionId: ongoingGroupCallGroup.id,
       onData: (d) {
         allRemainingTimesMap.value.addAll(d);
@@ -70,12 +72,17 @@ class OngoingGroupCallController extends GetxController
   @override
   void onClose() async {
     super.onClose();
-    stopListeningToMySession();
     stopTheTimer();
+    stopSubscriptions();
     mySession.value = null;
     firebaseSession.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
+  }
+
+  stopSubscriptions() {
+    sessionTimersSubscription?.cancel();
+    mySessionSubscription?.cancel();
   }
 
   onRemainingTimeUpdate(int? remainingTime) {

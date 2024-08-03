@@ -15,8 +15,6 @@ import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
 mixin FireBaseUtils {
-  StreamSubscription<DatabaseEvent>? mySessionSubscription = null;
-
   Future<List<UserInfoModel>> getUsersByIds(List<String> userIds) async {
     final databaseRef = FirebaseDatabase.instance.ref();
     final usersRef =
@@ -136,7 +134,7 @@ mixin FireBaseUtils {
     }
   }
 
-  startListeningToMyRemainingTalkingTime({
+  StreamSubscription<DatabaseEvent>? startListeningToMyRemainingTalkingTime({
     required String groupId,
     required String userId,
     required onData(int? remainingTime),
@@ -145,7 +143,7 @@ mixin FireBaseUtils {
             .sessionsRef +
         groupId +
         '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.remainingTalkTimeKey}');
-    mySessionSubscription = databaseRef.onValue.listen((event) {
+    return databaseRef.onValue.listen((event) {
       final remainingTime = event.snapshot.value as dynamic;
       if (remainingTime != null) {
         onData(remainingTime);
@@ -167,10 +165,6 @@ mixin FireBaseUtils {
         '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.remainingTalkTimeKey}');
     log.d("updating remaining time to $newValue in firebase");
     await databaseRef.set(newValue);
-  }
-
-  stopListeningToMySession() {
-    mySessionSubscription?.cancel();
   }
 
   Future setIsUserPresentInSession({

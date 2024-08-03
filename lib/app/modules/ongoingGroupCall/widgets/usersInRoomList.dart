@@ -300,6 +300,7 @@ class LikeDislike extends GetWidget<OngoingGroupCallController> {
             finishAt: finishAt,
             storageKey: storageKey,
             onComplete: () {
+              if (controller.timers.value[storageKey] == null) return;
               controller.timers.update((val) {
                 val!.remove(storageKey);
               });

@@ -24,7 +24,7 @@ class Env {
   static const jitsiServerUrl = String.fromEnvironment("jitsiServerUrl");
   static const appStoreUrl = String.fromEnvironment("appStoreUrl");
   static const VERSION =
-      String.fromEnvironment("VERSION", defaultValue: '1.0.0');
+      String.fromEnvironment("VERSION", defaultValue: '1.0.2');
 }
 
 const DEV = 'dev';

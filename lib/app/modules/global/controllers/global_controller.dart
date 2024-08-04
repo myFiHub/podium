@@ -90,11 +90,9 @@ class GlobalController extends GetxController {
     await Future.wait([initializeParticleAuth(), FirebaseInit.init()]);
 
     bool result = await connectionCheckerInstance.hasInternetAccess;
+    log.d("has internet access: $result");
+    await checkVersion();
     if (result) {
-      final canContinue = await checkVersion();
-      if (!canContinue) {
-        return;
-      }
       initializeApp();
     } else {
       log.e(
@@ -217,61 +215,69 @@ class GlobalController extends GetxController {
   }
 
   Future<bool> checkVersion() async {
-    try {
-      final shouldCheckVersion = await FirebaseDatabase.instance
-          .ref(FireBaseConstants.versionCheckRef)
-          .get();
-      if (shouldCheckVersion.value == false) {
-        log.f("version check disabled");
-        return true;
+    final storage = GetStorage();
+    final ignoredOrAcceptedVersion =
+        storage.read<String>(StorageKeys.ignoredOrAcceptedVersion) ?? '';
+    final completer = Completer<bool>();
+    final versionRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.versionRef);
+    // listen to version changes
+    versionRef.onValue.listen((event) async {
+      final data = event.snapshot.value as dynamic;
+      final version = data as String?;
+      if (version == null && completer.isCompleted == false) {
+        log.e('version not found');
+        return completer.complete(true);
       }
-      String localVersion = Env.VERSION;
-      if (Env.environment == DEV) {
-        return true;
-      }
-
-      if (localVersion == null || localVersion.isEmpty) {
-        log.e("local version not set");
-        return false;
-      }
-      localVersion = localVersion.split("+")[0];
-      final remoteVersion = await FirebaseDatabase.instance
-          .ref(FireBaseConstants.versionRef)
-          .get();
-      final intLocalVersion = int.parse(localVersion.split("+")[0]);
-      final remoteVersionNumber = remoteVersion.value.toString();
-      final intRemoteVersion = int.parse(remoteVersionNumber.split("+")[0]);
-
-      if (intLocalVersion < intRemoteVersion) {
-        log.f("new version available");
-        Get.defaultDialog(
-          titlePadding: EdgeInsets.all(12),
-          contentPadding: EdgeInsets.all(8),
+      final currentVersion = Env.VERSION.split('+')[0];
+      if (version != currentVersion && ignoredOrAcceptedVersion != version) {
+        log.e('New version available');
+        Get.dialog(
           barrierDismissible: false,
-          title: "New version available",
-          titleStyle: TextStyle(color: ColorName.black),
-          middleText: "Please update to the latest version",
-          middleTextStyle: TextStyle(color: ColorName.black),
-          actions: [
-            TextButton(
-              onPressed: () {
-                final Uri _url = Uri.parse(Env.appStoreUrl);
-                launchUrl(_url);
-                // exit the app
-                SystemNavigator.pop();
-                exit(0);
-              },
-              child: Text("Close"),
+          AlertDialog(
+            title: const Text('New version available'),
+            content: const Text('A new version of Podium is available',
+                style: TextStyle(color: ColorName.black)),
+            titleTextStyle: const TextStyle(
+              color: ColorName.black,
             ),
-          ],
+            actions: [
+              TextButton(
+                onPressed: () {
+                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
+                  Get.back();
+                  if (completer.isCompleted == false) {
+                    completer.complete(true);
+                  }
+                },
+                child: const Text(
+                  'Later',
+                  style: TextStyle(color: ColorName.black),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
+                  launchUrl(
+                    Uri.parse(
+                      Env.appStoreUrl,
+                    ),
+                  );
+                  SystemNavigator.pop();
+                  exit(0);
+                },
+                child: const Text('Update'),
+              ),
+            ],
+          ),
         );
-        return false;
+      } else {
+        if (completer.isCompleted == false) {
+          completer.complete(true);
+        }
       }
-    } catch (e) {
-      log.e("error checking version $e");
-      return false;
-    }
-    return true;
+    });
+    return completer.future;
   }
 
   checkLogin() async {

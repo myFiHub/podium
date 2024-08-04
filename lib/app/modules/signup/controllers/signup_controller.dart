@@ -100,6 +100,7 @@ class SignUpController extends GetxController with ParticleAuthUtils {
         localWalletAddress: '',
         following: [],
         numberOfFollowers: 0,
+        lowercasename: enteredFullName.toLowerCase(),
       );
       await usersDatabaseReference.set(userToCreate.toJson());
       final LoginController loginController = Get.put(LoginController());

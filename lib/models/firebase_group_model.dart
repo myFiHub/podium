@@ -1,8 +1,8 @@
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/utils/logger.dart';
 
 class FirebaseGroup {
   String name;
+  String? lowercasename;
   String id;
   UserInfoModel creator;
   List<String> members;
@@ -11,12 +11,14 @@ class FirebaseGroup {
   static String nameKey = 'name';
   static String creatorKey = 'creator';
   static String membersKey = 'members';
+  static String lowercasenameKey = 'lowercasename';
 
   FirebaseGroup({
     required this.name,
     required this.id,
     required this.creator,
     required this.members,
+    this.lowercasename,
   });
 
   Map<String, dynamic> toJson() {
@@ -25,6 +27,7 @@ class FirebaseGroup {
     data[idKey] = id;
     data[creatorKey] = creator.toJson();
     data[membersKey] = members;
+    data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     return data;
   }
 }

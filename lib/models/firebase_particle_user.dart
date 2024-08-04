@@ -7,6 +7,9 @@ class FirebaseParticleAuthUserInfo {
   final String uuid;
   final List<ParticleAuthWallet> wallets;
 
+  static const String uuidKey = 'uuid';
+  static const String walletsKey = 'wallets';
+
   FirebaseParticleAuthUserInfo({
     required this.uuid,
     required this.wallets,
@@ -65,6 +68,9 @@ class FirebaseParticleAuthUserInfo {
 class ParticleAuthWallet {
   final String address;
   final String chain;
+
+  static const String addressKey = 'address';
+  static const String chainKey = 'chain';
 
   ParticleAuthWallet({
     required this.address,

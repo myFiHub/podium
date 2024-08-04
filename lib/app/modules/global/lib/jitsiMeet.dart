@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
@@ -55,9 +56,16 @@ final jitsiListeners = JitsiMeetEventListener(
       if (Get.isRegistered<OngoingGroupCallController>()) {
         final ongoingGroupCallController =
             Get.find<OngoingGroupCallController>();
+        final myUserId = Get.find<GlobalController>().currentUserInfo.value!.id;
+        final groupCreator =
+            Get.find<GroupCallController>().group.value!.creator.id;
         final remainingTime = ongoingGroupCallController.remainingTimeTimer;
-        if (remainingTime <= 0) {
-          log.e("You have run out of time");
+        if (remainingTime <= 0 && myUserId != groupCreator) {
+          Get.snackbar(
+            "You have run out of time",
+            "",
+            colorText: Colors.red,
+          );
           jitsiMeet.setAudioMuted(true);
           return;
         }

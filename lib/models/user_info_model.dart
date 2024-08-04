@@ -8,6 +8,7 @@ class UserInfoModel {
   late String avatar;
   late String localWalletAddress;
   late List<String> following;
+  String? lowercasename;
   late ParticleUser.UserInfo? localParticleUserInfo;
   late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
   late int numberOfFollowers;
@@ -21,6 +22,7 @@ class UserInfoModel {
   static String numberOfFollowersKey = 'numberOfFollowers';
   static String localParticleUserInfoKey = 'localParticleUserInfo';
   static String savedParticleUserInfoKey = 'savedParticleUserInfo';
+  static String lowercasenameKey = 'lowercasename';
 
   UserInfoModel({
     required this.id,
@@ -30,6 +32,7 @@ class UserInfoModel {
     required this.localWalletAddress,
     required this.following,
     required this.numberOfFollowers,
+    this.lowercasename,
     this.localParticleUserInfo,
     this.savedParticleUserInfo,
   });
@@ -43,6 +46,7 @@ class UserInfoModel {
     following = json[followingKey] ?? [];
     numberOfFollowers = json[numberOfFollowersKey] ?? 0;
     localParticleUserInfo = json[localParticleUserInfoKey];
+    lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
   }
 
   Map<String, dynamic> toJson() {
@@ -55,6 +59,7 @@ class UserInfoModel {
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
     data[localParticleUserInfoKey] = localParticleUserInfo;
+    data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();
     return data;
   }
 }

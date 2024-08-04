@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -137,9 +138,15 @@ class OngoingGroupCallController extends GetxController
 
   Future<void> addToTimer(
       {required int seconds, required String userId}) async {
-    if (amIAdmin.value) {
+    if (groupCallController.group.value == null) {
+      Get.snackbar("Unknown error", "please join again");
       return;
     }
+    final creatorId = groupCallController.group.value!.creator.id;
+    if (creatorId == userId) {
+      return;
+    }
+    log.d("adding ${seconds} seconds to ${userId}");
     final milliseconds = seconds * 1000;
     final remainingTalkTimeForUser = await getUserRemainingTalkTime(
       groupId: groupCallController.group.value!.id,
@@ -159,7 +166,12 @@ class OngoingGroupCallController extends GetxController
 
   Future<void> reduceFromTimer(
       {required int seconds, required String userId}) async {
-    if (amIAdmin.value) {
+    if (groupCallController.group.value == null) {
+      Get.snackbar("Unknown error", "please join again");
+      return;
+    }
+    final creatorId = groupCallController.group.value!.creator.id;
+    if (creatorId == userId) {
       return;
     }
     final milliseconds = seconds * 1000;
@@ -224,17 +236,44 @@ class OngoingGroupCallController extends GetxController
   }
 
   cheerBoo({required String userId, required bool cheer}) async {
-    final canContinue = checkWalletConnected();
-    final target = await getUserLocalWalletAddress(userId);
-    if (canContinue && target != '') {
+    String? targetAddress;
+    final bool canContinue = checkWalletConnected(
+      afterConnection: () {
+        cheerBoo(userId: userId, cheer: cheer);
+      },
+    );
+
+    if (!canContinue) {
+      Get.snackbar(
+        "external wallet connection required",
+        "please connect your wallet first",
+        colorText: Colors.orange,
+      );
+      return;
+    }
+
+    final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
+    if (userLocalWalletAddress != '') {
+      targetAddress = userLocalWalletAddress;
+    } else {
+      final particleUserWallets = await getParticleAuthWalletsForUser(userId);
+      if (particleUserWallets.length > 0) {
+        targetAddress = particleUserWallets[0].address;
+      }
+    }
+
+    if (canContinue && targetAddress != null && targetAddress != '') {
       late List<String> receiverAddresses;
       final myUser = globalController.currentUserInfo.value!;
-      if (myUser.localWalletAddress == target) {
+      final myParticleUser = globalController.particleAuthUserInfo.value;
+      if (myUser.localWalletAddress == targetAddress ||
+          (myParticleUser != null &&
+              myParticleUser.wallets![0].publicAddress == targetAddress)) {
         receiverAddresses = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
       } else {
-        receiverAddresses = [target];
+        receiverAddresses = [targetAddress];
       }
       if (receiverAddresses.length == 0) {
         log.e("No wallets found in session");
@@ -264,7 +303,7 @@ class OngoingGroupCallController extends GetxController
 
       ///////////////////////
       final res = await cheerOrBoo(
-        target: target,
+        target: targetAddress,
         receiverAddresses: receiverAddresses,
         amount: parsedAmount,
         cheer: cheer,
@@ -294,22 +333,20 @@ class OngoingGroupCallController extends GetxController
         Get.snackbar("Error", "Cheer failed");
       }
       ///////////////////////
-    } else if (target == '') {
+    } else if (targetAddress == '' || targetAddress == null) {
       log.e("User has not connected wallet for some reason");
       Get.snackbar("Error", "User has not connected wallet for some reason");
       return;
     }
   }
 
-  onBooClick(String userId) {
-    log.d("Boo clicked $userId");
-  }
-
-  checkWalletConnected() {
+  checkWalletConnected({void Function()? afterConnection}) {
     final connectedWalletAddress =
         globalController.connectedWalletAddress.value;
     if (connectedWalletAddress == '') {
-      globalController.connectToWallet();
+      globalController.connectToWallet(afterConnection: () {
+        afterConnection!();
+      });
       return false;
     }
     return true;

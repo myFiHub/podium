@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -80,9 +81,18 @@ class GroupCallController extends GetxController
     //   );
     // }
     final globalController = Get.find<GlobalController>();
+    String? particleWalletAddress;
     final myUser = globalController.currentUserInfo.value!;
-    if (myUser.localWalletAddress == '' ||
-        globalController.connectedWalletAddress == '') {
+    if (globalController.particleAuthUserInfo.value != null) {
+      final particleUser = globalController.particleAuthUserInfo.value;
+      if (particleUser != null) {
+        particleWalletAddress = particleUser.wallets?[0]?.publicAddress;
+      }
+    }
+
+    if ((myUser.localWalletAddress == '' ||
+            globalController.connectedWalletAddress == '') &&
+        particleWalletAddress == null) {
       Get.snackbar(
         "Wallet connection required",
         "Please connect your wallet first",

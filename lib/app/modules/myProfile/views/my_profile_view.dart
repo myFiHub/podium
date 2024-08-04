@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
@@ -66,6 +67,7 @@ class ParticleWalletManager extends GetWidget<GlobalController> {
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         'Particle Wallets',
@@ -77,21 +79,40 @@ class ParticleWalletManager extends GetWidget<GlobalController> {
                       space10,
                       ...wallets
                           .map(
-                            (wallet) => Row(
-                              children: [
-                                Text(
-                                  Util.truncate(
-                                    wallet.publicAddress,
-                                    length: 6,
+                            (wallet) => GestureDetector(
+                              onTap: () async {
+                                await Clipboard.setData(
+                                  ClipboardData(
+                                    text: wallet.publicAddress,
                                   ),
-                                  style: const TextStyle(
-                                    fontSize: 23,
-                                    fontWeight: FontWeight.w700,
+                                );
+                                Get.snackbar(
+                                  'Copied',
+                                  'Wallet address copied to clipboard',
+                                  colorText: Colors.white,
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.account_balance_wallet,
                                     color: ColorName.greyText,
                                   ),
-                                ),
-                                space10,
-                              ],
+                                  space10,
+                                  Text(
+                                    Util.truncate(
+                                      wallet.publicAddress,
+                                      length: 6,
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: 23,
+                                      fontWeight: FontWeight.w700,
+                                      color: ColorName.greyText,
+                                    ),
+                                  ),
+                                  space10,
+                                ],
+                              ),
                             ),
                           )
                           .toList()
@@ -137,17 +158,30 @@ class WalletInfo extends GetWidget<GlobalController> {
                         ),
                       ),
                       space10,
-                      Text(
-                        Util.truncate(
-                          connectedWalletAddress,
-                          length: 6,
-                        ),
-                        style: const TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w700,
-                          color: ColorName.greyText,
-                        ),
-                      ),
+                      GestureDetector(
+                          onTap: () async {
+                            await Clipboard.setData(
+                              ClipboardData(
+                                text: connectedWalletAddress,
+                              ),
+                            );
+                            Get.snackbar(
+                              'Copied',
+                              'Wallet address copied to clipboard',
+                              colorText: Colors.white,
+                            );
+                          },
+                          child: Text(
+                            Util.truncate(
+                              connectedWalletAddress,
+                              length: 6,
+                            ),
+                            style: const TextStyle(
+                              fontSize: 23,
+                              fontWeight: FontWeight.w700,
+                              color: ColorName.greyText,
+                            ),
+                          )),
                     ],
                   ));
         }),

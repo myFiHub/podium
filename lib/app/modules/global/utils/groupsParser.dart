@@ -26,6 +26,8 @@ groupsParser(data) {
       localWalletAddress: creator[UserInfoModel.localWalletAddressKey] ?? '',
       following: following,
       numberOfFollowers: creator[UserInfoModel.numberOfFollowersKey] ?? 0,
+      lowercasename:
+          creator[UserInfoModel.lowercasenameKey] ?? creatorName.toLowerCase(),
     );
     final group = FirebaseGroup(
       id: groupId,

@@ -199,11 +199,10 @@ class GlobalController extends GetxController {
   saveUserWalletAddressOnFirebase(String walletAddress) async {
     final user = FirebaseAuth.instance.currentUser;
     final userId = user!.uid;
-    final firebaseUserDbReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.usersRef).child(userId);
-    return await firebaseUserDbReference.update({
-      UserInfoModel.localWalletAddressKey: walletAddress,
-    });
+    final firebaseUserDbReference = FirebaseDatabase.instance
+        .ref(FireBaseConstants.usersRef)
+        .child(userId + '/' + UserInfoModel.localWalletAddressKey);
+    return await firebaseUserDbReference.set(walletAddress);
   }
 
   cleanStorage() {

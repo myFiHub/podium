@@ -4,6 +4,7 @@ usersParser(data) {
   Map<String, UserInfoModel> usersMap = {};
   // Iterate through the data
   data.forEach((key, value) {
+    if (value[UserInfoModel.idKey] == null) return;
     final name = value[UserInfoModel.fullNameKey];
     final email = value[UserInfoModel.emailKey];
     final String id = value[UserInfoModel.idKey];

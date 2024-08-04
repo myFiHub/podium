@@ -51,6 +51,7 @@ class WidgetWithTimer extends StatelessWidget {
       GetStorage().remove(storageKey);
       return child;
     }
+
     return CircularCountDownTimer(
       duration: duration(finishTime),
       initialDuration: 0,

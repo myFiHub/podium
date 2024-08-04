@@ -48,6 +48,3 @@ app.*.map.json
 /env/dev.json
 /env/prod.json
 /android/app/google-service.json
-flutterfire.bat
-get.bat
-get.bat

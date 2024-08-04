@@ -16,6 +16,8 @@ usersParser(data) {
       localWalletAddress: value[UserInfoModel.localWalletAddressKey] ?? '',
       following: List.from(value[UserInfoModel.followingKey] ?? []),
       numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,
+      lowercasename:
+          value[UserInfoModel.lowercasenameKey] ?? name.toLowerCase(),
     );
     final lowercasedId = id.toLowerCase();
     usersMap[lowercasedId] = user;

@@ -333,7 +333,7 @@ class OngoingGroupCallController extends GetxController
         Get.snackbar("Error", "Cheer failed");
       }
       ///////////////////////
-    } else if (targetAddress == '') {
+    } else if (targetAddress == '' || targetAddress == null) {
       log.e("User has not connected wallet for some reason");
       Get.snackbar("Error", "User has not connected wallet for some reason");
       return;

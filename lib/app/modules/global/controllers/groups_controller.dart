@@ -98,6 +98,7 @@ class GroupsController extends GetxController with FireBaseUtils {
       name: name,
       creator: myUser,
       members: [myUser.id],
+      lowercasename: name.toLowerCase(),
     );
     try {
       await firebaseGroupsReference.set(group.toJson());

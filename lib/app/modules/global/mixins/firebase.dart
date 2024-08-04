@@ -38,6 +38,8 @@ mixin FireBaseUtils {
             localWalletAddress: user[UserInfoModel.localWalletAddressKey] ?? '',
             following: List.from(user[UserInfoModel.followingKey] ?? []),
             numberOfFollowers: user[UserInfoModel.numberOfFollowersKey] ?? 0,
+            lowercasename: user[UserInfoModel.lowercasenameKey] ??
+                user[UserInfoModel.fullNameKey].toLowerCase(),
           );
           usersList.add(userInfo);
         }
@@ -264,12 +266,13 @@ mixin FireBaseUtils {
       String groupName) async {
     if (groupName.isEmpty) return {};
     try {
+      final lowercased = groupName.toLowerCase();
       final DatabaseReference _database = FirebaseDatabase.instance.ref();
       Query query = _database
           .child(FireBaseConstants.groupsRef)
-          .orderByChild(FirebaseGroup.nameKey)
-          .startAt(groupName)
-          .endAt('$groupName\uf8ff');
+          .orderByChild(FirebaseGroup.lowercasenameKey)
+          .startAt(lowercased)
+          .endAt('$lowercased\uf8ff');
       DataSnapshot snapshot = await query.get();
       if (snapshot.value != null) {
         try {
@@ -288,12 +291,23 @@ mixin FireBaseUtils {
   Future<Map<String, UserInfoModel>> searchForUserByName(String name) async {
     try {
       final DatabaseReference _database = FirebaseDatabase.instance.ref();
-      Query query = _database
+
+      Query lowercasenameQuery = _database
+          .child(FireBaseConstants.usersRef)
+          .orderByChild(UserInfoModel.lowercasenameKey)
+          .startAt(name)
+          .endAt('$name\uf8ff');
+      DataSnapshot loweCaseResSnapshot = await lowercasenameQuery.get();
+      if (loweCaseResSnapshot.value != null) {
+        return usersParser(loweCaseResSnapshot.value)
+            as Map<String, UserInfoModel>;
+      }
+      Query fullNameQuery = _database
           .child(FireBaseConstants.usersRef)
           .orderByChild(UserInfoModel.fullNameKey)
           .startAt(name)
           .endAt('$name\uf8ff');
-      DataSnapshot snapshot = await query.get();
+      DataSnapshot snapshot = await fullNameQuery.get();
       if (snapshot.value != null) {
         return usersParser(snapshot.value) as Map<String, UserInfoModel>;
       }

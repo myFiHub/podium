@@ -11,6 +11,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/dateUtils.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -286,15 +287,29 @@ class LikeDislike extends GetWidget<OngoingGroupCallController> {
 
   @override
   Widget build(BuildContext context) {
+    final child = GFIconButton(
+      icon: Icon(
+        isLike ? Icons.thumb_up_rounded : Icons.thumb_down_rounded,
+        color: isLike ? Colors.green : Colors.red,
+      ),
+      onPressed: () {
+        isLike
+            ? controller.onLikeClicked(userId)
+            : controller.onDislikeClicked(userId);
+      },
+      type: GFButtonType.transparent,
+    );
+
     return Container(
       width: 50,
       child: Center(
         child: Obx(() {
           final timers = controller.timers.value;
           final storageKey = generateKeyForStorageAndObserver(
-              userId: userId,
-              groupId: controller.groupCallController.group.value!.id,
-              like: isLike);
+            userId: userId,
+            groupId: controller.groupCallController.group.value!.id,
+            like: isLike,
+          );
           final finishAt = timers[storageKey];
           return WidgetWithTimer(
             finishAt: finishAt,
@@ -305,18 +320,7 @@ class LikeDislike extends GetWidget<OngoingGroupCallController> {
                 val!.remove(storageKey);
               });
             },
-            child: GFIconButton(
-              icon: Icon(
-                isLike ? Icons.thumb_up_rounded : Icons.thumb_down_rounded,
-                color: isLike ? Colors.green : Colors.red,
-              ),
-              onPressed: () {
-                isLike
-                    ? controller.onLikeClicked(userId)
-                    : controller.onDislikeClicked(userId);
-              },
-              type: GFButtonType.transparent,
-            ),
+            child: child,
           );
         }),
       ),

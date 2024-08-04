@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -9,6 +10,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -111,9 +113,10 @@ class SignUpController extends GetxController with ParticleAuthUtils {
     } on FirebaseAuthException catch (e) {
       log.e('firebase auth error :' + e.toString());
       if (e.code == 'email-already-in-use') {
-        Get.snackbar('Error', 'this email is already in use');
+        Get.snackbar('Error', 'this email is already in use',
+            colorText: Colors.orange);
       } else {
-        Get.snackbar('Error', 'Something went wrong');
+        Get.snackbar('Error', 'Something went wrong', colorText: Colors.red);
       }
     } on FirebaseException catch (e) {
       log.e('firebase error :' + e.toString());

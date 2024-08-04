@@ -93,10 +93,16 @@ class GroupsController extends GetxController with FireBaseUtils {
     final firebaseSessionReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.sessionsRef + newGroupId);
     final myUser = globalController.currentUserInfo.value!;
+    final creator = FirebaseGroupCreator(
+      id: myUser.id,
+      fullName: myUser.fullName,
+      email: myUser.email,
+      avatar: myUser.avatar,
+    );
     final group = FirebaseGroup(
       id: newGroupId,
       name: name,
-      creator: myUser,
+      creator: creator,
       members: [myUser.id],
       lowercasename: name.toLowerCase(),
     );

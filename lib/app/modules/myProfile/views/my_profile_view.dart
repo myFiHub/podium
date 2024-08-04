@@ -25,12 +25,12 @@ class MyProfileView extends GetView<MyProfileController> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               UserInfo(),
-              Button(
-                onPressed: () {},
-                type: ButtonType.outline,
-                blockButton: true,
-                text: 'Edit Profile',
-              ),
+              // Button(
+              //   onPressed: () {},
+              //   type: ButtonType.outline,
+              //   blockButton: true,
+              //   text: 'Edit Profile',
+              // ),
               space10,
               WalletInfo(),
               ParticleWalletManager(),

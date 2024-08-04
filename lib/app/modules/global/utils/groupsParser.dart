@@ -18,16 +18,11 @@ groupsParser(data) {
     final creatorName = creator[UserInfoModel.fullNameKey];
     final creatorEmail = creator[UserInfoModel.emailKey];
     final creatorAvatar = creator[UserInfoModel.avatarUrlKey];
-    final creatorUser = UserInfoModel(
+    final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
       email: creatorEmail,
       id: creatorId,
       avatar: creatorAvatar,
-      localWalletAddress: creator[UserInfoModel.localWalletAddressKey] ?? '',
-      following: following,
-      numberOfFollowers: creator[UserInfoModel.numberOfFollowersKey] ?? 0,
-      lowercasename:
-          creator[UserInfoModel.lowercasenameKey] ?? creatorName.toLowerCase(),
     );
     final group = FirebaseGroup(
       id: groupId,

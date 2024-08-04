@@ -1,10 +1,33 @@
 import 'package:podium/models/user_info_model.dart';
 
+class FirebaseGroupCreator {
+  String id;
+  String fullName;
+  String email;
+  String avatar;
+
+  FirebaseGroupCreator({
+    required this.id,
+    required this.fullName,
+    required this.email,
+    required this.avatar,
+  });
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data[UserInfoModel.idKey] = id;
+    data[UserInfoModel.fullNameKey] = fullName;
+    data[UserInfoModel.emailKey] = email;
+    data[UserInfoModel.avatarUrlKey] = avatar;
+    return data;
+  }
+}
+
 class FirebaseGroup {
   String name;
   String? lowercasename;
   String id;
-  UserInfoModel creator;
+  FirebaseGroupCreator creator;
   List<String> members;
 
   static String idKey = 'id';

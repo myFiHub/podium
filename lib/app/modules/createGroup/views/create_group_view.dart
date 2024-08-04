@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/components/text_field/gf_text_field_rounded.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/textField/textFieldRounded.dart';
 
 import '../controllers/create_group_controller.dart';
 
@@ -15,21 +16,20 @@ class CreateGroupView extends GetView<CreateGroupController> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            GFTextFieldRounded(
-              editingbordercolor: Colors.blueAccent,
-              idlebordercolor: Colors.black,
-              borderwidth: 1,
-              cornerradius: 8,
-              hintText: 'group name',
+            Input(
+              hintText: 'Room Name',
               onChanged: (value) => controller.groupName.value = value,
             ),
             Obx(() {
               final loading = controller.isCreatingNewGroup.value;
               return Button(
+                loading: loading,
+                blockButton: true,
+                type: ButtonType.gradient,
                 onPressed: () {
                   controller.create();
                 },
-                text: loading ? 'creating . ..' : 'create',
+                text: 'create',
               );
             }),
           ],

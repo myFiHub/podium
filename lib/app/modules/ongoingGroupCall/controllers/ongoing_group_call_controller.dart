@@ -236,7 +236,7 @@ class OngoingGroupCallController extends GetxController
   }
 
   cheerBoo({required String userId, required bool cheer}) async {
-    late String targetAddress;
+    String? targetAddress;
     final bool canContinue = checkWalletConnected(
       afterConnection: () {
         cheerBoo(userId: userId, cheer: cheer);
@@ -251,14 +251,18 @@ class OngoingGroupCallController extends GetxController
       );
       return;
     }
-    final particleUserWallets = await getParticleAuthWalletsForUser(userId);
-    if (particleUserWallets.length > 0) {
-      targetAddress = particleUserWallets[0].address;
+
+    final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
+    if (userLocalWalletAddress != '') {
+      targetAddress = userLocalWalletAddress;
     } else {
-      targetAddress = await getUserLocalWalletAddress(userId);
+      final particleUserWallets = await getParticleAuthWalletsForUser(userId);
+      if (particleUserWallets.length > 0) {
+        targetAddress = particleUserWallets[0].address;
+      }
     }
 
-    if (canContinue && targetAddress != '') {
+    if (canContinue && targetAddress != null && targetAddress != '') {
       late List<String> receiverAddresses;
       final myUser = globalController.currentUserInfo.value!;
       final myParticleUser = globalController.particleAuthUserInfo.value;

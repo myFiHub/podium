@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
@@ -456,7 +457,9 @@ mixin FireBaseUtils {
       final snapshot = await databaseRef.get();
       final particleUserInfo = snapshot.value as dynamic;
       if (particleUserInfo != null) {
-        final wallets = List.from(particleUserInfo['wallets']);
+        final parsed = json.decode(particleUserInfo as String);
+        final wallets =
+            List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
         final List<ParticleAuthWallet> walletsList = [];
         wallets.forEach((element) {
           walletsList.add(ParticleAuthWallet.fromMap(element));

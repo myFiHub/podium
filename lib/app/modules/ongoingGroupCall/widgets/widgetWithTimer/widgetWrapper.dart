@@ -29,7 +29,8 @@ class WidgetWithTimer extends StatelessWidget {
 
   duration(int finishTime) {
     final remaining = finishTime - DateTime.now().millisecondsSinceEpoch;
-    if (remaining < 0) {
+    if (remaining <= 0) {
+      onComplete!();
       return 0;
     }
     return int.parse((remaining / 1000).toString().split(".")[0]);

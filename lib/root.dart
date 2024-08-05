@@ -25,7 +25,7 @@ class Root extends StatelessWidget {
             PodiumNavbar(),
           ],
         ),
-        InternetConnectionChecker(),
+        // InternetConnectionChecker(),
       ],
     );
   }
@@ -38,7 +38,8 @@ class InternetConnectionChecker extends GetWidget<GlobalController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final connected = controller.isConnectedToInternet.value;
-      return connected
+      final AppLifecycleState state = controller.appLifecycleState.value;
+      return connected && state != AppLifecycleState.paused
           ? const SizedBox()
           : Positioned(
               child: Material(
@@ -49,7 +50,7 @@ class InternetConnectionChecker extends GetWidget<GlobalController> {
                       Text(
                         'connection issue',
                         style: TextStyle(
-                          color: Colors.red,
+                          color: Colors.red[700],
                           fontSize: 20,
                         ),
                       ),

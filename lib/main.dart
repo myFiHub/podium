@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
@@ -74,6 +75,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void _handleStateChange(AppLifecycleState state) {
+    final isGlobalControllerReady = Get.isRegistered<GlobalController>();
+    if (isGlobalControllerReady) {
+      final globalController = Get.find<GlobalController>();
+      globalController.appLifecycleState.value = state;
+    }
     log.i('State changed: $state');
   }
 

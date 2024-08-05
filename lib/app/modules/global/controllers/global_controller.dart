@@ -57,6 +57,7 @@ final _checkOptions = [
 ];
 
 class GlobalController extends GetxController {
+  final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
   final userBalance = ''.obs;
@@ -172,7 +173,7 @@ class GlobalController extends GetxController {
           break;
         case InternetStatus.disconnected:
           log.f("Internet disconnected");
-          // isConnectedToInternet.value = false;
+          isConnectedToInternet.value = false;
           break;
       }
     });

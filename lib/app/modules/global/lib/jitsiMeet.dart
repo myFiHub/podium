@@ -113,4 +113,16 @@ final jitsiListeners = JitsiMeetEventListener(
   readyToClose: () {
     log.d("readyToClose");
   },
+  like: (email, participantId) {
+    log.d("like: email: $email, participantId: $participantId");
+  },
+  dislike: (email, participantId) {
+    log.d("dislike: email: $email, participantId: $participantId");
+  },
+  cheer: (email, participantId) {
+    log.d("cheer: email: $email, participantId: $participantId");
+  },
+  boo: (email, participantId) {
+    log.d("boo: email: $email, participantId: $participantId");
+  },
 );

@@ -410,7 +410,11 @@ class GlobalController extends GetxController {
         afterConnection();
       }
     } catch (e) {
-      log.f(e);
+      if (e is W3MServiceException) {
+        log.e(e.message);
+      } else {
+        log.e(e);
+      }
     }
   }
 }

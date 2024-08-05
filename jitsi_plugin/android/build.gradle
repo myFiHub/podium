@@ -18,6 +18,7 @@ rootProject.allprojects {
     repositories {
         // maven { url 'file:/D:\\my_projects\\podium_fihub\\jitsi_plugin\\android\\libs' }
         maven {
+        // url 'D:/my_projects/jitsi-meet/android/sdk/jitsi_meet_custom' 
             url "https://github.com/jitsi/jitsi-maven-repository/raw/master/releases"
         }
         google()
@@ -70,6 +71,6 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    // implementation ('org.jitsi.react:jitsi-meet-sdk:+') { transitive = true }
-    implementation ('org.jitsi.react:jitsi-meet-sdk:9.2.2') { transitive = true }
+    implementation ('org.jitsi.react:jitsi-meet-sdk:+') { transitive = true }
+    // implementation ('org.jitsi.react:jitsi-meet-sdk:9.2.2') { transitive = true }
 }

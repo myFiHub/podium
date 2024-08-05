@@ -197,6 +197,7 @@ class GroupsController extends GetxController with FireBaseUtils {
           joiningGroupId.value = '';
         }
       } else {
+        joiningGroupId.value = '';
         _openGroup(groupId: groupId);
       }
     }

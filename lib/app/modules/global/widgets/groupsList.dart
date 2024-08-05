@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:podium/app/modules/allGroups/controllers/all_groups_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -21,7 +22,6 @@ class GroupList extends StatelessWidget {
         final groupId = group.id;
         final amICreator = group.creator.id ==
             controller.globalController.currentUserInfo.value!.id;
-        final joiningGroupId = controller.joiningGroupId.value;
         return AnimationConfiguration.staggeredList(
           position: index,
           key: Key(groupId),
@@ -94,12 +94,9 @@ class GroupList extends StatelessWidget {
                               )
                             ],
                           ),
-                          if (joiningGroupId == groupId)
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: CircularProgressIndicator(),
-                            ),
+                          JoiningIndicator(
+                            groupId: groupId,
+                          ),
                         ],
                       ),
                     ),
@@ -111,5 +108,25 @@ class GroupList extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class JoiningIndicator extends GetWidget<GroupsController> {
+  final groupId;
+  const JoiningIndicator({super.key, required this.groupId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final joiningGroupId = controller.joiningGroupId.value;
+      if (joiningGroupId != groupId) {
+        return const SizedBox();
+      }
+      return Positioned(
+        right: 0,
+        bottom: 0,
+        child: CircularProgressIndicator(),
+      );
+    });
   }
 }

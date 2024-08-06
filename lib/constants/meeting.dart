@@ -1,4 +1,6 @@
+import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -32,8 +34,10 @@ class MeetingConstants {
 
   static buildMeetOptions(
       {required FirebaseGroup group, required UserInfoModel myUser}) {
+    final globalController = Get.find<GlobalController>();
+    final sa = globalController.jitsiServerAddress;
     return JitsiMeetConferenceOptions(
-      serverURL: Env.jitsiServerUrl,
+      serverURL: sa != '' ? sa : Env.jitsiServerUrl,
       room: group.id,
       configOverrides: configOverrides(group),
       featureFlags: featureFlags,

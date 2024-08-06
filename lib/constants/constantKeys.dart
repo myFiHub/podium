@@ -5,4 +5,5 @@ class FireBaseConstants {
   static final sessionsRef = 'sessions/';
   static final versionRef = 'version';
   static final versionCheckRef = 'versionCheck';
+  static final jitsiServerAddressRef = "va";
 }

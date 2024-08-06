@@ -235,7 +235,8 @@ class OngoingGroupCallController extends GetxController
     );
   }
 
-  cheerBoo({required String userId, required bool cheer}) async {
+  cheerBoo(
+      {required String userId, required bool cheer, bool? fromMeetPage}) async {
     String? targetAddress;
     final bool canContinue = checkWalletConnected(
       afterConnection: () {
@@ -280,8 +281,9 @@ class OngoingGroupCallController extends GetxController
         Get.snackbar("Error", "receiver wallet not found");
         return;
       }
-      final String? amount =
-          await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
+      final String? amount = fromMeetPage == true
+          ? Env.minimumCheerBooAmount
+          : await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
       if (amount == null) {
         log.e("Amount not selected");
         return;

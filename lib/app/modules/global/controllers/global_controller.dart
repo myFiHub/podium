@@ -92,8 +92,8 @@ class GlobalController extends GetxController {
 
     bool result = await connectionCheckerInstance.hasInternetAccess;
     log.d("has internet access: $result");
-    await checkVersion();
     if (result) {
+      await checkVersion();
       initializeApp();
     } else {
       log.e(

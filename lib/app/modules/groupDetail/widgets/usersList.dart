@@ -24,15 +24,16 @@ class UserList extends StatelessWidget {
       itemBuilder: (context, index) {
         final user = usersList[index];
         final name = user.fullName;
+        final avatar = user.avatar;
         final userId = user.id;
         final isItME = user.id == myUserId;
         return AnimationConfiguration.staggeredList(
           position: index,
-          key: Key(user.id),
-          duration: const Duration(milliseconds: 375),
+          key: Key(userId),
+          duration: const Duration(milliseconds: 100),
           child: SlideAnimation(
-            key: Key(user.id),
-            verticalOffset: 20.0,
+            key: Key(userId),
+            verticalOffset: 12.0,
             child: FadeInAnimation(
               child: GestureDetector(
                 onTap: () {
@@ -59,7 +60,7 @@ class UserList extends StatelessWidget {
                       margin: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 8),
                       padding: const EdgeInsets.all(16),
-                      key: Key(user.id),
+                      key: Key(userId),
                       child: Stack(
                         children: [
                           Row(
@@ -68,17 +69,22 @@ class UserList extends StatelessWidget {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(name,
+                                  Container(
+                                    width: Get.width * 0.5,
+                                    child: Text(
+                                      name,
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,
-                                      )),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
                                   space10,
                                   Row(
                                     children: [
                                       GFAvatar(
-                                        backgroundImage:
-                                            NetworkImage(user.avatar),
+                                        backgroundImage: NetworkImage(avatar),
                                         shape: GFAvatarShape.standard,
                                         backgroundColor: ColorName.cardBorder,
                                       ),
@@ -95,15 +101,16 @@ class UserList extends StatelessWidget {
                                               color: ColorName.greyText,
                                             ),
                                           ),
-                                          space5,
-                                          Text(
-                                            user.fullName,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700,
-                                              color: ColorName.greyText,
-                                            ),
-                                          ),
+                                          // space5,
+                                          // Text(
+                                          //   name,
+                                          //   style: const TextStyle(
+                                          //     fontSize: 16,
+                                          //     fontWeight: FontWeight.w700,
+                                          //     color: ColorName.greyText,
+                                          //     overflow: TextOverflow.ellipsis,
+                                          //   ),
+                                          // ),
                                         ],
                                       )
                                     ],

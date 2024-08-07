@@ -51,8 +51,8 @@ final w3mService = W3MService(
   },
 );
 final _checkOptions = [
-  // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
-  InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
+  InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
+  // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
   InternetCheckOption(uri: Uri.parse(movementChain.rpcUrl))
 ];
 
@@ -62,6 +62,7 @@ class GlobalController extends GetxController {
   final connectedWalletAddress = "".obs;
   final userBalance = ''.obs;
   final connectedChainId = ''.obs;
+  final jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
   final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
   final firebaseUser = Rxn<User>();
@@ -88,11 +89,13 @@ class GlobalController extends GetxController {
       '30732': movementChain,
     });
 
-    await Future.wait([initializeParticleAuth(), FirebaseInit.init()]);
+    await Future.wait([
+      initializeParticleAuth(),
+      FirebaseInit.init(),
+    ]);
 
     bool result = await connectionCheckerInstance.hasInternetAccess;
     log.d("has internet access: $result");
-    await checkVersion();
     if (result) {
       initializeApp();
     } else {
@@ -167,9 +170,18 @@ class GlobalController extends GetxController {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
           log.i("Internet connected");
-          if (!initializedOnce.value) {
+
+          final (versionResolved, serverAddress) = await (
+            checkVersion(),
+            getJitsiServerAddress(),
+          ).wait;
+
+          if (!initializedOnce.value &&
+              versionResolved &&
+              serverAddress != null) {
             await initializeApp();
           }
+
           break;
         case InternetStatus.disconnected:
           log.f("Internet disconnected");
@@ -203,6 +215,7 @@ class GlobalController extends GetxController {
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
+
     return await firebaseUserDbReference.set(walletAddress);
   }
 
@@ -212,6 +225,22 @@ class GlobalController extends GetxController {
     storage.remove(StorageKeys.userAvatar);
     storage.remove(StorageKeys.userFullName);
     storage.remove(StorageKeys.userEmail);
+  }
+
+  Future<String?> getJitsiServerAddress() {
+    final completer = Completer<String?>();
+    final serverAddressRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.jitsiServerAddressRef);
+    serverAddressRef.once().then((event) {
+      final data = event.snapshot.value as dynamic;
+      final serverAddress = data as String?;
+      if (serverAddress == null) {
+        log.e('server address not found');
+        return completer.complete(null);
+      }
+      completer.complete(serverAddress);
+    });
+    return completer.future;
   }
 
   Future<bool> checkVersion() async {

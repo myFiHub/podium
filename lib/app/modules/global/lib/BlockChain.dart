@@ -1,9 +1,12 @@
 import 'package:get/get.dart';
 import 'package:particle_auth/model/chain_info.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:http/http.dart';
+import 'package:web_socket_channel/io.dart';
 
 final movementChain = W3MChainInfo(
   chainName: 'Movement Testnet',
@@ -123,6 +126,7 @@ class BlockChainUtils {
 
     try {
       await _w3mService.init();
+      _startListeningToCheerBoEvents();
       const chainId = Env.chainId;
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
@@ -162,4 +166,56 @@ class BlockChainUtils {
       return '';
     }
   }
+
+  static _startListeningToCheerBoEvents() {
+    ////
+    final cheerEventToListenTo = _getContractEventListener(
+        contract: cheerBooContract, eventName: 'Cheer');
+    // cheerEventToListenTo.take(1).listen((event) {
+    //   log.i('^^^^^^^^^^^^^^^^^^^^Cheer event: $event^^^^^^^^^^^^^^^^^^^');
+    // });
+    ////
+    final booEventToListenTo =
+        _getContractEventListener(contract: cheerBooContract, eventName: 'Boo');
+    // booEventToListenTo.take(1).listen((event) {
+    //   log.i('^^^^^^^^^^^^^^^Boo event: $event^^^^^^^^^^^^^^^^^^^^^');
+    // });
+    ////
+  }
+}
+
+Stream<FilterEvent> _getContractEventListener({
+  required DeployedContract contract,
+  required String eventName,
+  chainId = Env.chainId,
+}) {
+  final chain = W3MChainPresets.chains[chainId]!;
+  // final GlobalController globalController = Get.find<GlobalController>();
+  // final web3ModalService = globalController.web3ModalService;
+  // final web3Client = web3ModalService.reconnectRelay();
+  // final web3Client = Web3Client(chain.rpcUrl, Client());
+  final client = Web3Client(
+    chain.rpcUrl,
+    Client(),
+    // socketConnector: () {
+    //   return IOWebSocketChannel.connect(chain.rpcUrl.replaceAll('https', 'ws'))
+    //       .cast<String>();
+    // },
+  );
+
+  final event = contract.event(eventName);
+
+  final options = FilterOptions(
+    address: contract.address,
+    fromBlock: BlockNum.genesis(),
+    toBlock: BlockNum.current(),
+    topics: [
+      [bytesToHex(event.signature, padToEvenLength: true, include0x: true)],
+    ],
+  );
+  // final options = FilterOptions.events(
+  //   contract: contract,
+  //   event: event,
+  // );
+  return client.events(options);
 }

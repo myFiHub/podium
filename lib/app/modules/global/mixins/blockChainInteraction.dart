@@ -9,23 +9,22 @@ import 'package:podium/utils/logger.dart';
 
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 
+final cheerBooContract = getContract(
+  abi: CheerBoo.abi,
+  address: CheerBoo.address,
+  name: "CheerBoo",
+);
+final proxyContract = getContract(
+  abi: ProxyContract.abi,
+  address: ProxyContract.address,
+  name: "TransparentUpgradeableProxy",
+);
+final starsArenaContract = getContract(
+  abi: StarsArenaSmartContract.abi,
+  address: StarsArenaSmartContract.address,
+  name: "StarsArena",
+);
 mixin BlockChainInteractions {
-  final cheerBooContract = getContract(
-    abi: CheerBoo.abi,
-    address: CheerBoo.address,
-    name: "CheerBoo",
-  );
-  final proxyContract = getContract(
-    abi: ProxyContract.abi,
-    address: ProxyContract.address,
-    name: "TransparentUpgradeableProxy",
-  );
-  final starsArenaContract = getContract(
-    abi: StarsArenaSmartContract.abi,
-    address: StarsArenaSmartContract.address,
-    name: "StarsArena",
-  );
-
   Future<dynamic> cheerOrBoo({
     required String target,
     required List<String> receiverAddresses,
@@ -41,6 +40,7 @@ mixin BlockChainInteractions {
     final targetWallet = parsAddress(target);
     final receivers = receiverAddresses.map((e) => parsAddress(e)).toList();
     service.launchConnectedWallet();
+
     try {
       final response = await service.requestWriteContract(
         topic: service.session!.topic,
@@ -120,6 +120,7 @@ mixin BlockChainInteractions {
       from: parsAddress(service.session!.address!),
       value: parseValue(value),
     );
+
     final referrerWallet = parsAddress(referrer);
     final sharesSubjectWallet = parsAddress(sharesSubject);
     service.launchConnectedWallet();

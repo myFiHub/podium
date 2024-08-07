@@ -112,7 +112,7 @@ class GroupCallController extends GetxController
       myUser: myUser,
     );
     try {
-      await jitsiMeet.join(options, jitsiListeners);
+      await jitsiMeet.join(options, jitsiListeners());
     } catch (e) {
       log.f(e.toString());
     }

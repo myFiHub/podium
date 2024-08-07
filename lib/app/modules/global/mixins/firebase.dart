@@ -51,6 +51,33 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<UserInfoModel?> getUserByEmail(String email) async {
+    final databaseRef = FirebaseDatabase.instance.ref();
+    final usersRef =
+        databaseRef.child(FireBaseConstants.usersRef.replaceFirst('/', ''));
+    final snapshot = await usersRef
+        .orderByChild(UserInfoModel.emailKey)
+        .equalTo(email)
+        .get();
+    final user = snapshot.value as dynamic;
+    if (user != null) {
+      final userValues = user.values.toList()[0];
+      final userInfo = UserInfoModel(
+        fullName: userValues[UserInfoModel.fullNameKey],
+        email: userValues[UserInfoModel.emailKey],
+        id: userValues[UserInfoModel.idKey],
+        avatar: userValues[UserInfoModel.avatarUrlKey],
+        localWalletAddress:
+            userValues[UserInfoModel.localWalletAddressKey] ?? '',
+        following: List.from(userValues[UserInfoModel.followingKey] ?? []),
+        numberOfFollowers: userValues[UserInfoModel.numberOfFollowersKey] ?? 0,
+      );
+      return userInfo;
+    } else {
+      return null;
+    }
+  }
+
   Future<FirebaseSession?> getSessionData({required String groupId}) async {
     final databaseRef =
         FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);

@@ -51,8 +51,8 @@ final w3mService = W3MService(
   },
 );
 final _checkOptions = [
-  // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
-  InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
+  InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
+  // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
   InternetCheckOption(uri: Uri.parse(movementChain.rpcUrl))
 ];
 

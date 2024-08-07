@@ -11,7 +11,6 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/dateUtils.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -74,11 +73,17 @@ class UsersInRoomList extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(name,
+                                    Container(
+                                      width: Get.width * 0.3,
+                                      child: Text(
+                                        name,
                                         style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
-                                        )),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
                                     space10,
                                     Row(
                                       children: [
@@ -238,15 +243,24 @@ class Actions extends GetView<OngoingGroupCallController> {
     final globalController = Get.find<GlobalController>();
     final myUser = globalController.currentUserInfo.value;
     final myId = myUser!.id;
-    return Expanded(
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+
+    return Center(
+      // width: Get.width * 0.5,
+      child: Wrap(
+        alignment: WrapAlignment.center,
         children: [
-          if (userId != myId) LikeDislike(userId: userId, isLike: true),
-          if (userId != myId) LikeDislike(userId: userId, isLike: false),
-          if (userId != myId) CheerBoo(cheer: false, userId: userId),
-          CheerBoo(cheer: true, userId: userId),
+          Row(
+            children: [
+              if (userId != myId) LikeDislike(userId: userId, isLike: true),
+              if (userId != myId) LikeDislike(userId: userId, isLike: false),
+            ],
+          ),
+          Row(
+            children: [
+              if (userId != myId) CheerBoo(cheer: false, userId: userId),
+              CheerBoo(cheer: true, userId: userId)
+            ],
+          ),
         ],
       ),
     );

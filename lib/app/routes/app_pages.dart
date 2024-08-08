@@ -20,6 +20,8 @@ import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
 import '../modules/ongoingGroupCall/bindings/ongoing_group_call_binding.dart';
 import '../modules/ongoingGroupCall/views/ongoing_group_call_view.dart';
+import '../modules/playground/bindings/playground_binding.dart';
+import '../modules/playground/views/playground_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/search/bindings/search_binding.dart';
@@ -106,6 +108,11 @@ class AppPages {
       name: _Paths.ALL_GROUPS,
       page: () => const AllGroupsView(),
       binding: AllGroupsBinding(),
+    ),
+    GetPage(
+      name: _Paths.PLAYGROUND,
+      page: () => const PlaygroundView(),
+      binding: PlaygroundBinding(),
     ),
   ];
 }

@@ -119,4 +119,14 @@ class LoginController extends GetxController
       isLoggingIn.value = false;
     }
   }
+
+  loginWithX() async {
+    final particleUser = await particleLoginWithX();
+    if (particleUser != null) {
+      log.d('email: ${particleUser.twitterEmail}');
+    } else {
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    }
+  }
 }

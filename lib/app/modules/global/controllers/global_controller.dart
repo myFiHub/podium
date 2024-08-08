@@ -8,8 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:particle_auth/particle_auth.dart' as ParticleAuth;
-import 'package:particle_auth/model/user_info.dart' as ParticleUser;
+import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -23,6 +22,9 @@ import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:particle_base/model/user_info.dart' as ParticleUser;
+import 'package:particle_base/model/chain_info.dart' as ChainInfo;
+import 'package:particle_base/particle_base.dart' as ParticleBase;
 
 PairingMetadata _pairingMetadata = PairingMetadata(
   name: StringConstants.w3mPageTitleV3,
@@ -128,7 +130,7 @@ class GlobalController extends GetxController {
       final chainName = W3MChainPresets.chains[chainId]!.chainName;
       final particleChain = Env.chainId == '30732'
           ? movementChainOnParticle
-          : ParticleAuth.ChainInfo.getChain(int.parse(chainId), chainName);
+          : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
       if (particleChain == null) {
         log.f("${chainId} chain not found on particle");
         return Future.error("particle chain not initialized");
@@ -141,17 +143,18 @@ class GlobalController extends GetxController {
         return Future.error("unhandled environment");
       }
       final environment = Env.environment == DEV
-          ? ParticleAuth.Env.dev
+          ? ParticleBase.Env.dev
           : Env.environment == STAGE
-              ? ParticleAuth.Env.staging
-              : ParticleAuth.Env.production;
+              ? ParticleBase.Env.staging
+              : ParticleBase.Env.production;
 
       log.i("##########initializing ParticleAuth");
-      ParticleAuth.ParticleInfo.set(
+      ParticleBase.ParticleInfo.set(
         Env.particleProjectId,
         Env.particleClientKey,
       );
-      ParticleAuth.ParticleAuth.init(
+
+      ParticleBase.ParticleBase.init(
         particleChain,
         environment,
       );
@@ -312,8 +315,14 @@ class GlobalController extends GetxController {
   checkLogin() async {
     isAutoLoggingIn.value = true;
     try {
-      final particleUserInfo = await ParticleAuth.ParticleAuth.isLoginAsync();
-      particleAuthUserInfo.value = particleUserInfo;
+      final isParticleLoggedIn = await ParticleAuthCore.isConnected();
+      if (isParticleLoggedIn) {
+        final particleUserInfo = await ParticleAuthCore.getUserInfo();
+        particleAuthUserInfo.value = particleUserInfo;
+      } else {
+        log.e("particle not logged in");
+        throw Exception("particle not logged in");
+      }
       final isLoggedIn = FirebaseAuth.instance.currentUser != null;
       if (isLoggedIn) {
         final user = FirebaseAuth.instance.currentUser;
@@ -359,7 +368,7 @@ class GlobalController extends GetxController {
   _logout() async {
     isLoggingOut.value = true;
     try {
-      await ParticleAuth.ParticleAuth.fastLogout();
+      await ParticleAuthCore.disconnect();
     } catch (e) {
       log.e(e);
       isLoggingOut.value = false;

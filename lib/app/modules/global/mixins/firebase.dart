@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
-import "package:particle_auth/model/user_info.dart" as ParticleUserInfo;
+import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -473,12 +473,16 @@ mixin FireBaseUtils {
       } else {
         final userToSave = FirebaseParticleAuthUserInfo(
           uuid: particleUser.uuid,
-          wallets: particleUser.wallets.map((e) {
-            return ParticleAuthWallet(
-              address: e.publicAddress,
-              chain: e.chainName,
-            );
-          }).toList(),
+          wallets: particleUser.wallets
+              .map((e) {
+                return ParticleAuthWallet(
+                  address: e.publicAddress,
+                  chain: e.chainName,
+                );
+              })
+              .toList()
+              .where((w) => w.address.isNotEmpty)
+              .toList(),
         );
         await databaseRef.set(userToSave.toJson());
       }

@@ -9,7 +9,7 @@ dependencies:
   get: ^4.6.5
   flutter:
     sdk: flutter
-  web3modal_flutter: ^3.2.2
+  web3modal_flutter: ^3.3.0
   intl: ^0.19.0
   fl_toast: ^3.2.0
   firebase_core: ^3.2.0
@@ -28,10 +28,10 @@ dependencies:
   gap: ^3.0.1
   flutter_staggered_animations: ^1.1.1
   internet_connection_checker_plus: ^2.5.0
-  particle_auth: ^1.4.28
   permission_handler: ^11.3.1
   app_settings: ^5.1.1
   url_launcher: ^6.3.0
+  particle_auth_core: ^1.5.7
 
 dev_dependencies:
   flutter_native_splash: ^2.4.1

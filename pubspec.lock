@@ -53,10 +53,10 @@ packages:
     dependency: transitive
     description:
       name: appcheck
-      sha256: "2682c9c270c28d83f8d87d68bb607a83882778b14c6a8da19df423be1b386520"
+      sha256: "0fcbe15b6bba67027c6f94bd177b9b319e019b51e0b49e9cd80486448c4a1909"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.5.2"
   archive:
     dependency: transitive
     description:
@@ -648,14 +648,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_timezone:
-    dependency: transitive
-    description:
-      name: flutter_timezone
-      sha256: "06b35132c98fa188db3c4b654b7e1af7ccd01dfe12a004d58be423357605fb24"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.8"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -1036,14 +1028,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  particle_auth:
+  particle_auth_core:
     dependency: "direct main"
     description:
-      name: particle_auth
-      sha256: "01c445fc37fd80a7419b240b59ecb055015b59437c7c91123d414e2c830ff1e8"
+      name: particle_auth_core
+      sha256: "6e84a94a53de84d0dfa9ebc760b1922fbe733c5d729ca5ae3db65957c4a722a1"
       url: "https://pub.dev"
     source: hosted
-    version: "1.4.28"
+    version: "1.5.7"
+  particle_base:
+    dependency: transitive
+    description:
+      name: particle_base
+      sha256: e3270b6ad587608f7035a980d55cc0f338911e64c0c28ee08f812e348b83b285
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.7"
   path:
     dependency: transitive
     description:
@@ -1597,10 +1597,10 @@ packages:
     dependency: transitive
     description:
       name: walletconnect_flutter_v2
-      sha256: cc6fa6a537910a66258ee64bb510edbfc0dee01485ea1138651431087c94671b
+      sha256: "4a77de8d33f5d1f6b6ae07d4d2f7bf591ddb6c4cd671bf7493100798d92fa4d3"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.3"
+    version: "2.3.0"
   watcher:
     dependency: transitive
     description:
@@ -1629,10 +1629,10 @@ packages:
     dependency: "direct main"
     description:
       name: web3modal_flutter
-      sha256: ddfb21de4ee450ad3b269008f695884ab1b2da6810c855b71aeee5d55363f7cd
+      sha256: "4d24d458ebbf19ef49ac2b094882e8e6327d3c667cb48b168769277fc3d4f20e"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.2"
+    version: "3.3.0"
   web_socket_channel:
     dependency: transitive
     description:

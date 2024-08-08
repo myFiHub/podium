@@ -74,22 +74,24 @@ class LoginView extends GetView<LoginController> {
                     name: 'password',
                   ),
                   space10,
-                  Obx(() {
-                    final loading = controller.isLoggingIn.value;
-                    final isAutoLoggingIn = controller.$isAutoLoggingIn.value;
-                    return Button(
-                      loading: loading || isAutoLoggingIn,
-                      type: ButtonType.gradient,
-                      blockButton: true,
-                      onPressed: () {
-                        final re = _formKey.currentState?.saveAndValidate();
-                        if (re == true) {
-                          controller.login();
-                        }
-                      },
-                      text: 'LOGIN',
-                    );
-                  }),
+                  Obx(
+                    () {
+                      final loading = controller.isLoggingIn.value;
+                      final isAutoLoggingIn = controller.$isAutoLoggingIn.value;
+                      return Button(
+                        loading: loading || isAutoLoggingIn,
+                        type: ButtonType.gradient,
+                        blockButton: true,
+                        onPressed: () {
+                          final re = _formKey.currentState?.saveAndValidate();
+                          if (re == true) {
+                            controller.login();
+                          }
+                        },
+                        text: 'LOGIN',
+                      );
+                    },
+                  ),
                   space10,
                   Button(
                     size: ButtonSize.MEDIUM,

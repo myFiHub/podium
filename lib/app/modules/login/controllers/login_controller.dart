@@ -1,8 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:particle_auth/particle_auth.dart';
-import "package:particle_auth/model/user_info.dart" as ParticleUserInfo;
+import 'package:particle_auth_core/particle_auth_core.dart';
+import 'package:particle_base/model/user_info.dart' as ParticleUser;
+
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
@@ -10,6 +11,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
+import 'package:particle_base/particle_base.dart' as ParticleBase;
 
 class LoginController extends GetxController
     with ParticleAuthUtils, FireBaseUtils {
@@ -44,10 +46,15 @@ class LoginController extends GetxController
     final enteredPassword =
         manualPassword == null ? password.value : manualPassword;
     try {
-      ParticleUserInfo.UserInfo? particleUser;
+      ParticleUser.UserInfo? particleUser;
       if (fromSignUp == true) {
         try {
-          particleUser = await ParticleAuth.isLoginAsync();
+          final isConnected = await ParticleAuthCore.isConnected();
+          if (isConnected) {
+            Get.snackbar('Error', 'Error logging in');
+            return;
+          }
+          particleUser = await ParticleAuthCore.getUserInfo();
           globalController.particleAuthUserInfo.value = particleUser;
         } catch (e) {
           log.e('Error logging in from signUp => particle auth: $e');
@@ -79,7 +86,7 @@ class LoginController extends GetxController
           return;
         }
         await saveParticleUserInfoToFirebaseIfNeeded(
-          particleUser: particleUser,
+          particleUser: particleUser!,
           myUserId: user.uid,
         );
         currentUserInfo.localParticleUserInfo = particleUser;

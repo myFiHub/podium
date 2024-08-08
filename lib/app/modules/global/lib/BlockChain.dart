@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:particle_auth/model/chain_info.dart';
+import 'package:particle_base/model/chain_info.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/env.dart';

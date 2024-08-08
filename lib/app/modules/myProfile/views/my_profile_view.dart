@@ -78,6 +78,8 @@ class ParticleWalletManager extends GetWidget<GlobalController> {
                       ),
                       space10,
                       ...wallets
+                          .where((w) => w.publicAddress.isNotEmpty)
+                          .toList()
                           .map(
                             (wallet) => GestureDetector(
                               onTap: () async {

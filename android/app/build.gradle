@@ -102,3 +102,6 @@ dependencies {
 flutter {
     source = "../.."
 }
+configurations{
+  all*.exclude module: 'bcprov-jdk15on'
+}

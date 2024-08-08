@@ -1,26 +1,27 @@
-import 'package:particle_auth/particle_auth.dart';
-import 'package:particle_auth/model/user_info.dart' as ParticleUser;
+import 'package:particle_auth_core/particle_auth_core.dart';
+import 'package:particle_base/model/user_info.dart' as ParticleUser;
+import 'package:particle_base/model/login_info.dart' as LoginInfo;
 
-List<SupportAuthType> supportAuthType = <SupportAuthType>[
-  SupportAuthType.email,
-  SupportAuthType.twitter,
-  SupportAuthType.google,
-  SupportAuthType.facebook,
-  SupportAuthType.github,
-  SupportAuthType.linkedin,
-  SupportAuthType.microsoft,
-  SupportAuthType.twitch,
-  SupportAuthType.discord,
-  SupportAuthType.apple,
-  SupportAuthType.phone,
+List<LoginInfo.SupportAuthType> supportAuthType = <LoginInfo.SupportAuthType>[
+  LoginInfo.SupportAuthType.email,
+  LoginInfo.SupportAuthType.twitter,
+  LoginInfo.SupportAuthType.google,
+  LoginInfo.SupportAuthType.facebook,
+  LoginInfo.SupportAuthType.github,
+  LoginInfo.SupportAuthType.linkedin,
+  LoginInfo.SupportAuthType.microsoft,
+  LoginInfo.SupportAuthType.twitch,
+  LoginInfo.SupportAuthType.discord,
+  LoginInfo.SupportAuthType.apple,
+  LoginInfo.SupportAuthType.phone,
 ];
 mixin ParticleAuthUtils {
   Future<ParticleUser.UserInfo?> particleLogin(String email) async {
     try {
-      final userInfo = await ParticleAuth.login(
-        LoginType.email,
-        email,
-        supportAuthType,
+      final userInfo = await ParticleAuthCore.connect(
+        LoginInfo.LoginType.email,
+        account: email,
+        supportAuthTypes: supportAuthType,
       );
       return userInfo;
     } catch (e) {

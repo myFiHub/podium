@@ -1,4 +1,5 @@
-import "package:particle_auth/model/user_info.dart" as ParticleUser;
+import 'package:particle_base/model/user_info.dart' as ParticleUser;
+
 import "package:podium/models/firebase_particle_user.dart";
 
 class UserInfoModel {

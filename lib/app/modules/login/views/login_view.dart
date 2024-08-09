@@ -104,15 +104,15 @@ class LoginView extends GetView<LoginController> {
                     text: 'CREATE ACCOUNT',
                     type: ButtonType.transparent,
                   ),
-                  // space10,
-                  // Button(
-                  //   size: ButtonSize.MEDIUM,
-                  //   onPressed: () {
-                  //     controller.loginWithX();
-                  //   },
-                  //   text: 'SOCIAL LOGIN',
-                  //   type: ButtonType.transparent,
-                  // ),
+                  space10,
+                  Button(
+                    size: ButtonSize.MEDIUM,
+                    onPressed: () {
+                      controller.loginWithX();
+                    },
+                    text: 'SOCIAL LOGIN',
+                    type: ButtonType.transparent,
+                  ),
                   space10,
                   Text(
                     "Version: " + Env.VERSION,

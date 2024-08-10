@@ -42,4 +42,19 @@ mixin ParticleAuthUtils {
       return null;
     }
   }
+
+  Future<ParticleUser.UserInfo?> particleLoginWithGoogle() async {
+    try {
+      final isAlreadyLoggedIn = await ParticleAuthCore.isConnected();
+      if (isAlreadyLoggedIn) {
+        return await ParticleAuthCore.getUserInfo();
+      }
+      final userInfo = await ParticleAuthCore.connect(
+        LoginInfo.LoginType.google,
+      );
+      return userInfo;
+    } catch (e) {
+      return null;
+    }
+  }
 }

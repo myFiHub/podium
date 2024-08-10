@@ -508,7 +508,7 @@ mixin FireBaseUtils {
     }
   }
 
-  Future<UserInfoModel?> saveUserLoggedInWithXIfNeeded(
+  Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded(
       {required UserInfoModel user}) async {
     try {
       final databaseRef = FirebaseDatabase.instance

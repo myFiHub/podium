@@ -166,7 +166,8 @@ class LoginController extends GetxController
           lowercasename: name.toLowerCase(),
         );
 
-        final user = await saveUserLoggedInWithXIfNeeded(user: userToCreate);
+        final user =
+            await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
         if (user == null) {
           Get.snackbar('Error', 'Error logging in');
           return;
@@ -175,6 +176,7 @@ class LoginController extends GetxController
         globalController.particleAuthUserInfo.value = particleUser;
         LoginTypeService.setLoginType(LoginType.x);
         globalController.setLoggedIn(true);
+        isLoggingIn.value = false;
         Navigate.to(
           type: NavigationTypes.offAllNamed,
           route: Routes.HOME,
@@ -192,5 +194,10 @@ class LoginController extends GetxController
     } finally {
       isLoggingIn.value = false;
     }
+  }
+
+  loginWithGoogle() async {
+    final userInfo = await particleLoginWithGoogle();
+    log.d(userInfo);
   }
 }

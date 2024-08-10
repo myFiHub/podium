@@ -110,7 +110,16 @@ class LoginView extends GetView<LoginController> {
                     onPressed: () {
                       controller.loginWithX(ignoreIfNotLoggedIn: false);
                     },
-                    text: 'SOCIAL LOGIN',
+                    text: 'LOGIN WITH X',
+                    type: ButtonType.transparent,
+                  ),
+                  space10,
+                  Button(
+                    size: ButtonSize.MEDIUM,
+                    onPressed: () {
+                      controller.loginWithGoogle();
+                    },
+                    text: 'LOGIN WITH GOOGLE',
                     type: ButtonType.transparent,
                   ),
                   space10,

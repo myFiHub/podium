@@ -481,7 +481,7 @@ mixin FireBaseUtils {
                 );
               })
               .toList()
-              .where((w) => w.address.isNotEmpty)
+              .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
               .toList(),
         );
         await databaseRef.set(userToSave.toJson());
@@ -521,15 +521,15 @@ mixin FireBaseUtils {
       final snapshot = await databaseRef.get();
       final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
-        if (user.savedParticleUserInfo != null) {
-          final canContinue = await saveParticleWalletInfoForUser(
-            userId: user.id,
-            info: user.savedParticleUserInfo!,
-          );
-          if (!canContinue) {
-            return null;
-          }
-        }
+        // if (user.savedParticleUserInfo != null) {
+        //   final canContinue = await saveParticleWalletInfoForUser(
+        //     userId: user.id,
+        //     info: user.savedParticleUserInfo!,
+        //   );
+        //   if (!canContinue) {
+        //     return null;
+        //   }
+        // }
         final retrievedUser = UserInfoModel(
           fullName: userSnapshot[UserInfoModel.fullNameKey],
           email: userSnapshot[UserInfoModel.emailKey],
@@ -546,7 +546,7 @@ mixin FireBaseUtils {
 
         final savedParticleUserInfo =
             userSnapshot[UserInfoModel.savedParticleUserInfoKey];
-        if (savedParticleUserInfo == null) {
+        if (savedParticleUserInfo != null) {
           final parsed = json.decode(savedParticleUserInfo as String);
           final wallets =
               List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
@@ -556,7 +556,9 @@ mixin FireBaseUtils {
           });
           final particleInfo = FirebaseParticleAuthUserInfo(
             uuid: parsed[FirebaseParticleAuthUserInfo.uuidKey],
-            wallets: walletsList,
+            wallets: walletsList
+                .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
+                .toList(),
           );
           retrievedUser.savedParticleUserInfo = particleInfo;
         }

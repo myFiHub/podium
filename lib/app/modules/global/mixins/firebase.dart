@@ -551,13 +551,19 @@ mixin FireBaseUtils {
           final wallets =
               List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
           final List<ParticleAuthWallet> walletsList = [];
-          wallets.forEach((element) {
-            walletsList.add(ParticleAuthWallet.fromMap(element));
-          });
+          wallets.forEach(
+            (element) {
+              walletsList.add(
+                ParticleAuthWallet.fromMap(element),
+              );
+            },
+          );
           final particleInfo = FirebaseParticleAuthUserInfo(
             uuid: parsed[FirebaseParticleAuthUserInfo.uuidKey],
             wallets: walletsList
-                .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
+                .where(
+                  (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
+                )
                 .toList(),
           );
           retrievedUser.savedParticleUserInfo = particleInfo;

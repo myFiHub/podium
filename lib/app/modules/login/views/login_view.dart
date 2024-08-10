@@ -108,7 +108,7 @@ class LoginView extends GetView<LoginController> {
                   Button(
                     size: ButtonSize.MEDIUM,
                     onPressed: () {
-                      controller.loginWithX();
+                      controller.loginWithX(ignoreIfNotLoggedIn: false);
                     },
                     text: 'SOCIAL LOGIN',
                     type: ButtonType.transparent,

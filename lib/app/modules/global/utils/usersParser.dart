@@ -25,6 +25,7 @@ usersParser(data) {
       final lowercasedId = id.toLowerCase();
       usersMap[lowercasedId] = user;
     } catch (e) {
+      log.e(value[UserInfoModel.idKey] + ' is causing problem');
       log.e(e);
     }
   });

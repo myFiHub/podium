@@ -8,10 +8,13 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
-import 'package:particle_base/particle_base.dart' as ParticleBase;
+import 'package:uuid/uuid.dart';
 
 class LoginController extends GetxController
     with ParticleAuthUtils, FireBaseUtils {
@@ -95,6 +98,7 @@ class LoginController extends GetxController
         storage.write(StorageKeys.userEmail, enteredEmail);
         globalController.firebaseUserCredential.value = firebaseUserCredential;
         globalController.setLoggedIn(true);
+        LoginTypeService.setLoginType(LoginType.emailAndPassword);
         Navigate.to(
           type: NavigationTypes.offAllNamed,
           route: Routes.HOME,
@@ -120,13 +124,70 @@ class LoginController extends GetxController
     }
   }
 
-  loginWithX() async {
-    final particleUser = await particleLoginWithX();
-    if (particleUser != null) {
-      log.d('email: ${particleUser.twitterEmail}');
-    } else {
+  loginWithX({required bool ignoreIfNotLoggedIn}) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleLoginWithX();
+      if (particleUser != null) {
+        final userId = particleUser.uuid;
+        if (particleUser.thirdpartyUserInfo == null) {
+          Get.snackbar('Error', 'complete your profile in X');
+          return;
+        }
+        final name = particleUser.thirdpartyUserInfo!.userInfo.name;
+        if (name == null || name.isEmpty) {
+          Get.snackbar('Error', 'complete your profile in X');
+          return;
+        }
+        String email = particleUser.thirdpartyUserInfo!.userInfo.email!;
+        if (email.isEmpty) {
+          email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
+        }
+        final wallets = particleUser.wallets;
+        final walletsToSave = wallets
+            .map((e) => ParticleAuthWallet(
+                address: e.publicAddress, chain: e.chainName))
+            .toList();
+        // this user will be saved, only if uuid of particle auth is not registered, so empty local wallet address is fine
+        final userToCreate = UserInfoModel(
+          id: userId,
+          fullName: name,
+          email: email,
+          avatar: particleUser.avatar ?? '',
+          localWalletAddress: '',
+          savedParticleUserInfo: FirebaseParticleAuthUserInfo(
+            uuid: userId,
+            wallets: walletsToSave,
+          ),
+          following: [],
+          numberOfFollowers: 0,
+          lowercasename: name.toLowerCase(),
+        );
+        final user = await saveUserLoggedInWithXIfNeeded(user: userToCreate);
+        if (user == null) {
+          Get.snackbar('Error', 'Error logging in');
+          return;
+        }
+        globalController.currentUserInfo.value = user;
+        globalController.particleAuthUserInfo.value = particleUser;
+        LoginTypeService.setLoginType(LoginType.x);
+        globalController.setLoggedIn(true);
+        Navigate.to(
+          type: NavigationTypes.offAllNamed,
+          route: Routes.HOME,
+        );
+      } else {
+        if (ignoreIfNotLoggedIn == false) {
+          Get.snackbar('Error', 'Error logging in');
+        }
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with X: $e');
       Get.snackbar('Error', 'Error logging in');
       return;
+    } finally {
+      isLoggingIn.value = false;
     }
   }
 }

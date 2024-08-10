@@ -30,6 +30,10 @@ mixin ParticleAuthUtils {
 
   Future<ParticleUser.UserInfo?> particleLoginWithX() async {
     try {
+      final isAlreadyLoggedIn = await ParticleAuthCore.isConnected();
+      if (isAlreadyLoggedIn) {
+        return await ParticleAuthCore.getUserInfo();
+      }
       final userInfo = await ParticleAuthCore.connect(
         LoginInfo.LoginType.twitter,
       );

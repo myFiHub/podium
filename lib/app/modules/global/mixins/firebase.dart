@@ -491,6 +491,39 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<UserInfoModel?> saveUserLoggedInWithXIfNeeded(
+      {required UserInfoModel user}) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.usersRef + user.id,
+      );
+      final snapshot = await databaseRef.get();
+      final userSnapshot = snapshot as dynamic;
+      if (userSnapshot != null) {
+        final retrievedUser = UserInfoModel(
+          fullName: userSnapshot[UserInfoModel.fullNameKey],
+          email: userSnapshot[UserInfoModel.emailKey],
+          id: userSnapshot[UserInfoModel.idKey],
+          avatar: userSnapshot[UserInfoModel.avatarUrlKey],
+          localWalletAddress:
+              userSnapshot[UserInfoModel.localWalletAddressKey] ?? '',
+          following: List.from(userSnapshot[UserInfoModel.followingKey] ?? []),
+          numberOfFollowers:
+              userSnapshot[UserInfoModel.numberOfFollowersKey] ?? 0,
+          lowercasename: userSnapshot[UserInfoModel.lowercasenameKey] ??
+              userSnapshot[UserInfoModel.fullNameKey].toLowerCase(),
+        );
+        return retrievedUser;
+      } else {
+        databaseRef.set(user.toJson());
+        return user;
+      }
+    } catch (e) {
+      log.f('Error saving user logged in with X to firebase: $e');
+      return null;
+    }
+  }
+
   Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
       String userId) async {
     try {

@@ -149,6 +149,10 @@ class LoginController extends GetxController
             .map((e) => ParticleAuthWallet(
                 address: e.publicAddress, chain: e.chainName))
             .toList();
+        final particleWalletInfo = FirebaseParticleAuthUserInfo(
+          uuid: userId,
+          wallets: walletsToSave,
+        );
         // this user will be saved, only if uuid of particle auth is not registered, so empty local wallet address is fine
         final userToCreate = UserInfoModel(
           id: userId,
@@ -156,14 +160,12 @@ class LoginController extends GetxController
           email: email,
           avatar: particleUser.avatar ?? '',
           localWalletAddress: '',
-          savedParticleUserInfo: FirebaseParticleAuthUserInfo(
-            uuid: userId,
-            wallets: walletsToSave,
-          ),
+          savedParticleUserInfo: particleWalletInfo,
           following: [],
           numberOfFollowers: 0,
           lowercasename: name.toLowerCase(),
         );
+
         final user = await saveUserLoggedInWithXIfNeeded(user: userToCreate);
         if (user == null) {
           Get.snackbar('Error', 'Error logging in');

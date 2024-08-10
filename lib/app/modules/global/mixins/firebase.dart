@@ -491,6 +491,23 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<bool> saveParticleWalletInfoForUser(
+      {required String userId,
+      required FirebaseParticleAuthUserInfo info}) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.usersRef +
+            userId +
+            '/${UserInfoModel.savedParticleUserInfoKey}',
+      );
+      await databaseRef.set(info.toJson());
+      return true;
+    } catch (e) {
+      log.f('Error saving particle user info to firebase: $e');
+      return false;
+    }
+  }
+
   Future<UserInfoModel?> saveUserLoggedInWithXIfNeeded(
       {required UserInfoModel user}) async {
     try {
@@ -504,6 +521,15 @@ mixin FireBaseUtils {
       final snapshot = await databaseRef.get();
       final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
+        if (user.savedParticleUserInfo != null) {
+          final canContinue = await saveParticleWalletInfoForUser(
+            userId: user.id,
+            info: user.savedParticleUserInfo!,
+          );
+          if (!canContinue) {
+            return null;
+          }
+        }
         final retrievedUser = UserInfoModel(
           fullName: userSnapshot[UserInfoModel.fullNameKey],
           email: userSnapshot[UserInfoModel.emailKey],

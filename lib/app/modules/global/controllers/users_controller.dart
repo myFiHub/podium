@@ -12,6 +12,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,7 +22,7 @@ class UsersController extends GetxController
   // current user is set by listening to global controller's currentUserInfo
   final currentUserInfo = Rxn<UserInfoModel>();
   final GroupsController groupsController = Get.find<GroupsController>();
-  final users = Map<String, UserInfoModel>();
+  // final users = Map<String, UserInfoModel>();
   final followingsInProgress = Map<String, String>().obs;
 
   @override
@@ -31,9 +32,9 @@ class UsersController extends GetxController
     globalController.currentUserInfo.listen((user) {
       currentUserInfo.value = user;
     });
-    globalController.loggedIn.listen((loggedIn) {
-      getRealtimeUsers(loggedIn);
-    });
+    // globalController.loggedIn.listen((loggedIn) {
+    //   getRealtimeUsers(loggedIn);
+    // });
   }
 
   @override
@@ -46,13 +47,16 @@ class UsersController extends GetxController
     super.onClose();
   }
 
-  UserInfoModel? getUserById(String id) {
-    final lowercasedId = id.toLowerCase();
-    return users[lowercasedId];
+  Future<UserInfoModel?> getUserById(String id) async {
+    final users = await getUsersByIds([id]);
+    if (users.isNotEmpty) {
+      return users[0];
+    }
+    return null;
   }
 
   followUnfollow(String id, bool startFollowing) async {
-    final user = getUserById(id);
+    final user = await getUserById(id);
     if (user != null) {
       try {
         followingsInProgress[id] = id;
@@ -94,31 +98,8 @@ class UsersController extends GetxController
     }
   }
 
-  getRealtimeUsers(bool loggedIn) {
-    final groupsController = Get.find<GroupsController>();
-    final databaseReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
-    StreamSubscription<DatabaseEvent>? subscription;
-    if (loggedIn) {
-      subscription = databaseReference.onValue.listen((event) {
-        final data = event.snapshot.value as Map<dynamic, dynamic>?;
-        if (data != null) {
-          final usersMap = usersParser(data);
-          users.assignAll(usersMap);
-          groupsController.getRealtimeGroups(true);
-        } else {
-          Get.snackbar('aaaaaaaaaaa', 'something horrible happened');
-        }
-      });
-    } else {
-      // ignore: dead_code
-      subscription?.cancel();
-      groupsController.subscription?.cancel();
-    }
-  }
-
-  openUserProfile(String userId) {
-    final user = getUserById(userId);
+  openUserProfile(String userId) async {
+    final user = await getUserById(userId);
     if (user != null) {
       final profileController = Get.put(ProfileController());
       profileController.userInfo.value = user;

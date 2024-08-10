@@ -494,11 +494,15 @@ mixin FireBaseUtils {
   Future<UserInfoModel?> saveUserLoggedInWithXIfNeeded(
       {required UserInfoModel user}) async {
     try {
-      final databaseRef = FirebaseDatabase.instance.ref(
-        FireBaseConstants.usersRef + user.id,
-      );
+      final databaseRef = FirebaseDatabase.instance
+          .ref(
+            FireBaseConstants.usersRef,
+          )
+          .child(
+            user.id,
+          );
       final snapshot = await databaseRef.get();
-      final userSnapshot = snapshot as dynamic;
+      final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
         final retrievedUser = UserInfoModel(
           fullName: userSnapshot[UserInfoModel.fullNameKey],
@@ -513,6 +517,23 @@ mixin FireBaseUtils {
           lowercasename: userSnapshot[UserInfoModel.lowercasenameKey] ??
               userSnapshot[UserInfoModel.fullNameKey].toLowerCase(),
         );
+
+        final savedParticleUserInfo =
+            userSnapshot[UserInfoModel.savedParticleUserInfoKey];
+        if (savedParticleUserInfo == null) {
+          final parsed = json.decode(savedParticleUserInfo as String);
+          final wallets =
+              List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
+          final List<ParticleAuthWallet> walletsList = [];
+          wallets.forEach((element) {
+            walletsList.add(ParticleAuthWallet.fromMap(element));
+          });
+          final particleInfo = FirebaseParticleAuthUserInfo(
+            uuid: parsed[FirebaseParticleAuthUserInfo.uuidKey],
+            wallets: walletsList,
+          );
+          retrievedUser.savedParticleUserInfo = particleInfo;
+        }
         return retrievedUser;
       } else {
         databaseRef.set(user.toJson());

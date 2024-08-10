@@ -57,6 +57,9 @@ class UserInfoModel {
     data[emailKey] = email;
     data[avatarUrlKey] = avatar;
     data[localWalletAddressKey] = localWalletAddress;
+    if (savedParticleUserInfo != null) {
+      data[savedParticleUserInfoKey] = savedParticleUserInfo!.toJson();
+    }
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
     data[localParticleUserInfoKey] = localParticleUserInfo;

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/loginType.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:web3modal_flutter/utils/util.dart';
@@ -274,14 +277,15 @@ class UserInfo extends GetWidget<GlobalController> {
               ),
             ),
             space10,
-            Text(
-              myUser.email,
-              style: const TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.w700,
-                color: ColorName.greyText,
+            if (GetStorage().read(StorageKeys.loginType) != LoginType.x)
+              Text(
+                myUser.email,
+                style: const TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.w700,
+                  color: ColorName.greyText,
+                ),
               ),
-            ),
           ],
         ),
       );

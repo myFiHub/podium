@@ -141,6 +141,7 @@ class LoginController extends GetxController
         }
         String email = particleUser.thirdpartyUserInfo!.userInfo.email!;
         if (email.isEmpty) {
+          //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
           email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
         }
         final wallets = particleUser.wallets;

@@ -160,7 +160,7 @@ class LoginController extends GetxController
         await _socialLogin(
           id: particleUser.uuid,
           name: particleUser.name!,
-          email: particleUser.email ?? '',
+          email: particleUser.googleEmail!,
           avatar: particleUser.avatar!,
           particleUser: particleUser,
           loginType: LoginType.google,

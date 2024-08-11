@@ -129,57 +129,13 @@ class LoginController extends GetxController
     try {
       final particleUser = await particleLoginWithX();
       if (particleUser != null) {
-        final userId = particleUser.uuid;
-        if (particleUser.thirdpartyUserInfo == null) {
-          Get.snackbar('Error', 'complete your profile in X');
-          return;
-        }
-        final name = particleUser.thirdpartyUserInfo!.userInfo.name;
-        if (name == null || name.isEmpty) {
-          Get.snackbar('Error', 'complete your profile in X');
-          return;
-        }
-        String email = particleUser.thirdpartyUserInfo!.userInfo.email!;
-        if (email.isEmpty) {
-          //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
-          email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
-        }
-        final wallets = particleUser.wallets;
-        final walletsToSave = wallets
-            .map((e) => ParticleAuthWallet(
-                address: e.publicAddress, chain: e.chainName))
-            .toList();
-        final particleWalletInfo = FirebaseParticleAuthUserInfo(
-          uuid: userId,
-          wallets: walletsToSave,
-        );
-        // this user will be saved, only if uuid of particle auth is not registered, so empty local wallet address is fine
-        final userToCreate = UserInfoModel(
-          id: userId,
-          fullName: name,
-          email: email,
-          avatar: particleUser.avatar ?? '',
-          localWalletAddress: '',
-          savedParticleUserInfo: particleWalletInfo,
-          following: [],
-          numberOfFollowers: 0,
-          lowercasename: name.toLowerCase(),
-        );
-
-        final user =
-            await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
-        if (user == null) {
-          Get.snackbar('Error', 'Error logging in');
-          return;
-        }
-        globalController.currentUserInfo.value = user;
-        globalController.particleAuthUserInfo.value = particleUser;
-        LoginTypeService.setLoginType(LoginType.x);
-        globalController.setLoggedIn(true);
-        isLoggingIn.value = false;
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.HOME,
+        await _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.thirdpartyUserInfo!.userInfo.email ?? '',
+          avatar: particleUser.avatar!,
+          particleUser: particleUser,
+          loginType: LoginType.x,
         );
       } else {
         if (ignoreIfNotLoggedIn == false) {
@@ -197,7 +153,78 @@ class LoginController extends GetxController
   }
 
   loginWithGoogle() async {
-    final userInfo = await particleLoginWithGoogle();
-    log.d(userInfo);
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleLoginWithGoogle();
+      if (particleUser != null) {
+        await _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.email ?? '',
+          avatar: particleUser.avatar!,
+          particleUser: particleUser,
+          loginType: LoginType.google,
+        );
+      } else {
+        Get.snackbar('Error', 'Error logging in');
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with Google: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
+  _socialLogin({
+    required String id,
+    required String name,
+    required String email,
+    required String avatar,
+    required ParticleUser.UserInfo particleUser,
+    required String loginType,
+  }) async {
+    final userId = id;
+    if (email.isEmpty) {
+      //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
+      email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
+    }
+    final walletsToSave = particleUser.wallets
+        .map((e) =>
+            ParticleAuthWallet(address: e.publicAddress, chain: e.chainName))
+        .toList();
+    final particleWalletInfo = FirebaseParticleAuthUserInfo(
+      uuid: userId,
+      wallets: walletsToSave,
+    );
+    // this user will be saved, only if uuid of particle auth is not registered, so empty local wallet address is fine
+    final userToCreate = UserInfoModel(
+      id: userId,
+      fullName: name,
+      email: email,
+      avatar: avatar,
+      localWalletAddress: '',
+      savedParticleUserInfo: particleWalletInfo,
+      following: [],
+      numberOfFollowers: 0,
+      lowercasename: name.toLowerCase(),
+    );
+
+    final user = await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
+    if (user == null) {
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    }
+    globalController.currentUserInfo.value = user;
+    globalController.particleAuthUserInfo.value = particleUser;
+    LoginTypeService.setLoginType(loginType);
+    globalController.setLoggedIn(true);
+    isLoggingIn.value = false;
+    Navigate.to(
+      type: NavigationTypes.offAllNamed,
+      route: Routes.HOME,
+    );
   }
 }

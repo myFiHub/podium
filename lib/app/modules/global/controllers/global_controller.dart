@@ -321,20 +321,14 @@ class GlobalController extends GetxController {
       final loginType = storage.read<String?>(StorageKeys.loginType);
       if (loginType == null) {
         isAutoLoggingIn.value = false;
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.LOGIN,
-        );
         return;
       }
       if (loginType == LoginType.emailAndPassword) {
-        // we will navigate to home inside next method
         await _autoLoginWithEmailAndPassword();
         return;
       }
       final LoginController loginController = Get.put(LoginController());
       if (loginType == LoginType.x) {
-        // we will navigate to home inside next method
         await loginController.loginWithX(ignoreIfNotLoggedIn: true);
         return;
       }

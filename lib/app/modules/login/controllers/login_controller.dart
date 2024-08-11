@@ -152,7 +152,7 @@ class LoginController extends GetxController
     }
   }
 
-  loginWithGoogle() async {
+  loginWithGoogle({required bool ignoreIfNotLoggedIn}) async {
     isLoggingIn.value = true;
     try {
       final particleUser = await particleLoginWithGoogle();
@@ -166,7 +166,9 @@ class LoginController extends GetxController
           loginType: LoginType.google,
         );
       } else {
-        Get.snackbar('Error', 'Error logging in');
+        if (!ignoreIfNotLoggedIn) {
+          Get.snackbar('Error', 'Error logging in');
+        }
         return;
       }
     } catch (e) {

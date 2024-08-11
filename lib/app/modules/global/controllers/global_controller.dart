@@ -332,10 +332,14 @@ class GlobalController extends GetxController {
         await _autoLoginWithEmailAndPassword();
         return;
       }
+      final LoginController loginController = Get.put(LoginController());
       if (loginType == LoginType.x) {
-        final LoginController loginController = Get.put(LoginController());
         // we will navigate to home inside next method
         await loginController.loginWithX(ignoreIfNotLoggedIn: true);
+        return;
+      }
+      if (loginType == LoginType.google) {
+        await loginController.loginWithGoogle(ignoreIfNotLoggedIn: true);
         return;
       }
     } catch (e) {

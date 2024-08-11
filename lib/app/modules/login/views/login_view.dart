@@ -117,7 +117,7 @@ class LoginView extends GetView<LoginController> {
                   Button(
                     size: ButtonSize.MEDIUM,
                     onPressed: () {
-                      controller.loginWithGoogle();
+                      controller.loginWithGoogle(ignoreIfNotLoggedIn: false);
                     },
                     text: 'LOGIN WITH GOOGLE',
                     type: ButtonType.transparent,

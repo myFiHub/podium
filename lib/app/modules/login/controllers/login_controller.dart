@@ -10,6 +10,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -17,7 +18,6 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:uuid/uuid.dart';
 
@@ -271,7 +271,7 @@ class LoginController extends GetxController
     Get.bottomSheet(
       Container(
         padding: EdgeInsets.all(20),
-        height: 300,
+        height: 250,
         width: Get.width,
         decoration: BoxDecoration(
           color: ColorName.cardBackground,
@@ -290,10 +290,14 @@ class LoginController extends GetxController
               },
               text: 'LOGIN WITH X',
               type: ButtonType.transparent,
-              icon: Icon(
-                Icons.close,
+              icon: Assets.images.xPlatform.svg(
+                width: 20,
+                height: 20,
                 color: ColorName.white,
               ),
+            ),
+            SizedBox(
+              height: 10,
             ),
             Button(
               size: ButtonSize.MEDIUM,
@@ -303,10 +307,12 @@ class LoginController extends GetxController
               },
               text: 'LOGIN WITH GOOGLE',
               type: ButtonType.transparent,
-              icon: Icon(
-                Icons.g_mobiledata,
-                color: ColorName.white,
+              icon: Assets.images.gIcon.image(
+                width: 20,
               ),
+            ),
+            SizedBox(
+              height: 10,
             ),
             Button(
               size: ButtonSize.MEDIUM,
@@ -316,9 +322,8 @@ class LoginController extends GetxController
               },
               text: 'LOGIN WITH FACEBOOK',
               type: ButtonType.transparent,
-              icon: Icon(
-                Icons.facebook,
-                color: ColorName.white,
+              icon: Assets.images.facebook.image(
+                height: 25,
               ),
             ),
           ],

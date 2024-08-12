@@ -11,4 +11,5 @@ class StorageKeys {
   static final userAvatar = 'userAvatar';
   static final connectedWalletAddress = 'connectedWalletAddress';
   static final ignoredOrAcceptedVersion = 'ignoredOrAcceptedVersion';
+  static final loginType = 'loginType';
 }

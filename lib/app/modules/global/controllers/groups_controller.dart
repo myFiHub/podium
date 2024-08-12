@@ -26,7 +26,11 @@ class GroupsController extends GetxController with FireBaseUtils {
   @override
   void onInit() {
     super.onInit();
-    // since we get the groups after getting the realtime user, we don't need to listen to the loggedIn status, it's done in users controller
+
+    globalController.loggedIn.listen((loggedIn) {
+      getRealtimeGroups(loggedIn);
+    });
+
     groups.listen((groups) {
       if (groups != null) {
         final myUser = globalController.currentUserInfo.value!;

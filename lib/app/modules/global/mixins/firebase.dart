@@ -481,13 +481,101 @@ mixin FireBaseUtils {
                 );
               })
               .toList()
-              .where((w) => w.address.isNotEmpty)
+              .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
               .toList(),
         );
         await databaseRef.set(userToSave.toJson());
       }
     } catch (e) {
       log.f('Error saving particle user info to firebase: $e');
+    }
+  }
+
+  Future<bool> saveParticleWalletInfoForUser(
+      {required String userId,
+      required FirebaseParticleAuthUserInfo info}) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.usersRef +
+            userId +
+            '/${UserInfoModel.savedParticleUserInfoKey}',
+      );
+      await databaseRef.set(info.toJson());
+      return true;
+    } catch (e) {
+      log.f('Error saving particle user info to firebase: $e');
+      return false;
+    }
+  }
+
+  Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded(
+      {required UserInfoModel user}) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance
+          .ref(
+            FireBaseConstants.usersRef,
+          )
+          .child(
+            user.id,
+          );
+      final snapshot = await databaseRef.get();
+      final userSnapshot = snapshot.value as dynamic;
+      if (userSnapshot != null) {
+        // if (user.savedParticleUserInfo != null) {
+        //   final canContinue = await saveParticleWalletInfoForUser(
+        //     userId: user.id,
+        //     info: user.savedParticleUserInfo!,
+        //   );
+        //   if (!canContinue) {
+        //     return null;
+        //   }
+        // }
+        final retrievedUser = UserInfoModel(
+          fullName: userSnapshot[UserInfoModel.fullNameKey],
+          email: userSnapshot[UserInfoModel.emailKey],
+          id: userSnapshot[UserInfoModel.idKey],
+          avatar: userSnapshot[UserInfoModel.avatarUrlKey],
+          localWalletAddress:
+              userSnapshot[UserInfoModel.localWalletAddressKey] ?? '',
+          following: List.from(userSnapshot[UserInfoModel.followingKey] ?? []),
+          numberOfFollowers:
+              userSnapshot[UserInfoModel.numberOfFollowersKey] ?? 0,
+          lowercasename: userSnapshot[UserInfoModel.lowercasenameKey] ??
+              userSnapshot[UserInfoModel.fullNameKey].toLowerCase(),
+        );
+
+        final savedParticleUserInfo =
+            userSnapshot[UserInfoModel.savedParticleUserInfoKey];
+        if (savedParticleUserInfo != null) {
+          final parsed = json.decode(savedParticleUserInfo as String);
+          final wallets =
+              List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
+          final List<ParticleAuthWallet> walletsList = [];
+          wallets.forEach(
+            (element) {
+              walletsList.add(
+                ParticleAuthWallet.fromMap(element),
+              );
+            },
+          );
+          final particleInfo = FirebaseParticleAuthUserInfo(
+            uuid: parsed[FirebaseParticleAuthUserInfo.uuidKey],
+            wallets: walletsList
+                .where(
+                  (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
+                )
+                .toList(),
+          );
+          retrievedUser.savedParticleUserInfo = particleInfo;
+        }
+        return retrievedUser;
+      } else {
+        databaseRef.set(user.toJson());
+        return user;
+      }
+    } catch (e) {
+      log.f('Error saving user logged in with X to firebase: $e');
+      return null;
     }
   }
 

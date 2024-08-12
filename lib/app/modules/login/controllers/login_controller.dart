@@ -1,17 +1,25 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
+import 'package:particle_base/model/login_info.dart' as PLoginInfo;
 
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
-import 'package:particle_base/particle_base.dart' as ParticleBase;
+import 'package:podium/widgets/button/button.dart';
+import 'package:uuid/uuid.dart';
 
 class LoginController extends GetxController
     with ParticleAuthUtils, FireBaseUtils {
@@ -95,6 +103,7 @@ class LoginController extends GetxController
         storage.write(StorageKeys.userEmail, enteredEmail);
         globalController.firebaseUserCredential.value = firebaseUserCredential;
         globalController.setLoggedIn(true);
+        LoginTypeService.setLoginType(LoginType.emailAndPassword);
         Navigate.to(
           type: NavigationTypes.offAllNamed,
           route: Routes.HOME,
@@ -120,13 +129,206 @@ class LoginController extends GetxController
     }
   }
 
-  loginWithX() async {
-    final particleUser = await particleLoginWithX();
-    if (particleUser != null) {
-      log.d('email: ${particleUser.twitterEmail}');
-    } else {
+  loginWithX({required bool ignoreIfNotLoggedIn}) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.twitter,
+      );
+      if (particleUser != null) {
+        await _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.thirdpartyUserInfo!.userInfo.email ?? '',
+          avatar: particleUser.avatar!,
+          particleUser: particleUser,
+          loginType: LoginType.x,
+        );
+      } else {
+        if (ignoreIfNotLoggedIn == false) {
+          Get.snackbar('Error', 'Error logging in');
+        }
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with X: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
+  loginWithGoogle({required bool ignoreIfNotLoggedIn}) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.google,
+      );
+      if (particleUser != null) {
+        await _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.googleEmail!,
+          avatar: particleUser.avatar!,
+          particleUser: particleUser,
+          loginType: LoginType.google,
+        );
+      } else {
+        if (!ignoreIfNotLoggedIn) {
+          Get.snackbar('Error', 'Error logging in');
+        }
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with Google: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
+  loginWithFaceBook({required bool ignoreIfNotLoggedIn}) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.facebook,
+      );
+      if (particleUser != null) {
+        _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.facebookEmail!,
+          avatar: particleUser.avatar!,
+          particleUser: particleUser,
+          loginType: LoginType.facebook,
+        );
+      } else {
+        Get.snackbar('Error', 'Error logging in');
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with Facebook: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
+  _socialLogin({
+    required String id,
+    required String name,
+    required String email,
+    required String avatar,
+    required ParticleUser.UserInfo particleUser,
+    required String loginType,
+  }) async {
+    final userId = id;
+    if (email.isEmpty) {
+      //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
+      email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
+    }
+    final walletsToSave = particleUser.wallets
+        .map((e) =>
+            ParticleAuthWallet(address: e.publicAddress, chain: e.chainName))
+        .toList();
+    final particleWalletInfo = FirebaseParticleAuthUserInfo(
+      uuid: userId,
+      wallets: walletsToSave,
+    );
+    // this user will be saved, only if uuid of particle auth is not registered, so empty local wallet address is fine
+    final userToCreate = UserInfoModel(
+      id: userId,
+      fullName: name,
+      email: email,
+      avatar: avatar,
+      localWalletAddress: '',
+      savedParticleUserInfo: particleWalletInfo,
+      following: [],
+      numberOfFollowers: 0,
+      lowercasename: name.toLowerCase(),
+    );
+
+    final user = await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
+    if (user == null) {
       Get.snackbar('Error', 'Error logging in');
       return;
     }
+    globalController.currentUserInfo.value = user;
+    globalController.particleAuthUserInfo.value = particleUser;
+    LoginTypeService.setLoginType(loginType);
+    globalController.setLoggedIn(true);
+    isLoggingIn.value = false;
+    Navigate.to(
+      type: NavigationTypes.offAllNamed,
+      route: Routes.HOME,
+    );
+  }
+
+  openSocialLoginBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.all(20),
+        height: 250,
+        width: Get.width,
+        decoration: BoxDecoration(
+          color: ColorName.cardBackground,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          children: <Widget>[
+            Button(
+              size: ButtonSize.MEDIUM,
+              onPressed: () {
+                loginWithX(ignoreIfNotLoggedIn: false);
+                Get.back();
+              },
+              text: 'LOGIN WITH X',
+              type: ButtonType.transparent,
+              icon: Assets.images.xPlatform.svg(
+                width: 20,
+                height: 20,
+                color: ColorName.white,
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Button(
+              size: ButtonSize.MEDIUM,
+              onPressed: () {
+                loginWithGoogle(ignoreIfNotLoggedIn: false);
+                Get.back();
+              },
+              text: 'LOGIN WITH GOOGLE',
+              type: ButtonType.transparent,
+              icon: Assets.images.gIcon.image(
+                width: 20,
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Button(
+              size: ButtonSize.MEDIUM,
+              onPressed: () {
+                loginWithFaceBook(ignoreIfNotLoggedIn: false);
+                Get.back();
+              },
+              text: 'LOGIN WITH FACEBOOK',
+              type: ButtonType.transparent,
+              icon: Assets.images.facebook.image(
+                height: 25,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

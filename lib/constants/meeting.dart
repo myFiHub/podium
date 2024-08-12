@@ -32,7 +32,7 @@ class MeetingConstants {
     };
   }
 
-  static buildMeetOptions(
+  static JitsiMeetConferenceOptions buildMeetOptions(
       {required FirebaseGroup group, required UserInfoModel myUser}) {
     final globalController = Get.find<GlobalController>();
     final sa = globalController.jitsiServerAddress;

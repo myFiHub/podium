@@ -11,6 +11,7 @@ import 'package:internet_connection_checker_plus/internet_connection_checker_plu
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
+import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -18,6 +19,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -59,6 +61,7 @@ final _checkOptions = [
 ];
 
 class GlobalController extends GetxController {
+  static final storage = GetStorage();
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
@@ -203,7 +206,6 @@ class GlobalController extends GetxController {
           log.d("new wallet address SAVED $newAddress");
           currentUserInfo.value!.localWalletAddress = newAddress;
           currentUserInfo.refresh();
-          GetStorage().write(StorageKeys.connectedWalletAddress, newAddress);
         } catch (e) {
           log.e("error saving wallet address");
           Get.snackbar('Error', 'Error saving wallet address, try again');
@@ -228,6 +230,7 @@ class GlobalController extends GetxController {
     storage.remove(StorageKeys.userAvatar);
     storage.remove(StorageKeys.userFullName);
     storage.remove(StorageKeys.userEmail);
+    storage.remove(StorageKeys.loginType);
   }
 
   Future<String?> getJitsiServerAddress() {
@@ -315,36 +318,27 @@ class GlobalController extends GetxController {
   checkLogin() async {
     isAutoLoggingIn.value = true;
     try {
-      final isParticleLoggedIn = await ParticleAuthCore.isConnected();
-      if (isParticleLoggedIn) {
-        final particleUserInfo = await ParticleAuthCore.getUserInfo();
-        particleAuthUserInfo.value = particleUserInfo;
-      } else {
-        log.e("particle not logged in");
-        throw Exception("particle not logged in");
-      }
-      final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-      if (isLoggedIn) {
-        final user = FirebaseAuth.instance.currentUser;
-        firebaseUser.value = user;
-        final userId = user!.uid;
-        final userInfo = await getUserInfoById(userId);
-        currentUserInfo.value = userInfo;
-        if (userInfo != null && userInfo.id.isNotEmpty) {
-          final storage = GetStorage();
-          storage.write(StorageKeys.userId, userInfo.id);
-          storage.write(StorageKeys.userAvatar, userInfo.avatar);
-          storage.write(StorageKeys.userFullName, userInfo.fullName);
-          storage.write(StorageKeys.userEmail, userInfo.email);
-          loggedIn.value = true;
-          isAutoLoggingIn.value = false;
-          Navigate.to(
-            type: NavigationTypes.offAllNamed,
-            route: Routes.HOME,
-          );
-        }
-      } else {
+      final loginType = storage.read<String?>(StorageKeys.loginType);
+      if (loginType == null) {
         isAutoLoggingIn.value = false;
+        return;
+      }
+      if (loginType == LoginType.emailAndPassword) {
+        await _autoLoginWithEmailAndPassword();
+        return;
+      }
+      final LoginController loginController = Get.put(LoginController());
+      if (loginType == LoginType.x) {
+        await loginController.loginWithX(ignoreIfNotLoggedIn: true);
+        return;
+      }
+      if (loginType == LoginType.google) {
+        await loginController.loginWithGoogle(ignoreIfNotLoggedIn: true);
+        return;
+      }
+      if (loginType == LoginType.facebook) {
+        await loginController.loginWithFaceBook(ignoreIfNotLoggedIn: true);
+        return;
       }
     } catch (e) {
       isAutoLoggingIn.value = false;
@@ -354,6 +348,40 @@ class GlobalController extends GetxController {
         route: Routes.LOGIN,
       );
       return;
+    }
+  }
+
+  _autoLoginWithEmailAndPassword() async {
+    final isParticleLoggedIn = await ParticleAuthCore.isConnected();
+    if (isParticleLoggedIn) {
+      final particleUserInfo = await ParticleAuthCore.getUserInfo();
+      particleAuthUserInfo.value = particleUserInfo;
+    } else {
+      log.e("particle not logged in");
+      throw Exception("particle not logged in");
+    }
+    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    if (isLoggedIn) {
+      final user = FirebaseAuth.instance.currentUser;
+      firebaseUser.value = user;
+      final userId = user!.uid;
+      final userInfo = await getUserInfoById(userId);
+      currentUserInfo.value = userInfo;
+      if (userInfo != null && userInfo.id.isNotEmpty) {
+        final storage = GetStorage();
+        storage.write(StorageKeys.userId, userInfo.id);
+        storage.write(StorageKeys.userAvatar, userInfo.avatar);
+        storage.write(StorageKeys.userFullName, userInfo.fullName);
+        storage.write(StorageKeys.userEmail, userInfo.email);
+        loggedIn.value = true;
+        isAutoLoggingIn.value = false;
+        Navigate.to(
+          type: NavigationTypes.offAllNamed,
+          route: Routes.HOME,
+        );
+      }
+    } else {
+      isAutoLoggingIn.value = false;
     }
   }
 
@@ -367,6 +395,7 @@ class GlobalController extends GetxController {
 
   _logout() async {
     isLoggingOut.value = true;
+    isAutoLoggingIn.value = false;
     try {
       await ParticleAuthCore.disconnect();
     } catch (e) {

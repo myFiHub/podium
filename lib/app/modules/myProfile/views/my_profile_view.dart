@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/loginType.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:web3modal_flutter/utils/util.dart';
@@ -78,7 +81,9 @@ class ParticleWalletManager extends GetWidget<GlobalController> {
                       ),
                       space10,
                       ...wallets
-                          .where((w) => w.publicAddress.isNotEmpty)
+                          .where((w) =>
+                              w.publicAddress.isNotEmpty &&
+                              w.chainName == 'evm_chain')
                           .toList()
                           .map(
                             (wallet) => GestureDetector(
@@ -250,6 +255,15 @@ class UserInfo extends GetWidget<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
+    String emailValue = controller.currentUserInfo.value?.email as String;
+    final loginType = GetStorage().read(StorageKeys.loginType);
+    if (loginType == LoginType.x) {
+      emailValue = 'Logged in with X platform';
+    }
+    if (loginType == LoginType.facebook) {
+      emailValue = 'Logged in with Facebook';
+    }
+
     return Obx(() {
       final myUser = controller.currentUserInfo.value;
       if (myUser == null) {
@@ -275,7 +289,7 @@ class UserInfo extends GetWidget<GlobalController> {
             ),
             space10,
             Text(
-              myUser.email,
+              emailValue,
               style: const TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.w700,

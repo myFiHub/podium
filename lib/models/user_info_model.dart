@@ -1,6 +1,7 @@
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
 
 import "package:podium/models/firebase_particle_user.dart";
+import 'package:podium/utils/logger.dart';
 
 class UserInfoModel {
   late String id;
@@ -57,6 +58,9 @@ class UserInfoModel {
     data[emailKey] = email;
     data[avatarUrlKey] = avatar;
     data[localWalletAddressKey] = localWalletAddress;
+    if (savedParticleUserInfo != null) {
+      data[savedParticleUserInfoKey] = savedParticleUserInfo!.toJson();
+    }
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
     data[localParticleUserInfoKey] = localParticleUserInfo;

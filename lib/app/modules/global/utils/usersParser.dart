@@ -3,7 +3,6 @@ import 'package:podium/utils/logger.dart';
 
 usersParser(data) {
   Map<String, UserInfoModel> usersMap = {};
-  // Iterate through the data
   data.forEach((key, value) {
     if (value[UserInfoModel.idKey] == null) return;
     try {
@@ -25,6 +24,7 @@ usersParser(data) {
       final lowercasedId = id.toLowerCase();
       usersMap[lowercasedId] = user;
     } catch (e) {
+      log.e(value[UserInfoModel.idKey] + ' is causing problem');
       log.e(e);
     }
   });

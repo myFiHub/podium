@@ -340,6 +340,14 @@ class GlobalController extends GetxController {
         await loginController.loginWithFaceBook(ignoreIfNotLoggedIn: true);
         return;
       }
+      if (loginType == LoginType.linkedin) {
+        await loginController.loginWithLinkedIn(ignoreIfNotLoggedIn: true);
+        return;
+      }
+      if (loginType == LoginType.apple) {
+        await loginController.loginWithApple(ignoreIfNotLoggedIn: true);
+        return;
+      }
     } catch (e) {
       isAutoLoggingIn.value = false;
 

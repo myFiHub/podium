@@ -189,6 +189,34 @@ class LoginController extends GetxController
     }
   }
 
+  loginWithLinkedIn({required bool ignoreIfNotLoggedIn}) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.linkedin,
+      );
+      if (particleUser != null) {
+        _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.linkedinEmail!,
+          avatar: particleUser.avatar!,
+          particleUser: particleUser,
+          loginType: LoginType.linkedin,
+        );
+      } else {
+        Get.snackbar('Error', 'Error logging in');
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with LinkedIn: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
   loginWithFaceBook({required bool ignoreIfNotLoggedIn}) async {
     isLoggingIn.value = true;
     try {
@@ -210,6 +238,34 @@ class LoginController extends GetxController
       }
     } catch (e) {
       log.e('Error logging in with Facebook: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
+  loginWithApple({required bool ignoreIfNotLoggedIn}) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.apple,
+      );
+      if (particleUser != null) {
+        _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.appleEmail!,
+          avatar: particleUser.avatar!,
+          particleUser: particleUser,
+          loginType: LoginType.apple,
+        );
+      } else {
+        Get.snackbar('Error', 'Error logging in');
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with Apple: $e');
       Get.snackbar('Error', 'Error logging in');
       return;
     } finally {
@@ -271,7 +327,7 @@ class LoginController extends GetxController
     Get.bottomSheet(
       Container(
         padding: EdgeInsets.all(20),
-        height: 250,
+        height: 340,
         width: Get.width,
         decoration: BoxDecoration(
           color: ColorName.cardBackground,
@@ -324,6 +380,37 @@ class LoginController extends GetxController
               type: ButtonType.transparent,
               icon: Assets.images.facebook.image(
                 height: 25,
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Button(
+              size: ButtonSize.MEDIUM,
+              onPressed: () {
+                loginWithApple(ignoreIfNotLoggedIn: false);
+                Get.back();
+              },
+              text: 'LOGIN WITH APPLE',
+              type: ButtonType.transparent,
+              icon: Assets.images.apple.image(
+                height: 25,
+                color: ColorName.white,
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Button(
+              size: ButtonSize.MEDIUM,
+              onPressed: () {
+                loginWithLinkedIn(ignoreIfNotLoggedIn: false);
+                Get.back();
+              },
+              text: 'LOGIN WITH LINKEDIN',
+              type: ButtonType.transparent,
+              icon: Assets.images.linkedin.image(
+                height: 20,
               ),
             ),
           ],

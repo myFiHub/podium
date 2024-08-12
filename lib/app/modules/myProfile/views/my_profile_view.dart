@@ -263,6 +263,12 @@ class UserInfo extends GetWidget<GlobalController> {
     if (loginType == LoginType.facebook) {
       emailValue = 'Logged in with Facebook';
     }
+    if (loginType == LoginType.linkedin) {
+      emailValue = 'Logged in with LinkedIn';
+    }
+    if (loginType == LoginType.apple) {
+      emailValue = 'Logged in with Apple';
+    }
 
     return Obx(() {
       final myUser = controller.currentUserInfo.value;

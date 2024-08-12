@@ -15,12 +15,19 @@ import 'package:vector_graphics/vector_graphics.dart';
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
+  /// File path: assets/images/apple.png
+  AssetGenImage get apple => const AssetGenImage('assets/images/apple.png');
+
   /// File path: assets/images/facebook.png
   AssetGenImage get facebook =>
       const AssetGenImage('assets/images/facebook.png');
 
   /// File path: assets/images/g_icon.png
   AssetGenImage get gIcon => const AssetGenImage('assets/images/g_icon.png');
+
+  /// File path: assets/images/linkedin.png
+  AssetGenImage get linkedin =>
+      const AssetGenImage('assets/images/linkedin.png');
 
   /// File path: assets/images/logo.png
   AssetGenImage get logo => const AssetGenImage('assets/images/logo.png');
@@ -30,7 +37,8 @@ class $AssetsImagesGen {
       const SvgGenImage('assets/images/x_platform.svg');
 
   /// List of all assets
-  List<dynamic> get values => [facebook, gIcon, logo, xPlatform];
+  List<dynamic> get values =>
+      [apple, facebook, gIcon, linkedin, logo, xPlatform];
 }
 
 class Assets {

@@ -123,6 +123,15 @@ class LoginView extends GetView<LoginController> {
                     type: ButtonType.transparent,
                   ),
                   space10,
+                  Button(
+                    size: ButtonSize.MEDIUM,
+                    onPressed: () {
+                      controller.loginWithFaceBook(ignoreIfNotLoggedIn: false);
+                    },
+                    text: 'LOGIN WITH FACEBOOK',
+                    type: ButtonType.transparent,
+                  ),
+                  space10,
                   Text(
                     "Version: " + Env.VERSION,
                     style: const TextStyle(

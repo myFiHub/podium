@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
+import 'package:particle_base/model/login_info.dart' as PLoginInfo;
 
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -127,7 +128,9 @@ class LoginController extends GetxController
   loginWithX({required bool ignoreIfNotLoggedIn}) async {
     isLoggingIn.value = true;
     try {
-      final particleUser = await particleLoginWithX();
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.twitter,
+      );
       if (particleUser != null) {
         await _socialLogin(
           id: particleUser.uuid,
@@ -155,7 +158,9 @@ class LoginController extends GetxController
   loginWithGoogle({required bool ignoreIfNotLoggedIn}) async {
     isLoggingIn.value = true;
     try {
-      final particleUser = await particleLoginWithGoogle();
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.google,
+      );
       if (particleUser != null) {
         await _socialLogin(
           id: particleUser.uuid,
@@ -173,6 +178,34 @@ class LoginController extends GetxController
       }
     } catch (e) {
       log.e('Error logging in with Google: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
+  loginWithFaceBook({required bool ignoreIfNotLoggedIn}) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.facebook,
+      );
+      if (particleUser != null) {
+        _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.facebookEmail!,
+          avatar: particleUser.avatar!,
+          particleUser: particleUser,
+          loginType: LoginType.facebook,
+        );
+      } else {
+        Get.snackbar('Error', 'Error logging in');
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with Facebook: $e');
       Get.snackbar('Error', 'Error logging in');
       return;
     } finally {

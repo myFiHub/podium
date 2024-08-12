@@ -336,6 +336,10 @@ class GlobalController extends GetxController {
         await loginController.loginWithGoogle(ignoreIfNotLoggedIn: true);
         return;
       }
+      if (loginType == LoginType.facebook) {
+        await loginController.loginWithFaceBook(ignoreIfNotLoggedIn: true);
+        return;
+      }
     } catch (e) {
       isAutoLoggingIn.value = false;
 
@@ -391,6 +395,7 @@ class GlobalController extends GetxController {
 
   _logout() async {
     isLoggingOut.value = true;
+    isAutoLoggingIn.value = false;
     try {
       await ParticleAuthCore.disconnect();
     } catch (e) {

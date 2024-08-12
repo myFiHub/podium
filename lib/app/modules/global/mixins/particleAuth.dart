@@ -1,25 +1,26 @@
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
-import 'package:particle_base/model/login_info.dart' as LoginInfo;
+import 'package:particle_base/model/login_info.dart' as PLoginInfo;
 
-List<LoginInfo.SupportAuthType> _supportAuthType = <LoginInfo.SupportAuthType>[
-  LoginInfo.SupportAuthType.email,
-  LoginInfo.SupportAuthType.twitter,
-  LoginInfo.SupportAuthType.google,
-  LoginInfo.SupportAuthType.facebook,
-  LoginInfo.SupportAuthType.github,
-  LoginInfo.SupportAuthType.linkedin,
-  LoginInfo.SupportAuthType.microsoft,
-  LoginInfo.SupportAuthType.twitch,
-  LoginInfo.SupportAuthType.discord,
-  LoginInfo.SupportAuthType.apple,
-  LoginInfo.SupportAuthType.phone,
+List<PLoginInfo.SupportAuthType> _supportAuthType =
+    <PLoginInfo.SupportAuthType>[
+  PLoginInfo.SupportAuthType.email,
+  PLoginInfo.SupportAuthType.twitter,
+  PLoginInfo.SupportAuthType.google,
+  PLoginInfo.SupportAuthType.facebook,
+  PLoginInfo.SupportAuthType.github,
+  PLoginInfo.SupportAuthType.linkedin,
+  PLoginInfo.SupportAuthType.microsoft,
+  PLoginInfo.SupportAuthType.twitch,
+  PLoginInfo.SupportAuthType.discord,
+  PLoginInfo.SupportAuthType.apple,
+  PLoginInfo.SupportAuthType.phone,
 ];
 mixin ParticleAuthUtils {
   Future<ParticleUser.UserInfo?> particleLogin(String email) async {
     try {
       final userInfo = await ParticleAuthCore.connect(
-        LoginInfo.LoginType.email,
+        PLoginInfo.LoginType.email,
         account: email,
       );
       return userInfo;
@@ -28,29 +29,15 @@ mixin ParticleAuthUtils {
     }
   }
 
-  Future<ParticleUser.UserInfo?> particleLoginWithX() async {
+  Future<ParticleUser.UserInfo?> particleSocialLogin(
+      {required PLoginInfo.LoginType type}) async {
     try {
       final isAlreadyLoggedIn = await ParticleAuthCore.isConnected();
       if (isAlreadyLoggedIn) {
         return await ParticleAuthCore.getUserInfo();
       }
       final userInfo = await ParticleAuthCore.connect(
-        LoginInfo.LoginType.twitter,
-      );
-      return userInfo;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  Future<ParticleUser.UserInfo?> particleLoginWithGoogle() async {
-    try {
-      final isAlreadyLoggedIn = await ParticleAuthCore.isConnected();
-      if (isAlreadyLoggedIn) {
-        return await ParticleAuthCore.getUserInfo();
-      }
-      final userInfo = await ParticleAuthCore.connect(
-        LoginInfo.LoginType.google,
+        type,
       );
       return userInfo;
     } catch (e) {

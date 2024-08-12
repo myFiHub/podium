@@ -58,5 +58,7 @@ final defaultAppBar = AppBar(
 );
 
 const vSpace10 = const SizedBox(height: 10);
-const space10 = const Gap(10);
+const space10 = const Gap(
+  10,
+);
 const space5 = const Gap(5);

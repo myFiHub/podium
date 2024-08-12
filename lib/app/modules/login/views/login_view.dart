@@ -93,6 +93,18 @@ class LoginView extends GetView<LoginController> {
                     },
                   ),
                   space10,
+                  space10,
+                  Button(
+                    size: ButtonSize.LARGE,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    onPressed: () {
+                      controller.openSocialLoginBottomSheet();
+                    },
+                    text: 'Social Login',
+                    blockButton: true,
+                    type: ButtonType.outline,
+                  ),
+                  space10,
                   Button(
                     size: ButtonSize.MEDIUM,
                     onPressed: () {
@@ -102,33 +114,6 @@ class LoginView extends GetView<LoginController> {
                       );
                     },
                     text: 'CREATE ACCOUNT',
-                    type: ButtonType.transparent,
-                  ),
-                  space10,
-                  Button(
-                    size: ButtonSize.MEDIUM,
-                    onPressed: () {
-                      controller.loginWithX(ignoreIfNotLoggedIn: false);
-                    },
-                    text: 'LOGIN WITH X',
-                    type: ButtonType.transparent,
-                  ),
-                  space10,
-                  Button(
-                    size: ButtonSize.MEDIUM,
-                    onPressed: () {
-                      controller.loginWithGoogle(ignoreIfNotLoggedIn: false);
-                    },
-                    text: 'LOGIN WITH GOOGLE',
-                    type: ButtonType.transparent,
-                  ),
-                  space10,
-                  Button(
-                    size: ButtonSize.MEDIUM,
-                    onPressed: () {
-                      controller.loginWithFaceBook(ignoreIfNotLoggedIn: false);
-                    },
-                    text: 'LOGIN WITH FACEBOOK',
                     type: ButtonType.transparent,
                   ),
                   space10,

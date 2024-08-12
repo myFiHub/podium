@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
@@ -9,12 +10,15 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
+import 'package:podium/utils/styles.dart';
+import 'package:podium/widgets/button/button.dart';
 import 'package:uuid/uuid.dart';
 
 class LoginController extends GetxController
@@ -260,6 +264,66 @@ class LoginController extends GetxController
     Navigate.to(
       type: NavigationTypes.offAllNamed,
       route: Routes.HOME,
+    );
+  }
+
+  openSocialLoginBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.all(20),
+        height: 300,
+        width: Get.width,
+        decoration: BoxDecoration(
+          color: ColorName.cardBackground,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          children: <Widget>[
+            Button(
+              size: ButtonSize.MEDIUM,
+              onPressed: () {
+                loginWithX(ignoreIfNotLoggedIn: false);
+                Get.back();
+              },
+              text: 'LOGIN WITH X',
+              type: ButtonType.transparent,
+              icon: Icon(
+                Icons.close,
+                color: ColorName.white,
+              ),
+            ),
+            Button(
+              size: ButtonSize.MEDIUM,
+              onPressed: () {
+                loginWithGoogle(ignoreIfNotLoggedIn: false);
+                Get.back();
+              },
+              text: 'LOGIN WITH GOOGLE',
+              type: ButtonType.transparent,
+              icon: Icon(
+                Icons.g_mobiledata,
+                color: ColorName.white,
+              ),
+            ),
+            Button(
+              size: ButtonSize.MEDIUM,
+              onPressed: () {
+                loginWithFaceBook(ignoreIfNotLoggedIn: false);
+                Get.back();
+              },
+              text: 'LOGIN WITH FACEBOOK',
+              type: ButtonType.transparent,
+              icon: Icon(
+                Icons.facebook,
+                color: ColorName.white,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -255,6 +255,15 @@ class UserInfo extends GetWidget<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
+    String emailValue = controller.currentUserInfo.value?.email as String;
+    final loginType = GetStorage().read(StorageKeys.loginType);
+    if (loginType == LoginType.x) {
+      emailValue = 'Logged in with X platform';
+    }
+    if (loginType == LoginType.facebook) {
+      emailValue = 'Logged in with Facebook';
+    }
+
     return Obx(() {
       final myUser = controller.currentUserInfo.value;
       if (myUser == null) {
@@ -279,15 +288,14 @@ class UserInfo extends GetWidget<GlobalController> {
               ),
             ),
             space10,
-            if (GetStorage().read(StorageKeys.loginType) != LoginType.x)
-              Text(
-                myUser.email,
-                style: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w700,
-                  color: ColorName.greyText,
-                ),
+            Text(
+              emailValue,
+              style: const TextStyle(
+                fontSize: 23,
+                fontWeight: FontWeight.w700,
+                color: ColorName.greyText,
               ),
+            ),
           ],
         ),
       );

@@ -15,17 +15,19 @@ If you want to see how easy integrating the Jitsi Meet Flutter SDK into a Flutte
 ### Add dependency
 
 Add the dependency from command-line
+
 ```bash
 $ flutter pub add jitsi_meet_flutter_sdk
 ```
 
 The command above will add this to the `pubspec.yaml` file in your project (you can do this manually):
+
 ```yaml
 dependencies:
-    jitsi_meet_flutter_sdk: ^0.4.2
+  jitsi_meet_flutter_sdk: ^0.4.2
 ```
 
-### Install 
+### Install
 
 Install the packages from the terminal:
 
@@ -57,7 +59,7 @@ jitsiMeet.join(options);
 
 ### iOS
 
-Make sure in `Podfile` from `ios` directory you set the ios version `12.4 or higher` 
+Make sure in `Podfile` from `ios` directory you set the ios version `12.4 or higher`
 
 ```
 platform :ios, '12.4'
@@ -88,11 +90,10 @@ android {
 }
 ```
 
-
 The `application:label` field from the Jitsi Meet Android SDK will conflict with your application's one . Go to `android/app/src/main/AndroidManifest.xml` and add the tools library and `tools:replace="android:label"` to the application tag.
 
 ```xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" 
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <application
         tools:replace="android:label"
@@ -103,50 +104,55 @@ The `application:label` field from the Jitsi Meet Android SDK will conflict with
     </application>
 </manifest>
 ```
+
 ## Using the API
 
 ### JitsiMeet
 
 The `JitsiMeet` class is the entry point for the sdk. It is used to launch the meeting screen, to send and receive all the events.
 
-1. ####  JitsiMeet()
-    The constructor for the class.
+1. #### JitsiMeet()
 
+   The constructor for the class.
 
-2. ####  join(JitsiMeetConferenceOptions options, [JitsiMeetEventListener? listener])
-    Joins a meeting with the given options and optionally a listener is given
+2. #### join(JitsiMeetConferenceOptions options, [JitsiMeetEventListener? listener])
 
-    - `options` : meeting options
-    - `listener` : event listener for events triggered by the native sdks
+   Joins a meeting with the given options and optionally a listener is given
+
+   - `options` : meeting options
+   - `listener` : event listener for events triggered by the native sdks
 
 3. #### hangUp()
 
-    The localParticipant leaves the current meeting.
+   The localParticipant leaves the current meeting.
 
 4. #### setAudioMuted(bool muted)
 
-    Sets the state of the localParticipant audio muted according to the `muted` parameter.
+   Sets the state of the localParticipant audio muted according to the `muted` parameter.
 
 5. #### setVideoMuted(bool muted)
-    Sets the state of the localParticipant video muted according to the `muted` parameter.
+
+   Sets the state of the localParticipant video muted according to the `muted` parameter.
 
 6. #### sendEndpointTextMessage({String? to, required String message})
-    Sends a message via the data channel to one particular participant or to all of them. If the `to` param is empty, the message will be sent to all the participants in the conference.
 
-    In order to get the participantId, the `participantsJoined` event should be listened for, which have as a parameter the `participantId` and this should be stored somehow.
+   Sends a message via the data channel to one particular participant or to all of them. If the `to` param is empty, the message will be sent to all the participants in the conference.
+
+   In order to get the participantId, the `participantsJoined` event should be listened for, which have as a parameter the `participantId` and this should be stored somehow.
 
 7. #### toggleScreenShare(bool enabled)
-    Sets the state of the localParticipant screen sharing according to the `enabled` parameter.
+
+   Sets the state of the localParticipant screen sharing according to the `enabled` parameter.
 
 8. #### openChat([String? to])
 
-    Opens the chat dialog. If `to` contains a valid participantId, the private chat with that particular participant will be opened.
+   Opens the chat dialog. If `to` contains a valid participantId, the private chat with that particular participant will be opened.
 
 9. #### sendChatMessage({String? to, required String message})
 
-    Sends a chat message via to one particular participant or to all of them. If the `to` param is empty, the message will be sent to all the participants in the conference.
+   Sends a chat message via to one particular participant or to all of them. If the `to` param is empty, the message will be sent to all the participants in the conference.
 
-    In order to get the participantId, the `participantsJoined` event should be listened for, which have as a parameter the `participantId` and this should be stored somehow.
+   In order to get the participantId, the `participantsJoined` event should be listened for, which have as a parameter the `participantId` and this should be stored somehow.
 
 10. #### closeChat()
 
@@ -155,7 +161,6 @@ The `JitsiMeet` class is the entry point for the sdk. It is used to launch the m
 11. #### retrieveParticipantsInfo()
 
     Sends and event that will trigger the `participantsInfoRetrieved` event which will contain participants information
-
 
 ### JitsiMeetConferenceOptions
 
@@ -177,7 +182,8 @@ var options = JitsiMeetConferenceOptions(
       },
       userInfo: JitsiMeetUserInfo(
           displayName: "Flutter user",
-          email: "user@example.com"
+          email: "user@example.com",
+          id:"user id in app"
       ),
     );
 ```
@@ -186,9 +192,9 @@ var options = JitsiMeetConferenceOptions(
 
 - All the values that can be added to the `featureFlags` can be found [here](https://github.com/jitsi/jitsi-meet/blob/master/react/features/base/flags/constants.ts).
 
-- #### JitsiMeetUserInfo({String displayName, String email, String avatar})
-    The constructor for the JitsiMeetUserInfo. 
-P.S. the avatar should be an url.
+- #### JitsiMeetUserInfo({String displayName,String id, String email, String avatar})
+      The constructor for the JitsiMeetUserInfo.
+  P.S. the avatar should be an url.
 
 ### JitsiMeetEventListener
 
@@ -196,62 +202,63 @@ This class intends to be used as a listener for events that come from the native
 
 1. #### conferenceJoined(String url)
 
-    Called when a conference was joined.
-    - `url` : the conference URL
+   Called when a conference was joined.
+
+   - `url` : the conference URL
 
 2. #### conferenceTerminated(String url, Object? error)
 
-    Called when the active conference ends, be it because of user choice or because of a failure.
+   Called when the active conference ends, be it because of user choice or because of a failure.
 
-    - `url` : the conference URL
-    - `error` : missing if the conference finished gracefully, otherwise contains the error message
+   - `url` : the conference URL
+   - `error` : missing if the conference finished gracefully, otherwise contains the error message
 
 3. #### conferenceWillJoin(String url)
 
-    Called before a conference is joined.
+   Called before a conference is joined.
 
-    - url: the conference URL
+   - url: the conference URL
 
-4. #### participantJoined(String? email, String? name, String? role, String? participantId) 
+4. #### participantJoined(String? email, String? name, String? role, String? participantId)
 
-    Called when a participant has joined the conference.
+   Called when a participant has joined the conference.
 
-    - `email` : the email of the participant. It may not be set if the remote participant didn't set one.
-    - `name` : the name of the participant.
-    - `role` : the role of the participant.
-    - `participantId` : the id of the participant.
+   - `email` : the email of the participant. It may not be set if the remote participant didn't set one.
+   - `name` : the name of the participant.
+   - `role` : the role of the participant.
+   - `participantId` : the id of the participant.
 
 5. #### participantLeft(String? participantId)
 
-    Called when a participant has left the conference.
+   Called when a participant has left the conference.
 
-    - `participantId` : the id of the participant that left.
+   - `participantId` : the id of the participant that left.
 
 6. #### audioMutedChanged(bool muted)
 
-    Called when the local participant's audio is muted or unmuted. 
+   Called when the local participant's audio is muted or unmuted.
 
-    - `muted` : a boolean indicating whether the audio is muted or not.
+   - `muted` : a boolean indicating whether the audio is muted or not.
 
 7. #### videoMutedChanged(bool muted)
 
-    Called when the local participant's video is muted or unmuted. 
+   Called when the local participant's video is muted or unmuted.
 
-    - `muted` : a boolean indicating whether the video is muted or not.
+   - `muted` : a boolean indicating whether the video is muted or not.
 
 8. #### endpointTextMessageReceived(String senderId, String message)
 
-    Called when an endpoint text message is received.
+   Called when an endpoint text message is received.
 
-    - `senderId` : the participantId of the sender
-    - `message` : the content.
+   - `senderId` : the participantId of the sender
+   - `message` : the content.
 
 9. #### screenShareToggled(String participantId, bool sharing)
 
-    Called when a participant starts or stops sharing his screen.
+   Called when a participant starts or stops sharing his screen.
 
-    - `participantId` : the id of the participant
-    - `sharing` : the state of screen share
+   - `participantId` : the id of the participant
+   - `sharing` : the state of screen share
 
 10. #### chatMessageReceived(String senderId, String message, bool isPrivate, String? timestamp)
 
@@ -269,6 +276,7 @@ This class intends to be used as a listener for events that come from the native
     - `isOpen` : true if the chat dialog is open, false otherwise.
 
 12. #### participantsInfoRetrieved(String participantsInfo)
+
     Called when `retrieveParticipantsInfo` action is called
 
     - `participantsInfo` : a list of participants information as a string.
@@ -308,12 +316,3 @@ var listener = JitsiMeetEventListener(
 ## References
 
 While building this project inspiration from https://github.com/saibotma/jitsi_meet_wrapper was taken.
-
-
-
-
-
-
-
-
-

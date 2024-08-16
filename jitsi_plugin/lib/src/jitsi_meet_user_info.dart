@@ -6,8 +6,15 @@ class JitsiMeetUserInfo {
   /// User email.
   final String? email;
 
+  final String id;
+
   /// URL for the user avatar.
   final String? avatar;
 
-  JitsiMeetUserInfo({this.displayName, this.email, this.avatar});
+  JitsiMeetUserInfo({
+    required this.id,
+    this.displayName,
+    this.email,
+    this.avatar,
+  });
 }

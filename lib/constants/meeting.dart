@@ -45,6 +45,7 @@ class MeetingConstants {
         displayName: myUser.fullName,
         email: myUser.email,
         avatar: myUser.avatar,
+        id: myUser.id,
       ),
     );
   }

@@ -220,8 +220,22 @@ class GlobalController extends GetxController {
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
-
     return await firebaseUserDbReference.set(walletAddress);
+  }
+
+  Future<bool> removeUserWalletAddressOnFirebase() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final userId = user!.uid;
+      final firebaseUserDbReference = FirebaseDatabase.instance
+          .ref(FireBaseConstants.usersRef)
+          .child(userId + '/' + UserInfoModel.localWalletAddressKey);
+      await firebaseUserDbReference.set('');
+      return true;
+    } catch (e) {
+      log.e("error removing wallet address");
+      return false;
+    }
   }
 
   cleanStorage() {
@@ -490,6 +504,13 @@ class GlobalController extends GetxController {
       } else {
         log.e(e);
       }
+    }
+  }
+
+  disconnect() async {
+    final removed = await removeUserWalletAddressOnFirebase();
+    if (removed) {
+      web3ModalService.disconnect();
     }
   }
 }

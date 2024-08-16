@@ -70,14 +70,15 @@ public class JitsiMeetPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         let featureFlags = arguments["featureFlags"] as? Dictionary<String, Any>
         let rawUserInfo = arguments["userInfo"] as! [String: Any]
         let displayName = rawUserInfo["displayName"] as? String
+        let id = rawUserInfo["id"] as? String
         let email = rawUserInfo["email"] as? String
         var avatar: URL? = nil
         if rawUserInfo["avatar"] as? String != nil {
             avatar = URL(string: rawUserInfo["avatar"] as! String)
         }
         var userInfo: JitsiMeetUserInfo? = nil
-        if (displayName != nil || email != nil || avatar != nil) {
-            userInfo = JitsiMeetUserInfo(displayName: displayName, andEmail: email, andAvatar: avatar)
+        if (displayName != nil || email != nil || avatar != nil || id != nil) {
+            userInfo = JitsiMeetUserInfo(displayName: displayName, andEmail: email, andAvatar: avatar,id:id)
         }
 
         let options = JitsiMeetConferenceOptions.fromBuilder { (builder) in

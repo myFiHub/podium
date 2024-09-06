@@ -6,7 +6,7 @@ environment:
   sdk: ">=3.4.3 <4.0.0"
 
 dependencies:
-  get: ^4.6.5
+  get: ^5.0.0-release-candidate-9.2
   flutter:
     sdk: flutter
   web3modal_flutter: ^3.3.0

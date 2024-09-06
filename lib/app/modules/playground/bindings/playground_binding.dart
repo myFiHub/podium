@@ -2,11 +2,11 @@ import 'package:get/get.dart';
 
 import '../controllers/playground_controller.dart';
 
-class PlaygroundBinding extends Bindings {
+class PlaygroundBinding extends Binding {
   @override
-  void dependencies() {
-    Get.lazyPut<PlaygroundController>(
-      () => PlaygroundController(),
-    );
-  }
+  dependencies() => [
+        Bind.lazyPut<PlaygroundController>(
+          () => PlaygroundController(),
+        )
+      ];
 }

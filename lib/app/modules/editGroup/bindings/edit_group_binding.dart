@@ -2,11 +2,11 @@ import 'package:get/get.dart';
 
 import '../controllers/edit_group_controller.dart';
 
-class EditGroupBinding extends Bindings {
+class EditGroupBinding extends Binding {
   @override
-  void dependencies() {
-    Get.lazyPut<EditGroupController>(
-      () => EditGroupController(),
-    );
-  }
+  dependencies() => [
+        Bind.lazyPut<EditGroupController>(
+          () => EditGroupController(),
+        )
+      ];
 }

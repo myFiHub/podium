@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
+    as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/allGroups/controllers/all_groups_controller.dart';
@@ -22,14 +23,14 @@ class GroupList extends StatelessWidget {
         final groupId = group.id;
         final amICreator = group.creator.id ==
             controller.globalController.currentUserInfo.value!.id;
-        return AnimationConfiguration.staggeredList(
+        return Staggered.AnimationConfiguration.staggeredList(
           position: index,
           key: Key(groupId),
           duration: const Duration(milliseconds: 375),
-          child: SlideAnimation(
+          child: Staggered.SlideAnimation(
             key: Key(groupId),
             verticalOffset: 50.0,
-            child: FadeInAnimation(
+            child: Staggered.FadeInAnimation(
               child: GestureDetector(
                 onTap: () {
                   controller.joinGroup(groupId);

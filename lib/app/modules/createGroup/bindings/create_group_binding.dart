@@ -2,11 +2,11 @@ import 'package:get/get.dart';
 
 import '../controllers/create_group_controller.dart';
 
-class CreateGroupBinding extends Bindings {
+class CreateGroupBinding extends Binding {
   @override
-  void dependencies() {
-    Get.lazyPut<CreateGroupController>(
-      () => CreateGroupController(),
-    );
-  }
+  dependencies() => [
+        Bind.lazyPut<CreateGroupController>(
+          () => CreateGroupController(),
+        )
+      ];
 }

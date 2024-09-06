@@ -2,11 +2,11 @@ import 'package:get/get.dart';
 
 import '../controllers/login_controller.dart';
 
-class LoginBinding extends Bindings {
+class LoginBinding extends Binding {
   @override
-  void dependencies() {
-    Get.put<LoginController>(
-      LoginController(),
-    );
-  }
+  dependencies() => [
+        Bind.put<LoginController>(
+          LoginController(),
+        )
+      ];
 }

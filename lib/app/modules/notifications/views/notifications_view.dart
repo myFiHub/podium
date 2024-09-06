@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
+    as Staggered;
 
 import 'package:get/get.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -30,14 +31,14 @@ class NotificationsView extends GetView<NotificationsController> {
                     itemCount: notifications.length,
                     itemBuilder: (context, index) {
                       final notif = notifications[index];
-                      return AnimationConfiguration.staggeredList(
+                      return Staggered.AnimationConfiguration.staggeredList(
                         position: index,
                         key: Key(notif.id),
                         duration: const Duration(milliseconds: 375),
-                        child: SlideAnimation(
+                        child: Staggered.SlideAnimation(
                           key: Key(notif.id),
                           verticalOffset: 20.0,
-                          child: FadeInAnimation(
+                          child: Staggered.FadeInAnimation(
                             child: GestureDetector(
                               onTap: () {
                                 controller.markNotificationAsRead(

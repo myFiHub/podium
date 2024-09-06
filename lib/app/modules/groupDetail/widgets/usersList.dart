@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
+    as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -27,14 +28,14 @@ class UserList extends StatelessWidget {
         final avatar = user.avatar;
         final userId = user.id;
         final isItME = user.id == myUserId;
-        return AnimationConfiguration.staggeredList(
+        return Staggered.AnimationConfiguration.staggeredList(
           position: index,
           key: Key(userId),
           duration: const Duration(milliseconds: 100),
-          child: SlideAnimation(
+          child: Staggered.SlideAnimation(
             key: Key(userId),
             verticalOffset: 12.0,
-            child: FadeInAnimation(
+            child: Staggered.FadeInAnimation(
               child: GestureDetector(
                 onTap: () {
                   final usersController = Get.find<UsersController>();

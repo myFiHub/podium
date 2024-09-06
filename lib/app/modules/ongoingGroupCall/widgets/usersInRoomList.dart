@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
+    as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -30,14 +31,14 @@ class UsersInRoomList extends StatelessWidget {
         final name = user.fullName;
         final userId = user.id;
         final isItME = user.id == myUserId;
-        return AnimationConfiguration.staggeredList(
+        return Staggered.AnimationConfiguration.staggeredList(
           position: index,
           key: Key(user.id),
           duration: const Duration(milliseconds: 375),
-          child: SlideAnimation(
+          child: Staggered.SlideAnimation(
             key: Key(user.id),
             verticalOffset: 20.0,
-            child: FadeInAnimation(
+            child: Staggered.FadeInAnimation(
               child: GestureDetector(
                 onTap: () {
                   final usersController = Get.find<UsersController>();
@@ -332,6 +333,7 @@ class LikeDislike extends GetWidget<OngoingGroupCallController> {
               if (controller.timers.value[storageKey] == null) return;
               controller.timers.update((val) {
                 val!.remove(storageKey);
+                return val;
               });
             },
             child: child,

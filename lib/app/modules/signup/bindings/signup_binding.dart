@@ -2,11 +2,11 @@ import 'package:get/get.dart';
 
 import '../controllers/signup_controller.dart';
 
-class SignupBinding extends Bindings {
+class SignupBinding extends Binding {
   @override
-  void dependencies() {
-    Get.lazyPut<SignUpController>(
-      () => SignUpController(),
-    );
-  }
+  dependencies() => [
+        Bind.lazyPut<SignUpController>(
+          () => SignUpController(),
+        )
+      ];
 }

@@ -6,13 +6,10 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
 

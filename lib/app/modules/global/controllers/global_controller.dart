@@ -207,7 +207,7 @@ class GlobalController extends GetxController {
           currentUserInfo.value!.localWalletAddress = newAddress;
           currentUserInfo.refresh();
         } catch (e) {
-          log.e("error saving wallet address");
+          log.e("error saving wallet address $e");
           Get.snackbar('Error', 'Error saving wallet address, try again');
         }
       }
@@ -215,8 +215,8 @@ class GlobalController extends GetxController {
   }
 
   saveUserWalletAddressOnFirebase(String walletAddress) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final userId = user!.uid;
+    // final user = FirebaseAuth.instance.currentUser;
+    final userId = currentUserInfo.value!.id;
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
@@ -225,15 +225,16 @@ class GlobalController extends GetxController {
 
   Future<bool> removeUserWalletAddressOnFirebase() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      final userId = user!.uid;
+      final globalController = Get.find<GlobalController>();
+      final id = globalController.currentUserInfo.value!.id;
+      final userId = id;
       final firebaseUserDbReference = FirebaseDatabase.instance
           .ref(FireBaseConstants.usersRef)
           .child(userId + '/' + UserInfoModel.localWalletAddressKey);
       await firebaseUserDbReference.set('');
       return true;
     } catch (e) {
-      log.e("error removing wallet address");
+      log.e("error removing wallet address $e");
       return false;
     }
   }
@@ -342,6 +343,10 @@ class GlobalController extends GetxController {
         return;
       }
       final LoginController loginController = Get.put(LoginController());
+      if (loginType == LoginType.email) {
+        await loginController.loginWithEmail(ignoreIfNotLoggedIn: true);
+        return;
+      }
       if (loginType == LoginType.x) {
         await loginController.loginWithX(ignoreIfNotLoggedIn: true);
         return;

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 class Constants {
   static const smallScreen = 640;
-
   static const String aud = 'https://walletconnect.org/login';
   static const String domain = 'walletconnect.org';
+  static const defaultProfilePic =
+      'https://static.vecteezy.com/system/resources/previews/021/548/095/original/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg';
 }
 
 class StyleConstants {

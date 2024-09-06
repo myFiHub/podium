@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:form_builder_validators/form_builder_validators.dart';
-
 import 'package:get/get.dart';
-import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:podium/widgets/textField/textFieldRounded.dart';
 
 import '../controllers/login_controller.dart';
 
@@ -45,76 +40,91 @@ class LoginView extends GetView<LoginController> {
                     ),
                   ),
                   space10,
-                  FormBuilderField(
-                    builder: (FormFieldState<String?> field) {
-                      return Input(
-                        hintText: 'Email',
-                        onChanged: (value) => controller.email.value = value,
-                        validator: FormBuilderValidators.compose([
-                          FormBuilderValidators.required(),
-                          FormBuilderValidators.email(),
-                        ]),
-                      );
-                    },
-                    name: 'email',
-                  ),
-                  space10,
-                  FormBuilderField(
-                    builder: (FormFieldState<String?> field) {
-                      return Input(
-                        onChanged: (value) => controller.password.value = value,
-                        hintText: 'Password',
-                        obscureText: true,
-                        validator: FormBuilderValidators.compose([
-                          FormBuilderValidators.required(),
-                          FormBuilderValidators.minLength(6),
-                        ]),
-                      );
-                    },
-                    name: 'password',
-                  ),
-                  space10,
-                  Obx(
-                    () {
-                      final loading = controller.isLoggingIn.value;
-                      final isAutoLoggingIn = controller.$isAutoLoggingIn.value;
-                      return Button(
-                        loading: loading || isAutoLoggingIn,
-                        type: ButtonType.gradient,
-                        blockButton: true,
-                        onPressed: () {
-                          final re = _formKey.currentState?.saveAndValidate();
-                          if (re == true) {
-                            controller.login();
-                          }
-                        },
-                        text: 'LOGIN',
-                      );
-                    },
-                  ),
-                  space10,
-                  space10,
-                  Button(
-                    size: ButtonSize.LARGE,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    onPressed: () {
-                      controller.openSocialLoginBottomSheet();
-                    },
-                    text: 'Social Login',
-                    blockButton: true,
-                    type: ButtonType.outline,
-                  ),
-                  space10,
                   Button(
                     size: ButtonSize.MEDIUM,
                     onPressed: () {
-                      Navigate.to(
-                        type: NavigationTypes.toNamed,
-                        route: Routes.SIGNUP,
+                      controller.loginWithEmail(
+                        ignoreIfNotLoggedIn: false,
                       );
                     },
-                    text: 'CREATE ACCOUNT',
+                    text: 'LOGIN WITH EMAIL',
                     type: ButtonType.transparent,
+                    icon: Icon(
+                      Icons.email_outlined,
+                      color: ColorName.white,
+                    ),
+                  ),
+                  Button(
+                    size: ButtonSize.MEDIUM,
+                    onPressed: () {
+                      controller.loginWithX(ignoreIfNotLoggedIn: false);
+                    },
+                    text: 'LOGIN WITH X',
+                    type: ButtonType.transparent,
+                    icon: Assets.images.xPlatform.svg(
+                      width: 20,
+                      height: 20,
+                      color: ColorName.white,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Button(
+                    size: ButtonSize.MEDIUM,
+                    onPressed: () {
+                      controller.loginWithGoogle(ignoreIfNotLoggedIn: false);
+                    },
+                    text: 'LOGIN WITH GOOGLE',
+                    type: ButtonType.transparent,
+                    icon: Assets.images.gIcon.image(
+                      width: 20,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Button(
+                    size: ButtonSize.MEDIUM,
+                    onPressed: () {
+                      controller.loginWithFaceBook(ignoreIfNotLoggedIn: false);
+                    },
+                    text: 'LOGIN WITH FACEBOOK',
+                    type: ButtonType.transparent,
+                    icon: Assets.images.facebook.image(
+                      height: 25,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Button(
+                    size: ButtonSize.MEDIUM,
+                    onPressed: () {
+                      controller.loginWithApple(ignoreIfNotLoggedIn: false);
+                    },
+                    text: 'LOGIN WITH APPLE',
+                    type: ButtonType.transparent,
+                    icon: Assets.images.apple.image(
+                      height: 25,
+                      color: ColorName.white,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Button(
+                    size: ButtonSize.MEDIUM,
+                    onPressed: () {
+                      controller.loginWithLinkedIn(
+                        ignoreIfNotLoggedIn: false,
+                      );
+                    },
+                    text: 'LOGIN WITH LINKEDIN',
+                    type: ButtonType.transparent,
+                    icon: Assets.images.linkedin.image(
+                      height: 20,
+                    ),
                   ),
                   space10,
                   Text(

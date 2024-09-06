@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
@@ -14,11 +16,13 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:uuid/uuid.dart';
 
 class LoginController extends GetxController
@@ -129,6 +133,40 @@ class LoginController extends GetxController
     }
   }
 
+  loginWithEmail({
+    required bool ignoreIfNotLoggedIn,
+    String? email,
+  }) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.email,
+        email: email,
+      );
+      if (particleUser != null) {
+        await _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name ?? '',
+          email: particleUser.email ?? '',
+          avatar: particleUser.avatar ?? Constants.defaultProfilePic,
+          particleUser: particleUser,
+          loginType: LoginType.email,
+        );
+      } else {
+        if (ignoreIfNotLoggedIn == false) {
+          Get.snackbar('Error', 'Error logging in');
+        }
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with Email: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
   loginWithX({required bool ignoreIfNotLoggedIn}) async {
     isLoggingIn.value = true;
     try {
@@ -140,7 +178,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.thirdpartyUserInfo!.userInfo.email ?? '',
-          avatar: particleUser.avatar!,
+          avatar: particleUser.avatar ?? Constants.defaultProfilePic,
           particleUser: particleUser,
           loginType: LoginType.x,
         );
@@ -170,7 +208,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.googleEmail!,
-          avatar: particleUser.avatar!,
+          avatar: particleUser.avatar ?? Constants.defaultProfilePic,
           particleUser: particleUser,
           loginType: LoginType.google,
         );
@@ -199,8 +237,8 @@ class LoginController extends GetxController
         _socialLogin(
           id: particleUser.uuid,
           name: particleUser.name!,
-          email: particleUser.linkedinEmail!,
-          avatar: particleUser.avatar!,
+          email: particleUser.linkedinEmail ?? '',
+          avatar: particleUser.avatar ?? Constants.defaultProfilePic,
           particleUser: particleUser,
           loginType: LoginType.linkedin,
         );
@@ -227,8 +265,8 @@ class LoginController extends GetxController
         _socialLogin(
           id: particleUser.uuid,
           name: particleUser.name!,
-          email: particleUser.facebookEmail!,
-          avatar: particleUser.avatar!,
+          email: particleUser.facebookEmail ?? '',
+          avatar: particleUser.avatar ?? Constants.defaultProfilePic,
           particleUser: particleUser,
           loginType: LoginType.facebook,
         );
@@ -255,8 +293,8 @@ class LoginController extends GetxController
         _socialLogin(
           id: particleUser.uuid,
           name: particleUser.name!,
-          email: particleUser.appleEmail!,
-          avatar: particleUser.avatar!,
+          email: particleUser.appleEmail ?? '',
+          avatar: particleUser.avatar ?? Constants.defaultProfilePic,
           particleUser: particleUser,
           loginType: LoginType.apple,
         );
@@ -320,102 +358,6 @@ class LoginController extends GetxController
     Navigate.to(
       type: NavigationTypes.offAllNamed,
       route: Routes.HOME,
-    );
-  }
-
-  openSocialLoginBottomSheet() {
-    Get.bottomSheet(
-      Container(
-        padding: EdgeInsets.all(20),
-        height: 340,
-        width: Get.width,
-        decoration: BoxDecoration(
-          color: ColorName.cardBackground,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Column(
-          children: <Widget>[
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithX(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH X',
-              type: ButtonType.transparent,
-              icon: Assets.images.xPlatform.svg(
-                width: 20,
-                height: 20,
-                color: ColorName.white,
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithGoogle(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH GOOGLE',
-              type: ButtonType.transparent,
-              icon: Assets.images.gIcon.image(
-                width: 20,
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithFaceBook(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH FACEBOOK',
-              type: ButtonType.transparent,
-              icon: Assets.images.facebook.image(
-                height: 25,
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithApple(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH APPLE',
-              type: ButtonType.transparent,
-              icon: Assets.images.apple.image(
-                height: 25,
-                color: ColorName.white,
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithLinkedIn(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH LINKEDIN',
-              type: ButtonType.transparent,
-              icon: Assets.images.linkedin.image(
-                height: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

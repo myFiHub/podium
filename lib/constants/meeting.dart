@@ -4,6 +4,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/constants.dart';
 
 class MeetingConstants {
   static Map<String, Object?> featureFlags = {
@@ -11,17 +12,18 @@ class MeetingConstants {
     FeatureFlags.securityOptionEnabled: false,
     FeatureFlags.iosScreenSharingEnabled: true,
     FeatureFlags.toolboxAlwaysVisible: true,
-    FeatureFlags.inviteEnabled: false,
+    FeatureFlags.inviteEnabled: true,
     FeatureFlags.raiseHandEnabled: true,
     FeatureFlags.videoShareEnabled: false,
     FeatureFlags.recordingEnabled: false,
-    FeatureFlags.welcomePageEnabled: false,
-    FeatureFlags.preJoinPageEnabled: false,
+    FeatureFlags.welcomePageEnabled: true,
+    FeatureFlags.preJoinPageEnabled: true,
     FeatureFlags.pipEnabled: true,
     FeatureFlags.kickOutEnabled: false,
     FeatureFlags.fullScreenEnabled: true,
     FeatureFlags.reactionsEnabled: false,
     FeatureFlags.videoMuteEnabled: false,
+    FeatureFlags.audioMuteButtonEnabled: false,
   };
   static Map<String, Object?> configOverrides(FirebaseGroup g) {
     return {
@@ -36,6 +38,11 @@ class MeetingConstants {
       {required FirebaseGroup group, required UserInfoModel myUser}) {
     final globalController = Get.find<GlobalController>();
     final sa = globalController.jitsiServerAddress;
+    String avatar = myUser.avatar;
+    // ignore: unnecessary_null_comparison
+    if (avatar == null || avatar.isEmpty) {
+      avatar = Constants.defaultProfilePic;
+    }
     return JitsiMeetConferenceOptions(
       serverURL: sa != '' ? sa : Env.jitsiServerUrl,
       room: group.id,
@@ -44,7 +51,7 @@ class MeetingConstants {
       userInfo: JitsiMeetUserInfo(
         displayName: myUser.fullName,
         email: myUser.email,
-        avatar: myUser.avatar,
+        avatar: avatar,
         id: myUser.id,
       ),
     );

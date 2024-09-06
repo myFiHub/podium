@@ -3,6 +3,7 @@ import 'package:podium/utils/storage.dart';
 
 class LoginType {
   static const String emailAndPassword = 'emailAndPassword';
+  static const String email = 'email';
   static const String x = 'x';
   static const String google = 'google';
   static const String facebook = 'facebook';

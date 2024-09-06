@@ -30,7 +30,7 @@ mixin ParticleAuthUtils {
   }
 
   Future<ParticleUser.UserInfo?> particleSocialLogin(
-      {required PLoginInfo.LoginType type}) async {
+      {required PLoginInfo.LoginType type, String? email}) async {
     try {
       final isAlreadyLoggedIn = await ParticleAuthCore.isConnected();
       if (isAlreadyLoggedIn) {
@@ -38,6 +38,7 @@ mixin ParticleAuthUtils {
       }
       final userInfo = await ParticleAuthCore.connect(
         type,
+        account: email,
       );
       return userInfo;
     } catch (e) {

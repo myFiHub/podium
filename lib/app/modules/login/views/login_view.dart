@@ -24,18 +24,6 @@ class LoginView extends GetView<LoginController> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Button(onPressed: () {
-                    controller.forceSaveUserFullName(
-                      user: UserInfoModel(
-                          id: 'id',
-                          fullName: 'fullName',
-                          email: 'email',
-                          avatar: 'avatar',
-                          localWalletAddress: 'localWalletAddress',
-                          following: [],
-                          numberOfFollowers: 0),
-                    );
-                  }),
                   Container(
                     height: 200,
                     child: Assets.images.logo.image(),

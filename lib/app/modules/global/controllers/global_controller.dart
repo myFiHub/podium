@@ -295,7 +295,7 @@ class GlobalController extends GetxController {
               TextButton(
                 onPressed: () {
                   storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                  Get.back();
+                  Get.backLegacy();
                   if (completer.isCompleted == false) {
                     completer.complete(true);
                   }

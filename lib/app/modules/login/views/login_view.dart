@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 
@@ -23,6 +24,18 @@ class LoginView extends GetView<LoginController> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Button(onPressed: () {
+                    controller.forceSaveUserFullName(
+                      user: UserInfoModel(
+                          id: 'id',
+                          fullName: 'fullName',
+                          email: 'email',
+                          avatar: 'avatar',
+                          localWalletAddress: 'localWalletAddress',
+                          following: [],
+                          numberOfFollowers: 0),
+                    );
+                  }),
                   Container(
                     height: 200,
                     child: Assets.images.logo.image(),

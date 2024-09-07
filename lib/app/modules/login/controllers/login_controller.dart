@@ -345,19 +345,98 @@ class LoginController extends GetxController
       lowercasename: name.toLowerCase(),
     );
 
-    final user = await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
+    UserInfoModel? user =
+        await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
+
     if (user == null) {
       Get.snackbar('Error', 'Error logging in');
       return;
     }
-    globalController.currentUserInfo.value = user;
-    globalController.particleAuthUserInfo.value = particleUser;
-    LoginTypeService.setLoginType(loginType);
-    globalController.setLoggedIn(true);
-    isLoggingIn.value = false;
-    Navigate.to(
-      type: NavigationTypes.offAllNamed,
-      route: Routes.HOME,
+    late String? savedName;
+    if (user.fullName.isEmpty || user.fullName == null) {
+      savedName = await forceSaveUserFullName(user: user);
+      final [myUser] = await getUsersByIds([user.id]);
+      user = myUser;
+      if (user == null) {
+        Get.snackbar('Error', 'Error logging in');
+        globalController.setLoggedIn(false);
+        return;
+      }
+    } else {
+      savedName = user.fullName;
+    }
+    if (savedName != null) {
+      globalController.currentUserInfo.value = user;
+      globalController.particleAuthUserInfo.value = particleUser;
+      LoginTypeService.setLoginType(loginType);
+      globalController.setLoggedIn(true);
+      isLoggingIn.value = false;
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: Routes.HOME,
+      );
+    } else {
+      globalController.setLoggedIn(false);
+      Get.snackbar("a name is required", '', colorText: Colors.red);
+    }
+  }
+
+  Future<String?> forceSaveUserFullName({required UserInfoModel user}) async {
+    final _formKey = GlobalKey<FormBuilderState>();
+    String fullName = '';
+    final name = await Get.bottomSheet(
+      isDismissible: false,
+      Container(
+        width: Get.width,
+        height: 300,
+        color: ColorName.cardBackground,
+        padding: EdgeInsets.all(12),
+        child: FormBuilder(
+          key: _formKey,
+          child: Column(
+            children: [
+              Text(
+                'the name you want to use in the platform',
+                style: TextStyle(
+                  color: ColorName.greyText,
+                ),
+              ),
+              FormBuilderField(
+                builder: (FormFieldState<String?> field) {
+                  return Input(
+                    hintText: 'Full Name',
+                    onChanged: (value) => fullName = value,
+                    validator: FormBuilderValidators.compose([
+                      FormBuilderValidators.required(
+                          errorText: 'Name is required'),
+                      FormBuilderValidators.minLength(3,
+                          errorText: 'Name too short'),
+                    ]),
+                  );
+                },
+                name: 'fullName',
+              ),
+              Button(
+                text: 'SUBMIT',
+                blockButton: true,
+                type: ButtonType.gradient,
+                onPressed: () {
+                  final re = _formKey.currentState?.saveAndValidate();
+                  if (re == true) {
+                    Navigator.pop(Get.context!, fullName);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+    final savedName = await saveNameForUserById(
+      userId: user.id,
+      name: name,
+    );
+
+    return savedName;
   }
 }

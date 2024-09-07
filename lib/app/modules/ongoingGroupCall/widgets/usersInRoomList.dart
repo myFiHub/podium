@@ -335,6 +335,8 @@ class LikeDislike extends GetWidget<OngoingGroupCallController> {
                 val!.remove(storageKey);
                 return val;
               });
+              // ignore: invalid_use_of_protected_member
+              controller.timers.refresh();
             },
             child: child,
           );

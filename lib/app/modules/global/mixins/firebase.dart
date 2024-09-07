@@ -51,6 +51,21 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<String?> saveNameForUserById(
+      {required String userId, required String name}) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance.ref(
+          FireBaseConstants.usersRef +
+              userId +
+              '/${UserInfoModel.fullNameKey}');
+      await databaseRef.set(name);
+      return name;
+    } catch (e) {
+      log.f('Error saving name for user by id: $e');
+      return null;
+    }
+  }
+
   Future<UserInfoModel?> getUserByEmail(String email) async {
     final databaseRef = FirebaseDatabase.instance.ref();
     final usersRef =

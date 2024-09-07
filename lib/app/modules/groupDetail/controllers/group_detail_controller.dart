@@ -36,8 +36,7 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   }
 
   getGroupInfo({required String id}) async {
-    log.d('Getting group info');
-    // if (isGettingGroupInfo.value) return;
+    if (isGettingGroupInfo.value) return;
     isGettingGroupInfo.value = true;
     final remoteGroup = await getGroupInfoById(id);
     group.value = remoteGroup;

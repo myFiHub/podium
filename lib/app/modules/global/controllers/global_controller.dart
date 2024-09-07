@@ -11,7 +11,9 @@ import 'package:internet_connection_checker_plus/internet_connection_checker_plu
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
+import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/app/modules/ongoingGroupCall/views/ongoing_group_call_view.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -79,6 +81,7 @@ class GlobalController extends GetxController {
   final loggedIn = false.obs;
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
+  String? deepLinkRoute = null;
 
   final connectionCheckerInstance = InternetConnection.createInstance(
     checkInterval: const Duration(seconds: 5),
@@ -221,6 +224,26 @@ class GlobalController extends GetxController {
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
     return await firebaseUserDbReference.set(walletAddress);
+  }
+
+  setDeepLinkRoute(String route) async {
+    log.d('deep link in global controller $route');
+    deepLinkRoute = route;
+    if (loggedIn.value) {
+      if (route.contains(Routes.GROUP_DETAIL)) {
+        final groupId = route.split('/')[2];
+        final groupDetailController = Get.put(GroupDetailController());
+        final GroupInfo = await groupDetailController.getGroupInfoById(groupId);
+        if (GroupInfo != null) {
+          groupDetailController.group.value = GroupInfo;
+          Navigate.to(
+            type: NavigationTypes.toNamed,
+            route: Routes.GROUP_DETAIL,
+          );
+        }
+      }
+      return;
+    }
   }
 
   Future<bool> removeUserWalletAddressOnFirebase() async {
@@ -417,6 +440,8 @@ class GlobalController extends GetxController {
     if (value == false) {
       log.f("logging out");
       _logout();
+    } else {
+      log.d(deepLinkRoute);
     }
   }
 

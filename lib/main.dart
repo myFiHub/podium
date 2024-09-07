@@ -9,8 +9,10 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/deepLink.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 import 'app/routes/app_pages.dart';
@@ -32,11 +34,17 @@ processLink(String? link) async {
   if (link != null) {
     if (link.startsWith('podium://')) {
       final deepLinkedPage = link.replaceAll('podium://', '/');
-      log.e('Deep link: $deepLinkedPage');
       final isGlobalControllerInitialized =
           Get.isRegistered<GlobalController>();
       if (isGlobalControllerInitialized) {
-        Get.toNamed(deepLinkedPage);
+        final globalController = Get.find<GlobalController>();
+        globalController.setDeepLinkRoute(deepLinkedPage);
+      } else {
+        final globalController = Get.put(
+          GlobalController(),
+          permanent: true,
+        );
+        globalController.setDeepLinkRoute(deepLinkedPage);
       }
     }
   }

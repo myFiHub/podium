@@ -15,6 +15,16 @@ final List<String> _validRoutesForNavigation =
     List.from(navbarItems.map((e) => e.route));
 
 class Navigate {
+  static toInitial() {
+    final GlobalController globalController = Get.find();
+    if (globalController.deepLinkRoute != null) {
+      final newRoute = globalController.deepLinkRoute;
+      globalController.deepLinkRoute = null;
+      Get.offAllNamed(newRoute!);
+      globalController.activeRoute.value = '/' + newRoute.split('/')[1];
+    }
+  }
+
   static to(
       {required NavigationTypes type,
       required String route,
@@ -39,7 +49,8 @@ class Navigate {
         Get.offAndToNamed(route, arguments: arguments);
         break;
     }
-    if (_validRoutesForNavigation.contains(route)) {
+    if (_validRoutesForNavigation.contains(route) ||
+        _validRoutesForNavigation.contains(route.split('/')[0])) {
       final globalController = Get.find<GlobalController>();
       globalController.activeRoute.value = route;
     }

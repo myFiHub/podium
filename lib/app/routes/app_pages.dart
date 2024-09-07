@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:podium/app/modules/groupDetail/views/group_by_id_landing.dart';
 
 import '../modules/allGroups/bindings/all_groups_binding.dart';
 import '../modules/allGroups/views/all_groups_view.dart';
@@ -63,6 +64,14 @@ class AppPages {
       name: _Paths.GROUP_DETAIL,
       page: () => const GroupDetailView(),
       binding: GroupDetailBinding(),
+      children: [
+        GetPage(
+          name: '/:id',
+          page: () => GroupByIdLandingScreen(),
+          transition: Transition.native,
+          preventDuplicates: false,
+        ),
+      ],
     ),
     GetPage(
       name: _Paths.EDIT_GROUP,

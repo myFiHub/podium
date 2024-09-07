@@ -304,6 +304,19 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<FirebaseGroup?> getGroupInfoById(String groupId) async {
+    final databaseRef = FirebaseDatabase.instance.ref();
+    final groupRef = databaseRef.child(FireBaseConstants.groupsRef + groupId);
+    final snapshot = await groupRef.get();
+    final group = snapshot.value as dynamic;
+    if (group != null) {
+      final groupInfo = singleGroupParser(group);
+      return groupInfo;
+    } else {
+      return null;
+    }
+  }
+
   Future<Map<String, FirebaseGroup>> searchForGroupByName(
       String groupName) async {
     if (groupName.isEmpty) return {};

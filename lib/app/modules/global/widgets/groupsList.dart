@@ -3,7 +3,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
     as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:podium/app/modules/allGroups/controllers/all_groups_controller.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -51,49 +51,65 @@ class GroupList extends StatelessWidget {
                       key: Key(groupId),
                       child: Stack(
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                name,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              space10,
-                              Row(
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  GFAvatar(
-                                    backgroundImage:
-                                        NetworkImage(group.creator.avatar),
-                                    shape: GFAvatarShape.standard,
-                                    backgroundColor: ColorName.cardBorder,
+                                  Text(
+                                    name,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                   space10,
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  Row(
                                     children: [
-                                      Text(
-                                          "Created By ${amICreator ? "You" : group.creator.fullName}",
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              color: ColorName.greyText)),
-                                      space5,
-                                      space5,
-                                      Text(
-                                        group.members.length.toString() +
-                                            " members",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700,
-                                            color: ColorName.greyText),
+                                      GFAvatar(
+                                        backgroundImage:
+                                            NetworkImage(group.creator.avatar),
+                                        shape: GFAvatarShape.standard,
+                                        backgroundColor: ColorName.cardBorder,
                                       ),
+                                      space10,
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                              "Created By ${amICreator ? "You" : group.creator.fullName}",
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: ColorName.greyText)),
+                                          space5,
+                                          space5,
+                                          Text(
+                                            group.members.length.toString() +
+                                                " members",
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w700,
+                                                color: ColorName.greyText),
+                                          ),
+                                        ],
+                                      )
                                     ],
                                   )
                                 ],
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  Share.share(
+                                    'podium://group-detail/$groupId',
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.share,
+                                  color: ColorName.greyText,
+                                ),
                               )
                             ],
                           ),

@@ -12,7 +12,6 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -32,6 +31,7 @@ class LoginController extends GetxController
   final $isAutoLoggingIn = false.obs;
   final email = ''.obs;
   final password = ''.obs;
+  Function? afterLogin = null;
 
   @override
   void onInit() {
@@ -371,6 +371,11 @@ class LoginController extends GetxController
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
       isLoggingIn.value = false;
+      if (afterLogin != null) {
+        afterLogin!();
+        afterLogin = null;
+        return;
+      }
       Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
@@ -12,6 +14,33 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 import 'app/routes/app_pages.dart';
+import 'package:uni_links/uni_links.dart';
+
+late StreamSubscription<String?> _subUniLinks;
+
+Future<void> initUniLinks() async {
+  try {
+    final String? initialLink = await getInitialLink();
+    if (initialLink != null) {
+      processLink(initialLink);
+    }
+  } on PlatformException {}
+  _subUniLinks = linkStream.listen(processLink, onError: (err) {});
+}
+
+processLink(String? link) async {
+  if (link != null) {
+    if (link.startsWith('podium://')) {
+      final deepLinkedPage = link.replaceAll('podium://', '/');
+      log.e('Deep link: $deepLinkedPage');
+      final isGlobalControllerInitialized =
+          Get.isRegistered<GlobalController>();
+      if (isGlobalControllerInitialized) {
+        Get.toNamed(deepLinkedPage);
+      }
+    }
+  }
+}
 
 void main() async {
   await GetStorage.init();
@@ -33,6 +62,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    initUniLinks();
+
     log.i(SchedulerBinding.instance.lifecycleState);
 
     _listener = AppLifecycleListener(
@@ -60,6 +91,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _listener.dispose();
+
+    if (_subUniLinks != null) _subUniLinks!.cancel();
+
     super.dispose();
   }
 

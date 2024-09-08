@@ -229,11 +229,16 @@ class GlobalController extends GetxController {
 
   openDeepLinkGroup(String route) {
     if (route.contains(Routes.GROUP_DETAIL)) {
-      final groupId = route.split('/')[2];
       Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
+      final splited = route.split(Routes.GROUP_DETAIL);
+      if (splited.length < 2) {
+        log.f("splited: $splited");
+        return;
+      }
+      final groupId = splited[1];
       final groupsController = Get.put(GroupsController());
       groupsController.joinGroupAndOpenGroupDetailPage(groupId);
       deepLinkRoute = null;

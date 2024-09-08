@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -155,6 +156,7 @@ class GroupsController extends GetxController with FireBaseUtils {
   }
 
   joinGroupAndOpenGroupDetailPage(String groupId) async {
+    if (groupId.isEmpty) return;
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
     final firebaseSessionsReference =
@@ -205,7 +207,15 @@ class GroupsController extends GetxController with FireBaseUtils {
         _openGroup(group: group);
       }
     } else {
-      Get.snackbar("Error", "Failed to join group, seems like room is deleted");
+      Get.snackbar(
+        "Error",
+        "Failed to join the room, seems like the room is deleted",
+        colorText: Colors.white,
+      );
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: Routes.HOME,
+      );
     }
   }
 

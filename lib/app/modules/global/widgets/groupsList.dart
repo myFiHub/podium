@@ -3,6 +3,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
     as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -104,9 +105,8 @@ class GroupList extends StatelessWidget {
                               IconButton(
                                 onPressed: () {
                                   Share.share(
-                                    // 'podium://group-detail/$groupId',
-                                    "${Env.baseDeepLinkUrl}/group-detail?id=$groupId",
-                                  );
+                                      // 'podium://group-detail/$groupId',
+                                      "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium");
                                 },
                                 icon: Icon(
                                   Icons.share,

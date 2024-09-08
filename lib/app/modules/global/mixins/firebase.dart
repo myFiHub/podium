@@ -305,6 +305,7 @@ mixin FireBaseUtils {
   }
 
   Future<FirebaseGroup?> getGroupInfoById(String groupId) async {
+    if (groupId.isEmpty) return null;
     final databaseRef = FirebaseDatabase.instance.ref();
     final groupRef = databaseRef.child(FireBaseConstants.groupsRef + groupId);
     final snapshot = await groupRef.get();

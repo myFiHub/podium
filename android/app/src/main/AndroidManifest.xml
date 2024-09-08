@@ -23,8 +23,9 @@
     <category android:name="android.intent.category.BROWSABLE" />
     <data android:scheme="podium" android:host="group-detail" />
     <data android:scheme="http" android:host="web3podium.page.link" />
-    <data android:scheme="https" android:host="web3podium.page.link" />
-
+    <data android:scheme="https"  />
+        <data android:scheme="http" android:host="web3podium.page.link/group-detail" />
+    <data android:scheme="https"  />
 </intent-filter>
 
             <!-- Specifies an Android theme to apply to this Activity as soon as

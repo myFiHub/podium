@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/env.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
@@ -14,9 +15,6 @@ import 'package:web3modal_flutter/web3modal_flutter.dart';
 import 'app/routes/app_pages.dart';
 import 'package:app_links/app_links.dart';
 
-// import 'package:uni_links/uni_links.dart';
-
-// late StreamSubscription<String?> _subUniLinks;
 StreamSubscription<Uri>? _linkSubscription;
 
 late AppLinks _appLinks;
@@ -25,24 +23,16 @@ Future<void> initDeepLinks() async {
   _appLinks = AppLinks();
 
   // Handle links
-  final initialLink = await _appLinks.getInitialLinkString();
+  final initialLink = await _appLinks.getInitialLink();
+  log.f('initial link: $initialLink');
   if (initialLink != null) {
-    processLink(initialLink);
+    processLink(initialLink.toString());
   }
   _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+    log.f('deep link: $uri');
     processLink(uri.toString());
   });
 }
-
-// Future<void> initUniLinks() async {
-//   try {
-//     final String? initialLink = await getInitialLink();
-//     if (initialLink != null) {
-//       processLink(initialLink);
-//     }
-//   } on PlatformException {}
-//   _subUniLinks = linkStream.listen(processLink, onError: (err) {});
-// }
 
 processLink(String? link) async {
   if (link != null) {
@@ -50,8 +40,8 @@ processLink(String? link) async {
     late String deepLinkedPage;
     if (link.startsWith('podium://')) {
       deepLinkedPage = link.replaceAll('podium://', '/');
-    } else if (link.startsWith("https://web3podium.page.link")) {
-      deepLinkedPage = link.replaceAll("https://web3podium.page.link", "");
+    } else if (link.startsWith(Env.baseDeepLinkUrl)) {
+      deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
       deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
     } else {
       deepLinkedPage = '';
@@ -91,7 +81,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    // initUniLinks();
     initDeepLinks();
 
     log.i(SchedulerBinding.instance.lifecycleState);
@@ -122,14 +111,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _listener.dispose();
     _linkSubscription?.cancel();
-
-    // if (_subUniLinks != null) _subUniLinks!.cancel();
-
     super.dispose();
   }
 
   void _handleDetached() async {
-    // jitsiMeet.hangUp();
+    jitsiMeet.hangUp();
     jitsiMethodChannel.invokeMethod<String>('hangUp');
     log.f('Detached');
   }

@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
@@ -226,23 +227,24 @@ class GlobalController extends GetxController {
     return await firebaseUserDbReference.set(walletAddress);
   }
 
+  openDeepLinkGroup(String route) {
+    if (route.contains(Routes.GROUP_DETAIL)) {
+      final groupId = route.split('/')[2];
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: Routes.HOME,
+      );
+      final groupsController = Get.put(GroupsController());
+      groupsController.joinGroupAndOpenGroupDetailPage(groupId);
+      deepLinkRoute = null;
+      activeRoute.value = Routes.HOME;
+    }
+  }
+
   setDeepLinkRoute(String route) async {
-    log.d('deep link in global controller $route');
     deepLinkRoute = route;
     if (loggedIn.value) {
-      if (route.contains(Routes.GROUP_DETAIL)) {
-        final groupId = route.split('/')[2];
-        final groupDetailController = Get.put(GroupDetailController());
-        final GroupInfo = await groupDetailController.getGroupInfoById(groupId);
-        if (GroupInfo != null) {
-          groupDetailController.group.value = GroupInfo;
-          Navigate.to(
-            type: NavigationTypes.toNamed,
-            route: Routes.GROUP_DETAIL,
-          );
-        }
-      }
-      return;
+      openDeepLinkGroup(route);
     }
   }
 
@@ -441,7 +443,15 @@ class GlobalController extends GetxController {
       log.f("logging out");
       _logout();
     } else {
-      log.d(deepLinkRoute);
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: Routes.HOME,
+      );
+      if (deepLinkRoute != null) {
+        final route = deepLinkRoute!;
+        openDeepLinkGroup(route);
+        return;
+      }
     }
   }
 

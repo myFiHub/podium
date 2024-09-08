@@ -38,29 +38,18 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   getGroupInfo({required String id}) async {
     if (isGettingGroupInfo.value) return;
     isGettingGroupInfo.value = true;
-    final remoteGroup = await getGroupInfoById(id);
-    group.value = remoteGroup;
-    if (remoteGroup == null) {
-      Get.snackbar('Error', 'Group not found');
-    }
     final globalController = Get.find<GlobalController>();
     final groupsController = Get.find<GroupsController>();
     if (globalController.loggedIn.value) {
-      groupsController.joinGroup(id);
+      groupsController.joinGroupAndOpenGroupDetailPage(id);
     } else {
       Get.offAllNamed(Routes.LOGIN);
       final loginController = Get.put(LoginController());
-      log.d('Setting after login');
       loginController.afterLogin = () {
-        Get.offAllNamed(
-          '${Routes.GROUP_DETAIL}/$id',
-        );
+        groupsController.joinGroupAndOpenGroupDetailPage(id);
       };
     }
     isGettingGroupInfo.value = false;
-
-    // groupsController.joinGroup(id);
-    // Get.toNamed(Routes.GROUP_DETAIL);
   }
 
   getMembers(FirebaseGroup group) async {

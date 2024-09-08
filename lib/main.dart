@@ -1,51 +1,72 @@
 import 'dart:async';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
-import 'package:podium/deepLink.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 import 'app/routes/app_pages.dart';
-import 'package:uni_links/uni_links.dart';
+import 'package:app_links/app_links.dart';
 
-late StreamSubscription<String?> _subUniLinks;
+// import 'package:uni_links/uni_links.dart';
 
-Future<void> initUniLinks() async {
-  try {
-    final String? initialLink = await getInitialLink();
-    if (initialLink != null) {
-      processLink(initialLink);
-    }
-  } on PlatformException {}
-  _subUniLinks = linkStream.listen(processLink, onError: (err) {});
+// late StreamSubscription<String?> _subUniLinks;
+StreamSubscription<Uri>? _linkSubscription;
+
+late AppLinks _appLinks;
+
+Future<void> initDeepLinks() async {
+  _appLinks = AppLinks();
+
+  // Handle links
+  final initialLink = await _appLinks.getInitialLinkString();
+  if (initialLink != null) {
+    processLink(initialLink);
+  }
+  _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+    processLink(uri.toString());
+  });
 }
+
+// Future<void> initUniLinks() async {
+//   try {
+//     final String? initialLink = await getInitialLink();
+//     if (initialLink != null) {
+//       processLink(initialLink);
+//     }
+//   } on PlatformException {}
+//   _subUniLinks = linkStream.listen(processLink, onError: (err) {});
+// }
 
 processLink(String? link) async {
   if (link != null) {
+    log.f('deep link: $link');
+    late String deepLinkedPage;
     if (link.startsWith('podium://')) {
-      final deepLinkedPage = link.replaceAll('podium://', '/');
-      final isGlobalControllerInitialized =
-          Get.isRegistered<GlobalController>();
-      if (isGlobalControllerInitialized) {
-        final globalController = Get.find<GlobalController>();
-        globalController.setDeepLinkRoute(deepLinkedPage);
-      } else {
-        final globalController = Get.put(
-          GlobalController(),
-          permanent: true,
-        );
-        globalController.setDeepLinkRoute(deepLinkedPage);
-      }
+      deepLinkedPage = link.replaceAll('podium://', '/');
+    } else if (link.startsWith("https://web3podium.page.link")) {
+      deepLinkedPage = link.replaceAll("https://web3podium.page.link", "");
+      deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
+    } else {
+      deepLinkedPage = '';
+    }
+    if (deepLinkedPage.isEmpty) return;
+    final isGlobalControllerInitialized = Get.isRegistered<GlobalController>();
+    if (isGlobalControllerInitialized) {
+      final globalController = Get.find<GlobalController>();
+      globalController.setDeepLinkRoute(deepLinkedPage);
+    } else {
+      final globalController = Get.put(
+        GlobalController(),
+        permanent: true,
+      );
+      globalController.setDeepLinkRoute(deepLinkedPage);
     }
   }
 }
@@ -70,7 +91,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    initUniLinks();
+    // initUniLinks();
+    initDeepLinks();
 
     log.i(SchedulerBinding.instance.lifecycleState);
 
@@ -99,8 +121,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _listener.dispose();
+    _linkSubscription?.cancel();
 
-    if (_subUniLinks != null) _subUniLinks!.cancel();
+    // if (_subUniLinks != null) _subUniLinks!.cancel();
 
     super.dispose();
   }

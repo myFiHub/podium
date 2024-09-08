@@ -3,6 +3,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
     as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:podium/env.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -33,7 +34,7 @@ class GroupList extends StatelessWidget {
             child: Staggered.FadeInAnimation(
               child: GestureDetector(
                 onTap: () {
-                  controller.joinGroup(groupId);
+                  controller.joinGroupAndOpenGroupDetailPage(groupId);
                 },
                 child: Stack(
                   children: [
@@ -103,7 +104,8 @@ class GroupList extends StatelessWidget {
                               IconButton(
                                 onPressed: () {
                                   Share.share(
-                                    'podium://group-detail/$groupId',
+                                    // 'podium://group-detail/$groupId',
+                                    "${Env.baseDeepLinkUrl}/group-detail?id=$groupId",
                                   );
                                 },
                                 icon: Icon(

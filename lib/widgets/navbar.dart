@@ -63,9 +63,9 @@ class PodiumNavbar extends GetWidget<GlobalController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      final loggedIn = controller.loggedIn.value;
       final activeRoute = controller.activeRoute.value;
-      if (_routesWithoutNavbar.contains(activeRoute) ||
-          controller.loggedIn.value == false) {
+      if (_routesWithoutNavbar.contains(activeRoute) || loggedIn == false) {
         return Container(
           height: 0,
         );

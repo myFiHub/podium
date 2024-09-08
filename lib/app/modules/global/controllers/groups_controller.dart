@@ -131,7 +131,7 @@ class GroupsController extends GetxController with FireBaseUtils {
       );
       final jsoned = newFirebaseSession.toJson();
       await firebaseSessionReference.set(jsoned);
-      joinGroup(newGroupId);
+      joinGroupAndOpenGroupDetailPage(newGroupId);
     } catch (e) {
       deleteGroup(groupId: newGroupId);
       Get.snackbar("Error", "Failed to create group");
@@ -154,13 +154,13 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
-  joinGroup(String groupId) async {
+  joinGroupAndOpenGroupDetailPage(String groupId) async {
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
     final firebaseSessionsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
     final myUser = globalController.currentUserInfo.value!;
-    final group = groups.value![groupId];
+    final group = await getGroupInfoById(groupId);
     if (group != null) {
       final iAmGroupCreator = group.creator.id == myUser.id;
       final members = List.from([...group.members]);
@@ -194,7 +194,7 @@ class GroupsController extends GetxController with FireBaseUtils {
                 .child(myUser.id)
                 .set(newFirebaseSessionMember.toJson());
           }
-          _openGroup(groupId: groupId);
+          _openGroup(group: group);
         } catch (e) {
           Get.snackbar("Error", "Failed to join group");
           log.f("Error joining group: $e");
@@ -202,22 +202,20 @@ class GroupsController extends GetxController with FireBaseUtils {
         }
       } else {
         joiningGroupId.value = '';
-        _openGroup(groupId: groupId);
+        _openGroup(group: group);
       }
+    } else {
+      Get.snackbar("Error", "Failed to join group, seems like room is deleted");
     }
   }
 
-  _openGroup({required String groupId}) async {
+  _openGroup({required FirebaseGroup group}) async {
     final groupDetainController = Get.put(GroupDetailController());
-    final allGroups = groups.value;
-    if (allGroups != null) {
-      final group = allGroups[groupId];
-      groupDetainController.group.value = group;
-      joiningGroupId.value = '';
-      Navigate.to(
-        type: NavigationTypes.toNamed,
-        route: Routes.GROUP_DETAIL,
-      );
-    }
+    groupDetainController.group.value = group;
+    joiningGroupId.value = '';
+    Navigate.to(
+      type: NavigationTypes.toNamed,
+      route: Routes.GROUP_DETAIL,
+    );
   }
 }

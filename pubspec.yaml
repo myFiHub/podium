@@ -12,8 +12,7 @@ dependencies:
   web3modal_flutter: ^3.3.0
   intl: ^0.19.0
   share_plus: ^10.0.0
-  uni_links: ^0.5.1
-
+  app_links: ^6.3.2
   fl_toast: ^3.2.0
   firebase_core: ^3.4.0
   firebase_database: ^11.0.3

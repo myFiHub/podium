@@ -108,7 +108,7 @@ class LoginController extends GetxController
         globalController.firebaseUserCredential.value = firebaseUserCredential;
         globalController.setLoggedIn(true);
         LoginTypeService.setLoginType(LoginType.emailAndPassword);
-        Navigate.toInitial();
+        // Navigate.toInitial();
       } catch (e) {
         Navigate.to(
           type: NavigationTypes.offAllNamed,
@@ -371,9 +371,8 @@ class LoginController extends GetxController
       if (afterLogin != null) {
         afterLogin!();
         afterLogin = null;
-        return;
       }
-      Navigate.toInitial();
+      // Navigate.toInitial();
     } else {
       globalController.setLoggedIn(false);
       Get.snackbar("a name is required", '', colorText: Colors.red);

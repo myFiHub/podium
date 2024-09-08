@@ -1,5 +1,8 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/widgets/navbar.dart';
 
 enum NavigationTypes {
@@ -15,16 +18,6 @@ final List<String> _validRoutesForNavigation =
     List.from(navbarItems.map((e) => e.route));
 
 class Navigate {
-  static toInitial() {
-    final GlobalController globalController = Get.find();
-    if (globalController.deepLinkRoute != null) {
-      final newRoute = globalController.deepLinkRoute;
-      globalController.deepLinkRoute = null;
-      Get.offAllNamed(newRoute!);
-      globalController.activeRoute.value = '/' + newRoute.split('/')[1];
-    }
-  }
-
   static to(
       {required NavigationTypes type,
       required String route,

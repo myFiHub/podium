@@ -1,3 +1,4 @@
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 
@@ -7,7 +8,11 @@ FirebaseGroup singleGroupParser(value) {
   final creator = value[FirebaseGroup.creatorKey];
   final members =
       ((value[FirebaseGroup.membersKey]) as List<dynamic>).cast<String>();
-
+  final privacyType =
+      value[FirebaseGroup.privacyTypeKey] ?? RoomPrivacyTypes.public;
+  final speakerType =
+      value[FirebaseGroup.speakerTypeKey] ?? RoomSpeakerTypes.everyone;
+  final subject = value[FirebaseGroup.subjectKey] ?? defaultSubject;
   final creatorId = creator[UserInfoModel.idKey];
   final creatorName = creator[UserInfoModel.fullNameKey];
   final creatorEmail = creator[UserInfoModel.emailKey];
@@ -23,6 +28,9 @@ FirebaseGroup singleGroupParser(value) {
     name: name,
     creator: creatorUser,
     members: members,
+    privacyType: privacyType,
+    speakerType: speakerType,
+    subject: subject,
   );
   return group;
 }

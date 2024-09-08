@@ -87,6 +87,24 @@ class GroupList extends StatelessWidget {
                                                   fontWeight: FontWeight.w400,
                                                   color: ColorName.greyText)),
                                           space5,
+                                          Text(
+                                            "Subject: ${group.subject}",
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w400,
+                                              color: ColorName.greyText,
+                                            ),
+                                          ),
+                                          space5,
+                                          Text(
+                                            "Speaker: ${group.speakerType}",
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w400,
+                                              color: ColorName.greyText,
+                                            ),
+                                          ),
+                                          space5,
                                           space5,
                                           Text(
                                             group.members.length.toString() +

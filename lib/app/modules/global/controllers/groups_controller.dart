@@ -91,7 +91,12 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
-  createGroup(String name) async {
+  createGroup({
+    required String name,
+    required String privacyType,
+    required String speakerType,
+    required String subject,
+  }) async {
     final newGroupId = Uuid().v4();
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + newGroupId);
@@ -108,7 +113,10 @@ class GroupsController extends GetxController with FireBaseUtils {
       id: newGroupId,
       name: name,
       creator: creator,
+      privacyType: privacyType,
+      speakerType: speakerType,
       members: [myUser.id],
+      subject: subject,
       lowercasename: name.toLowerCase(),
     );
     try {
@@ -118,6 +126,9 @@ class GroupsController extends GetxController with FireBaseUtils {
         name: name,
         createdBy: myUser.id,
         id: newGroupId,
+        privacyType: group.privacyType,
+        speakerType: group.speakerType,
+        subject: group.subject,
         members: {
           myUser.id: FirebaseSessionMember(
             avatar: myUser.avatar,

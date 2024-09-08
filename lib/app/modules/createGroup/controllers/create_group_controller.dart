@@ -7,6 +7,9 @@ import 'package:podium/utils/navigation/navigation.dart';
 class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
+  final roomPrivacyType = RoomPrivacyTypes.public.obs;
+  final roomSpeakerType = RoomSpeakerTypes.everyone.obs;
+  final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
   @override
   void onInit() {
@@ -21,6 +24,18 @@ class CreateGroupController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  setRoomPrivacyType(String value) {
+    roomPrivacyType.value = value;
+  }
+
+  setRoomSpeakingType(String value) {
+    roomSpeakerType.value = value;
+  }
+
+  setRoomSubject(String value) {
+    roomSubject.value = value;
   }
 
   create() async {
@@ -39,9 +54,17 @@ class CreateGroupController extends GetxController {
       );
       return;
     }
-
+    String subject = roomSubject.value;
+    if (subject.isEmpty) {
+      subject = defaultSubject;
+    }
     isCreatingNewGroup.value = true;
-    await groupsController.createGroup(groupName.value);
+    await groupsController.createGroup(
+      name: groupName.value,
+      privacyType: roomPrivacyType.value,
+      speakerType: roomSpeakerType.value,
+      subject: subject,
+    );
     isCreatingNewGroup.value = false;
     Navigate.to(
       type: NavigationTypes.offAllAndToNamed,
@@ -49,3 +72,17 @@ class CreateGroupController extends GetxController {
     );
   }
 }
+
+class RoomPrivacyTypes {
+  static const public = 'public';
+  static const onlyLink = 'onlyLink';
+  static const onlyTicketHolders = 'onlyTicketHolders';
+}
+
+class RoomSpeakerTypes {
+  static const everyone = 'everyone';
+  static const onlyCreator = 'onlyCreator';
+  static const onlyTicketHolders = 'onlyTicketHolders';
+}
+
+const defaultSubject = "anything";

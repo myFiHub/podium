@@ -1,3 +1,4 @@
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/models/user_info_model.dart';
 
 class FirebaseGroupCreator {
@@ -29,19 +30,28 @@ class FirebaseGroup {
   String id;
   FirebaseGroupCreator creator;
   List<String> members;
+  String? privacyType;
+  String? speakerType;
+  String? subject;
 
   static String idKey = 'id';
   static String nameKey = 'name';
   static String creatorKey = 'creator';
   static String membersKey = 'members';
   static String lowercasenameKey = 'lowercasename';
+  static String privacyTypeKey = 'privacyType';
+  static String speakerTypeKey = 'speakerType';
+  static String subjectKey = 'subject';
 
   FirebaseGroup({
     required this.name,
     required this.id,
     required this.creator,
     required this.members,
+    this.privacyType,
+    this.speakerType,
     this.lowercasename,
+    this.subject,
   });
 
   Map<String, dynamic> toJson() {
@@ -50,6 +60,8 @@ class FirebaseGroup {
     data[idKey] = id;
     data[creatorKey] = creator.toJson();
     data[membersKey] = members;
+    data[privacyTypeKey] = privacyType ?? RoomPrivacyTypes.public;
+    data[speakerTypeKey] = speakerType ?? RoomSpeakerTypes.everyone;
     data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     return data;
   }

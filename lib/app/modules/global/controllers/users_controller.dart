@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -29,9 +28,6 @@ class UsersController extends GetxController
     globalController.currentUserInfo.listen((user) {
       currentUserInfo.value = user;
     });
-    // globalController.loggedIn.listen((loggedIn) {
-    //   getRealtimeUsers(loggedIn);
-    // });
   }
 
   @override

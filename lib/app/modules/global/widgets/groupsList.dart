@@ -48,7 +48,7 @@ class GroupList extends StatelessWidget {
                                   : ColorName.cardBorder),
                           borderRadius:
                               const BorderRadius.all(const Radius.circular(8))),
-                      margin: const EdgeInsets.all(24),
+                      margin: const EdgeInsets.all(12),
                       padding: const EdgeInsets.all(16),
                       key: Key(groupId),
                       child: Stack(
@@ -70,6 +70,7 @@ class GroupList extends StatelessWidget {
                                   Row(
                                     children: [
                                       GFAvatar(
+                                        size: 52,
                                         backgroundImage:
                                             NetworkImage(group.creator.avatar),
                                         shape: GFAvatarShape.standard,
@@ -87,32 +88,79 @@ class GroupList extends StatelessWidget {
                                                   fontWeight: FontWeight.w400,
                                                   color: ColorName.greyText)),
                                           space5,
-                                          Text(
-                                            "Subject: ${group.subject}",
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              color: ColorName.greyText,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.subject,
+                                                color: ColorName.greyText,
+                                                size: 14,
+                                              ),
+                                              Text(
+                                                " ${group.subject}",
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: ColorName.greyText,
+                                                ),
+                                              )
+                                            ],
                                           ),
                                           space5,
-                                          Text(
-                                            "Speaker: ${group.speakerType}",
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              color: ColorName.greyText,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.mic,
+                                                color: ColorName.greyText,
+                                                size: 14,
+                                              ),
+                                              space5,
+                                              Text(
+                                                "${group.speakerType}",
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: ColorName.greyText,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                           space5,
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.lock,
+                                                color: ColorName.greyText,
+                                                size: 14,
+                                              ),
+                                              space5,
+                                              Text(
+                                                "${group.privacyType}",
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: ColorName.greyText,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                           space5,
-                                          Text(
-                                            group.members.length.toString() +
-                                                " members",
-                                            style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w700,
-                                                color: ColorName.greyText),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.group,
+                                                color: ColorName.greyText,
+                                                size: 14,
+                                              ),
+                                              space5,
+                                              Text(
+                                                "${group.members.length} Members",
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: ColorName.greyText,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       )

@@ -76,13 +76,16 @@ class CreateGroupController extends GetxController {
 class RoomPrivacyTypes {
   static const public = 'public';
   static const onlyLink = 'onlyLink';
-  static const onlyTicketHolders = 'onlyTicketHolders';
+  static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
+  static const onlyMovementPassHolders = 'onlyMovementPassHolders';
 }
 
 class RoomSpeakerTypes {
   static const everyone = 'everyone';
+  static const invitees = 'invitees';
   static const onlyCreator = 'onlyCreator';
-  static const onlyTicketHolders = 'onlyTicketHolders';
+  static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
+  static const onlyMovementPassHolders = 'onlyMovementPassHolders';
 }
 
 const defaultSubject = "anything";

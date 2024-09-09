@@ -52,8 +52,13 @@ class CreateGroupView extends GetView<CreateGroupController> {
                         text: 'Only By Link',
                       ),
                       DropDownItem(
-                        value: RoomPrivacyTypes.onlyTicketHolders,
-                        text: 'Only Ticket Holders',
+                        value: RoomPrivacyTypes.onlyArenaTicketHolders,
+                        text: 'Only Arena Ticket Holders',
+                        enabled: false,
+                      ),
+                      DropDownItem(
+                        value: RoomPrivacyTypes.onlyMovementPassHolders,
+                        text: 'Only Movement Pass Holders',
                         enabled: false,
                       ),
                     ],
@@ -84,15 +89,19 @@ class CreateGroupView extends GetView<CreateGroupController> {
                     items: [
                       DropDownItem(
                         value: RoomSpeakerTypes.everyone,
-                        text: 'Every One',
+                        text: 'Everyone',
+                      ),
+                      DropDownItem(
+                        value: RoomSpeakerTypes.invitees,
+                        text: 'Invitees',
                       ),
                       DropDownItem(
                         value: RoomSpeakerTypes.onlyCreator,
                         text: 'Only Creator',
                       ),
                       DropDownItem(
-                        value: RoomSpeakerTypes.onlyTicketHolders,
-                        text: 'Only Ticket Holders',
+                        value: RoomSpeakerTypes.onlyArenaTicketHolders,
+                        text: 'Ticket Holders',
                         enabled: false,
                       ),
                     ],

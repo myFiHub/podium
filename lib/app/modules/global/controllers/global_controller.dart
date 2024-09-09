@@ -241,7 +241,9 @@ class GlobalController extends GetxController {
       final groupId = splited[1];
       final groupsController = Get.put(GroupsController());
       Get.put(GroupDetailController());
-      groupsController.joinGroupAndOpenGroupDetailPage(groupId);
+      groupsController.joinGroupAndOpenGroupDetailPage(
+        groupId: groupId,
+      );
       deepLinkRoute = null;
       activeRoute.value = Routes.HOME;
     }

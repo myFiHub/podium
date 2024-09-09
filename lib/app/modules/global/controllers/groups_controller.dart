@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
@@ -63,8 +64,14 @@ class GroupsController extends GetxController with FireBaseUtils {
     final data = snapShot.value as Map<dynamic, dynamic>?;
     if (data != null) {
       try {
-        final groupsMap = groupsParser(data);
-        groups.value = groupsMap;
+        final Map<String, FirebaseGroup> groupsMap = groupsParser(data);
+        if (globalController.currentUserInfo.value != null) {
+          final myUser = globalController.currentUserInfo.value!;
+          final myId = myUser.id;
+          groups.value = getGroupsVisibleToMe(groupsMap, myId);
+        }
+
+        // groups.value = groupsMap;
       } catch (e) {
         log.e(e);
       }
@@ -79,8 +86,12 @@ class GroupsController extends GetxController with FireBaseUtils {
         final data = event.snapshot.value as Map<dynamic, dynamic>?;
         if (data != null) {
           try {
+            final myUser = globalController.currentUserInfo.value!;
+            final myId = myUser.id;
             final groupsMap = groupsParser(data);
-            groups.value = groupsMap;
+            groups.value = getGroupsVisibleToMe(groupsMap, myId);
+
+            // groups.value = groupsMap;
           } catch (e) {
             log.e(e);
           }
@@ -143,7 +154,9 @@ class GroupsController extends GetxController with FireBaseUtils {
       );
       final jsoned = newFirebaseSession.toJson();
       await firebaseSessionReference.set(jsoned);
-      joinGroupAndOpenGroupDetailPage(newGroupId);
+      joinGroupAndOpenGroupDetailPage(
+        groupId: newGroupId,
+      );
     } catch (e) {
       deleteGroup(groupId: newGroupId);
       Get.snackbar("Error", "Failed to create group");
@@ -166,7 +179,7 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
-  joinGroupAndOpenGroupDetailPage(String groupId) async {
+  joinGroupAndOpenGroupDetailPage({required String groupId}) async {
     if (groupId.isEmpty) return;
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
@@ -239,4 +252,18 @@ class GroupsController extends GetxController with FireBaseUtils {
       route: Routes.GROUP_DETAIL,
     );
   }
+}
+
+getGroupsVisibleToMe(Map<String, FirebaseGroup> groups, String myId) {
+  final filteredGroups = groups.entries.where((element) {
+    if (element.value.privacyType == RoomPrivacyTypes.public ||
+        element.value.members.contains(myId)) {
+      return true;
+    }
+    return false;
+  }).toList();
+  final filteredGroupsConverted = Map<String, FirebaseGroup>.fromEntries(
+    filteredGroups,
+  );
+  return filteredGroupsConverted;
 }

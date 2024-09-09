@@ -2,7 +2,7 @@ import 'package:app_settings/app_settings.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 mixin PermissionUtils {
-  getPermission(Permission featureToRequest) async {
+  Future<bool> getPermission(Permission featureToRequest) async {
     final status = await featureToRequest.status;
     if (status.isGranted) {
       return true;

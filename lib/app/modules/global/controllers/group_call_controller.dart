@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
@@ -61,25 +62,27 @@ class GroupCallController extends GetxController
   }
 
   startCall(FirebaseGroup g) async {
-    final hasMicAccess = await getPermission(Permission.microphone);
+    final globalController = Get.find<GlobalController>();
+    final myId = globalController.currentUserInfo.value!.id;
+    final iAmTheCreator = g.creator.id == myId;
+    final amIAllowedToSpeak = g.speakerType == null ||
+        iAmTheCreator ||
+        g.speakerType == RoomSpeakerTypes.everyone;
+    bool hasMicAccess = false;
+    if (amIAllowedToSpeak) {
+      hasMicAccess = await getPermission(Permission.microphone);
+      if (!hasMicAccess) {
+        Get.snackbar(
+          "warning",
+          "mic permission is required in order to join the call",
+          colorText: ColorName.white,
+        );
+      }
+    }
     final hasNotificationPermission =
         await getPermission(Permission.notification);
-    if (!hasMicAccess) {
-      Get.snackbar(
-        "warning",
-        "mic permission is required in order to join the call",
-        colorText: ColorName.white,
-      );
-    }
     log.d("notifications allowed: $hasNotificationPermission");
-    // if (!hasNotificationPermission) {
-    //   Get.snackbar(
-    //     "warning",
-    //     "notification permission is required in order to join the call",
-    //     colorText: ColorName.white,
-    //   );
-    // }
-    final globalController = Get.find<GlobalController>();
+
     String? particleWalletAddress;
     final myUser = globalController.currentUserInfo.value!;
     if (globalController.particleAuthUserInfo.value != null) {
@@ -109,6 +112,7 @@ class GroupCallController extends GetxController
     var options = MeetingConstants.buildMeetOptions(
       group: g,
       myUser: myUser,
+      allowedToSpeak: amIAllowedToSpeak,
     );
     try {
       await jitsiMeet.join(options, jitsiListeners());

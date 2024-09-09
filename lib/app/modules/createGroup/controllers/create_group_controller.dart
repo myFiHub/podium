@@ -88,4 +88,4 @@ class RoomSpeakerTypes {
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }
 
-const defaultSubject = "anything";
+const defaultSubject = "";

@@ -98,7 +98,7 @@ class GroupList extends StatelessWidget {
                                                 size: 14,
                                               ),
                                               Text(
-                                                " ${group.subject}",
+                                                " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w400,

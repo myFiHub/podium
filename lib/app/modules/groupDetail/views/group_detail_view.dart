@@ -28,6 +28,21 @@ class GroupDetailView extends GetView<GroupDetailController> {
           } else {
             return Column(
               children: <Widget>[
+                Text(
+                  group.name,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (group.subject != null)
+                  Text(
+                    group.subject!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[400],
+                    ),
+                  ),
                 Expanded(
                   child: UserList(
                     usersList: members,

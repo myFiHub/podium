@@ -130,8 +130,8 @@ class GroupCallController extends GetxController
     final globalController = Get.find<GlobalController>();
     final myId = globalController.currentUserInfo.value!.id;
     final iAmTheCreator = group.creator.id == myId;
+    if (iAmTheCreator) return true;
     final iAmAllowedToSpeak = group.speakerType == null ||
-        iAmTheCreator ||
         group.speakerType == RoomSpeakerTypes.everyone ||
         group.speakerType == RoomSpeakerTypes.invitees;
     return iAmAllowedToSpeak;

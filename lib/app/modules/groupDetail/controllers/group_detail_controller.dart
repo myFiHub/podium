@@ -41,12 +41,16 @@ class GroupDetailController extends GetxController with FireBaseUtils {
     final globalController = Get.find<GlobalController>();
     final groupsController = Get.find<GroupsController>();
     if (globalController.loggedIn.value) {
-      groupsController.joinGroupAndOpenGroupDetailPage(id);
+      groupsController.joinGroupAndOpenGroupDetailPage(
+        groupId: id,
+      );
     } else {
       Get.offAllNamed(Routes.LOGIN);
       final loginController = Get.put(LoginController());
       loginController.afterLogin = () {
-        groupsController.joinGroupAndOpenGroupDetailPage(id);
+        groupsController.joinGroupAndOpenGroupDetailPage(
+          groupId: id,
+        );
       };
     }
     isGettingGroupInfo.value = false;

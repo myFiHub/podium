@@ -35,7 +35,9 @@ class GroupList extends StatelessWidget {
             child: Staggered.FadeInAnimation(
               child: GestureDetector(
                 onTap: () {
-                  controller.joinGroupAndOpenGroupDetailPage(groupId);
+                  controller.joinGroupAndOpenGroupDetailPage(
+                    groupId: groupId,
+                  );
                 },
                 child: Stack(
                   children: [

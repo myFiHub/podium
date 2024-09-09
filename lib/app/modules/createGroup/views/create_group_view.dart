@@ -44,21 +44,21 @@ class CreateGroupView extends GetView<CreateGroupController> {
                   DropDown(
                     items: [
                       DropDownItem(
-                        value: RoomPrivacyTypes.public,
+                        value: RoomAccessTypes.public,
                         text: 'Public',
                       ),
                       DropDownItem(
-                        value: RoomPrivacyTypes.onlyLink,
+                        value: RoomAccessTypes.onlyLink,
                         text: 'Only By Link',
                       ),
                       DropDownItem(
-                        value: RoomPrivacyTypes.onlyArenaTicketHolders,
+                        value: RoomAccessTypes.onlyArenaTicketHolders,
                         text: 'Only Arena Ticket Holders',
                         enabled: false,
                       ),
                       DropDownItem(
-                        value: RoomPrivacyTypes.onlyMovementPassHolders,
-                        text: 'Only Movement Pass Holders',
+                        value: RoomAccessTypes.onlyPodiumPassHolders,
+                        text: 'Only Podium Pass Holders',
                         enabled: false,
                       ),
                     ],

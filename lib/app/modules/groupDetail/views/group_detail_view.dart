@@ -39,8 +39,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                   blockButton: true,
                   type: ButtonType.gradient,
                   onPressed: () {
-                    final groupCallController = Get.find<GroupCallController>();
-                    groupCallController.startCall(group);
+                    controller.startTheCall();
                   },
                   child: Text('join the room'),
                 ),

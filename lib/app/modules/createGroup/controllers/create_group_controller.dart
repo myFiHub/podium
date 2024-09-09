@@ -7,7 +7,7 @@ import 'package:podium/utils/navigation/navigation.dart';
 class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
-  final roomPrivacyType = RoomPrivacyTypes.public.obs;
+  final roomPrivacyType = RoomAccessTypes.public.obs;
   final roomSpeakerType = RoomSpeakerTypes.everyone.obs;
   final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
@@ -73,11 +73,11 @@ class CreateGroupController extends GetxController {
   }
 }
 
-class RoomPrivacyTypes {
+class RoomAccessTypes {
   static const public = 'public';
   static const onlyLink = 'onlyLink';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
-  static const onlyMovementPassHolders = 'onlyMovementPassHolders';
+  static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }
 
 class RoomSpeakerTypes {
@@ -85,7 +85,7 @@ class RoomSpeakerTypes {
   static const invitees = 'invitees';
   static const onlyCreator = 'onlyCreator';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
-  static const onlyMovementPassHolders = 'onlyMovementPassHolders';
+  static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }
 
 const defaultSubject = "anything";

@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/utils/logger.dart';
 
 class GroupDetailController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
@@ -62,5 +62,12 @@ class GroupDetailController extends GetxController with FireBaseUtils {
     final list = await getUsersByIds(memberIds);
     membersList.value = list;
     isGettingMembers.value = false;
+  }
+
+  startTheCall() {
+    final groupCallController = Get.find<GroupCallController>();
+    groupCallController.startCall(
+      groupToJoin: group.value!,
+    );
   }
 }

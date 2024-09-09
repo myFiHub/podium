@@ -33,7 +33,7 @@ class FirebaseSession {
     data[createdByKey] = createdBy;
     data[subjectKey] = subject ?? defaultSubject;
     data[idKey] = id;
-    data[privacyTypeKey] = privacyType ?? RoomPrivacyTypes.public;
+    data[privacyTypeKey] = privacyType ?? RoomAccessTypes.public;
     data[speakerTypeKey] = speakerType ?? RoomSpeakerTypes.everyone;
     // ignore: unnecessary_null_comparison
     if (members != null) {

@@ -61,13 +61,13 @@ class GroupCallController extends GetxController
     jitsiMeet.hangUp();
   }
 
-  startCall(FirebaseGroup g) async {
+  startCall({required FirebaseGroup groupToJoin}) async {
     final globalController = Get.find<GlobalController>();
     final myId = globalController.currentUserInfo.value!.id;
-    final iAmTheCreator = g.creator.id == myId;
-    final amIAllowedToSpeak = g.speakerType == null ||
+    final iAmTheCreator = groupToJoin.creator.id == myId;
+    final amIAllowedToSpeak = groupToJoin.speakerType == null ||
         iAmTheCreator ||
-        g.speakerType == RoomSpeakerTypes.everyone;
+        groupToJoin.speakerType == RoomSpeakerTypes.everyone;
     bool hasMicAccess = false;
     if (amIAllowedToSpeak) {
       hasMicAccess = await getPermission(Permission.microphone);
@@ -102,15 +102,15 @@ class GroupCallController extends GetxController
       );
       globalController.connectToWallet(
         afterConnection: () {
-          startCall(g);
+          startCall(groupToJoin: groupToJoin);
         },
       );
       return;
     }
-    group.value = g;
-    members.value = await getUsersByIds(g.members);
+    group.value = groupToJoin;
+    members.value = await getUsersByIds(groupToJoin.members);
     var options = MeetingConstants.buildMeetOptions(
-      group: g,
+      group: groupToJoin,
       myUser: myUser,
       allowedToSpeak: amIAllowedToSpeak,
     );

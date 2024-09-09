@@ -30,7 +30,7 @@ class FirebaseGroup {
   String id;
   FirebaseGroupCreator creator;
   List<String> members;
-  String? privacyType;
+  String? accessType;
   String? speakerType;
   String? subject;
 
@@ -39,7 +39,7 @@ class FirebaseGroup {
   static String creatorKey = 'creator';
   static String membersKey = 'members';
   static String lowercasenameKey = 'lowercasename';
-  static String privacyTypeKey = 'privacyType';
+  static String accessTypeKey = 'accessType';
   static String speakerTypeKey = 'speakerType';
   static String subjectKey = 'subject';
 
@@ -48,7 +48,7 @@ class FirebaseGroup {
     required this.id,
     required this.creator,
     required this.members,
-    this.privacyType,
+    this.accessType,
     this.speakerType,
     this.lowercasename,
     this.subject,
@@ -60,7 +60,7 @@ class FirebaseGroup {
     data[idKey] = id;
     data[creatorKey] = creator.toJson();
     data[membersKey] = members;
-    data[privacyTypeKey] = privacyType ?? RoomPrivacyTypes.public;
+    data[accessTypeKey] = accessType ?? RoomAccessTypes.public;
     data[speakerTypeKey] = speakerType ?? RoomSpeakerTypes.everyone;
     data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     return data;

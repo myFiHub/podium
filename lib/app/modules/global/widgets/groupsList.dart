@@ -136,7 +136,7 @@ class GroupList extends StatelessWidget {
                                               ),
                                               space5,
                                               Text(
-                                                "${group.privacyType}",
+                                                "${group.accessType}",
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w400,

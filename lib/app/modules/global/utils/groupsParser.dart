@@ -8,8 +8,8 @@ FirebaseGroup singleGroupParser(value) {
   final creator = value[FirebaseGroup.creatorKey];
   final members =
       ((value[FirebaseGroup.membersKey]) as List<dynamic>).cast<String>();
-  final privacyType =
-      value[FirebaseGroup.privacyTypeKey] ?? RoomPrivacyTypes.public;
+  final accessType =
+      value[FirebaseGroup.accessTypeKey] ?? RoomAccessTypes.public;
   final speakerType =
       value[FirebaseGroup.speakerTypeKey] ?? RoomSpeakerTypes.everyone;
   final subject = value[FirebaseGroup.subjectKey] ?? defaultSubject;
@@ -28,7 +28,7 @@ FirebaseGroup singleGroupParser(value) {
     name: name,
     creator: creatorUser,
     members: members,
-    privacyType: privacyType,
+    accessType: accessType,
     speakerType: speakerType,
     subject: subject,
   );

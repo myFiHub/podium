@@ -179,7 +179,10 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
-  joinGroupAndOpenGroupDetailPage({required String groupId}) async {
+  joinGroupAndOpenGroupDetailPage({
+    required String groupId,
+    bool? joiningByLink,
+  }) async {
     if (groupId.isEmpty) return;
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
@@ -187,6 +190,12 @@ class GroupsController extends GetxController with FireBaseUtils {
         FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
     final myUser = globalController.currentUserInfo.value!;
     final group = await getGroupInfoById(groupId);
+    if (group?.privacyType == RoomPrivacyTypes.onlyLink &&
+        joiningByLink != true) {
+      Get.snackbar(
+          "Error", "This is a private room, you need an invite to join");
+      return;
+    }
     if (group != null) {
       final iAmGroupCreator = group.creator.id == myUser.id;
       final members = List.from([...group.members]);

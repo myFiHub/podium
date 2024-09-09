@@ -62,6 +62,7 @@ class FirebaseGroup {
     data[membersKey] = members;
     data[accessTypeKey] = accessType ?? RoomAccessTypes.public;
     data[speakerTypeKey] = speakerType ?? RoomSpeakerTypes.everyone;
+    data[subjectKey] = subject ?? defaultSubject;
     data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     return data;
   }

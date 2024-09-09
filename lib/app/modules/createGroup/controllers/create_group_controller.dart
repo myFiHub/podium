@@ -66,10 +66,10 @@ class CreateGroupController extends GetxController {
       subject: subject,
     );
     isCreatingNewGroup.value = false;
-    Navigate.to(
-      type: NavigationTypes.offAllAndToNamed,
-      route: Routes.HOME,
-    );
+    // Navigate.to(
+    //   type: NavigationTypes.offAllAndToNamed,
+    //   route: Routes.HOME,
+    // );
   }
 }
 

@@ -20,9 +20,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
           final group = controller.group.value;
           if (group == null) {
             return Center(
-              child: Text(
-                'Group is empty, don\'t forget to add a group to controller then navigate to this view',
-              ),
+              child: CircularProgressIndicator(),
             );
           }
           if (isLoading) {

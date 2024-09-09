@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
@@ -63,19 +64,15 @@ class GroupCallController extends GetxController
 
   startCall({required FirebaseGroup groupToJoin}) async {
     final globalController = Get.find<GlobalController>();
-    final myId = globalController.currentUserInfo.value!.id;
-    final iAmTheCreator = groupToJoin.creator.id == myId;
-    final amIAllowedToSpeak = groupToJoin.speakerType == null ||
-        iAmTheCreator ||
-        groupToJoin.speakerType == RoomSpeakerTypes.everyone;
+    final iAmAllowedToSpeak = canISpeak(group: groupToJoin);
     bool hasMicAccess = false;
-    if (amIAllowedToSpeak) {
+    if (iAmAllowedToSpeak) {
       hasMicAccess = await getPermission(Permission.microphone);
       if (!hasMicAccess) {
         Get.snackbar(
           "warning",
           "mic permission is required in order to join the call",
-          colorText: ColorName.white,
+          colorText: Colors.orange,
         );
       }
     }
@@ -112,7 +109,7 @@ class GroupCallController extends GetxController
     var options = MeetingConstants.buildMeetOptions(
       group: groupToJoin,
       myUser: myUser,
-      allowedToSpeak: amIAllowedToSpeak,
+      allowedToSpeak: iAmAllowedToSpeak,
     );
     try {
       await jitsiMeet.join(options, jitsiListeners());
@@ -127,5 +124,16 @@ class GroupCallController extends GetxController
       type: NavigationTypes.offAllNamed,
     );
     cleanupAfterCall();
+  }
+
+  bool canISpeak({required FirebaseGroup group}) {
+    final globalController = Get.find<GlobalController>();
+    final myId = globalController.currentUserInfo.value!.id;
+    final iAmTheCreator = group.creator.id == myId;
+    final iAmAllowedToSpeak = group.speakerType == null ||
+        iAmTheCreator ||
+        group.speakerType == RoomSpeakerTypes.everyone ||
+        group.speakerType == RoomSpeakerTypes.invitees;
+    return iAmAllowedToSpeak;
   }
 }

@@ -3,6 +3,8 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
     as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:share_plus/share_plus.dart';
@@ -117,7 +119,8 @@ class GroupList extends StatelessWidget {
                                               ),
                                               space5,
                                               Text(
-                                                "${group.speakerType}",
+                                                parseSpeakerType(
+                                                    group.speakerType),
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w400,
@@ -136,7 +139,8 @@ class GroupList extends StatelessWidget {
                                               ),
                                               space5,
                                               Text(
-                                                "${group.accessType}",
+                                                parseAccessType(
+                                                    group.accessType),
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w400,
@@ -170,17 +174,18 @@ class GroupList extends StatelessWidget {
                                   )
                                 ],
                               ),
-                              IconButton(
-                                onPressed: () {
-                                  Share.share(
-                                      // 'podium://group-detail/$groupId',
-                                      "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium");
-                                },
-                                icon: Icon(
-                                  Icons.share,
-                                  color: ColorName.greyText,
-                                ),
-                              )
+                              if (canShareGroupUrl(group: group))
+                                IconButton(
+                                  onPressed: () {
+                                    Share.share(
+                                        // 'podium://group-detail/$groupId',
+                                        "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium");
+                                  },
+                                  icon: Icon(
+                                    Icons.share,
+                                    color: ColorName.greyText,
+                                  ),
+                                )
                             ],
                           ),
                           JoiningIndicator(
@@ -218,4 +223,62 @@ class JoiningIndicator extends GetWidget<GroupsController> {
       );
     });
   }
+}
+
+String parseSpeakerType(String? speakerType) {
+  switch (speakerType) {
+    case null:
+      return "Everyone";
+    case RoomSpeakerTypes.everyone:
+      return "Everyone";
+    case RoomSpeakerTypes.onlyCreator:
+      return "Only Creator";
+    case RoomSpeakerTypes.invitees:
+      return "Invitees";
+    case RoomSpeakerTypes.onlyArenaTicketHolders:
+      return "Only Arena Ticket Holders";
+    case RoomSpeakerTypes.onlyPodiumPassHolders:
+      return "Only Podium Pass Holders";
+
+    default:
+      return "Unknown";
+  }
+}
+
+String parseAccessType(String? accessType) {
+  switch (accessType) {
+    case null:
+      return "Public";
+    case RoomAccessTypes.public:
+      return "Public";
+    case RoomAccessTypes.onlyLink:
+      return "Only By Link";
+    case RoomAccessTypes.onlyArenaTicketHolders:
+      return "Only Arena Ticket Holders";
+    case RoomAccessTypes.onlyPodiumPassHolders:
+      return "Only Podium Pass Holders";
+    default:
+      return "Unknown";
+  }
+}
+
+canShareGroupUrl({required FirebaseGroup group}) {
+  final GlobalController globalController = Get.find();
+  if (globalController.currentUserInfo.value == null) {
+    return false;
+  }
+  final myId = globalController.currentUserInfo.value!.id;
+  final iAmCreator = group.creator.id == myId;
+  if (iAmCreator) {
+    return true;
+  }
+  if (group.accessType == RoomAccessTypes.public) {
+    return true;
+  }
+  if (group.accessType == RoomAccessTypes.onlyLink) {
+    if (group.members.contains(myId)) {
+      return true;
+    }
+  }
+  return false;
 }

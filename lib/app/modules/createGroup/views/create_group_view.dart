@@ -35,7 +35,7 @@ class CreateGroupView extends GetView<CreateGroupController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Room Privacy Type',
+                    'Room Access',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[400],

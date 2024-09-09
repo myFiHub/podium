@@ -253,6 +253,7 @@ class GlobalController extends GetxController {
   setDeepLinkRoute(String route) async {
     deepLinkRoute = route;
     if (loggedIn.value) {
+      log.e("logged in, opening deep link $route");
       openDeepLinkGroup(route);
     }
   }

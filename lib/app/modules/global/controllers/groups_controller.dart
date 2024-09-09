@@ -194,7 +194,7 @@ class GroupsController extends GetxController with FireBaseUtils {
       Get.snackbar(
         "Error",
         "Failed to join the room, seems like the room is deleted",
-        colorText: Colors.white,
+        colorText: Colors.red,
       );
       Navigate.to(
         type: NavigationTypes.offAllNamed,
@@ -204,14 +204,8 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
 
     final allowedToJoin = canJoin(group: group, joiningByLink: joiningByLink);
+    log.e("allowedToJoin: $allowedToJoin");
     if (!allowedToJoin) return;
-
-    if (group?.accessType == RoomAccessTypes.onlyLink &&
-        joiningByLink != true) {
-      Get.snackbar(
-          "Error", "This is a private room, you need an invite to join");
-      return;
-    }
 
     final iAmGroupCreator = group.creator.id == myUser.id;
     final members = List.from([...group.members]);
@@ -273,10 +267,16 @@ class GroupsController extends GetxController with FireBaseUtils {
     if (iAmGroupCreator ||
         group.accessType == null ||
         group.accessType == RoomAccessTypes.public) return true;
-
+    if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink == true) {
+      return true;
+    }
+    if (group.members.contains(myUser.id)) return true;
     if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink != true) {
       Get.snackbar(
-          "Error", "This is a private room, you need an invite to join");
+        "Error",
+        "This is a private room, you need an invite to join",
+        colorText: Colors.red,
+      );
       return false;
     }
     return false;

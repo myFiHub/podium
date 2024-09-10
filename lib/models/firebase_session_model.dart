@@ -5,7 +5,7 @@ class FirebaseSession {
   late String createdBy;
   late String id;
   late Map<String, FirebaseSessionMember> members;
-  late String? privacyType;
+  late String? accessType;
   late String? speakerType;
   late String? subject;
 
@@ -13,7 +13,7 @@ class FirebaseSession {
   static String nameKey = 'name';
   static String createdByKey = 'createdBy';
   static String membersKey = 'members';
-  static String privacyTypeKey = 'privacyType';
+  static String accessTypeKey = 'accessType';
   static String speakerTypeKey = 'speakerType';
   static String subjectKey = 'subject';
 
@@ -22,7 +22,7 @@ class FirebaseSession {
     required this.createdBy,
     required this.id,
     required this.members,
-    this.privacyType,
+    this.accessType,
     this.speakerType,
     this.subject,
   });
@@ -33,7 +33,7 @@ class FirebaseSession {
     data[createdByKey] = createdBy;
     data[subjectKey] = subject ?? defaultSubject;
     data[idKey] = id;
-    data[privacyTypeKey] = privacyType ?? RoomAccessTypes.public;
+    data[accessTypeKey] = accessType ?? RoomAccessTypes.public;
     data[speakerTypeKey] = speakerType ?? RoomSpeakerTypes.everyone;
     // ignore: unnecessary_null_comparison
     if (members != null) {

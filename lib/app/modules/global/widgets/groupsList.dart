@@ -205,7 +205,7 @@ class GroupList extends StatelessWidget {
   }
 }
 
-class JoiningIndicator extends GetWidget<GroupsController> {
+class JoiningIndicator extends GetView<GroupsController> {
   final groupId;
   const JoiningIndicator({super.key, required this.groupId});
 
@@ -234,7 +234,7 @@ String parseSpeakerType(String? speakerType) {
     case RoomSpeakerTypes.onlyCreator:
       return "Only Creator";
     case RoomSpeakerTypes.invitees:
-      return "Invitees";
+      return "Only Invited Users";
     case RoomSpeakerTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
     case RoomSpeakerTypes.onlyPodiumPassHolders:
@@ -253,12 +253,14 @@ String parseAccessType(String? accessType) {
       return "Public";
     case RoomAccessTypes.onlyLink:
       return "Only By Link";
+    case RoomAccessTypes.invitees:
+      return "Only Invited Users";
     case RoomAccessTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
     case RoomAccessTypes.onlyPodiumPassHolders:
       return "Only Podium Pass Holders";
     default:
-      return "Unknown";
+      return "Public";
   }
 }
 

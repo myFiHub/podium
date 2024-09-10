@@ -30,7 +30,7 @@ class CreateGroupView extends GetView<CreateGroupController> {
               marginvertical: 0,
             ),
             Obx(() {
-              final selectedValue = controller.roomPrivacyType.value;
+              final selectedValue = controller.roomAccessType.value;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -97,7 +97,7 @@ class CreateGroupView extends GetView<CreateGroupController> {
                       ),
                       DropDownItem(
                         value: RoomSpeakerTypes.invitees,
-                        text: 'Invitees',
+                        text: 'Only Invited Users',
                       ),
                       DropDownItem(
                         value: RoomSpeakerTypes.onlyCreator,

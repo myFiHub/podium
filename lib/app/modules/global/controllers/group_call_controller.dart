@@ -131,6 +131,11 @@ class GroupCallController extends GetxController
     final myId = globalController.currentUserInfo.value!.id;
     final iAmTheCreator = group.creator.id == myId;
     if (iAmTheCreator) return true;
+    if (group.speakerType == RoomSpeakerTypes.invitees) {
+      if (group.invitedMembers.contains(myId)) return true;
+      return false;
+    }
+    ;
     final iAmAllowedToSpeak = group.speakerType == null ||
         group.speakerType == RoomSpeakerTypes.everyone ||
         group.speakerType == RoomSpeakerTypes.invitees;

@@ -8,6 +8,9 @@ FirebaseGroup singleGroupParser(value) {
   final creator = value[FirebaseGroup.creatorKey];
   final members =
       ((value[FirebaseGroup.membersKey]) as List<dynamic>).cast<String>();
+  final invitedMembers =
+      ((value[FirebaseGroup.invitedMembersKey] ?? []) as List<dynamic>)
+          .cast<String>();
   final accessType =
       value[FirebaseGroup.accessTypeKey] ?? RoomAccessTypes.public;
   final speakerType =
@@ -31,6 +34,7 @@ FirebaseGroup singleGroupParser(value) {
     accessType: accessType,
     speakerType: speakerType,
     subject: subject,
+    invitedMembers: invitedMembers,
   );
   return group;
 }

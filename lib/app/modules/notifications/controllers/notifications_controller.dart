@@ -78,12 +78,13 @@ class NotificationsController extends GetxController with FireBaseUtils {
     required FirebaseNotificationModel notif,
   }) async {
     final groupId = notif.actionId;
-    log.e(groupId);
-    // final GroupsController groupsController = Get.find<GroupsController>();
-
-    // await groupsController.joinGroupAndOpenGroupDetailPage(groupId: groupId);
+    if (groupId == null) return;
+    final GroupsController groupsController = Get.find<GroupsController>();
+    await groupsController.joinGroupAndOpenGroupDetailPage(
+      groupId: groupId,
+    );
     try {
-      // await deleteNotification(notificationId: notif.id);
+      await deleteNotification(notificationId: notif.id);
     } catch (e) {
       log.e(e);
     }
@@ -91,9 +92,14 @@ class NotificationsController extends GetxController with FireBaseUtils {
 
   rejectGroupInvitation({
     required FirebaseNotificationModel notif,
-  }) {
+  }) async {
     final groupId = notif.actionId;
-    log.e(groupId);
+    if (groupId == null) return;
+    try {
+      await deleteNotification(notificationId: notif.id);
+    } catch (e) {
+      log.e(e);
+    }
   }
 
   sendTestNotif() async {

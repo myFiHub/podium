@@ -104,7 +104,7 @@ class GroupsController extends GetxController with FireBaseUtils {
 
   createGroup({
     required String name,
-    required String privacyType,
+    required String accessType,
     required String speakerType,
     required String subject,
   }) async {
@@ -124,20 +124,21 @@ class GroupsController extends GetxController with FireBaseUtils {
       id: newGroupId,
       name: name,
       creator: creator,
-      accessType: privacyType,
+      accessType: accessType,
       speakerType: speakerType,
       members: [myUser.id],
       subject: subject,
       lowercasename: name.toLowerCase(),
     );
+    final jsonedGroup = group.toJson();
     try {
-      await firebaseGroupsReference.set(group.toJson());
+      await firebaseGroupsReference.set(jsonedGroup);
       groups.value![newGroupId] = group;
       final newFirebaseSession = FirebaseSession(
         name: name,
         createdBy: myUser.id,
         id: newGroupId,
-        privacyType: group.accessType,
+        accessType: group.accessType,
         speakerType: group.speakerType,
         subject: group.subject,
         members: {
@@ -203,8 +204,10 @@ class GroupsController extends GetxController with FireBaseUtils {
       return;
     }
 
-    final allowedToJoin = canJoin(group: group, joiningByLink: joiningByLink);
-    log.e("allowedToJoin: $allowedToJoin");
+    final allowedToJoin = canJoin(
+      group: group,
+      joiningByLink: joiningByLink,
+    );
     if (!allowedToJoin) return;
 
     final iAmGroupCreator = group.creator.id == myUser.id;
@@ -271,6 +274,19 @@ class GroupsController extends GetxController with FireBaseUtils {
       return true;
     }
     if (group.members.contains(myUser.id)) return true;
+    final invitedMembers = group.invitedMembers;
+    if (group.accessType == RoomAccessTypes.invitees) {
+      if (invitedMembers.contains(myUser.id))
+        return true;
+      else {
+        Get.snackbar(
+          "Error",
+          "You are not invited to this room",
+          colorText: Colors.red,
+        );
+      }
+    }
+
     if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink != true) {
       Get.snackbar(
         "Error",

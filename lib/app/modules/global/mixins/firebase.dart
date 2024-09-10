@@ -485,6 +485,7 @@ mixin FireBaseUtils {
               targetUserId: value[FirebaseNotificationModel.targetUserIdKey],
               isRead: value[FirebaseNotificationModel.isReadKey],
               image: value[FirebaseNotificationModel.imageKey],
+              actionId: value[FirebaseNotificationModel.actionIdKey],
               timestamp: value[FirebaseNotificationModel.timestampKey],
             );
             notificationsList.add(notification);

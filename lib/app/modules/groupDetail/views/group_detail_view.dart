@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
@@ -48,10 +49,25 @@ class GroupDetailView extends GetView<GroupDetailController> {
                         Text(
                           group.subject!,
                           style: TextStyle(
+                            fontSize: 22,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      if (iAmOwner)
+                        Text(
+                          "Access Type: ${parseAccessType(group.accessType)}",
+                          style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[400],
                           ),
                         ),
+                      Text(
+                        "Speakers: ${parseSpeakerType(group.speakerType)}",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[400],
+                        ),
+                      ),
                       Expanded(
                         child: UserList(
                           usersList: members,

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
-import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 
 class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
-  final roomPrivacyType = RoomAccessTypes.public.obs;
+  final roomAccessType = RoomAccessTypes.public.obs;
   final roomSpeakerType = RoomSpeakerTypes.everyone.obs;
   final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
@@ -27,7 +25,7 @@ class CreateGroupController extends GetxController {
   }
 
   setRoomPrivacyType(String value) {
-    roomPrivacyType.value = value;
+    roomAccessType.value = value;
   }
 
   setRoomSpeakingType(String value) {
@@ -59,10 +57,12 @@ class CreateGroupController extends GetxController {
       subject = defaultSubject;
     }
     isCreatingNewGroup.value = true;
+    final accessType = roomAccessType.value;
+    final speakerType = roomSpeakerType.value;
     await groupsController.createGroup(
       name: groupName.value,
-      privacyType: roomPrivacyType.value,
-      speakerType: roomSpeakerType.value,
+      accessType: accessType,
+      speakerType: speakerType,
       subject: subject,
     );
     isCreatingNewGroup.value = false;

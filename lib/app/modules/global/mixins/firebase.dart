@@ -171,6 +171,26 @@ mixin FireBaseUtils {
     }
   }
 
+  listenToSessionMembers({
+    required String groupId,
+    required void Function(DatabaseEvent) onData,
+  }) {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.sessionsRef +
+            groupId +
+            '/${FirebaseSession.membersKey}');
+    return databaseRef.onValue.listen(onData);
+  }
+
+  listenToGroupMembers({
+    required String groupId,
+    required void Function(DatabaseEvent) onData,
+  }) {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef + groupId + '/${FirebaseGroup.membersKey}');
+    return databaseRef.onValue.listen(onData);
+  }
+
   StreamSubscription<DatabaseEvent> listenToInvitedGroupMembers(
       {required FirebaseGroup group,
       required void Function(DatabaseEvent) onData}) {

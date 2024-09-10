@@ -7,6 +7,7 @@ import 'package:podium/app/modules/createGroup/controllers/create_group_controll
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -27,6 +28,10 @@ class GroupList extends StatelessWidget {
         final groupId = group.id;
         final amICreator = group.creator.id ==
             controller.globalController.currentUserInfo.value!.id;
+        String creatorAvatar = group.creator.avatar;
+        if (creatorAvatar.isEmpty) {
+          creatorAvatar = Constants.defaultProfilePic;
+        }
         return Staggered.AnimationConfiguration.staggeredList(
           position: index,
           key: Key(groupId),
@@ -76,7 +81,7 @@ class GroupList extends StatelessWidget {
                                       GFAvatar(
                                         size: 52,
                                         backgroundImage:
-                                            NetworkImage(group.creator.avatar),
+                                            NetworkImage(creatorAvatar),
                                         shape: GFAvatarShape.standard,
                                         backgroundColor: ColorName.cardBorder,
                                       ),

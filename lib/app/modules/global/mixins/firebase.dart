@@ -144,6 +144,43 @@ mixin FireBaseUtils {
     });
   }
 
+  Future<bool> inviteUserToJoinGroup({
+    required String groupId,
+    required String userId,
+  }) async {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef +
+            groupId +
+            '/${FirebaseGroup.invitedMembersKey}');
+    final currentList = await databaseRef.get();
+    final invitedMembers = currentList.value as dynamic;
+    if (invitedMembers != null) {
+      final currentList = List.from(invitedMembers);
+      if (currentList.contains(userId)) {
+        return true;
+      } else {
+        currentList.add(userId);
+        await databaseRef.set(currentList);
+        return true;
+      }
+    } else {
+      final currentList = [];
+      currentList.add(userId);
+      await databaseRef.set(currentList);
+      return true;
+    }
+  }
+
+  StreamSubscription<DatabaseEvent> listenToInvitedGroupMembers(
+      {required FirebaseGroup group,
+      required void Function(DatabaseEvent) onData}) {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef +
+            group.id +
+            '/${FirebaseGroup.invitedMembersKey}');
+    return databaseRef.onValue.listen(onData);
+  }
+
   Future<FirebaseSessionMember?> getUserSessionData(
       {required String groupId, required String userId}) async {
     final databaseRef = FirebaseDatabase.instance.ref(
@@ -375,11 +412,15 @@ mixin FireBaseUtils {
   }
 
   sendNotification({required FirebaseNotificationModel notification}) async {
-    final databaseRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.notificationsRef + notification.id);
-    await databaseRef.set(
-      notification.toJson(),
-    );
+    try {
+      final databaseRef = FirebaseDatabase.instance
+          .ref(FireBaseConstants.notificationsRef + notification.id);
+      await databaseRef.set(
+        notification.toJson(),
+      );
+    } catch (e) {
+      log.e(e);
+    }
   }
 
   Future<List<FirebaseNotificationModel>> getMyNotifications() async {

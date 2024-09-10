@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -6,7 +9,13 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/throttleAndDebounce/debounce.dart';
+import 'package:uuid/uuid.dart';
+
+final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class GroupDetailController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
@@ -14,6 +23,10 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   final group = Rxn<FirebaseGroup>();
   final membersList = Rx<List<UserInfoModel>>([]);
   final isGettingGroupInfo = false.obs;
+  final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
+  final invitedList = Rxn<List<UserInfoModel>>([]);
+  final liveInvitedMemberIds = Rx<List<String>>([]);
+  StreamSubscription<DatabaseEvent>? invitedMembersStream = null;
 
   @override
   void onInit() {
@@ -21,6 +34,7 @@ class GroupDetailController extends GetxController with FireBaseUtils {
     group.listen((group) {
       if (group != null) {
         getMembers(group);
+        startListeningToInvitedUsers(group);
       }
     });
   }
@@ -33,6 +47,25 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   @override
   void onClose() {
     super.onClose();
+    stopListeningToInvitedUsers();
+  }
+
+  startListeningToInvitedUsers(FirebaseGroup group) {
+    invitedMembersStream?.cancel();
+    invitedMembersStream = listenToInvitedGroupMembers(
+        group: group,
+        onData: (data) {
+          if (data.snapshot.value == null) {
+            liveInvitedMemberIds.value = [];
+            return;
+          }
+          liveInvitedMemberIds.value =
+              (data.snapshot.value as List<dynamic>).cast<String>();
+        });
+  }
+
+  stopListeningToInvitedUsers() {
+    invitedMembersStream?.cancel();
   }
 
   getGroupInfo({required String id}) async {
@@ -69,5 +102,66 @@ class GroupDetailController extends GetxController with FireBaseUtils {
     groupCallController.startCall(
       groupToJoin: group.value!,
     );
+  }
+
+  searchUsers(String value) async {
+    _deb.debounce(() async {
+      if (value.isEmpty) {
+        listOfSearchedUsersToInvite.value = [];
+        return;
+      }
+      final users = await searchForUserByName(value);
+      if (value.isEmpty) {
+        membersList.value = [];
+      } else {
+        final list = users.values.toList();
+        // remove the users that are already in the group
+        final filteredList = list
+            .where((element) => !group.value!.members.contains(element.id))
+            .toList();
+        // // remove the users that are already invited
+        // final filteredList2 = filteredList
+        //     .where(
+        //         (element) => !liveInvitedMemberIds.value.contains(element.id))
+        //     .toList();
+        // remove my user from the list
+        final filteredList3 = filteredList
+            .where((element) =>
+                element.id !=
+                Get.find<GlobalController>().currentUserInfo.value!.id)
+            .toList();
+        listOfSearchedUsersToInvite.value = filteredList3;
+      }
+    });
+  }
+
+  inviteUserToJoinThisGroup({required String userId}) async {
+    if (group.value == null) return;
+    try {
+      await inviteUserToJoinGroup(
+        groupId: group.value!.id,
+        userId: userId,
+      );
+      final myUser = Get.find<GlobalController>().currentUserInfo.value;
+      final notifId = Uuid().v4();
+      final subject = group.value!.subject;
+      final invitationNotification = FirebaseNotificationModel(
+        id: notifId,
+        title:
+            "${myUser!.fullName} invited you to join room: ${group.value!.name}",
+        body:
+            "${subject != null && subject.isNotEmpty ? "talking about: " + subject : 'No subject'}",
+        type: NotificationTypes.inviteToJoinGroup.toString(),
+        targetUserId: userId,
+        isRead: false,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        actionId: group.value!.id,
+      );
+      await sendNotification(
+        notification: invitationNotification,
+      );
+    } catch (e) {
+      log.e(e);
+    }
   }
 }

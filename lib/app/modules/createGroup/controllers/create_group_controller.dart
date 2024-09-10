@@ -76,6 +76,7 @@ class CreateGroupController extends GetxController {
 class RoomAccessTypes {
   static const public = 'public';
   static const onlyLink = 'onlyLink';
+  static const invitees = 'invitees';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }

@@ -52,6 +52,10 @@ class CreateGroupView extends GetView<CreateGroupController> {
                         text: 'Only By Link',
                       ),
                       DropDownItem(
+                        value: RoomAccessTypes.invitees,
+                        text: 'Only Invited Users',
+                      ),
+                      DropDownItem(
                         value: RoomAccessTypes.onlyArenaTicketHolders,
                         text: 'Only Arena Ticket Holders',
                         enabled: false,

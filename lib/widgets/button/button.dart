@@ -100,7 +100,7 @@ class Button extends StatefulWidget {
     this.child,
     this.type = ButtonType.solid,
     this.shape = ButtonShape.standard,
-    this.color = ButtonColors.PRIMARY,
+    this.color = ColorName.buttonOutlineBorder,
     this.textColor,
     this.position = Position.start,
     this.size = ButtonSize.LARGE,
@@ -436,6 +436,9 @@ class _ButtonState extends State<Button> {
     Color getBorderColor() {
       if (widget.enabled) {
         final Color fillColor = color;
+        if (widget.color != ColorName.buttonOutlineBorder) {
+          return widget.color;
+        }
         if (widget.type == ButtonType.outline ||
             widget.type == ButtonType.outline2x) {
           return ColorName.buttonOutlineBorder;

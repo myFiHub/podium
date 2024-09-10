@@ -7,6 +7,7 @@ class FirebaseNotificationModel {
   late String targetUserId;
   late bool isRead;
   late int timestamp;
+  late String? actionId;
 
   static const String idKey = 'id';
   static const String titleKey = 'title';
@@ -16,6 +17,7 @@ class FirebaseNotificationModel {
   static const String targetUserIdKey = 'targetUserId';
   static const String isReadKey = 'isRead';
   static const String timestampKey = 'timestamp';
+  static const String actionIdKey = 'actionId';
 
   FirebaseNotificationModel({
     required this.id,
@@ -26,6 +28,7 @@ class FirebaseNotificationModel {
     required this.targetUserId,
     required this.isRead,
     required this.timestamp,
+    this.actionId,
   });
 
   FirebaseNotificationModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +40,7 @@ class FirebaseNotificationModel {
     targetUserId = json[targetUserIdKey];
     isRead = json[isReadKey];
     timestamp = json[timestampKey];
+    actionId = json[actionIdKey];
   }
 
   Map<String, dynamic> toJson() {
@@ -49,10 +53,12 @@ class FirebaseNotificationModel {
     data[targetUserIdKey] = targetUserId;
     data[isReadKey] = isRead;
     data[timestampKey] = timestamp;
+    data[actionIdKey] = actionId;
     return data;
   }
 }
 
 enum NotificationTypes {
   follow,
+  inviteToJoinGroup,
 }

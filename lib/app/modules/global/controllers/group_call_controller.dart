@@ -185,8 +185,7 @@ class GroupCallController extends GetxController
     }
 
     final iAmAllowedToSpeak = group.speakerType == null ||
-        group.speakerType == RoomSpeakerTypes.everyone ||
-        group.speakerType == RoomSpeakerTypes.invitees;
+        group.speakerType == RoomSpeakerTypes.everyone;
     return iAmAllowedToSpeak;
   }
 }

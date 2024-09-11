@@ -162,12 +162,14 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
               Expanded(child: Container(
                 child: Obx(() {
                   final users = controller.listOfSearchedUsersToInvite.value;
-                  final invitedUserIds = controller.liveInvitedMemberIds.value;
+                  final liveInvitedMembers =
+                      controller.liveInvitedMembers.value;
                   return ListView.builder(
                     itemCount: users.length,
                     itemBuilder: (context, index) {
                       final user = users[index];
-                      if (invitedUserIds.contains(user.id)) {
+                      final userInInvitedList = liveInvitedMembers[user.id];
+                      if (userInInvitedList != null) {
                         return ListTile(
                           title: Text(
                             user.fullName,
@@ -176,7 +178,7 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                             ),
                           ),
                           trailing: Text(
-                            'Invited',
+                            'Invited ${userInInvitedList.invitedToSpeak ? 'to speak' : 'to listen'}',
                             style: TextStyle(
                               color: Colors.green[200],
                             ),
@@ -184,25 +186,35 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                         );
                       }
                       return ListTile(
-                        title: Text(
-                          user.fullName,
-                          style: TextStyle(
-                            color: Colors.white,
+                          title: Text(
+                            user.fullName,
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        trailing: IconButton(
-                          onPressed: () {
-                            controller.inviteUserToJoinThisGroup(
-                              userId: user.id,
-                            );
-                            // controller.inviteUser(user);
-                          },
-                          icon: Icon(
-                            Icons.add,
-                            color: Colors.green[200],
-                          ),
-                        ),
-                      );
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  controller.inviteUserToJoinThisGroup(
+                                    userId: user.id,
+                                    inviteToSpeak: true,
+                                  );
+                                },
+                                icon: Icon(Icons.mic),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  controller.inviteUserToJoinThisGroup(
+                                    userId: user.id,
+                                    inviteToSpeak: false,
+                                  );
+                                },
+                                icon: Icon(Icons.hearing),
+                              ),
+                            ],
+                          ));
                     },
                   );
                 }),

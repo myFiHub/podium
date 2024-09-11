@@ -276,7 +276,7 @@ class GroupsController extends GetxController with FireBaseUtils {
     if (group.members.contains(myUser.id)) return true;
     final invitedMembers = group.invitedMembers;
     if (group.accessType == RoomAccessTypes.invitees) {
-      if (invitedMembers.contains(myUser.id))
+      if (invitedMembers[myUser.id] != null)
         return true;
       else {
         Get.snackbar(

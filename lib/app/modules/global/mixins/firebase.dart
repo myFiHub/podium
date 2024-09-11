@@ -147,27 +147,21 @@ mixin FireBaseUtils {
   Future<bool> inviteUserToJoinGroup({
     required String groupId,
     required String userId,
+    required bool invitedToSpeak,
   }) async {
     final databaseRef = FirebaseDatabase.instance.ref(
         FireBaseConstants.groupsRef +
             groupId +
-            '/${FirebaseGroup.invitedMembersKey}');
-    final currentList = await databaseRef.get();
-    final invitedMembers = currentList.value as dynamic;
-    if (invitedMembers != null) {
-      final currentList = List.from(invitedMembers);
-      if (currentList.contains(userId)) {
-        return true;
-      } else {
-        currentList.add(userId);
-        await databaseRef.set(currentList);
-        return true;
-      }
-    } else {
-      final currentList = [];
-      currentList.add(userId);
-      await databaseRef.set(currentList);
+            '/${FirebaseGroup.invitedMembersKey}/$userId');
+    try {
+      await databaseRef.set({
+        InvitedMember.idKey: userId,
+        InvitedMember.invitedToSpeakKey: invitedToSpeak,
+      });
       return true;
+    } catch (e) {
+      log.e(e);
+      return false;
     }
   }
 
@@ -199,6 +193,30 @@ mixin FireBaseUtils {
             group.id +
             '/${FirebaseGroup.invitedMembersKey}');
     return databaseRef.onValue.listen(onData);
+  }
+
+  Future<Map<String, InvitedMember>> getInvitedMembers(String groupId) async {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef +
+            groupId +
+            '/${FirebaseGroup.invitedMembersKey}');
+    final snapshot = await databaseRef.get();
+    final invitedMembers = snapshot.value as dynamic;
+    if (invitedMembers != null) {
+      final Map<String, InvitedMember> invitedMembersMap = {};
+      invitedMembers.keys.toList().forEach((element) {
+        final invitedMember = InvitedMember(
+          id: element,
+          invitedToSpeak: invitedMembers[element]
+              [InvitedMember.invitedToSpeakKey],
+        );
+        invitedMembersMap[element] = invitedMember;
+      });
+      return invitedMembersMap;
+    } else {
+      log.i('no invited members found');
+      return {};
+    }
   }
 
   Future<FirebaseSessionMember?> getUserSessionData(

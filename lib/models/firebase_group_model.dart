@@ -30,7 +30,7 @@ class FirebaseGroup {
   String id;
   FirebaseGroupCreator creator;
   List<String> members;
-  List<String> invitedMembers = [];
+  Map<String, InvitedMember> invitedMembers = {};
   String? accessType;
   String? speakerType;
   String? subject;
@@ -54,7 +54,7 @@ class FirebaseGroup {
     this.speakerType,
     this.lowercasename,
     this.subject,
-    this.invitedMembers = const [],
+    this.invitedMembers = const {},
   });
 
   Map<String, dynamic> toJson() {
@@ -69,5 +69,32 @@ class FirebaseGroup {
     data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     data[invitedMembersKey] = invitedMembers;
     return data;
+  }
+}
+
+class InvitedMember {
+  String id;
+  bool invitedToSpeak;
+
+  static String idKey = 'id';
+  static String invitedToSpeakKey = 'invitedToSpeak';
+
+  InvitedMember({
+    required this.id,
+    required this.invitedToSpeak,
+  });
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data[idKey] = id;
+    data[invitedToSpeakKey] = invitedToSpeak;
+    return data;
+  }
+
+  factory InvitedMember.fromJson(Map<String, dynamic> json) {
+    return InvitedMember(
+      id: json[idKey],
+      invitedToSpeak: json[invitedToSpeakKey],
+    );
   }
 }

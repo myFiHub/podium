@@ -31,7 +31,7 @@ class SearchView extends GetView<SearchController.SearchController> {
                 },
               )),
           Container(
-            height: Get.height - 225,
+            height: Get.height - 185,
             child: DefaultTabController(
               length: 2,
               child: Scaffold(
@@ -79,9 +79,8 @@ class SearchView extends GetView<SearchController.SearchController> {
                         return Container();
                       }
                       return Container(
-                          child: Expanded(
                         child: GroupList(groupsList: groupsList),
-                      ));
+                      );
                     }),
                     Obx(() {
                       final usersMap = controller.searchedUsers.value;
@@ -93,9 +92,8 @@ class SearchView extends GetView<SearchController.SearchController> {
                         return Container();
                       }
                       return Container(
-                          child: Expanded(
                         child: UserList(usersList: usersList),
-                      ));
+                      );
                     }),
                   ],
                 ),

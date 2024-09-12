@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
@@ -157,6 +158,7 @@ class GroupsController extends GetxController with FireBaseUtils {
       await firebaseSessionReference.set(jsoned);
       joinGroupAndOpenGroupDetailPage(
         groupId: newGroupId,
+        openTheRoomAfterJoining: true,
       );
     } catch (e) {
       deleteGroup(groupId: newGroupId);
@@ -182,6 +184,7 @@ class GroupsController extends GetxController with FireBaseUtils {
 
   joinGroupAndOpenGroupDetailPage({
     required String groupId,
+    bool? openTheRoomAfterJoining,
     bool? joiningByLink,
   }) async {
     if (groupId.isEmpty) return;
@@ -242,7 +245,10 @@ class GroupsController extends GetxController with FireBaseUtils {
               .child(myUser.id)
               .set(newFirebaseSessionMember.toJson());
         }
-        _openGroup(group: group);
+        _openGroup(
+          group: group,
+          openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
+        );
       } catch (e) {
         Get.snackbar("Error", "Failed to join group");
         log.f("Error joining group: $e");
@@ -250,11 +256,16 @@ class GroupsController extends GetxController with FireBaseUtils {
       }
     } else {
       joiningGroupId.value = '';
-      _openGroup(group: group);
+      _openGroup(
+        group: group,
+        openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
+      );
     }
   }
 
-  _openGroup({required FirebaseGroup group}) async {
+  _openGroup(
+      {required FirebaseGroup group,
+      required bool openTheRoomAfterJoining}) async {
     final groupDetainController = Get.put(GroupDetailController());
     groupDetainController.group.value = group;
     joiningGroupId.value = '';
@@ -262,6 +273,9 @@ class GroupsController extends GetxController with FireBaseUtils {
       type: NavigationTypes.toNamed,
       route: Routes.GROUP_DETAIL,
     );
+    if (openTheRoomAfterJoining) {
+      groupDetainController.startTheCall();
+    }
   }
 
   bool canJoin({required FirebaseGroup group, bool? joiningByLink}) {

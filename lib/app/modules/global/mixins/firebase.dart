@@ -58,7 +58,17 @@ mixin FireBaseUtils {
           FireBaseConstants.usersRef +
               userId +
               '/${UserInfoModel.fullNameKey}');
-      await databaseRef.set(name);
+
+      final lowerCasedName = name.toLowerCase();
+      final lowerCaseNameRef = FirebaseDatabase.instance.ref(
+          FireBaseConstants.usersRef +
+              userId +
+              '/${UserInfoModel.lowercasenameKey}');
+      await Future.wait([
+        databaseRef.set(name),
+        lowerCaseNameRef.set(lowerCasedName),
+      ]);
+
       return name;
     } catch (e) {
       log.f('Error saving name for user by id: $e');
@@ -641,15 +651,6 @@ mixin FireBaseUtils {
       final snapshot = await databaseRef.get();
       final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
-        // if (user.savedParticleUserInfo != null) {
-        //   final canContinue = await saveParticleWalletInfoForUser(
-        //     userId: user.id,
-        //     info: user.savedParticleUserInfo!,
-        //   );
-        //   if (!canContinue) {
-        //     return null;
-        //   }
-        // }
         final retrievedUser = UserInfoModel(
           fullName: userSnapshot[UserInfoModel.fullNameKey],
           email: userSnapshot[UserInfoModel.emailKey],
@@ -715,7 +716,9 @@ mixin FireBaseUtils {
             List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
         final List<ParticleAuthWallet> walletsList = [];
         wallets.forEach((element) {
-          walletsList.add(ParticleAuthWallet.fromMap(element));
+          if (element['address'] != '' && element['chain'] == 'evm_chain') {
+            walletsList.add(ParticleAuthWallet.fromMap(element));
+          }
         });
         return walletsList;
       } else {

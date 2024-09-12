@@ -40,7 +40,7 @@ mixin ParticleAuthUtils {
         return await ParticleAuthCore.getUserInfo();
       }
       final userInfo = await ParticleAuthCore.connect(
-        supportAuthTypes: _supportAuthType,
+        // supportAuthTypes: _supportAuthType,
         type,
         account: email,
       );

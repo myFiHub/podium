@@ -145,8 +145,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name ?? '',
           email: particleUser.email ?? '',
-          avatar: particleUser.avatar ??
-              avatarPlaceHolder(particleUser.name ?? 'O'),
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.email,
         );
@@ -176,8 +175,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.thirdpartyUserInfo!.userInfo.email ?? '',
-          avatar: particleUser.avatar ??
-              avatarPlaceHolder(particleUser.name ?? "O"),
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.x,
         );
@@ -211,8 +209,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.googleEmail!,
-          avatar: particleUser.avatar ??
-              avatarPlaceHolder(particleUser.name ?? 'O'),
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.google,
         );
@@ -242,8 +239,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.linkedinEmail ?? '',
-          avatar: particleUser.avatar ??
-              avatarPlaceHolder(particleUser.name ?? 'O'),
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.linkedin,
         );
@@ -271,8 +267,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.facebookEmail ?? '',
-          avatar: particleUser.avatar ??
-              avatarPlaceHolder(particleUser.name ?? "O"),
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.facebook,
         );
@@ -300,10 +295,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.appleEmail ?? '',
-          avatar: particleUser.avatar ??
-              avatarPlaceHolder(
-                particleUser.name ?? "O",
-              ),
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.apple,
         );

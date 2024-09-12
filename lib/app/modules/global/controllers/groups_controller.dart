@@ -273,6 +273,14 @@ class GroupsController extends GetxController with FireBaseUtils {
     if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink == true) {
       return true;
     }
+    if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink != true) {
+      Get.snackbar(
+        "Error",
+        "This is a private room, you need an invite link to join",
+        colorText: Colors.red,
+      );
+      return false;
+    }
     if (group.members.contains(myUser.id)) return true;
     final invitedMembers = group.invitedMembers;
     if (group.accessType == RoomAccessTypes.invitees) {

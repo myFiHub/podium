@@ -113,7 +113,7 @@ class UserInfo extends GetWidget<ProfileController> {
       }
       String avatar = myUser.avatar;
       if (avatar.isEmpty) {
-        avatar = Constants.defaultProfilePic;
+        avatar = avatarPlaceHolder(myUser.fullName);
       }
       return Container(
         padding: const EdgeInsets.all(20),

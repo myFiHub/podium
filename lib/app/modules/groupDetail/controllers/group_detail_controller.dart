@@ -25,7 +25,6 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   final isGettingGroupInfo = false.obs;
   final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InvitedMember>>({});
-  StreamSubscription<DatabaseEvent>? invitedMembersStream = null;
 
   @override
   void onInit() {
@@ -33,7 +32,7 @@ class GroupDetailController extends GetxController with FireBaseUtils {
     group.listen((group) {
       if (group != null) {
         getMembers(group);
-        startListeningToInvitedUsers(group);
+        fetchInvitedMembers();
       }
     });
   }
@@ -46,39 +45,22 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   @override
   void onClose() {
     super.onClose();
-    stopListeningToInvitedUsers();
   }
 
-  startListeningToInvitedUsers(FirebaseGroup group) {
-    invitedMembersStream?.cancel();
-    invitedMembersStream = listenToInvitedGroupMembers(
-        group: group,
-        onData: (data) {
-          if (data.snapshot.value == null) {
-            liveInvitedMembers.value = {};
-            return;
-          }
-          final map = data.snapshot.value as Map<dynamic, dynamic>;
-          final Map<String, InvitedMember> invitedMembers = {};
-          map.forEach((key, value) {
-            final invitedMember = InvitedMember(
-              id: key,
-              invitedToSpeak: value[InvitedMember.invitedToSpeakKey],
-            );
-            invitedMembers[key] = invitedMember;
-          });
-          liveInvitedMembers.value = invitedMembers;
-        });
-  }
-
-  refetchInvitedMembers() async {
+  fetchInvitedMembers({String? userId}) async {
     if (group.value == null) return;
-    final map = await getInvitedMembers(group.value!.id);
-    liveInvitedMembers.value = map;
-  }
-
-  stopListeningToInvitedUsers() {
-    invitedMembersStream?.cancel();
+    final map = await getInvitedMembers(
+      groupId: group.value!.id,
+      userId: userId,
+    );
+    if (userId != null) {
+      map.forEach((key, value) {
+        liveInvitedMembers.value[key] = value;
+      });
+      liveInvitedMembers.refresh();
+    } else {
+      liveInvitedMembers.value = map;
+    }
   }
 
   getGroupInfo({required String id}) async {
@@ -157,7 +139,7 @@ class GroupDetailController extends GetxController with FireBaseUtils {
         userId: userId,
         invitedToSpeak: inviteToSpeak,
       );
-      await refetchInvitedMembers();
+      await fetchInvitedMembers(userId: userId);
       final myUser = Get.find<GlobalController>().currentUserInfo.value;
       final notifId = Uuid().v4();
       final subject = group.value!.subject;

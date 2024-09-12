@@ -32,7 +32,7 @@ class UsersInRoomList extends StatelessWidget {
         final name = user.name;
         String avatar = user.avatar;
         if (avatar.isEmpty) {
-          avatar = Constants.defaultProfilePic;
+          avatar = avatarPlaceHolder(name);
         }
         final userId = user.id;
         final isItME = user.id == myUserId;

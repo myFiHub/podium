@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+avatarPlaceHolder(String name) {
+  final n = name.isEmpty ? 'Oo' : name;
+  return 'https://ui-avatars.com/api/?name=${n.replaceAll(' ', '+')}.png';
+}
+
 class Constants {
   static const smallScreen = 640;
   static const String aud = 'https://walletconnect.org/login';

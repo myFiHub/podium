@@ -195,14 +195,25 @@ mixin FireBaseUtils {
     return databaseRef.onValue.listen(onData);
   }
 
-  Future<Map<String, InvitedMember>> getInvitedMembers(String groupId) async {
-    final databaseRef = FirebaseDatabase.instance.ref(
-        FireBaseConstants.groupsRef +
-            groupId +
-            '/${FirebaseGroup.invitedMembersKey}');
+  Future<Map<String, InvitedMember>> getInvitedMembers({
+    required String groupId,
+    String? userId,
+  }) async {
+    final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants
+            .groupsRef +
+        groupId +
+        '/${FirebaseGroup.invitedMembersKey}${userId != null ? '/' + userId : ''}');
     final snapshot = await databaseRef.get();
     final invitedMembers = snapshot.value as dynamic;
     if (invitedMembers != null) {
+      if (userId != null) {
+        final invitedMember = InvitedMember(
+          id: userId,
+          invitedToSpeak: invitedMembers[InvitedMember.invitedToSpeakKey],
+        );
+        return {userId: invitedMember};
+      }
+
       final Map<String, InvitedMember> invitedMembersMap = {};
       invitedMembers.keys.toList().forEach((element) {
         final invitedMember = InvitedMember(

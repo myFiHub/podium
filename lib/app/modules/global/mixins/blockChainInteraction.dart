@@ -94,6 +94,8 @@ mixin BlockChainInteractions {
     try {
       final response = await service.requestReadContract(
         deployedContract: starsArenaContract,
+        topic: service.session!.topic,
+        chainId: service.selectedChain!.chainId,
         functionName: 'getBuyPriceAfterFee',
         parameters: [
           sharesSubjectWallet,

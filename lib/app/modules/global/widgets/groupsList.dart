@@ -30,7 +30,7 @@ class GroupList extends StatelessWidget {
             controller.globalController.currentUserInfo.value!.id;
         String creatorAvatar = group.creator.avatar;
         if (creatorAvatar.isEmpty) {
-          creatorAvatar = Constants.defaultProfilePic;
+          creatorAvatar = avatarPlaceHolder(group.creator.fullName);
         }
         return Staggered.AnimationConfiguration.staggeredList(
           position: index,

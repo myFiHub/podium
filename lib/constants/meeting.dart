@@ -49,7 +49,7 @@ class MeetingConstants {
     String avatar = myUser.avatar;
     // ignore: unnecessary_null_comparison
     if (avatar == null || avatar.isEmpty) {
-      avatar = Constants.defaultProfilePic;
+      avatar = avatarPlaceHolder(myUser.fullName);
     }
     return JitsiMeetConferenceOptions(
       serverURL: sa != '' ? sa : Env.jitsiServerUrl,

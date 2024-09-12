@@ -301,37 +301,37 @@ class SessionWidgetState extends State<SessionWidget> {
         height: StyleConstants.linear40,
         width: double.infinity,
         margin: const EdgeInsets.symmetric(vertical: StyleConstants.linear8),
-        child: ElevatedButton(
-          onPressed: onSepolia
-              ? () async {
-                  final future = EIP155.callTestSmartContract(
-                    w3mService: widget.w3mService,
-                    action: 'read',
-                  );
-                  MethodDialog.show(
-                    context,
-                    'Test Contract (Read)',
-                    future,
-                  );
-                }
-              : onMainnet
-                  ? () async {
-                      final future = EIP155.callUSDTSmartContract(
-                        w3mService: widget.w3mService,
-                        action: 'read',
-                      );
-                      MethodDialog.show(
-                        context,
-                        'Test Contract (Read)',
-                        future,
-                      );
-                    }
-                  : null,
-          style: buttonStyle(context),
-          child: onMainnet
-              ? const Text('USDT Contract (Read)')
-              : const Text('AAVE Contract (Read)'),
-        ),
+        // child: ElevatedButton(
+        //   onPressed: onSepolia
+        //       ? () async {
+        //           final future = EIP155.callTestSmartContract(
+        //             w3mService: widget.w3mService,
+        //             action: 'read',
+        //           );
+        //           MethodDialog.show(
+        //             context,
+        //             'Test Contract (Read)',
+        //             future,
+        //           );
+        //         }
+        //       : onMainnet
+        //           ? () async {
+        //               final future = EIP155.callUSDTSmartContract(
+        //                 w3mService: widget.w3mService,
+        //                 action: 'read',
+        //               );
+        //               MethodDialog.show(
+        //                 context,
+        //                 'Test Contract (Read)',
+        //                 future,
+        //               );
+        //             }
+        //           : null,
+        //   style: buttonStyle(context),
+        //   child: onMainnet
+        //       ? const Text('USDT Contract (Read)')
+        //       : const Text('AAVE Contract (Read)'),
+        // ),
       ),
       Container(
         height: StyleConstants.linear40,
@@ -340,22 +340,22 @@ class SessionWidgetState extends State<SessionWidget> {
         child: ElevatedButton(
           onPressed: onSepolia
               ? () async {
-                  widget.w3mService.launchConnectedWallet();
-                  final future = EIP155.callTestSmartContract(
-                    w3mService: widget.w3mService,
-                    action: 'write',
-                  );
-                  MethodDialog.show(context, 'Test Contract (Write)', future);
+                  // widget.w3mService.launchConnectedWallet();
+                  // final future = EIP155.callTestSmartContract(
+                  //   w3mService: widget.w3mService,
+                  //   action: 'write',
+                  // );
+                  // MethodDialog.show(context, 'Test Contract (Write)', future);
                 }
               : onMainnet
                   ? () async {
-                      widget.w3mService.launchConnectedWallet();
-                      final future = EIP155.callUSDTSmartContract(
-                        w3mService: widget.w3mService,
-                        action: 'write',
-                      );
-                      MethodDialog.show(
-                          context, 'Test Contract (Write)', future);
+                      // widget.w3mService.launchConnectedWallet();
+                      // final future = EIP155.callUSDTSmartContract(
+                      //   w3mService: widget.w3mService,
+                      //   action: 'write',
+                      // );
+                      // MethodDialog.show(
+                      //     context, 'Test Contract (Write)', future);
                     }
                   : null,
           style: buttonStyle(context),

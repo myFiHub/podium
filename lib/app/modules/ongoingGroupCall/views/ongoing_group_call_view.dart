@@ -158,7 +158,6 @@ class MembersList extends GetWidget<GroupCallController> {
         ),
       );
     }
-    final iAmTheOwner = myUser.id == controller.group.value!.creator.id;
     return Container(
       height: Get.height - 190,
       child: Column(
@@ -177,13 +176,20 @@ class MembersList extends GetWidget<GroupCallController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              if (iAmTheOwner)
+              if (canInvite(
+                group: controller.group.value!,
+                currentUserId: myUser.id,
+              ))
                 Container(
                   width: (Get.width / 2) - 20,
                   child: Button(
                     type: ButtonType.outline,
                     onPressed: () {
-                      openInviteBottomSheet();
+                      openInviteBottomSheet(
+                          canInviteToSpeak: canInviteToSpeak(
+                        group: controller.group.value!,
+                        currentUserId: myUser.id,
+                      ));
                     },
                     child: Text('Invite users'),
                   ),

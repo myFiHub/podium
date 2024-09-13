@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -76,13 +78,20 @@ class GroupDetailView extends GetView<GroupDetailController> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          if (iAmOwner)
+                          if (canInvite(
+                            group: group,
+                            currentUserId: myId,
+                          ))
                             Container(
                               width: (Get.width / 2) - 20,
                               child: Button(
                                 type: ButtonType.outline,
                                 onPressed: () {
-                                  openInviteBottomSheet();
+                                  openInviteBottomSheet(
+                                      canInviteToSpeak: canInviteToSpeak(
+                                    group: group,
+                                    currentUserId: myId,
+                                  ));
                                 },
                                 child: Text('Invite users'),
                               ),
@@ -113,14 +122,44 @@ class GroupDetailView extends GetView<GroupDetailController> {
   }
 }
 
-openInviteBottomSheet() {
+openInviteBottomSheet({required bool canInviteToSpeak}) {
   Get.dialog(
-    UserInvitationBottomSheetContent(),
+    UserInvitationBottomSheetContent(
+      canInviteToSpeak: canInviteToSpeak,
+    ),
   );
 }
 
+bool canInvite({
+  required FirebaseGroup group,
+  required String currentUserId,
+}) {
+  final iAmCreator = currentUserId == group.creator.id;
+  final isGroupPublic =
+      group.accessType == null || group.accessType == RoomAccessTypes.public;
+  if (iAmCreator || isGroupPublic) {
+    return true;
+  }
+  return false;
+}
+
+bool canInviteToSpeak({
+  required FirebaseGroup group,
+  required String currentUserId,
+}) {
+  final iAmCreator = currentUserId == group.creator.id;
+  final isGroupPublic = group.speakerType == null ||
+      group.speakerType == RoomSpeakerTypes.everyone;
+  if (iAmCreator || isGroupPublic) {
+    return true;
+  }
+  return false;
+}
+
 class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
-  const UserInvitationBottomSheetContent({super.key});
+  final bool canInviteToSpeak;
+  const UserInvitationBottomSheetContent(
+      {super.key, required this.canInviteToSpeak});
 
   @override
   Widget build(BuildContext context) {
@@ -209,17 +248,18 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Button(
-                                  type: ButtonType.outline,
-                                  size: ButtonSize.SMALL,
-                                  onPressed: () {
-                                    controller.inviteUserToJoinThisGroup(
-                                      userId: user.id,
-                                      inviteToSpeak: true,
-                                    );
-                                  },
-                                  text: 'Invite to speak',
-                                ),
+                                if (canInviteToSpeak)
+                                  Button(
+                                    type: ButtonType.outline,
+                                    size: ButtonSize.SMALL,
+                                    onPressed: () {
+                                      controller.inviteUserToJoinThisGroup(
+                                        userId: user.id,
+                                        inviteToSpeak: true,
+                                      );
+                                    },
+                                    text: 'Invite to speak',
+                                  ),
                                 space10,
                                 Button(
                                   type: ButtonType.outline,

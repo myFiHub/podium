@@ -186,10 +186,11 @@ class MembersList extends GetWidget<GroupCallController> {
                     type: ButtonType.outline,
                     onPressed: () {
                       openInviteBottomSheet(
-                          canInviteToSpeak: canInviteToSpeak(
-                        group: controller.group.value!,
-                        currentUserId: myUser.id,
-                      ));
+                        canInviteToSpeak: canInviteToSpeak(
+                          group: controller.group.value!,
+                          currentUserId: myUser.id,
+                        ),
+                      );
                     },
                     child: Text('Invite users'),
                   ),

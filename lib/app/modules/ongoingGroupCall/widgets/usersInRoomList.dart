@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
+    as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -9,7 +10,8 @@ import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widgetWrapper.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/models/firebase_session_model.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
@@ -17,7 +19,7 @@ import 'package:podium/widgets/button/button.dart';
 import 'package:web3modal_flutter/utils/util.dart';
 
 class UsersInRoomList extends StatelessWidget {
-  final List<UserInfoModel> usersList;
+  final List<FirebaseSessionMember> usersList;
   const UsersInRoomList({super.key, required this.usersList});
   @override
   Widget build(BuildContext context) {
@@ -27,17 +29,21 @@ class UsersInRoomList extends StatelessWidget {
       itemCount: usersList.length,
       itemBuilder: (context, index) {
         final user = usersList[index];
-        final name = user.fullName;
+        final name = user.name;
+        String avatar = user.avatar;
+        if (avatar.isEmpty) {
+          avatar = avatarPlaceHolder(name);
+        }
         final userId = user.id;
         final isItME = user.id == myUserId;
-        return AnimationConfiguration.staggeredList(
+        return Staggered.AnimationConfiguration.staggeredList(
           position: index,
           key: Key(user.id),
           duration: const Duration(milliseconds: 375),
-          child: SlideAnimation(
+          child: Staggered.SlideAnimation(
             key: Key(user.id),
             verticalOffset: 20.0,
-            child: FadeInAnimation(
+            child: Staggered.FadeInAnimation(
               child: GestureDetector(
                 onTap: () {
                   final usersController = Get.find<UsersController>();
@@ -88,8 +94,7 @@ class UsersInRoomList extends StatelessWidget {
                                     Row(
                                       children: [
                                         GFAvatar(
-                                          backgroundImage:
-                                              NetworkImage(user.avatar),
+                                          backgroundImage: NetworkImage(avatar),
                                           shape: GFAvatarShape.standard,
                                           backgroundColor: ColorName.cardBorder,
                                         ),
@@ -113,7 +118,7 @@ class UsersInRoomList extends StatelessWidget {
                                               ),
                                               space5,
                                               Text(
-                                                user.fullName,
+                                                user.name,
                                                 style: const TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w700,
@@ -162,7 +167,8 @@ class RemainingTime extends GetWidget<OngoingGroupCallController> {
       final roomCreator = controller.groupCallController.group.value!.creator;
       final userRemainingTime = timersMap[userId];
       if (userId == roomCreator.id) {
-        return const Text('Room creator', style: TextStyle(fontSize: 12));
+        return Text('Room creator',
+            style: TextStyle(fontSize: 10, color: Colors.green[200]));
       }
       if (userRemainingTime == null) {
         return const SizedBox();
@@ -332,7 +338,10 @@ class LikeDislike extends GetWidget<OngoingGroupCallController> {
               if (controller.timers.value[storageKey] == null) return;
               controller.timers.update((val) {
                 val!.remove(storageKey);
+                return val;
               });
+              // ignore: invalid_use_of_protected_member
+              controller.timers.refresh();
             },
             child: child,
           );

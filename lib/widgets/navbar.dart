@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
 const navbarHeight = 60.0;
@@ -62,9 +63,9 @@ class PodiumNavbar extends GetWidget<GlobalController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      final loggedIn = controller.loggedIn.value;
       final activeRoute = controller.activeRoute.value;
-      if (_routesWithoutNavbar.contains(activeRoute) ||
-          controller.loggedIn.value == false) {
+      if (_routesWithoutNavbar.contains(activeRoute) || loggedIn == false) {
         return Container(
           height: 0,
         );

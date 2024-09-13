@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
-import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 
 class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
+  final roomAccessType = RoomAccessTypes.public.obs;
+  final roomSpeakerType = RoomSpeakerTypes.everyone.obs;
+  final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
   @override
   void onInit() {
@@ -21,6 +22,18 @@ class CreateGroupController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  setRoomPrivacyType(String value) {
+    roomAccessType.value = value;
+  }
+
+  setRoomSpeakingType(String value) {
+    roomSpeakerType.value = value;
+  }
+
+  setRoomSubject(String value) {
+    roomSubject.value = value;
   }
 
   create() async {
@@ -39,13 +52,41 @@ class CreateGroupController extends GetxController {
       );
       return;
     }
-
+    String subject = roomSubject.value;
+    if (subject.isEmpty) {
+      subject = defaultSubject;
+    }
     isCreatingNewGroup.value = true;
-    await groupsController.createGroup(groupName.value);
-    isCreatingNewGroup.value = false;
-    Navigate.to(
-      type: NavigationTypes.offAllAndToNamed,
-      route: Routes.HOME,
+    final accessType = roomAccessType.value;
+    final speakerType = roomSpeakerType.value;
+    await groupsController.createGroup(
+      name: groupName.value,
+      accessType: accessType,
+      speakerType: speakerType,
+      subject: subject,
     );
+    isCreatingNewGroup.value = false;
+    // Navigate.to(
+    //   type: NavigationTypes.offAllAndToNamed,
+    //   route: Routes.HOME,
+    // );
   }
 }
+
+class RoomAccessTypes {
+  static const public = 'public';
+  static const onlyLink = 'onlyLink';
+  static const invitees = 'invitees';
+  static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
+  static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
+}
+
+class RoomSpeakerTypes {
+  static const everyone = 'everyone';
+  static const invitees = 'invitees';
+  static const onlyCreator = 'onlyCreator';
+  static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
+  static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
+}
+
+const defaultSubject = "";

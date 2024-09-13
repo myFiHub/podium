@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/env.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:web3modal_flutter/utils/w3m_chains_presets.dart';
@@ -111,12 +111,16 @@ class UserInfo extends GetWidget<ProfileController> {
       if (myUser == null) {
         return Container();
       }
+      String avatar = myUser.avatar;
+      if (avatar.isEmpty) {
+        avatar = avatarPlaceHolder(myUser.fullName);
+      }
       return Container(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             GFAvatar(
-              backgroundImage: NetworkImage(myUser.avatar),
+              backgroundImage: NetworkImage(avatar),
               shape: GFAvatarShape.standard,
               size: 100,
             ),

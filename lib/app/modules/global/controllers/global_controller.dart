@@ -9,9 +9,12 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
+import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/app/modules/ongoingGroupCall/views/ongoing_group_call_view.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -79,6 +82,7 @@ class GlobalController extends GetxController {
   final loggedIn = false.obs;
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
+  String? deepLinkRoute = null;
 
   final connectionCheckerInstance = InternetConnection.createInstance(
     checkInterval: const Duration(seconds: 5),
@@ -200,28 +204,80 @@ class GlobalController extends GetxController {
   listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
-      if (newAddress != '' && newAddress != null) {
-        try {
-          await saveUserWalletAddressOnFirebase(newAddress);
-          log.d("new wallet address SAVED $newAddress");
-          currentUserInfo.value!.localWalletAddress = newAddress;
-          currentUserInfo.refresh();
-        } catch (e) {
-          log.e("error saving wallet address");
-          Get.snackbar('Error', 'Error saving wallet address, try again');
-        }
+      if (newAddress != '' &&
+          newAddress != null &&
+          currentUserInfo.value != null) {
+        _saveExternalWalletAddress(newAddress);
       }
     });
   }
 
+  _saveExternalWalletAddress(String address) async {
+    try {
+      await saveUserWalletAddressOnFirebase(address);
+      log.d("new wallet address SAVED $address");
+      currentUserInfo.value!.localWalletAddress = address;
+      currentUserInfo.refresh();
+    } catch (e) {
+      log.e("error saving wallet address $e");
+      Get.snackbar('Error', 'Error saving wallet address, try again');
+    }
+  }
+
   saveUserWalletAddressOnFirebase(String walletAddress) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final userId = user!.uid;
+    // final user = FirebaseAuth.instance.currentUser;
+    final userId = currentUserInfo.value!.id;
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
-
     return await firebaseUserDbReference.set(walletAddress);
+  }
+
+  openDeepLinkGroup(String route) {
+    if (route.contains(Routes.GROUP_DETAIL)) {
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: Routes.HOME,
+      );
+      final splited = route.split(Routes.GROUP_DETAIL);
+      if (splited.length < 2) {
+        log.f("splited: $splited");
+        return;
+      }
+      final groupId = splited[1];
+      final groupsController = Get.put(GroupsController());
+      Get.put(GroupDetailController());
+      groupsController.joinGroupAndOpenGroupDetailPage(
+        groupId: groupId,
+        joiningByLink: true,
+      );
+      deepLinkRoute = null;
+      activeRoute.value = Routes.HOME;
+    }
+  }
+
+  setDeepLinkRoute(String route) async {
+    deepLinkRoute = route;
+    if (loggedIn.value) {
+      log.e("logged in, opening deep link $route");
+      openDeepLinkGroup(route);
+    }
+  }
+
+  Future<bool> removeUserWalletAddressOnFirebase() async {
+    try {
+      final globalController = Get.find<GlobalController>();
+      final id = globalController.currentUserInfo.value!.id;
+      final userId = id;
+      final firebaseUserDbReference = FirebaseDatabase.instance
+          .ref(FireBaseConstants.usersRef)
+          .child(userId + '/' + UserInfoModel.localWalletAddressKey);
+      await firebaseUserDbReference.set('');
+      return true;
+    } catch (e) {
+      log.e("error removing wallet address $e");
+      return false;
+    }
   }
 
   cleanStorage() {
@@ -280,7 +336,7 @@ class GlobalController extends GetxController {
               TextButton(
                 onPressed: () {
                   storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                  Get.back();
+                  Get.backLegacy();
                   if (completer.isCompleted == false) {
                     completer.complete(true);
                   }
@@ -328,6 +384,10 @@ class GlobalController extends GetxController {
         return;
       }
       final LoginController loginController = Get.put(LoginController());
+      if (loginType == LoginType.email) {
+        await loginController.loginWithEmail(ignoreIfNotLoggedIn: true);
+        return;
+      }
       if (loginType == LoginType.x) {
         await loginController.loginWithX(ignoreIfNotLoggedIn: true);
         return;
@@ -398,6 +458,16 @@ class GlobalController extends GetxController {
     if (value == false) {
       log.f("logging out");
       _logout();
+    } else {
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: Routes.HOME,
+      );
+      if (deepLinkRoute != null) {
+        final route = deepLinkRoute!;
+        openDeepLinkGroup(route);
+        return;
+      }
     }
   }
 
@@ -490,6 +560,13 @@ class GlobalController extends GetxController {
       } else {
         log.e(e);
       }
+    }
+  }
+
+  disconnect() async {
+    final removed = await removeUserWalletAddressOnFirebase();
+    if (removed) {
+      web3ModalService.disconnect();
     }
   }
 }

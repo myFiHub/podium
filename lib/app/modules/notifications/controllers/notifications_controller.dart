@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -59,16 +60,43 @@ class NotificationsController extends GetxController with FireBaseUtils {
   getNotifications() async {
     try {
       final notifs = await getMyNotifications();
-      log.d(notifs);
       notifications.assignAll(notifs);
     } catch (e) {
       log.e(e);
     }
   }
 
-  deleteMyNotification(String id) {
+  deleteMyNotification(FirebaseNotificationModel notif) {
     try {
-      deleteNotification(notificationId: id);
+      deleteNotification(notificationId: notif.id);
+    } catch (e) {
+      log.e(e);
+    }
+  }
+
+  acceptGroupInvitation({
+    required FirebaseNotificationModel notif,
+  }) async {
+    final groupId = notif.actionId;
+    if (groupId == null) return;
+    final GroupsController groupsController = Get.find<GroupsController>();
+    await groupsController.joinGroupAndOpenGroupDetailPage(
+      groupId: groupId,
+    );
+    try {
+      await deleteNotification(notificationId: notif.id);
+    } catch (e) {
+      log.e(e);
+    }
+  }
+
+  rejectGroupInvitation({
+    required FirebaseNotificationModel notif,
+  }) async {
+    final groupId = notif.actionId;
+    if (groupId == null) return;
+    try {
+      await deleteNotification(notificationId: notif.id);
     } catch (e) {
       log.e(e);
     }

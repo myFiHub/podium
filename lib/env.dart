@@ -23,6 +23,7 @@ class Env {
   static const environment = String.fromEnvironment("environment");
   static const jitsiServerUrl = String.fromEnvironment("jitsiServerUrl");
   static const appStoreUrl = String.fromEnvironment("appStoreUrl");
+  static const baseDeepLinkUrl = String.fromEnvironment("baseDeepLinkUrl");
   static const VERSION =
       String.fromEnvironment("VERSION", defaultValue: '1.0.2');
 }

@@ -12,6 +12,7 @@ class SearchController extends GetxController with FireBaseUtils {
   final searchValue = ''.obs;
   final searchedGroups = Rxn<Map<String, FirebaseGroup>>({});
   final searchedUsers = Rxn<Map<String, UserInfoModel>>({});
+  final selectedSearchTab = 0.obs;
 
   @override
   void onInit() {

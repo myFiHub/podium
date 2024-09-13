@@ -210,7 +210,7 @@ class WalletConnect extends GetWidget<GlobalController> {
             walletConnected != ''
                 ? Button(
                     onPressed: () {
-                      controller.web3ModalService.disconnect();
+                      controller.disconnect();
                     },
                     type: ButtonType.outline,
                     color: ButtonColors.WARNING,

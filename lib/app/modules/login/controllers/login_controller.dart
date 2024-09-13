@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
@@ -10,15 +12,16 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:uuid/uuid.dart';
 
 class LoginController extends GetxController
@@ -28,6 +31,7 @@ class LoginController extends GetxController
   final $isAutoLoggingIn = false.obs;
   final email = ''.obs;
   final password = ''.obs;
+  Function? afterLogin = null;
 
   @override
   void onInit() {
@@ -104,10 +108,7 @@ class LoginController extends GetxController
         globalController.firebaseUserCredential.value = firebaseUserCredential;
         globalController.setLoggedIn(true);
         LoginTypeService.setLoginType(LoginType.emailAndPassword);
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.HOME,
-        );
+        // Navigate.toInitial();
       } catch (e) {
         Navigate.to(
           type: NavigationTypes.offAllNamed,
@@ -129,6 +130,40 @@ class LoginController extends GetxController
     }
   }
 
+  loginWithEmail({
+    required bool ignoreIfNotLoggedIn,
+    String? email,
+  }) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.email,
+        email: email,
+      );
+      if (particleUser != null) {
+        await _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name ?? '',
+          email: particleUser.email ?? '',
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
+          particleUser: particleUser,
+          loginType: LoginType.email,
+        );
+      } else {
+        if (ignoreIfNotLoggedIn == false) {
+          Get.snackbar('Error', 'Error logging in');
+        }
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with Email: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
   loginWithX({required bool ignoreIfNotLoggedIn}) async {
     isLoggingIn.value = true;
     try {
@@ -140,13 +175,17 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.thirdpartyUserInfo!.userInfo.email ?? '',
-          avatar: particleUser.avatar!,
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.x,
         );
       } else {
         if (ignoreIfNotLoggedIn == false) {
-          Get.snackbar('Error', 'Error logging in');
+          Get.snackbar(
+            'Error',
+            'Error logging in',
+            colorText: Colors.red,
+          );
         }
         return;
       }
@@ -170,7 +209,7 @@ class LoginController extends GetxController
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.googleEmail!,
-          avatar: particleUser.avatar!,
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.google,
         );
@@ -199,8 +238,8 @@ class LoginController extends GetxController
         _socialLogin(
           id: particleUser.uuid,
           name: particleUser.name!,
-          email: particleUser.linkedinEmail!,
-          avatar: particleUser.avatar!,
+          email: particleUser.linkedinEmail ?? '',
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.linkedin,
         );
@@ -227,8 +266,8 @@ class LoginController extends GetxController
         _socialLogin(
           id: particleUser.uuid,
           name: particleUser.name!,
-          email: particleUser.facebookEmail!,
-          avatar: particleUser.avatar!,
+          email: particleUser.facebookEmail ?? '',
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.facebook,
         );
@@ -255,8 +294,8 @@ class LoginController extends GetxController
         _socialLogin(
           id: particleUser.uuid,
           name: particleUser.name!,
-          email: particleUser.appleEmail!,
-          avatar: particleUser.avatar!,
+          email: particleUser.appleEmail ?? '',
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.apple,
         );
@@ -307,115 +346,99 @@ class LoginController extends GetxController
       lowercasename: name.toLowerCase(),
     );
 
-    final user = await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
+    UserInfoModel? user =
+        await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
+
     if (user == null) {
       Get.snackbar('Error', 'Error logging in');
       return;
     }
-    globalController.currentUserInfo.value = user;
-    globalController.particleAuthUserInfo.value = particleUser;
-    LoginTypeService.setLoginType(loginType);
-    globalController.setLoggedIn(true);
-    isLoggingIn.value = false;
-    Navigate.to(
-      type: NavigationTypes.offAllNamed,
-      route: Routes.HOME,
-    );
+    late String? savedName;
+    if (user.fullName.isEmpty || user.fullName == null) {
+      savedName = await forceSaveUserFullName(user: user);
+      final [myUser] = await getUsersByIds([user.id]);
+      user = myUser;
+      if (user == null) {
+        Get.snackbar('Error', 'Error logging in');
+        globalController.setLoggedIn(false);
+        return;
+      }
+    } else {
+      savedName = user.fullName;
+    }
+    if (savedName != null) {
+      globalController.currentUserInfo.value = user;
+      globalController.particleAuthUserInfo.value = particleUser;
+      LoginTypeService.setLoginType(loginType);
+      globalController.setLoggedIn(true);
+      isLoggingIn.value = false;
+      if (afterLogin != null) {
+        afterLogin!();
+        afterLogin = null;
+      }
+      // Navigate.toInitial();
+    } else {
+      globalController.setLoggedIn(false);
+      Get.snackbar("a name is required", '', colorText: Colors.red);
+    }
   }
 
-  openSocialLoginBottomSheet() {
-    Get.bottomSheet(
+  Future<String?> forceSaveUserFullName({required UserInfoModel user}) async {
+    final _formKey = GlobalKey<FormBuilderState>();
+    String fullName = '';
+    final name = await Get.bottomSheet(
+      isDismissible: false,
       Container(
-        padding: EdgeInsets.all(20),
-        height: 340,
         width: Get.width,
-        decoration: BoxDecoration(
-          color: ColorName.cardBackground,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+        height: 300,
+        color: ColorName.cardBackground,
+        padding: EdgeInsets.all(12),
+        child: FormBuilder(
+          key: _formKey,
+          child: Column(
+            children: [
+              Text(
+                'the name you want to use in the platform',
+                style: TextStyle(
+                  color: ColorName.greyText,
+                ),
+              ),
+              FormBuilderField(
+                builder: (FormFieldState<String?> field) {
+                  return Input(
+                    hintText: 'Full Name',
+                    onChanged: (value) => fullName = value,
+                    validator: FormBuilderValidators.compose([
+                      FormBuilderValidators.required(
+                          errorText: 'Name is required'),
+                      FormBuilderValidators.minLength(3,
+                          errorText: 'Name too short'),
+                    ]),
+                  );
+                },
+                name: 'fullName',
+              ),
+              Button(
+                text: 'SUBMIT',
+                blockButton: true,
+                type: ButtonType.gradient,
+                onPressed: () {
+                  final re = _formKey.currentState?.saveAndValidate();
+                  if (re == true) {
+                    Navigator.pop(Get.context!, fullName);
+                  }
+                },
+              ),
+            ],
           ),
-        ),
-        child: Column(
-          children: <Widget>[
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithX(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH X',
-              type: ButtonType.transparent,
-              icon: Assets.images.xPlatform.svg(
-                width: 20,
-                height: 20,
-                color: ColorName.white,
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithGoogle(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH GOOGLE',
-              type: ButtonType.transparent,
-              icon: Assets.images.gIcon.image(
-                width: 20,
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithFaceBook(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH FACEBOOK',
-              type: ButtonType.transparent,
-              icon: Assets.images.facebook.image(
-                height: 25,
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithApple(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH APPLE',
-              type: ButtonType.transparent,
-              icon: Assets.images.apple.image(
-                height: 25,
-                color: ColorName.white,
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Button(
-              size: ButtonSize.MEDIUM,
-              onPressed: () {
-                loginWithLinkedIn(ignoreIfNotLoggedIn: false);
-                Get.back();
-              },
-              text: 'LOGIN WITH LINKEDIN',
-              type: ButtonType.transparent,
-              icon: Assets.images.linkedin.image(
-                height: 20,
-              ),
-            ),
-          ],
         ),
       ),
     );
+    final savedName = await saveNameForUserById(
+      userId: user.id,
+      name: name,
+    );
+
+    return savedName;
   }
 }

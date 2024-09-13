@@ -30,11 +30,14 @@ class AllGroupsController extends GetxController with FireBaseUtils {
     searchValue.value = value;
     _deb.debounce(() async {
       final groups = await searchForGroupByName(value);
+      Map<String, FirebaseGroup> searchedGroupsMap = {};
       if (value.isEmpty) {
-        searchedGroups.value = groupsController.groups.value;
+        searchedGroupsMap = groupsController.groups.value ?? {};
       } else {
-        searchedGroups.value = groups;
+        searchedGroupsMap = groups;
       }
+      final myId = groupsController.globalController.currentUserInfo.value!.id;
+      searchedGroups.value = getGroupsVisibleToMe(searchedGroupsMap, myId);
     });
   }
 }

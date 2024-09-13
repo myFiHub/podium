@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
+    as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -7,6 +8,7 @@ import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -24,17 +26,20 @@ class UserList extends StatelessWidget {
       itemBuilder: (context, index) {
         final user = usersList[index];
         final name = user.fullName;
-        final avatar = user.avatar;
+        String avatar = user.avatar;
+        if (avatar.isEmpty) {
+          avatar = avatarPlaceHolder(name);
+        }
         final userId = user.id;
         final isItME = user.id == myUserId;
-        return AnimationConfiguration.staggeredList(
+        return Staggered.AnimationConfiguration.staggeredList(
           position: index,
           key: Key(userId),
           duration: const Duration(milliseconds: 100),
-          child: SlideAnimation(
+          child: Staggered.SlideAnimation(
             key: Key(userId),
             verticalOffset: 12.0,
-            child: FadeInAnimation(
+            child: Staggered.FadeInAnimation(
               child: GestureDetector(
                 onTap: () {
                   final usersController = Get.find<UsersController>();

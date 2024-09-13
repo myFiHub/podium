@@ -42,6 +42,7 @@ class MethodChannelJitsiMeet extends JitsiMeetPlatform {
       'token': options.token,
       'userInfo': {
         'displayName': options.userInfo?.displayName,
+        'id': options.userInfo?.id,
         'email': options.userInfo?.email,
         'avatar': options.userInfo?.avatar,
       },

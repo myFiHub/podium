@@ -51,6 +51,31 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<String?> saveNameForUserById(
+      {required String userId, required String name}) async {
+    try {
+      final databaseRef = FirebaseDatabase.instance.ref(
+          FireBaseConstants.usersRef +
+              userId +
+              '/${UserInfoModel.fullNameKey}');
+
+      final lowerCasedName = name.toLowerCase();
+      final lowerCaseNameRef = FirebaseDatabase.instance.ref(
+          FireBaseConstants.usersRef +
+              userId +
+              '/${UserInfoModel.lowercasenameKey}');
+      await Future.wait([
+        databaseRef.set(name),
+        lowerCaseNameRef.set(lowerCasedName),
+      ]);
+
+      return name;
+    } catch (e) {
+      log.f('Error saving name for user by id: $e');
+      return null;
+    }
+  }
+
   Future<UserInfoModel?> getUserByEmail(String email) async {
     final databaseRef = FirebaseDatabase.instance.ref();
     final usersRef =
@@ -105,6 +130,24 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<bool> setCreatorJoinedToTrue({required String groupId}) async {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.sessionsRef +
+            groupId +
+            '/${FirebaseGroup.creatorJoinedKey}');
+    try {
+      final isCreatorJoined = await databaseRef.get();
+      if (isCreatorJoined.value == true) {
+        return true;
+      }
+      await databaseRef.set(true);
+      return true;
+    } catch (e) {
+      log.e(e);
+      return false;
+    }
+  }
+
   StreamSubscription<DatabaseEvent>? startListeningToSessionTimers({
     required String sessionId,
     required void Function(Map<String, int>) onData,
@@ -127,6 +170,92 @@ mixin FireBaseUtils {
         return null;
       }
     });
+  }
+
+  Future<bool> inviteUserToJoinGroup({
+    required String groupId,
+    required String userId,
+    required bool invitedToSpeak,
+  }) async {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef +
+            groupId +
+            '/${FirebaseGroup.invitedMembersKey}/$userId');
+    try {
+      await databaseRef.set({
+        InvitedMember.idKey: userId,
+        InvitedMember.invitedToSpeakKey: invitedToSpeak,
+      });
+      return true;
+    } catch (e) {
+      log.e(e);
+      return false;
+    }
+  }
+
+  listenToSessionMembers({
+    required String groupId,
+    required void Function(DatabaseEvent) onData,
+  }) {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.sessionsRef +
+            groupId +
+            '/${FirebaseSession.membersKey}');
+    return databaseRef.onValue.listen(onData);
+  }
+
+  listenToGroupMembers({
+    required String groupId,
+    required void Function(DatabaseEvent) onData,
+  }) {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef + groupId + '/${FirebaseGroup.membersKey}');
+    return databaseRef.onValue.listen(onData);
+  }
+
+  StreamSubscription<DatabaseEvent> listenToInvitedGroupMembers(
+      {required FirebaseGroup group,
+      required void Function(DatabaseEvent) onData}) {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef +
+            group.id +
+            '/${FirebaseGroup.invitedMembersKey}');
+    return databaseRef.onValue.listen(onData);
+  }
+
+  Future<Map<String, InvitedMember>> getInvitedMembers({
+    required String groupId,
+    String? userId,
+  }) async {
+    final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants
+            .groupsRef +
+        groupId +
+        '/${FirebaseGroup.invitedMembersKey}${userId != null ? '/' + userId : ''}');
+    final snapshot = await databaseRef.get();
+    final invitedMembers = snapshot.value as dynamic;
+    if (invitedMembers != null) {
+      if (userId != null) {
+        final invitedMember = InvitedMember(
+          id: userId,
+          invitedToSpeak: invitedMembers[InvitedMember.invitedToSpeakKey],
+        );
+        return {userId: invitedMember};
+      }
+
+      final Map<String, InvitedMember> invitedMembersMap = {};
+      invitedMembers.keys.toList().forEach((element) {
+        final invitedMember = InvitedMember(
+          id: element,
+          invitedToSpeak: invitedMembers[element]
+              [InvitedMember.invitedToSpeakKey],
+        );
+        invitedMembersMap[element] = invitedMember;
+      });
+      return invitedMembersMap;
+    } else {
+      log.i('no invited members found');
+      return {};
+    }
   }
 
   Future<FirebaseSessionMember?> getUserSessionData(
@@ -289,6 +418,20 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<FirebaseGroup?> getGroupInfoById(String groupId) async {
+    if (groupId.isEmpty) return null;
+    final databaseRef = FirebaseDatabase.instance.ref();
+    final groupRef = databaseRef.child(FireBaseConstants.groupsRef + groupId);
+    final snapshot = await groupRef.get();
+    final group = snapshot.value as dynamic;
+    if (group != null) {
+      final groupInfo = singleGroupParser(group);
+      return groupInfo;
+    } else {
+      return null;
+    }
+  }
+
   Future<Map<String, FirebaseGroup>> searchForGroupByName(
       String groupName) async {
     if (groupName.isEmpty) return {};
@@ -346,11 +489,15 @@ mixin FireBaseUtils {
   }
 
   sendNotification({required FirebaseNotificationModel notification}) async {
-    final databaseRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.notificationsRef + notification.id);
-    await databaseRef.set(
-      notification.toJson(),
-    );
+    try {
+      final databaseRef = FirebaseDatabase.instance
+          .ref(FireBaseConstants.notificationsRef + notification.id);
+      await databaseRef.set(
+        notification.toJson(),
+      );
+    } catch (e) {
+      log.e(e);
+    }
   }
 
   Future<List<FirebaseNotificationModel>> getMyNotifications() async {
@@ -415,6 +562,7 @@ mixin FireBaseUtils {
               targetUserId: value[FirebaseNotificationModel.targetUserIdKey],
               isRead: value[FirebaseNotificationModel.isReadKey],
               image: value[FirebaseNotificationModel.imageKey],
+              actionId: value[FirebaseNotificationModel.actionIdKey],
               timestamp: value[FirebaseNotificationModel.timestampKey],
             );
             notificationsList.add(notification);
@@ -521,15 +669,6 @@ mixin FireBaseUtils {
       final snapshot = await databaseRef.get();
       final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
-        // if (user.savedParticleUserInfo != null) {
-        //   final canContinue = await saveParticleWalletInfoForUser(
-        //     userId: user.id,
-        //     info: user.savedParticleUserInfo!,
-        //   );
-        //   if (!canContinue) {
-        //     return null;
-        //   }
-        // }
         final retrievedUser = UserInfoModel(
           fullName: userSnapshot[UserInfoModel.fullNameKey],
           email: userSnapshot[UserInfoModel.emailKey],
@@ -595,7 +734,9 @@ mixin FireBaseUtils {
             List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
         final List<ParticleAuthWallet> walletsList = [];
         wallets.forEach((element) {
-          walletsList.add(ParticleAuthWallet.fromMap(element));
+          if (element['address'] != '' && element['chain'] == 'evm_chain') {
+            walletsList.add(ParticleAuthWallet.fromMap(element));
+          }
         });
         return walletsList;
       } else {

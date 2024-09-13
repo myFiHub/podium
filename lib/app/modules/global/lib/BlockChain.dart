@@ -6,7 +6,6 @@ import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 import 'package:http/http.dart';
-import 'package:web_socket_channel/io.dart';
 
 final movementChain = W3MChainInfo(
   chainName: 'Movement Testnet',

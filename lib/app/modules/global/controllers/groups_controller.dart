@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
@@ -62,8 +65,14 @@ class GroupsController extends GetxController with FireBaseUtils {
     final data = snapShot.value as Map<dynamic, dynamic>?;
     if (data != null) {
       try {
-        final groupsMap = groupsParser(data);
-        groups.value = groupsMap;
+        final Map<String, FirebaseGroup> groupsMap = groupsParser(data);
+        if (globalController.currentUserInfo.value != null) {
+          final myUser = globalController.currentUserInfo.value!;
+          final myId = myUser.id;
+          groups.value = getGroupsVisibleToMe(groupsMap, myId);
+        }
+
+        // groups.value = groupsMap;
       } catch (e) {
         log.e(e);
       }
@@ -78,8 +87,12 @@ class GroupsController extends GetxController with FireBaseUtils {
         final data = event.snapshot.value as Map<dynamic, dynamic>?;
         if (data != null) {
           try {
+            final myUser = globalController.currentUserInfo.value!;
+            final myId = myUser.id;
             final groupsMap = groupsParser(data);
-            groups.value = groupsMap;
+            groups.value = getGroupsVisibleToMe(groupsMap, myId);
+
+            // groups.value = groupsMap;
           } catch (e) {
             log.e(e);
           }
@@ -90,7 +103,12 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
-  createGroup(String name) async {
+  createGroup({
+    required String name,
+    required String accessType,
+    required String speakerType,
+    required String subject,
+  }) async {
     final newGroupId = Uuid().v4();
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + newGroupId);
@@ -107,16 +125,23 @@ class GroupsController extends GetxController with FireBaseUtils {
       id: newGroupId,
       name: name,
       creator: creator,
+      accessType: accessType,
+      speakerType: speakerType,
       members: [myUser.id],
+      subject: subject,
       lowercasename: name.toLowerCase(),
     );
+    final jsonedGroup = group.toJson();
     try {
-      await firebaseGroupsReference.set(group.toJson());
+      await firebaseGroupsReference.set(jsonedGroup);
       groups.value![newGroupId] = group;
       final newFirebaseSession = FirebaseSession(
         name: name,
         createdBy: myUser.id,
         id: newGroupId,
+        accessType: group.accessType,
+        speakerType: group.speakerType,
+        subject: group.subject,
         members: {
           myUser.id: FirebaseSessionMember(
             avatar: myUser.avatar,
@@ -131,7 +156,10 @@ class GroupsController extends GetxController with FireBaseUtils {
       );
       final jsoned = newFirebaseSession.toJson();
       await firebaseSessionReference.set(jsoned);
-      joinGroup(newGroupId);
+      joinGroupAndOpenGroupDetailPage(
+        groupId: newGroupId,
+        openTheRoomAfterJoining: true,
+      );
     } catch (e) {
       deleteGroup(groupId: newGroupId);
       Get.snackbar("Error", "Failed to create group");
@@ -154,70 +182,156 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
-  joinGroup(String groupId) async {
+  joinGroupAndOpenGroupDetailPage({
+    required String groupId,
+    bool? openTheRoomAfterJoining,
+    bool? joiningByLink,
+  }) async {
+    if (groupId.isEmpty) return;
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
     final firebaseSessionsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
     final myUser = globalController.currentUserInfo.value!;
-    final group = groups.value![groupId];
-    if (group != null) {
-      final iAmGroupCreator = group.creator.id == myUser.id;
-      final members = List.from([...group.members]);
-      if (!members.contains(myUser.id)) {
-        members.add(myUser.id);
-        try {
-          joiningGroupId.value = groupId;
-          await firebaseGroupsReference
-              .child(FirebaseGroup.membersKey)
-              .set(members);
-          final mySession = await getUserSessionData(
-            groupId: groupId,
-            userId: myUser.id,
-          );
-          if (mySession == null) {
-            final newFirebaseSessionMember = FirebaseSessionMember(
-              avatar: myUser.avatar,
-              id: myUser.id,
-              name: myUser.fullName,
-              initialTalkTime: iAmGroupCreator
-                  ? double.maxFinite.toInt()
-                  : SessionConstants.initialTakTime,
-              isMuted: true,
-              remainingTalkTime: iAmGroupCreator
-                  ? double.maxFinite.toInt()
-                  : SessionConstants.initialTakTime,
-              present: false,
-            );
-            await firebaseSessionsReference
-                .child(FirebaseSession.membersKey)
-                .child(myUser.id)
-                .set(newFirebaseSessionMember.toJson());
-          }
-          _openGroup(groupId: groupId);
-        } catch (e) {
-          Get.snackbar("Error", "Failed to join group");
-          log.f("Error joining group: $e");
-          joiningGroupId.value = '';
-        }
-      } else {
-        joiningGroupId.value = '';
-        _openGroup(groupId: groupId);
-      }
-    }
-  }
-
-  _openGroup({required String groupId}) async {
-    final groupDetainController = Get.put(GroupDetailController());
-    final allGroups = groups.value;
-    if (allGroups != null) {
-      final group = allGroups[groupId];
-      groupDetainController.group.value = group;
-      joiningGroupId.value = '';
+    final group = await getGroupInfoById(groupId);
+    if (group == null) {
+      Get.snackbar(
+        "Error",
+        "Failed to join the room, seems like the room is deleted",
+        colorText: Colors.red,
+      );
       Navigate.to(
-        type: NavigationTypes.toNamed,
-        route: Routes.GROUP_DETAIL,
+        type: NavigationTypes.offAllNamed,
+        route: Routes.HOME,
+      );
+      return;
+    }
+
+    final allowedToJoin = canJoin(
+      group: group,
+      joiningByLink: joiningByLink,
+    );
+    if (!allowedToJoin) return;
+
+    final iAmGroupCreator = group.creator.id == myUser.id;
+    final members = List.from([...group.members]);
+    if (!members.contains(myUser.id)) {
+      members.add(myUser.id);
+      try {
+        joiningGroupId.value = groupId;
+        await firebaseGroupsReference
+            .child(FirebaseGroup.membersKey)
+            .set(members);
+        final mySession = await getUserSessionData(
+          groupId: groupId,
+          userId: myUser.id,
+        );
+        if (mySession == null) {
+          final newFirebaseSessionMember = FirebaseSessionMember(
+            avatar: myUser.avatar,
+            id: myUser.id,
+            name: myUser.fullName,
+            initialTalkTime: iAmGroupCreator
+                ? double.maxFinite.toInt()
+                : SessionConstants.initialTakTime,
+            isMuted: true,
+            remainingTalkTime: iAmGroupCreator
+                ? double.maxFinite.toInt()
+                : SessionConstants.initialTakTime,
+            present: false,
+          );
+          await firebaseSessionsReference
+              .child(FirebaseSession.membersKey)
+              .child(myUser.id)
+              .set(newFirebaseSessionMember.toJson());
+        }
+        _openGroup(
+          group: group,
+          openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
+        );
+      } catch (e) {
+        Get.snackbar("Error", "Failed to join group");
+        log.f("Error joining group: $e");
+        joiningGroupId.value = '';
+      }
+    } else {
+      joiningGroupId.value = '';
+      _openGroup(
+        group: group,
+        openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
       );
     }
   }
+
+  _openGroup(
+      {required FirebaseGroup group,
+      required bool openTheRoomAfterJoining}) async {
+    final groupDetainController = Get.put(GroupDetailController());
+    groupDetainController.group.value = group;
+    joiningGroupId.value = '';
+    Navigate.to(
+      type: NavigationTypes.toNamed,
+      route: Routes.GROUP_DETAIL,
+    );
+    if (openTheRoomAfterJoining) {
+      groupDetainController.startTheCall();
+    }
+  }
+
+  bool canJoin({required FirebaseGroup group, bool? joiningByLink}) {
+    final myUser = globalController.currentUserInfo.value!;
+    final iAmGroupCreator = group.creator.id == myUser.id;
+    if (iAmGroupCreator) return true;
+    if (group.accessType == null || group.accessType == RoomAccessTypes.public)
+      return true;
+    if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink == true) {
+      return true;
+    }
+    if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink != true) {
+      Get.snackbar(
+        "Error",
+        "This is a private room, you need an invite link to join",
+        colorText: Colors.red,
+      );
+      return false;
+    }
+    if (group.members.contains(myUser.id)) return true;
+    final invitedMembers = group.invitedMembers;
+    if (group.accessType == RoomAccessTypes.invitees) {
+      if (invitedMembers[myUser.id] != null)
+        return true;
+      else {
+        Get.snackbar(
+          "Error",
+          "You are not invited to this room",
+          colorText: Colors.red,
+        );
+      }
+    }
+
+    if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink != true) {
+      Get.snackbar(
+        "Error",
+        "This is a private room, you need an invite to join",
+        colorText: Colors.red,
+      );
+      return false;
+    }
+    return false;
+  }
+}
+
+getGroupsVisibleToMe(Map<String, FirebaseGroup> groups, String myId) {
+  return groups;
+  // final filteredGroups = groups.entries.where((element) {
+  //   if (element.value.privacyType == RoomPrivacyTypes.public ||
+  //       element.value.members.contains(myId)) {
+  //     return true;
+  //   }
+  //   return false;
+  // }).toList();
+  // final filteredGroupsConverted = Map<String, FirebaseGroup>.fromEntries(
+  //   filteredGroups,
+  // );
+  // return filteredGroupsConverted;
 }

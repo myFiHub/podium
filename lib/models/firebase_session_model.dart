@@ -1,26 +1,40 @@
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
+
 class FirebaseSession {
   late String name;
   late String createdBy;
   late String id;
   late Map<String, FirebaseSessionMember> members;
+  late String? accessType;
+  late String? speakerType;
+  late String? subject;
 
   static String idKey = 'id';
   static String nameKey = 'name';
   static String createdByKey = 'createdBy';
   static String membersKey = 'members';
+  static String accessTypeKey = 'accessType';
+  static String speakerTypeKey = 'speakerType';
+  static String subjectKey = 'subject';
 
   FirebaseSession({
     required this.name,
     required this.createdBy,
     required this.id,
     required this.members,
+    this.accessType,
+    this.speakerType,
+    this.subject,
   });
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
     data[nameKey] = name;
     data[createdByKey] = createdBy;
+    data[subjectKey] = subject ?? defaultSubject;
     data[idKey] = id;
+    data[accessTypeKey] = accessType ?? RoomAccessTypes.public;
+    data[speakerTypeKey] = speakerType ?? RoomSpeakerTypes.everyone;
     // ignore: unnecessary_null_comparison
     if (members != null) {
       final membersList = members.values.map((v) => v.toJson()).toList();

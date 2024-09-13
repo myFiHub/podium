@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
+import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 
@@ -18,7 +21,105 @@ class CreateGroupView extends GetView<CreateGroupController> {
             Input(
               hintText: 'Room Name',
               onChanged: (value) => controller.groupName.value = value,
+              marginvertical: 0,
             ),
+            Input(
+              initialValue: controller.roomSubject.value,
+              hintText: 'Main Subject (optional)',
+              onChanged: (value) => controller.roomSubject.value = value,
+              marginvertical: 0,
+            ),
+            Obx(() {
+              final selectedValue = controller.roomAccessType.value;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Room Access',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                  DropDown(
+                    items: [
+                      DropDownItem(
+                        value: RoomAccessTypes.public,
+                        text: 'Public',
+                      ),
+                      DropDownItem(
+                        value: RoomAccessTypes.onlyLink,
+                        text: 'Only By Link',
+                      ),
+                      DropDownItem(
+                        value: RoomAccessTypes.invitees,
+                        text: 'Only Invited Users',
+                      ),
+                      DropDownItem(
+                        value: RoomAccessTypes.onlyArenaTicketHolders,
+                        text: 'Only Arena Ticket Holders',
+                        enabled: false,
+                      ),
+                      DropDownItem(
+                        value: RoomAccessTypes.onlyPodiumPassHolders,
+                        text: 'Only Podium Pass Holders',
+                        enabled: false,
+                      ),
+                    ],
+                    selectedValue: selectedValue,
+                    onChanged: (value) {
+                      controller.setRoomPrivacyType(value);
+                    },
+                  ),
+                ],
+              );
+            }),
+            space10,
+            space10,
+            space10,
+            Obx(() {
+              final selectedValue = controller.roomSpeakerType.value;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Speaker Type',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                  DropDown(
+                    items: [
+                      DropDownItem(
+                        value: RoomSpeakerTypes.everyone,
+                        text: 'Everyone',
+                      ),
+                      DropDownItem(
+                        value: RoomSpeakerTypes.invitees,
+                        text: 'Only Invited Users',
+                      ),
+                      DropDownItem(
+                        value: RoomSpeakerTypes.onlyCreator,
+                        text: 'Only Creator',
+                      ),
+                      DropDownItem(
+                        value: RoomSpeakerTypes.onlyArenaTicketHolders,
+                        text: 'Ticket Holders',
+                        enabled: false,
+                      ),
+                    ],
+                    selectedValue: selectedValue,
+                    onChanged: (value) {
+                      controller.setRoomSpeakingType(value);
+                    },
+                  ),
+                ],
+              );
+            }),
+            space10,
+            space10,
+            space10,
             Obx(() {
               final loading = controller.isCreatingNewGroup.value;
               return Button(

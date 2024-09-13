@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
@@ -7,11 +7,59 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/env.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 import 'app/routes/app_pages.dart';
+import 'package:app_links/app_links.dart';
+
+StreamSubscription<Uri>? _linkSubscription;
+
+late AppLinks _appLinks;
+
+Future<void> initDeepLinks() async {
+  _appLinks = AppLinks();
+
+  // Handle links
+  final initialLink = await _appLinks.getInitialLink();
+  log.f('initial link: $initialLink');
+  if (initialLink != null) {
+    processLink(initialLink.toString());
+  }
+  _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+    log.f('deep link: $uri');
+    processLink(uri.toString());
+  });
+}
+
+processLink(String? link) async {
+  if (link != null) {
+    log.f('deep link: $link');
+    late String deepLinkedPage;
+    if (link.startsWith('podium://')) {
+      deepLinkedPage = link.replaceAll('podium://', '/');
+    } else if (link.startsWith(Env.baseDeepLinkUrl)) {
+      deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
+      deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
+    } else {
+      deepLinkedPage = '';
+    }
+    if (deepLinkedPage.isEmpty) return;
+    final isGlobalControllerInitialized = Get.isRegistered<GlobalController>();
+    if (isGlobalControllerInitialized) {
+      final globalController = Get.find<GlobalController>();
+      globalController.setDeepLinkRoute(deepLinkedPage);
+    } else {
+      final globalController = Get.put(
+        GlobalController(),
+        permanent: true,
+      );
+      globalController.setDeepLinkRoute(deepLinkedPage);
+    }
+  }
+}
 
 void main() async {
   await GetStorage.init();
@@ -33,6 +81,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    initDeepLinks();
+
     log.i(SchedulerBinding.instance.lifecycleState);
 
     _listener = AppLifecycleListener(
@@ -60,11 +110,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _listener.dispose();
+    _linkSubscription?.cancel();
     super.dispose();
   }
 
   void _handleDetached() async {
-    // jitsiMeet.hangUp();
+    jitsiMeet.hangUp();
     jitsiMethodChannel.invokeMethod<String>('hangUp');
     log.f('Detached');
   }
@@ -117,7 +168,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ),
           );
         },
-        initialBinding: GlobalBindings(),
+        binds: globalBindings,
         debugShowCheckedModeBanner: false,
         initialRoute: AppPages.INITIAL,
         getPages: AppPages.routes,

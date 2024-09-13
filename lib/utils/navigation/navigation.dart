@@ -1,5 +1,8 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/widgets/navbar.dart';
 
 enum NavigationTypes {
@@ -39,7 +42,8 @@ class Navigate {
         Get.offAndToNamed(route, arguments: arguments);
         break;
     }
-    if (_validRoutesForNavigation.contains(route)) {
+    if (_validRoutesForNavigation.contains(route) ||
+        _validRoutesForNavigation.contains(route.split('/')[0])) {
       final globalController = Get.find<GlobalController>();
       globalController.activeRoute.value = route;
     }

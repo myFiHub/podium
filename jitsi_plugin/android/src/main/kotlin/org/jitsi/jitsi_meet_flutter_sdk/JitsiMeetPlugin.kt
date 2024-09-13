@@ -79,10 +79,12 @@ class JitsiMeetPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     val configOverrides = call.argument<HashMap<String, Any?>>("configOverrides")
     val rawUserInfo = call.argument<HashMap<String, String?>>("userInfo")
     val displayName = rawUserInfo?.get("displayName")
+    val id = rawUserInfo?.get("id")
     val email = rawUserInfo?.get("email")
     val avatar = if (rawUserInfo?.get("avatar") != null) URL(rawUserInfo.get("avatar")) else null
     val userInfo = JitsiMeetUserInfo().apply {
       if (displayName != null) this.displayName = displayName
+      if (id != null) this.id = id
       if (email != null) this.email = email
       if (avatar != null) this.avatar = avatar
     }

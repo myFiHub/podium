@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/dateUtils.dart';
@@ -147,6 +148,9 @@ class MembersList extends GetWidget<GroupCallController> {
   Widget build(BuildContext context) {
     final globalController = Get.find<GlobalController>();
     final myUser = globalController.currentUserInfo.value;
+    if (controller.group.value == null) {
+      return Container();
+    }
     if (myUser == null) {
       return Container(
         child: const Center(
@@ -169,14 +173,41 @@ class MembersList extends GetWidget<GroupCallController> {
             ),
           ),
           space5,
-          Button(
-            onPressed: () {
-              controller.runHome();
-            },
-            text: "Leave the Room",
-            type: ButtonType.solid,
-            color: ButtonColors.DANGER,
-          )
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              if (canInvite(
+                group: controller.group.value!,
+                currentUserId: myUser.id,
+              ))
+                Container(
+                  width: (Get.width / 2) - 20,
+                  child: Button(
+                    type: ButtonType.outline,
+                    onPressed: () {
+                      openInviteBottomSheet(
+                        canInviteToSpeak: canInviteToSpeak(
+                          group: controller.group.value!,
+                          currentUserId: myUser.id,
+                        ),
+                      );
+                    },
+                    child: Text('Invite users'),
+                  ),
+                ),
+              Container(
+                width: (Get.width / 2) - 20,
+                child: Button(
+                  onPressed: () {
+                    controller.runHome();
+                  },
+                  text: "Leave the Room",
+                  type: ButtonType.solid,
+                  color: ButtonColors.DANGER,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -20,11 +20,12 @@ class JitsiMeetConferenceOptions {
   /// Information about the local user. It will be used in absence of a token.
   final JitsiMeetUserInfo? userInfo;
 
-  JitsiMeetConferenceOptions(
-      {this.serverURL,
-      required this.room,
-      this.token,
-      this.configOverrides,
-      this.featureFlags,
-      this.userInfo});
+  JitsiMeetConferenceOptions({
+    this.serverURL,
+    required this.room,
+    this.token,
+    this.configOverrides,
+    this.featureFlags,
+    this.userInfo,
+  });
 }

@@ -158,7 +158,11 @@ class GroupCallController extends GetxController
       allowedToSpeak: iAmAllowedToSpeak,
     );
     try {
-      await jitsiMeet.join(options, jitsiListeners());
+      await jitsiMeet.join(
+          options,
+          jitsiListeners(
+            group: groupToJoin,
+          ));
     } catch (e) {
       log.f(e.toString());
     }

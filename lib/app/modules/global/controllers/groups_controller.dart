@@ -281,9 +281,9 @@ class GroupsController extends GetxController with FireBaseUtils {
   bool canJoin({required FirebaseGroup group, bool? joiningByLink}) {
     final myUser = globalController.currentUserInfo.value!;
     final iAmGroupCreator = group.creator.id == myUser.id;
-    if (iAmGroupCreator ||
-        group.accessType == null ||
-        group.accessType == RoomAccessTypes.public) return true;
+    if (iAmGroupCreator) return true;
+    if (group.accessType == null || group.accessType == RoomAccessTypes.public)
+      return true;
     if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink == true) {
       return true;
     }

@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -13,7 +14,7 @@ import 'package:podium/utils/navigation/navigation.dart';
 final jitsiMeet = JitsiMeet();
 const MethodChannel jitsiMethodChannel = MethodChannel('jitsi_meet_wrapper');
 
-JitsiMeetEventListener jitsiListeners() {
+JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
   Get.put<OngoingGroupCallController>(OngoingGroupCallController());
   final groupCallController = Get.find<GroupCallController>();
   final globalController = Get.find<GlobalController>();
@@ -23,7 +24,12 @@ JitsiMeetEventListener jitsiListeners() {
         route: Routes.ONGOING_GROUP_CALL,
         type: NavigationTypes.toNamed,
       );
-
+      final myUserId = globalController.currentUserInfo.value!.id;
+      final groupCreator = groupCallController.group.value!.creator.id;
+      final iAmCreator = groupCreator == myUserId;
+      if (group.creatorJoined != true && iAmCreator) {
+        await groupCallController.setCreatorJoinedToTrue(groupId: group.id);
+      }
       groupCallController.haveOngoingCall.value = true;
       groupCallController.setIsUserPresentInSession(
         groupId: groupCallController.group.value!.id,

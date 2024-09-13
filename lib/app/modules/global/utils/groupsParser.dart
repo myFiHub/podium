@@ -29,6 +29,7 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorName = creator[UserInfoModel.fullNameKey];
     final creatorEmail = creator[UserInfoModel.emailKey];
     final creatorAvatar = creator[UserInfoModel.avatarUrlKey];
+    final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
       email: creatorEmail,
@@ -44,6 +45,7 @@ FirebaseGroup? singleGroupParser(value) {
       speakerType: speakerType,
       subject: subject,
       invitedMembers: invitedMembers,
+      creatorJoined: creatorJoined,
     );
     return group;
   } catch (e) {

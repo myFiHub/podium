@@ -130,6 +130,24 @@ mixin FireBaseUtils {
     }
   }
 
+  Future<bool> setCreatorJoinedToTrue({required String groupId}) async {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.sessionsRef +
+            groupId +
+            '/${FirebaseGroup.creatorJoinedKey}');
+    try {
+      final isCreatorJoined = await databaseRef.get();
+      if (isCreatorJoined.value == true) {
+        return true;
+      }
+      await databaseRef.set(true);
+      return true;
+    } catch (e) {
+      log.e(e);
+      return false;
+    }
+  }
+
   StreamSubscription<DatabaseEvent>? startListeningToSessionTimers({
     required String sessionId,
     required void Function(Map<String, int>) onData,

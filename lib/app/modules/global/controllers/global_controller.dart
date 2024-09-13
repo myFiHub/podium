@@ -204,18 +204,24 @@ class GlobalController extends GetxController {
   listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
-      if (newAddress != '' && newAddress != null) {
-        try {
-          await saveUserWalletAddressOnFirebase(newAddress);
-          log.d("new wallet address SAVED $newAddress");
-          currentUserInfo.value!.localWalletAddress = newAddress;
-          currentUserInfo.refresh();
-        } catch (e) {
-          log.e("error saving wallet address $e");
-          Get.snackbar('Error', 'Error saving wallet address, try again');
-        }
+      if (newAddress != '' &&
+          newAddress != null &&
+          currentUserInfo.value != null) {
+        _saveExternalWalletAddress(newAddress);
       }
     });
+  }
+
+  _saveExternalWalletAddress(String address) async {
+    try {
+      await saveUserWalletAddressOnFirebase(address);
+      log.d("new wallet address SAVED $address");
+      currentUserInfo.value!.localWalletAddress = address;
+      currentUserInfo.refresh();
+    } catch (e) {
+      log.e("error saving wallet address $e");
+      Get.snackbar('Error', 'Error saving wallet address, try again');
+    }
   }
 
   saveUserWalletAddressOnFirebase(String walletAddress) async {

@@ -137,7 +137,8 @@ bool canInvite({
   final iAmCreator = currentUserId == group.creator.id;
   final isGroupPublic =
       group.accessType == null || group.accessType == RoomAccessTypes.public;
-  if (iAmCreator || isGroupPublic) {
+  final amIAMember = group.members.contains(currentUserId);
+  if (iAmCreator || isGroupPublic || amIAMember) {
     return true;
   }
   return false;

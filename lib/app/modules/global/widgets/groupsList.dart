@@ -20,192 +20,207 @@ class GroupList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<GroupsController>();
-    return ListView.builder(
-      itemCount: groupsList.length,
-      itemBuilder: (context, index) {
-        final group = groupsList[index];
-        final name = group.name;
-        final groupId = group.id;
-        final amICreator = group.creator.id ==
-            controller.globalController.currentUserInfo.value!.id;
-        String creatorAvatar = group.creator.avatar;
-        if (creatorAvatar.isEmpty) {
-          creatorAvatar = avatarPlaceHolder(group.creator.fullName);
-        }
-        return Staggered.AnimationConfiguration.staggeredList(
-          position: index,
-          key: Key(groupId),
-          duration: const Duration(milliseconds: 375),
-          child: Staggered.SlideAnimation(
-            key: Key(groupId),
-            verticalOffset: 50.0,
-            child: Staggered.FadeInAnimation(
-              child: GestureDetector(
-                onTap: () {
-                  controller.joinGroupAndOpenGroupDetailPage(
-                    groupId: groupId,
-                  );
-                },
-                child: Stack(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                          color: ColorName.cardBackground,
-                          border: Border.all(
-                              color: amICreator
-                                  ? Colors.green
-                                  : ColorName.cardBorder),
-                          borderRadius:
-                              const BorderRadius.all(const Radius.circular(8))),
-                      margin: const EdgeInsets.all(12),
-                      padding: const EdgeInsets.all(16),
-                      key: Key(groupId),
-                      child: Stack(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    name,
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  space10,
-                                  Row(
-                                    children: [
-                                      GFAvatar(
-                                        size: 52,
-                                        backgroundImage:
-                                            NetworkImage(creatorAvatar),
-                                        shape: GFAvatarShape.standard,
-                                        backgroundColor: ColorName.cardBorder,
-                                      ),
-                                      space10,
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                              "Created By ${amICreator ? "You" : group.creator.fullName}",
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: ColorName.greyText)),
-                                          space5,
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.subject,
-                                                color: ColorName.greyText,
-                                                size: 14,
-                                              ),
-                                              Text(
-                                                " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: ColorName.greyText,
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                          space5,
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.mic,
-                                                color: ColorName.greyText,
-                                                size: 14,
-                                              ),
-                                              space5,
-                                              Text(
-                                                parseSpeakerType(
-                                                    group.speakerType),
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: ColorName.greyText,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          space5,
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.lock,
-                                                color: ColorName.greyText,
-                                                size: 14,
-                                              ),
-                                              space5,
-                                              Text(
-                                                parseAccessType(
-                                                    group.accessType),
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: ColorName.greyText,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          space5,
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.group,
-                                                color: ColorName.greyText,
-                                                size: 14,
-                                              ),
-                                              space5,
-                                              Text(
-                                                "${group.members.length} Members",
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: ColorName.greyText,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  )
-                                ],
-                              ),
-                              if (canShareGroupUrl(group: group))
-                                IconButton(
-                                  onPressed: () {
-                                    Share.share(
-                                        // 'podium://group-detail/$groupId',
-                                        "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium");
-                                  },
-                                  icon: Icon(
-                                    Icons.share,
-                                    color: ColorName.greyText,
-                                  ),
-                                )
-                            ],
-                          ),
-                          JoiningIndicator(
-                            groupId: groupId,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+    return Scrollbar(
+      child: ListView.builder(
+        itemCount: groupsList.length,
+        itemBuilder: (context, index) {
+          final group = groupsList[index];
+          final name = group.name;
+          final groupId = group.id;
+          final amICreator = group.creator.id ==
+              controller.globalController.currentUserInfo.value!.id;
+          String creatorAvatar = group.creator.avatar;
+          if (creatorAvatar.isEmpty) {
+            creatorAvatar = avatarPlaceHolder(group.creator.fullName);
+          }
+          return SingleGroup(
+            controller: controller,
+            groupId: groupId,
+            amICreator: amICreator,
+            name: name,
+            creatorAvatar: creatorAvatar,
+            group: group,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class SingleGroup extends StatelessWidget {
+  const SingleGroup({
+    super.key,
+    required this.controller,
+    required this.groupId,
+    required this.amICreator,
+    required this.name,
+    required this.creatorAvatar,
+    required this.group,
+  });
+
+  final GroupsController controller;
+  final String groupId;
+  final bool amICreator;
+  final String name;
+  final String creatorAvatar;
+  final FirebaseGroup group;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        controller.joinGroupAndOpenGroupDetailPage(
+          groupId: groupId,
         );
       },
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+                color: ColorName.cardBackground,
+                border: Border.all(
+                    color: amICreator ? Colors.green : ColorName.cardBorder),
+                borderRadius: const BorderRadius.all(const Radius.circular(8))),
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
+            key: Key(groupId),
+            child: Stack(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        space10,
+                        Row(
+                          children: [
+                            GFAvatar(
+                              size: 52,
+                              backgroundImage: NetworkImage(creatorAvatar),
+                              shape: GFAvatarShape.standard,
+                              backgroundColor: ColorName.cardBorder,
+                            ),
+                            space10,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    "Created By ${amICreator ? "You" : group.creator.fullName}",
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorName.greyText)),
+                                space5,
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.subject,
+                                      color: ColorName.greyText,
+                                      size: 14,
+                                    ),
+                                    Text(
+                                      " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorName.greyText,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                space5,
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.mic,
+                                      color: ColorName.greyText,
+                                      size: 14,
+                                    ),
+                                    space5,
+                                    Text(
+                                      parseSpeakerType(group.speakerType),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorName.greyText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                space5,
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.lock,
+                                      color: ColorName.greyText,
+                                      size: 14,
+                                    ),
+                                    space5,
+                                    Text(
+                                      parseAccessType(group.accessType),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorName.greyText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                space5,
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.group,
+                                      color: ColorName.greyText,
+                                      size: 14,
+                                    ),
+                                    space5,
+                                    Text(
+                                      "${group.members.length} Members",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorName.greyText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                    if (canShareGroupUrl(group: group))
+                      IconButton(
+                        onPressed: () {
+                          Share.share(
+                              // 'podium://group-detail/$groupId',
+                              "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium");
+                        },
+                        icon: Icon(
+                          Icons.share,
+                          color: ColorName.greyText,
+                        ),
+                      )
+                  ],
+                ),
+                JoiningIndicator(
+                  groupId: groupId,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,10 +1,13 @@
+import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
@@ -16,8 +19,43 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: GroupCall(),
+    return FloatingDraggableWidget(
+      mainScreenWidget: Scaffold(
+        body: GroupCall(),
+      ),
+      floatingWidget: Obx(() {
+        final group = controller.groupCallController.group.value;
+        if (group == null) {
+          return Container(
+            width: 0,
+            height: 0,
+          );
+        }
+        final isMuted = controller.amIMuted.value;
+        final canITalk = canISpeak(
+          group: group,
+        );
+        if (!canITalk) {
+          return Container(
+            width: 0,
+            height: 0,
+          );
+        }
+        return FloatingActionButton(
+          backgroundColor: isMuted ? Colors.red : Colors.green,
+          onPressed: () {
+            jitsiMeet.setAudioMuted(!isMuted);
+          },
+          tooltip: 'mute',
+          child: Icon(
+            isMuted ? Icons.mic : Icons.mic_off,
+          ),
+        );
+      }),
+      floatingWidgetHeight: 50,
+      floatingWidgetWidth: 50,
+      dx: Get.width - 80,
+      dy: 50,
     );
   }
 }
@@ -158,17 +196,59 @@ class MembersList extends GetWidget<GroupCallController> {
         ),
       );
     }
-    return Container(
-      height: Get.height - 190,
+    return Expanded(
+      // height: Get.height - 190,
       child: Column(
         children: [
           Container(
             child: Expanded(
-              child: Container(
-                child: Obx(() {
-                  final members = controller.members.value;
-                  return UsersInRoomList(usersList: members);
-                }),
+              child: DefaultTabController(
+                length: 2,
+                child: Scaffold(
+                  appBar: AppBar(
+                    backgroundColor: Colors.transparent,
+                    toolbarHeight: 0,
+                    bottom: TabBar(
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicatorColor: ColorName.primaryBlue,
+                      labelColor: ColorName.primaryBlue,
+                      unselectedLabelColor: Colors.grey,
+                      tabs: [
+                        Tab(
+                          child: Text("All Members"),
+                        ),
+                        Obx(() {
+                          final talkingMembers =
+                              controller.talkingMembers.value;
+                          return Tab(
+                            child: Text("Talking (${talkingMembers.length})"),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  body: TabBarView(
+                    children: [
+                      Obx(
+                        () {
+                          final members = controller.sortedMembers.value;
+                          //  sort the users based on the sort type, biggest to smallest
+                          return UsersInRoomList(
+                            usersList: members,
+                          );
+                        },
+                      ),
+                      Obx(
+                        () {
+                          final members = controller.talkingMembers.value;
+                          return UsersInRoomList(
+                            usersList: members,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

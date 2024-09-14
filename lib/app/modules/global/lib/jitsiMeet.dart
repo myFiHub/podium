@@ -52,34 +52,11 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       log.d("participantLeft: $p");
     },
     audioMutedChanged: (muted) {
-      if (muted) {
-        if (Get.isRegistered<OngoingGroupCallController>()) {
-          final ongoingGroupCallController =
-              Get.find<OngoingGroupCallController>();
-          ongoingGroupCallController.stopTheTimer();
-          ongoingGroupCallController.amIMuted.value = true;
-        }
-      } else {
-        if (Get.isRegistered<OngoingGroupCallController>()) {
-          final ongoingGroupCallController =
-              Get.find<OngoingGroupCallController>();
-          final myUserId = globalController.currentUserInfo.value!.id;
-          final groupCreator = groupCallController.group.value!.creator.id;
-          final remainingTime = ongoingGroupCallController.remainingTimeTimer;
-          if (remainingTime <= 0 && myUserId != groupCreator) {
-            Get.snackbar(
-              "You have run out of time",
-              "",
-              colorText: Colors.red,
-            );
-            jitsiMeet.setAudioMuted(true);
-            return;
-          }
-          ongoingGroupCallController.amIMuted.value = false;
-          ongoingGroupCallController.startTheTimer();
-        }
+      if (Get.isRegistered<OngoingGroupCallController>()) {
+        Get.find<OngoingGroupCallController>().audioMuteChanged(
+          muted: muted,
+        );
       }
-      log.d("audioMutedChanged: $muted");
     },
     videoMutedChanged: (muted) {
       log.d("videoMutedChanged: $muted");

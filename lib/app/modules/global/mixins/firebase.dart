@@ -130,6 +130,26 @@ mixin FireBaseUtils {
     }
   }
 
+  Future setIsTalkingInSession({
+    required String sessionId,
+    required String userId,
+    required bool isTalking,
+    int? startedToTalkAt,
+  }) async {
+    final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants
+            .sessionsRef +
+        sessionId +
+        '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.isTalkingKey}');
+    final startedToTalkAtRef = FirebaseDatabase.instance.ref(FireBaseConstants
+            .sessionsRef +
+        sessionId +
+        '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.startedToTalkAtKey}');
+    if (startedToTalkAt != null && isTalking) {
+      await startedToTalkAtRef.set(startedToTalkAt);
+    }
+    await databaseRef.set(isTalking);
+  }
+
   Future<bool> setCreatorJoinedToTrue({required String groupId}) async {
     final databaseRef = FirebaseDatabase.instance.ref(
         FireBaseConstants.sessionsRef +
@@ -148,9 +168,9 @@ mixin FireBaseUtils {
     }
   }
 
-  StreamSubscription<DatabaseEvent>? startListeningToSessionTimers({
+  StreamSubscription<DatabaseEvent>? startListeningToSessionMembers({
     required String sessionId,
-    required void Function(Map<String, int>) onData,
+    required void Function(Map<String, FirebaseSessionMember>) onData,
   }) {
     final databaseRef = FirebaseDatabase.instance.ref(
         FireBaseConstants.sessionsRef +
@@ -159,10 +179,10 @@ mixin FireBaseUtils {
     return databaseRef.onValue.listen((event) {
       final members = event.snapshot.value as dynamic;
       if (members != null) {
-        final Map<String, int> membersMap = {};
+        final Map<String, FirebaseSessionMember> membersMap = {};
         members.keys.toList().forEach((element) {
-          membersMap[element] =
-              members[element][FirebaseSessionMember.remainingTalkTimeKey];
+          final member = FirebaseSessionMember.fromJson(members[element]);
+          membersMap[element] = member;
         });
         onData(membersMap);
       } else {

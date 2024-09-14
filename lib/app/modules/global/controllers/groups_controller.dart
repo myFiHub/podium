@@ -146,10 +146,13 @@ class GroupsController extends GetxController with FireBaseUtils {
           myUser.id: FirebaseSessionMember(
             avatar: myUser.avatar,
             id: myUser.id,
+            isTalking: false,
+            startedToTalkAt: 0,
             name: myUser.fullName,
             initialTalkTime: double.maxFinite.toInt(),
             isMuted: true,
             remainingTalkTime: double.maxFinite.toInt(),
+            timeJoined: DateTime.now().millisecondsSinceEpoch,
             present: false,
           )
         },
@@ -231,6 +234,9 @@ class GroupsController extends GetxController with FireBaseUtils {
             avatar: myUser.avatar,
             id: myUser.id,
             name: myUser.fullName,
+            isTalking: false,
+            startedToTalkAt: 0,
+            timeJoined: DateTime.now().millisecondsSinceEpoch,
             initialTalkTime: iAmGroupCreator
                 ? double.maxFinite.toInt()
                 : SessionConstants.initialTakTime,
@@ -282,6 +288,8 @@ class GroupsController extends GetxController with FireBaseUtils {
     final myUser = globalController.currentUserInfo.value!;
     final iAmGroupCreator = group.creator.id == myUser.id;
     if (iAmGroupCreator) return true;
+    if (group.members.contains(myUser.id)) return true;
+
     if (group.accessType == null || group.accessType == RoomAccessTypes.public)
       return true;
     if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink == true) {
@@ -295,7 +303,6 @@ class GroupsController extends GetxController with FireBaseUtils {
       );
       return false;
     }
-    if (group.members.contains(myUser.id)) return true;
     final invitedMembers = group.invitedMembers;
     if (group.accessType == RoomAccessTypes.invitees) {
       if (invitedMembers[myUser.id] != null)

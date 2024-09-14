@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -14,44 +15,53 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/constants/meeting.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/firebase_session_model.dart' as firebaseSession;
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/utils/storage.dart';
+
+class SortTypes {
+  static const String recentlyTalked = 'recentlyTalked';
+  static const String timeJoined = 'timeJoined';
+}
 
 class GroupCallController extends GetxController
     with FireBaseUtils, PermissionUtils {
+  final storage = GetStorage();
   // group session id is group id
   final groupsController = Get.find<GroupsController>();
   final globalController = Get.find<GlobalController>();
   final group = Rxn<FirebaseGroup>();
-  final members = Rx<List<firebaseSession.FirebaseSessionMember>>([]);
+  final members = Rx<List<FirebaseSessionMember>>([]);
+  final sortedMembers = Rx<List<FirebaseSessionMember>>([]);
   final haveOngoingCall = false.obs;
   final jitsiMembers = Rx<List<JitsiMember>>([]);
-
-  StreamSubscription<DatabaseEvent>? sessionMembersSubscription = null;
+  final talkingMembers = Rx<List<FirebaseSessionMember>>([]);
+  final sortType = Rx<String>(SortTypes.recentlyTalked);
 
   @override
   void onInit() {
+    sortType.value = storage.read(StorageKeys.ongoingCallSortType) ??
+        SortTypes.recentlyTalked;
     super.onInit();
     group.listen((activeGroup) {
-      sessionMembersSubscription?.cancel();
       members.value = [];
       if (activeGroup != null) {
         listenToGroupMembers(
-            groupId: activeGroup.id,
-            onData: (data) async {
-              if (data.snapshot.value != null) {
-                final membersListFromStream =
-                    (data.snapshot.value as List<dynamic>).cast<String>();
-                final previousUniqueMembers = members.value.map((e) => e.id);
-                final newUniqueMembers = membersListFromStream.map((e) => e);
-                if (previousUniqueMembers.toSet() != newUniqueMembers.toSet()) {
-                  await refetchSessionMembers();
-                }
+          groupId: activeGroup.id,
+          onData: (data) async {
+            if (data.snapshot.value != null) {
+              final membersListFromStream =
+                  (data.snapshot.value as List<dynamic>).cast<String>();
+              final previousUniqueMembers = members.value.map((e) => e.id);
+              final newUniqueMembers = membersListFromStream.map((e) => e);
+              if (previousUniqueMembers.length != newUniqueMembers.length) {
+                await refetchSessionMembers();
               }
-            });
+            }
+          },
+        );
       }
     });
   }
@@ -75,6 +85,26 @@ class GroupCallController extends GetxController
 
   ///////////////////////////////////////////////////////////////
 
+  updateTalkingMembers({required List<String> ids}) {
+    final talkingMembersList = members.value.where((element) {
+      return ids.contains(element.id);
+    }).toList();
+
+    // put talking talkingMembersList at start of the sortedMembers
+    // forEach talking member, remove from sortedMembers and add to the start
+    // of the list
+    final sorted = [...sortedMembers.value];
+    talkingMembersList.forEach((talkingMember) {
+      sorted.removeWhere((element) => element.id == talkingMember.id);
+      sorted.insert(0, talkingMember);
+    });
+    talkingMembers.value = talkingMembersList;
+    log.d("talking members: ${talkingMembersList.map((e) => e.id).toList()}");
+    final sortedIds = sorted.map((e) => e.id).toList();
+    log.d("sorted members: $sortedIds");
+    sortedMembers.value = sorted;
+  }
+
   refetchSessionMembers() async {
     if (group.value == null) return;
     final databaseRef = FirebaseDatabase.instance.ref(
@@ -94,19 +124,57 @@ class GroupCallController extends GetxController
           initialTalkTime: value[FirebaseSessionMember.initialTalkTimeKey],
           present: value[FirebaseSessionMember.presentKey],
           remainingTalkTime: value[FirebaseSessionMember.remainingTalkTimeKey],
+          isTalking: value[FirebaseSessionMember.isTalkingKey] ?? false,
+          startedToTalkAt: value[FirebaseSessionMember.startedToTalkAtKey] ?? 0,
+          timeJoined: value[FirebaseSessionMember.timeJoinedKey] ?? 0,
         );
         membersList.add(member);
       });
     }
+
     members.value = membersList;
+// sort the members based on selected sort type
+    final sorted = sortMembers(
+      members: membersList,
+    );
+    sortedMembers.value = sorted;
+  }
+
+  List<FirebaseSessionMember> sortMembers(
+      {required List<FirebaseSessionMember> members}) {
+    final sorted = [...members];
+    if (sortType.value == SortTypes.recentlyTalked) {
+      sorted.sort((a, b) {
+        return b.startedToTalkAt.compareTo(a.startedToTalkAt);
+      });
+    } else if (sortType.value == SortTypes.timeJoined) {
+      sorted.sort((a, b) {
+        return b.timeJoined.compareTo(a.timeJoined);
+      });
+    }
+    return sorted;
   }
 
   cleanupAfterCall() {
     haveOngoingCall.value = false;
     jitsiMembers.value = [];
     jitsiMeet.hangUp();
-    sessionMembersSubscription?.cancel();
     members.value = [];
+    talkingMembers.value = [];
+    final groupId = group.value?.id;
+    if (groupId != null) {
+      final userId = globalController.currentUserInfo.value!.id;
+      setIsUserPresentInSession(
+        groupId: groupId,
+        userId: globalController.currentUserInfo.value!.id,
+        isPresent: false,
+      );
+      setIsTalkingInSession(
+        sessionId: groupId,
+        userId: userId,
+        isTalking: false,
+      );
+    }
   }
 
   startCall({required FirebaseGroup groupToJoin}) async {
@@ -175,21 +243,21 @@ class GroupCallController extends GetxController
     );
     cleanupAfterCall();
   }
+}
 
-  bool canISpeak({required FirebaseGroup group}) {
-    final globalController = Get.find<GlobalController>();
-    final myId = globalController.currentUserInfo.value!.id;
-    final iAmTheCreator = group.creator.id == myId;
-    if (iAmTheCreator) return true;
-    if (group.speakerType == RoomSpeakerTypes.invitees) {
-      // check if I am invited and am invited to speak
-      final invitedMember = group.invitedMembers[myId];
-      if (invitedMember != null && invitedMember.invitedToSpeak) return true;
-      return false;
-    }
-
-    final iAmAllowedToSpeak = group.speakerType == null ||
-        group.speakerType == RoomSpeakerTypes.everyone;
-    return iAmAllowedToSpeak;
+bool canISpeak({required FirebaseGroup group}) {
+  final globalController = Get.find<GlobalController>();
+  final myId = globalController.currentUserInfo.value!.id;
+  final iAmTheCreator = group.creator.id == myId;
+  if (iAmTheCreator) return true;
+  if (group.speakerType == RoomSpeakerTypes.invitees) {
+    // check if I am invited and am invited to speak
+    final invitedMember = group.invitedMembers[myId];
+    if (invitedMember != null && invitedMember.invitedToSpeak) return true;
+    return false;
   }
+
+  final iAmAllowedToSpeak = group.speakerType == null ||
+      group.speakerType == RoomSpeakerTypes.everyone;
+  return iAmAllowedToSpeak;
 }

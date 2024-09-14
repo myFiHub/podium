@@ -36,122 +36,133 @@ class UsersInRoomList extends StatelessWidget {
         }
         final userId = user.id;
         final isItME = user.id == myUserId;
-        return Staggered.AnimationConfiguration.staggeredList(
-          position: index,
+        return SingleUserInRoom(
           key: Key(user.id),
-          duration: const Duration(milliseconds: 375),
-          child: Staggered.SlideAnimation(
+          isItME: isItME,
+          userId: userId,
+          user: user,
+          name: name,
+          avatar: avatar,
+        );
+      },
+    );
+  }
+}
+
+class SingleUserInRoom extends StatelessWidget {
+  const SingleUserInRoom({
+    super.key,
+    required this.isItME,
+    required this.userId,
+    required this.user,
+    required this.name,
+    required this.avatar,
+  });
+
+  final bool isItME;
+  final String userId;
+  final FirebaseSessionMember user;
+  final String name;
+  final String avatar;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        final usersController = Get.find<UsersController>();
+        if (isItME) {
+          Navigate.to(
+            type: NavigationTypes.toNamed,
+            route: Routes.MY_PROFILE,
+          );
+          return;
+        }
+        usersController.openUserProfile(userId);
+      },
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+                color: ColorName.cardBackground,
+                border: Border.all(
+                    color: isItME ? Colors.green : ColorName.cardBorder),
+                borderRadius: const BorderRadius.all(const Radius.circular(8))),
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.all(16),
             key: Key(user.id),
-            verticalOffset: 20.0,
-            child: Staggered.FadeInAnimation(
-              child: GestureDetector(
-                onTap: () {
-                  final usersController = Get.find<UsersController>();
-                  if (isItME) {
-                    Navigate.to(
-                      type: NavigationTypes.toNamed,
-                      route: Routes.MY_PROFILE,
-                    );
-                    return;
-                  }
-                  usersController.openUserProfile(userId);
-                },
-                child: Stack(
+            child: Stack(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      decoration: BoxDecoration(
-                          color: ColorName.cardBackground,
-                          border: Border.all(
-                              color:
-                                  isItME ? Colors.green : ColorName.cardBorder),
-                          borderRadius:
-                              const BorderRadius.all(const Radius.circular(8))),
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 8),
-                      padding: const EdgeInsets.all(16),
-                      key: Key(user.id),
-                      child: Stack(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Container(
+                            width: Get.width * 0.3,
+                            child: Text(
+                              name,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          space10,
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              GFAvatar(
+                                backgroundImage: NetworkImage(avatar),
+                                shape: GFAvatarShape.standard,
+                                backgroundColor: ColorName.cardBorder,
+                              ),
+                              space10,
                               Container(
+                                width: Get.width - 335,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: Get.width * 0.3,
-                                      child: Text(
-                                        name,
-                                        style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
+                                    Text(
+                                      Util.truncate(userId, length: 6),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorName.greyText,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    space10,
-                                    Row(
-                                      children: [
-                                        GFAvatar(
-                                          backgroundImage: NetworkImage(avatar),
-                                          shape: GFAvatarShape.standard,
-                                          backgroundColor: ColorName.cardBorder,
-                                        ),
-                                        space10,
-                                        Container(
-                                          width: Get.width - 335,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                Util.truncate(userId,
-                                                    length: 6),
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: ColorName.greyText,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              space5,
-                                              Text(
-                                                user.name,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: ColorName.greyText,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              RemainingTime(
-                                                userId: userId,
-                                                key: Key(user.id),
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      ],
-                                    )
+                                    space5,
+                                    Text(
+                                      user.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: ColorName.greyText,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    RemainingTime(
+                                      userId: userId,
+                                      key: Key(user.id),
+                                    ),
                                   ],
                                 ),
-                              ),
-                              Actions(userId: userId),
+                              )
                             ],
-                          ),
+                          )
                         ],
                       ),
                     ),
+                    Actions(userId: userId),
                   ],
                 ),
-              ),
+              ],
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

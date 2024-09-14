@@ -31,7 +31,8 @@ class OngoingGroupCallController extends GetxController
   final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
-  StreamSubscription<DatabaseEvent>? sessionTimersSubscription = null;
+  final talkingIds = Rx<List<String>>([]);
+  StreamSubscription<DatabaseEvent>? sessionMembersSubscription = null;
   StreamSubscription<DatabaseEvent>? mySessionSubscription = null;
 
   Timer? timer;
@@ -56,10 +57,30 @@ class OngoingGroupCallController extends GetxController
       userId: myUser.id,
       onData: onRemainingTimeUpdate,
     );
-    sessionTimersSubscription = startListeningToSessionTimers(
+    sessionMembersSubscription = startListeningToSessionMembers(
       sessionId: ongoingGroupCallGroup.id,
-      onData: (d) {
-        allRemainingTimesMap.value.addAll(d);
+      onData: (sessionMembers) {
+        final Map<String, int> remainingTimeMap = {};
+        final membersList = sessionMembers.values.toList();
+        // sort based on last talking time to show the most recent talker first
+        membersList
+            .sort((a, b) => b.startedToTalkAt.compareTo(a.startedToTalkAt));
+        final talkingIdsList = membersList
+            .where((element) => element.isTalking)
+            .map((e) => e.id)
+            .toList();
+        if (talkingIdsList.length != talkingIds.value.length) {
+          talkingIds.value = talkingIdsList;
+          final GroupCallController groupCallController =
+              Get.find<GroupCallController>();
+          groupCallController.updateTalkingMembers(
+            ids: talkingIdsList,
+          );
+        }
+        sessionMembers.forEach((key, value) {
+          remainingTimeMap[key] = value.remainingTalkTime;
+        });
+        allRemainingTimesMap.value.addAll(remainingTimeMap);
         allRemainingTimesMap.refresh();
       },
     );
@@ -82,7 +103,7 @@ class OngoingGroupCallController extends GetxController
   }
 
   stopSubscriptions() {
-    sessionTimersSubscription?.cancel();
+    sessionMembersSubscription?.cancel();
     mySessionSubscription?.cancel();
   }
 
@@ -132,8 +153,33 @@ class OngoingGroupCallController extends GetxController
     }
   }
 
+  updateMyLastTalkingTime() {
+    final myUserId = globalController.currentUserInfo.value?.id;
+    final group = groupCallController.group.value;
+    if (group == null) {
+      return;
+    }
+    final canSpeak = canISpeak(group: group);
+    if (myUserId != null && canSpeak) {
+      setIsTalkingInSession(
+        sessionId: firebaseSession.value!.id,
+        userId: myUserId,
+        isTalking: true,
+        startedToTalkAt: DateTime.now().millisecondsSinceEpoch,
+      );
+    }
+  }
+
   stopTheTimer() {
     timer?.cancel();
+    final myUserId = globalController.currentUserInfo.value?.id;
+    if (myUserId != null) {
+      setIsTalkingInSession(
+        sessionId: firebaseSession.value!.id,
+        userId: myUserId,
+        isTalking: false,
+      );
+    }
   }
 
   Future<void> addToTimer(
@@ -340,6 +386,36 @@ class OngoingGroupCallController extends GetxController
       Get.snackbar("Error", "User has not connected wallet for some reason");
       return;
     }
+  }
+
+  audioMuteChanged({required bool muted}) {
+    if (muted) {
+      stopTheTimer();
+      amIMuted.value = true;
+      jitsiMeet.setAudioMuted(muted);
+    } else {
+      final myUserId = globalController.currentUserInfo.value!.id;
+      final groupCreator = groupCallController.group.value!.creator.id;
+      final remainingTime = remainingTimeTimer;
+      if (remainingTime <= 0 && myUserId != groupCreator) {
+        Get.snackbar(
+          "You have run out of time",
+          "",
+          colorText: Colors.red,
+        );
+        amIMuted.value = true;
+        jitsiMeet.setAudioMuted(true);
+        return;
+      }
+      amIMuted.value = false;
+      jitsiMeet.setAudioMuted(false);
+
+      startTheTimer();
+      if (remainingTimeTimer > 0) {
+        updateMyLastTalkingTime();
+      }
+    }
+    log.d("audioMutedChanged: $muted");
   }
 
   checkWalletConnected({void Function()? afterConnection}) {

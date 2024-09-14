@@ -1,3 +1,5 @@
+import 'package:animated_reorderable_list/animated_reorderable_list.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
     as Staggered;
@@ -21,6 +23,30 @@ class UserList extends StatelessWidget {
   Widget build(BuildContext context) {
     final globalController = Get.find<GlobalController>();
     final myUserId = globalController.currentUserInfo.value!.id;
+
+    return Scrollbar(
+      child: ListView.builder(
+        itemCount: usersList.length,
+        itemBuilder: (BuildContext context, int index) {
+          final user = usersList[index];
+          final name = user.fullName;
+          String avatar = user.avatar;
+          if (avatar.isEmpty) {
+            avatar = avatarPlaceHolder(name);
+          }
+          final userId = user.id;
+          final isItME = user.id == myUserId;
+          return SingleUser(
+            key: Key(userId),
+            isItME: isItME,
+            userId: userId,
+            name: name,
+            avatar: avatar,
+          );
+        },
+      ),
+    );
+
     return ListView.builder(
       itemCount: usersList.length,
       itemBuilder: (context, index) {
@@ -40,110 +66,132 @@ class UserList extends StatelessWidget {
             key: Key(userId),
             verticalOffset: 12.0,
             child: Staggered.FadeInAnimation(
-              child: GestureDetector(
-                onTap: () {
-                  final usersController = Get.find<UsersController>();
-                  if (isItME) {
-                    Navigate.to(
-                      type: NavigationTypes.toNamed,
-                      route: Routes.MY_PROFILE,
-                    );
-                    return;
-                  }
-                  usersController.openUserProfile(userId);
-                },
-                child: Stack(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                          color: ColorName.cardBackground,
-                          border: Border.all(
-                              color:
-                                  isItME ? Colors.green : ColorName.cardBorder),
-                          borderRadius:
-                              const BorderRadius.all(const Radius.circular(8))),
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 8),
-                      padding: const EdgeInsets.all(16),
-                      key: Key(userId),
-                      child: Stack(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: Get.width * 0.5,
-                                    child: Text(
-                                      name,
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                  space10,
-                                  Row(
-                                    children: [
-                                      GFAvatar(
-                                        backgroundImage: NetworkImage(avatar),
-                                        shape: GFAvatarShape.standard,
-                                        backgroundColor: ColorName.cardBorder,
-                                      ),
-                                      space10,
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            Util.truncate(userId, length: 6),
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              color: ColorName.greyText,
-                                            ),
-                                          ),
-                                          // space5,
-                                          // Text(
-                                          //   name,
-                                          //   style: const TextStyle(
-                                          //     fontSize: 16,
-                                          //     fontWeight: FontWeight.w700,
-                                          //     color: ColorName.greyText,
-                                          //     overflow: TextOverflow.ellipsis,
-                                          //   ),
-                                          // ),
-                                        ],
-                                      )
-                                    ],
-                                  )
-                                ],
-                              ),
-                              if (isItME)
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                )
-                              else
-                                FollowButton(
-                                  userId: userId,
-                                  key: Key(userId),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              child: SingleUser(
+                key: Key(userId),
+                isItME: isItME,
+                userId: userId,
+                name: name,
+                avatar: avatar,
               ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class SingleUser extends StatelessWidget {
+  const SingleUser({
+    super.key,
+    required this.isItME,
+    required this.userId,
+    required this.name,
+    required this.avatar,
+  });
+
+  final bool isItME;
+  final String userId;
+  final String name;
+  final String avatar;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        final usersController = Get.find<UsersController>();
+        if (isItME) {
+          Navigate.to(
+            type: NavigationTypes.toNamed,
+            route: Routes.MY_PROFILE,
+          );
+          return;
+        }
+        usersController.openUserProfile(userId);
+      },
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+                color: ColorName.cardBackground,
+                border: Border.all(
+                    color: isItME ? Colors.green : ColorName.cardBorder),
+                borderRadius: const BorderRadius.all(const Radius.circular(8))),
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.all(16),
+            key: Key(userId),
+            child: Stack(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: Get.width * 0.5,
+                          child: Text(
+                            name,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        space10,
+                        Row(
+                          children: [
+                            GFAvatar(
+                              backgroundImage: NetworkImage(avatar),
+                              shape: GFAvatarShape.standard,
+                              backgroundColor: ColorName.cardBorder,
+                            ),
+                            space10,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  Util.truncate(userId, length: 6),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w400,
+                                    color: ColorName.greyText,
+                                  ),
+                                ),
+                                // space5,
+                                // Text(
+                                //   name,
+                                //   style: const TextStyle(
+                                //     fontSize: 16,
+                                //     fontWeight: FontWeight.w700,
+                                //     color: ColorName.greyText,
+                                //     overflow: TextOverflow.ellipsis,
+                                //   ),
+                                // ),
+                              ],
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                    if (isItME)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                      )
+                    else
+                      FollowButton(
+                        userId: userId,
+                        key: Key(userId),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -14,7 +14,6 @@ import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
-import 'package:podium/app/modules/ongoingGroupCall/views/ongoing_group_call_view.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -82,6 +81,7 @@ class GlobalController extends GetxController {
   final loggedIn = false.obs;
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
+  final isFirebaseInitialized = false.obs;
   String? deepLinkRoute = null;
 
   final connectionCheckerInstance = InternetConnection.createInstance(
@@ -102,7 +102,7 @@ class GlobalController extends GetxController {
       initializeParticleAuth(),
       FirebaseInit.init(),
     ]);
-
+    isFirebaseInitialized.value = true;
     bool result = await connectionCheckerInstance.hasInternetAccess;
     log.d("has internet access: $result");
     if (result) {

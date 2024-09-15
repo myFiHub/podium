@@ -13,6 +13,7 @@ import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/popListener.dart';
+import 'package:podium/widgets/textField/textFieldRounded.dart';
 import '../controllers/ongoing_group_call_controller.dart';
 
 class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
@@ -203,7 +204,7 @@ class MembersList extends GetWidget<GroupCallController> {
           Container(
             child: Expanded(
               child: DefaultTabController(
-                length: 2,
+                length: 3,
                 child: Scaffold(
                   appBar: AppBar(
                     backgroundColor: Colors.transparent,
@@ -216,6 +217,9 @@ class MembersList extends GetWidget<GroupCallController> {
                       tabs: [
                         Tab(
                           child: Text("All Members"),
+                        ),
+                        Tab(
+                          child: Text("Search"),
                         ),
                         Obx(() {
                           final talkingMembers =
@@ -237,6 +241,9 @@ class MembersList extends GetWidget<GroupCallController> {
                             usersList: members,
                           );
                         },
+                      ),
+                      Container(
+                        child: SearchInRoom(),
                       ),
                       Obx(
                         () {
@@ -290,6 +297,43 @@ class MembersList extends GetWidget<GroupCallController> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class SearchInRoom extends GetWidget<GroupCallController> {
+  const SearchInRoom({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          height: 50,
+          child: Input(
+            hintText: "Search",
+            onChanged: (value) {
+              controller.searchedValueInMeet.value = value;
+            },
+          ),
+        ),
+        Obx(
+          () {
+            final members = controller.sortedMembers.value;
+            final searchedValue = controller.searchedValueInMeet.value;
+            final filteredMembers = members.where((element) {
+              return element.name
+                  .toLowerCase()
+                  .contains(searchedValue.toLowerCase());
+            }).toList();
+            return Expanded(
+              child: UsersInRoomList(
+                usersList: filteredMembers,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

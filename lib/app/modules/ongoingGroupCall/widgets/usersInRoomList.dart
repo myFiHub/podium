@@ -87,8 +87,8 @@ class SingleUserInRoom extends StatelessWidget {
                 border: Border.all(
                     color: isItME ? Colors.green : ColorName.cardBorder),
                 borderRadius: const BorderRadius.all(const Radius.circular(8))),
-            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            padding: const EdgeInsets.all(8),
             key: Key(user.id),
             child: Stack(
               children: [
@@ -110,7 +110,7 @@ class SingleUserInRoom extends StatelessWidget {
                               ),
                             ),
                           ),
-                          space10,
+                          space5,
                           Row(
                             children: [
                               GFAvatar(

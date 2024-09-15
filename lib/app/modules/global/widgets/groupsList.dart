@@ -81,8 +81,8 @@ class SingleGroup extends StatelessWidget {
                 border: Border.all(
                     color: amICreator ? Colors.green : ColorName.cardBorder),
                 borderRadius: const BorderRadius.all(const Radius.circular(8))),
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            padding: const EdgeInsets.all(8),
             key: Key(groupId),
             child: Stack(
               children: [

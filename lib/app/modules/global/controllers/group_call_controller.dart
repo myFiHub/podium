@@ -38,6 +38,7 @@ class GroupCallController extends GetxController
   final haveOngoingCall = false.obs;
   final jitsiMembers = Rx<List<JitsiMember>>([]);
   final talkingMembers = Rx<List<FirebaseSessionMember>>([]);
+  final searchedValueInMeet = Rx<String>('');
   final sortType = Rx<String>(SortTypes.recentlyTalked);
 
   @override
@@ -161,6 +162,7 @@ class GroupCallController extends GetxController
     jitsiMeet.hangUp();
     members.value = [];
     talkingMembers.value = [];
+    searchedValueInMeet.value = '';
     final groupId = group.value?.id;
     if (groupId != null) {
       final userId = globalController.currentUserInfo.value!.id;

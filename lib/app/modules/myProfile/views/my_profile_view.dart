@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/storage.dart';
@@ -279,10 +280,13 @@ class UserInfo extends GetWidget<GlobalController> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            GFAvatar(
-              backgroundImage: NetworkImage(myUser.avatar),
-              shape: GFAvatarShape.standard,
-              size: 100,
+            Hero(
+              tag: myUser.id,
+              child: Img(
+                src: myUser.avatar,
+                size: 100,
+                alt: myUser.fullName,
+              ),
             ),
             space10,
             space10,

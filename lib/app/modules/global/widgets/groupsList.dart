@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
     as Staggered;
@@ -5,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/constants.dart';
@@ -102,11 +104,9 @@ class SingleGroup extends StatelessWidget {
                         space10,
                         Row(
                           children: [
-                            GFAvatar(
-                              size: 52,
-                              backgroundImage: NetworkImage(creatorAvatar),
-                              shape: GFAvatarShape.standard,
-                              backgroundColor: ColorName.cardBorder,
+                            Img(
+                              src: creatorAvatar,
+                              alt: group.creator.fullName,
                             ),
                             space10,
                             Column(

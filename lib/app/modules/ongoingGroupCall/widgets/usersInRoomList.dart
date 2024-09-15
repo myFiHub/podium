@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
+import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widgetWrapper.dart';
@@ -113,10 +114,12 @@ class SingleUserInRoom extends StatelessWidget {
                           space5,
                           Row(
                             children: [
-                              GFAvatar(
-                                backgroundImage: NetworkImage(avatar),
-                                shape: GFAvatarShape.standard,
-                                backgroundColor: ColorName.cardBorder,
+                              Hero(
+                                tag: user.id,
+                                child: Img(
+                                  src: avatar,
+                                  alt: name,
+                                ),
                               ),
                               space10,
                               Container(

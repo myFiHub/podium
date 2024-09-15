@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -112,17 +113,17 @@ class UserInfo extends GetWidget<ProfileController> {
         return Container();
       }
       String avatar = myUser.avatar;
-      if (avatar.isEmpty) {
-        avatar = avatarPlaceHolder(myUser.fullName);
-      }
       return Container(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            GFAvatar(
-              backgroundImage: NetworkImage(avatar),
-              shape: GFAvatarShape.standard,
-              size: 100,
+            Hero(
+              tag: myUser.id,
+              child: Img(
+                src: avatar,
+                alt: myUser.fullName,
+                size: 100,
+              ),
             ),
             space10,
             space10,

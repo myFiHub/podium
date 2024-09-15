@@ -49,7 +49,7 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
           },
           tooltip: 'mute',
           child: Icon(
-            isMuted ? Icons.mic : Icons.mic_off,
+            isMuted ? Icons.mic_off : Icons.mic,
           ),
         );
       }),

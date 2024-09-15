@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
+import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -45,38 +46,6 @@ class UserList extends StatelessWidget {
           );
         },
       ),
-    );
-
-    return ListView.builder(
-      itemCount: usersList.length,
-      itemBuilder: (context, index) {
-        final user = usersList[index];
-        final name = user.fullName;
-        String avatar = user.avatar;
-        if (avatar.isEmpty) {
-          avatar = avatarPlaceHolder(name);
-        }
-        final userId = user.id;
-        final isItME = user.id == myUserId;
-        return Staggered.AnimationConfiguration.staggeredList(
-          position: index,
-          key: Key(userId),
-          duration: const Duration(milliseconds: 100),
-          child: Staggered.SlideAnimation(
-            key: Key(userId),
-            verticalOffset: 12.0,
-            child: Staggered.FadeInAnimation(
-              child: SingleUser(
-                key: Key(userId),
-                isItME: isItME,
-                userId: userId,
-                name: name,
-                avatar: avatar,
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -142,10 +111,12 @@ class SingleUser extends StatelessWidget {
                         space10,
                         Row(
                           children: [
-                            GFAvatar(
-                              backgroundImage: NetworkImage(avatar),
-                              shape: GFAvatarShape.standard,
-                              backgroundColor: ColorName.cardBorder,
+                            Hero(
+                              tag: userId,
+                              child: Img(
+                                src: avatar,
+                                alt: name,
+                              ),
                             ),
                             space10,
                             Column(

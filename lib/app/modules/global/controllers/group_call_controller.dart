@@ -245,18 +245,6 @@ class GroupCallController extends GetxController
     );
     cleanupAfterCall();
   }
-
-  Future handleGroupJoined(FirebaseGroup group) async {
-    final myId = Get.find<GlobalController>().currentUserInfo.value!.id;
-    final iAmCreator = group.creator.id == myId;
-    final isAlreadyJoined = group.creatorJoined ?? false;
-    if (iAmCreator && !isAlreadyJoined) {
-      await setIsCreatorJoined(
-        groupId: group.id,
-        isJoined: true,
-      );
-    }
-  }
 }
 
 bool canISpeak({required FirebaseGroup group}) {

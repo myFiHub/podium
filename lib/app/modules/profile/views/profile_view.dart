@@ -134,15 +134,6 @@ class UserInfo extends GetWidget<ProfileController> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            // space10,
-            // Text(
-            //   myUser.email,
-            //   style: const TextStyle(
-            //     fontSize: 23,
-            //     fontWeight: FontWeight.w700,
-            //     color: ColorName.greyText,
-            //   ),
-            // ),
           ],
         ),
       );

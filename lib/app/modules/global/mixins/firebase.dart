@@ -76,6 +76,15 @@ mixin FireBaseUtils {
     }
   }
 
+  Future setIsCreatorJoined(
+      {required String groupId, required bool isJoined}) async {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef +
+            groupId +
+            '/${FirebaseGroup.creatorJoinedKey}');
+    await databaseRef.set(true);
+  }
+
   Future<UserInfoModel?> getUserByEmail(String email) async {
     final databaseRef = FirebaseDatabase.instance.ref();
     final usersRef =

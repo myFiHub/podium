@@ -36,6 +36,7 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         userId: globalController.currentUserInfo.value!.id,
         isPresent: true,
       );
+      groupCallController.handleGroupJoined(group);
 
       await Future.delayed(Duration(seconds: 3));
       await jitsiMeet.retrieveParticipantsInfo();

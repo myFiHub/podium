@@ -9,6 +9,7 @@ class LoginType {
   static const String facebook = 'facebook';
   static const String linkedin = 'linkedin';
   static const String apple = 'apple';
+  static const String github = 'github';
 }
 
 class LoginTypeService {

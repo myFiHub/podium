@@ -312,6 +312,34 @@ class LoginController extends GetxController
     }
   }
 
+  loginWithGithub({required bool ignoreIfNotLoggedIn}) async {
+    isLoggingIn.value = true;
+    try {
+      final particleUser = await particleSocialLogin(
+        type: PLoginInfo.LoginType.github,
+      );
+      if (particleUser != null) {
+        _socialLogin(
+          id: particleUser.uuid,
+          name: particleUser.name!,
+          email: particleUser.githubEmail ?? '',
+          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
+          particleUser: particleUser,
+          loginType: LoginType.github,
+        );
+      } else {
+        Get.snackbar('Error', 'Error logging in');
+        return;
+      }
+    } catch (e) {
+      log.e('Error logging in with Apple: $e');
+      Get.snackbar('Error', 'Error logging in');
+      return;
+    } finally {
+      isLoggingIn.value = false;
+    }
+  }
+
   _socialLogin({
     required String id,
     required String name,

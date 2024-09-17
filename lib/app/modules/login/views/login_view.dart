@@ -106,6 +106,23 @@ class LoginView extends GetView<LoginController> {
                         Button(
                           size: ButtonSize.MEDIUM,
                           onPressed: () {
+                            controller.loginWithGithub(
+                              ignoreIfNotLoggedIn: false,
+                            );
+                          },
+                          text: 'LOGIN WITH GITHUB',
+                          type: ButtonType.transparent,
+                          icon: Assets.images.github.image(
+                            color: ColorName.white,
+                            height: 25,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Button(
+                          size: ButtonSize.MEDIUM,
+                          onPressed: () {
                             controller.loginWithFaceBook(
                                 ignoreIfNotLoggedIn: false);
                           },

@@ -25,7 +25,7 @@ class Env {
   static const appStoreUrl = String.fromEnvironment("appStoreUrl");
   static const baseDeepLinkUrl = String.fromEnvironment("baseDeepLinkUrl");
   static const VERSION =
-      String.fromEnvironment("VERSION", defaultValue: '1.0.2');
+      String.fromEnvironment("VERSION", defaultValue: '1.0.3');
 }
 
 const DEV = 'dev';

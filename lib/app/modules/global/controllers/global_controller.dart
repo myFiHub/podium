@@ -408,9 +408,12 @@ class GlobalController extends GetxController {
         await loginController.loginWithApple(ignoreIfNotLoggedIn: true);
         return;
       }
+      if (loginType == LoginType.github) {
+        await loginController.loginWithGithub(ignoreIfNotLoggedIn: true);
+        return;
+      }
     } catch (e) {
       isAutoLoggingIn.value = false;
-
       Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.LOGIN,

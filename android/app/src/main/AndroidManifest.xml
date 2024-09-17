@@ -78,4 +78,8 @@
     <!-- to access notification -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+    <!-- to remove warning in google play -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
+
 </manifest>

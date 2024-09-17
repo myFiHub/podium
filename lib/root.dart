@@ -80,10 +80,10 @@ class AnimatedBgbWrapper extends GetWidget<GlobalController> {
       final loggedIn = controller.loggedIn.value;
       return AnimatedContainer(
           child: child,
-          duration: const Duration(seconds: 2),
+          duration: const Duration(seconds: 1),
           decoration: BoxDecoration(
             gradient: RadialGradient(
-              center: loggedIn ? Alignment(0, -1) : Alignment(-0.1, -0.4),
+              center: loggedIn ? Alignment(0, -1) : Alignment(-0.0, -0.1),
               colors: loggedIn ? _linearColors : _cirularColors,
               radius: loggedIn ? 2.0 : 1.0,
             ),
@@ -97,9 +97,10 @@ final _linearColors = [
   ColorName.pageBgGradientEnd,
 ];
 final _cirularColors = [
+  ColorName.pageBgGradientStart.withOpacity(0.6),
   ColorName.pageBgGradientStart.withOpacity(0.5),
   ColorName.pageBgGradientStart.withOpacity(0.4),
-  ColorName.pageBgGradientStart.withOpacity(0.1),
-  ColorName.pageBgGradientStart.withOpacity(0.05),
-  ColorName.pageBgGradientStart.withOpacity(0),
+  ColorName.pageBgGradientStart.withOpacity(0.3),
+  ColorName.pageBgGradientStart.withOpacity(0.2),
+  // ColorName.pageBgGradientStart.withOpacity(0.1),
 ];

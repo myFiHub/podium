@@ -384,7 +384,12 @@ class LoginController extends GetxController
     late String? savedName;
     if (user.fullName.isEmpty || user.fullName == null) {
       savedName = await forceSaveUserFullName(user: user);
-      final [myUser] = await getUsersByIds([user.id]);
+      UserInfoModel? myUser;
+      try {
+        myUser = (await getUsersByIds([user.id])).first;
+      } catch (e) {
+        myUser = null;
+      }
       user = myUser;
       if (user == null) {
         Get.snackbar('Error', 'Error logging in');

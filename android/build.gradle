@@ -1,4 +1,12 @@
+buildscript {
+   repositories {
+      google()
+      mavenCentral()
+      maven { setUrl("https://jitpack.io") }  // Add this
+  }
 
+ 
+}
 allprojects {
     repositories {
     google()

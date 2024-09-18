@@ -32,6 +32,9 @@ class GroupList extends StatelessWidget {
           final amICreator = group.creator.id ==
               controller.globalController.currentUserInfo.value!.id;
           String creatorAvatar = group.creator.avatar;
+          if (creatorAvatar.contains("https://ui-avatars.com/api/?name=Oo")) {
+            creatorAvatar = '';
+          }
           if (creatorAvatar.isEmpty) {
             creatorAvatar = avatarPlaceHolder(group.creator.fullName);
           }

@@ -12,6 +12,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -32,6 +33,9 @@ class UserList extends StatelessWidget {
           final user = usersList[index];
           final name = user.fullName;
           String avatar = user.avatar;
+          if (avatar.contains("https://ui-avatars.com/api/?name=Oo")) {
+            avatar = '';
+          }
           if (avatar.isEmpty) {
             avatar = avatarPlaceHolder(name);
           }
@@ -130,16 +134,6 @@ class SingleUser extends StatelessWidget {
                                     color: ColorName.greyText,
                                   ),
                                 ),
-                                // space5,
-                                // Text(
-                                //   name,
-                                //   style: const TextStyle(
-                                //     fontSize: 16,
-                                //     fontWeight: FontWeight.w700,
-                                //     color: ColorName.greyText,
-                                //     overflow: TextOverflow.ellipsis,
-                                //   ),
-                                // ),
                               ],
                             )
                           ],

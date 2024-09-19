@@ -133,12 +133,16 @@ class SingleGroup extends StatelessWidget {
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
-                                    Text(
-                                      " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        color: ColorName.greyText,
+                                    Container(
+                                      width: Get.width - 170,
+                                      child: Text(
+                                        " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w400,
+                                          color: ColorName.greyText,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     )
                                   ],

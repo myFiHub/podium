@@ -27,7 +27,7 @@ final movementChainOnParticle = ChainInfo(
   movementChain.rpcUrl,
   '',
   movementChain.explorerUrl,
-  [ChainInfoFeature('EIP1559')],
+  [ChainInfoFeature(Env.chainNamespace.toUpperCase())],
 );
 
 class BlockChainUtils {
@@ -126,7 +126,7 @@ class BlockChainUtils {
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
         await _w3mService.selectChain(
-          ReownAppKitModalNetworks.getNetworkById('eip155', chainId),
+          ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId),
           switchChain: true,
         );
         _w3mService.loadAccountData().then((_) {
@@ -146,7 +146,7 @@ class BlockChainUtils {
     }
     final session = _w3mService.session!;
     final accounts = session.getAccounts();
-    final currentNamespace = 'eip155:${Env.chainId}';
+    final currentNamespace = '${Env.chainNamespace}:${Env.chainId}';
     if (accounts != null && accounts.isNotEmpty) {
       final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
       if (chainsNamespaces.contains(currentNamespace)) {
@@ -185,7 +185,7 @@ Stream<FilterEvent> _getContractEventListener({
   required String eventName,
   chainId = Env.chainId,
 }) {
-  final chain = ReownAppKitModalNetworks.getNetworkById('eip155',
+  final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace,
       chainId)!; // final GlobalController globalController = Get.find<GlobalController>();
   // final web3ModalService = globalController.web3ModalService;
   // final web3Client = web3ModalService.reconnectRelay();

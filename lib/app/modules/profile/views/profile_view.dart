@@ -68,7 +68,7 @@ class BuyTicket extends GetView<ProfileController> {
               Text(price.toString()),
               space5,
               Text(ReownAppKitModalNetworks.getNetworkById(
-                      'eip155', Env.chainId)!
+                      Env.chainNamespace, Env.chainId)!
                   .currency)
             ],
           );

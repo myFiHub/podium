@@ -82,7 +82,7 @@ class GlobalController extends GetxController {
     super.onInit();
 
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
-    ReownAppKitModalNetworks.addNetworks('eip155', [movementChain]);
+    ReownAppKitModalNetworks.addNetworks(Env.chainNamespace, [movementChain]);
 
     await Future.wait([
       initializeParticleAuth(),
@@ -135,7 +135,8 @@ class GlobalController extends GetxController {
     try {
       final chainId = Env.chainId;
       final chainName =
-          ReownAppKitModalNetworks.getNetworkById('eip155', chainId)!.name;
+          ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
+              .name;
       final particleChain = Env.chainId == '30732'
           ? movementChainOnParticle
           : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);

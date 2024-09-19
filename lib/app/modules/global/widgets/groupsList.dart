@@ -120,11 +120,13 @@ class SingleGroup extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                    "Created By ${amICreator ? "You" : group.creator.fullName}",
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        color: ColorName.greyText)),
+                                  "Created By ${amICreator ? "You" : group.creator.fullName}",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w400,
+                                    color: ColorName.greyText,
+                                  ),
+                                ),
                                 space5,
                                 Row(
                                   children: [

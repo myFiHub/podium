@@ -1,12 +1,19 @@
 buildscript {
-   repositories {
+ 
+   ext {
+       agp_version = '8.5.1'
+       kotlin_version = '1.9.10'
+   }
+    repositories {
       google()
       mavenCentral()
       maven { setUrl("https://jitpack.io") }  // Add this
   }
-
- 
+      dependencies {
+        classpath 'com.android.tools.build:gradle:8.5.1'
+     }
 }
+
 allprojects {
     repositories {
     google()

@@ -1120,18 +1120,18 @@ packages:
     dependency: "direct main"
     description:
       name: particle_auth_core
-      sha256: "6e84a94a53de84d0dfa9ebc760b1922fbe733c5d729ca5ae3db65957c4a722a1"
+      sha256: "53a0e4fb152963924c807cfb8f6c36301464e995f3abe32a2208bc9b82ef5011"
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.7"
+    version: "2.1.3"
   particle_base:
     dependency: transitive
     description:
       name: particle_base
-      sha256: e3270b6ad587608f7035a980d55cc0f338911e64c0c28ee08f812e348b83b285
+      sha256: "5a8449461e9d4462848de0c6d811467a15d3e6e1f60d35328b0c8705c6a4fae8"
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.7"
+    version: "2.1.3"
   path:
     dependency: transitive
     description:

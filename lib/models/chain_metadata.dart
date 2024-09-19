@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 enum ChainType {
   eip155,
@@ -10,7 +10,7 @@ enum ChainType {
 class ChainMetadata {
   final Color color;
   final ChainType type;
-  final W3MChainInfo w3mChainInfo;
+  final ReownAppKitModalNetworkInfo w3mChainInfo;
 
   const ChainMetadata({
     required this.color,

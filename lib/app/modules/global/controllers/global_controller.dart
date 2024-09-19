@@ -25,7 +25,7 @@ import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
 import 'package:particle_base/model/chain_info.dart' as ChainInfo;
 import 'package:particle_base/particle_base.dart' as ParticleBase;
@@ -43,19 +43,6 @@ PairingMetadata _pairingMetadata = PairingMetadata(
   ),
 );
 
-final w3mService = W3MService(
-  projectId: Env.projectId,
-  logLevel: LogLevel.error,
-  metadata: _pairingMetadata,
-  featuredWalletIds: {
-    'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase
-    '18450873727504ae9315a084fa7624b5297d2fe5880f0982979c17345a138277', // Kraken Wallet
-    'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // Metamask
-    '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369', // Rainbow
-    'c03dfee351b6fcc421b4494ea33b9d4b92a984f87aa76d1663bb28705e95034a', // Uniswap
-    '38f5d18bd8522c244bdd70cb4a68e0e718865155811c043f052fb9f1c51de662', // Bitget
-  },
-);
 final _checkOptions = [
   InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
   // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
@@ -77,7 +64,7 @@ class GlobalController extends GetxController {
   final activeRoute = AppPages.INITIAL.obs;
   final isAutoLoggingIn = true.obs;
   final isConnectedToInternet = true.obs;
-  W3MService web3ModalService = w3mService;
+  late ReownAppKitModal web3ModalService;
   final loggedIn = false.obs;
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
@@ -93,10 +80,9 @@ class GlobalController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
+
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
-    W3MChainPresets.chains.addAll({
-      '30732': movementChain,
-    });
+    ReownAppKitModalNetworks.addNetworks('eip155', [movementChain]);
 
     await Future.wait([
       initializeParticleAuth(),
@@ -116,6 +102,20 @@ class GlobalController extends GetxController {
 
   @override
   void onReady() async {
+    web3ModalService = ReownAppKitModal(
+      context: Get.context!,
+      projectId: Env.projectId,
+      logLevel: LogLevel.error,
+      metadata: _pairingMetadata,
+      featuredWalletIds: {
+        'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase
+        '18450873727504ae9315a084fa7624b5297d2fe5880f0982979c17345a138277', // Kraken Wallet
+        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // Metamask
+        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369', // Rainbow
+        'c03dfee351b6fcc421b4494ea33b9d4b92a984f87aa76d1663bb28705e95034a', // Uniswap
+        '38f5d18bd8522c244bdd70cb4a68e0e718865155811c043f052fb9f1c51de662', // Bitget
+      },
+    );
     super.onReady();
   }
 
@@ -134,7 +134,8 @@ class GlobalController extends GetxController {
   Future<void> initializeParticleAuth() async {
     try {
       final chainId = Env.chainId;
-      final chainName = W3MChainPresets.chains[chainId]!.chainName;
+      final chainName =
+          ReownAppKitModalNetworks.getNetworkById('eip155', chainId)!.name;
       final particleChain = Env.chainId == '30732'
           ? movementChainOnParticle
           : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
@@ -533,7 +534,22 @@ class GlobalController extends GetxController {
     return completer.future;
   }
 
-  Future<W3MService?> initializeW3MService() async {
+  Future<ReownAppKitModal?> initializeW3MService() async {
+    web3ModalService = ReownAppKitModal(
+      context: Get.context!,
+      projectId: Env.projectId,
+      logLevel: LogLevel.error,
+      metadata: _pairingMetadata,
+      featuredWalletIds: {
+        'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase
+        '18450873727504ae9315a084fa7624b5297d2fe5880f0982979c17345a138277', // Kraken Wallet
+        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // Metamask
+        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369', // Rainbow
+        'c03dfee351b6fcc421b4494ea33b9d4b92a984f87aa76d1663bb28705e95034a', // Uniswap
+        '38f5d18bd8522c244bdd70cb4a68e0e718865155811c043f052fb9f1c51de662', // Bitget
+      },
+    );
+
     try {
       final service = await BlockChainUtils.initializewm3Service(
         web3ModalService,
@@ -551,14 +567,14 @@ class GlobalController extends GetxController {
   connectToWallet({void Function()? afterConnection}) async {
     try {
       // web3ModalService.disconnect();
-      await web3ModalService.openModal(Get.context!);
+      await web3ModalService.openModalView();
       final address = BlockChainUtils.retrieveConnectedWallet(web3ModalService);
       connectedWalletAddress.value = address;
       if (afterConnection != null && address != '') {
         afterConnection();
       }
     } catch (e) {
-      if (e is W3MServiceException) {
+      if (e is ReownAppKitModalException) {
         log.e(e.message);
       } else {
         log.e(e);

@@ -3,15 +3,14 @@ import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
+import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:web3modal_flutter/utils/util.dart';
 
 import '../controllers/my_profile_controller.dart';
 
@@ -108,9 +107,9 @@ class ParticleWalletManager extends GetWidget<GlobalController> {
                                   ),
                                   space10,
                                   Text(
-                                    Util.truncate(
+                                    truncate(
                                       wallet.publicAddress,
-                                      length: 6,
+                                      length: 12,
                                     ),
                                     style: const TextStyle(
                                       fontSize: 23,
@@ -180,9 +179,9 @@ class WalletInfo extends GetWidget<GlobalController> {
                             );
                           },
                           child: Text(
-                            Util.truncate(
+                            truncate(
                               connectedWalletAddress,
-                              length: 6,
+                              length: 12,
                             ),
                             style: const TextStyle(
                               fontSize: 23,
@@ -301,7 +300,7 @@ class UserInfo extends GetWidget<GlobalController> {
             Text(
               emailValue,
               style: const TextStyle(
-                fontSize: 23,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: ColorName.greyText,
               ),

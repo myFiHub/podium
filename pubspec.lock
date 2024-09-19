@@ -277,10 +277,10 @@ packages:
     dependency: transitive
     description:
       name: coinbase_wallet_sdk
-      sha256: "4a309b22d1d8647ab4381ac075921dba211ac642f58b2ca06c0c1fb8f58973da"
+      sha256: c51f3c54c728a6bdaec346de2ce4a3b6498f099a030772b7df22b058a1bad884
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.9"
+    version: "1.0.10"
   collection:
     dependency: transitive
     description:
@@ -1316,6 +1316,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.3"
+  reown_appkit:
+    dependency: "direct main"
+    description:
+      name: reown_appkit
+      sha256: "16d5ce70bd254db2b0fd837272438f240212caf0fadff17902834cfb6644dc26"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
+  reown_core:
+    dependency: transitive
+    description:
+      name: reown_core
+      sha256: acfdd52de8a1c9c2c96007a9911cfe7750254233493b391ac90bcf629bf1f7c6
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  reown_sign:
+    dependency: transitive
+    description:
+      name: reown_sign
+      sha256: ee2a555c815ba300699615b499d2d67060fdf4e7ba6469e21c4501e6cd47bd02
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   retrofit:
     dependency: transitive
     description:
@@ -1697,14 +1721,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.13"
-  walletconnect_flutter_v2:
-    dependency: transitive
-    description:
-      name: walletconnect_flutter_v2
-      sha256: da2208740e7f40a682e2fc258fd16b176ca0dcece2696343822cd0c997c4e13c
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.3.1"
   watcher:
     dependency: transitive
     description:
@@ -1729,14 +1745,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.7.3"
-  web3modal_flutter:
-    dependency: "direct main"
-    description:
-      name: web3modal_flutter
-      sha256: e8d5d192237237aed14fa9c8815e2188db5d88d935ad771e534757af8df72d7b
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.3.4"
   web_socket_channel:
     dependency: transitive
     description:

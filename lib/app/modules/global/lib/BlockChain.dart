@@ -4,39 +4,35 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 import 'package:http/http.dart';
 
-final movementChain = W3MChainInfo(
-  chainName: 'Movement Testnet',
-  namespace: 'eip155:30732',
+final movementChain = ReownAppKitModalNetworkInfo(
+  name: 'Movement Testnet',
   chainId: '30732',
   chainIcon: "https://docs.movementnetwork.xyz/img/logo.svg",
-  tokenName: 'MOVE',
+  currency: 'MOVE',
   rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
-  blockExplorer: W3MBlockExplorer(
-    name: 'movement explorer',
-    url: 'https://explorer.devnet.imola.movementlabs.xyz',
-  ),
+  explorerUrl: 'https://explorer.devnet.imola.movementlabs.xyz',
 );
 final movementChainOnParticle = ChainInfo(
   int.parse(movementChain.chainId),
   'Movement',
   'evm',
   movementChain.chainIcon!,
-  movementChain.chainName,
+  movementChain.name,
   movementChain.chainId == '30732' ? 'Testnet' : 'Mainnet',
   'https://docs.movementnetwork.xyz',
   ChainInfoNativeCurrency('Movement', 'MOVE', 18),
   movementChain.rpcUrl,
   '',
-  movementChain.blockExplorer!.url,
+  movementChain.explorerUrl,
   [ChainInfoFeature('EIP1559')],
 );
 
 class BlockChainUtils {
-  static Future<W3MService> initializewm3Service(
-    W3MService _w3mService,
+  static Future<ReownAppKitModal> initializewm3Service(
+    ReownAppKitModal _w3mService,
     RxString connectedWalletAddress,
     RxBool w3serviceInitialized,
   ) async {
@@ -113,13 +109,13 @@ class BlockChainUtils {
     _w3mService.onSessionUpdateEvent.subscribe(_onSessionUpdate);
     _w3mService.onSessionEventEvent.subscribe(_onSessionEvent);
     // relayClient subscriptions
-    _w3mService.web3App!.core.relayClient.onRelayClientConnect.subscribe(
+    _w3mService.appKit!.core.relayClient.onRelayClientConnect.subscribe(
       _onRelayClientConnect,
     );
-    _w3mService.web3App!.core.relayClient.onRelayClientError.subscribe(
+    _w3mService.appKit!.core.relayClient.onRelayClientError.subscribe(
       _onRelayClientError,
     );
-    _w3mService.web3App!.core.relayClient.onRelayClientDisconnect.subscribe(
+    _w3mService.appKit!.core.relayClient.onRelayClientDisconnect.subscribe(
       _onRelayClientDisconnect,
     );
 
@@ -130,7 +126,7 @@ class BlockChainUtils {
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
         await _w3mService.selectChain(
-          W3MChainPresets.chains[chainId],
+          ReownAppKitModalNetworks.getNetworkById('eip155', chainId),
           switchChain: true,
         );
         _w3mService.loadAccountData().then((_) {
@@ -143,13 +139,14 @@ class BlockChainUtils {
     return _w3mService;
   }
 
-  static String retrieveConnectedWallet(W3MService _w3mService) {
-    if (w3mService.session == null) {
+  static String retrieveConnectedWallet(ReownAppKitModal _w3mService) {
+    final GlobalController globalController = Get.find<GlobalController>();
+    if (globalController.web3ModalService.session == null) {
       return '';
     }
     final session = _w3mService.session!;
     final accounts = session.getAccounts();
-    final currentNamespace = _w3mService.selectedChain?.namespace;
+    final currentNamespace = 'eip155:${Env.chainId}';
     if (accounts != null && accounts.isNotEmpty) {
       final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
       if (chainsNamespaces.contains(currentNamespace)) {
@@ -188,8 +185,8 @@ Stream<FilterEvent> _getContractEventListener({
   required String eventName,
   chainId = Env.chainId,
 }) {
-  final chain = W3MChainPresets.chains[chainId]!;
-  // final GlobalController globalController = Get.find<GlobalController>();
+  final chain = ReownAppKitModalNetworks.getNetworkById('eip155',
+      chainId)!; // final GlobalController globalController = Get.find<GlobalController>();
   // final web3ModalService = globalController.web3ModalService;
   // final web3Client = web3ModalService.reconnectRelay();
   // final web3Client = Web3Client(chain.rpcUrl, Client());
@@ -209,7 +206,7 @@ Stream<FilterEvent> _getContractEventListener({
     fromBlock: BlockNum.genesis(),
     toBlock: BlockNum.current(),
     topics: [
-      [bytesToHex(event.signature, padToEvenLength: true, include0x: true)],
+      // [bytesToHex(event.signature, padToEvenLength: true, include0x: true)],
     ],
   );
   // final options = FilterOptions.events(

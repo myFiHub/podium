@@ -6,7 +6,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
-import 'package:web3modal_flutter/utils/w3m_chains_presets.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 class CheerBooBottomSheet extends StatefulWidget {
   final bool isCheer;
@@ -92,7 +92,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                    """each ${Env.minimumCheerBooAmount} ${W3MChainPresets.chains[Env.chainId]!.tokenName}, will ${widget.isCheer ? "add" : "reduce"} ${Env.cheerBooTimeMultiplication} seconds ${widget.isCheer ? "to" : "from"} 
+                    """each ${Env.minimumCheerBooAmount} ${ReownAppKitModalNetworks.getNetworkById('eip155', Env.chainId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} ${Env.cheerBooTimeMultiplication} seconds ${widget.isCheer ? "to" : "from"} 
                    that user's time""",
                     style: TextStyle(
                       fontSize: 16,

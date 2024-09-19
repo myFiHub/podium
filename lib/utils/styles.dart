@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 ButtonStyle buttonStyle(BuildContext context) {
-  final themeColors = Web3ModalTheme.colorsOf(context);
+  final themeColors = ReownAppKitModalTheme.colorsOf(context);
   return ButtonStyle(
     backgroundColor: WidgetStateProperty.resolveWith<Color>(
       (states) {
         if (states.contains(WidgetState.disabled)) {
-          return Web3ModalTheme.colorsOf(context).background225;
+          return ReownAppKitModalTheme.colorsOf(context).background225;
         }
-        return Web3ModalTheme.colorsOf(context).accent100;
+        return ReownAppKitModalTheme.colorsOf(context).accent100;
       },
     ),
     shape: WidgetStateProperty.resolveWith<RoundedRectangleBorder>(
@@ -26,25 +26,28 @@ ButtonStyle buttonStyle(BuildContext context) {
     ),
     textStyle: WidgetStateProperty.resolveWith<TextStyle>(
       (states) {
-        return Web3ModalTheme.getDataOf(context).textStyles.small600.copyWith(
+        return ReownAppKitModalTheme.getDataOf(context)
+            .textStyles
+            .small600
+            .copyWith(
               color: (states.contains(WidgetState.disabled))
-                  ? Web3ModalTheme.colorsOf(context).foreground300
-                  : Web3ModalTheme.colorsOf(context).inverse100,
+                  ? ReownAppKitModalTheme.colorsOf(context).foreground300
+                  : ReownAppKitModalTheme.colorsOf(context).inverse100,
             );
       },
     ),
     foregroundColor: WidgetStateProperty.resolveWith<Color>(
       (states) {
         return (states.contains(WidgetState.disabled))
-            ? Web3ModalTheme.colorsOf(context).foreground300
-            : Web3ModalTheme.colorsOf(context).inverse100;
+            ? ReownAppKitModalTheme.colorsOf(context).foreground300
+            : ReownAppKitModalTheme.colorsOf(context).inverse100;
       },
     ),
   );
 }
 
 BorderRadiusGeometry borderRadius(BuildContext context) {
-  final radiuses = Web3ModalTheme.radiusesOf(context);
+  final radiuses = ReownAppKitModalTheme.radiusesOf(context);
   return radiuses.isSquare()
       ? const BorderRadius.all(Radius.zero)
       : radiuses.isCircular()

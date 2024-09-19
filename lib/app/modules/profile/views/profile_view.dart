@@ -9,7 +9,7 @@ import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:web3modal_flutter/utils/w3m_chains_presets.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 import '../controllers/profile_controller.dart';
 
@@ -67,7 +67,9 @@ class BuyTicket extends GetView<ProfileController> {
               Text("Buy Ticket "),
               Text(price.toString()),
               space5,
-              Text(W3MChainPresets.chains[Env.chainId]!.tokenName)
+              Text(ReownAppKitModalNetworks.getNetworkById(
+                      'eip155', Env.chainId)!
+                  .currency)
             ],
           );
         }

@@ -7,7 +7,7 @@ import 'package:podium/contracts/proxy.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/utils/logger.dart';
 
-import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 final cheerBooContract = getContract(
   abi: CheerBoo.abi,
@@ -44,7 +44,7 @@ mixin BlockChainInteractions {
     try {
       final response = await service.requestWriteContract(
         topic: service.session!.topic,
-        chainId: service.selectedChain!.namespace,
+        chainId: service.selectedChain!.chainId,
         deployedContract: cheerBooContract,
         functionName: 'cheerOrBoo',
         transaction: transaction,
@@ -129,7 +129,7 @@ mixin BlockChainInteractions {
     try {
       final response = service.requestWriteContract(
         topic: service.session!.topic,
-        chainId: service.selectedChain!.namespace,
+        chainId: service.selectedChain!.chainId,
         deployedContract: starsArenaContract,
         functionName: 'buySharesWithReferrer',
         transaction: transaction,

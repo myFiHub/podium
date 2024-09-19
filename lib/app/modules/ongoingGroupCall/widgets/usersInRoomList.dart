@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
-    as Staggered;
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -16,8 +14,8 @@ import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
+import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:web3modal_flutter/utils/util.dart';
 
 class UsersInRoomList extends StatelessWidget {
   final List<FirebaseSessionMember> usersList;
@@ -128,7 +126,7 @@ class SingleUserInRoom extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      Util.truncate(userId, length: 6),
+                                      truncate(userId, length: 10),
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,

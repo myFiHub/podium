@@ -11,7 +11,7 @@ import 'package:podium/env.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 import 'app/routes/app_pages.dart';
 import 'package:app_links/app_links.dart';
 
@@ -74,7 +74,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool _isDarkMode = true;
-  Web3ModalThemeData? _themeData;
+  ReownAppKitModalThemeData? _themeData;
 
   late final AppLifecycleListener _listener;
 
@@ -156,7 +156,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return Web3ModalTheme(
+    return ReownAppKitModalTheme(
       isDarkMode: _isDarkMode,
       themeData: _themeData,
       child: GetMaterialApp(
@@ -185,8 +185,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         _isDarkMode = !_isDarkMode;
       });
 
-  Web3ModalThemeData get _customTheme => Web3ModalThemeData(
-        lightColors: Web3ModalColors.lightMode.copyWith(
+  ReownAppKitModalThemeData get _customTheme => ReownAppKitModalThemeData(
+        lightColors: ReownAppKitModalColors.lightMode.copyWith(
           accent100: const Color.fromARGB(255, 30, 59, 236),
           background100: const Color.fromARGB(255, 161, 183, 231),
           // Main Modal's background color
@@ -199,7 +199,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           // Secondary Modal's text
           foreground150: const Color.fromARGB(255, 22, 18, 19),
         ),
-        darkColors: Web3ModalColors.darkMode.copyWith(
+        darkColors: ReownAppKitModalColors.darkMode.copyWith(
           accent100: const Color.fromARGB(255, 161, 183, 231),
           background100: const Color.fromARGB(255, 30, 59, 236),
           // Main Modal's background color
@@ -212,6 +212,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           // Secondary Modal's text
           foreground150: const Color.fromARGB(255, 233, 237, 236),
         ),
-        radiuses: Web3ModalRadiuses.square,
+        radiuses: ReownAppKitModalRadiuses.square,
       );
 }

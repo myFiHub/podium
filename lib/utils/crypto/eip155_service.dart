@@ -1,14 +1,11 @@
 import 'dart:convert';
 
-import 'package:intl/intl.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
-
 // ignore: depend_on_referenced_packages
 import 'package:convert/convert.dart';
 
-import 'test_data/aave_contract.dart';
 import 'test_data/test_data.dart';
-import 'test_data/usdt_contract.dart';
+
+import 'package:reown_appkit/reown_appkit.dart';
 
 enum EIP155UIMethods {
   personalSign,
@@ -67,7 +64,7 @@ class EIP155 {
   }
 
   static Future<dynamic> callMethod({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String topic,
     required EIP155UIMethods method,
     required String chainId,
@@ -120,7 +117,7 @@ class EIP155 {
   }
 
   static Future<dynamic> requestAccounts({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
   }) async {
     return await w3mService.request(
       topic: w3mService.session!.topic,
@@ -133,7 +130,7 @@ class EIP155 {
   }
 
   static Future<dynamic> personalSign({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String message,
   }) async {
     final bytes = utf8.encode(message);
@@ -153,7 +150,7 @@ class EIP155 {
   }
 
   static Future<dynamic> ethSignTypedData({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String data,
   }) async {
     return await w3mService.request(
@@ -170,7 +167,7 @@ class EIP155 {
   }
 
   static Future<dynamic> ethSignTypedDataV3({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String data,
   }) async {
     return await w3mService.request(
@@ -187,7 +184,7 @@ class EIP155 {
   }
 
   static Future<dynamic> ethSignTypedDataV4({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String data,
   }) async {
     return await w3mService.request(
@@ -204,7 +201,7 @@ class EIP155 {
   }
 
   static Future<dynamic> ethSendTransaction({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required Transaction transaction,
     required EIP155UIMethods method,
   }) async {
@@ -221,7 +218,7 @@ class EIP155 {
   }
 
   static Future<dynamic> walletWatchAsset({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
   }) async {
     return await w3mService.request(
       topic: w3mService.session!.topic,

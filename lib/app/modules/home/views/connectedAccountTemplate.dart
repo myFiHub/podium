@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/widgets/session_widget.dart';
-import 'package:web3modal_flutter/utils/util.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:podium/utils/truncate.dart';
+import 'package:reown_appkit/modal/appkit_modal_impl.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 class HomeBody extends GetView<GlobalController> {
   const HomeBody({super.key});
@@ -25,7 +25,7 @@ class HomeBody extends GetView<GlobalController> {
 class ConnectedBody extends GetWidget<GlobalController> {
   const ConnectedBody({super.key, required this.service});
 // read service from the controller
-  final W3MService service;
+  final ReownAppKitModal service;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +45,7 @@ class ConnectedBody extends GetWidget<GlobalController> {
 
 class _ButtonsView extends StatelessWidget {
   const _ButtonsView({required this.w3mService});
-  final W3MService w3mService;
+  final ReownAppKitModal w3mService;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +53,8 @@ class _ButtonsView extends StatelessWidget {
       children: [
         AccountText(),
         const SizedBox.square(dimension: 8.0),
-        W3MConnectWalletButton(
-          service: w3mService,
+        AppKitModalConnectButton(
+          appKit: w3mService,
           context: context,
         ),
         const SizedBox.square(dimension: 8.0),
@@ -65,7 +65,7 @@ class _ButtonsView extends StatelessWidget {
 
 class _ConnectedView extends StatelessWidget {
   const _ConnectedView({required this.w3mService});
-  final W3MService w3mService;
+  final ReownAppKitModal w3mService;
 
   @override
   Widget build(BuildContext context) {
@@ -78,13 +78,12 @@ class _ConnectedView extends StatelessWidget {
         ValueListenableBuilder<String>(
           valueListenable: w3mService.balanceNotifier,
           builder: (_, balance, __) {
-            return W3MAccountButton(
-              service: w3mService,
-              context: context,
+            return AppKitModalAccountButton(
+              appKit: w3mService,
             );
           },
         ),
-        SessionWidget(w3mService: w3mService),
+        // SessionWidget(w3mService: w3mService),
         const SizedBox.square(dimension: 12.0),
       ],
     );
@@ -102,7 +101,7 @@ class AccountText extends GetWidget<GlobalController> {
           : Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                Util.truncate(
+                truncate(
                   address,
                   length: 4,
                 ),

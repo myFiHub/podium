@@ -199,7 +199,7 @@ class RemainingTime extends GetWidget<OngoingGroupCallController> {
   }
 }
 
-class FollowButton extends GetWidget<UsersController> {
+class FollowButton extends GetView<UsersController> {
   final String userId;
   final bool fullWidth;
   const FollowButton({super.key, required this.userId, this.fullWidth = false});

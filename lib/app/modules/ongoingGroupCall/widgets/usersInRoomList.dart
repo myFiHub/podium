@@ -30,7 +30,7 @@ class UsersInRoomList extends StatelessWidget {
         final user = usersList[index];
         final name = user.name;
         String avatar = user.avatar;
-        if (avatar.isEmpty) {
+        if (avatar.isEmpty || avatar == defaultAvatar) {
           avatar = avatarPlaceHolder(name);
         }
         final userId = user.id;

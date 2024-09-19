@@ -64,12 +64,19 @@ class MeetingConstants {
       ),
       userInfo: JitsiMeetUserInfo(
         displayName: myUser.fullName,
-        email: myUser.email,
+        // this is crucial for us to pass the email like this
+        email: transformIdToEmailLike(myUser.id),
         avatar: avatar,
         id: myUser.id,
       ),
     );
   }
+}
+
+transformIdToEmailLike(String id) {
+  // transform 054dfc78-c174-49dc-a620-0f0da86d0400 to 054dfc78c17449dca6200f0da86d0400@gmail.com
+  final rawId = id.replaceAll('-', '');
+  return '$rawId@gmail.com';
 }
 
 transformEmailLikeToId(String email) {
@@ -81,6 +88,7 @@ transformEmailLikeToId(String email) {
   final firstPart = idParts.sublist(0, 8).join();
   final secondPart = idParts.sublist(8, 12).join();
   final thirdPart = idParts.sublist(12, 16).join();
-  final fourthPart = idParts.sublist(16, idLength).join();
-  return '$firstPart-$secondPart-$thirdPart-$fourthPart';
+  final fourthPart = idParts.sublist(16, 20).join();
+  final fifthPart = idParts.sublist(20, idLength).join();
+  return '$firstPart-$secondPart-$thirdPart-$fourthPart-$fifthPart';
 }

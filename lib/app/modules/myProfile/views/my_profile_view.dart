@@ -46,7 +46,7 @@ class MyProfileView extends GetView<MyProfileController> {
   }
 }
 
-class ParticleWalletManager extends GetWidget<GlobalController> {
+class ParticleWalletManager extends GetView<GlobalController> {
   const ParticleWalletManager({super.key});
 
   @override
@@ -132,7 +132,7 @@ class ParticleWalletManager extends GetWidget<GlobalController> {
   }
 }
 
-class WalletInfo extends GetWidget<GlobalController> {
+class WalletInfo extends GetView<GlobalController> {
   const WalletInfo({super.key});
 
   @override
@@ -197,7 +197,7 @@ class WalletInfo extends GetWidget<GlobalController> {
   }
 }
 
-class WalletConnect extends GetWidget<GlobalController> {
+class WalletConnect extends GetView<GlobalController> {
   const WalletConnect({super.key});
 
   @override
@@ -250,7 +250,7 @@ class WalletConnect extends GetWidget<GlobalController> {
   }
 }
 
-class UserInfo extends GetWidget<GlobalController> {
+class UserInfo extends GetView<GlobalController> {
   const UserInfo({super.key});
 
   @override

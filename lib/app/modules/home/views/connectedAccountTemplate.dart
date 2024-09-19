@@ -22,7 +22,7 @@ class HomeBody extends GetView<GlobalController> {
   }
 }
 
-class ConnectedBody extends GetWidget<GlobalController> {
+class ConnectedBody extends GetView<GlobalController> {
   const ConnectedBody({super.key, required this.service});
 // read service from the controller
   final ReownAppKitModal service;
@@ -90,7 +90,7 @@ class _ConnectedView extends StatelessWidget {
   }
 }
 
-class AccountText extends GetWidget<GlobalController> {
+class AccountText extends GetView<GlobalController> {
   const AccountText({super.key});
   @override
   Widget build(BuildContext context) {

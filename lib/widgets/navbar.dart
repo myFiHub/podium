@@ -57,7 +57,7 @@ final List<NavbarItem> navbarItems = [
   ),
 ];
 
-class PodiumNavbar extends GetWidget<GlobalController> {
+class PodiumNavbar extends GetView<GlobalController> {
   const PodiumNavbar({super.key});
 
   @override

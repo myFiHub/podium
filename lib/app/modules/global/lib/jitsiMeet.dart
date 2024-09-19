@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/constants/meeting.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/utils/logger.dart';
@@ -92,45 +93,38 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
     readyToClose: () {
       log.d("readyToClose");
     },
-    like: (email, participantId) async {
+    like: (idWithAddedAtSign, participantId) async {
       final OngoingGroupCallController ongoingGroupCallController =
           Get.find<OngoingGroupCallController>();
-      final user = await ongoingGroupCallController.getUserByEmail(email!);
-      if (user != null) {
-        ongoingGroupCallController.onLikeClicked(user.id);
-      }
+      final id = transformEmailLikeToId(idWithAddedAtSign!);
+      ongoingGroupCallController.onLikeClicked(id);
     },
-    dislike: (email, participantId) async {
+    dislike: (idWithAddedAtSign, participantId) async {
       final OngoingGroupCallController ongoingGroupCallController =
           Get.find<OngoingGroupCallController>();
-      final user = await ongoingGroupCallController.getUserByEmail(email!);
-      if (user != null) {
-        ongoingGroupCallController.onDislikeClicked(user.id);
-      }
+      final id = transformEmailLikeToId(idWithAddedAtSign!);
+      ongoingGroupCallController.onDislikeClicked(id);
     },
-    cheer: (email, participantId) async {
+    cheer: (idWithAddedAtSign, participantId) async {
       final OngoingGroupCallController ongoingGroupCallController =
           Get.find<OngoingGroupCallController>();
-      final user = await ongoingGroupCallController.getUserByEmail(email!);
-      if (user != null) {
-        ongoingGroupCallController.cheerBoo(
-          userId: user.id,
-          cheer: true,
-          fromMeetPage: true,
-        );
-      }
+      final id = transformEmailLikeToId(idWithAddedAtSign!);
+      log.f(id);
+      ongoingGroupCallController.cheerBoo(
+        userId: id,
+        cheer: true,
+        fromMeetPage: true,
+      );
     },
-    boo: (email, participantId) async {
+    boo: (idWithAddedAtSign, participantId) async {
       final OngoingGroupCallController ongoingGroupCallController =
           Get.find<OngoingGroupCallController>();
-      final user = await ongoingGroupCallController.getUserByEmail(email!);
-      if (user != null) {
-        ongoingGroupCallController.cheerBoo(
-          userId: user.id,
-          cheer: false,
-          fromMeetPage: true,
-        );
-      }
+      final id = transformEmailLikeToId(idWithAddedAtSign!);
+      ongoingGroupCallController.cheerBoo(
+        userId: id,
+        cheer: false,
+        fromMeetPage: true,
+      );
     },
   );
 }

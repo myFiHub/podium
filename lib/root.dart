@@ -31,7 +31,7 @@ class Root extends StatelessWidget {
   }
 }
 
-class InternetConnectionChecker extends GetWidget<GlobalController> {
+class InternetConnectionChecker extends GetView<GlobalController> {
   const InternetConnectionChecker({super.key});
 
   @override
@@ -70,7 +70,7 @@ class InternetConnectionChecker extends GetWidget<GlobalController> {
   }
 }
 
-class AnimatedBgbWrapper extends GetWidget<GlobalController> {
+class AnimatedBgbWrapper extends GetView<GlobalController> {
   final Widget child;
   const AnimatedBgbWrapper({super.key, required this.child});
 

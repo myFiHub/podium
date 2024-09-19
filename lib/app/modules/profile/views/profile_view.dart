@@ -110,27 +110,30 @@ class UserInfo extends GetWidget<ProfileController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final myUser = controller.userInfo.value;
-      if (myUser == null) {
+      final user = controller.userInfo.value;
+      if (user == null) {
         return Container();
       }
-      String avatar = myUser.avatar;
+      String avatar = user.avatar;
+      if (avatar == defaultAvatar) {
+        avatar = avatarPlaceHolder(user.fullName);
+      }
       return Container(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             Hero(
-              tag: myUser.id,
+              tag: user.id,
               child: Img(
                 src: avatar,
-                alt: myUser.fullName,
+                alt: user.fullName,
                 size: 100,
               ),
             ),
             space10,
             space10,
             Text(
-              myUser.fullName,
+              user.fullName,
               style: const TextStyle(
                 fontSize: 33,
                 fontWeight: FontWeight.w700,

@@ -217,7 +217,6 @@ class GlobalController extends GetxController {
   _saveExternalWalletAddress(String address) async {
     try {
       await saveUserWalletAddressOnFirebase(address);
-      log.d("new wallet address SAVED $address");
       currentUserInfo.value!.localWalletAddress = address;
       currentUserInfo.refresh();
     } catch (e) {
@@ -232,7 +231,14 @@ class GlobalController extends GetxController {
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
-    return await firebaseUserDbReference.set(walletAddress);
+    final savedWalletAddress = await firebaseUserDbReference.get();
+    if (savedWalletAddress.value == walletAddress) {
+      return;
+    }
+
+    await firebaseUserDbReference.set(walletAddress);
+    log.d("new wallet address SAVED $walletAddress");
+    return;
   }
 
   openDeepLinkGroup(String route) {
@@ -311,66 +317,68 @@ class GlobalController extends GetxController {
     final storage = GetStorage();
     final ignoredOrAcceptedVersion =
         storage.read<String>(StorageKeys.ignoredOrAcceptedVersion) ?? '';
-    final completer = Completer<bool>();
     final versionRef =
         FirebaseDatabase.instance.ref(FireBaseConstants.versionRef);
+    final shouldCheckVersionRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.versionCheckRef);
+    final shouldCheckVersionEvent = await shouldCheckVersionRef.get();
+    final shouldCheckVersion = shouldCheckVersionEvent.value as dynamic;
+    if (shouldCheckVersion == false) {
+      log.d('version check disabled');
+      return true;
+    }
     // listen to version changes
-    versionRef.onValue.listen((event) async {
-      final data = event.snapshot.value as dynamic;
-      final version = data as String?;
-      if (version == null && completer.isCompleted == false) {
-        log.e('version not found');
-        return completer.complete(true);
-      }
-      final currentVersion = Env.VERSION.split('+')[0];
-      if (version != currentVersion && ignoredOrAcceptedVersion != version) {
-        log.e('New version available');
-        Get.dialog(
-          barrierDismissible: false,
-          AlertDialog(
-            title: const Text('New version available'),
-            content: const Text('A new version of Podium is available',
-                style: TextStyle(color: ColorName.black)),
-            titleTextStyle: const TextStyle(
-              color: ColorName.black,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                  Get.backLegacy();
-                  if (completer.isCompleted == false) {
-                    completer.complete(true);
-                  }
-                },
-                child: const Text(
-                  'Later',
-                  style: TextStyle(color: ColorName.black),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                  launchUrl(
-                    Uri.parse(
-                      Env.appStoreUrl,
-                    ),
-                  );
-                  SystemNavigator.pop();
-                  exit(0);
-                },
-                child: const Text('Update'),
-              ),
-            ],
+    final event = await versionRef.get();
+    final data = event.value as dynamic;
+    final version = data as String?;
+    if (version == null) {
+      log.e('version not found');
+      return (true);
+    }
+    final currentVersion = Env.VERSION.split('+')[0];
+    if (version != currentVersion && ignoredOrAcceptedVersion != version) {
+      log.e('New version available');
+      Get.dialog(
+        barrierDismissible: false,
+        AlertDialog(
+          title: const Text('New version available'),
+          content: const Text('A new version of Podium is available',
+              style: TextStyle(color: ColorName.black)),
+          titleTextStyle: const TextStyle(
+            color: ColorName.black,
           ),
-        );
-      } else {
-        if (completer.isCompleted == false) {
-          completer.complete(true);
-        }
-      }
-    });
-    return completer.future;
+          actions: [
+            TextButton(
+              onPressed: () {
+                storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
+                Get.backLegacy();
+              },
+              child: const Text(
+                'Later',
+                style: TextStyle(color: ColorName.black),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
+                launchUrl(
+                  Uri.parse(
+                    Env.appStoreUrl,
+                  ),
+                );
+                SystemNavigator.pop();
+                exit(0);
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        ),
+      );
+      return true;
+    } else {
+      log.d('version is up to date');
+      return true;
+    }
   }
 
   checkLogin() async {

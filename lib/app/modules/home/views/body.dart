@@ -14,7 +14,6 @@ class HomeBody extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
-        space10,
         space5,
         Text(
           "My Rooms",

@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/env.dart';
+import 'package:podium/providers/api.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
@@ -63,6 +64,7 @@ processLink(String? link) async {
 
 void main() async {
   await GetStorage.init();
+  HttpApis.configure();
   runApp(MyApp());
 }
 
@@ -161,6 +163,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       themeData: _themeData,
       child: GetMaterialApp(
         theme: darkThemeData,
+        // showPerformanceOverlay: true,
         builder: (_, child) {
           return SafeArea(
             child: Root(

@@ -51,7 +51,7 @@ class MeetingConstants {
     final sa = globalController.jitsiServerAddress;
     String avatar = myUser.avatar;
     // ignore: unnecessary_null_comparison
-    if (avatar == null || avatar.isEmpty) {
+    if (avatar == null || avatar.isEmpty || avatar == defaultAvatar) {
       avatar = avatarPlaceHolder(myUser.fullName);
     }
     return JitsiMeetConferenceOptions(
@@ -64,7 +64,9 @@ class MeetingConstants {
       ),
       userInfo: JitsiMeetUserInfo(
         displayName: myUser.fullName,
-        // this is crucial for us to pass the email like this
+        // this is crucial for us to pass the email like this,
+        // since cheering and booing listeners return email,
+        // we use that email to determine who is being cheered
         email: transformIdToEmailLike(myUser.id),
         avatar: avatar,
         id: myUser.id,
@@ -73,14 +75,14 @@ class MeetingConstants {
   }
 }
 
+// transform 054dfc78-c174-49dc-a620-0f0da86d0400 to 054dfc78c17449dca6200f0da86d0400@gmail.com
 transformIdToEmailLike(String id) {
-  // transform 054dfc78-c174-49dc-a620-0f0da86d0400 to 054dfc78c17449dca6200f0da86d0400@gmail.com
   final rawId = id.replaceAll('-', '');
   return '$rawId@gmail.com';
 }
 
+// transform 054dfc78c17449dca6200f0da86d0400@gmail.com to 054dfc78-c174-49dc-a620-0f0da86d0400
 transformEmailLikeToId(String email) {
-  // transform 054dfc78c17449dca6200f0da86d0400@gmail.com to 054dfc78-c174-49dc-a620-0f0da86d0400
   final parts = email.split('@');
   final id = parts[0];
   final idParts = id.split('');

@@ -7,7 +7,6 @@ import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_ca
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/meeting.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
@@ -80,12 +79,12 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
     },
     participantsInfoRetrieved: (participantsInfo) {
       try {
-        final members =
-            convertJitsiMembersResponseToReadableJson(participantsInfo);
-        final OngoingGroupCallController ongoingGroupCallController =
-            Get.find<OngoingGroupCallController>();
-        groupCallController.jitsiMembers.value = members;
-        ongoingGroupCallController.jitsiMembers.value = members;
+        // final members =
+        //     convertJitsiMembersResponseToReadableJson(participantsInfo);
+        // final OngoingGroupCallController ongoingGroupCallController =
+        //     Get.find<OngoingGroupCallController>();
+        // groupCallController.jitsiMembers.value = members;
+        // ongoingGroupCallController.jitsiMembers.value = members;
       } catch (e) {
         log.e("participantsInfoRetrieved: $e");
       }

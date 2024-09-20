@@ -1,5 +1,5 @@
 name: podium
-version: 1.0.3+31
+version: 1.0.4+33
 publish_to: none
 description: web3 Podium.
 environment:
@@ -30,14 +30,12 @@ dependencies:
   jitsi_meet_flutter_sdk:
     path: ./jitsi_plugin
   gap: ^3.0.1
-  flutter_staggered_animations: ^1.1.1
   internet_connection_checker_plus: ^2.5.2
   cached_network_image: ^3.4.1
   permission_handler: ^11.3.1
   app_settings: ^5.1.1
   url_launcher: ^6.3.0
   particle_auth_core: ^2.1.3
-  animated_reorderable_list: ^1.1.1
   firebase_analytics: ^11.3.2
 
 dependency_overrides:

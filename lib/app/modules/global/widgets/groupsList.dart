@@ -1,9 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
-    as Staggered;
 import 'package:get/get.dart';
-import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';

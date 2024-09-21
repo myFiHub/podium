@@ -115,7 +115,11 @@ Widget _buildNavItem({
   final activeRoute = Get.find<GlobalController>().activeRoute.value;
   final isActive = activeRoute == route;
   return GestureDetector(
-    onTap: () {
+    onTap: () async {
+      final canNavigateToNewRoute = await canNavigate();
+      if (!canNavigateToNewRoute) {
+        return;
+      }
       jitsiMeet.hangUp();
       Navigate.to(
         type: NavigationTypes.offAllNamed,

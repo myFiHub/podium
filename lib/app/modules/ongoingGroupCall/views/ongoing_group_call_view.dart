@@ -6,13 +6,10 @@ import 'package:podium/app/modules/global/controllers/group_call_controller.dart
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
-import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/dateUtils.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:podium/widgets/popListener.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import '../controllers/ongoing_group_call_controller.dart';
 
@@ -68,15 +65,6 @@ class GroupCall extends GetView<GroupCallController> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        PopListener(
-          warningMessage: "Tap again to leave the room",
-          onPop: () {
-            Navigate.to(
-              type: NavigationTypes.offAllNamed,
-              route: Routes.HOME,
-            );
-          },
-        ),
         GroupInfo(),
         SessionInfo(),
         MembersList(),
@@ -85,7 +73,7 @@ class GroupCall extends GetView<GroupCallController> {
   }
 }
 
-class SessionInfo extends GetWidget<OngoingGroupCallController> {
+class SessionInfo extends GetView<OngoingGroupCallController> {
   const SessionInfo({super.key});
 
   @override
@@ -143,7 +131,7 @@ class SessionInfo extends GetWidget<OngoingGroupCallController> {
   }
 }
 
-class GroupInfo extends GetWidget<GroupCallController> {
+class GroupInfo extends GetView<GroupCallController> {
   const GroupInfo({super.key});
 
   @override
@@ -180,7 +168,7 @@ class GroupInfo extends GetWidget<GroupCallController> {
 
 const spaceBetween = const SizedBox(width: 10);
 
-class MembersList extends GetWidget<GroupCallController> {
+class MembersList extends GetView<GroupCallController> {
   const MembersList({super.key});
 
   @override
@@ -301,7 +289,7 @@ class MembersList extends GetWidget<GroupCallController> {
   }
 }
 
-class SearchInRoom extends GetWidget<GroupCallController> {
+class SearchInRoom extends GetView<GroupCallController> {
   const SearchInRoom({super.key});
 
   @override

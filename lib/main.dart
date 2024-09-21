@@ -10,6 +10,7 @@ import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api.dart';
 import 'package:podium/root.dart';
+import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:reown_appkit/reown_appkit.dart';
@@ -171,6 +172,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ),
           );
         },
+
         binds: globalBindings,
         debugShowCheckedModeBanner: false,
         initialRoute: AppPages.INITIAL,

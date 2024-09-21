@@ -19,6 +19,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
+import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
@@ -89,6 +90,9 @@ class GlobalController extends GetxController {
       FirebaseInit.init(),
     ]);
     isFirebaseInitialized.value = true;
+    final res = await analytics.getSessionId();
+
+    log.d('analytics session id: $res');
     bool result = await connectionCheckerInstance.hasInternetAccess;
     log.d("has internet access: $result");
     if (result) {

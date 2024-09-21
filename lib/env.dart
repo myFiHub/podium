@@ -20,7 +20,7 @@ class Env {
   static const baseDeepLinkUrl = String.fromEnvironment("baseDeepLinkUrl");
   static const chainNamespace = String.fromEnvironment("chainNamespace");
   static const VERSION =
-      String.fromEnvironment("VERSION", defaultValue: '1.0.3');
+      String.fromEnvironment("VERSION", defaultValue: '1.0.4');
 }
 
 const DEV = 'dev';

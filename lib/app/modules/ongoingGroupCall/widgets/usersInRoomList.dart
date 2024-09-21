@@ -168,7 +168,7 @@ class SingleUserInRoom extends StatelessWidget {
   }
 }
 
-class RemainingTime extends GetWidget<OngoingGroupCallController> {
+class RemainingTime extends GetView<OngoingGroupCallController> {
   final String userId;
   const RemainingTime({super.key, required this.userId});
 
@@ -285,7 +285,7 @@ class Actions extends GetView<OngoingGroupCallController> {
   }
 }
 
-class CheerBoo extends GetWidget<OngoingGroupCallController> {
+class CheerBoo extends GetView<OngoingGroupCallController> {
   final bool cheer;
   final String userId;
   const CheerBoo({super.key, required this.cheer, required this.userId});
@@ -308,7 +308,7 @@ class CheerBoo extends GetWidget<OngoingGroupCallController> {
   }
 }
 
-class LikeDislike extends GetWidget<OngoingGroupCallController> {
+class LikeDislike extends GetView<OngoingGroupCallController> {
   final bool isLike;
   final String userId;
   const LikeDislike({

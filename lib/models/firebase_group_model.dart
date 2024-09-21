@@ -35,6 +35,7 @@ class FirebaseGroup {
   String? speakerType;
   String? subject;
   bool creatorJoined = false;
+  bool archived = false;
 
   static String idKey = 'id';
   static String nameKey = 'name';
@@ -46,6 +47,7 @@ class FirebaseGroup {
   static String subjectKey = 'subject';
   static String invitedMembersKey = 'invitedMembers';
   static String creatorJoinedKey = 'creatorJoined';
+  static String archivedKey = 'archived';
 
   FirebaseGroup({
     required this.name,
@@ -58,6 +60,7 @@ class FirebaseGroup {
     this.subject,
     this.invitedMembers = const {},
     this.creatorJoined = false,
+    this.archived = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -72,6 +75,7 @@ class FirebaseGroup {
     data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     data[invitedMembersKey] = invitedMembers;
     data[creatorJoinedKey] = creatorJoined;
+    data[archivedKey] = archived;
     return data;
   }
 }

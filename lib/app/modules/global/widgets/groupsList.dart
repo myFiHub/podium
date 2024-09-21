@@ -24,19 +24,15 @@ class GroupList extends StatelessWidget {
         itemBuilder: (context, index) {
           final group = groupsList[index];
           final name = group.name;
-          final groupId = group.id;
           final amICreator = group.creator.id ==
               controller.globalController.currentUserInfo.value!.id;
           String creatorAvatar = group.creator.avatar;
-          if (creatorAvatar.contains("https://ui-avatars.com/api/?name=Oo")) {
-            creatorAvatar = '';
-          }
-          if (creatorAvatar.isEmpty) {
+
+          if (creatorAvatar == defaultAvatar) {
             creatorAvatar = avatarPlaceHolder(group.creator.fullName);
           }
           return SingleGroup(
             controller: controller,
-            groupId: groupId,
             amICreator: amICreator,
             name: name,
             creatorAvatar: creatorAvatar,
@@ -52,7 +48,6 @@ class SingleGroup extends StatelessWidget {
   const SingleGroup({
     super.key,
     required this.controller,
-    required this.groupId,
     required this.amICreator,
     required this.name,
     required this.creatorAvatar,
@@ -60,7 +55,6 @@ class SingleGroup extends StatelessWidget {
   });
 
   final GroupsController controller;
-  final String groupId;
   final bool amICreator;
   final String name;
   final String creatorAvatar;
@@ -71,7 +65,7 @@ class SingleGroup extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         controller.joinGroupAndOpenGroupDetailPage(
-          groupId: groupId,
+          groupId: group.id,
         );
       },
       child: Stack(
@@ -84,7 +78,7 @@ class SingleGroup extends StatelessWidget {
                 borderRadius: const BorderRadius.all(const Radius.circular(8))),
             margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
             padding: const EdgeInsets.all(8),
-            key: Key(groupId),
+            key: Key(group.id),
             child: Stack(
               children: [
                 Row(
@@ -208,22 +202,38 @@ class SingleGroup extends StatelessWidget {
                         )
                       ],
                     ),
-                    if (canShareGroupUrl(group: group))
-                      IconButton(
-                        onPressed: () {
-                          Share.share(
-                              // 'podium://group-detail/$groupId',
-                              "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium");
-                        },
-                        icon: Icon(
-                          Icons.share,
-                          color: ColorName.greyText,
-                        ),
-                      )
+                    Column(
+                      children: [
+                        if (canShareGroupUrl(group: group))
+                          IconButton(
+                            onPressed: () {
+                              Share.share(
+                                  // 'podium://group-detail/$groupId',
+                                  "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${group.id}&apn=com.web3podium");
+                            },
+                            icon: Icon(
+                              Icons.share,
+                              color: ColorName.greyText,
+                            ),
+                          ),
+                        if (canArchiveGroup(group: group))
+                          IconButton(
+                            onPressed: () {
+                              controller.toggleArchive(group: group);
+                            },
+                            icon: Icon(
+                              group.archived ? Icons.unarchive : Icons.archive,
+                              color: group.archived
+                                  ? ColorName.greyText
+                                  : Colors.red,
+                            ),
+                          )
+                      ],
+                    )
                   ],
                 ),
                 JoiningIndicator(
-                  groupId: groupId,
+                  groupId: group.id,
                 ),
               ],
             ),
@@ -312,4 +322,14 @@ canShareGroupUrl({required FirebaseGroup group}) {
     }
   }
   return false;
+}
+
+canArchiveGroup({required FirebaseGroup group}) {
+  final GlobalController globalController = Get.find();
+  if (globalController.currentUserInfo.value == null) {
+    return false;
+  }
+  final myId = globalController.currentUserInfo.value!.id;
+  final iAmCreator = group.creator.id == myId;
+  return iAmCreator;
 }

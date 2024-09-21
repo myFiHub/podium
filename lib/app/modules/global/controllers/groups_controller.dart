@@ -3,17 +3,18 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/allGroups/controllers/all_groups_controller.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
+import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantConfigs.dart';
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
-
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -58,6 +59,31 @@ class GroupsController extends GetxController with FireBaseUtils {
     super.onClose();
   }
 
+  toggleArchive({required FirebaseGroup group}) async {
+    final canContinue = await _showModalToToggleArchiveGroup(group: group);
+    if (canContinue == null || canContinue == false) return;
+    final archive = !group.archived;
+    await toggleGroupArchive(groupId: group.id, archive: archive);
+    Get.snackbar(
+      "Success",
+      "Group ${archive ? "archived" : "is available again"}",
+      colorText: Colors.green,
+    );
+    final remoteGroup = await getGroupInfoById(group.id);
+    if (remoteGroup != null) {
+      groups.value![group.id] = remoteGroup;
+      groups.refresh();
+      if (Get.isRegistered<AllGroupsController>()) {
+        final AllGroupsController allGroupsController = Get.find();
+        allGroupsController.refreshSearchedGroup(remoteGroup);
+      }
+      if (Get.isRegistered<SearchPageController>()) {
+        final SearchPageController searchPageController = Get.find();
+        searchPageController.refreshSearchedGroup(remoteGroup);
+      }
+    }
+  }
+
   getAllGroupsFromFirebase() async {
     final databaseReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
@@ -71,7 +97,6 @@ class GroupsController extends GetxController with FireBaseUtils {
           final myId = myUser.id;
           groups.value = getGroupsVisibleToMe(groupsMap, myId);
         }
-
         // groups.value = groupsMap;
       } catch (e) {
         log.e(e);
@@ -91,8 +116,6 @@ class GroupsController extends GetxController with FireBaseUtils {
             final myId = myUser.id;
             final groupsMap = groupsParser(data);
             groups.value = getGroupsVisibleToMe(groupsMap, myId);
-
-            // groups.value = groupsMap;
           } catch (e) {
             log.e(e);
           }
@@ -289,7 +312,14 @@ class GroupsController extends GetxController with FireBaseUtils {
     final iAmGroupCreator = group.creator.id == myUser.id;
     if (iAmGroupCreator) return true;
     if (group.members.contains(myUser.id)) return true;
-
+    if (group.archived) {
+      Get.snackbar(
+        "Error",
+        "This group is archived, you can't join it",
+        colorText: Colors.red,
+      );
+      return false;
+    }
     if (group.accessType == null || group.accessType == RoomAccessTypes.public)
       return true;
     if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink == true) {
@@ -341,4 +371,44 @@ getGroupsVisibleToMe(Map<String, FirebaseGroup> groups, String myId) {
   //   filteredGroups,
   // );
   // return filteredGroupsConverted;
+}
+
+_showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
+  final isCurrentlyArchived = group.archived;
+  final result = await Get.dialog(
+    AlertDialog(
+      backgroundColor: ColorName.cardBackground,
+      title: Text("${isCurrentlyArchived ? "Un" : ""}Archive Group"),
+      content: RichText(
+        text: TextSpan(
+          text: "Are you sure you want to ",
+          children: [
+            TextSpan(
+              text: "${isCurrentlyArchived ? "un" : ""}archive",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: !isCurrentlyArchived ? Colors.red : Colors.green,
+              ),
+            ),
+            TextSpan(text: " this group?"),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(false);
+          },
+          child: Text("No"),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(true);
+          },
+          child: Text("Yes"),
+        ),
+      ],
+    ),
+  );
+  return result;
 }

@@ -1,4 +1,6 @@
+import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -30,6 +32,7 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorEmail = creator[UserInfoModel.emailKey];
     final creatorAvatar = creator[UserInfoModel.avatarUrlKey];
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
+    final isArchived = value[FirebaseGroup.archivedKey] ?? false;
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
       email: creatorEmail,
@@ -46,6 +49,7 @@ FirebaseGroup? singleGroupParser(value) {
       subject: subject,
       invitedMembers: invitedMembers,
       creatorJoined: creatorJoined,
+      archived: isArchived,
     );
     return group;
   } catch (e) {
@@ -55,12 +59,14 @@ FirebaseGroup? singleGroupParser(value) {
 }
 
 groupsParser(data) {
+  final globalController = Get.find<GlobalController>();
+  final myId = globalController.currentUserInfo.value!.id;
   Map<String, FirebaseGroup> groupsMap = {};
-
   // Iterate through the data
   data.forEach((key, value) {
     final group = singleGroupParser(value);
-    if (group != null) {
+    if (group != null &&
+        (group.archived == false || group.creator.id == myId)) {
       groupsMap[group.id] = group;
     }
   });

@@ -10,9 +10,9 @@ import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 
-import '../controllers/search_controller.dart' as SearchController;
+import '../controllers/search_controller.dart';
 
-class SearchView extends GetView<SearchController.SearchController> {
+class SearchView extends GetView<SearchPageController> {
   const SearchView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {

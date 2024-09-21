@@ -213,12 +213,13 @@ mixin FireBaseUtils {
     }
   }
 
-  setGroupToArchived({required String groupId, bool archived = true}) async {
+  toggleGroupArchive({required String groupId,required bool archive}) async {
+    log.d(groupId);
     final databaseRef = FirebaseDatabase.instance.ref(
         FireBaseConstants.groupsRef +
             groupId +
             '/${FirebaseGroup.archivedKey}');
-    await databaseRef.set(archived);
+    await databaseRef.set(archive);
   }
 
   listenToSessionMembers({

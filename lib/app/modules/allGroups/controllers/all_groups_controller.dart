@@ -9,7 +9,7 @@ final _deb = Debouncing(duration: const Duration(seconds: 1));
 class AllGroupsController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
   final searchValue = ''.obs;
-  final searchedGroups = Rxn<Map<String, FirebaseGroup>>({});
+  final searchedGroups = Rx<Map<String, FirebaseGroup>>({});
 
   @override
   void onInit() {
@@ -39,5 +39,12 @@ class AllGroupsController extends GetxController with FireBaseUtils {
       final myId = groupsController.globalController.currentUserInfo.value!.id;
       searchedGroups.value = getGroupsVisibleToMe(searchedGroupsMap, myId);
     });
+  }
+
+  refreshSearchedGroup(FirebaseGroup group) {
+    if (searchedGroups.value.containsKey(group.id)) {
+      searchedGroups.value[group.id] = group;
+      searchedGroups.refresh();
+    }
   }
 }

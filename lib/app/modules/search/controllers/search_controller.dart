@@ -7,11 +7,11 @@ import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
-class SearchController extends GetxController with FireBaseUtils {
+class SearchPageController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
   final searchValue = ''.obs;
-  final searchedGroups = Rxn<Map<String, FirebaseGroup>>({});
-  final searchedUsers = Rxn<Map<String, UserInfoModel>>({});
+  final searchedGroups = Rx<Map<String, FirebaseGroup>>({});
+  final searchedUsers = Rx<Map<String, UserInfoModel>>({});
   final selectedSearchTab = 0.obs;
 
   @override
@@ -42,5 +42,35 @@ class SearchController extends GetxController with FireBaseUtils {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  searchGroup(String v) async {
+    if (v.isEmpty) {
+      searchedGroups.value = {};
+      return;
+    }
+    final foundGroups = await searchForGroupByName(v);
+    searchedGroups.value = foundGroups;
+  }
+
+  searchUser(String v) async {
+    if (v.isEmpty) {
+      searchedUsers.value = {};
+      return;
+    }
+    final foundUsers = await searchForUserByName(v);
+    searchedUsers.value = foundUsers;
+  }
+
+  refreshSearchedGroup(FirebaseGroup group) {
+    if (searchedGroups.value.isEmpty) {
+      return;
+    }
+    final currentGroups = searchedGroups.value;
+    if (currentGroups.containsKey(group.id)) {
+      currentGroups[group.id] = group;
+      searchedGroups.value = currentGroups;
+      searchedGroups.refresh();
+    }
   }
 }

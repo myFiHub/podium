@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
+  final newGroupHasAdultContent = false.obs;
   final roomAccessType = RoomAccessTypes.public.obs;
   final roomSpeakerType = RoomSpeakerTypes.everyone.obs;
   final roomSubject = defaultSubject.obs;

@@ -33,6 +33,7 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorAvatar = creator[UserInfoModel.avatarUrlKey];
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final isArchived = value[FirebaseGroup.archivedKey] ?? false;
+    final hasAdultContent = value[FirebaseGroup.hasAdultContentKey] ?? false;
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
       email: creatorEmail,
@@ -50,6 +51,7 @@ FirebaseGroup? singleGroupParser(value) {
       invitedMembers: invitedMembers,
       creatorJoined: creatorJoined,
       archived: isArchived,
+      hasAdultContent: hasAdultContent,
     );
     return group;
   } catch (e) {

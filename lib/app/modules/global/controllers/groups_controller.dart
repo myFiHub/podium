@@ -97,7 +97,6 @@ class GroupsController extends GetxController with FireBaseUtils {
           final myId = myUser.id;
           groups.value = getGroupsVisibleToMe(groupsMap, myId);
         }
-        // groups.value = groupsMap;
       } catch (e) {
         log.e(e);
       }
@@ -131,6 +130,7 @@ class GroupsController extends GetxController with FireBaseUtils {
     required String accessType,
     required String speakerType,
     required String subject,
+    required bool adultContent,
   }) async {
     final newGroupId = Uuid().v4();
     final firebaseGroupsReference =
@@ -152,6 +152,7 @@ class GroupsController extends GetxController with FireBaseUtils {
       speakerType: speakerType,
       members: [myUser.id],
       subject: subject,
+      hasAdultContent: adultContent,
       lowercasename: name.toLowerCase(),
     );
     final jsonedGroup = group.toJson();

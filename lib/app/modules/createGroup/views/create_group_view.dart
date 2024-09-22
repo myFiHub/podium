@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
-import 'package:podium/utils/logger.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -118,6 +119,30 @@ class CreateGroupView extends GetView<CreateGroupController> {
               );
             }),
             space10,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'adults only',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 18,
+                  ),
+                ),
+                Obx(
+                  () {
+                    final isChecked = controller.newGroupHasAdultContent.value;
+                    return GFCheckbox(
+                      value: isChecked,
+                      activeBgColor: Colors.red,
+                      onChanged: (value) {
+                        controller.newGroupHasAdultContent.value = value;
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
             space10,
             space10,
             Obx(() {

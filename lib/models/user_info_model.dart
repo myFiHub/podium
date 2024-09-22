@@ -1,7 +1,6 @@
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
 
 import "package:podium/models/firebase_particle_user.dart";
-import 'package:podium/utils/logger.dart';
 
 class UserInfoModel {
   late String id;

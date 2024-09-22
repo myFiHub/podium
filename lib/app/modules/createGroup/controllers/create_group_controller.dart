@@ -65,6 +65,7 @@ class CreateGroupController extends GetxController {
       accessType: accessType,
       speakerType: speakerType,
       subject: subject,
+      adultContent: newGroupHasAdultContent.value,
     );
     isCreatingNewGroup.value = false;
     // Navigate.to(

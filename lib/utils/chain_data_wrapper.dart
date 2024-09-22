@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:podium/models/chain_metadata.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
 class ChainDataWrapper {

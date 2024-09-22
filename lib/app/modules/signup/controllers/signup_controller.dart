@@ -10,7 +10,6 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/particleAuth.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 

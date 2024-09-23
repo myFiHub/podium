@@ -89,7 +89,7 @@ class CreateGroupView extends GetView<CreateGroupController> {
                       ),
                       Obx(() {
                         final selectedList = controller
-                            .selectedUsersToBuyTicketFrom_ToAccessRoom;
+                            .selectedUsersToBuyTicketFrom_ToAccessRoom.value;
                         if (controller.shouldBuyTicketToAccess) {
                           return SelectUserstoBuyTicketFrom(
                             onTap: () {
@@ -158,8 +158,8 @@ class CreateGroupView extends GetView<CreateGroupController> {
                         ),
                         Obx(
                           () {
-                            final selectedList =
-                                controller.selectedUsersToBuyticketFrom_ToSpeak;
+                            final selectedList = controller
+                                .selectedUsersToBuyticketFrom_ToSpeak.value;
                             if (controller.shouldBuyTicketToSpeak) {
                               return SelectUserstoBuyTicketFrom(
                                 onTap: () {
@@ -264,21 +264,22 @@ class SelectorContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: selectedList.isEmpty ? Colors.red[200] : Colors.green[400],
         borderRadius: BorderRadius.circular(4),
       ),
-      width: 140,
+      // width: 140,
       height: 40,
       child: Center(
         child: Text(
           selectedList.isEmpty
-              ? 'Select Required Users'
-              : 'Selected ${selectedList.length} required ticket${selectedList.length > 1 ? 's' : ''}',
+              ? 'Select Tickets'
+              : '${selectedList.length} required ticket${selectedList.length > 1 ? 's' : ''}',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.black,
-            fontSize: 11,
+            fontSize: 10,
           ),
         ),
       ),

@@ -31,8 +31,6 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   @override
   void onReady() {
     super.onReady();
-    final myUser = Get.find<GlobalController>().currentUserInfo.value!;
-    listOfSearchedUsersToBuyTicketFrom.value = [myUser];
   }
 
   @override
@@ -112,17 +110,14 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   }
 
   searchUsers(String value) async {
-    final myUser = Get.find<GlobalController>().currentUserInfo.value!;
     _deb.debounce(() async {
       if (value.isEmpty) {
-        final myUser = Get.find<GlobalController>().currentUserInfo.value!;
-        listOfSearchedUsersToBuyTicketFrom.value = [myUser];
+        listOfSearchedUsersToBuyTicketFrom.value = [];
         return;
       }
       final users = await searchForUserByName(value);
-      users.removeWhere((key, value) => value.id == myUser.id);
-      final list = [myUser, ...users.values.toList()];
-      listOfSearchedUsersToBuyTicketFrom.value = list;
+      listOfSearchedUsersToBuyTicketFrom.value = users.values.toList();
+      ;
     });
   }
 

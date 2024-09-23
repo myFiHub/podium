@@ -519,6 +519,11 @@ class GlobalController extends GetxController {
     }
   }
 
+  setIsMyUserOver18(bool value) {
+    currentUserInfo.value!.isOver18 = value;
+    currentUserInfo.refresh();
+  }
+
   Future<UserInfoModel?> getUserInfoById(String userId) async {
     Completer<UserInfoModel> completer = Completer();
     final firebaseUserDbReference =
@@ -530,11 +535,13 @@ class GlobalController extends GetxController {
         final userFullName = data[UserInfoModel.fullNameKey];
         final userEmail = data[UserInfoModel.emailKey];
         final userAvatar = data[UserInfoModel.avatarUrlKey];
+        final amIover18 = data[UserInfoModel.isOver18Key] ?? false;
         final user = UserInfoModel(
           id: userId,
           fullName: userFullName,
           email: userEmail,
           avatar: userAvatar,
+          isOver18: amIover18,
           localWalletAddress: data[UserInfoModel.localWalletAddressKey] ?? '',
           following: List.from(data[UserInfoModel.followingKey] ?? []),
           numberOfFollowers: data[UserInfoModel.numberOfFollowersKey] ?? 0,

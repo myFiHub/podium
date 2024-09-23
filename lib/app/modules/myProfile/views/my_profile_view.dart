@@ -6,6 +6,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
@@ -275,6 +276,10 @@ class UserInfo extends GetView<GlobalController> {
       if (myUser == null) {
         return Container();
       }
+      String avatar= myUser.avatar;
+      if (avatar == defaultAvatar) {
+        avatar = avatarPlaceHolder(myUser.fullName);
+      }
       return Container(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -282,7 +287,7 @@ class UserInfo extends GetView<GlobalController> {
             Hero(
               tag: myUser.id,
               child: Img(
-                src: myUser.avatar,
+                src: avatar,
                 size: 100,
                 alt: myUser.fullName,
               ),

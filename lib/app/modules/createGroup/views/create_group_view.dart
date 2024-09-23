@@ -75,8 +75,6 @@ class CreateGroupView extends GetView<CreateGroupController> {
               );
             }),
             space10,
-            space10,
-            space10,
             Obx(() {
               final selectedValue = controller.roomSpeakerType.value;
               return Column(
@@ -142,7 +140,6 @@ class CreateGroupView extends GetView<CreateGroupController> {
                 ),
               ],
             ),
-            space10,
             space10,
             Obx(() {
               final loading = controller.isCreatingNewGroup.value;

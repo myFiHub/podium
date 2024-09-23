@@ -1,5 +1,4 @@
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
-
 import "package:podium/models/firebase_particle_user.dart";
 
 class UserInfoModel {
@@ -13,6 +12,7 @@ class UserInfoModel {
   late ParticleUser.UserInfo? localParticleUserInfo;
   late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
   late int numberOfFollowers;
+  bool isOver18 = false;
 
   static String idKey = 'id';
   static String fullNameKey = 'fullName';
@@ -24,6 +24,7 @@ class UserInfoModel {
   static String localParticleUserInfoKey = 'localParticleUserInfo';
   static String savedParticleUserInfoKey = 'savedParticleUserInfo';
   static String lowercasenameKey = 'lowercasename';
+  static String isOver18Key = 'isOver18';
 
   UserInfoModel({
     required this.id,
@@ -36,6 +37,7 @@ class UserInfoModel {
     this.lowercasename,
     this.localParticleUserInfo,
     this.savedParticleUserInfo,
+    this.isOver18 = false,
   });
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class UserInfoModel {
     numberOfFollowers = json[numberOfFollowersKey] ?? 0;
     localParticleUserInfo = json[localParticleUserInfoKey];
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
+    isOver18 = json[isOver18Key] ?? false;
   }
 
   Map<String, dynamic> toJson() {
@@ -64,6 +67,7 @@ class UserInfoModel {
     data[numberOfFollowersKey] = numberOfFollowers;
     data[localParticleUserInfoKey] = localParticleUserInfo;
     data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();
+    data[isOver18Key] = isOver18;
     return data;
   }
 }

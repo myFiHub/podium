@@ -16,6 +16,7 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
@@ -234,11 +235,19 @@ class GroupsController extends GetxController with FireBaseUtils {
       return;
     }
 
-    final allowedToJoin = canJoin(
+    final allowedToJoin = await canJoin(
       group: group,
       joiningByLink: joiningByLink,
     );
     if (!allowedToJoin) return;
+
+    final hasAgeVerified = await _showAreYouOver18Dialog(
+      group: group,
+      myUser: myUser,
+    );
+    if (!hasAgeVerified) {
+      return;
+    }
 
     final iAmGroupCreator = group.creator.id == myUser.id;
     final members = List.from([...group.members]);
@@ -308,11 +317,11 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
-  bool canJoin({required FirebaseGroup group, bool? joiningByLink}) {
+  Future<bool> canJoin(
+      {required FirebaseGroup group, bool? joiningByLink}) async {
     final myUser = globalController.currentUserInfo.value!;
     final iAmGroupCreator = group.creator.id == myUser.id;
     if (iAmGroupCreator) return true;
-    if (group.members.contains(myUser.id)) return true;
     if (group.archived) {
       Get.snackbar(
         "Error",
@@ -321,6 +330,7 @@ class GroupsController extends GetxController with FireBaseUtils {
       );
       return false;
     }
+    if (group.members.contains(myUser.id)) return true;
     if (group.accessType == null || group.accessType == RoomAccessTypes.public)
       return true;
     if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink == true) {
@@ -356,6 +366,49 @@ class GroupsController extends GetxController with FireBaseUtils {
       return false;
     }
     return false;
+  }
+
+  Future<bool> _showAreYouOver18Dialog({
+    required FirebaseGroup group,
+    required UserInfoModel myUser,
+  }) async {
+    final isGroupAgeRestricted = group.hasAdultContent;
+    final iAmOwner = group.creator.id == myUser.id;
+    final iAmMember = group.members.contains(myUser.id);
+    final amIOver18 = myUser.isOver18 ?? false;
+    if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18) {
+      return true;
+    }
+
+    final result = await Get.dialog(
+      AlertDialog(
+        backgroundColor: ColorName.cardBackground,
+        title: Text("Are you over 18?"),
+        content: Text(
+          "This group is for adults only, are you over 18?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(Get.overlayContext!).pop(false);
+            },
+            child: Text("No"),
+          ),
+          TextButton(
+            onPressed: () {
+              final over18Ref = FirebaseDatabase.instance
+                  .ref(FireBaseConstants.usersRef + myUser.id)
+                  .child(UserInfoModel.isOver18Key);
+              over18Ref.set(true);
+              globalController.setIsMyUserOver18(true);
+              Navigator.of(Get.overlayContext!).pop(true);
+            },
+            child: Text("Yes"),
+          ),
+        ],
+      ),
+    );
+    return result;
   }
 }
 

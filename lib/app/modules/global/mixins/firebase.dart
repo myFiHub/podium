@@ -35,6 +35,7 @@ mixin FireBaseUtils {
             email: user[UserInfoModel.emailKey],
             id: user[UserInfoModel.idKey],
             avatar: user[UserInfoModel.avatarUrlKey],
+            isOver18: user[UserInfoModel.isOver18Key] ?? false,
             localWalletAddress: user[UserInfoModel.localWalletAddressKey] ?? '',
             following: List.from(user[UserInfoModel.followingKey] ?? []),
             numberOfFollowers: user[UserInfoModel.numberOfFollowersKey] ?? 0,
@@ -91,6 +92,7 @@ mixin FireBaseUtils {
         fullName: userValues[UserInfoModel.fullNameKey],
         email: userValues[UserInfoModel.emailKey],
         id: userValues[UserInfoModel.idKey],
+        isOver18: userValues[UserInfoModel.isOver18Key] ?? false,
         avatar: userValues[UserInfoModel.avatarUrlKey],
         localWalletAddress:
             userValues[UserInfoModel.localWalletAddressKey] ?? '',
@@ -703,6 +705,7 @@ mixin FireBaseUtils {
           email: userSnapshot[UserInfoModel.emailKey],
           id: userSnapshot[UserInfoModel.idKey],
           avatar: userSnapshot[UserInfoModel.avatarUrlKey],
+          isOver18: userSnapshot[UserInfoModel.isOver18Key] ?? false,
           localWalletAddress:
               userSnapshot[UserInfoModel.localWalletAddressKey] ?? '',
           following: List.from(userSnapshot[UserInfoModel.followingKey] ?? []),

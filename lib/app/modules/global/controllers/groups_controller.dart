@@ -17,6 +17,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
@@ -83,6 +84,13 @@ class GroupsController extends GetxController with FireBaseUtils {
         searchPageController.refreshSearchedGroup(remoteGroup);
       }
     }
+    analytics.logEvent(
+      name: "group_archive_toggled",
+      parameters: {
+        "group_id": group.id,
+        "archive": archive,
+      },
+    );
   }
 
   getAllGroupsFromFirebase() async {
@@ -311,6 +319,12 @@ class GroupsController extends GetxController with FireBaseUtils {
     Navigate.to(
       type: NavigationTypes.toNamed,
       route: Routes.GROUP_DETAIL,
+    );
+    analytics.logEvent(
+      name: "group_opened",
+      parameters: {
+        "group_id": group.id,
+      },
     );
     if (openTheRoomAfterJoining) {
       groupDetainController.startTheCall();

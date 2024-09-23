@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -208,6 +209,13 @@ class SingleGroup extends StatelessWidget {
                         if (canShareGroupUrl(group: group))
                           IconButton(
                             onPressed: () {
+                              analytics.logEvent(
+                                name: "share_group",
+                                parameters: {
+                                  "group_id": group.id,
+                                  "group_name": group.name,
+                                },
+                              );
                               Share.share(
                                   // 'podium://group-detail/$groupId',
                                   "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${group.id}&apn=com.web3podium");
@@ -239,9 +247,8 @@ class SingleGroup extends StatelessWidget {
                 if (group.hasAdultContent)
                   Positioned(
                     child: Assets.images.ageRestricted.image(
-                      width: 40,
-                      height: 40,
-                      color: Colors.red,
+                      width: 30,
+                      height: 30,
                     ),
                     left: 0,
                     bottom: 0,

@@ -374,8 +374,10 @@ class LoginController extends GetxController
       lowercasename: name.toLowerCase(),
     );
 
-    UserInfoModel? user =
-        await saveUserLoggedInWithSocialIfNeeded(user: userToCreate);
+    UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
+      user: userToCreate,
+      logintype: loginType,
+    );
 
     if (user == null) {
       Get.snackbar('Error', 'Error logging in');

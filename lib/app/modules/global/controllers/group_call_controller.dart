@@ -16,6 +16,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
+import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
@@ -99,9 +100,9 @@ class GroupCallController extends GetxController
       sorted.insert(0, talkingMember);
     });
     talkingMembers.value = talkingMembersList;
-    log.d("talking members: ${talkingMembersList.map((e) => e.id).toList()}");
-    final sortedIds = sorted.map((e) => e.id).toList();
-    log.d("sorted members: $sortedIds");
+    // log.d("talking members: ${talkingMembersList.map((e) => e.id).toList()}");
+    // final sortedIds = sorted.map((e) => e.id).toList();
+    // log.d("sorted members: $sortedIds");
     sortedMembers.value = sorted;
   }
 
@@ -228,10 +229,19 @@ class GroupCallController extends GetxController
     );
     try {
       await jitsiMeet.join(
-          options,
-          jitsiListeners(
-            group: groupToJoin,
-          ));
+        options,
+        jitsiListeners(
+          group: groupToJoin,
+        ),
+      );
+      analytics.logEvent(
+        name: 'joined_group_call',
+        parameters: {
+          'group_id': groupToJoin.id,
+          'group_name': groupToJoin.name,
+          'user_id': myUser.id,
+        },
+      );
     } catch (e) {
       log.f(e.toString());
     }

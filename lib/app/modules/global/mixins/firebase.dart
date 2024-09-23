@@ -13,6 +13,7 @@ import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 
 mixin FireBaseUtils {
@@ -215,8 +216,7 @@ mixin FireBaseUtils {
     }
   }
 
-  toggleGroupArchive({required String groupId,required bool archive}) async {
-    log.d(groupId);
+  toggleGroupArchive({required String groupId, required bool archive}) async {
     final databaseRef = FirebaseDatabase.instance.ref(
         FireBaseConstants.groupsRef +
             groupId +
@@ -616,6 +616,12 @@ mixin FireBaseUtils {
       final databaseRef = FirebaseDatabase.instance
           .ref(FireBaseConstants.notificationsRef + notificationId);
       await databaseRef.child(FirebaseNotificationModel.isReadKey).set(true);
+      analytics.logEvent(
+        name: 'notification_read',
+        parameters: {
+          'notification_id': notificationId,
+        },
+      );
     } catch (e) {
       log.e(e);
     }
@@ -626,6 +632,12 @@ mixin FireBaseUtils {
       final databaseRef = FirebaseDatabase.instance
           .ref(FireBaseConstants.notificationsRef + notificationId);
       await databaseRef.remove();
+      analytics.logEvent(
+        name: 'notification_deleted',
+        parameters: {
+          'notification_id': notificationId,
+        },
+      );
     } catch (e) {
       log.e(e);
     }
@@ -687,8 +699,10 @@ mixin FireBaseUtils {
     }
   }
 
-  Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded(
-      {required UserInfoModel user}) async {
+  Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
+    required UserInfoModel user,
+    required String logintype,
+  }) async {
     try {
       final databaseRef = FirebaseDatabase.instance
           .ref(
@@ -700,6 +714,7 @@ mixin FireBaseUtils {
       final snapshot = await databaseRef.get();
       final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
+        analytics.logLogin(loginMethod: logintype);
         final retrievedUser = UserInfoModel(
           fullName: userSnapshot[UserInfoModel.fullNameKey],
           email: userSnapshot[UserInfoModel.emailKey],
@@ -742,6 +757,7 @@ mixin FireBaseUtils {
         return retrievedUser;
       } else {
         databaseRef.set(user.toJson());
+        analytics.logSignUp(signUpMethod: logintype);
         return user;
       }
     } catch (e) {

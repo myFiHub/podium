@@ -475,6 +475,12 @@ class GlobalController extends GetxController {
     if (value == false) {
       log.f("logging out");
       _logout();
+      analytics.logEvent(
+        name: 'logout',
+        parameters: {
+          'user_id': currentUserInfo.value?.id ?? '',
+        },
+      );
     } else {
       Navigate.to(
         type: NavigationTypes.offAllNamed,
@@ -593,7 +599,15 @@ class GlobalController extends GetxController {
       if (afterConnection != null && address != '') {
         afterConnection();
       }
+      analytics.logEvent(
+        name: 'wallet_connected',
+        parameters: {'wallet_address': address},
+      );
     } catch (e) {
+      analytics.logEvent(
+        name: 'wallet_connection_failed',
+        parameters: {'error': e.toString()},
+      );
       if (e is ReownAppKitModalException) {
         log.e(e.message);
       } else {
@@ -607,5 +621,8 @@ class GlobalController extends GetxController {
     if (removed) {
       web3ModalService.disconnect();
     }
+    analytics.logEvent(
+      name: 'wallet_disconnected',
+    );
   }
 }

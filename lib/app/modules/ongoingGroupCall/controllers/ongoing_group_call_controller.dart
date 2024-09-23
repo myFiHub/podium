@@ -13,11 +13,33 @@ import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.
 import 'package:podium/env.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
+import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
 const amountToAddForLikeInSeconds = 10; // 10 seconds
 const amountToReduceForDislikeInSeconds = 10; // 10 seconds
+
+class MyTalkTimer {
+  int startedAt = DateTime.now().millisecondsSinceEpoch;
+  int endedAt = 0;
+  startTimer() {
+    startedAt = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  endTimer() {
+    endedAt = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  int get timeElapsedInSeconds {
+    final elapsed =
+        int.parse(((endedAt - startedAt) / 1000).toStringAsFixed(0));
+    if (elapsed < 0) {
+      return 0;
+    }
+    return elapsed;
+  }
+}
 
 class OngoingGroupCallController extends GetxController
     with FireBaseUtils, BlockChainInteractions {
@@ -27,6 +49,7 @@ class OngoingGroupCallController extends GetxController
   final mySession = Rxn<FirebaseSessionMember>();
   final jitsiMembers = Rxn<List<JitsiMember>>();
   final allRemainingTimesMap = Rx<Map<String, int>>({});
+  final talkTimer = MyTalkTimer();
   final amIAdmin = false.obs;
   final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
@@ -252,11 +275,12 @@ class OngoingGroupCallController extends GetxController
   }
 
   onLikeClicked(String userId) async {
-    log.d("Like clicked $userId");
+    final myUser = globalController.currentUserInfo.value!;
     final key = generateKeyForStorageAndObserver(
-        userId: userId,
-        groupId: groupCallController.group.value!.id,
-        like: true);
+      userId: userId,
+      groupId: groupCallController.group.value!.id,
+      like: true,
+    );
     timers.value[key] = DateTime.now().millisecondsSinceEpoch +
         likeDislikeTimeoutInMilliSeconds;
     timers.refresh();
@@ -264,10 +288,17 @@ class OngoingGroupCallController extends GetxController
       seconds: amountToAddForLikeInSeconds,
       userId: userId,
     );
+    analytics.logEvent(
+      name: 'like',
+      parameters: {
+        'targetUser': userId,
+        'groupId': groupCallController.group.value!.id,
+        'fromUser': myUser.id,
+      },
+    );
   }
 
   onDislikeClicked(String userId) async {
-    log.d("Dislike clicked $userId");
     final key = generateKeyForStorageAndObserver(
         userId: userId,
         groupId: groupCallController.group.value!.id,
@@ -278,6 +309,15 @@ class OngoingGroupCallController extends GetxController
     await reduceFromTimer(
       seconds: amountToReduceForDislikeInSeconds,
       userId: userId,
+    );
+    final myUser = globalController.currentUserInfo.value!;
+    analytics.logEvent(
+      name: 'dislike',
+      parameters: {
+        'targetUser': userId,
+        'groupId': groupCallController.group.value!.id,
+        'fromUser': myUser.id,
+      },
     );
   }
 
@@ -374,11 +414,18 @@ class OngoingGroupCallController extends GetxController
         } catch (e) {
           log.e("Error updating remaining time");
         }
-        log.i("Cheer successful");
-        Get.snackbar("Success", "Cheer successful");
+        log.i("${cheer ? "Cheer" : "Boo"} successful");
+        Get.snackbar("Success", "${cheer ? "Cheer" : "Boo"} successful");
+        analytics.logEvent(name: 'cheerBoo', parameters: {
+          'cheer': cheer,
+          'amount': amount,
+          'target': userId,
+          'groupId': groupCallController.group.value!.id,
+          'fromUser': myUser.id,
+        });
       } else {
-        log.e("Cheer failed");
-        Get.snackbar("Error", "Cheer failed");
+        log.e("${cheer ? "Cheer" : "Boo"} failed");
+        Get.snackbar("Error", "${cheer ? "Cheer" : "Boo"} failed");
       }
       ///////////////////////
     } else if (targetAddress == '' || targetAddress == null) {
@@ -393,6 +440,19 @@ class OngoingGroupCallController extends GetxController
       stopTheTimer();
       amIMuted.value = true;
       jitsiMeet.setAudioMuted(muted);
+      talkTimer.endTimer();
+      final myUserId = globalController.currentUserInfo.value!.id;
+      final elapsed = talkTimer.timeElapsedInSeconds;
+      if (elapsed > 0) {
+        analytics.logEvent(
+          name: 'talked',
+          parameters: {
+            'timeInSeconds': elapsed,
+            'userId': myUserId,
+            'groupId': groupCallController.group.value!.id,
+          },
+        );
+      }
     } else {
       final myUserId = globalController.currentUserInfo.value!.id;
       final groupCreator = groupCallController.group.value!.creator.id;
@@ -412,10 +472,11 @@ class OngoingGroupCallController extends GetxController
 
       startTheTimer();
       if (remainingTimeTimer > 0) {
+        talkTimer.startTimer();
         updateMyLastTalkingTime();
       }
     }
-    log.d("audioMutedChanged: $muted");
+    // log.d("audioMutedChanged: $muted");
   }
 
   checkWalletConnected({void Function()? afterConnection}) {

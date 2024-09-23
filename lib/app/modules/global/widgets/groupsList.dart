@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -235,6 +236,16 @@ class SingleGroup extends StatelessWidget {
                 JoiningIndicator(
                   groupId: group.id,
                 ),
+                if (group.hasAdultContent)
+                  Positioned(
+                    child: Assets.images.ageRestricted.image(
+                      width: 40,
+                      height: 40,
+                      color: Colors.red,
+                    ),
+                    left: 0,
+                    bottom: 0,
+                  ),
               ],
             ),
           ),

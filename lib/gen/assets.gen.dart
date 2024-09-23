@@ -15,6 +15,10 @@ import 'package:vector_graphics/vector_graphics.dart' as _vg;
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
+  /// File path: assets/images/ageRestricted.png
+  AssetGenImage get ageRestricted =>
+      const AssetGenImage('assets/images/ageRestricted.png');
+
   /// File path: assets/images/apple.png
   AssetGenImage get apple => const AssetGenImage('assets/images/apple.png');
 
@@ -40,8 +44,16 @@ class $AssetsImagesGen {
       const SvgGenImage('assets/images/x_platform.svg');
 
   /// List of all assets
-  List<dynamic> get values =>
-      [apple, facebook, gIcon, github, linkedin, logo, xPlatform];
+  List<dynamic> get values => [
+        ageRestricted,
+        apple,
+        facebook,
+        gIcon,
+        github,
+        linkedin,
+        logo,
+        xPlatform
+      ];
 }
 
 class Assets {

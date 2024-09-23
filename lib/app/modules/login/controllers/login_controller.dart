@@ -382,7 +382,8 @@ class LoginController extends GetxController
       return;
     }
     late String? savedName;
-    if (user.fullName.isEmpty) {
+    // ignore: unnecessary_null_comparison
+    if (user.fullName.isEmpty || user.fullName == null) {
       savedName = await forceSaveUserFullName(user: user);
       UserInfoModel? myUser;
       try {

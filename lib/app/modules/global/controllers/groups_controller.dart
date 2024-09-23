@@ -134,12 +134,30 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
+  String? _extractActiveWalletAddressForUser({required UserInfoModel user}) {
+    final walletAddress = user.localWalletAddress;
+    if (walletAddress.isEmpty || walletAddress == null) {
+      final firstParticleAddress =
+          user.savedParticleUserInfo?.wallets.firstWhere(
+        (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
+      );
+      if (firstParticleAddress != null) {
+        return firstParticleAddress.address;
+      } else {
+        return null;
+      }
+    }
+    return walletAddress;
+  }
+
   createGroup({
     required String name,
     required String accessType,
     required String speakerType,
     required String subject,
     required bool adultContent,
+    required List<UserInfoModel> requiredTicketsToAccess,
+    required List<UserInfoModel> requiredTicketsToSpeak,
   }) async {
     final newGroupId = Uuid().v4();
     final firebaseGroupsReference =
@@ -163,6 +181,22 @@ class GroupsController extends GetxController with FireBaseUtils {
       subject: subject,
       hasAdultContent: adultContent,
       lowercasename: name.toLowerCase(),
+      ticketsRequiredToAccess: requiredTicketsToAccess
+          .map(
+            (e) => UserTicket(
+              userId: e.id,
+              userAddress: _extractActiveWalletAddressForUser(user: e) ?? '',
+            ),
+          )
+          .toList(),
+      ticketsRequiredToSpeak: requiredTicketsToSpeak
+          .map(
+            (e) => UserTicket(
+              userId: e.id,
+              userAddress: _extractActiveWalletAddressForUser(user: e) ?? '',
+            ),
+          )
+          .toList(),
     );
     final jsonedGroup = group.toJson();
     try {

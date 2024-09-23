@@ -150,6 +150,8 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       speakerType: speakerType,
       subject: subject,
       adultContent: newGroupHasAdultContent.value,
+      requiredTicketsToAccess: selectedUsersToBuyTicketFrom_ToAccessRoom.value,
+      requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
     );
     isCreatingNewGroup.value = false;
     // Navigate.to(

@@ -34,6 +34,23 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final isArchived = value[FirebaseGroup.archivedKey] ?? false;
     final hasAdultContent = value[FirebaseGroup.hasAdultContentKey] ?? false;
+    final ticketsRequiredToAccess =
+        value[FirebaseGroup.ticketRequiredToAccessKey] ?? [];
+    final ticketsRequiredToSpeak =
+        value[FirebaseGroup.ticketsRequiredToSpeakKey] ?? [];
+    final parsedTicketsRequiredToAccess = ticketsRequiredToAccess
+        .map((e) => UserTicket(
+            userId: e[UserTicket.userIdKey],
+            userAddress: e[UserTicket.userAddressKey]))
+        .toList()
+        .cast<UserTicket>();
+    final parsedTicketsRequiredToSpeak = ticketsRequiredToSpeak
+        .map((e) => UserTicket(
+            userId: e[UserTicket.userIdKey],
+            userAddress: e[UserTicket.userAddressKey]))
+        .toList()
+        .cast<UserTicket>();
+
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
       email: creatorEmail,
@@ -52,6 +69,8 @@ FirebaseGroup? singleGroupParser(value) {
       creatorJoined: creatorJoined,
       archived: isArchived,
       hasAdultContent: hasAdultContent,
+      ticketsRequiredToAccess: parsedTicketsRequiredToAccess,
+      ticketsRequiredToSpeak: parsedTicketsRequiredToSpeak,
     );
     return group;
   } catch (e) {

@@ -34,6 +34,8 @@ class FirebaseGroup {
   String? accessType;
   String? speakerType;
   String? subject;
+  List<UserTicket> ticketsRequiredToAccess = [];
+  List<UserTicket> ticketsRequiredToSpeak = [];
   bool creatorJoined = false;
   bool archived = false;
   bool hasAdultContent = false;
@@ -50,6 +52,8 @@ class FirebaseGroup {
   static String creatorJoinedKey = 'creatorJoined';
   static String archivedKey = 'archived';
   static String hasAdultContentKey = 'hasAdultContent';
+  static String ticketRequiredToAccessKey = 'ticketsRequiredToAccess';
+  static String ticketsRequiredToSpeakKey = 'ticketsRequiredToSpeak';
 
   FirebaseGroup({
     required this.name,
@@ -64,6 +68,8 @@ class FirebaseGroup {
     this.creatorJoined = false,
     this.archived = false,
     this.hasAdultContent = false,
+    this.ticketsRequiredToAccess = const [],
+    this.ticketsRequiredToSpeak = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -80,6 +86,10 @@ class FirebaseGroup {
     data[creatorJoinedKey] = creatorJoined;
     data[archivedKey] = archived;
     data[hasAdultContentKey] = hasAdultContent;
+    data[ticketRequiredToAccessKey] =
+        ticketsRequiredToAccess.map((e) => e.toJson()).toList();
+    data[ticketsRequiredToSpeakKey] =
+        ticketsRequiredToSpeak.map((e) => e.toJson()).toList();
     return data;
   }
 }
@@ -107,6 +117,33 @@ class InvitedMember {
     return InvitedMember(
       id: json[idKey],
       invitedToSpeak: json[invitedToSpeakKey],
+    );
+  }
+}
+
+class UserTicket {
+  String userId;
+  String userAddress;
+
+  static String userIdKey = 'userId';
+  static String userAddressKey = 'userAddress';
+
+  UserTicket({
+    required this.userId,
+    required this.userAddress,
+  });
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data[userIdKey] = userId;
+    data[userAddressKey] = userAddress;
+    return data;
+  }
+
+  factory UserTicket.fromJson(Map<String, dynamic> json) {
+    return UserTicket(
+      userId: json[userIdKey],
+      userAddress: json[userAddressKey],
     );
   }
 }

@@ -50,10 +50,10 @@ class Navigate {
   }
 }
 
-Future<bool> canNavigate() async {
+Future<bool?> canNavigate() async {
   final hasOngoingCall = Get.isRegistered<OngoingGroupCallController>();
   if (!hasOngoingCall) return true;
-  final can = await Get.dialog(
+  final bool? can = await Get.dialog(
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
       title: const Text('Are you sure?'),

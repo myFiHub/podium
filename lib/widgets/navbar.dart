@@ -116,7 +116,7 @@ Widget _buildNavItem({
   return GestureDetector(
     onTap: () async {
       final canNavigateToNewRoute = await canNavigate();
-      if (!canNavigateToNewRoute) {
+      if (canNavigateToNewRoute != true) {
         return;
       }
       jitsiMeet.hangUp();

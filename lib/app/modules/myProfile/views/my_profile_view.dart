@@ -276,7 +276,7 @@ class UserInfo extends GetView<GlobalController> {
       if (myUser == null) {
         return Container();
       }
-      String avatar= myUser.avatar;
+      String avatar = myUser.avatar;
       if (avatar == defaultAvatar) {
         avatar = avatarPlaceHolder(myUser.fullName);
       }

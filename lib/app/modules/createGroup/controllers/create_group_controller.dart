@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getwidget/getwidget.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/styles.dart';
+import 'package:podium/utils/throttleAndDebounce/debounce.dart';
+import 'package:podium/widgets/textField/textFieldRounded.dart';
 
-class CreateGroupController extends GetxController {
+final _deb = Debouncing(duration: const Duration(seconds: 1));
+
+class CreateGroupController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
   final roomAccessType = RoomAccessTypes.public.obs;
   final roomSpeakerType = RoomSpeakerTypes.everyone.obs;
+  final selectedUsersToBuyTicketFrom_ToAccessRoom = <UserInfoModel>[].obs;
+  final selectedUsersToBuyticketFrom_ToSpeak = <UserInfoModel>[].obs;
+  final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
   final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
   @override
@@ -18,6 +31,8 @@ class CreateGroupController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    final myUser = Get.find<GlobalController>().currentUserInfo.value!;
+    listOfSearchedUsersToBuyTicketFrom.value = [myUser];
   }
 
   @override
@@ -35,6 +50,80 @@ class CreateGroupController extends GetxController {
 
   setRoomSubject(String value) {
     roomSubject.value = value;
+  }
+
+  get shouldSelectTicketHolersForSpeaking {
+    return (roomSpeakerType.value ==
+                RoomSpeakerTypes.onlyFriendTechTicketHolders ||
+            roomSpeakerType.value == RoomSpeakerTypes.onlyArenaTicketHolders ||
+            roomSpeakerType.value == RoomSpeakerTypes.onlyPodiumPassHolders) &&
+        selectedUsersToBuyticketFrom_ToSpeak.isEmpty;
+  }
+
+  get shouldSelectTicketHolersForAccess {
+    return ((roomAccessType.value ==
+                RoomAccessTypes.onlyFriendTechTicketHolders) ||
+            roomAccessType.value == RoomAccessTypes.onlyArenaTicketHolders ||
+            roomAccessType.value == RoomAccessTypes.onlyPodiumPassHolders) &&
+        selectedUsersToBuyTicketFrom_ToAccessRoom.isEmpty;
+  }
+
+  get shouldBuyTicketToSpeak {
+    return roomSpeakerType.value ==
+            RoomSpeakerTypes.onlyFriendTechTicketHolders ||
+        roomSpeakerType.value == RoomSpeakerTypes.onlyArenaTicketHolders ||
+        roomSpeakerType.value == RoomSpeakerTypes.onlyPodiumPassHolders;
+  }
+
+  get shouldBuyTicketToAccess {
+    return roomAccessType.value ==
+            RoomAccessTypes.onlyFriendTechTicketHolders ||
+        roomAccessType.value == RoomAccessTypes.onlyArenaTicketHolders ||
+        roomAccessType.value == RoomAccessTypes.onlyPodiumPassHolders;
+  }
+
+  toggleUserToSelectedList(UserInfoModel user, String ticketPermissiontype) {
+    if (ticketPermissiontype == TicketPermissionType.speak) {
+      final list =
+          selectedUsersToBuyticketFrom_ToSpeak.value.map((e) => e.id).toList();
+      if (list.contains(user.id)) {
+        selectedUsersToBuyticketFrom_ToSpeak.value.removeWhere((element) {
+          return element.id == user.id;
+        });
+      } else {
+        selectedUsersToBuyticketFrom_ToSpeak.value.add(user);
+      }
+      selectedUsersToBuyticketFrom_ToSpeak.refresh();
+    } else if (ticketPermissiontype == TicketPermissionType.access) {
+      final list = selectedUsersToBuyTicketFrom_ToAccessRoom.value
+          .map((e) => e.id)
+          .toList();
+      if (list.contains(user.id)) {
+        selectedUsersToBuyTicketFrom_ToAccessRoom.value.removeWhere(
+          (element) {
+            return element.id == user.id;
+          },
+        );
+      } else {
+        selectedUsersToBuyTicketFrom_ToAccessRoom.value.add(user);
+      }
+      selectedUsersToBuyTicketFrom_ToAccessRoom.refresh();
+    }
+  }
+
+  searchUsers(String value) async {
+    final myUser = Get.find<GlobalController>().currentUserInfo.value!;
+    _deb.debounce(() async {
+      if (value.isEmpty) {
+        final myUser = Get.find<GlobalController>().currentUserInfo.value!;
+        listOfSearchedUsersToBuyTicketFrom.value = [myUser];
+        return;
+      }
+      final users = await searchForUserByName(value);
+      users.removeWhere((key, value) => value.id == myUser.id);
+      final list = [myUser, ...users.values.toList()];
+      listOfSearchedUsersToBuyTicketFrom.value = list;
+    });
   }
 
   create() async {
@@ -73,20 +162,171 @@ class CreateGroupController extends GetxController {
     //   route: Routes.HOME,
     // );
   }
+
+  openSelectTicketBottomSheet({required String buyTicketToGetPermisionFor}) {
+    Get.dialog(
+      SelectUsersToBuyTicketFromBottomSheetContent(
+        buyTicketToGetPermisionFor: buyTicketToGetPermisionFor,
+      ),
+    );
+  }
+}
+
+class SelectUsersToBuyTicketFromBottomSheetContent
+    extends GetView<CreateGroupController> {
+  final String buyTicketToGetPermisionFor;
+  const SelectUsersToBuyTicketFromBottomSheetContent({
+    super.key,
+    required this.buyTicketToGetPermisionFor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Material(
+        child: Container(
+          color: ColorName.cardBackground,
+          padding: EdgeInsets.all(20),
+          height: Get.height * 0.5,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Search user',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      controller.listOfSearchedUsersToBuyTicketFrom.value = [];
+                      Get.close();
+                    },
+                    icon: Icon(Icons.close),
+                  ),
+                ],
+              ),
+              space10,
+              Input(
+                hintText: 'Enter the Name',
+                onChanged: (value) {
+                  controller.searchUsers(value);
+                },
+                autofocus: true,
+              ),
+              Expanded(
+                child: Container(
+                  child: Obx(
+                    () {
+                      final users =
+                          controller.listOfSearchedUsersToBuyTicketFrom.value;
+                      final selsectedListOfUsersToBuyTicketFromInOrderToSpeak =
+                          controller.selectedUsersToBuyticketFrom_ToSpeak.value;
+                      final selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom =
+                          controller
+                              .selectedUsersToBuyTicketFrom_ToAccessRoom.value;
+                      final myUser =
+                          Get.find<GlobalController>().currentUserInfo.value!;
+                      final myId = myUser.id;
+                      List<String> selectedIds = [];
+                      if (buyTicketToGetPermisionFor ==
+                          TicketPermissionType.speak) {
+                        selectedIds =
+                            selsectedListOfUsersToBuyTicketFromInOrderToSpeak
+                                .map((e) => e.id)
+                                .toList();
+                      } else if (buyTicketToGetPermisionFor ==
+                          TicketPermissionType.access) {
+                        selectedIds =
+                            selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom
+                                .map((e) => e.id)
+                                .toList();
+                      } else {
+                        return Container(
+                          child: Center(
+                            child: Text('Error, type is not valid'),
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        itemCount: users.length,
+                        itemBuilder: (context, index) {
+                          final user = users[index];
+                          return Column(
+                            children: [
+                              ListTile(
+                                title: Text(
+                                  user.id == myId ? "You" : user.fullName,
+                                  style: TextStyle(
+                                    color: user.id == myId
+                                        ? Colors.green
+                                        : Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    GFCheckbox(
+                                      onChanged: (v) {
+                                        controller.toggleUserToSelectedList(
+                                          user,
+                                          buyTicketToGetPermisionFor,
+                                        );
+                                      },
+                                      value: selectedIds.contains(user.id),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(
+                                color: Colors.grey[900],
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class RoomAccessTypes {
   static const public = 'public';
   static const onlyLink = 'onlyLink';
   static const invitees = 'invitees';
+  static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
+}
+
+class TicketPermissionType {
+  static const speak = 'speak';
+  static const access = 'access';
+}
+
+class TicketTypes {
+  static const arena = 'arena';
+  static const podium = 'podium';
+  static const friendTech = 'friendTech';
 }
 
 class RoomSpeakerTypes {
   static const everyone = 'everyone';
   static const invitees = 'invitees';
   static const onlyCreator = 'onlyCreator';
+  static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }

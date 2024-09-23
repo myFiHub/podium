@@ -159,8 +159,10 @@ bool canInviteToSpeak({
 
 class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
   final bool canInviteToSpeak;
-  const UserInvitationBottomSheetContent(
-      {super.key, required this.canInviteToSpeak});
+  const UserInvitationBottomSheetContent({
+    super.key,
+    required this.canInviteToSpeak,
+  });
 
   @override
   Widget build(BuildContext context) {

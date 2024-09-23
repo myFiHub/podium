@@ -715,6 +715,19 @@ mixin FireBaseUtils {
       final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
         analytics.logLogin(loginMethod: logintype);
+
+        final savedLogintype = userSnapshot[UserInfoModel.loginTypeKey];
+        if (savedLogintype != logintype) {
+          databaseRef.child(UserInfoModel.loginTypeKey).set(logintype);
+        }
+        final savedLoginTypeIdentifier =
+            userSnapshot[UserInfoModel.loginTypeIdentifierKey];
+        if (savedLoginTypeIdentifier != user.loginTypeIdentifier) {
+          databaseRef
+              .child(UserInfoModel.loginTypeIdentifierKey)
+              .set(user.loginTypeIdentifier);
+        }
+
         final retrievedUser = UserInfoModel(
           fullName: userSnapshot[UserInfoModel.fullNameKey],
           email: userSnapshot[UserInfoModel.emailKey],

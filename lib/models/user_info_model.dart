@@ -13,6 +13,8 @@ class UserInfoModel {
   late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
   late int numberOfFollowers;
   bool isOver18 = false;
+  String? loginType;
+  String? loginTypeIdentifier;
 
   static String idKey = 'id';
   static String fullNameKey = 'fullName';
@@ -25,6 +27,8 @@ class UserInfoModel {
   static String savedParticleUserInfoKey = 'savedParticleUserInfo';
   static String lowercasenameKey = 'lowercasename';
   static String isOver18Key = 'isOver18';
+  static String loginTypeKey = 'loginType';
+  static String loginTypeIdentifierKey = 'loginTypeIdentifier';
 
   UserInfoModel({
     required this.id,
@@ -38,6 +42,8 @@ class UserInfoModel {
     this.localParticleUserInfo,
     this.savedParticleUserInfo,
     this.isOver18 = false,
+    this.loginType,
+    this.loginTypeIdentifier,
   });
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +57,8 @@ class UserInfoModel {
     localParticleUserInfo = json[localParticleUserInfoKey];
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
+    loginType = json[loginTypeKey];
+    loginTypeIdentifier = json[loginTypeIdentifierKey];
   }
 
   Map<String, dynamic> toJson() {
@@ -68,6 +76,8 @@ class UserInfoModel {
     data[localParticleUserInfoKey] = localParticleUserInfo;
     data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();
     data[isOver18Key] = isOver18;
+    data[loginTypeKey] = loginType;
+    data[loginTypeIdentifierKey] = loginTypeIdentifier;
     return data;
   }
 }

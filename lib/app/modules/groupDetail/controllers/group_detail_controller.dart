@@ -1,5 +1,3 @@
-
-import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';

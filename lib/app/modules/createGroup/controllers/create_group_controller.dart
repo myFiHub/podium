@@ -227,18 +227,17 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           Get.find<GlobalController>().currentUserInfo.value!;
                       final myId = myUser.id;
                       List<String> selectedIds = [];
+                      List<UserInfoModel> selectedUsers;
                       if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.speak) {
-                        selectedIds =
-                            selsectedListOfUsersToBuyTicketFromInOrderToSpeak
-                                .map((e) => e.id)
-                                .toList();
+                        selectedUsers =
+                            selsectedListOfUsersToBuyTicketFromInOrderToSpeak;
+                        selectedIds = selectedUsers.map((e) => e.id).toList();
                       } else if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.access) {
-                        selectedIds =
-                            selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom
-                                .map((e) => e.id)
-                                .toList();
+                        selectedUsers =
+                            selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom;
+                        selectedIds = selectedUsers.map((e) => e.id).toList();
                       } else {
                         return Container(
                           child: Center(
@@ -246,11 +245,19 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           ),
                         );
                       }
+                      // move selectedIds to the top of the list then my id to the top of them
+                      List<UserInfoModel> listToShow = [];
+                      listToShow.add(myUser);
+                      final SelectedUsersExceptMe =
+                          selectedUsers.where((element) => element.id != myId);
+                      listToShow.addAll([...SelectedUsersExceptMe]);
+                      listToShow.addAll(users.where(
+                          (element) => !selectedIds.contains(element.id)));
 
                       return ListView.builder(
-                        itemCount: users.length,
+                        itemCount: listToShow.length,
                         itemBuilder: (context, index) {
-                          final user = users[index];
+                          final user = listToShow[index];
                           return Column(
                             children: [
                               ListTile(

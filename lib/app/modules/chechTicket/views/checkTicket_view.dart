@@ -55,6 +55,7 @@ class CheckTicketView extends GetWidget<CheckticketController> {
                                 final boughtTicketToSpeak =
                                     allUsersList[index].boughtTicketToSpeak;
                                 final checking = allUsersList[index].checking;
+                                final buying = allUsersList[index].buying;
                                 final address = allUsersList[index].address;
                                 final shouldBuyTicketToAccess =
                                     !boughtTicketToAccess;
@@ -111,7 +112,7 @@ class CheckTicketView extends GetWidget<CheckticketController> {
                                         ),
                                       ),
                                       Container(
-                                        child: checking
+                                        child: checking || buying
                                             ? SizedBox(
                                                 child:
                                                     CircularProgressIndicator(),

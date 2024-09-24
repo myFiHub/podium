@@ -123,9 +123,18 @@ class CheckticketController extends GetxController
   }
 
   buyTicket({required UserInfoModel userToBuyFrom}) async {
-    final result = await particle_buySharesWithReferrer(
-      sharesSubject: extractAddressFromUserModel(user: userToBuyFrom)!,
-    );
+    try {
+      allUsersToBuyTicketFrom.value[userToBuyFrom.id]!.buying = true;
+      allUsersToBuyTicketFrom.refresh();
+      final result = await particle_buySharesWithReferrer(
+        sharesSubject: extractAddressFromUserModel(user: userToBuyFrom) ?? '',
+      );
+      log.d(result);
+    } catch (e) {
+    } finally {
+      allUsersToBuyTicketFrom.value[userToBuyFrom.id]!.buying = false;
+      allUsersToBuyTicketFrom.refresh();
+    }
   }
 
   Future<HasAccessTicket> checkIfIveBoughtTheTicketFromUser(

@@ -1,12 +1,15 @@
 import 'dart:convert';
 
+import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/proxy.dart';
 import 'package:podium/contracts/starsArena.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:particle_base/particle_base.dart';
 
@@ -86,15 +89,16 @@ mixin BlockChainInteractions {
   /// You’ll provide the desired share quantity as an argument.
   ///
 
-  Future<BigInt?> getBuyPrice({
+  Future<BigInt?> ext_getBuyPrice({
     required String sharesSubject,
     required num shareAmount,
   }) async {
     final globalController = Get.find<GlobalController>();
     final service = globalController.web3ModalService;
-    final sharesSubjectWallet = parsAddress(sharesSubject);
+
     // service.launchConnectedWallet();
     try {
+      final sharesSubjectWallet = parsAddress(sharesSubject);
       final response = await service.requestReadContract(
         deployedContract: starsArenaContract,
         topic: service.session!.topic,
@@ -250,7 +254,7 @@ mixin BlockChainInteractions {
     final myAddress = await Evm.getAddress();
     final contractAddress = StarsArenaSmartContract.address;
     final methodName = 'buySharesWithReferrer';
-    final parameters = [sharesSubjectWallet, shareAmount, referrer];
+    final parameters = [sharesSubjectWallet, shareAmount.toString(), referrer];
     const abiJson = StarsArenaSmartContract.abi;
     final abiJsonString = jsonEncode(abiJson);
     try {
@@ -266,14 +270,26 @@ mixin BlockChainInteractions {
       return signature;
     } catch (e) {
       log.e('error : $e');
-      if (e.toString().contains('insufficient funds')) {
+      if (e.toString().toLowerCase().contains('insufficient funds')) {
+        Get.snackbar(
+          "Error:Insufficient funds",
+          "Please top up your wallet",
+          colorText: Colors.red,
+          mainButton: TextButton(
+            onPressed: () {
+              _copyToClipboard(myAddress, prefix: "Address");
+            },
+            child: Text("Copy"),
+          ),
+        );
+      } else {
         Get.snackbar(
           "Error",
-          "Insufficient funds",
+          e.toString(),
           colorText: Colors.red,
         );
       }
-      ;
+
       return null;
     }
   }
@@ -321,3 +337,13 @@ double bigIntWeiToDouble(BigInt v) {
 }
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+void _copyToClipboard(String text, {String? prefix}) {
+  Clipboard.setData(ClipboardData(text: text)).then(
+    (_) => Get.snackbar(
+      "${prefix} Copied",
+      "",
+      colorText: Colors.green,
+    ),
+  );
+}

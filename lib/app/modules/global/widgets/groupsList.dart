@@ -145,13 +145,13 @@ class SingleGroup extends StatelessWidget {
                                 Row(
                                   children: [
                                     Icon(
-                                      Icons.mic,
+                                      Icons.lock,
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
                                     space5,
                                     Text(
-                                      parseSpeakerType(group.speakerType),
+                                      parseAccessType(group.accessType),
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
@@ -164,13 +164,13 @@ class SingleGroup extends StatelessWidget {
                                 Row(
                                   children: [
                                     Icon(
-                                      Icons.lock,
+                                      Icons.mic,
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
                                     space5,
                                     Text(
-                                      parseAccessType(group.accessType),
+                                      parseSpeakerType(group.speakerType),
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,

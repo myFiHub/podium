@@ -31,19 +31,10 @@ mixin FireBaseUtils {
       for (DataSnapshot snapshot in snapshots) {
         final user = snapshot.value as dynamic;
         if (user != null) {
-          final userInfo = UserInfoModel(
-            fullName: user[UserInfoModel.fullNameKey],
-            email: user[UserInfoModel.emailKey],
-            id: user[UserInfoModel.idKey],
-            avatar: user[UserInfoModel.avatarUrlKey],
-            isOver18: user[UserInfoModel.isOver18Key] ?? false,
-            localWalletAddress: user[UserInfoModel.localWalletAddressKey] ?? '',
-            following: List.from(user[UserInfoModel.followingKey] ?? []),
-            numberOfFollowers: user[UserInfoModel.numberOfFollowersKey] ?? 0,
-            lowercasename: user[UserInfoModel.lowercasenameKey] ??
-                user[UserInfoModel.fullNameKey].toLowerCase(),
-          );
-          usersList.add(userInfo);
+          final userInfo = singleUserParser(user);
+          if (userInfo != null) {
+            usersList.add(userInfo);
+          }
         }
       }
       return usersList;

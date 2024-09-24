@@ -140,7 +140,7 @@ class UserTicket {
     return data;
   }
 
-  factory UserTicket.fromJson(Map<String, dynamic> json) {
+  factory UserTicket.fromJson(dynamic json) {
     return UserTicket(
       userId: json[userIdKey],
       userAddress: json[userAddressKey],

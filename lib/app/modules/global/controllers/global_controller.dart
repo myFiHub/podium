@@ -186,16 +186,15 @@ class GlobalController extends GetxController {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
           log.i("Internet connected");
+          if (!initializedOnce.value) {
+            final (versionResolved, serverAddress) = await (
+              checkVersion(),
+              getJitsiServerAddress(),
+            ).wait;
 
-          final (versionResolved, serverAddress) = await (
-            checkVersion(),
-            getJitsiServerAddress(),
-          ).wait;
-
-          if (!initializedOnce.value &&
-              versionResolved &&
-              serverAddress != null) {
-            await initializeApp();
+            if (versionResolved && serverAddress != null) {
+              await initializeApp();
+            }
           }
 
           break;

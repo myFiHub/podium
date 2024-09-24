@@ -41,7 +41,7 @@ class ProfileController extends GetxController with BlockChainInteractions {
   buyTicket() async {
     try {
       isBuyingTicket.value = true;
-      final String? result = await buySharesWithReferrer(
+      final String? result = await ext_buySharesWithReferrer(
         sharesSubject: userInfo.value!.localWalletAddress,
         shareAmount: 1,
         value: ticketPriceFor1Share.value,

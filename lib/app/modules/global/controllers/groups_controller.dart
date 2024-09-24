@@ -4,9 +4,12 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/allGroups/controllers/all_groups_controller.dart';
+import 'package:podium/app/modules/chechTicket/controllers/checkTicket_controller.dart';
+import 'package:podium/app/modules/chechTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
@@ -134,22 +137,6 @@ class GroupsController extends GetxController with FireBaseUtils {
     }
   }
 
-  String? _extractActiveWalletAddressForUser({required UserInfoModel user}) {
-    final walletAddress = user.localWalletAddress;
-    if (walletAddress.isEmpty || walletAddress == null) {
-      final firstParticleAddress =
-          user.savedParticleUserInfo?.wallets.firstWhere(
-        (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
-      );
-      if (firstParticleAddress != null) {
-        return firstParticleAddress.address;
-      } else {
-        return null;
-      }
-    }
-    return walletAddress;
-  }
-
   createGroup({
     required String name,
     required String accessType,
@@ -185,7 +172,7 @@ class GroupsController extends GetxController with FireBaseUtils {
           .map(
             (e) => UserTicket(
               userId: e.id,
-              userAddress: _extractActiveWalletAddressForUser(user: e) ?? '',
+              userAddress: extractAddressFromUserModel(user: e) ?? '',
             ),
           )
           .toList(),
@@ -193,7 +180,7 @@ class GroupsController extends GetxController with FireBaseUtils {
           .map(
             (e) => UserTicket(
               userId: e.id,
-              userAddress: _extractActiveWalletAddressForUser(user: e) ?? '',
+              userAddress: extractAddressFromUserModel(user: e) ?? '',
             ),
           )
           .toList(),
@@ -347,8 +334,8 @@ class GroupsController extends GetxController with FireBaseUtils {
   _openGroup(
       {required FirebaseGroup group,
       required bool openTheRoomAfterJoining}) async {
-    final groupDetainController = Get.put(GroupDetailController());
-    groupDetainController.group.value = group;
+    final groupDetailController = Get.put(GroupDetailController());
+    groupDetailController.group.value = group;
     joiningGroupId.value = '';
     Navigate.to(
       type: NavigationTypes.toNamed,
@@ -361,12 +348,16 @@ class GroupsController extends GetxController with FireBaseUtils {
       },
     );
     if (openTheRoomAfterJoining) {
-      groupDetainController.startTheCall();
+      groupDetailController.startTheCall();
     }
   }
 
   Future<bool> canJoin(
       {required FirebaseGroup group, bool? joiningByLink}) async {
+    if (group.accessType == RoomAccessTypes.onlyArenaTicketHolders) {
+      final results = await checkTicket(group: group);
+      return results?.canEnter ?? false;
+    }
     final myUser = globalController.currentUserInfo.value!;
     final iAmGroupCreator = group.creator.id == myUser.id;
     if (iAmGroupCreator) return true;
@@ -381,17 +372,19 @@ class GroupsController extends GetxController with FireBaseUtils {
     if (group.members.contains(myUser.id)) return true;
     if (group.accessType == null || group.accessType == RoomAccessTypes.public)
       return true;
-    if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink == true) {
-      return true;
+    if (group.accessType == RoomAccessTypes.onlyLink) {
+      if (joiningByLink == true) {
+        return true;
+      } else {
+        Get.snackbar(
+          "Error",
+          "This is a private room, you need an invite link to join",
+          colorText: Colors.red,
+        );
+        return false;
+      }
     }
-    if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink != true) {
-      Get.snackbar(
-        "Error",
-        "This is a private room, you need an invite link to join",
-        colorText: Colors.red,
-      );
-      return false;
-    }
+
     final invitedMembers = group.invitedMembers;
     if (group.accessType == RoomAccessTypes.invitees) {
       if (invitedMembers[myUser.id] != null)
@@ -404,16 +397,19 @@ class GroupsController extends GetxController with FireBaseUtils {
         );
       }
     }
-
-    if (group.accessType == RoomAccessTypes.onlyLink && joiningByLink != true) {
-      Get.snackbar(
-        "Error",
-        "This is a private room, you need an invite to join",
-        colorText: Colors.red,
-      );
-      return false;
+    if (group.accessType == RoomAccessTypes.onlyArenaTicketHolders) {
+      final results = await checkTicket(group: group);
+      return results?.canEnter ?? false;
     }
     return false;
+  }
+
+  Future<HasAccessTicket?> checkTicket({required FirebaseGroup group}) async {
+    final checkTicketController = Get.put(CheckticketController());
+    checkTicketController.group.value = group;
+    final result = await Get.dialog(CheckTicketView());
+    Get.delete<CheckticketController>();
+    return result;
   }
 
   Future<bool> _showAreYouOver18Dialog({

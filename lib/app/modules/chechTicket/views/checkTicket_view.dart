@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/chechTicket/controllers/checkTicket_controller.dart';
-import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -16,24 +15,32 @@ class CheckTicketView extends GetWidget<CheckticketController> {
           padding: EdgeInsets.all(20),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Row(
+                  children: [
+                    Text('Buy Tickets to:',
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
+                    space10,
+                    Text('Enter',
+                        style: TextStyle(
+                            fontSize: 10, fontWeight: FontWeight.bold)),
+                    space10,
+                    Icon(Icons.login, color: Colors.red),
+                    space10,
+                    Text('or Speak',
+                        style: TextStyle(
+                            fontSize: 10, fontWeight: FontWeight.bold)),
+                    space10,
+                    Icon(Icons.mic, color: Colors.red)
+                  ],
+                ),
+                IconButton(
                     onPressed: () {
                       Get.close();
                     },
-                    icon: Icon(Icons.close),
-                  ),
-                ],
-              ),
+                    icon: Icon(Icons.close))
+              ]),
               space10,
               Obx(
                 () {
@@ -89,25 +96,21 @@ class CheckTicketView extends GetWidget<CheckticketController> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            Text(
-                                              userInfo.fullName,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
+                                            Text(userInfo.fullName,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
                                             space10,
                                             Text(
-                                              truncate(
-                                                address,
-                                                length: 16,
-                                              ),
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.red,
-                                              ),
-                                            ),
+                                                truncate(
+                                                  address,
+                                                  length: 16,
+                                                ),
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.red)),
                                           ],
                                         ),
                                       ),
@@ -117,31 +120,26 @@ class CheckTicketView extends GetWidget<CheckticketController> {
                                                 child:
                                                     CircularProgressIndicator(),
                                                 width: 20,
-                                                height: 20,
-                                              )
+                                                height: 20)
                                             : boughtTicketToAccess &&
                                                     boughtTicketToSpeak
-                                                ? Icon(
-                                                    Icons.check,
-                                                    color: Colors.green,
-                                                  )
+                                                ? Icon(Icons.check,
+                                                    color: Colors.green)
                                                 : Tooltip(
                                                     message: actionButtonText,
                                                     child: GestureDetector(
                                                       onTap: () {
                                                         controller.buyTicket(
-                                                          userToBuyFrom:
-                                                              userInfo,
-                                                        );
+                                                            userToBuyFrom:
+                                                                userInfo);
                                                       },
                                                       child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.green,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(5),
-                                                        ),
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.green,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        5)),
                                                         padding:
                                                             EdgeInsets.all(5),
                                                         child: Row(

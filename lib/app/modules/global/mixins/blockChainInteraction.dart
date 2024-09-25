@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/material.dart';
@@ -258,18 +259,23 @@ mixin BlockChainInteractions {
     const abiJson = StarsArenaSmartContract.abi;
     final abiJsonString = jsonEncode(abiJson);
     try {
-      final transaction = await EvmService.writeContract(
-        myAddress,
-        buyPrice,
+      final data = await EvmService.customMethod(
         contractAddress,
         methodName,
         parameters,
         abiJsonString,
       );
+      final transaction = await EvmService.createTransaction(
+        myAddress,
+        data,
+        buyPrice,
+        contractAddress,
+        gasFeeLevel: GasFeeLevel.high,
+      );
       final signature = await Evm.sendTransaction(transaction);
       return signature;
     } catch (e) {
-      log.e('error : $e');
+      log.e('error : $e ${((e as dynamic).data)}');
       if (e.toString().toLowerCase().contains('insufficient funds')) {
         Get.snackbar(
           "Error:Insufficient funds",
@@ -285,11 +291,10 @@ mixin BlockChainInteractions {
       } else {
         Get.snackbar(
           "Error",
-          e.toString(),
+          (e as dynamic).message,
           colorText: Colors.red,
         );
       }
-
       return null;
     }
   }
@@ -330,13 +335,24 @@ DeployedContract getContract(
   );
 }
 
+BigInt doubleToBigIntWei(num v) {
+  final BigInt weiToEthRatio = BigInt.from(10).pow(18);
+  final BigInt vInWei = BigInt.from(v * weiToEthRatio.toInt());
+  return vInWei;
+}
+
 double bigIntWeiToDouble(BigInt v) {
   final BigInt weiToEthRatio = BigInt.from(10).pow(18);
   final double vInEth = v.toDouble() / weiToEthRatio.toDouble();
   return vInEth;
 }
 
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+String hexToAscii(String hexString) => List.generate(
+      hexString.length ~/ 2,
+      (i) => String.fromCharCode(
+        int.parse(hexString.substring(i * 2, (i * 2) + 2), radix: 16),
+      ),
+    ).join();
 
 void _copyToClipboard(String text, {String? prefix}) {
   Clipboard.setData(ClipboardData(text: text)).then(
@@ -347,3 +363,5 @@ void _copyToClipboard(String text, {String? prefix}) {
     ),
   );
 }
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";

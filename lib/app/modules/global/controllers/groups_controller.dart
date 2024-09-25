@@ -405,11 +405,19 @@ class GroupsController extends GetxController with FireBaseUtils {
   }
 
   Future<HasAccessTicket?> checkTicket({required FirebaseGroup group}) async {
+    joiningGroupId.value = group.id;
     final checkTicketController = Get.put(CheckticketController());
     checkTicketController.group.value = group;
-    final result = await Get.dialog(CheckTicketView());
-    Get.delete<CheckticketController>();
-    return result;
+    final accesses = await checkTicketController.checkTickets();
+    if (accesses.canEnter == true && accesses.canSpeak == true) {
+      joiningGroupId.value = '';
+      return accesses;
+    } else {
+      final result = await Get.dialog(CheckTicketView());
+      Get.delete<CheckticketController>();
+      joiningGroupId.value = '';
+      return result;
+    }
   }
 
   Future<bool> _showAreYouOver18Dialog({

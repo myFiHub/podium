@@ -54,7 +54,7 @@ class CheckticketController extends GetxController
   @override
   void onReady() {
     super.onReady();
-    checkTickets();
+    // checkTickets();
   }
 
   @override
@@ -63,8 +63,7 @@ class CheckticketController extends GetxController
     log.f('CheckticketController closed');
   }
 
-  checkTickets() async {
-    if (group.value == null) return;
+  Future<HasAccessTicket> checkTickets() async {
     loadingUsers.value = true;
     final requiredTicketsToAccess = group.value!.ticketsRequiredToAccess;
     final requiredTicketsToSpeak = group.value!.ticketsRequiredToSpeak;
@@ -120,6 +119,19 @@ class CheckticketController extends GetxController
       );
     }
     allUsersToBuyTicketFrom.refresh();
+    return checkAccess();
+  }
+
+  HasAccessTicket checkAccess() {
+    final can_not_Speak = allUsersToBuyTicketFrom.value.entries.any(
+      (element) => element.value.boughtTicketToSpeak == false,
+    );
+    final can_not_enter = allUsersToBuyTicketFrom.value.entries.any(
+      (element) => element.value.boughtTicketToAccess == false,
+    );
+    final canEnter = !can_not_enter;
+    final canSpeak = !can_not_Speak;
+    return HasAccessTicket(canEnter: canEnter, canSpeak: canSpeak);
   }
 
   buyTicket({required UserInfoModel userToBuyFrom}) async {

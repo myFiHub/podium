@@ -19,8 +19,8 @@ class CheckTicketView extends GetWidget<CheckticketController> {
           child: Column(
             children: [
               Header(),
-              space10,
-              TicketBuyObserver(),
+              // space10,
+              // TicketBuyObserver(),
               space10,
               Expanded(
                 child: Obx(
@@ -64,26 +64,21 @@ class EnterButton extends GetView<CheckticketController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final allUsersToBuyTicketFrom =
-          controller.allUsersToBuyTicketFrom.value.values.toList();
+      final canEnter = controller.allUsersToBuyTicketFrom.value.values.any(
+          (element) =>
+              element.boughtTicketToAccess && element.accessTicketType != null);
 
-      final listOfRemainingTicketsToEnter = allUsersToBuyTicketFrom
-          .where((element) =>
-              !element.boughtTicketToAccess && element.accessTicketType != null)
-          .toList();
-      final remainingTicketsToEnter = listOfRemainingTicketsToEnter.length;
-      final canEnter = remainingTicketsToEnter == 0;
+      final canSpeak = controller.allUsersToBuyTicketFrom.value.values.any(
+          (element) =>
+              element.boughtTicketToSpeak && element.speakTicketType != null);
 
-      final remainingTicketsToSpeak = allUsersToBuyTicketFrom
+      final remainingTicketsToTalk = controller
+          .allUsersToBuyTicketFrom.value.values
           .where((element) =>
               !element.boughtTicketToSpeak && element.speakTicketType != null)
+          .toList()
           .length;
-      final canSpeakThough =
-          (remainingTicketsToSpeak != 0 && controller.isSpeakBuyableByTicket);
-
-      final canSpeak =
-          (remainingTicketsToSpeak == 0 && controller.isSpeakBuyableByTicket) ||
-              controller.canSpeakWithoutATicket;
+      final canSpeakThough = !canSpeak && remainingTicketsToTalk > 0;
 
       String text = "Enter";
       if (canSpeakThough) {
@@ -110,7 +105,7 @@ class EnterButton extends GetView<CheckticketController> {
             space5,
             if (!canSpeak && canSpeakThough)
               Text(
-                'you will be able to speak if you buy all the tickets to Speak',
+                'you will be able to speak if you buy 1 the ticket to Speak',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.red,
@@ -120,7 +115,18 @@ class EnterButton extends GetView<CheckticketController> {
           ],
         );
       }
-      return Container();
+      return Button(
+        onPressed: null,
+        blockButton: true,
+        child: Text(
+            'you will be able to Enter if you buy 1 ticket required for Entering the room',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.red,
+              fontSize: 14,
+            )),
+        color: Colors.grey,
+      );
     });
   }
 }
@@ -275,7 +281,7 @@ class Header extends StatelessWidget {
           space10,
           Icon(Icons.login, color: Colors.red),
           space10,
-          Text('or Speak',
+          Text('and Speak',
               style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
           space10,
           Icon(Icons.mic, color: Colors.red)

@@ -329,7 +329,7 @@ class TicketTypes {
 class RoomSpeakerTypes {
   static const everyone = 'everyone';
   static const invitees = 'invitees';
-  static const onlyCreator = 'onlyCreator';
+  // static const onlyCreator = 'onlyCreator';
   static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';

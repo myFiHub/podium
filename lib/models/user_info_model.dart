@@ -80,4 +80,38 @@ class UserInfoModel {
     data[loginTypeIdentifierKey] = loginTypeIdentifier;
     return data;
   }
+
+  copyWith({
+    String? id,
+    String? fullName,
+    String? email,
+    String? avatar,
+    String? localWalletAddress,
+    List<String>? following,
+    int? numberOfFollowers,
+    String? lowercasename,
+    ParticleUser.UserInfo? localParticleUserInfo,
+    FirebaseParticleAuthUserInfo? savedParticleUserInfo,
+    bool? isOver18,
+    String? loginType,
+    String? loginTypeIdentifier,
+  }) {
+    return UserInfoModel(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      avatar: avatar ?? this.avatar,
+      localWalletAddress: localWalletAddress ?? this.localWalletAddress,
+      following: following ?? this.following,
+      numberOfFollowers: numberOfFollowers ?? this.numberOfFollowers,
+      lowercasename: lowercasename ?? this.lowercasename,
+      localParticleUserInfo:
+          localParticleUserInfo ?? this.localParticleUserInfo,
+      savedParticleUserInfo:
+          savedParticleUserInfo ?? this.savedParticleUserInfo,
+      isOver18: isOver18 ?? this.isOver18,
+      loginType: loginType ?? this.loginType,
+      loginTypeIdentifier: loginTypeIdentifier ?? this.loginTypeIdentifier,
+    );
+  }
 }

@@ -432,7 +432,9 @@ class GroupsController extends GetxController with FireBaseUtils {
     if (accesses.canEnter == true && accesses.canSpeak == true) {
       joiningGroupId.value = '';
       return GroupAccesses(
-          canEnter: accesses.canEnter, canSpeak: accesses.canSpeak);
+        canEnter: accesses.canEnter,
+        canSpeak: accesses.canSpeak,
+      );
     } else {
       final result = await Get.dialog<GroupAccesses?>(CheckTicketView());
       log.d(

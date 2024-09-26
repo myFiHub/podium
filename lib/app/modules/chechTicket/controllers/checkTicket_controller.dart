@@ -3,9 +3,9 @@ import 'package:podium/app/modules/createGroup/controllers/create_group_controll
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -47,6 +47,27 @@ class TicketSeller {
     this.speakTicketType,
     this.accessTicketType,
   });
+  copyWith({
+    UserInfoModel? userInfo,
+    bool? boughtTicketToSpeak,
+    bool? boughtTicketToAccess,
+    bool? buying,
+    bool? checking,
+    String? speakTicketType,
+    String? accessTicketType,
+    String? address,
+  }) {
+    return TicketSeller(
+      userInfo: userInfo ?? this.userInfo,
+      boughtTicketToSpeak: boughtTicketToSpeak ?? this.boughtTicketToSpeak,
+      boughtTicketToAccess: boughtTicketToAccess ?? this.boughtTicketToAccess,
+      buying: buying ?? this.buying,
+      checking: checking ?? this.checking,
+      speakTicketType: speakTicketType ?? this.speakTicketType,
+      accessTicketType: accessTicketType ?? this.accessTicketType,
+      address: address ?? this.address,
+    );
+  }
 }
 
 class CheckticketController extends GetxController
@@ -135,15 +156,14 @@ class CheckticketController extends GetxController
       final ticketTypeToAccessForThisSeller =
           allUsersToBuyTicketFrom.value[key]?.accessTicketType;
 
-      allUsersToBuyTicketFrom.value[key] = TicketSeller(
-        userInfo: allUsersToBuyTicketFrom.value[key]!.userInfo,
+      allUsersToBuyTicketFrom.value[key] =
+          allUsersToBuyTicketFrom.value[key]!.copyWith(
         speakTicketType: ticketTypeToSpeakForThisSeller,
         accessTicketType: ticketTypeToAccessForThisSeller,
         boughtTicketToAccess: access.canEnter,
         boughtTicketToSpeak: access.canSpeak,
         checking: false,
         buying: false,
-        address: allUsersToBuyTicketFrom.value[key]!.address,
       );
     }
     allUsersToBuyTicketFrom.refresh();
@@ -151,22 +171,23 @@ class CheckticketController extends GetxController
   }
 
   GroupAccesses checkAccess() {
-    final can_not_Speak = allUsersToBuyTicketFrom.value.entries.any(
+    final canSpeak = allUsersToBuyTicketFrom.value.entries.any(
+          (element) =>
+              element.value.boughtTicketToSpeak == true &&
+              element.value.speakTicketType != null,
+        ) ||
+        canSpeakWithoutATicket;
+
+    final canEnter = allUsersToBuyTicketFrom.value.entries.any(
       (element) =>
-          element.value.boughtTicketToSpeak == false &&
-          element.value.speakTicketType != null,
-    );
-    final can_not_enter = allUsersToBuyTicketFrom.value.entries.any(
-      (element) =>
-          element.value.boughtTicketToAccess == false &&
+          element.value.boughtTicketToAccess == true &&
           element.value.accessTicketType != null,
     );
-    final canEnter = !can_not_enter;
-    final canSpeak = !can_not_Speak;
-    return GroupAccesses(
+    final accessResult = GroupAccesses(
       canEnter: canEnter,
       canSpeak: isSpeakBuyableByTicket ? canSpeak : canSpeakWithoutATicket,
     );
+    return accessResult;
   }
 
   buyTicket({

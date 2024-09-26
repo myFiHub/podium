@@ -292,8 +292,6 @@ String parseSpeakerType(String? speakerType) {
       return "Everyone";
     case RoomSpeakerTypes.everyone:
       return "Everyone";
-    case RoomSpeakerTypes.onlyCreator:
-      return "Only Creator";
     case RoomSpeakerTypes.invitees:
       return "Only Invited Users";
     case RoomSpeakerTypes.onlyArenaTicketHolders:

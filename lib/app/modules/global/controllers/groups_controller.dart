@@ -8,6 +8,7 @@ import 'package:podium/app/modules/chechTicket/controllers/checkTicket_controlle
 import 'package:podium/app/modules/chechTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
@@ -264,11 +265,12 @@ class GroupsController extends GetxController with FireBaseUtils {
       return;
     }
 
-    final allowedToJoin = await canJoin(
+    final accesses = await getGroupAccesses(
       group: group,
       joiningByLink: joiningByLink,
     );
-    if (!allowedToJoin) return;
+    log.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
+    if (accesses.canEnter == false) return;
 
     final hasAgeVerified = await _showAreYouOver18Dialog(
       group: group,
@@ -316,6 +318,7 @@ class GroupsController extends GetxController with FireBaseUtils {
         _openGroup(
           group: group,
           openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
+          accesses: accesses,
         );
       } catch (e) {
         Get.snackbar("Error", "Failed to join group");
@@ -325,17 +328,19 @@ class GroupsController extends GetxController with FireBaseUtils {
     } else {
       joiningGroupId.value = '';
       _openGroup(
-        group: group,
-        openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
-      );
+          group: group,
+          openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
+          accesses: accesses);
     }
   }
 
   _openGroup(
       {required FirebaseGroup group,
-      required bool openTheRoomAfterJoining}) async {
+      required bool openTheRoomAfterJoining,
+      required GroupAccesses accesses}) async {
     final groupDetailController = Get.put(GroupDetailController());
     groupDetailController.group.value = group;
+    groupDetailController.groupAccesses.value = accesses;
     joiningGroupId.value = '';
     Navigate.to(
       type: NavigationTypes.toNamed,
@@ -348,47 +353,65 @@ class GroupsController extends GetxController with FireBaseUtils {
       },
     );
     if (openTheRoomAfterJoining) {
-      groupDetailController.startTheCall();
+      groupDetailController.startTheCall(
+        accesses: accesses,
+      );
     }
   }
 
-  Future<bool> canJoin(
+  Future<GroupAccesses> getGroupAccesses(
       {required FirebaseGroup group, bool? joiningByLink}) async {
-    if (group.accessType == RoomAccessTypes.onlyArenaTicketHolders) {
-      final results = await checkTicket(group: group);
-      return results?.canEnter ?? false;
-    }
     final myUser = globalController.currentUserInfo.value!;
     final iAmGroupCreator = group.creator.id == myUser.id;
-    if (iAmGroupCreator) return true;
+    if (iAmGroupCreator) return GroupAccesses(canEnter: true, canSpeak: true);
+    if (accessIsBuyableByTicket(group) || speakIsBuyableByTicket(group)) {
+      final results = await checkTicket(group: group);
+      if (results?.canEnter == false) {
+        Get.snackbar(
+          "Error",
+          "You don't have required tickets to join this room",
+          colorText: Colors.red,
+        );
+        return GroupAccesses(canEnter: false, canSpeak: false);
+      } else {
+        return results != null
+            ? results
+            : GroupAccesses(canEnter: false, canSpeak: false);
+      }
+    }
+
     if (group.archived) {
       Get.snackbar(
         "Error",
         "This group is archived, you can't join it",
         colorText: Colors.red,
       );
-      return false;
+      return GroupAccesses(canEnter: false, canSpeak: false);
     }
-    if (group.members.contains(myUser.id)) return true;
+    if (group.members.contains(myUser.id))
+      return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
     if (group.accessType == null || group.accessType == RoomAccessTypes.public)
-      return true;
+      return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
     if (group.accessType == RoomAccessTypes.onlyLink) {
       if (joiningByLink == true) {
-        return true;
+        return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
       } else {
         Get.snackbar(
           "Error",
           "This is a private room, you need an invite link to join",
           colorText: Colors.red,
         );
-        return false;
+        return GroupAccesses(canEnter: false, canSpeak: false);
       }
     }
 
     final invitedMembers = group.invitedMembers;
     if (group.accessType == RoomAccessTypes.invitees) {
       if (invitedMembers[myUser.id] != null)
-        return true;
+        return GroupAccesses(
+          canEnter: true,
+          canSpeak: canISpeak(group: group),
+        );
       else {
         Get.snackbar(
           "Error",
@@ -397,23 +420,23 @@ class GroupsController extends GetxController with FireBaseUtils {
         );
       }
     }
-    if (group.accessType == RoomAccessTypes.onlyArenaTicketHolders) {
-      final results = await checkTicket(group: group);
-      return results?.canEnter ?? false;
-    }
-    return false;
+
+    return GroupAccesses(canEnter: false, canSpeak: false);
   }
 
-  Future<HasAccessTicket?> checkTicket({required FirebaseGroup group}) async {
+  Future<GroupAccesses?> checkTicket({required FirebaseGroup group}) async {
     joiningGroupId.value = group.id;
     final checkTicketController = Get.put(CheckticketController());
     checkTicketController.group.value = group;
     final accesses = await checkTicketController.checkTickets();
     if (accesses.canEnter == true && accesses.canSpeak == true) {
       joiningGroupId.value = '';
-      return accesses;
+      return GroupAccesses(
+          canEnter: accesses.canEnter, canSpeak: accesses.canSpeak);
     } else {
-      final result = await Get.dialog(CheckTicketView());
+      final result = await Get.dialog<GroupAccesses?>(CheckTicketView());
+      log.d(
+          "Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
       Get.delete<CheckticketController>();
       joiningGroupId.value = '';
       return result;
@@ -517,4 +540,13 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
     ),
   );
   return result;
+}
+
+class GroupAccesses {
+  bool canEnter;
+  bool canSpeak;
+  GroupAccesses({
+    required this.canEnter,
+    required this.canSpeak,
+  });
 }

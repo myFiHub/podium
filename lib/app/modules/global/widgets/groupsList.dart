@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
@@ -26,8 +27,7 @@ class GroupList extends StatelessWidget {
         itemBuilder: (context, index) {
           final group = groupsList[index];
           final name = group.name;
-          final amICreator = group.creator.id ==
-              controller.globalController.currentUserInfo.value!.id;
+          final amICreator = group.creator.id == myId;
           String creatorAvatar = group.creator.avatar;
 
           if (creatorAvatar == defaultAvatar) {
@@ -111,12 +111,16 @@ class SingleGroup extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "Created By ${amICreator ? "You" : group.creator.fullName}",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w400,
-                                    color: ColorName.greyText,
+                                Container(
+                                  width: Get.width - 170,
+                                  child: Text(
+                                    "Created By ${amICreator ? "You" : group.creator.fullName}",
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w400,
+                                      color: ColorName.greyText,
+                                    ),
                                   ),
                                 ),
                                 space5,
@@ -274,8 +278,8 @@ class JoiningIndicator extends GetView<GroupsController> {
         return const SizedBox();
       }
       return Positioned(
-        right: 0,
-        bottom: 0,
+        right: Get.width / 2 - 20,
+        bottom: 40,
         child: CircularProgressIndicator(),
       );
     });
@@ -326,7 +330,6 @@ canShareGroupUrl({required FirebaseGroup group}) {
   if (globalController.currentUserInfo.value == null) {
     return false;
   }
-  final myId = globalController.currentUserInfo.value!.id;
   final iAmCreator = group.creator.id == myId;
   if (iAmCreator) {
     return true;
@@ -347,7 +350,6 @@ canArchiveGroup({required FirebaseGroup group}) {
   if (globalController.currentUserInfo.value == null) {
     return false;
   }
-  final myId = globalController.currentUserInfo.value!.id;
   final iAmCreator = group.creator.id == myId;
   return iAmCreator;
 }

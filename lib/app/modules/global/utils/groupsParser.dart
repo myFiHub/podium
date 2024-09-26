@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -80,8 +81,6 @@ FirebaseGroup? singleGroupParser(value) {
 }
 
 groupsParser(data) {
-  final globalController = Get.find<GlobalController>();
-  final myId = globalController.currentUserInfo.value!.id;
   Map<String, FirebaseGroup> groupsMap = {};
   // Iterate through the data
   data.forEach((key, value) {

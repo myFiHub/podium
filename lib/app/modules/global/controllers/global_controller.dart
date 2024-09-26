@@ -12,6 +12,7 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -230,7 +231,7 @@ class GlobalController extends GetxController {
 
   saveUserWalletAddressOnFirebase(String walletAddress) async {
     // final user = FirebaseAuth.instance.currentUser;
-    final userId = currentUserInfo.value!.id;
+    final userId = myId;
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
@@ -278,7 +279,7 @@ class GlobalController extends GetxController {
   Future<bool> removeUserWalletAddressOnFirebase() async {
     try {
       final globalController = Get.find<GlobalController>();
-      final id = globalController.currentUserInfo.value!.id;
+      final id = myId;
       final userId = id;
       final firebaseUserDbReference = FirebaseDatabase.instance
           .ref(FireBaseConstants.usersRef)

@@ -1,22 +1,15 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
-
-class HasAccessTicket {
-  bool canEnter;
-  bool canSpeak;
-  HasAccessTicket({
-    required this.canEnter,
-    required this.canSpeak,
-  });
-}
 
 class TicketSeller {
   final UserInfoModel userInfo;
@@ -24,7 +17,26 @@ class TicketSeller {
   bool boughtTicketToAccess;
   bool buying;
   bool checking;
+  String? speakTicketType;
+  String? accessTicketType;
   final String address;
+
+  get hasSeparateTickets =>
+      speakTicketType != null &&
+      accessTicketType != null &&
+      speakTicketType != accessTicketType;
+
+  get alreadyBoughtRequiredTickets {
+    if (hasSeparateTickets) {
+      return boughtTicketToAccess && boughtTicketToSpeak;
+    } else if (shouldOnlyBuyOneTicket) {
+      return boughtTicketToAccess || boughtTicketToSpeak;
+    }
+    return false;
+  }
+
+  get shouldOnlyBuyOneTicket => !hasSeparateTickets;
+
   TicketSeller({
     required this.userInfo,
     required this.boughtTicketToSpeak,
@@ -32,6 +44,8 @@ class TicketSeller {
     required this.checking,
     required this.address,
     required this.buying,
+    this.speakTicketType,
+    this.accessTicketType,
   });
 }
 
@@ -63,7 +77,7 @@ class CheckticketController extends GetxController
     log.f('CheckticketController closed');
   }
 
-  Future<HasAccessTicket> checkTickets() async {
+  Future<GroupAccesses> checkTickets() async {
     loadingUsers.value = true;
     final requiredTicketsToAccess = group.value!.ticketsRequiredToAccess;
     final requiredTicketsToSpeak = group.value!.ticketsRequiredToSpeak;
@@ -86,10 +100,16 @@ class CheckticketController extends GetxController
       ...usersToBuyTicketFromInOrderToSpeak,
     };
     mergedUsers.forEach((key, value) {
+      final requiredAccessTypeForThisUser =
+          accessIds.contains(key) ? group.value!.accessType : null;
+      final requiredSpeakTypeForThisUser =
+          speakIds.contains(key) ? group.value!.speakerType : null;
       allUsersToBuyTicketFrom.value[key] = TicketSeller(
         userInfo: value,
         boughtTicketToAccess: false,
         boughtTicketToSpeak: false,
+        speakTicketType: requiredSpeakTypeForThisUser,
+        accessTicketType: requiredAccessTypeForThisUser,
         checking: true,
         buying: false,
         address: extractAddressFromUserModel(user: value) ?? '',
@@ -109,8 +129,16 @@ class CheckticketController extends GetxController
     for (var i = 0; i < results.length; i++) {
       final access = results[i];
       final key = allKeys[i];
+
+      final ticketTypeToSpeakForThisSeller =
+          allUsersToBuyTicketFrom.value[key]?.speakTicketType;
+      final ticketTypeToAccessForThisSeller =
+          allUsersToBuyTicketFrom.value[key]?.accessTicketType;
+
       allUsersToBuyTicketFrom.value[key] = TicketSeller(
         userInfo: allUsersToBuyTicketFrom.value[key]!.userInfo,
+        speakTicketType: ticketTypeToSpeakForThisSeller,
+        accessTicketType: ticketTypeToAccessForThisSeller,
         boughtTicketToAccess: access.canEnter,
         boughtTicketToSpeak: access.canSpeak,
         checking: false,
@@ -122,65 +150,164 @@ class CheckticketController extends GetxController
     return checkAccess();
   }
 
-  HasAccessTicket checkAccess() {
+  GroupAccesses checkAccess() {
     final can_not_Speak = allUsersToBuyTicketFrom.value.entries.any(
-      (element) => element.value.boughtTicketToSpeak == false,
+      (element) =>
+          element.value.boughtTicketToSpeak == false &&
+          element.value.speakTicketType != null,
     );
     final can_not_enter = allUsersToBuyTicketFrom.value.entries.any(
-      (element) => element.value.boughtTicketToAccess == false,
+      (element) =>
+          element.value.boughtTicketToAccess == false &&
+          element.value.accessTicketType != null,
     );
     final canEnter = !can_not_enter;
     final canSpeak = !can_not_Speak;
-    return HasAccessTicket(canEnter: canEnter, canSpeak: canSpeak);
+    return GroupAccesses(
+      canEnter: canEnter,
+      canSpeak: isSpeakBuyableByTicket ? canSpeak : canSpeakWithoutATicket,
+    );
   }
 
-  buyTicket({required UserInfoModel userToBuyFrom}) async {
-    try {
-      allUsersToBuyTicketFrom.value[userToBuyFrom.id]!.buying = true;
+  buyTicket({
+    required TicketSeller ticketSeller,
+  }) async {
+    if (ticketSeller.accessTicketType != null &&
+        ticketSeller.speakTicketType != null &&
+        ticketSeller.accessTicketType != ticketSeller.speakTicketType) {
+      log.f('FIXME: we should show a dialog to ask which ticket to buy');
+      Get.snackbar("Update Required", "Please update the app to buy tickets");
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
       allUsersToBuyTicketFrom.refresh();
-      final result = await particle_buySharesWithReferrer(
-        sharesSubject: extractAddressFromUserModel(user: userToBuyFrom) ?? '',
-      );
-      log.d(result);
+      return;
+    }
+    try {
+      if ((group.value!.accessType != RoomAccessTypes.onlyArenaTicketHolders ||
+              group.value!.speakerType !=
+                  RoomSpeakerTypes.onlyArenaTicketHolders) &&
+          isSpeakBuyableByTicket) {
+        log.f('FIXME: add support for other ticket types');
+        Get.snackbar("Update Required", "Please update the app to buy tickets");
+        allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+        allUsersToBuyTicketFrom.refresh();
+        return;
+      }
+      if (ticketSeller.shouldOnlyBuyOneTicket) {
+        final accessType =
+            ticketSeller.accessTicketType ?? ticketSeller.speakTicketType;
+        if (accessType == RoomAccessTypes.onlyArenaTicketHolders) {
+          await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
+        } else {
+          log.f('FIXME: add support for other ticket types');
+          Get.snackbar(
+              "Update Required", "Please update the app to buy tickets");
+          allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying =
+              false;
+          allUsersToBuyTicketFrom.refresh();
+        }
+      }
     } catch (e) {
     } finally {
-      allUsersToBuyTicketFrom.value[userToBuyFrom.id]!.buying = false;
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
       allUsersToBuyTicketFrom.refresh();
     }
   }
 
-  Future<HasAccessTicket> checkIfIveBoughtTheTicketFromUser(
+  Future<bool> buyTicketFromTicketSellerOnArena({
+    required TicketSeller ticketSeller,
+  }) async {
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
+    allUsersToBuyTicketFrom.refresh();
+    final bought = await particle_buySharesWithReferrer(
+      sharesSubject:
+          extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+    );
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+    if (ticketSeller.accessTicketType ==
+        RoomAccessTypes.onlyArenaTicketHolders) {
+      allUsersToBuyTicketFrom
+          .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
+    }
+    if (ticketSeller.speakTicketType ==
+        RoomSpeakerTypes.onlyArenaTicketHolders) {
+      allUsersToBuyTicketFrom
+          .value[ticketSeller.userInfo.id]!.boughtTicketToSpeak = bought;
+    }
+    allUsersToBuyTicketFrom.refresh();
+    return bought;
+  }
+
+  bool get isAccessBuyableByTicket {
+    return accessIsBuyableByTicket(group.value!);
+  }
+
+  bool get isSpeakBuyableByTicket {
+    return speakIsBuyableByTicket(group.value!);
+  }
+
+  bool get canSpeakWithoutATicket {
+    return canISpeak(group: group.value!);
+  }
+
+  Future<GroupAccesses> checkIfIveBoughtTheTicketFromUser(
     String userAddress,
     String userId,
   ) async {
     final myUser = globalController.currentUserInfo.value!;
     if (userId == myUser.id)
-      return HasAccessTicket(canEnter: true, canSpeak: true);
-    HasAccessTicket access = HasAccessTicket(canEnter: false, canSpeak: false);
+      return GroupAccesses(canEnter: true, canSpeak: true);
+    GroupAccesses access = GroupAccesses(canEnter: false, canSpeak: false);
     final List<Future> arrayToCall = [];
-    if (group.value!.accessType == RoomAccessTypes.onlyArenaTicketHolders) {
-      arrayToCall.add(particle_getMyShares(
-        sharesSubject: userAddress,
-      ));
+    if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
+      if (group.value!.accessType == RoomAccessTypes.onlyArenaTicketHolders) {
+        arrayToCall.add(particle_getMyShares(
+          sharesSubject: userAddress,
+        ));
+      } else {
+        log.f('FIXME: add support for other ticket types');
+      }
     }
-    if (group.value!.speakerType == RoomSpeakerTypes.onlyArenaTicketHolders) {
-      arrayToCall.add(particle_getMyShares(
-        sharesSubject: userAddress,
-      ));
+    if (arrayToCall.isEmpty) {
+      arrayToCall.add(Future(() => BigInt.zero));
     }
-    // /////////////////// TODO:FIXME: fix for other tickets
+
+    if (allUsersToBuyTicketFrom.value[userId]?.speakTicketType != null) {
+      if (group.value!.speakerType == RoomSpeakerTypes.onlyArenaTicketHolders) {
+        arrayToCall.add(particle_getMyShares(
+          sharesSubject: userAddress,
+        ));
+      } else {
+        log.f('FIXME: add support for other ticket types');
+      }
+    }
+    if (arrayToCall.length == 1) {
+      arrayToCall.add(Future(() => BigInt.zero));
+    }
+
     final results = await Future.wait(arrayToCall);
     final accessTicket = results[0] as BigInt?;
     if (accessTicket != null && accessTicket > BigInt.zero) {
       access.canEnter = true;
     }
-    if (results.length > 1) {
-      final speakTicket = results[1] as BigInt?;
-      if (speakTicket != null && speakTicket > BigInt.zero) {
-        access.canSpeak = true;
-      }
+    final speakTicket = results[1] as BigInt?;
+    if (speakTicket != null && speakTicket > BigInt.zero) {
+      access.canSpeak = true;
     }
 
     return access;
   }
+}
+
+accessIsBuyableByTicket(FirebaseGroup group) {
+  final groupAccessType = group.accessType;
+  return groupAccessType == RoomAccessTypes.onlyArenaTicketHolders ||
+      groupAccessType == RoomAccessTypes.onlyFriendTechTicketHolders ||
+      groupAccessType == RoomAccessTypes.onlyPodiumPassHolders;
+}
+
+speakIsBuyableByTicket(FirebaseGroup group) {
+  final groupSpeakType = group.speakerType;
+  return groupSpeakType == RoomSpeakerTypes.onlyArenaTicketHolders ||
+      groupSpeakType == RoomSpeakerTypes.onlyFriendTechTicketHolders ||
+      groupSpeakType == RoomSpeakerTypes.onlyPodiumPassHolders;
 }

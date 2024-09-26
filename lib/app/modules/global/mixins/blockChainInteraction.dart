@@ -239,7 +239,7 @@ mixin BlockChainInteractions {
     }
   }
 
-  particle_buySharesWithReferrer({
+  Future<bool> particle_buySharesWithReferrer({
     String referrer = ZERO_ADDRESS,
     required String sharesSubject,
     num shareAmount = 1,
@@ -249,7 +249,7 @@ mixin BlockChainInteractions {
       shareAmount: shareAmount,
     );
     if (buyPrice == null) {
-      return null;
+      return false;
     }
     final sharesSubjectWallet = sharesSubject;
     final myAddress = await Evm.getAddress();
@@ -273,13 +273,19 @@ mixin BlockChainInteractions {
         gasFeeLevel: GasFeeLevel.high,
       );
       final signature = await Evm.sendTransaction(transaction);
-      return signature;
+      if (signature.length > 10) {
+        return true;
+      }
+      return false;
     } catch (e) {
       log.e('error : $e ${((e as dynamic).data)}');
-      if (e.toString().toLowerCase().contains('insufficient funds')) {
+      if (e.toString().toLowerCase().contains('fund')) {
+        final selectedChain = await ParticleBase.getChainInfo();
+        final selectedChainName = selectedChain.name;
+        final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
         Get.snackbar(
-          "Error:Insufficient funds",
-          "Please top up your wallet",
+          "Error:Insufficient $selectedChainCurrency",
+          "Please top up your wallet on $selectedChainName",
           colorText: Colors.red,
           mainButton: TextButton(
             onPressed: () {
@@ -295,7 +301,7 @@ mixin BlockChainInteractions {
           colorText: Colors.red,
         );
       }
-      return null;
+      return false;
     }
   }
 }

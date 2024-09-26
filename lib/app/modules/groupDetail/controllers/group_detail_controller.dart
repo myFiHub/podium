@@ -3,6 +3,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -18,6 +19,7 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
   final isGettingMembers = false.obs;
   final group = Rxn<FirebaseGroup>();
+  final groupAccesses = Rxn<GroupAccesses>();
   final membersList = Rx<List<UserInfoModel>>([]);
   final isGettingGroupInfo = false.obs;
   final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
@@ -89,10 +91,11 @@ class GroupDetailController extends GetxController with FireBaseUtils {
     isGettingMembers.value = false;
   }
 
-  startTheCall() {
+  startTheCall({required GroupAccesses accesses}) {
     final groupCallController = Get.find<GroupCallController>();
     groupCallController.startCall(
       groupToJoin: group.value!,
+      accessOverRides: accesses,
     );
   }
 
@@ -117,11 +120,8 @@ class GroupDetailController extends GetxController with FireBaseUtils {
         //         (element) => !liveInvitedMemberIds.value.contains(element.id))
         //     .toList();
         // remove my user from the list
-        final filteredList3 = filteredList
-            .where((element) =>
-                element.id !=
-                Get.find<GlobalController>().currentUserInfo.value!.id)
-            .toList();
+        final filteredList3 =
+            filteredList.where((element) => element.id != myId).toList();
         listOfSearchedUsersToInvite.value = filteredList3;
       }
     });

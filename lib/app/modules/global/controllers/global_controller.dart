@@ -155,14 +155,15 @@ class GlobalController extends GetxController {
       final currentChainId = web3ModalService.selectedChain?.chainId;
       if (currentChainId == chainId) {
         success = true;
-      }
-      await web3ModalService.selectChain(chain);
-      final selectedChainId = web3ModalService.selectedChain?.chainId;
-      if (selectedChainId != null && selectedChainId.isNotEmpty) {
-        externalWalletChainId.value = selectedChainId;
-        success = true;
       } else {
-        success = false;
+        await web3ModalService.selectChain(chain);
+        final selectedChainId = web3ModalService.selectedChain?.chainId;
+        if (selectedChainId != null && selectedChainId.isNotEmpty) {
+          externalWalletChainId.value = selectedChainId;
+          success = true;
+        } else {
+          success = false;
+        }
       }
     } catch (e) {
       log.e("error switching chain $e");

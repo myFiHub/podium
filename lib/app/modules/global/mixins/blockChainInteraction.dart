@@ -51,13 +51,14 @@ mixin BlockChainInteractions {
     if (selectedChain == null) {
       return;
     } else if (selectedChain.chainId != '30732') {
-      await Get.snackbar("Not supported on ${selectedChain.name}",
+      Get.snackbar("Not supported on ${selectedChain.name}",
           'Switch external wallet to Movement please');
       // final switched =
       //     await globalController.switchExternalWalletChain('30732');
       // if (!switched) {
       //   return;
       // }
+      return;
     }
     final transaction = Transaction(
       from: parsAddress(service.session!.address!),

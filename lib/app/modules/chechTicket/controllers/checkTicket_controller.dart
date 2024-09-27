@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -184,7 +185,7 @@ class CheckticketController extends GetxController
           element.value.accessTicketType != null,
     );
     final accessResult = GroupAccesses(
-      canEnter: canEnter,
+      canEnter: isAccessBuyableByTicket ? canEnter : canEnterWithoutTicket,
       canSpeak: isSpeakBuyableByTicket ? canSpeak : canSpeakWithoutATicket,
     );
     return accessResult;
@@ -203,10 +204,10 @@ class CheckticketController extends GetxController
       return;
     }
     try {
-      if ((group.value!.accessType != RoomAccessTypes.onlyArenaTicketHolders ||
-              group.value!.speakerType !=
-                  RoomSpeakerTypes.onlyArenaTicketHolders) &&
-          isSpeakBuyableByTicket) {
+      if (((group.value!.accessType != RoomAccessTypes.onlyArenaTicketHolders &&
+              isAccessBuyableByTicket) ||
+          group.value!.speakerType != RoomSpeakerTypes.onlyArenaTicketHolders &&
+              isSpeakBuyableByTicket)) {
         log.f('FIXME: add support for other ticket types');
         Get.snackbar("Update Required", "Please update the app to buy tickets");
         allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
@@ -214,9 +215,10 @@ class CheckticketController extends GetxController
         return;
       }
       if (ticketSeller.shouldOnlyBuyOneTicket) {
-        final accessType =
+        final ticketAccessType =
             ticketSeller.accessTicketType ?? ticketSeller.speakTicketType;
-        if (accessType == RoomAccessTypes.onlyArenaTicketHolders) {
+
+        if (ticketAccessType == RoomAccessTypes.onlyArenaTicketHolders) {
           await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
         } else {
           log.f('FIXME: add support for other ticket types');
@@ -237,12 +239,27 @@ class CheckticketController extends GetxController
   Future<bool> buyTicketFromTicketSellerOnArena({
     required TicketSeller ticketSeller,
   }) async {
+    final selectedWallet = await choseAWallet();
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
-    final bought = await particle_buySharesWithReferrer(
-      sharesSubject:
-          extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
-    );
+    if (selectedWallet == null) {
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+      allUsersToBuyTicketFrom.refresh();
+      return false;
+    }
+    bool bought = false;
+    if (selectedWallet == WalletNames.particle) {
+      bought = await particle_buySharesWithReferrer(
+        sharesSubject:
+            extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+      );
+    } else {
+      bought = await ext_buySharesWithReferrer(
+        sharesSubject:
+            extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+      );
+      log.d('bought: $bought');
+    }
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
     if (ticketSeller.accessTicketType ==
         RoomAccessTypes.onlyArenaTicketHolders) {
@@ -268,6 +285,11 @@ class CheckticketController extends GetxController
 
   bool get canSpeakWithoutATicket {
     return canISpeak(group: group.value!);
+  }
+
+  bool get canEnterWithoutTicket {
+    final g = group.value!;
+    return canEnterWithoutATicket(g);
   }
 
   Future<GroupAccesses> checkIfIveBoughtTheTicketFromUser(
@@ -331,4 +353,25 @@ speakIsBuyableByTicket(FirebaseGroup group) {
   return groupSpeakType == RoomSpeakerTypes.onlyArenaTicketHolders ||
       groupSpeakType == RoomSpeakerTypes.onlyFriendTechTicketHolders ||
       groupSpeakType == RoomSpeakerTypes.onlyPodiumPassHolders;
+}
+
+canEnterWithoutATicket(FirebaseGroup group) {
+  final globalController = Get.find<GlobalController>();
+  final g = group;
+  final amIInvited = g.invitedMembers[myId] != null;
+  final link = globalController.deepLinkRoute;
+  final cameHereByLink = g.accessType == RoomAccessTypes.onlyLink &&
+      link != null &&
+      link.isNotEmpty &&
+      link.contains(g.id);
+  if (g.accessType == RoomAccessTypes.onlyLink) {
+    return cameHereByLink;
+  }
+  if (g.accessType == RoomAccessTypes.invitees) {
+    return amIInvited;
+  }
+  if (g.accessType == RoomAccessTypes.public) {
+    return true;
+  }
+  return false;
 }

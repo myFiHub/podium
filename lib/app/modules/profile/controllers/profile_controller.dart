@@ -44,25 +44,17 @@ class ProfileController extends GetxController with BlockChainInteractions {
   buyTicket() async {
     try {
       isBuyingTicket.value = true;
-      final String? result = await ext_buySharesWithReferrer(
+      final bool result = await ext_buySharesWithReferrer(
         sharesSubject: extractAddressFromUserModel(user: userInfo.value!) ?? '',
         shareAmount: 1,
-        value: ticketPriceFor1Share.value,
       );
-      if (result != null) {
-        if (result.startsWith("0x")) {
-          Get.snackbar(
-            'Success',
-            "ticket bought",
-            colorText: Colors.green,
-          );
-        } else {
-          Get.snackbar(
-            'Error',
-            "Error buying ticket",
-            colorText: ColorName.white,
-          );
-        }
+
+      if (result) {
+        Get.snackbar(
+          'Success',
+          "ticket bought",
+          colorText: Colors.green,
+        );
       } else {
         Get.snackbar(
           'Error',

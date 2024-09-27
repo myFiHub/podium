@@ -65,8 +65,10 @@ class EnterButton extends GetView<CheckticketController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final canEnter = controller.allUsersToBuyTicketFrom.value.values.any(
-          (element) =>
-              element.boughtTicketToAccess && element.accessTicketType != null);
+              (element) =>
+                  element.boughtTicketToAccess &&
+                  element.accessTicketType != null) ||
+          controller.canEnterWithoutTicket;
 
       final canSpeak = controller.allUsersToBuyTicketFrom.value.values.any(
           (element) =>

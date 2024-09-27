@@ -11,7 +11,7 @@ String get myId {
   return myUser.id;
 }
 
-String? get connectedWalletAddress {
+String? get externalWalletAddress {
   final GlobalController globalController = Get.find();
   final address = globalController.connectedWalletAddress.value;
   if (address.isEmpty) {

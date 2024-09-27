@@ -667,6 +667,8 @@ class GlobalController extends GetxController {
     final removed = await removeUserWalletAddressOnFirebase();
     if (removed) {
       web3ModalService.disconnect();
+      storage.remove(StorageKeys.externalWalletChainId);
+      storage.remove(StorageKeys.selectedWalletName);
     }
     analytics.logEvent(
       name: 'wallet_disconnected',

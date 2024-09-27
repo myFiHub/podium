@@ -5,15 +5,21 @@ import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/proxy.dart';
 import 'package:podium/contracts/starsArena.dart';
+import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:particle_base/particle_base.dart';
+import 'package:podium/utils/storage.dart';
+import 'package:podium/utils/styles.dart';
+import 'package:podium/widgets/button/button.dart';
 
 import 'package:reown_appkit/reown_appkit.dart';
 
@@ -111,6 +117,7 @@ mixin BlockChainInteractions {
           BigInt.from(shareAmount),
         ],
       );
+      log.d('response: $response');
       final res = response[0] as BigInt;
       return res;
     } catch (e) {
@@ -153,7 +160,6 @@ mixin BlockChainInteractions {
     final parameters = [sharesSubjectWallet];
     const abiJson = StarsArenaSmartContract.abi;
     final abiJsonString = jsonEncode(abiJson);
-    final externalWalletAddress = connectedWalletAddress;
     try {
       final results = await Future.wait([
         EvmService.readContract(
@@ -164,9 +170,9 @@ mixin BlockChainInteractions {
           parameters,
           abiJsonString,
         ),
-        if (externalWalletAddress != null)
+        if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty)
           EvmService.readContract(
-            externalWalletAddress,
+            externalWalletAddress!,
             BigInt.zero,
             contractAddress,
             methodName,
@@ -187,12 +193,18 @@ mixin BlockChainInteractions {
     }
   }
 
-  ext_buySharesWithReferrer({
+  Future<bool> ext_buySharesWithReferrer({
     String referrer = ZERO_ADDRESS,
     required String sharesSubject,
-    required num shareAmount,
-    required num value,
-  }) {
+    num shareAmount = 1,
+  }) async {
+    final bigIntValue = await ext_getBuyPrice(
+        sharesSubject: sharesSubject, shareAmount: shareAmount);
+    if (bigIntValue == null) {
+      return false;
+    }
+    final value = bigIntValue.toInt();
+
     final globalController = Get.find<GlobalController>();
     final service = globalController.web3ModalService;
     final transaction = Transaction(
@@ -204,7 +216,7 @@ mixin BlockChainInteractions {
     final sharesSubjectWallet = parsAddress(sharesSubject);
     service.launchConnectedWallet();
     try {
-      final response = service.requestWriteContract(
+      final response = await service.requestWriteContract(
         topic: service.session!.topic,
         chainId: service.selectedChain!.chainId,
         deployedContract: starsArenaContract,
@@ -216,10 +228,14 @@ mixin BlockChainInteractions {
           referrerWallet,
         ],
       );
-      return response;
+      final success = response != null &&
+          response is String &&
+          response.startsWith("0x") &&
+          response.length > 10;
+      return success;
     } catch (e) {
       log.e('error : $e');
-      return null;
+      return false;
     }
   }
 
@@ -387,3 +403,122 @@ void _copyToClipboard(String text, {String? prefix}) {
 }
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+class WalletNames {
+  static const particle = "Particle Wallet";
+  static const external = "External Wallet";
+}
+
+Future<String?> choseAWallet() async {
+  if (externalWalletAddress == null) {
+    return WalletNames.particle;
+  }
+  if (externalWalletAddress!.isEmpty) {
+    return WalletNames.particle;
+  }
+  final store = GetStorage();
+  final savedWallet = store.read(StorageKeys.selectedWalletName);
+  if (savedWallet != null) {
+    return savedWallet;
+  }
+  final selectedWallet = await Get.dialog(
+    barrierDismissible: true,
+    AlertDialog(
+      title: Text("Choose a wallet"),
+      backgroundColor: ColorName.cardBackground,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Button(
+              text: "Particle Wallet",
+              type: ButtonType.outline,
+              color: ColorName.primaryBlue,
+              blockButton: true,
+              icon: Assets.images.particleIcon.image(
+                width: 20,
+                height: 20,
+              ),
+              onPressed: () {
+                final shouldRemember = store.read("rememberWallet") ?? false;
+                if (shouldRemember) {
+                  store.write(
+                      StorageKeys.selectedWalletName, WalletNames.particle);
+                }
+                Navigator.pop(Get.overlayContext!, WalletNames.particle);
+              }),
+          space10,
+          Button(
+              text: "External Wallet",
+              type: ButtonType.outline,
+              color: ColorName.primaryBlue,
+              blockButton: true,
+              onPressed: () {
+                final shouldRemember = store.read("rememberWallet") ?? false;
+                if (shouldRemember) {
+                  store.write(
+                      StorageKeys.selectedWalletName, WalletNames.external);
+                }
+                Navigator.pop(Get.overlayContext!, WalletNames.external);
+              }),
+          space10,
+          // remember my choice
+          RememberCheckBox(),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(Get.overlayContext!, null);
+                },
+                child: Text("Cancel"),
+              ),
+            ],
+          )
+        ],
+      ),
+    ),
+  );
+  return selectedWallet;
+}
+
+class RememberCheckBox extends StatefulWidget {
+  const RememberCheckBox({super.key});
+
+  @override
+  State<RememberCheckBox> createState() => _RememberCheckBoxState();
+}
+
+class _RememberCheckBoxState extends State<RememberCheckBox> {
+  bool value = false;
+  @override
+  Widget build(BuildContext context) {
+    final store = GetStorage();
+    final savedValue = store.read("rememberWallet");
+    if (savedValue != null && savedValue is bool && savedValue != value) {
+      value = savedValue;
+    }
+    return GestureDetector(
+      onTap: () {
+        store.write("rememberWallet", !value);
+        setState(() {
+          value = !value;
+        });
+      },
+      child: Row(
+        children: [
+          Checkbox(
+            value: value,
+            onChanged: (value) {
+              store.write("rememberWallet", value);
+              setState(() {
+                this.value = value!;
+              });
+            },
+          ),
+          Text("Remember my choice"),
+        ],
+      ),
+    );
+  }
+}

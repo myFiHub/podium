@@ -59,6 +59,11 @@ class BlockChainUtils {
     void _onModalNetworkChange(ModalNetworkChange? event) {
       log.i(
           '[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
+      if (event != null) {
+        GlobalController globalController = Get.find<GlobalController>();
+        globalController.externalWalletChainId.value = event.chainId;
+        globalController.switchExternalWalletChain(event.chainId);
+      }
     }
 
     void _onModalDisconnect(ModalDisconnect? event) {

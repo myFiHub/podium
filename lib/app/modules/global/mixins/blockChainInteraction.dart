@@ -14,7 +14,6 @@ import 'package:podium/contracts/proxy.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:particle_base/particle_base.dart';
 import 'package:podium/utils/storage.dart';
@@ -47,6 +46,19 @@ mixin BlockChainInteractions {
   }) async {
     final globalController = Get.find<GlobalController>();
     final service = globalController.web3ModalService;
+    final selectedChain = globalController.web3ModalService.selectedChain;
+
+    if (selectedChain == null) {
+      return;
+    } else if (selectedChain.chainId != '30732') {
+      await Get.snackbar("Not supported on ${selectedChain.name}",
+          'Switch external wallet to Movement please');
+      // final switched =
+      //     await globalController.switchExternalWalletChain('30732');
+      // if (!switched) {
+      //   return;
+      // }
+    }
     final transaction = Transaction(
       from: parsAddress(service.session!.address!),
       value: parseValue(amount),

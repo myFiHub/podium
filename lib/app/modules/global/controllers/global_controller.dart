@@ -71,8 +71,12 @@ class GlobalController extends GetxController {
   final isFirebaseInitialized = false.obs;
   String? deepLinkRoute = null;
 
-  final particleWalletChainId = Env.initialParticleWalletChainId.obs;
-  final externalWalletChainId = Env.initialExternalWalletChainId.obs;
+  final particleWalletChainId = RxString(
+      (storage.read(StorageKeys.externalWalletChainId) ??
+          Env.initialParticleWalletChainId));
+  final externalWalletChainId = RxString(
+      (storage.read(StorageKeys.externalWalletChainId) ??
+          Env.initialExternalWalletChainId));
 
   final connectionCheckerInstance = InternetConnection.createInstance(
     checkInterval: const Duration(seconds: 5),
@@ -138,27 +142,38 @@ class GlobalController extends GetxController {
   }
 
   Future<bool> switchExternalWalletChain(String chainId) async {
+    bool success = false;
     final chain = ReownAppKitModalNetworks.getNetworkById(
       Env.chainNamespace,
       chainId,
     );
     if (chain == null) {
       log.e("chain not found");
-      return false;
+      success = false;
     }
     try {
+      final currentChainId = web3ModalService.selectedChain?.chainId;
+      if (currentChainId == chainId) {
+        success = true;
+      }
       await web3ModalService.selectChain(chain);
       final selectedChainId = web3ModalService.selectedChain?.chainId;
       if (selectedChainId != null && selectedChainId.isNotEmpty) {
         externalWalletChainId.value = selectedChainId;
-        return true;
+        success = true;
       } else {
-        return false;
+        success = false;
       }
     } catch (e) {
       log.e("error switching chain $e");
-      return false;
+      success = false;
     }
+    if (success) {
+      storage.write(StorageKeys.externalWalletChainId, chainId);
+    } else {
+      storage.remove(StorageKeys.externalWalletChainId);
+    }
+    return success;
   }
 
   Future<bool> switchParticleWalletChain(String chainId) async {
@@ -172,11 +187,19 @@ class GlobalController extends GetxController {
     );
     if (chain == null) {
       log.e("chain not found");
+      storage.remove(StorageKeys.particleWalletChainId);
       return false;
     }
-    await ParticleBase.ParticleBase.setChainInfo(chain);
+    final done = await ParticleBase.ParticleBase.setChainInfo(chain);
+    if (!done) {
+      log.e("error switching chain");
+      storage.remove(StorageKeys.particleWalletChainId);
+      return false;
+    }
     final selectedChainId = ParticleBase.ParticleBase.getChainId();
     particleWalletChainId.value = selectedChainId.toString();
+    storage.write(
+        StorageKeys.particleWalletChainId, selectedChainId.toString());
     return true;
   }
 

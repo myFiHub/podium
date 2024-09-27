@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
 const navbarHeight = 60.0;
@@ -69,8 +70,9 @@ class PodiumNavbar extends GetView<GlobalController> {
           height: 0,
         );
       }
+      final bottomSpace = MediaQuery.of(context).viewInsets.bottom;
       return Container(
-        height: navbarHeight,
+        height: bottomSpace == 0 ? navbarHeight : 0,
         color: ColorName.navbarBackground,
         child: BottomNav(
           activeRoute: activeRoute,

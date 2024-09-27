@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
@@ -92,7 +93,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                    """each ${Env.minimumCheerBooAmount} ${ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, Env.chainId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} ${Env.cheerBooTimeMultiplication} seconds ${widget.isCheer ? "to" : "from"} 
+                    """each ${Env.minimumCheerBooAmount} ${ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, externalWalletChianId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} ${Env.cheerBooTimeMultiplication} seconds ${widget.isCheer ? "to" : "from"} 
                    that user's time""",
                     style: TextStyle(
                       fontSize: 16,

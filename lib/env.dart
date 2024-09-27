@@ -1,5 +1,9 @@
 class Env {
-  static const chainId = String.fromEnvironment("chainId");
+  static const initialExternalWalletChainId =
+      String.fromEnvironment("initialExternalWalletChainId");
+  static const initialParticleWalletChainId =
+      String.fromEnvironment("initialParticleWalletChainId");
+
   static const starsArenaAddress = String.fromEnvironment("starsArenaAddress");
   static const proxyAddress = String.fromEnvironment("proxyAddress");
   static const cheerBooAddress = String.fromEnvironment("cheerBooAddress");

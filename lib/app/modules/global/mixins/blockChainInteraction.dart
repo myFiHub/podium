@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/proxy.dart';
 import 'package:podium/contracts/starsArena.dart';
@@ -152,19 +153,34 @@ mixin BlockChainInteractions {
     final parameters = [sharesSubjectWallet];
     const abiJson = StarsArenaSmartContract.abi;
     final abiJsonString = jsonEncode(abiJson);
-
+    final externalWalletAddress = connectedWalletAddress;
     try {
-      final result = await EvmService.readContract(
-        myAddress,
-        BigInt.zero,
-        contractAddress,
-        methodName,
-        parameters,
-        abiJsonString,
-      );
-      if (result != null) {
-        return BigInt.parse(result);
+      final results = await Future.wait([
+        EvmService.readContract(
+          myAddress,
+          BigInt.zero,
+          contractAddress,
+          methodName,
+          parameters,
+          abiJsonString,
+        ),
+        if (externalWalletAddress != null)
+          EvmService.readContract(
+            externalWalletAddress,
+            BigInt.zero,
+            contractAddress,
+            methodName,
+            parameters,
+            abiJsonString,
+          ),
+      ]);
+      BigInt sum = BigInt.zero;
+      for (var result in results) {
+        if (result != null) {
+          sum += BigInt.parse(result);
+        }
       }
+      return sum;
     } catch (e) {
       log.e('error : $e');
       return null;

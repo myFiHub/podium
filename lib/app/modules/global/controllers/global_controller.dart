@@ -56,8 +56,6 @@ class GlobalController extends GetxController {
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
-  final userBalance = ''.obs;
-  final connectedChainId = ''.obs;
   final jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
   final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
@@ -72,6 +70,9 @@ class GlobalController extends GetxController {
   final isLoggingOut = false.obs;
   final isFirebaseInitialized = false.obs;
   String? deepLinkRoute = null;
+
+  final particleWalletChainId = Env.initialParticleWalletChainId.obs;
+  final externalWalletChainId = Env.initialExternalWalletChainId.obs;
 
   final connectionCheckerInstance = InternetConnection.createInstance(
     checkInterval: const Duration(seconds: 5),
@@ -136,13 +137,64 @@ class GlobalController extends GetxController {
     initializedOnce.value = true;
   }
 
+  Future<bool> switchExternalWalletChain(String chainId) async {
+    final chain = ReownAppKitModalNetworks.getNetworkById(
+      Env.chainNamespace,
+      chainId,
+    );
+    if (chain == null) {
+      log.e("chain not found");
+      return false;
+    }
+    try {
+      await web3ModalService.selectChain(chain);
+      final selectedChainId = web3ModalService.selectedChain?.chainId;
+      if (selectedChainId != null && selectedChainId.isNotEmpty) {
+        externalWalletChainId.value = selectedChainId;
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      log.e("error switching chain $e");
+      return false;
+    }
+  }
+
+  Future<bool> switchParticleWalletChain(String chainId) async {
+    final chain = ChainInfo.ChainInfo.getChain(
+      int.parse(chainId),
+      ReownAppKitModalNetworks.getNetworkById(
+        Env.chainNamespace,
+        chainId,
+      )!
+          .name,
+    );
+    if (chain == null) {
+      log.e("chain not found");
+      return false;
+    }
+    await ParticleBase.ParticleBase.setChainInfo(chain);
+    final selectedChainId = ParticleBase.ParticleBase.getChainId();
+    particleWalletChainId.value = selectedChainId.toString();
+    return true;
+  }
+
+  get particleEnvironment {
+    return Env.environment == DEV
+        ? ParticleBase.Env.dev
+        : Env.environment == STAGE
+            ? ParticleBase.Env.staging
+            : ParticleBase.Env.production;
+  }
+
   Future<void> initializeParticleAuth() async {
     try {
-      final chainId = Env.chainId;
+      final chainId = particleWalletChainId.value;
       final chainName =
           ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
               .name;
-      final particleChain = Env.chainId == '30732'
+      final particleChain = particleWalletChainId == '30732'
           ? movementChainOnParticle
           : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
       if (particleChain == null) {
@@ -156,11 +208,6 @@ class GlobalController extends GetxController {
         log.f("particle auth not initialized");
         return Future.error("unhandled environment");
       }
-      final environment = Env.environment == DEV
-          ? ParticleBase.Env.dev
-          : Env.environment == STAGE
-              ? ParticleBase.Env.staging
-              : ParticleBase.Env.production;
 
       log.i("##########initializing ParticleAuth");
       ParticleBase.ParticleInfo.set(
@@ -170,7 +217,7 @@ class GlobalController extends GetxController {
 
       ParticleBase.ParticleBase.init(
         particleChain,
-        environment,
+        particleEnvironment,
       );
       log.i('##########particle auth initialized');
       return Future.value();

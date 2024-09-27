@@ -10,3 +10,22 @@ UserInfoModel get myUser {
 String get myId {
   return myUser.id;
 }
+
+String? get connectedWalletAddress {
+  final GlobalController globalController = Get.find();
+  final address = globalController.connectedWalletAddress.value;
+  if (address.isEmpty) {
+    return null;
+  }
+  return address;
+}
+
+get externalWalletChianId {
+  final GlobalController globalController = Get.find();
+  return globalController.externalWalletChainId.value;
+}
+
+get particleCianId {
+  final GlobalController globalController = Get.find();
+  return globalController.particleWalletChainId.value;
+}

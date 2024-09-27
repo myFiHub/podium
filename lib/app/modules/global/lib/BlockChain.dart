@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:particle_base/model/chain_info.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
@@ -122,7 +123,7 @@ class BlockChainUtils {
     try {
       await _w3mService.init();
       _startListeningToCheerBoEvents();
-      const chainId = Env.chainId;
+      final chainId = externalWalletChianId;
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
         await _w3mService.selectChain(
@@ -146,7 +147,7 @@ class BlockChainUtils {
     }
     final session = _w3mService.session!;
     final accounts = session.getAccounts();
-    final currentNamespace = '${Env.chainNamespace}:${Env.chainId}';
+    final currentNamespace = '${Env.chainNamespace}:${externalWalletChianId}';
     if (accounts != null && accounts.isNotEmpty) {
       final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
       if (chainsNamespaces.contains(currentNamespace)) {
@@ -183,7 +184,7 @@ class BlockChainUtils {
 Stream<FilterEvent> _getContractEventListener({
   required DeployedContract contract,
   required String eventName,
-  chainId = Env.chainId,
+  chainId = Env.initialExternalWalletChainId,
 }) {
   final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace,
       chainId)!; // final GlobalController globalController = Get.find<GlobalController>();

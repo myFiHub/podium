@@ -65,7 +65,7 @@ class PodiumNavbar extends GetView<GlobalController> {
       final loggedIn = controller.loggedIn.value;
       final activeRoute = controller.activeRoute.value;
       if (_routesWithoutNavbar.contains(activeRoute) || loggedIn == false) {
-        return Container(
+        return SizedBox(
           height: 0,
         );
       }

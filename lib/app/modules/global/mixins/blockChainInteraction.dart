@@ -40,9 +40,9 @@ mixin BlockChainInteractions {
     final selectedChain = globalController.web3ModalService.selectedChain;
 
     if (selectedChain == null) {
-      return;
+      return null;
     } else if (cheerBooAddress == ZERO_ADDRESS) {
-      return;
+      return null;
     }
 
     final transaction = Transaction(
@@ -52,11 +52,6 @@ mixin BlockChainInteractions {
     final targetWallet = parsAddress(target);
     final receivers = receiverAddresses.map((e) => parsAddress(e)).toList();
 
-    final cheerBooContract = getContract(
-      abi: CheerBoo.abi,
-      address: cheerBooAddress,
-      name: "CheerBoo",
-    );
     service.launchConnectedWallet();
 
     try {
@@ -110,11 +105,7 @@ mixin BlockChainInteractions {
     if (starsArenaAddress == ZERO_ADDRESS) {
       return null;
     }
-    final starsArenaContract = getContract(
-      abi: StarsArenaSmartContract.abi,
-      address: starsArenaAddress,
-      name: "StarsArena",
-    );
+
     // service.launchConnectedWallet();
     try {
       final sharesSubjectWallet = parsAddress(sharesSubject);
@@ -146,11 +137,7 @@ mixin BlockChainInteractions {
     if (starsArenaAddress == ZERO_ADDRESS) {
       return null;
     }
-    final starsArenaContract = getContract(
-      abi: StarsArenaSmartContract.abi,
-      address: starsArenaAddress,
-      name: "StarsArena",
-    );
+
     try {
       final response = await service.requestReadContract(
         deployedContract: starsArenaContract,
@@ -237,11 +224,6 @@ mixin BlockChainInteractions {
     if (starsArenaAddress == ZERO_ADDRESS) {
       return false;
     }
-    final starsArenaContract = getContract(
-      abi: StarsArenaSmartContract.abi,
-      address: starsArenaAddress,
-      name: "StarsArena",
-    );
 
     final referrerWallet = parsAddress(referrer);
     final sharesSubjectWallet = parsAddress(sharesSubject);
@@ -464,6 +446,14 @@ String get starsArenaAddress {
   return address;
 }
 
+DeployedContract get starsArenaContract {
+  return getContract(
+    abi: StarsArenaSmartContract.abi,
+    address: starsArenaAddress,
+    name: "StarsArena",
+  );
+}
+
 String get cheerBooAddress {
   final address = Environment.Env.cheerBooAddress(externalWalletChianId);
   if (address == null || address.isEmpty) {
@@ -475,6 +465,14 @@ String get cheerBooAddress {
     return ZERO_ADDRESS;
   }
   return address;
+}
+
+get cheerBooContract {
+  return getContract(
+    abi: CheerBoo.abi,
+    address: cheerBooAddress,
+    name: "CheerBoo",
+  );
 }
 
 class WalletNames {

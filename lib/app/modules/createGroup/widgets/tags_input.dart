@@ -72,12 +72,20 @@ class _DynamicTagsState extends State<DynamicTags> {
                 vertical: 22.0,
               ),
               border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderRadius: BorderRadius.all(Radius.circular(8)),
                 // borderSide: BorderSide(
                 //   width: 1.0,
                 // ),
               ),
+              enabledBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+                borderSide: BorderSide(
+                  width: 1.0,
+                  color: ColorName.pageBackground,
+                ),
+              ),
               focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8)),
                 borderSide: BorderSide(
                   color: ColorName.secondaryBlue,
                   width: 1.0,

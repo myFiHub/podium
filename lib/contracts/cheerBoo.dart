@@ -1,7 +1,7 @@
 import 'package:podium/env.dart';
 
 class CheerBoo {
-  static const address = Env.cheerBooAddress;
+  static const address = Env.cheerBooAddress_Movement_Devnet;
   static const abi = [
     {
       "anonymous": false,

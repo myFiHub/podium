@@ -171,7 +171,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ),
           );
         },
-
         binds: globalBindings,
         debugShowCheckedModeBanner: false,
         initialRoute: AppPages.INITIAL,

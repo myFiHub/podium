@@ -1,7 +1,7 @@
 import 'package:podium/env.dart';
 
 class StarsArenaSmartContract {
-  static const String address = Env.starsArenaAddress;
+  static const String address = Env.starsArenaAddress_Avalanche_Mainnet;
   static const abi = [
     {
       "anonymous": false,

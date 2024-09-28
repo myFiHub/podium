@@ -78,7 +78,7 @@ class ProfileController extends GetxController with BlockChainInteractions {
       if (user != null &&
           // ignore: unnecessary_null_comparison
           !connectedWalletAddress.isEmpty) {
-        final price = await ext_getBuyPrice(
+        final price = await particle_getBuyPrice(
           sharesSubject: extractAddressFromUserModel(user: user) ?? '',
           shareAmount: 1,
         );

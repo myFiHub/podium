@@ -208,14 +208,14 @@ class BlockChainUtils {
 
   static _startListeningToCheerBoEvents() {
     ////
-    final cheerEventToListenTo = _getContractEventListener(
-        contract: cheerBooContract, eventName: 'Cheer');
+    // final cheerEventToListenTo = _getContractEventListener(
+    //     contract: cheerBooContract, eventName: 'Cheer');
     // cheerEventToListenTo.take(1).listen((event) {
     //   log.i('^^^^^^^^^^^^^^^^^^^^Cheer event: $event^^^^^^^^^^^^^^^^^^^');
     // });
     ////
-    final booEventToListenTo =
-        _getContractEventListener(contract: cheerBooContract, eventName: 'Boo');
+    // final booEventToListenTo =
+    //     _getContractEventListener(contract: cheerBooContract, eventName: 'Boo');
     // booEventToListenTo.take(1).listen((event) {
     //   log.i('^^^^^^^^^^^^^^^Boo event: $event^^^^^^^^^^^^^^^^^^^^^');
     // });

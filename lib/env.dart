@@ -1,12 +1,17 @@
+import 'dart:convert';
+
 class Env {
   static const initialExternalWalletChainId =
       String.fromEnvironment("initialExternalWalletChainId");
   static const initialParticleWalletChainId =
       String.fromEnvironment("initialParticleWalletChainId");
 
-  static const starsArenaAddress = String.fromEnvironment("starsArenaAddress");
-  static const proxyAddress = String.fromEnvironment("proxyAddress");
-  static const cheerBooAddress = String.fromEnvironment("cheerBooAddress");
+  static const starsArenaAddress_Avalanche_Mainnet =
+      String.fromEnvironment("starsArenaAddress_Avalanche_Mainnet");
+  static const starsArenaProxyAddress_Avalanche_Mainnet =
+      String.fromEnvironment("starsArenaProxyAddress_Avalanche_Mainnet");
+  static const cheerBooAddress_Movement_Devnet =
+      String.fromEnvironment("cheerBooAddress_Movement_Devnet");
   static const minimumCheerBooAmount =
       String.fromEnvironment("minimumCheerBooAmount");
   static const cheerBooTimeMultiplication =
@@ -23,8 +28,47 @@ class Env {
   static const appStoreUrl = String.fromEnvironment("appStoreUrl");
   static const baseDeepLinkUrl = String.fromEnvironment("baseDeepLinkUrl");
   static const chainNamespace = String.fromEnvironment("chainNamespace");
+  static const fihubAddress_Avalanche_MainNet =
+      String.fromEnvironment("fihubAddress_Avalanche_MainNet");
+
   static const VERSION =
       String.fromEnvironment("VERSION", defaultValue: '1.0.4');
+
+  static String? starsArenaAddress(String chainId) {
+    switch (chainId) {
+      case '43114':
+        return starsArenaAddress_Avalanche_Mainnet;
+      default:
+        return null;
+    }
+  }
+
+  static String? starsArenaProxyAddress(String chainId) {
+    switch (chainId) {
+      case '43114':
+        return starsArenaProxyAddress_Avalanche_Mainnet;
+      default:
+        return null;
+    }
+  }
+
+  static String? fihubAddress(String chainId) {
+    switch (chainId) {
+      case '43114':
+        return fihubAddress_Avalanche_MainNet;
+      default:
+        return null;
+    }
+  }
+
+  static String? cheerBooAddress(String chainId) {
+    switch (chainId) {
+      case '30732':
+        return cheerBooAddress_Movement_Devnet;
+      default:
+        return null;
+    }
+  }
 }
 
 const DEV = 'dev';

@@ -34,6 +34,7 @@ class GroupList extends StatelessWidget {
             creatorAvatar = avatarPlaceHolder(group.creator.fullName);
           }
           return SingleGroup(
+            key: Key(group.id),
             controller: controller,
             amICreator: amICreator,
             name: name,
@@ -80,7 +81,7 @@ class SingleGroup extends StatelessWidget {
                 borderRadius: const BorderRadius.all(const Radius.circular(8))),
             margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
             padding: const EdgeInsets.all(8),
-            key: Key(group.id),
+            // key: Key(group.id),
             child: Stack(
               children: [
                 Row(

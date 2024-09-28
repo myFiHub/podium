@@ -9,6 +9,7 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/mixins/permissions.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/constants/meeting.dart';
@@ -165,10 +166,10 @@ class GroupCallController extends GetxController
     searchedValueInMeet.value = '';
     final groupId = group.value?.id;
     if (groupId != null) {
-      final userId = globalController.currentUserInfo.value!.id;
+      final userId = myId;
       setIsUserPresentInSession(
         groupId: groupId,
-        userId: globalController.currentUserInfo.value!.id,
+        userId: myId,
         isPresent: false,
       );
       setIsTalkingInSession(
@@ -179,9 +180,13 @@ class GroupCallController extends GetxController
     }
   }
 
-  startCall({required FirebaseGroup groupToJoin}) async {
+  startCall(
+      {required FirebaseGroup groupToJoin,
+      GroupAccesses? accessOverRides}) async {
     final globalController = Get.find<GlobalController>();
-    final iAmAllowedToSpeak = canISpeak(group: groupToJoin);
+    final iAmAllowedToSpeak = accessOverRides != null
+        ? accessOverRides.canSpeak
+        : canISpeak(group: groupToJoin);
     bool hasMicAccess = false;
     if (iAmAllowedToSpeak) {
       hasMicAccess = await getPermission(Permission.microphone);
@@ -216,7 +221,7 @@ class GroupCallController extends GetxController
       );
       globalController.connectToWallet(
         afterConnection: () {
-          startCall(groupToJoin: groupToJoin);
+          startCall(groupToJoin: groupToJoin, accessOverRides: accessOverRides);
         },
       );
       return;
@@ -257,8 +262,6 @@ class GroupCallController extends GetxController
 }
 
 bool canISpeak({required FirebaseGroup group}) {
-  final globalController = Get.find<GlobalController>();
-  final myId = globalController.currentUserInfo.value!.id;
   final iAmTheCreator = group.creator.id == myId;
   if (iAmTheCreator) return true;
   if (group.speakerType == RoomSpeakerTypes.invitees) {
@@ -270,5 +273,6 @@ bool canISpeak({required FirebaseGroup group}) {
 
   final iAmAllowedToSpeak = group.speakerType == null ||
       group.speakerType == RoomSpeakerTypes.everyone;
+
   return iAmAllowedToSpeak;
 }

@@ -34,6 +34,9 @@ class FirebaseGroup {
   String? accessType;
   String? speakerType;
   String? subject;
+  List<UserTicket> ticketsRequiredToAccess = [];
+  List<UserTicket> ticketsRequiredToSpeak = [];
+  List<String> tags = [];
   bool creatorJoined = false;
   bool archived = false;
   bool hasAdultContent = false;
@@ -50,6 +53,9 @@ class FirebaseGroup {
   static String creatorJoinedKey = 'creatorJoined';
   static String archivedKey = 'archived';
   static String hasAdultContentKey = 'hasAdultContent';
+  static String ticketRequiredToAccessKey = 'ticketsRequiredToAccess';
+  static String ticketsRequiredToSpeakKey = 'ticketsRequiredToSpeak';
+  static String tagsKey = 'tags';
 
   FirebaseGroup({
     required this.name,
@@ -64,6 +70,9 @@ class FirebaseGroup {
     this.creatorJoined = false,
     this.archived = false,
     this.hasAdultContent = false,
+    this.ticketsRequiredToAccess = const [],
+    this.ticketsRequiredToSpeak = const [],
+    this.tags = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -80,6 +89,35 @@ class FirebaseGroup {
     data[creatorJoinedKey] = creatorJoined;
     data[archivedKey] = archived;
     data[hasAdultContentKey] = hasAdultContent;
+    data[ticketRequiredToAccessKey] =
+        ticketsRequiredToAccess.map((e) => e.toJson()).toList();
+    data[ticketsRequiredToSpeakKey] =
+        ticketsRequiredToSpeak.map((e) => e.toJson()).toList();
+    data[tagsKey] = tags.map((e) => e).toList();
+    return data;
+  }
+}
+
+class Tag {
+  String id;
+  List<String>? groupIds = [];
+  String tagName;
+
+  static String idKey = 'id';
+  static String tagNameKey = 'tagName';
+  static String groupIdsKey = 'groupIds';
+
+  Tag({
+    required this.id,
+    required this.tagName,
+    this.groupIds,
+  });
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data[idKey] = id;
+    data[tagNameKey] = tagName;
+    data[groupIdsKey] = groupIds;
     return data;
   }
 }
@@ -107,6 +145,33 @@ class InvitedMember {
     return InvitedMember(
       id: json[idKey],
       invitedToSpeak: json[invitedToSpeakKey],
+    );
+  }
+}
+
+class UserTicket {
+  String userId;
+  String userAddress;
+
+  static String userIdKey = 'userId';
+  static String userAddressKey = 'userAddress';
+
+  UserTicket({
+    required this.userId,
+    required this.userAddress,
+  });
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data[userIdKey] = userId;
+    data[userAddressKey] = userAddress;
+    return data;
+  }
+
+  factory UserTicket.fromJson(dynamic json) {
+    return UserTicket(
+      userId: json[userIdKey],
+      userAddress: json[userAddressKey],
     );
   }
 }

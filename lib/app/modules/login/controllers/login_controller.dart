@@ -148,6 +148,7 @@ class LoginController extends GetxController
           avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.email,
+          loginTypeIdentifier: particleUser.email,
         );
       } else {
         if (ignoreIfNotLoggedIn == false) {
@@ -178,6 +179,7 @@ class LoginController extends GetxController
           avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.x,
+          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
         if (ignoreIfNotLoggedIn == false) {
@@ -212,6 +214,7 @@ class LoginController extends GetxController
           avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.google,
+          loginTypeIdentifier: particleUser.googleEmail,
         );
       } else {
         if (!ignoreIfNotLoggedIn) {
@@ -242,6 +245,7 @@ class LoginController extends GetxController
           avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.linkedin,
+          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
         Get.snackbar('Error', 'Error logging in');
@@ -270,6 +274,7 @@ class LoginController extends GetxController
           avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.facebook,
+          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
         Get.snackbar('Error', 'Error logging in');
@@ -298,6 +303,7 @@ class LoginController extends GetxController
           avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.apple,
+          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
         Get.snackbar('Error', 'Error logging in');
@@ -326,6 +332,7 @@ class LoginController extends GetxController
           avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.github,
+          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
         Get.snackbar('Error', 'Error logging in');
@@ -347,6 +354,7 @@ class LoginController extends GetxController
     required String avatar,
     required ParticleUser.UserInfo particleUser,
     required String loginType,
+    String? loginTypeIdentifier,
   }) async {
     final userId = id;
     if (email.isEmpty) {
@@ -371,6 +379,8 @@ class LoginController extends GetxController
       savedParticleUserInfo: particleWalletInfo,
       following: [],
       numberOfFollowers: 0,
+      loginType: loginType,
+      loginTypeIdentifier: loginTypeIdentifier,
       lowercasename: name.toLowerCase(),
     );
 

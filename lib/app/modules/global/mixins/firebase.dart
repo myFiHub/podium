@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
@@ -31,19 +32,10 @@ mixin FireBaseUtils {
       for (DataSnapshot snapshot in snapshots) {
         final user = snapshot.value as dynamic;
         if (user != null) {
-          final userInfo = UserInfoModel(
-            fullName: user[UserInfoModel.fullNameKey],
-            email: user[UserInfoModel.emailKey],
-            id: user[UserInfoModel.idKey],
-            avatar: user[UserInfoModel.avatarUrlKey],
-            isOver18: user[UserInfoModel.isOver18Key] ?? false,
-            localWalletAddress: user[UserInfoModel.localWalletAddressKey] ?? '',
-            following: List.from(user[UserInfoModel.followingKey] ?? []),
-            numberOfFollowers: user[UserInfoModel.numberOfFollowersKey] ?? 0,
-            lowercasename: user[UserInfoModel.lowercasenameKey] ??
-                user[UserInfoModel.fullNameKey].toLowerCase(),
-          );
-          usersList.add(userInfo);
+          final userInfo = singleUserParser(user);
+          if (userInfo != null) {
+            usersList.add(userInfo);
+          }
         }
       }
       return usersList;
@@ -457,6 +449,12 @@ mixin FireBaseUtils {
     final group = snapshot.value as dynamic;
     if (group != null) {
       final groupInfo = singleGroupParser(group);
+      if (groupInfo == null) {
+        return null;
+      }
+      if (groupInfo.archived && groupInfo.creator.id != myId) {
+        return null;
+      }
       return groupInfo;
     } else {
       return null;
@@ -715,6 +713,19 @@ mixin FireBaseUtils {
       final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
         analytics.logLogin(loginMethod: logintype);
+
+        final savedLogintype = userSnapshot[UserInfoModel.loginTypeKey];
+        if (savedLogintype != logintype) {
+          databaseRef.child(UserInfoModel.loginTypeKey).set(logintype);
+        }
+        final savedLoginTypeIdentifier =
+            userSnapshot[UserInfoModel.loginTypeIdentifierKey];
+        if (savedLoginTypeIdentifier != user.loginTypeIdentifier) {
+          databaseRef
+              .child(UserInfoModel.loginTypeIdentifierKey)
+              .set(user.loginTypeIdentifier);
+        }
+
         final retrievedUser = UserInfoModel(
           fullName: userSnapshot[UserInfoModel.fullNameKey],
           email: userSnapshot[UserInfoModel.emailKey],

@@ -12,6 +12,7 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -55,8 +56,6 @@ class GlobalController extends GetxController {
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
-  final userBalance = ''.obs;
-  final connectedChainId = ''.obs;
   final jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
   final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
@@ -71,6 +70,33 @@ class GlobalController extends GetxController {
   final isLoggingOut = false.obs;
   final isFirebaseInitialized = false.obs;
   String? deepLinkRoute = null;
+
+  final particleWalletChainId = RxString(
+      (storage.read(StorageKeys.particleWalletChainId) ??
+          Env.initialParticleWalletChainId));
+  final externalWalletChainId = RxString(
+      (storage.read(StorageKeys.externalWalletChainId) ??
+          Env.initialExternalWalletChainId));
+
+  ChainInfo.ChainInfo? particleWalletChain(String? chainId) {
+    final particleChain = ChainInfo.ChainInfo.getChain(
+      int.parse(chainId ?? particleWalletChainId.value),
+      ReownAppKitModalNetworks.getNetworkById(
+        Env.chainNamespace,
+        chainId ?? particleWalletChainId.value,
+      )!
+          .name,
+    );
+    return particleChain;
+  }
+
+  ReownAppKitModalNetworkInfo? get externalWalletChain {
+    final chain = ReownAppKitModalNetworks.getNetworkById(
+      Env.chainNamespace,
+      externalWalletChainId.value,
+    );
+    return chain;
+  }
 
   final connectionCheckerInstance = InternetConnection.createInstance(
     checkInterval: const Duration(seconds: 5),
@@ -135,13 +161,89 @@ class GlobalController extends GetxController {
     initializedOnce.value = true;
   }
 
+  Future<bool> switchExternalWalletChain(String chainId) async {
+    log.d(chainId);
+    bool success = false;
+    final chain = ReownAppKitModalNetworks.getNetworkById(
+      Env.chainNamespace,
+      chainId,
+    );
+    if (chain == null) {
+      log.e("chain not found");
+      success = false;
+    }
+    try {
+      final currentChainId = web3ModalService.selectedChain?.chainId;
+      if (currentChainId == chainId) {
+        success = true;
+      } else {
+        await web3ModalService.selectChain(
+          chain,
+          switchChain: true,
+        );
+        final selectedChainId = web3ModalService.selectedChain?.chainId;
+        if (selectedChainId != null && selectedChainId.isNotEmpty) {
+          success = true;
+        } else {
+          log.e("error switching chain");
+          success = false;
+        }
+      }
+    } catch (e) {
+      log.e("error switching chain $e");
+      success = false;
+    }
+    if (success) {
+      storage.write(StorageKeys.externalWalletChainId, chainId);
+      externalWalletChainId.value = chainId;
+    } else {
+      storage.remove(StorageKeys.externalWalletChainId);
+    }
+    return success;
+  }
+
+  Future<bool> switchParticleWalletChain(String chainId) async {
+    final chain = ChainInfo.ChainInfo.getChain(
+      int.parse(chainId),
+      ReownAppKitModalNetworks.getNetworkById(
+        Env.chainNamespace,
+        chainId,
+      )!
+          .name,
+    );
+    if (chain == null) {
+      log.e("chain not found");
+      storage.remove(StorageKeys.particleWalletChainId);
+      return false;
+    }
+    final done = await ParticleBase.ParticleBase.setChainInfo(chain);
+    if (!done) {
+      log.e("error switching chain");
+      storage.remove(StorageKeys.particleWalletChainId);
+      return false;
+    }
+    final selectedChainId = ParticleBase.ParticleBase.getChainId();
+    particleWalletChainId.value = selectedChainId.toString();
+    storage.write(
+        StorageKeys.particleWalletChainId, selectedChainId.toString());
+    return true;
+  }
+
+  get particleEnvironment {
+    return Env.environment == DEV
+        ? ParticleBase.Env.dev
+        : Env.environment == STAGE
+            ? ParticleBase.Env.staging
+            : ParticleBase.Env.production;
+  }
+
   Future<void> initializeParticleAuth() async {
     try {
-      final chainId = Env.chainId;
+      final chainId = particleWalletChainId.value;
       final chainName =
           ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
               .name;
-      final particleChain = Env.chainId == '30732'
+      final particleChain = particleWalletChainId == '30732'
           ? movementChainOnParticle
           : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
       if (particleChain == null) {
@@ -155,11 +257,6 @@ class GlobalController extends GetxController {
         log.f("particle auth not initialized");
         return Future.error("unhandled environment");
       }
-      final environment = Env.environment == DEV
-          ? ParticleBase.Env.dev
-          : Env.environment == STAGE
-              ? ParticleBase.Env.staging
-              : ParticleBase.Env.production;
 
       log.i("##########initializing ParticleAuth");
       ParticleBase.ParticleInfo.set(
@@ -169,7 +266,7 @@ class GlobalController extends GetxController {
 
       ParticleBase.ParticleBase.init(
         particleChain,
-        environment,
+        particleEnvironment,
       );
       log.i('##########particle auth initialized');
       return Future.value();
@@ -186,16 +283,15 @@ class GlobalController extends GetxController {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
           log.i("Internet connected");
+          if (!initializedOnce.value) {
+            final (versionResolved, serverAddress) = await (
+              checkVersion(),
+              getJitsiServerAddress(),
+            ).wait;
 
-          final (versionResolved, serverAddress) = await (
-            checkVersion(),
-            getJitsiServerAddress(),
-          ).wait;
-
-          if (!initializedOnce.value &&
-              versionResolved &&
-              serverAddress != null) {
-            await initializeApp();
+            if (versionResolved && serverAddress != null) {
+              await initializeApp();
+            }
           }
 
           break;
@@ -231,7 +327,7 @@ class GlobalController extends GetxController {
 
   saveUserWalletAddressOnFirebase(String walletAddress) async {
     // final user = FirebaseAuth.instance.currentUser;
-    final userId = currentUserInfo.value!.id;
+    final userId = myId;
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
@@ -278,12 +374,9 @@ class GlobalController extends GetxController {
 
   Future<bool> removeUserWalletAddressOnFirebase() async {
     try {
-      final globalController = Get.find<GlobalController>();
-      final id = globalController.currentUserInfo.value!.id;
-      final userId = id;
       final firebaseUserDbReference = FirebaseDatabase.instance
           .ref(FireBaseConstants.usersRef)
-          .child(userId + '/' + UserInfoModel.localWalletAddressKey);
+          .child(myId + '/' + UserInfoModel.localWalletAddressKey);
       await firebaseUserDbReference.set('');
       return true;
     } catch (e) {
@@ -294,11 +387,7 @@ class GlobalController extends GetxController {
 
   cleanStorage() {
     final storage = GetStorage();
-    storage.remove(StorageKeys.userId);
-    storage.remove(StorageKeys.userAvatar);
-    storage.remove(StorageKeys.userFullName);
-    storage.remove(StorageKeys.userEmail);
-    storage.remove(StorageKeys.loginType);
+    storage.erase();
   }
 
   Future<String?> getJitsiServerAddress() {
@@ -594,7 +683,8 @@ class GlobalController extends GetxController {
     try {
       // web3ModalService.disconnect();
       await web3ModalService.openModalView();
-      final address = BlockChainUtils.retrieveConnectedWallet(web3ModalService);
+      final address =
+          await BlockChainUtils.retrieveConnectedWallet(web3ModalService);
       connectedWalletAddress.value = address;
       if (afterConnection != null && address != '') {
         afterConnection();
@@ -620,6 +710,9 @@ class GlobalController extends GetxController {
     final removed = await removeUserWalletAddressOnFirebase();
     if (removed) {
       web3ModalService.disconnect();
+      storage.remove(StorageKeys.externalWalletChainId);
+      storage.remove(StorageKeys.selectedWalletName);
+      connectedWalletAddress.value = '';
     }
     analytics.logEvent(
       name: 'wallet_disconnected',

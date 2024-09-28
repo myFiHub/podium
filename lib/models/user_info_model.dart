@@ -13,6 +13,8 @@ class UserInfoModel {
   late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
   late int numberOfFollowers;
   bool isOver18 = false;
+  String? loginType;
+  String? loginTypeIdentifier;
 
   static String idKey = 'id';
   static String fullNameKey = 'fullName';
@@ -25,6 +27,8 @@ class UserInfoModel {
   static String savedParticleUserInfoKey = 'savedParticleUserInfo';
   static String lowercasenameKey = 'lowercasename';
   static String isOver18Key = 'isOver18';
+  static String loginTypeKey = 'loginType';
+  static String loginTypeIdentifierKey = 'loginTypeIdentifier';
 
   UserInfoModel({
     required this.id,
@@ -38,6 +42,8 @@ class UserInfoModel {
     this.localParticleUserInfo,
     this.savedParticleUserInfo,
     this.isOver18 = false,
+    this.loginType,
+    this.loginTypeIdentifier,
   });
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +57,8 @@ class UserInfoModel {
     localParticleUserInfo = json[localParticleUserInfoKey];
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
+    loginType = json[loginTypeKey];
+    loginTypeIdentifier = json[loginTypeIdentifierKey];
   }
 
   Map<String, dynamic> toJson() {
@@ -68,6 +76,42 @@ class UserInfoModel {
     data[localParticleUserInfoKey] = localParticleUserInfo;
     data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();
     data[isOver18Key] = isOver18;
+    data[loginTypeKey] = loginType;
+    data[loginTypeIdentifierKey] = loginTypeIdentifier;
     return data;
+  }
+
+  copyWith({
+    String? id,
+    String? fullName,
+    String? email,
+    String? avatar,
+    String? localWalletAddress,
+    List<String>? following,
+    int? numberOfFollowers,
+    String? lowercasename,
+    ParticleUser.UserInfo? localParticleUserInfo,
+    FirebaseParticleAuthUserInfo? savedParticleUserInfo,
+    bool? isOver18,
+    String? loginType,
+    String? loginTypeIdentifier,
+  }) {
+    return UserInfoModel(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      avatar: avatar ?? this.avatar,
+      localWalletAddress: localWalletAddress ?? this.localWalletAddress,
+      following: following ?? this.following,
+      numberOfFollowers: numberOfFollowers ?? this.numberOfFollowers,
+      lowercasename: lowercasename ?? this.lowercasename,
+      localParticleUserInfo:
+          localParticleUserInfo ?? this.localParticleUserInfo,
+      savedParticleUserInfo:
+          savedParticleUserInfo ?? this.savedParticleUserInfo,
+      isOver18: isOver18 ?? this.isOver18,
+      loginType: loginType ?? this.loginType,
+      loginTypeIdentifier: loginTypeIdentifier ?? this.loginTypeIdentifier,
+    );
   }
 }

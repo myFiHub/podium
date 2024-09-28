@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:getwidget/getwidget.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/env.dart';
@@ -68,7 +68,9 @@ class BuyTicket extends GetView<ProfileController> {
               Text(price.toString()),
               space5,
               Text(ReownAppKitModalNetworks.getNetworkById(
-                      Env.chainNamespace, Env.chainId)!
+                Env.chainNamespace,
+                externalWalletChianId,
+              )!
                   .currency)
             ],
           );

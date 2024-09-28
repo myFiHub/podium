@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/loginType.dart';
@@ -22,6 +23,7 @@ class MyProfileView extends GetView<MyProfileController> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
+          height: Get.height - 110,
           padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
           width: double.infinity,
           child: Column(
@@ -29,6 +31,7 @@ class MyProfileView extends GetView<MyProfileController> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               UserInfo(),
+              DefaultWallet(),
               // Button(
               //   onPressed: () {},
               //   type: ButtonType.outline,
@@ -36,14 +39,80 @@ class MyProfileView extends GetView<MyProfileController> {
               //   text: 'Edit Profile',
               // ),
               space10,
-              WalletInfo(),
               ParticleWalletManager(),
+              WalletInfo(),
               WalletConnect(),
+              Expanded(
+                child: Container(),
+              ),
+              LogoutButton(),
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+class DefaultWallet extends StatefulWidget {
+  const DefaultWallet({super.key});
+
+  @override
+  State<DefaultWallet> createState() => _DefaultWalletState();
+}
+
+class _DefaultWalletState extends State<DefaultWallet> {
+  bool visible = false;
+  @override
+  Widget build(BuildContext context) {
+    final store = GetStorage();
+    final String defaultWallet =
+        store.read(StorageKeys.selectedWalletName) ?? '';
+    if (defaultWallet.isNotEmpty) {
+      visible = true;
+    }
+    if (visible == false) {
+      return Container();
+    } else {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Default Wallet:',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              space10,
+              Text(
+                defaultWallet,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.purple[200],
+                ),
+              ),
+            ],
+          ),
+          space10,
+          Button(
+            size: ButtonSize.SMALL,
+            borderSide: const BorderSide(color: Colors.red),
+            onPressed: () {
+              store.remove(StorageKeys.selectedWalletName);
+              setState(() {
+                visible = false;
+              });
+            },
+            type: ButtonType.outline,
+            text: 'Forget',
+          ),
+        ],
+      );
+    }
   }
 }
 
@@ -57,6 +126,10 @@ class ParticleWalletManager extends GetView<GlobalController> {
         Obx(() {
           final particleAuthUserInfo = controller.particleAuthUserInfo.value;
           final wallets = particleAuthUserInfo?.wallets ?? [];
+          final walletsToShow = wallets
+              .where((w) =>
+                  w.publicAddress.isNotEmpty && w.chainName == 'evm_chain')
+              .toList();
           return particleAuthUserInfo == null
               ? Container()
               : Container(
@@ -66,26 +139,32 @@ class ParticleWalletManager extends GetView<GlobalController> {
                       color: ColorName.greyText,
                       width: 1,
                     ),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(4),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        'Particle Wallets',
-                        style: const TextStyle(
-                          fontSize: 33,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      Row(
+                        children: [
+                          Assets.images.particleIcon.image(
+                            width: 30,
+                            height: 30,
+                          ),
+                          space10,
+                          Text(
+                            'Particle Wallet${walletsToShow.length > 1 ? 's' : ''}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.blue[100],
+                            ),
+                          ),
+                        ],
                       ),
                       space10,
-                      ...wallets
-                          .where((w) =>
-                              w.publicAddress.isNotEmpty &&
-                              w.chainName == 'evm_chain')
-                          .toList()
+                      ...walletsToShow
                           .map(
                             (wallet) => GestureDetector(
                               onTap: () async {
@@ -152,18 +231,23 @@ class WalletInfo extends GetView<GlobalController> {
                       color: ColorName.greyText,
                       width: 1,
                     ),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(4),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: Column(
                     children: [
-                      Text(
-                        'Connected Wallet',
-                        style: const TextStyle(
-                          fontSize: 33,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'External Wallet',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.green[100],
+                            ),
+                          ),
+                        ],
                       ),
                       space10,
                       GestureDetector(
@@ -179,16 +263,26 @@ class WalletInfo extends GetView<GlobalController> {
                               colorText: Colors.white,
                             );
                           },
-                          child: Text(
-                            truncate(
-                              connectedWalletAddress,
-                              length: 12,
-                            ),
-                            style: const TextStyle(
-                              fontSize: 23,
-                              fontWeight: FontWeight.w700,
-                              color: ColorName.greyText,
-                            ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.account_balance_wallet,
+                                color: ColorName.greyText,
+                              ),
+                              space10,
+                              Text(
+                                truncate(
+                                  connectedWalletAddress,
+                                  length: 12,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorName.greyText,
+                                ),
+                              ),
+                              space10,
+                            ],
                           )),
                     ],
                   ));
@@ -218,7 +312,7 @@ class WalletConnect extends GetView<GlobalController> {
                     textColor: Colors.red,
                     borderSide: const BorderSide(color: Colors.red),
                     blockButton: true,
-                    text: 'Disconnect Wallet',
+                    text: 'Disconnect External Wallet',
                   )
                 : Button(
                     onPressed: () {
@@ -226,28 +320,35 @@ class WalletConnect extends GetView<GlobalController> {
                     },
                     type: ButtonType.gradient,
                     blockButton: true,
-                    text: 'Connect Wallet',
+                    text: 'Connect External Wallet',
                   ),
             space10,
-            space10,
-            Obx(() {
-              final isLoggingOut = controller.isLoggingOut.value;
-              return Button(
-                loading: isLoggingOut,
-                onPressed: () {
-                  final globalController = Get.find<GlobalController>();
-                  globalController.setLoggedIn(false);
-                },
-                type: ButtonType.solid,
-                blockButton: true,
-                color: ButtonColors.DANGER,
-                text: 'Logout',
-              );
-            })
           ],
         );
       },
     );
+  }
+}
+
+class LogoutButton extends GetView<GlobalController> {
+  const LogoutButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isLoggingOut = controller.isLoggingOut.value;
+      return Button(
+        loading: isLoggingOut,
+        onPressed: () {
+          final globalController = Get.find<GlobalController>();
+          globalController.setLoggedIn(false);
+        },
+        type: ButtonType.solid,
+        blockButton: true,
+        color: ButtonColors.DANGER,
+        text: 'Logout',
+      );
+    });
   }
 }
 
@@ -276,7 +377,7 @@ class UserInfo extends GetView<GlobalController> {
       if (myUser == null) {
         return Container();
       }
-      String avatar= myUser.avatar;
+      String avatar = myUser.avatar;
       if (avatar == defaultAvatar) {
         avatar = avatarPlaceHolder(myUser.fullName);
       }

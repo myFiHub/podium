@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:particle_base/model/chain_info.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
@@ -37,16 +38,24 @@ class BlockChainUtils {
     RxBool w3serviceInitialized,
   ) async {
     // W3MChainPresets.chains.addAll(W3MChainPresets.testChains);
-    _w3mService.addListener(() {
+    _w3mService.addListener(() async {
       if (_w3mService.session == null) {
         connectedWalletAddress.value = '';
         return;
       }
-      final address = retrieveConnectedWallet(_w3mService);
+      final address = await retrieveConnectedWallet(_w3mService);
       connectedWalletAddress.value = address;
-      log.i('Connected Wallet Address: ${connectedWalletAddress.value}');
+      log.i(
+          'Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${_w3mService.session?.chainId}');
     });
-    void _onModalConnect(ModalConnect? event) {
+    void _onModalConnect(ModalConnect? event) async {
+      if (_w3mService.session == null) {
+        connectedWalletAddress.value = '';
+        return;
+      }
+      final address = await retrieveConnectedWallet(_w3mService);
+      connectedWalletAddress.value = address;
+
       log.i('[initializewm3Service] _onModalConnect ${event?.toString()}');
     }
 
@@ -55,9 +64,17 @@ class BlockChainUtils {
       log.i('[initializewm3Service] _onModalUpdate ${event?.toString()}');
     }
 
-    void _onModalNetworkChange(ModalNetworkChange? event) {
+    void _onModalNetworkChange(ModalNetworkChange? event) async {
       log.i(
           '[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
+      if (event != null) {
+        GlobalController globalController = Get.find<GlobalController>();
+        String chainId = event.chainId;
+        if (chainId.contains(':')) {
+          chainId = chainId.split(':')[1];
+        }
+        await globalController.switchExternalWalletChain(chainId);
+      }
     }
 
     void _onModalDisconnect(ModalDisconnect? event) {
@@ -84,6 +101,15 @@ class BlockChainUtils {
 
     void _onSessionEvent(SessionEvent? event) {
       log.i('[initializewm3Service] _onSessionEvent ${event?.toString()}');
+      String? eventChainId = event?.chainId;
+      if (eventChainId != null && eventChainId.isNotEmpty) {
+        if (eventChainId.contains(':')) {
+          eventChainId = eventChainId.split(':')[1];
+        }
+        if (eventChainId == externalWalletChianId) return;
+        final GlobalController globalController = Get.find<GlobalController>();
+        globalController.switchExternalWalletChain(eventChainId);
+      }
     }
 
     void _onRelayClientConnect(EventArgs? event) {
@@ -122,7 +148,7 @@ class BlockChainUtils {
     try {
       await _w3mService.init();
       _startListeningToCheerBoEvents();
-      const chainId = Env.chainId;
+      final chainId = externalWalletChianId;
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
         await _w3mService.selectChain(
@@ -139,14 +165,31 @@ class BlockChainUtils {
     return _w3mService;
   }
 
-  static String retrieveConnectedWallet(ReownAppKitModal _w3mService) {
+  static Future<String> retrieveConnectedWallet(
+      ReownAppKitModal _w3mService) async {
     final GlobalController globalController = Get.find<GlobalController>();
     if (globalController.web3ModalService.session == null) {
       return '';
     }
-    final session = _w3mService.session!;
+    if (_w3mService.session == null) {
+      return '';
+    }
+    final session = _w3mService.session;
+    final connectedChain = session!.chainId;
+    String chainId = connectedChain;
+
+    if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty) {
+      final globalController = Get.find<GlobalController>();
+      if (connectedChain != externalWalletChianId) {
+        if (chainId.contains(':')) {
+          chainId = chainId.split(':')[1];
+        }
+        await globalController.switchExternalWalletChain(chainId);
+      }
+    }
+
     final accounts = session.getAccounts();
-    final currentNamespace = '${Env.chainNamespace}:${Env.chainId}';
+    final currentNamespace = '${Env.chainNamespace}:${chainId}';
     if (accounts != null && accounts.isNotEmpty) {
       final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
       if (chainsNamespaces.contains(currentNamespace)) {
@@ -183,7 +226,7 @@ class BlockChainUtils {
 Stream<FilterEvent> _getContractEventListener({
   required DeployedContract contract,
   required String eventName,
-  chainId = Env.chainId,
+  chainId = Env.initialExternalWalletChainId,
 }) {
   final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace,
       chainId)!; // final GlobalController globalController = Get.find<GlobalController>();

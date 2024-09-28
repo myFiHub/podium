@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -19,9 +20,6 @@ class UserList extends StatelessWidget {
   const UserList({super.key, required this.usersList});
   @override
   Widget build(BuildContext context) {
-    final globalController = Get.find<GlobalController>();
-    final myUserId = globalController.currentUserInfo.value!.id;
-
     return Scrollbar(
       child: ListView.builder(
         itemCount: usersList.length,
@@ -36,7 +34,7 @@ class UserList extends StatelessWidget {
             avatar = avatarPlaceHolder(name);
           }
           final userId = user.id;
-          final isItME = user.id == myUserId;
+          final isItME = user.id == myId;
           return SingleUser(
             key: Key(userId),
             isItME: isItME,

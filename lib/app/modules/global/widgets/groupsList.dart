@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
@@ -26,8 +27,7 @@ class GroupList extends StatelessWidget {
         itemBuilder: (context, index) {
           final group = groupsList[index];
           final name = group.name;
-          final amICreator = group.creator.id ==
-              controller.globalController.currentUserInfo.value!.id;
+          final amICreator = group.creator.id == myId;
           String creatorAvatar = group.creator.avatar;
 
           if (creatorAvatar == defaultAvatar) {
@@ -111,12 +111,16 @@ class SingleGroup extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "Created By ${amICreator ? "You" : group.creator.fullName}",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w400,
-                                    color: ColorName.greyText,
+                                Container(
+                                  width: Get.width - 170,
+                                  child: Text(
+                                    "Created By ${amICreator ? "You" : group.creator.fullName}",
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w400,
+                                      color: ColorName.greyText,
+                                    ),
                                   ),
                                 ),
                                 space5,
@@ -145,13 +149,13 @@ class SingleGroup extends StatelessWidget {
                                 Row(
                                   children: [
                                     Icon(
-                                      Icons.mic,
+                                      Icons.lock,
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
                                     space5,
                                     Text(
-                                      parseSpeakerType(group.speakerType),
+                                      parseAccessType(group.accessType),
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
@@ -164,13 +168,13 @@ class SingleGroup extends StatelessWidget {
                                 Row(
                                   children: [
                                     Icon(
-                                      Icons.lock,
+                                      Icons.mic,
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
                                     space5,
                                     Text(
-                                      parseAccessType(group.accessType),
+                                      parseSpeakerType(group.speakerType),
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
@@ -201,7 +205,8 @@ class SingleGroup extends StatelessWidget {
                               ],
                             )
                           ],
-                        )
+                        ),
+                        if (group.tags.isNotEmpty) TagsWrapper(group: group),
                       ],
                     ),
                     Column(
@@ -262,6 +267,57 @@ class SingleGroup extends StatelessWidget {
   }
 }
 
+class TagsWrapper extends StatelessWidget {
+  const TagsWrapper({
+    super.key,
+    required this.group,
+  });
+
+  final FirebaseGroup group;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        children: group.tags
+            .map((e) => SingleTag(
+                  tagName: e,
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class SingleTag extends StatelessWidget {
+  final String tagName;
+  const SingleTag({
+    required this.tagName,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      margin: EdgeInsets.only(right: 4),
+      decoration: BoxDecoration(
+        color: ColorName.greyText.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        tagName,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: ColorName.greyText,
+        ),
+      ),
+    );
+  }
+}
+
 class JoiningIndicator extends GetView<GroupsController> {
   final groupId;
   const JoiningIndicator({super.key, required this.groupId});
@@ -274,8 +330,8 @@ class JoiningIndicator extends GetView<GroupsController> {
         return const SizedBox();
       }
       return Positioned(
-        right: 0,
-        bottom: 0,
+        right: Get.width / 2 - 20,
+        bottom: 40,
         child: CircularProgressIndicator(),
       );
     });
@@ -288,8 +344,6 @@ String parseSpeakerType(String? speakerType) {
       return "Everyone";
     case RoomSpeakerTypes.everyone:
       return "Everyone";
-    case RoomSpeakerTypes.onlyCreator:
-      return "Only Creator";
     case RoomSpeakerTypes.invitees:
       return "Only Invited Users";
     case RoomSpeakerTypes.onlyArenaTicketHolders:
@@ -326,7 +380,6 @@ canShareGroupUrl({required FirebaseGroup group}) {
   if (globalController.currentUserInfo.value == null) {
     return false;
   }
-  final myId = globalController.currentUserInfo.value!.id;
   final iAmCreator = group.creator.id == myId;
   if (iAmCreator) {
     return true;
@@ -347,7 +400,6 @@ canArchiveGroup({required FirebaseGroup group}) {
   if (globalController.currentUserInfo.value == null) {
     return false;
   }
-  final myId = globalController.currentUserInfo.value!.id;
   final iAmCreator = group.creator.id == myId;
   return iAmCreator;
 }

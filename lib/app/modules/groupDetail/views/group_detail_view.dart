@@ -27,6 +27,12 @@ class GroupDetailView extends GetView<GroupDetailController> {
               final group = controller.group.value;
               final GlobalController globalController = Get.find();
               final myUser = globalController.currentUserInfo.value;
+              final accesses = controller.groupAccesses.value;
+              if (accesses == null) {
+                return Container(
+                  child: Text('No Accesses defined'),
+                );
+              }
               final myId = myUser!.id;
               if (group == null) {
                 return Center(
@@ -101,7 +107,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                             child: Button(
                               type: ButtonType.gradient,
                               onPressed: () {
-                                controller.startTheCall();
+                                controller.startTheCall(accesses: accesses);
                               },
                               child: Text('join the room'),
                             ),
@@ -159,8 +165,10 @@ bool canInviteToSpeak({
 
 class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
   final bool canInviteToSpeak;
-  const UserInvitationBottomSheetContent(
-      {super.key, required this.canInviteToSpeak});
+  const UserInvitationBottomSheetContent({
+    super.key,
+    required this.canInviteToSpeak,
+  });
 
   @override
   Widget build(BuildContext context) {

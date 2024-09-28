@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
@@ -22,8 +23,6 @@ class UsersInRoomList extends StatelessWidget {
   const UsersInRoomList({super.key, required this.usersList});
   @override
   Widget build(BuildContext context) {
-    final globalController = Get.find<GlobalController>();
-    final myUserId = globalController.currentUserInfo.value!.id;
     return ListView.builder(
       itemCount: usersList.length,
       itemBuilder: (context, index) {
@@ -34,7 +33,7 @@ class UsersInRoomList extends StatelessWidget {
           avatar = avatarPlaceHolder(name);
         }
         final userId = user.id;
-        final isItME = user.id == myUserId;
+        final isItME = user.id == myId;
         return SingleUserInRoom(
           key: Key(user.id),
           isItME: isItME,

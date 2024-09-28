@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/controllers/group_call_controller.dart
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
 import 'package:podium/env.dart';
@@ -161,12 +162,11 @@ class OngoingGroupCallController extends GetxController
           if (!amIMuted.value) {
             final v = remainingTimeTimer.value - 1000;
             remainingTimeTimer.value = v;
-            final myUserId = globalController.currentUserInfo.value!.id;
             if (v == 0) {
-              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myUserId);
+              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
               t.cancel();
             } else {
-              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myUserId);
+              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
             }
           }
         } else {
@@ -441,23 +441,21 @@ class OngoingGroupCallController extends GetxController
       amIMuted.value = true;
       jitsiMeet.setAudioMuted(muted);
       talkTimer.endTimer();
-      final myUserId = globalController.currentUserInfo.value!.id;
       final elapsed = talkTimer.timeElapsedInSeconds;
       if (elapsed > 0) {
         analytics.logEvent(
           name: 'talked',
           parameters: {
             'timeInSeconds': elapsed,
-            'userId': myUserId,
+            'userId': myId,
             'groupId': groupCallController.group.value!.id,
           },
         );
       }
     } else {
-      final myUserId = globalController.currentUserInfo.value!.id;
       final groupCreator = groupCallController.group.value!.creator.id;
       final remainingTime = remainingTimeTimer;
-      if (remainingTime <= 0 && myUserId != groupCreator) {
+      if (remainingTime <= 0 && myId != groupCreator) {
         Get.snackbar(
           "You have run out of time",
           "",

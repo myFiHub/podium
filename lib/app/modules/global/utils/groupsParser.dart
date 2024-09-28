@@ -1,6 +1,5 @@
-import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -34,6 +33,28 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final isArchived = value[FirebaseGroup.archivedKey] ?? false;
     final hasAdultContent = value[FirebaseGroup.hasAdultContentKey] ?? false;
+
+    final ticketsRequiredToAccess =
+        value[FirebaseGroup.ticketRequiredToAccessKey] ?? [];
+    final parsedTicketsRequiredToAccess = ticketsRequiredToAccess
+        .map((e) => UserTicket(
+            userId: e[UserTicket.userIdKey],
+            userAddress: e[UserTicket.userAddressKey]))
+        .toList()
+        .cast<UserTicket>();
+
+    final ticketsRequiredToSpeak =
+        value[FirebaseGroup.ticketsRequiredToSpeakKey] ?? [];
+    final parsedTicketsRequiredToSpeak = ticketsRequiredToSpeak
+        .map((e) => UserTicket(
+            userId: e[UserTicket.userIdKey],
+            userAddress: e[UserTicket.userAddressKey]))
+        .toList()
+        .cast<UserTicket>();
+
+    final tags = value[FirebaseGroup.tagsKey] ?? [];
+    final List<String> parsedTags = tags.map((e) => e).toList().cast<String>();
+
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
       email: creatorEmail,
@@ -52,6 +73,9 @@ FirebaseGroup? singleGroupParser(value) {
       creatorJoined: creatorJoined,
       archived: isArchived,
       hasAdultContent: hasAdultContent,
+      tags: parsedTags,
+      ticketsRequiredToAccess: parsedTicketsRequiredToAccess,
+      ticketsRequiredToSpeak: parsedTicketsRequiredToSpeak,
     );
     return group;
   } catch (e) {
@@ -61,8 +85,6 @@ FirebaseGroup? singleGroupParser(value) {
 }
 
 groupsParser(data) {
-  final globalController = Get.find<GlobalController>();
-  final myId = globalController.currentUserInfo.value!.id;
   Map<String, FirebaseGroup> groupsMap = {};
   // Iterate through the data
   data.forEach((key, value) {

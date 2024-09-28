@@ -38,16 +38,24 @@ class BlockChainUtils {
     RxBool w3serviceInitialized,
   ) async {
     // W3MChainPresets.chains.addAll(W3MChainPresets.testChains);
-    _w3mService.addListener(() {
+    _w3mService.addListener(() async {
       if (_w3mService.session == null) {
         connectedWalletAddress.value = '';
         return;
       }
-      final address = retrieveConnectedWallet(_w3mService);
+      final address = await retrieveConnectedWallet(_w3mService);
       connectedWalletAddress.value = address;
-      log.i('Connected Wallet Address: ${connectedWalletAddress.value}');
+      log.i(
+          'Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${_w3mService.session?.chainId}');
     });
-    void _onModalConnect(ModalConnect? event) {
+    void _onModalConnect(ModalConnect? event) async {
+      if (_w3mService.session == null) {
+        connectedWalletAddress.value = '';
+        return;
+      }
+      final address = await retrieveConnectedWallet(_w3mService);
+      connectedWalletAddress.value = address;
+
       log.i('[initializewm3Service] _onModalConnect ${event?.toString()}');
     }
 
@@ -61,7 +69,6 @@ class BlockChainUtils {
           '[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
       if (event != null) {
         GlobalController globalController = Get.find<GlobalController>();
-        globalController.externalWalletChainId.value = event.chainId;
         globalController.switchExternalWalletChain(event.chainId);
       }
     }
@@ -145,14 +152,27 @@ class BlockChainUtils {
     return _w3mService;
   }
 
-  static String retrieveConnectedWallet(ReownAppKitModal _w3mService) {
+  static Future<String> retrieveConnectedWallet(
+      ReownAppKitModal _w3mService) async {
     final GlobalController globalController = Get.find<GlobalController>();
     if (globalController.web3ModalService.session == null) {
       return '';
     }
-    final session = _w3mService.session!;
+    if (_w3mService.session == null) {
+      return '';
+    }
+    final session = _w3mService.session;
+    final connectedChain = session!.chainId;
+
+    if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty) {
+      final globalController = Get.find<GlobalController>();
+      if (connectedChain != externalWalletChianId) {
+        await globalController.switchExternalWalletChain(connectedChain);
+      }
+    }
+
     final accounts = session.getAccounts();
-    final currentNamespace = '${Env.chainNamespace}:${externalWalletChianId}';
+    final currentNamespace = '${Env.chainNamespace}:${connectedChain}';
     if (accounts != null && accounts.isNotEmpty) {
       final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
       if (chainsNamespaces.contains(currentNamespace)) {

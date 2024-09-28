@@ -434,6 +434,11 @@ Future<String?> choseAWallet() async {
   if (savedWallet != null) {
     return savedWallet;
   }
+  final avalancheChainId = "43114";
+  final externalWalletEnabled = externalWalletChianId != null &&
+      externalWalletChianId!.isNotEmpty &&
+      externalWalletChianId == avalancheChainId;
+
   final selectedWallet = await Get.dialog(
     barrierDismissible: true,
     AlertDialog(
@@ -465,14 +470,23 @@ Future<String?> choseAWallet() async {
               type: ButtonType.outline,
               color: ColorName.primaryBlue,
               blockButton: true,
-              onPressed: () {
-                final shouldRemember = store.read("rememberWallet") ?? false;
-                if (shouldRemember) {
-                  store.write(
-                      StorageKeys.selectedWalletName, WalletNames.external);
-                }
-                Navigator.pop(Get.overlayContext!, WalletNames.external);
-              }),
+              onPressed: externalWalletEnabled
+                  ? () {
+                      final shouldRemember =
+                          store.read("rememberWallet") ?? false;
+                      if (shouldRemember) {
+                        store.write(StorageKeys.selectedWalletName,
+                            WalletNames.external);
+                      }
+                      Navigator.pop(Get.overlayContext!, WalletNames.external);
+                    }
+                  : null),
+          if (externalWalletEnabled == false)
+            Text(
+              "to use External Wallet, please switch to Avalanche chain (${avalancheChainId}) on your wallet and try again",
+              style: TextStyle(color: Colors.red, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
           space10,
           // remember my choice
           RememberCheckBox(),

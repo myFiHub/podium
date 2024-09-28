@@ -22,7 +22,7 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   final selectedUsersToBuyTicketFrom_ToAccessRoom = <UserInfoModel>[].obs;
   final selectedUsersToBuyticketFrom_ToSpeak = <UserInfoModel>[].obs;
   final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
-  final tags = RxList<Tag>([]);
+  final tags = RxList<String>([]);
   final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
   @override
@@ -38,6 +38,10 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  setTags(List<String> values) {
+    tags.value = values;
   }
 
   setRoomPrivacyType(String value) {

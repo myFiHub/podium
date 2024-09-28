@@ -53,17 +53,7 @@ FirebaseGroup? singleGroupParser(value) {
         .cast<UserTicket>();
 
     final tags = value[FirebaseGroup.tagsKey] ?? [];
-    final parsedTags = tags
-        .map((e) {
-          final groupIds = e[Tag.groupIdsKey] ?? [];
-          final parsedGroupIds = groupIds.cast<String>();
-          return Tag(
-              name: e[Tag.nameKey],
-              lowercasename: e[Tag.lowercasenameKey],
-              groupIds: parsedGroupIds);
-        })
-        .toList()
-        .cast<Tag>();
+    final List<String> parsedTags = tags.map((e) => e).toList().cast<String>();
 
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,

@@ -205,7 +205,8 @@ class SingleGroup extends StatelessWidget {
                               ],
                             )
                           ],
-                        )
+                        ),
+                        if (group.tags.isNotEmpty) TagsWrapper(group: group),
                       ],
                     ),
                     Column(
@@ -261,6 +262,57 @@ class SingleGroup extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class TagsWrapper extends StatelessWidget {
+  const TagsWrapper({
+    super.key,
+    required this.group,
+  });
+
+  final FirebaseGroup group;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        children: group.tags
+            .map((e) => SingleTag(
+                  tagName: e,
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class SingleTag extends StatelessWidget {
+  final String tagName;
+  const SingleTag({
+    required this.tagName,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      margin: EdgeInsets.only(right: 4),
+      decoration: BoxDecoration(
+        color: ColorName.greyText.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        tagName,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: ColorName.greyText,
+        ),
       ),
     );
   }

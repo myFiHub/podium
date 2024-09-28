@@ -1,35 +1,50 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
-class SearchPageController extends GetxController with FireBaseUtils {
+class SearchPageController extends GetxController
+    with FireBaseUtils, FirebaseTags {
   final groupsController = Get.find<GroupsController>();
   final searchValue = ''.obs;
   final searchedGroups = Rx<Map<String, FirebaseGroup>>({});
   final searchedUsers = Rx<Map<String, UserInfoModel>>({});
+  final searchedTags = Rx<Map<String, Tag>>({});
+  final loadingTag_name = ''.obs;
   final selectedSearchTab = 0.obs;
+  final isSearching = false.obs;
 
   @override
   void onInit() {
     super.onInit();
     searchValue.listen((value) async {
+      if (value.isEmpty) {
+        searchedTags.value = {};
+        searchedGroups.value = {};
+        searchedUsers.value = {};
+        isSearching.value = false;
+        return;
+      }
+      isSearching.value = true;
       _deb.debounce(() async {
-        final [groups, users] = await Future.wait([
+        final [groups, users, tags] = await Future.wait([
           searchForGroupByName(value),
           searchForUserByName(value),
+          searchTags(value)
         ]);
-        if (value.isEmpty) {
-          searchedGroups.value = {};
-          searchedUsers.value = {};
-        } else {
-          searchedGroups.value = groups as Map<String, FirebaseGroup>;
-          searchedUsers.value = users as Map<String, UserInfoModel>;
-        }
+        searchedGroups.value = groups as Map<String, FirebaseGroup>;
+        searchedUsers.value = users as Map<String, UserInfoModel>;
+        searchedTags.value = tags as Map<String, Tag>;
+        isSearching.value = false;
       });
     });
   }
@@ -51,6 +66,65 @@ class SearchPageController extends GetxController with FireBaseUtils {
     }
     final foundGroups = await searchForGroupByName(v);
     searchedGroups.value = foundGroups;
+  }
+
+  tagClicked(Tag tag) async {
+    final groupIds = tag.groupIds;
+    loadingTag_name.value = tag.tagName;
+    if (groupIds == null) {
+      return;
+    }
+    final foundGroups =
+        await Future.wait(groupIds.map((e) => getGroupInfoById(e)));
+    if (foundGroups.isEmpty) {
+      log.e('No groups found for tag: ${tag.tagName}');
+      return;
+    } else {
+      final parsedGroups = foundGroups
+          .where((element) => element != null)
+          .toList()
+          .cast<FirebaseGroup>();
+      Get.dialog(
+        SafeArea(
+          child: Scaffold(
+            backgroundColor: ColorName.pageBackground,
+            body: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: Get.width - 100,
+                        child: Text(
+                          '#${tag.tagName}',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close),
+                        onPressed: Get.close,
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  height: Get.height - 150,
+                  color: ColorName.pageBackground,
+                  child: GroupList(groupsList: parsedGroups),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    loadingTag_name.value = '';
   }
 
   searchUser(String v) async {

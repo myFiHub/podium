@@ -36,7 +36,7 @@ class FirebaseGroup {
   String? subject;
   List<UserTicket> ticketsRequiredToAccess = [];
   List<UserTicket> ticketsRequiredToSpeak = [];
-  List<Tag> tags = [];
+  List<String> tags = [];
   bool creatorJoined = false;
   bool archived = false;
   bool hasAdultContent = false;
@@ -93,30 +93,30 @@ class FirebaseGroup {
         ticketsRequiredToAccess.map((e) => e.toJson()).toList();
     data[ticketsRequiredToSpeakKey] =
         ticketsRequiredToSpeak.map((e) => e.toJson()).toList();
-    data[tagsKey] = tags.map((e) => e.toJson()).toList();
+    data[tagsKey] = tags.map((e) => e).toList();
     return data;
   }
 }
 
 class Tag {
-  String name;
-  List<String> groupIds = [];
-  String? lowercasename;
+  String id;
+  List<String>? groupIds = [];
+  String tagName;
 
-  static String nameKey = 'name';
-  static String lowercasenameKey = 'lowercasename';
+  static String idKey = 'id';
+  static String tagNameKey = 'tagName';
   static String groupIdsKey = 'groupIds';
 
   Tag({
-    required this.name,
-    this.lowercasename,
-    required this.groupIds,
+    required this.id,
+    required this.tagName,
+    this.groupIds,
   });
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data[nameKey] = name;
-    data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
+    data[idKey] = id;
+    data[tagNameKey] = tagName;
     data[groupIdsKey] = groupIds;
     return data;
   }

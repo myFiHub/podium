@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
@@ -448,6 +449,12 @@ mixin FireBaseUtils {
     final group = snapshot.value as dynamic;
     if (group != null) {
       final groupInfo = singleGroupParser(group);
+      if (groupInfo == null) {
+        return null;
+      }
+      if (groupInfo.archived && groupInfo.creator.id != myId) {
+        return null;
+      }
       return groupInfo;
     } else {
       return null;

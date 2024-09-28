@@ -147,7 +147,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     required bool adultContent,
     required List<UserInfoModel> requiredTicketsToAccess,
     required List<UserInfoModel> requiredTicketsToSpeak,
-    required List<Tag> tags,
+    required List<String> tags,
   }) async {
     final newGroupId = Uuid().v4();
     final firebaseGroupsReference =
@@ -171,7 +171,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       subject: subject,
       hasAdultContent: adultContent,
       lowercasename: name.toLowerCase(),
-      tags: tags,
+      tags: tags.map((e) => e).toList(),
       ticketsRequiredToAccess: requiredTicketsToAccess
           .map(
             (e) => UserTicket(
@@ -262,7 +262,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     if (group == null) {
       Get.snackbar(
         "Error",
-        "Failed to join the room, seems like the room is deleted",
+        "Failed to join the room, seems like the room is Archived or deleted",
         colorText: Colors.red,
       );
       Navigate.to(

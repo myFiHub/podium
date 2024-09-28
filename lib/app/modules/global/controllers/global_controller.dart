@@ -156,10 +156,12 @@ class GlobalController extends GetxController {
       if (currentChainId == chainId) {
         success = true;
       } else {
-        await web3ModalService.selectChain(chain);
+        await web3ModalService.selectChain(
+          chain,
+          switchChain: true,
+        );
         final selectedChainId = web3ModalService.selectedChain?.chainId;
         if (selectedChainId != null && selectedChainId.isNotEmpty) {
-          externalWalletChainId.value = selectedChainId;
           success = true;
         } else {
           success = false;
@@ -171,6 +173,7 @@ class GlobalController extends GetxController {
     }
     if (success) {
       storage.write(StorageKeys.externalWalletChainId, chainId);
+      externalWalletChainId.value = chainId;
     } else {
       storage.remove(StorageKeys.externalWalletChainId);
     }
@@ -349,12 +352,9 @@ class GlobalController extends GetxController {
 
   Future<bool> removeUserWalletAddressOnFirebase() async {
     try {
-      final globalController = Get.find<GlobalController>();
-      final id = myId;
-      final userId = id;
       final firebaseUserDbReference = FirebaseDatabase.instance
           .ref(FireBaseConstants.usersRef)
-          .child(userId + '/' + UserInfoModel.localWalletAddressKey);
+          .child(myId + '/' + UserInfoModel.localWalletAddressKey);
       await firebaseUserDbReference.set('');
       return true;
     } catch (e) {
@@ -365,11 +365,7 @@ class GlobalController extends GetxController {
 
   cleanStorage() {
     final storage = GetStorage();
-    storage.remove(StorageKeys.userId);
-    storage.remove(StorageKeys.userAvatar);
-    storage.remove(StorageKeys.userFullName);
-    storage.remove(StorageKeys.userEmail);
-    storage.remove(StorageKeys.loginType);
+    storage.erase();
   }
 
   Future<String?> getJitsiServerAddress() {
@@ -665,7 +661,8 @@ class GlobalController extends GetxController {
     try {
       // web3ModalService.disconnect();
       await web3ModalService.openModalView();
-      final address = BlockChainUtils.retrieveConnectedWallet(web3ModalService);
+      final address =
+          await BlockChainUtils.retrieveConnectedWallet(web3ModalService);
       connectedWalletAddress.value = address;
       if (afterConnection != null && address != '') {
         afterConnection();

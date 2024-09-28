@@ -39,6 +39,10 @@ class $AssetsImagesGen {
   /// File path: assets/images/logo.png
   AssetGenImage get logo => const AssetGenImage('assets/images/logo.png');
 
+  /// File path: assets/images/movement_logo.svg
+  SvgGenImage get movementLogo =>
+      const SvgGenImage('assets/images/movement_logo.svg');
+
   /// File path: assets/images/particle_icon.png
   AssetGenImage get particleIcon =>
       const AssetGenImage('assets/images/particle_icon.png');
@@ -56,6 +60,7 @@ class $AssetsImagesGen {
         github,
         linkedin,
         logo,
+        movementLogo,
         particleIcon,
         xPlatform
       ];

@@ -45,8 +45,6 @@ class BlockChainUtils {
       }
       final address = await retrieveConnectedWallet(_w3mService);
       connectedWalletAddress.value = address;
-      log.i(
-          'Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${_w3mService.session?.chainId}');
     });
     void _onModalConnect(ModalConnect? event) async {
       if (_w3mService.session == null) {
@@ -55,7 +53,17 @@ class BlockChainUtils {
       }
       final address = await retrieveConnectedWallet(_w3mService);
       connectedWalletAddress.value = address;
-
+      if (event != null) {
+        String chainId = event.session.chainId;
+        if (chainId.contains(':')) {
+          chainId = chainId.split(':')[1];
+        }
+        if (chainId == externalWalletChianId) return;
+        final GlobalController globalController = Get.find<GlobalController>();
+        await globalController.switchExternalWalletChain(chainId);
+      }
+      log.d(
+          'Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${_w3mService.session?.chainId}');
       log.i('[initializewm3Service] _onModalConnect ${event?.toString()}');
     }
 
@@ -69,10 +77,12 @@ class BlockChainUtils {
           '[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
       if (event != null) {
         GlobalController globalController = Get.find<GlobalController>();
+
         String chainId = event.chainId;
         if (chainId.contains(':')) {
           chainId = chainId.split(':')[1];
         }
+        if (chainId == externalWalletChianId) return;
         await globalController.switchExternalWalletChain(chainId);
       }
     }
@@ -178,15 +188,15 @@ class BlockChainUtils {
     final connectedChain = session!.chainId;
     String chainId = connectedChain;
 
-    if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty) {
-      final globalController = Get.find<GlobalController>();
-      if (connectedChain != externalWalletChianId) {
-        if (chainId.contains(':')) {
-          chainId = chainId.split(':')[1];
-        }
-        await globalController.switchExternalWalletChain(chainId);
-      }
-    }
+    // if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty) {
+    //   final globalController = Get.find<GlobalController>();
+    //   if (connectedChain != externalWalletChianId) {
+    //     if (chainId.contains(':')) {
+    //       chainId = chainId.split(':')[1];
+    //     }
+    //     await globalController.switchExternalWalletChain(chainId);
+    //   }
+    // }
 
     final accounts = session.getAccounts();
     final currentNamespace = '${Env.chainNamespace}:${chainId}';

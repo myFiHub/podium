@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/chainIcons.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/constants.dart';
@@ -161,6 +162,12 @@ class ParticleWalletManager extends GetView<GlobalController> {
                               color: Colors.blue[100],
                             ),
                           ),
+                          space5,
+                          Icon(Icons.link, color: Colors.blue[100]),
+                          space5,
+                          ParticleWalletChainIcon(
+                            size: 20,
+                          )
                         ],
                       ),
                       space10,
@@ -246,6 +253,12 @@ class WalletInfo extends GetView<GlobalController> {
                               fontWeight: FontWeight.w700,
                               color: Colors.green[100],
                             ),
+                          ),
+                          space5,
+                          Icon(Icons.link, color: Colors.green[100]),
+                          space5,
+                          ExternalWalletChainIcon(
+                            size: 20,
                           ),
                         ],
                       ),

@@ -162,7 +162,6 @@ class GlobalController extends GetxController {
   }
 
   Future<bool> switchExternalWalletChain(String chainId) async {
-    log.d(chainId);
     bool success = false;
     final chain = ReownAppKitModalNetworks.getNetworkById(
       Env.chainNamespace,

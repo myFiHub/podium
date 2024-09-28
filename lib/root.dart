@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/widgets/chainIcons.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
@@ -44,48 +45,29 @@ class ConnectedNetworks extends GetWidget<GlobalController> {
         top: 0,
         left: 0,
         child: Obx(() {
-          // we need next two lines for data to be reactive
-          // ignore: unused_local_variable
-          final externalWalletChainId = controller.externalWalletChainId.value;
+          controller.particleWalletChainId.value;
+          controller.externalWalletChainId.value;
           final connectedExternalWalletAddress =
               controller.connectedWalletAddress.value;
-          // ignore: unused_local_variable
-          final particleWalletChainId = controller.particleWalletChainId.value;
-          final particleChain = controller.particleWalletChain(null);
-          final externalChain = controller.externalWalletChain;
-          String externalChainNetworkIcon = '';
-          if (externalChain != null) {
-            externalChainNetworkIcon =
-                controller.particleWalletChain(externalWalletChainId)?.icon ??
-                    '';
-          }
-          if (externalChainNetworkIcon == '') {
-            externalChainNetworkIcon = movementChain.chainIcon ?? '';
-          }
           // final externalWalletIcon= ;
           return Container(
             constraints: BoxConstraints(maxHeight: 60),
             child: Column(
               children: [
-                if (particleChain != null)
-                  Row(
-                    children: [
-                      SizedBox(width: 4),
-                      Assets.images.particleIcon.image(
-                        width: 10,
-                        height: 10,
-                      ),
-                      space5,
-                      Icon(Icons.link_sharp),
-                      space5,
-                      Container(
-                        height: 12,
-                        child: Image.network(particleChain.icon),
-                      ),
-                    ],
-                  ),
-                if (externalChain != null &&
-                    connectedExternalWalletAddress != '')
+                Row(
+                  children: [
+                    SizedBox(width: 4),
+                    Assets.images.particleIcon.image(
+                      width: 10,
+                      height: 10,
+                    ),
+                    space5,
+                    Icon(Icons.link_sharp),
+                    space5,
+                    ParticleWalletChainIcon(),
+                  ],
+                ),
+                if (connectedExternalWalletAddress != '')
                   Row(
                     children: [
                       SizedBox(
@@ -100,10 +82,7 @@ class ConnectedNetworks extends GetWidget<GlobalController> {
                       ),
                       Icon(Icons.link_sharp),
                       space5,
-                      Container(
-                        height: 12,
-                        child: Image.network(externalChainNetworkIcon ?? ''),
-                      ),
+                      ExternalWalletChainIcon(),
                     ],
                   ),
               ],

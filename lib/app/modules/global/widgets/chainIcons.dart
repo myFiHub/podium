@@ -18,10 +18,14 @@ class ParticleWalletChainIcon extends GetWidget<GlobalController> {
       if (particleChain == null) {
         return const SizedBox();
       }
-      return Container(
-        height: size.toDouble(),
-        child: Image.network(
-          particleChain.icon,
+      return Tooltip(
+        message: particleChain.name,
+        preferBelow: false,
+        child: Container(
+          height: size.toDouble(),
+          child: Image.network(
+            particleChain.icon,
+          ),
         ),
       );
     });
@@ -53,14 +57,18 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
       if (connectedExternalWalletAddress == '' || externalChain == null) {
         return const SizedBox();
       }
-      return Container(
-        height: size.toDouble(),
-        child: externalChainNetworkIcon == ''
-            ? Assets.images.movementLogo.svg(
-                width: size.toDouble(),
-                height: size.toDouble(),
-              )
-            : Image.network(externalChainNetworkIcon ?? ''),
+      return Tooltip(
+        message: externalChain.name,
+        preferBelow: false,
+        child: Container(
+          height: size.toDouble(),
+          child: externalChainNetworkIcon == ''
+              ? Assets.images.movementLogo.svg(
+                  width: size.toDouble(),
+                  height: size.toDouble(),
+                )
+              : Image.network(externalChainNetworkIcon ?? ''),
+        ),
       );
     });
   }

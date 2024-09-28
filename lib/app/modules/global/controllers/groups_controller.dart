@@ -9,6 +9,7 @@ import 'package:podium/app/modules/chechTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
@@ -26,7 +27,7 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
 
-class GroupsController extends GetxController with FireBaseUtils {
+class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
   final groups = Rxn<Map<String, FirebaseGroup>>({});
@@ -146,6 +147,7 @@ class GroupsController extends GetxController with FireBaseUtils {
     required bool adultContent,
     required List<UserInfoModel> requiredTicketsToAccess,
     required List<UserInfoModel> requiredTicketsToSpeak,
+    required List<Tag> tags,
   }) async {
     final newGroupId = Uuid().v4();
     final firebaseGroupsReference =
@@ -169,6 +171,7 @@ class GroupsController extends GetxController with FireBaseUtils {
       subject: subject,
       hasAdultContent: adultContent,
       lowercasename: name.toLowerCase(),
+      tags: tags,
       ticketsRequiredToAccess: requiredTicketsToAccess
           .map(
             (e) => UserTicket(
@@ -188,7 +191,11 @@ class GroupsController extends GetxController with FireBaseUtils {
     );
     final jsonedGroup = group.toJson();
     try {
-      await firebaseGroupsReference.set(jsonedGroup);
+      await Future.wait([
+        firebaseGroupsReference.set(jsonedGroup),
+        ...tags.map((tag) => saveNewTagIfNeeded(tag: tag, group: group)),
+      ]);
+
       groups.value![newGroupId] = group;
       final newFirebaseSession = FirebaseSession(
         name: name,

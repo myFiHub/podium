@@ -1,6 +1,4 @@
-import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -35,22 +33,37 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final isArchived = value[FirebaseGroup.archivedKey] ?? false;
     final hasAdultContent = value[FirebaseGroup.hasAdultContentKey] ?? false;
+
     final ticketsRequiredToAccess =
         value[FirebaseGroup.ticketRequiredToAccessKey] ?? [];
-    final ticketsRequiredToSpeak =
-        value[FirebaseGroup.ticketsRequiredToSpeakKey] ?? [];
     final parsedTicketsRequiredToAccess = ticketsRequiredToAccess
         .map((e) => UserTicket(
             userId: e[UserTicket.userIdKey],
             userAddress: e[UserTicket.userAddressKey]))
         .toList()
         .cast<UserTicket>();
+
+    final ticketsRequiredToSpeak =
+        value[FirebaseGroup.ticketsRequiredToSpeakKey] ?? [];
     final parsedTicketsRequiredToSpeak = ticketsRequiredToSpeak
         .map((e) => UserTicket(
             userId: e[UserTicket.userIdKey],
             userAddress: e[UserTicket.userAddressKey]))
         .toList()
         .cast<UserTicket>();
+
+    final tags = value[FirebaseGroup.tagsKey] ?? [];
+    final parsedTags = tags
+        .map((e) {
+          final groupIds = e[Tag.groupIdsKey] ?? [];
+          final parsedGroupIds = groupIds.cast<String>();
+          return Tag(
+              name: e[Tag.nameKey],
+              lowercasename: e[Tag.lowercasenameKey],
+              groupIds: parsedGroupIds);
+        })
+        .toList()
+        .cast<Tag>();
 
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
@@ -70,6 +83,7 @@ FirebaseGroup? singleGroupParser(value) {
       creatorJoined: creatorJoined,
       archived: isArchived,
       hasAdultContent: hasAdultContent,
+      tags: parsedTags,
       ticketsRequiredToAccess: parsedTicketsRequiredToAccess,
       ticketsRequiredToSpeak: parsedTicketsRequiredToSpeak,
     );

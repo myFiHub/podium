@@ -36,6 +36,7 @@ class FirebaseGroup {
   String? subject;
   List<UserTicket> ticketsRequiredToAccess = [];
   List<UserTicket> ticketsRequiredToSpeak = [];
+  List<Tag> tags = [];
   bool creatorJoined = false;
   bool archived = false;
   bool hasAdultContent = false;
@@ -54,6 +55,7 @@ class FirebaseGroup {
   static String hasAdultContentKey = 'hasAdultContent';
   static String ticketRequiredToAccessKey = 'ticketsRequiredToAccess';
   static String ticketsRequiredToSpeakKey = 'ticketsRequiredToSpeak';
+  static String tagsKey = 'tags';
 
   FirebaseGroup({
     required this.name,
@@ -70,6 +72,7 @@ class FirebaseGroup {
     this.hasAdultContent = false,
     this.ticketsRequiredToAccess = const [],
     this.ticketsRequiredToSpeak = const [],
+    this.tags = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -90,6 +93,31 @@ class FirebaseGroup {
         ticketsRequiredToAccess.map((e) => e.toJson()).toList();
     data[ticketsRequiredToSpeakKey] =
         ticketsRequiredToSpeak.map((e) => e.toJson()).toList();
+    data[tagsKey] = tags.map((e) => e.toJson()).toList();
+    return data;
+  }
+}
+
+class Tag {
+  String name;
+  List<String> groupIds = [];
+  String? lowercasename;
+
+  static String nameKey = 'name';
+  static String lowercasenameKey = 'lowercasename';
+  static String groupIdsKey = 'groupIds';
+
+  Tag({
+    required this.name,
+    this.lowercasename,
+    required this.groupIds,
+  });
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data[nameKey] = name;
+    data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
+    data[groupIdsKey] = groupIds;
     return data;
   }
 }

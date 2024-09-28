@@ -76,6 +76,7 @@ class AllGroupsList extends GetWidget<AllGroupsController> {
       final groups = controller.searchedGroups.value;
       final groupsController = Get.find<GroupsController>();
       List<FirebaseGroup> groupsList =
+          // ignore: unnecessary_null_comparison
           groups != null ? groups.values.toList() : [];
       if (groupsList.isEmpty && groupsController.groups.value != null) {
         groupsList = groupsController.groups.value!.values.toList();

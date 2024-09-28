@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -21,6 +22,7 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   final selectedUsersToBuyTicketFrom_ToAccessRoom = <UserInfoModel>[].obs;
   final selectedUsersToBuyticketFrom_ToSpeak = <UserInfoModel>[].obs;
   final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
+  final tags = RxList<Tag>([]);
   final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
   @override
@@ -149,6 +151,7 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       accessType: accessType,
       speakerType: speakerType,
       subject: subject,
+      tags: tags.value,
       adultContent: newGroupHasAdultContent.value,
       requiredTicketsToAccess: selectedUsersToBuyTicketFrom_ToAccessRoom.value,
       requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,

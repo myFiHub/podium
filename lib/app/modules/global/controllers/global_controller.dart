@@ -72,11 +72,31 @@ class GlobalController extends GetxController {
   String? deepLinkRoute = null;
 
   final particleWalletChainId = RxString(
-      (storage.read(StorageKeys.externalWalletChainId) ??
+      (storage.read(StorageKeys.particleWalletChainId) ??
           Env.initialParticleWalletChainId));
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
           Env.initialExternalWalletChainId));
+
+  ChainInfo.ChainInfo? particleWalletChain(String? chainId) {
+    final particleChain = ChainInfo.ChainInfo.getChain(
+      int.parse(chainId ?? particleWalletChainId.value),
+      ReownAppKitModalNetworks.getNetworkById(
+        Env.chainNamespace,
+        chainId ?? particleWalletChainId.value,
+      )!
+          .name,
+    );
+    return particleChain;
+  }
+
+  ReownAppKitModalNetworkInfo? get externalWalletChain {
+    final chain = ReownAppKitModalNetworks.getNetworkById(
+      Env.chainNamespace,
+      externalWalletChainId.value,
+    );
+    return chain;
+  }
 
   final connectionCheckerInstance = InternetConnection.createInstance(
     checkInterval: const Duration(seconds: 5),
@@ -142,6 +162,7 @@ class GlobalController extends GetxController {
   }
 
   Future<bool> switchExternalWalletChain(String chainId) async {
+    log.d(chainId);
     bool success = false;
     final chain = ReownAppKitModalNetworks.getNetworkById(
       Env.chainNamespace,
@@ -164,6 +185,7 @@ class GlobalController extends GetxController {
         if (selectedChainId != null && selectedChainId.isNotEmpty) {
           success = true;
         } else {
+          log.e("error switching chain");
           success = false;
         }
       }
@@ -690,6 +712,7 @@ class GlobalController extends GetxController {
       web3ModalService.disconnect();
       storage.remove(StorageKeys.externalWalletChainId);
       storage.remove(StorageKeys.selectedWalletName);
+      connectedWalletAddress.value = '';
     }
     analytics.logEvent(
       name: 'wallet_disconnected',

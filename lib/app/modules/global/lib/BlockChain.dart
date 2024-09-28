@@ -64,12 +64,16 @@ class BlockChainUtils {
       log.i('[initializewm3Service] _onModalUpdate ${event?.toString()}');
     }
 
-    void _onModalNetworkChange(ModalNetworkChange? event) {
+    void _onModalNetworkChange(ModalNetworkChange? event) async {
       log.i(
           '[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
       if (event != null) {
         GlobalController globalController = Get.find<GlobalController>();
-        globalController.switchExternalWalletChain(event.chainId);
+        String chainId = event.chainId;
+        if (chainId.contains(':')) {
+          chainId = chainId.split(':')[1];
+        }
+        await globalController.switchExternalWalletChain(chainId);
       }
     }
 
@@ -97,6 +101,15 @@ class BlockChainUtils {
 
     void _onSessionEvent(SessionEvent? event) {
       log.i('[initializewm3Service] _onSessionEvent ${event?.toString()}');
+      String? eventChainId = event?.chainId;
+      if (eventChainId != null && eventChainId.isNotEmpty) {
+        if (eventChainId.contains(':')) {
+          eventChainId = eventChainId.split(':')[1];
+        }
+        if (eventChainId == externalWalletChianId) return;
+        final GlobalController globalController = Get.find<GlobalController>();
+        globalController.switchExternalWalletChain(eventChainId);
+      }
     }
 
     void _onRelayClientConnect(EventArgs? event) {
@@ -163,16 +176,20 @@ class BlockChainUtils {
     }
     final session = _w3mService.session;
     final connectedChain = session!.chainId;
+    String chainId = connectedChain;
 
     if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty) {
       final globalController = Get.find<GlobalController>();
       if (connectedChain != externalWalletChianId) {
-        await globalController.switchExternalWalletChain(connectedChain);
+        if (chainId.contains(':')) {
+          chainId = chainId.split(':')[1];
+        }
+        await globalController.switchExternalWalletChain(chainId);
       }
     }
 
     final accounts = session.getAccounts();
-    final currentNamespace = '${Env.chainNamespace}:${connectedChain}';
+    final currentNamespace = '${Env.chainNamespace}:${chainId}';
     if (accounts != null && accounts.isNotEmpty) {
       final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
       if (chainsNamespaces.contains(currentNamespace)) {

@@ -25,7 +25,7 @@ get externalWalletChianId {
   return globalController.externalWalletChainId.value;
 }
 
-get particleCianId {
+get particleChianId {
   final GlobalController globalController = Get.find();
   return globalController.particleWalletChainId.value;
 }

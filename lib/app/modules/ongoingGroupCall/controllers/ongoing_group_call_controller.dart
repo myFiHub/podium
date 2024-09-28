@@ -339,6 +339,10 @@ class OngoingGroupCallController extends GetxController
       return;
     }
 
+    if (cheerBooAddress == ZERO_ADDRESS) {
+      return;
+    }
+
     final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
     if (userLocalWalletAddress != '') {
       targetAddress = userLocalWalletAddress;

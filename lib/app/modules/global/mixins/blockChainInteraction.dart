@@ -459,7 +459,7 @@ String get cheerBooAddress {
   if (address == null || address.isEmpty) {
     Get.snackbar(
       "Error",
-      "Smart contract is not defined on this chain",
+      "please switch to Movement chain, on your wallet and try again",
       colorText: Colors.red,
     );
     return ZERO_ADDRESS;

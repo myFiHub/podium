@@ -115,6 +115,7 @@ class GlobalController extends GetxController {
       initializeParticleAuth(),
       FirebaseInit.init(),
     ]);
+
     isFirebaseInitialized.value = true;
     final res = await analytics.getSessionId();
 

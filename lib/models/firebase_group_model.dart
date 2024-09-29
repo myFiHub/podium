@@ -42,6 +42,8 @@ class FirebaseGroup {
   bool creatorJoined = false;
   bool archived = false;
   bool hasAdultContent = false;
+  int scheduledFor = 0;
+  int alarmId = 0;
 
   static String idKey = 'id';
   static String nameKey = 'name';
@@ -60,6 +62,8 @@ class FirebaseGroup {
   static String requiredAddressesToEnterKey = 'requiredAddressesToEnter';
   static String requiredAddressesToSpeakKey = 'requiredAddressesToSpeak';
   static String tagsKey = 'tags';
+  static String scheduledForKey = 'ScheduledFor';
+  static String alarmIdKey = 'alarmId';
 
   FirebaseGroup({
     required this.name,
@@ -79,6 +83,8 @@ class FirebaseGroup {
     this.requiredAddressesToEnter = const [],
     this.requiredAddressesToSpeak = const [],
     this.tags = const [],
+    this.scheduledFor = 0,
+    this.alarmId = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -102,6 +108,8 @@ class FirebaseGroup {
     data[tagsKey] = tags.map((e) => e).toList();
     data[requiredAddressesToEnterKey] = requiredAddressesToEnter;
     data[requiredAddressesToSpeakKey] = requiredAddressesToSpeak;
+    data[scheduledForKey] = scheduledFor;
+    data[alarmIdKey] = alarmId;
     return data;
   }
 }

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -29,6 +28,8 @@ class CreateGroupView extends GetView<CreateGroupController> {
                 space10,
                 SelectRoomSpeakerType(),
                 space10,
+                ScheduleToggle(),
+                space10,
                 AdultsCheckbox(),
                 space10,
                 CreateButton(),
@@ -39,6 +40,76 @@ class CreateGroupView extends GetView<CreateGroupController> {
       ),
     );
   }
+}
+
+class ScheduleToggle extends GetView<CreateGroupController> {
+  const ScheduleToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isScheduled = controller.isScheduled.value;
+      final scheduledFor = controller.scheduledFor.value;
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text(
+                  'Schedule Room',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 18,
+                  ),
+                ),
+                Switch(
+                  value: isScheduled,
+                  onChanged: (value) {
+                    controller.toggleScheduled();
+                  },
+                ),
+              ],
+            ),
+          ),
+          space10,
+          if (isScheduled)
+            Builder(builder: (context) {
+              final selected = scheduledFor != 0;
+              return Button(
+                  text: !selected
+                      ? 'Select Date and Time'
+                      : millisecondsToFormattedDateWithTime(scheduledFor),
+                  blockButton: true,
+                  type: ButtonType.outline,
+                  icon: Icon(
+                    Icons.calendar_month_outlined,
+                    color: Colors.grey[400],
+                  ),
+                  onPressed: () {
+                    controller.openCalendarBottomSheet();
+                  });
+            }),
+        ],
+      );
+    });
+  }
+}
+
+millisecondsToFormattedDateWithTime(int milliseconds) {
+// if a number is less than 10, add a 0 before it
+  String addZero(int number) {
+    return number < 10 ? '0$number' : number.toString();
+  }
+
+  final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+  final day = addZero(date.day);
+  final month = addZero(date.month);
+  final year = date.year;
+  final hour = addZero(date.hour);
+  final minute = addZero(date.minute);
+  return '$day/$month/$year $hour:$minute';
 }
 
 class TagsInput extends GetWidget<CreateGroupController> {
@@ -100,8 +171,12 @@ class CreateButton extends GetWidget<CreateGroupController> {
           controller.shouldSelectTicketHolersForAccess;
       final shouldSelectTicketHolersForSpeaking =
           controller.shouldSelectTicketHolersForSpeaking;
+      final isScheduled = controller.isScheduled.value;
+      final scheduledFor = controller.scheduledFor.value;
       final hasThingsToDo = shouldSelectTicketHolersForAccess ||
-          shouldSelectTicketHolersForSpeaking;
+          shouldSelectTicketHolersForSpeaking ||
+          (isScheduled && scheduledFor == 0);
+
       return Button(
         loading: loading,
         blockButton: true,

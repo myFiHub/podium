@@ -31,6 +31,7 @@ import 'package:reown_appkit/reown_appkit.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
 import 'package:particle_base/model/chain_info.dart' as ChainInfo;
 import 'package:particle_base/particle_base.dart' as ParticleBase;
+import 'package:alarm/alarm.dart';
 
 PairingMetadata _pairingMetadata = PairingMetadata(
   name: StringConstants.w3mPageTitleV3,
@@ -164,6 +165,7 @@ class GlobalController extends GetxController {
     checkLogin();
     initializeW3MService();
     listenToWalletAddressChange();
+    Alarm.init();
     initializedOnce.value = true;
   }
 

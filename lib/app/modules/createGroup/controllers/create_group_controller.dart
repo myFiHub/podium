@@ -1,7 +1,13 @@
+import 'dart:io';
+import 'dart:math';
+
+import 'package:alarm/alarm.dart';
+import 'package:alarm/model/alarm_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -14,6 +20,7 @@ import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+import 'package:uuid/uuid.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
@@ -28,6 +35,8 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
   final addressesToAddForEntering = RxList<String>([]);
   final addressesToAddForSpeaking = RxList<String>([]);
+  final isScheduled = false.obs;
+  final scheduledFor = 0.obs;
   final searchValueForSeletTickets = "".obs;
   final tags = RxList<String>([]);
   final roomSubject = defaultSubject.obs;
@@ -47,6 +56,10 @@ class CreateGroupController extends GetxController with FireBaseUtils {
     super.onClose();
   }
 
+  toggleScheduled() {
+    isScheduled.value = !isScheduled.value;
+  }
+
   setTags(List<String> values) {
     tags.value = values;
   }
@@ -61,6 +74,22 @@ class CreateGroupController extends GetxController with FireBaseUtils {
 
   setRoomSubject(String value) {
     roomSubject.value = value;
+  }
+
+  Future<int> openCalendarBottomSheet() async {
+    DateTime? dateTime = await showOmniDateTimePicker(
+      context: Get.context!,
+      is24HourMode: true,
+      theme: ThemeData.dark(),
+      type: OmniDateTimePickerType.dateAndTime,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(Duration(days: 365)),
+      minutesInterval: 5,
+    );
+    if (dateTime != null) {
+      scheduledFor.value = dateTime.millisecondsSinceEpoch;
+    }
+    return scheduledFor.value;
   }
 
   get shouldSelectTicketHolersForSpeaking {
@@ -189,6 +218,65 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       );
       return;
     }
+    final twentyMinutesFromNow =
+        DateTime.now().add(Duration(minutes: 20)).millisecondsSinceEpoch;
+    final isGroupScheduled =
+        isScheduled.value && scheduledFor.value > twentyMinutesFromNow;
+    final alarmId = Random().nextInt(100000000);
+    if (isGroupScheduled) {
+      final int? alarmMeBefore = await Get.dialog<int>(
+        AlertDialog(
+          title: Text('Alarm'),
+          content: Text('Do you want to set an alarm for this event?'),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              child: Text('set for 5 minutes before the event'),
+              onPressed: () {
+                Navigator.of(Get.overlayContext!).pop(5);
+              },
+            ),
+            TextButton(
+              child: Text('set for 10 minutes before the event'),
+              onPressed: () {
+                Navigator.of(Get.overlayContext!).pop(10);
+              },
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(Get.overlayContext!).pop(0);
+              },
+              child: Text('No, thanks, continue'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(Get.overlayContext!).pop(null);
+              },
+              child: Text('cancel'),
+            ),
+          ],
+        ),
+      );
+      if (alarmMeBefore == null) {
+        return;
+      } else {
+        final alarmSettings = AlarmSettings(
+          id: alarmId,
+          dateTime: DateTime.fromMillisecondsSinceEpoch(scheduledFor.value)
+              .subtract(Duration(minutes: alarmMeBefore)),
+          assetAudioPath: 'assets/alarm.mp3',
+          loopAudio: true,
+          vibrate: true,
+          volume: 0.8,
+          fadeDuration: 3.0,
+          notificationTitle: 'Podium',
+          notificationBody: 'Your event will start in $alarmMeBefore minutes',
+          enableNotificationOnKill: Platform.isIOS,
+        );
+        await Alarm.set(alarmSettings: alarmSettings);
+      }
+    }
+
     String subject = roomSubject.value;
     if (subject.isEmpty) {
       subject = defaultSubject;
@@ -207,6 +295,8 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
       requiredAddressesToEnter: addressesToAddForEntering.value,
       requiredAddressesToSpeak: addressesToAddForSpeaking.value,
+      scheduledFor: scheduledFor.value,
+      alarmId: alarmId,
     );
     isCreatingNewGroup.value = false;
     // Navigate.to(
@@ -220,6 +310,32 @@ class CreateGroupController extends GetxController with FireBaseUtils {
     Get.dialog(
       SelectUsersToBuyTicketFromBottomSheetContent(
         buyTicketToGetPermisionFor: buyTicketToGetPermisionFor,
+      ),
+    );
+  }
+}
+
+class ScheduledGroupDateSelector extends GetView<CreateGroupController> {
+  const ScheduledGroupDateSelector({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Container(
+        width: Get.width,
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: ColorName.cardBackground,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          children: [
+            Text('Select Date and Time'),
+          ],
+        ),
       ),
     );
   }

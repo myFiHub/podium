@@ -139,6 +139,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     required List<String> requiredAddressesToEnter,
     required List<String> requiredAddressesToSpeak,
     required List<String> tags,
+    required int scheduledFor,
+    required int alarmId,
   }) async {
     final newGroupId = Uuid().v4();
     final firebaseGroupsReference =
@@ -163,6 +165,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       hasAdultContent: adultContent,
       lowercasename: name.toLowerCase(),
       tags: tags.map((e) => e).toList(),
+      alarmId: alarmId,
+      creatorJoined: false,
       requiredAddressesToEnter: requiredAddressesToEnter,
       requiredAddressesToSpeak: requiredAddressesToSpeak,
       ticketsRequiredToAccess: requiredTicketsToAccess
@@ -181,6 +185,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
             ),
           )
           .toList(),
+      scheduledFor: scheduledFor,
     );
     final jsonedGroup = group.toJson();
     try {

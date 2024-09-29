@@ -57,9 +57,10 @@ FirebaseGroup? singleGroupParser(value) {
             userAddress: e[UserTicket.userAddressKey]))
         .toList()
         .cast<UserTicket>();
-
+    final int scheduledFor = value[FirebaseGroup.scheduledForKey] ?? 0;
     final tags = value[FirebaseGroup.tagsKey] ?? [];
     final List<String> parsedTags = tags.map((e) => e).toList().cast<String>();
+    final int alarmId = value[FirebaseGroup.alarmIdKey] ?? 0;
 
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
@@ -84,10 +85,14 @@ FirebaseGroup? singleGroupParser(value) {
       tags: parsedTags,
       ticketsRequiredToAccess: parsedTicketsRequiredToAccess,
       ticketsRequiredToSpeak: parsedTicketsRequiredToSpeak,
+      scheduledFor: scheduledFor,
+      alarmId: alarmId,
     );
     return group;
   } catch (e) {
-    log.e('Error parsing group: id:${groupId} $e');
+    log.e('Error parsing group: id:${groupId} $e',
+        stackTrace: StackTrace.current);
+
     return null;
   }
 }

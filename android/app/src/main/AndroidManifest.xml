@@ -5,7 +5,7 @@
      tools:replace="android:label"
         android:label="podium"
         android:name="${applicationName}"
-        
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

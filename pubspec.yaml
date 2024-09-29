@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   reown_appkit: ^1.0.1
+  alarm: ^3.1.7
   intl: ^0.19.0
   share_plus: ^10.0.2
   app_links: ^6.3.2
@@ -41,6 +42,7 @@ dependencies:
   pretty_dio_logger: ^1.4.0
   textfield_tags: ^3.0.1
   squadron: ^6.0.3
+  omni_datetime_picker: ^2.0.5
 
 dependency_overrides:
   web: ^0.5.0
@@ -82,4 +84,5 @@ flutter:
           weight: 700
   assets:
     - assets/images/
+    - assets/audio/blip.mp3
   uses-material-design: true

@@ -271,7 +271,7 @@ class CreateGroupController extends GetxController with FireBaseUtils {
           fadeDuration: 3.0,
           notificationTitle: 'Podium',
           notificationBody: 'Your event will start in $alarmMeBefore minutes',
-          enableNotificationOnKill: Platform.isIOS,
+          enableNotificationOnKill: Platform.isAndroid,
         );
         await Alarm.set(alarmSettings: alarmSettings);
       }

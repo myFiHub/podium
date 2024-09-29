@@ -163,6 +163,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       themeData: _themeData,
       child: GetMaterialApp(
         theme: darkThemeData,
+        defaultTransition: Transition.native,
         // showPerformanceOverlay: true,
         builder: (_, child) {
           return SafeArea(

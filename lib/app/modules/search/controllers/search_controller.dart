@@ -37,7 +37,8 @@ class SearchPageController extends GetxController
       isSearching.value = true;
       _deb.debounce(() async {
         final [groups, users, tags] = await Future.wait([
-          searchForGroupByName(value),
+          // searchForGroupByName(value),
+          filterGroupName(value),
           searchForUserByName(value),
           searchTags(value)
         ]);
@@ -57,6 +58,18 @@ class SearchPageController extends GetxController
   @override
   void onClose() {
     super.onClose();
+  }
+
+  Future<Map<String, FirebaseGroup>> filterGroupName(String name) async {
+    final allGroups = groupsController.groups.value;
+    final filteredGroups = allGroups.entries
+        .where((element) =>
+            element.value.name.toLowerCase().contains(name.toLowerCase()))
+        .toList();
+    final filteredGroupsMap = Map<String, FirebaseGroup>.fromEntries(
+      filteredGroups,
+    );
+    return filteredGroupsMap;
   }
 
   searchGroup(String v) async {

@@ -84,7 +84,7 @@ FirebaseGroup? singleGroupParser(value) {
   }
 }
 
-groupsParser(data) {
+Map<String, FirebaseGroup> groupsParser(data) {
   Map<String, FirebaseGroup> groupsMap = {};
   // Iterate through the data
   data.forEach((key, value) {

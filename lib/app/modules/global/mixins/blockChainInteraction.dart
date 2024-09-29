@@ -492,17 +492,32 @@ Future<String?> choseAWallet() async {
   if (savedWallet != null) {
     return savedWallet;
   }
-  final avalancheChainId = "43114";
-  final externalWalletEnabled = externalWalletChianId != null &&
-      externalWalletChianId!.isNotEmpty &&
-      externalWalletChianId == avalancheChainId;
 
   final selectedWallet = await Get.dialog(
     barrierDismissible: true,
     AlertDialog(
       title: Text("Choose a wallet"),
       backgroundColor: ColorName.cardBackground,
-      content: Column(
+      content: SelectChainContent(),
+    ),
+  );
+  return selectedWallet;
+}
+
+class SelectChainContent extends GetWidget<GlobalController> {
+  const SelectChainContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final store = GetStorage();
+
+    return Obx(() {
+      final avalancheChainId = "43114";
+      final externalChaiId = controller.externalWalletChainId.value;
+      final externalWalletEnabled =
+          externalChaiId.isNotEmpty && externalChaiId == avalancheChainId;
+
+      return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Button(
@@ -561,10 +576,9 @@ Future<String?> choseAWallet() async {
             ],
           )
         ],
-      ),
-    ),
-  );
-  return selectedWallet;
+      );
+    });
+  }
 }
 
 class RememberCheckBox extends StatefulWidget {

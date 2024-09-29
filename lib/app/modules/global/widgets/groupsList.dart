@@ -114,28 +114,29 @@ class SingleGroup extends StatelessWidget {
                                 Container(
                                   width: Get.width - 170,
                                   child: RichText(
+                                      overflow: TextOverflow.ellipsis,
                                       text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: "Created by:",
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: ColorName.greyText,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text:
-                                            "  ${amICreator ? "You" : group.creator.fullName}",
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          color: amICreator
-                                              ? Colors.green[200]
-                                              : Colors.blue[200],
-                                        ),
-                                      ),
-                                    ],
-                                  )),
+                                        children: [
+                                          TextSpan(
+                                            text: "Created by:",
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: ColorName.greyText,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text:
+                                                "  ${amICreator ? "You" : group.creator.fullName}",
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              color: amICreator
+                                                  ? Colors.green[200]
+                                                  : Colors.blue[200],
+                                            ),
+                                          ),
+                                        ],
+                                      )),
                                 ),
                                 space5,
                                 Row(
@@ -291,14 +292,18 @@ class TagsWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Wrap(
-        children: group.tags
-            .map((e) => SingleTag(
-                  tagName: e,
-                ))
-            .toList(),
+    return Container(
+      margin: EdgeInsets.only(top: 8),
+      width: Get.width - 74,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: group.tags
+              .map((e) => SingleTag(
+                    tagName: e,
+                  ))
+              .toList(),
+        ),
       ),
     );
   }

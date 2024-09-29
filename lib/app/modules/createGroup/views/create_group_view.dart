@@ -204,6 +204,8 @@ class SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
               () {
                 final selectedList =
                     controller.selectedUsersToBuyticketFrom_ToSpeak.value;
+                final numberOfAddressesToAdd =
+                    controller.addressesToAddForSpeaking;
                 if (controller.shouldBuyTicketToSpeak) {
                   return SelectUserstoBuyTicketFrom(
                     onTap: () {
@@ -211,7 +213,8 @@ class SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
                         buyTicketToGetPermisionFor: TicketPermissionType.speak,
                       );
                     },
-                    selectedList: selectedList,
+                    selectedListLength:
+                        selectedList.length + numberOfAddressesToAdd.length,
                   );
                 }
                 return SizedBox();
@@ -287,6 +290,7 @@ class SelectRoomAccessType extends GetWidget<CreateGroupController> {
           Obx(() {
             final selectedList =
                 controller.selectedUsersToBuyTicketFrom_ToAccessRoom.value;
+            final addresses = controller.addressesToAddForEntering;
             if (controller.shouldBuyTicketToAccess) {
               return SelectUserstoBuyTicketFrom(
                 onTap: () {
@@ -294,7 +298,7 @@ class SelectRoomAccessType extends GetWidget<CreateGroupController> {
                     buyTicketToGetPermisionFor: TicketPermissionType.access,
                   );
                 },
-                selectedList: selectedList,
+                selectedListLength: selectedList.length + addresses.length,
               );
             }
             return SizedBox();
@@ -307,8 +311,9 @@ class SelectRoomAccessType extends GetWidget<CreateGroupController> {
 
 class SelectUserstoBuyTicketFrom extends StatelessWidget {
   final Function onTap;
-  final List<UserInfoModel> selectedList;
-  SelectUserstoBuyTicketFrom({required this.onTap, required this.selectedList});
+  final int selectedListLength;
+  SelectUserstoBuyTicketFrom(
+      {required this.onTap, required this.selectedListLength});
   @override
   Widget build(BuildContext context) {
     return Positioned(
@@ -318,7 +323,7 @@ class SelectUserstoBuyTicketFrom extends StatelessWidget {
         onTap: () {
           onTap();
         },
-        child: SelectorContent(selectedList: selectedList),
+        child: SelectorContent(selectedListLength: selectedListLength),
       ),
     );
   }
@@ -327,26 +332,26 @@ class SelectUserstoBuyTicketFrom extends StatelessWidget {
 class SelectorContent extends StatelessWidget {
   const SelectorContent({
     super.key,
-    required this.selectedList,
+    required this.selectedListLength,
   });
 
-  final List<UserInfoModel> selectedList;
+  final int selectedListLength;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: selectedList.isEmpty ? Colors.red[200] : Colors.green[400],
+        color: selectedListLength == 0 ? Colors.red[200] : Colors.green[400],
         borderRadius: BorderRadius.circular(4),
       ),
       // width: 140,
       height: 40,
       child: Center(
         child: Text(
-          selectedList.isEmpty
+          selectedListLength == 0
               ? 'Select Tickets'
-              : '${selectedList.length} required ticket${selectedList.length > 1 ? 's' : ''}',
+              : '${selectedListLength} required ticket${selectedListLength > 1 ? 's' : ''}',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.black,

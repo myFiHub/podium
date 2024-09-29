@@ -12,6 +12,7 @@ class Input extends StatefulWidget {
       this.cornerradius = 8,
       required this.hintText,
       this.iconPrefix,
+      this.suffixIcon,
       this.formField = true,
       this.backgroundcolor = ColorName.pageBackground,
       this.normalbordercolor = Colors.grey,
@@ -85,6 +86,7 @@ class Input extends StatefulWidget {
   final double marginvertical;
   final double marginhorizontal;
   final Widget? iconPrefix;
+  final Widget? suffixIcon;
   final bool formField;
   final TextEditingController? controller;
   final String initialValue;
@@ -153,6 +155,7 @@ class _InputState extends State<Input> {
           decoration: InputDecoration(
             filled: widget.backgroundcolor != null || false,
             prefixIcon: widget.iconPrefix,
+            suffixIcon: widget.suffixIcon,
             fillColor: widget.backgroundcolor,
             hintText: widget.hintText,
             border: OutlineInputBorder(

@@ -4,6 +4,8 @@ import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
+import 'squads/groupsParser_squadran.dart';
+
 FirebaseGroup? singleGroupParser(value) {
   String groupId = '';
   try {
@@ -33,6 +35,10 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final isArchived = value[FirebaseGroup.archivedKey] ?? false;
     final hasAdultContent = value[FirebaseGroup.hasAdultContentKey] ?? false;
+    final List<String> requiredAddressesToEnter =
+        (value[FirebaseGroup.requiredAddressesToEnterKey] ?? []).cast<String>();
+    final List<String> requiredAddressesToSpeak =
+        (value[FirebaseGroup.requiredAddressesToSpeakKey] ?? []).cast<String>();
 
     final ticketsRequiredToAccess =
         value[FirebaseGroup.ticketRequiredToAccessKey] ?? [];
@@ -73,6 +79,8 @@ FirebaseGroup? singleGroupParser(value) {
       creatorJoined: creatorJoined,
       archived: isArchived,
       hasAdultContent: hasAdultContent,
+      requiredAddressesToEnter: requiredAddressesToEnter,
+      requiredAddressesToSpeak: requiredAddressesToSpeak,
       tags: parsedTags,
       ticketsRequiredToAccess: parsedTicketsRequiredToAccess,
       ticketsRequiredToSpeak: parsedTicketsRequiredToSpeak,
@@ -84,15 +92,9 @@ FirebaseGroup? singleGroupParser(value) {
   }
 }
 
-Map<String, FirebaseGroup> groupsParser(data) {
-  Map<String, FirebaseGroup> groupsMap = {};
-  // Iterate through the data
-  data.forEach((key, value) {
-    final group = singleGroupParser(value);
-    if (group != null &&
-        (group.archived == false || group.creator.id == myId)) {
-      groupsMap[group.id] = group;
-    }
-  });
+Future<Map<String, FirebaseGroup>> groupsParser(data) async {
+  final groupParserWorker = GroupsParserWorker();
+  final groupsMap = await groupParserWorker.parseGroups(data, myId);
+  groupParserWorker.stop();
   return groupsMap;
 }

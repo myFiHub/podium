@@ -504,7 +504,7 @@ Future<String?> choseAWallet() async {
   return selectedWallet;
 }
 
-class SelectChainContent extends GetWidget<GlobalController> {
+class SelectChainContent extends GetView<GlobalController> {
   const SelectChainContent({super.key});
 
   @override

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
+import 'package:podium/utils/truncate.dart';
+import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
@@ -22,6 +26,9 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   final selectedUsersToBuyTicketFrom_ToAccessRoom = <UserInfoModel>[].obs;
   final selectedUsersToBuyticketFrom_ToSpeak = <UserInfoModel>[].obs;
   final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
+  final addressesToAddForEntering = RxList<String>([]);
+  final addressesToAddForSpeaking = RxList<String>([]);
+  final searchValueForSeletTickets = "".obs;
   final tags = RxList<String>([]);
   final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
@@ -61,7 +68,8 @@ class CreateGroupController extends GetxController with FireBaseUtils {
                 RoomSpeakerTypes.onlyFriendTechTicketHolders ||
             roomSpeakerType.value == RoomSpeakerTypes.onlyArenaTicketHolders ||
             roomSpeakerType.value == RoomSpeakerTypes.onlyPodiumPassHolders) &&
-        selectedUsersToBuyticketFrom_ToSpeak.isEmpty;
+        selectedUsersToBuyticketFrom_ToSpeak.isEmpty &&
+        addressesToAddForSpeaking.isEmpty;
   }
 
   get shouldSelectTicketHolersForAccess {
@@ -69,7 +77,8 @@ class CreateGroupController extends GetxController with FireBaseUtils {
                 RoomAccessTypes.onlyFriendTechTicketHolders) ||
             roomAccessType.value == RoomAccessTypes.onlyArenaTicketHolders ||
             roomAccessType.value == RoomAccessTypes.onlyPodiumPassHolders) &&
-        selectedUsersToBuyTicketFrom_ToAccessRoom.isEmpty;
+        selectedUsersToBuyTicketFrom_ToAccessRoom.isEmpty &&
+        addressesToAddForEntering.isEmpty;
   }
 
   get shouldBuyTicketToSpeak {
@@ -115,16 +124,53 @@ class CreateGroupController extends GetxController with FireBaseUtils {
     }
   }
 
+  addAddressForEntering(String address) {
+    // add if it is not already added
+    if (!addressesToAddForEntering.contains(address)) {
+      addressesToAddForEntering.add(address);
+    }
+  }
+
+  removeAddressForEntering(String address) {
+    addressesToAddForEntering.remove(address);
+  }
+
+  addAddressForSpeaking(String address) {
+    // add if it is not already added
+    if (!addressesToAddForSpeaking.contains(address)) {
+      addressesToAddForSpeaking.add(address);
+    }
+  }
+
+  removeAddressForSpeaking(String address) {
+    addressesToAddForSpeaking.remove(address);
+  }
+
   searchUsers(String value) async {
+    searchValueForSeletTickets.value = value;
+    if (value.isEmpty) {
+      listOfSearchedUsersToBuyTicketFrom.value = [];
+      return;
+    }
     _deb.debounce(() async {
-      if (value.isEmpty) {
-        listOfSearchedUsersToBuyTicketFrom.value = [];
-        return;
-      }
+      final isAddress = checkIfValueIsDirectAddress(value);
+      log.d('Is address: $isAddress');
       final users = await searchForUserByName(value);
       listOfSearchedUsersToBuyTicketFrom.value = users.values.toList();
       ;
     });
+  }
+
+  bool checkIfValueIsDirectAddress(String value) {
+    if (value.length == 42) {
+      try {
+        EthereumAddress.fromHex(value);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
   }
 
   create() async {
@@ -159,6 +205,8 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       adultContent: newGroupHasAdultContent.value,
       requiredTicketsToAccess: selectedUsersToBuyTicketFrom_ToAccessRoom.value,
       requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
+      requiredAddressesToEnter: addressesToAddForEntering.value,
+      requiredAddressesToSpeak: addressesToAddForSpeaking.value,
     );
     isCreatingNewGroup.value = false;
     // Navigate.to(
@@ -168,6 +216,7 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   }
 
   openSelectTicketBottomSheet({required String buyTicketToGetPermisionFor}) {
+    searchValueForSeletTickets.value = "";
     Get.dialog(
       SelectUsersToBuyTicketFromBottomSheetContent(
         buyTicketToGetPermisionFor: buyTicketToGetPermisionFor,
@@ -186,6 +235,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
 
   @override
   Widget build(BuildContext context) {
+    final inputController = TextEditingController();
     return SafeArea(
       child: Material(
         child: Container(
@@ -214,27 +264,97 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                 ],
               ),
               space10,
-              Input(
-                hintText: 'Enter the Name',
-                onChanged: (value) {
-                  controller.searchUsers(value);
-                },
-                autofocus: true,
-              ),
+              Obx(() {
+                final searchValue = controller.searchValueForSeletTickets.value;
+                bool isAddress =
+                    controller.checkIfValueIsDirectAddress(searchValue);
+                try {} catch (e) {}
+                return SizedBox(
+                  height: 70,
+                  child: Input(
+                    controller: inputController,
+                    suffixIcon: searchValue.isEmpty
+                        ? IconButton(
+                            onPressed: () async {
+                              final clipboardData =
+                                  await Clipboard.getData(Clipboard.kTextPlain);
+                              String? clipboardText = clipboardData?.text;
+                              if (clipboardText != null) {
+                                if (controller.checkIfValueIsDirectAddress(
+                                    clipboardText)) {
+                                  if (buyTicketToGetPermisionFor ==
+                                      TicketPermissionType.speak) {
+                                    controller
+                                        .addAddressForSpeaking(clipboardText);
+                                  } else if (buyTicketToGetPermisionFor ==
+                                      TicketPermissionType.access) {
+                                    controller
+                                        .addAddressForEntering(clipboardText);
+                                  }
+                                } else {
+                                  inputController.text = clipboardText;
+                                  controller.searchUsers(clipboardText);
+                                }
+                              }
+                            },
+                            icon: Icon(
+                              Icons.paste,
+                              color: Colors.grey,
+                            ),
+                          )
+                        : isAddress
+                            ? IconButton(
+                                onPressed: () {
+                                  if (buyTicketToGetPermisionFor ==
+                                      TicketPermissionType.speak) {
+                                    controller
+                                        .addAddressForSpeaking(searchValue);
+                                  } else if (buyTicketToGetPermisionFor ==
+                                      TicketPermissionType.access) {
+                                    controller
+                                        .addAddressForEntering(searchValue);
+                                  }
+                                  controller.searchUsers('');
+                                  inputController.clear();
+                                },
+                                icon: Icon(Icons.check, color: Colors.green),
+                              )
+                            : IconButton(
+                                onPressed: () {
+                                  controller.searchUsers('');
+                                  inputController.clear();
+                                },
+                                icon: Icon(Icons.close, color: Colors.red),
+                              ),
+                    hintText: 'Enter the Name/address',
+                    onChanged: (value) {
+                      controller.searchUsers(value);
+                    },
+                    autofocus: true,
+                  ),
+                );
+              }),
               Expanded(
                 child: Container(
                   child: Obx(
                     () {
-                      final users =
-                          controller.listOfSearchedUsersToBuyTicketFrom.value;
+                      final users = controller
+                          .listOfSearchedUsersToBuyTicketFrom.value
+                          .where(
+                        (element) {
+                          return element.id != myId;
+                        },
+                      );
                       final selsectedListOfUsersToBuyTicketFromInOrderToSpeak =
                           controller.selectedUsersToBuyticketFrom_ToSpeak.value;
                       final selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom =
                           controller
-                              .selectedUsersToBuyTicketFrom_ToAccessRoom.value;
-                      final myUser =
-                          Get.find<GlobalController>().currentUserInfo.value!;
-                      final myId = myUser.id;
+                              .selectedUsersToBuyTicketFrom_ToAccessRoom.value
+                              .where(
+                        (element) {
+                          return element.id != myId;
+                        },
+                      ).toList();
                       List<String> selectedIds = [];
                       List<UserInfoModel> selectedUsers;
                       if (buyTicketToGetPermisionFor ==
@@ -255,42 +375,127 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                         );
                       }
                       // move selectedIds to the top of the list then my id to the top of them
-                      List<UserInfoModel> listToShow = [];
-                      listToShow.add(myUser);
+                      List<UserInfoModel> listOfUsers = [];
+                      listOfUsers.add(myUser);
                       final SelectedUsersExceptMe =
                           selectedUsers.where((element) => element.id != myId);
-                      listToShow.addAll([...SelectedUsersExceptMe]);
-                      listToShow.addAll(users.where(
+                      listOfUsers.addAll([...SelectedUsersExceptMe]);
+                      listOfUsers.addAll(users.where(
                           (element) => !selectedIds.contains(element.id)));
+                      final listOfAddresses = buyTicketToGetPermisionFor ==
+                              TicketPermissionType.speak
+                          ? controller.addressesToAddForSpeaking
+                          : controller.addressesToAddForEntering;
+                      List<SelectBoxOption> options = [];
+                      for (var address in listOfAddresses) {
+                        options.add(SelectBoxOption(address: address));
+                      }
+                      for (var user in listOfUsers) {
+                        options.add(SelectBoxOption(user: user));
+                      }
 
                       return ListView.builder(
-                        itemCount: listToShow.length,
+                        itemCount: options.length,
                         itemBuilder: (context, index) {
-                          final user = listToShow[index];
+                          final element = options[index];
                           return Column(
                             children: [
                               ListTile(
-                                title: Text(
-                                  user.id == myId ? "You" : user.fullName,
-                                  style: TextStyle(
-                                    color: user.id == myId
-                                        ? Colors.green
-                                        : Colors.white,
-                                    fontSize: 14,
-                                  ),
+                                contentPadding: EdgeInsets.only(left: 12),
+                                title: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        if (element.user != null)
+                                          Text(
+                                            element.user!.id == myId
+                                                ? "You"
+                                                : element.user!.fullName,
+                                            textAlign: TextAlign.start,
+                                            style: TextStyle(
+                                              color: element.user!.id == myId
+                                                  ? Colors.green
+                                                  : Colors.white,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        if (element.address != null)
+                                          Text(
+                                            truncate(
+                                              element.address!,
+                                              length: 20,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    if (element.user != null)
+                                      Row(
+                                        children: [
+                                          Text(
+                                            "user ID: " +
+                                                truncate(element.user!.id,
+                                                    length: 12),
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    GFCheckbox(
-                                      onChanged: (v) {
-                                        controller.toggleUserToSelectedList(
-                                          user,
-                                          buyTicketToGetPermisionFor,
-                                        );
-                                      },
-                                      value: selectedIds.contains(user.id),
-                                    ),
+                                    if (element.user != null)
+                                      GFCheckbox(
+                                        onChanged: (v) {
+                                          if (element.user != null) {
+                                            controller.toggleUserToSelectedList(
+                                              element.user!,
+                                              buyTicketToGetPermisionFor,
+                                            );
+                                            return;
+                                          }
+                                        },
+                                        value: selectedIds
+                                            .contains(element.user!.id),
+                                      ),
+                                    if (element.address != null)
+                                      GFCheckbox(
+                                        onChanged: (v) {
+                                          if (element.address != null) {
+                                            if (!v) {
+                                              if (buyTicketToGetPermisionFor ==
+                                                  TicketPermissionType.speak) {
+                                                controller
+                                                    .removeAddressForSpeaking(
+                                                        element.address!);
+                                              }
+                                              if (buyTicketToGetPermisionFor ==
+                                                  TicketPermissionType.access) {
+                                                controller
+                                                    .removeAddressForEntering(
+                                                        element.address!);
+                                              }
+                                            }
+                                          }
+                                        },
+                                        value: buyTicketToGetPermisionFor ==
+                                                TicketPermissionType.speak
+                                            ? controller
+                                                .addressesToAddForSpeaking
+                                                .contains(element.address)
+                                            : controller
+                                                .addressesToAddForEntering
+                                                .contains(element.address),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -304,7 +509,35 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                     },
                   ),
                 ),
-              )
+              ),
+              Obx(() {
+                final type = buyTicketToGetPermisionFor;
+                bool ready = false;
+                if (type == TicketPermissionType.speak) {
+                  ready = !controller.shouldSelectTicketHolersForSpeaking;
+                }
+                if (type == TicketPermissionType.access) {
+                  ready = !controller.shouldSelectTicketHolersForAccess;
+                }
+                if (!ready) {
+                  return Container(
+                    child: Center(
+                      child: Text(
+                        'Select Users, or Enter Address',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+                return Button(
+                  blockButton: true,
+                  type: ButtonType.gradient,
+                  onPressed: () {
+                    Get.close();
+                  },
+                  child: Text('Done'),
+                );
+              })
             ],
           ),
         ),
@@ -340,6 +573,12 @@ class RoomSpeakerTypes {
   static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
+}
+
+class SelectBoxOption {
+  UserInfoModel? user;
+  String? address;
+  SelectBoxOption({this.user, this.address});
 }
 
 const defaultSubject = "";

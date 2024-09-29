@@ -36,6 +36,8 @@ class FirebaseGroup {
   String? subject;
   List<UserTicket> ticketsRequiredToAccess = [];
   List<UserTicket> ticketsRequiredToSpeak = [];
+  List<String> requiredAddressesToEnter = [];
+  List<String> requiredAddressesToSpeak = [];
   List<String> tags = [];
   bool creatorJoined = false;
   bool archived = false;
@@ -55,6 +57,8 @@ class FirebaseGroup {
   static String hasAdultContentKey = 'hasAdultContent';
   static String ticketRequiredToAccessKey = 'ticketsRequiredToAccess';
   static String ticketsRequiredToSpeakKey = 'ticketsRequiredToSpeak';
+  static String requiredAddressesToEnterKey = 'requiredAddressesToEnter';
+  static String requiredAddressesToSpeakKey = 'requiredAddressesToSpeak';
   static String tagsKey = 'tags';
 
   FirebaseGroup({
@@ -72,6 +76,8 @@ class FirebaseGroup {
     this.hasAdultContent = false,
     this.ticketsRequiredToAccess = const [],
     this.ticketsRequiredToSpeak = const [],
+    this.requiredAddressesToEnter = const [],
+    this.requiredAddressesToSpeak = const [],
     this.tags = const [],
   });
 
@@ -94,6 +100,8 @@ class FirebaseGroup {
     data[ticketsRequiredToSpeakKey] =
         ticketsRequiredToSpeak.map((e) => e.toJson()).toList();
     data[tagsKey] = tags.map((e) => e).toList();
+    data[requiredAddressesToEnterKey] = requiredAddressesToEnter;
+    data[requiredAddressesToSpeakKey] = requiredAddressesToSpeak;
     return data;
   }
 }

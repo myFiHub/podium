@@ -92,7 +92,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     final data = snapShot.value as Map<dynamic, dynamic>?;
     if (data != null) {
       try {
-        final Map<String, FirebaseGroup> groupsMap = groupsParser(data);
+        final Map<String, FirebaseGroup> groupsMap = await groupsParser(data);
         if (globalController.currentUserInfo.value != null) {
           final myUser = globalController.currentUserInfo.value!;
           final myId = myUser.id;
@@ -109,13 +109,13 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       gettingAllGroups.value = true;
       final databaseReference =
           FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
-      subscription = databaseReference.onValue.listen((event) {
+      subscription = databaseReference.onValue.listen((event) async {
         final data = event.snapshot.value as Map<dynamic, dynamic>?;
         if (data != null) {
           try {
             final myUser = globalController.currentUserInfo.value!;
             final myId = myUser.id;
-            final groupsMap = groupsParser(data);
+            final groupsMap = await groupsParser(data);
             groups.value = getGroupsVisibleToMe(groupsMap, myId);
             gettingAllGroups.value = false;
           } catch (e) {
@@ -136,6 +136,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     required bool adultContent,
     required List<UserInfoModel> requiredTicketsToAccess,
     required List<UserInfoModel> requiredTicketsToSpeak,
+    required List<String> requiredAddressesToEnter,
+    required List<String> requiredAddressesToSpeak,
     required List<String> tags,
   }) async {
     final newGroupId = Uuid().v4();
@@ -161,6 +163,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       hasAdultContent: adultContent,
       lowercasename: name.toLowerCase(),
       tags: tags.map((e) => e).toList(),
+      requiredAddressesToEnter: requiredAddressesToEnter,
+      requiredAddressesToSpeak: requiredAddressesToSpeak,
       ticketsRequiredToAccess: requiredTicketsToAccess
           .map(
             (e) => UserTicket(

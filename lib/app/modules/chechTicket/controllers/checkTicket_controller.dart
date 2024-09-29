@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -98,6 +99,50 @@ class CheckticketController extends GetxController
     log.f('CheckticketController closed');
   }
 
+  _fakeUserModel(String address) {
+    final fakeUser = UserInfoModel(
+      id: address,
+      fullName: 'Direct Address',
+      avatar: '',
+      email: '',
+      localWalletAddress: address,
+      following: [],
+      numberOfFollowers: 0,
+      savedParticleUserInfo: FirebaseParticleAuthUserInfo(
+        wallets: [
+          ParticleAuthWallet(
+            address: address,
+            chain: 'evm_chain',
+          )
+        ],
+        uuid: '',
+      ),
+    );
+    return fakeUser;
+  }
+
+  (List<UserInfoModel>, List<UserInfoModel>) _generateFakeUsers() {
+    final requiredDirectAddressesToAccess =
+        group.value!.requiredAddressesToEnter;
+    final requiredDirectAddressesToSpeak =
+        group.value!.requiredAddressesToSpeak;
+
+    List<UserInfoModel> fakeUsersToBuyTicketFromInOrderToHaveAccess = [];
+    List<UserInfoModel> fakeUsersToBuyTicketFromInOrderToSpeak = [];
+
+    requiredDirectAddressesToSpeak.forEach((element) {
+      fakeUsersToBuyTicketFromInOrderToSpeak.add(_fakeUserModel(element));
+    });
+
+    requiredDirectAddressesToAccess.forEach((element) {
+      fakeUsersToBuyTicketFromInOrderToHaveAccess.add(_fakeUserModel(element));
+    });
+    return (
+      fakeUsersToBuyTicketFromInOrderToHaveAccess,
+      fakeUsersToBuyTicketFromInOrderToSpeak
+    );
+  }
+
   Future<GroupAccesses> checkTickets() async {
     loadingUsers.value = true;
     final requiredTicketsToAccess = group.value!.ticketsRequiredToAccess;
@@ -109,6 +154,16 @@ class CheckticketController extends GetxController
       getUsersByIds(accessIds),
       getUsersByIds(speakIds),
     ]);
+
+    final (fakeUsersToAccess, fakeUsersToSpeak) = _generateFakeUsers();
+
+    // add fake users to the list
+    usersForAccess.addAll(fakeUsersToAccess);
+    usersForSpeak.addAll(fakeUsersToSpeak);
+    accessIds.addAll(fakeUsersToAccess.map((e) => e.id).toList());
+    speakIds.addAll(fakeUsersToSpeak.map((e) => e.id).toList());
+    // end of adding fake users
+
     usersForAccess.forEach((element) {
       usersToBuyTicketFromInOrderToHaveAccess[element.id] = element;
     });
@@ -306,7 +361,7 @@ class CheckticketController extends GetxController
           sharesSubject: userAddress,
         ));
       } else {
-        log.f('FIXME: add support for other ticket types');
+        log.f('FIXME: add support for other ticket types ');
       }
     }
     if (arrayToCall.isEmpty) {

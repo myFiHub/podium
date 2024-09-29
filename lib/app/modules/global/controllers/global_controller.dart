@@ -107,7 +107,6 @@ class GlobalController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    log.d(Env.fihubAddress(particleWalletChainId.value));
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
     ReownAppKitModalNetworks.addNetworks(Env.chainNamespace, [movementChain]);
 
@@ -332,7 +331,7 @@ class GlobalController extends GetxController {
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
     final savedWalletAddress = await firebaseUserDbReference.get();
-    if (savedWalletAddress.value == walletAddress) {
+    if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
       return;
     }
 

@@ -34,15 +34,23 @@ class SearchPageController extends GetxController
         isSearching.value = false;
         return;
       }
+      final Map<String, FirebaseGroup> groups = await filterGroupName(value);
+      searchedGroups.value = groups;
       isSearching.value = true;
       _deb.debounce(() async {
-        final [groups, users, tags] = await Future.wait([
+        if (searchValue.value.isEmpty) {
+          searchedTags.value = {};
+          searchedGroups.value = {};
+          searchedUsers.value = {};
+          isSearching.value = false;
+          return;
+        }
+
+        final [users, tags] = await Future.wait([
           // searchForGroupByName(value),
-          filterGroupName(value),
           searchForUserByName(value),
           searchTags(value)
         ]);
-        searchedGroups.value = groups as Map<String, FirebaseGroup>;
         searchedUsers.value = users as Map<String, UserInfoModel>;
         searchedTags.value = tags as Map<String, Tag>;
         isSearching.value = false;

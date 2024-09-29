@@ -76,8 +76,7 @@ class SingleGroup extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
                 color: ColorName.cardBackground,
-                border: Border.all(
-                    color: amICreator ? Colors.green : ColorName.cardBorder),
+                border: Border.all(color: ColorName.cardBorder),
                 borderRadius: const BorderRadius.all(const Radius.circular(8))),
             margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
             padding: const EdgeInsets.all(8),
@@ -120,7 +119,9 @@ class SingleGroup extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w400,
-                                      color: ColorName.greyText,
+                                      color: amICreator
+                                          ? Colors.green[200]
+                                          : ColorName.greyText,
                                     ),
                                   ),
                                 ),

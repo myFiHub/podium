@@ -31,7 +31,6 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
   final groups = Rxn<Map<String, FirebaseGroup>>({});
-  final groupsImIn = Rxn<Map<String, FirebaseGroup>>({});
   StreamSubscription<DatabaseEvent>? subscription;
 
   @override
@@ -40,19 +39,6 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
 
     globalController.loggedIn.listen((loggedIn) {
       getRealtimeGroups(loggedIn);
-    });
-
-    groups.listen((groups) {
-      if (groups != null) {
-        final myUser = globalController.currentUserInfo.value!;
-        final groupsImInMap = groups.entries
-            .where((element) => element.value.members.contains(myUser.id))
-            .toList();
-        final groupsImInMapConverted = Map<String, FirebaseGroup>.fromEntries(
-          groupsImInMap,
-        );
-        groupsImIn.value = groupsImInMapConverted;
-      }
     });
   }
 
@@ -93,7 +79,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       name: "group_archive_toggled",
       parameters: {
         "group_id": group.id,
-        "archive": archive,
+        "archive": archive.toString(),
       },
     );
   }

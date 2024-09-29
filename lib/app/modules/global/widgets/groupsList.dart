@@ -113,17 +113,29 @@ class SingleGroup extends StatelessWidget {
                               children: [
                                 Container(
                                   width: Get.width - 170,
-                                  child: Text(
-                                    "Created By ${amICreator ? "You" : group.creator.fullName}",
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w400,
-                                      color: amICreator
-                                          ? Colors.green[200]
-                                          : ColorName.greyText,
-                                    ),
-                                  ),
+                                  child: RichText(
+                                      text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: "Created by:",
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: ColorName.greyText,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text:
+                                            "  ${amICreator ? "You" : group.creator.fullName}",
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: amICreator
+                                              ? Colors.green[200]
+                                              : Colors.blue[200],
+                                        ),
+                                      ),
+                                    ],
+                                  )),
                                 ),
                                 space5,
                                 Row(

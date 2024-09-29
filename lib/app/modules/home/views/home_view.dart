@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/utils/styles.dart';
+import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 
 import '../controllers/home_controller.dart';
@@ -105,6 +109,7 @@ class HomeView extends GetView<HomeController> {
                 children: [
                   Obx(() {
                     final seachValue = controller.searchValue.value;
+                    final groupsImIn = controller.groupsImIn.value;
                     final myGroups = controller.groupsImIn.value.values
                         .where((element) => element.creator.id == myId)
                         .toList();
@@ -122,6 +127,31 @@ class HomeView extends GetView<HomeController> {
                       return Container(
                         child: Center(
                           child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    if (groupsImIn.isEmpty) {
+                      return Container(
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                  "You have not joined, or created any rooms yet"),
+                              space10,
+                              Button(
+                                type: ButtonType.gradient,
+                                blockButton: true,
+                                onPressed: () {
+                                  Navigate.to(
+                                    type: NavigationTypes.offAllNamed,
+                                    route: Routes.ALL_GROUPS,
+                                  );
+                                },
+                                child: Text("See all rooms"),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }
@@ -226,7 +256,8 @@ class SearchInput extends GetWidget<HomeController> {
   Widget build(BuildContext context) {
     return Container(
       child: Input(
-          hintText: "search among your rooms", onChanged: controller.search),
+          hintText: "search among your created/joined rooms",
+          onChanged: controller.search),
       height: 60,
     );
   }

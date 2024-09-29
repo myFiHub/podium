@@ -30,7 +30,7 @@ import 'package:uuid/uuid.dart';
 class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
-  final groups = Rxn<Map<String, FirebaseGroup>>({});
+  final groups = Rx<Map<String, FirebaseGroup>>({});
   final gettingAllGroups = true.obs;
   StreamSubscription<DatabaseEvent>? subscription;
 

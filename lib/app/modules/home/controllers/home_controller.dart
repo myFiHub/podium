@@ -11,17 +11,12 @@ class HomeController extends GetxController {
 
   @override
   void onInit() async {
+    allGroups.value = groupsController.groups.value;
+    if (allGroups.value.isNotEmpty) {
+      extractMyGroups(allGroups.value);
+    }
     groupsController.groups.listen((groups) {
-      if (groups != null) {
-        allGroups.value = groups;
-        final groupsImInMap = groups.entries
-            .where((element) => element.value.members.contains(myId))
-            .toList();
-        final groupsImInMapConverted = Map<String, FirebaseGroup>.fromEntries(
-          groupsImInMap,
-        );
-        groupsImIn.value = groupsImInMapConverted;
-      }
+      extractMyGroups(groups);
     });
 
     super.onInit();
@@ -35,6 +30,17 @@ class HomeController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  extractMyGroups(Map<String, FirebaseGroup> groups) {
+    final groupsImInMap = groups.entries
+        .where((element) => element.value.members.contains(myId))
+        .toList();
+    final groupsImInMapConverted = Map<String, FirebaseGroup>.fromEntries(
+      groupsImInMap,
+    );
+    groupsImIn.value = groupsImInMapConverted;
+    allGroups.value = groups;
   }
 
   search(String value) {

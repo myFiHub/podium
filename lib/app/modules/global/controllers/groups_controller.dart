@@ -31,6 +31,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
   final groups = Rxn<Map<String, FirebaseGroup>>({});
+  final gettingAllGroups = true.obs;
   StreamSubscription<DatabaseEvent>? subscription;
 
   @override
@@ -105,6 +106,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
 
   getRealtimeGroups(bool loggedIn) {
     if (loggedIn) {
+      gettingAllGroups.value = true;
       final databaseReference =
           FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
       subscription = databaseReference.onValue.listen((event) {
@@ -115,6 +117,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
             final myId = myUser.id;
             final groupsMap = groupsParser(data);
             groups.value = getGroupsVisibleToMe(groupsMap, myId);
+            gettingAllGroups.value = false;
           } catch (e) {
             log.e(e);
           }

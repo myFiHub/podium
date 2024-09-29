@@ -6,6 +6,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
+import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/constants.dart';
@@ -14,6 +15,7 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/my_profile_controller.dart';
 
@@ -33,12 +35,6 @@ class MyProfileView extends GetView<MyProfileController> {
             children: <Widget>[
               UserInfo(),
               DefaultWallet(),
-              // Button(
-              //   onPressed: () {},
-              //   type: ButtonType.outline,
-              //   blockButton: true,
-              //   text: 'Edit Profile',
-              // ),
               space10,
               ParticleWalletManager(),
               WalletInfo(),
@@ -46,11 +42,85 @@ class MyProfileView extends GetView<MyProfileController> {
               Expanded(
                 child: Container(),
               ),
+              ToggleShowArchivedGroups(),
+              space10,
+              BugsAndFeedbacks(),
+              space10,
               LogoutButton(),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class BugsAndFeedbacks extends GetView<MyProfileController> {
+  const BugsAndFeedbacks({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        space10,
+        Button(
+          onPressed: () {
+            controller.openFeedbackPage();
+          },
+          blockButton: true,
+          type: ButtonType.outline,
+          child: RichText(
+              text: TextSpan(
+            children: [
+              TextSpan(
+                text: 'Report a bug or give feedback',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              WidgetSpan(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Icon(
+                    Icons.bug_report,
+                    size: 20,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ],
+          )),
+        ),
+      ],
+    );
+  }
+}
+
+class ToggleShowArchivedGroups extends GetView<GlobalController> {
+  const ToggleShowArchivedGroups({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(
+        'Show My Archived Rooms',
+        style: TextStyle(
+          fontSize: 18,
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      trailing: Obx(() {
+        final value = controller.showArchivedGroups.value;
+        return Switch(
+          value: value,
+          onChanged: (v) {
+            controller.toggleShowArchivedGroups();
+          },
+        );
+      }),
     );
   }
 }
@@ -383,6 +453,9 @@ class UserInfo extends GetView<GlobalController> {
     }
     if (loginType == LoginType.apple) {
       emailValue = 'Logged in with Apple';
+    }
+    if (loginType == LoginType.github) {
+      emailValue = 'Logged in with Github';
     }
 
     return Obx(() {

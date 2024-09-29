@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:podium/widgets/textField/textFieldRounded.dart';
 
 import '../controllers/home_controller.dart';
 
@@ -16,249 +17,101 @@ class HomeView extends GetView<HomeController> {
   const HomeView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          toolbarHeight: 0,
-          bottom: TabBar(
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicatorColor: ColorName.primaryBlue,
-            labelColor: ColorName.primaryBlue,
-            unselectedLabelColor: Colors.grey,
-            tabs: [
-              Obx(() {
-                final seachValue = controller.searchValue.value;
-                final myGroups = controller.groupsImIn.value.values
-                    .where((element) => element.creator.id == myId)
-                    .toList();
-                final notArchived = myGroups
-                    .where((element) => element.archived != true)
-                    .toList();
-                final notArchivedAndSearched = notArchived
-                    .where((element) => element.name
-                        .toLowerCase()
-                        .contains(seachValue.toLowerCase()))
-                    .toList();
-                return Tab(
-                    child: Row(
-                  children: [
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text(
-                        "Created ${notArchivedAndSearched.length > 0 ? "(${notArchivedAndSearched.length})" : ""}"),
-                  ],
-                ));
-              }),
-              Obx(() {
-                final notCreatedByMe = controller.groupsImIn.value.values
-                    .where((element) => element.creator.id != myId)
-                    .toList();
-                final searchValue = controller.searchValue.value;
-                final searchedGroups = notCreatedByMe
-                    .where((element) => element.name
-                        .toLowerCase()
-                        .contains(searchValue.toLowerCase()))
-                    .toList();
-                return Tab(
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                          "Joined ${searchedGroups.length > 0 ? "(${searchedGroups.length})" : ""}"),
-                    ],
-                  ),
-                );
-              }),
-              Obx(() {
-                final archived = controller.groupsImIn.value.values
-                    .where((element) => element.archived)
-                    .toList();
-                final searchValue = controller.searchValue.value;
-                final searchedGroups = archived
-                    .where((element) => element.name
-                        .toLowerCase()
-                        .contains(searchValue.toLowerCase()))
-                    .toList();
-                return Tab(
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        "Archive ${searchedGroups.length > 0 ? "(${searchedGroups.length})" : ""}",
-                        textAlign: TextAlign.start,
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            SearchInput(),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  Obx(() {
-                    final seachValue = controller.searchValue.value;
-                    final groupsImIn = controller.groupsImIn.value;
-                    final myGroups = controller.groupsImIn.value.values
-                        .where((element) => element.creator.id == myId)
-                        .toList();
-                    final notArchived = myGroups
-                        .where((element) => element.archived != true)
-                        .toList();
-                    final notArchivedAndSearched = notArchived
-                        .where((element) => element.name
-                            .toLowerCase()
-                            .contains(seachValue.toLowerCase()))
-                        .toList();
-                    final allGroups =
-                        controller.allGroups.value.values.toList();
-                    if (allGroups.length == 0) {
-                      return Container(
-                        child: Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
-                    if (groupsImIn.isEmpty) {
-                      return Container(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                  "You have not joined, or created any rooms yet"),
-                              space10,
-                              Button(
-                                type: ButtonType.gradient,
-                                blockButton: true,
-                                onPressed: () {
-                                  Navigate.to(
-                                    type: NavigationTypes.offAllNamed,
-                                    route: Routes.ALL_GROUPS,
-                                  );
-                                },
-                                child: Text("See all rooms"),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-
-                    if (myGroups.length == 0) {
-                      return Container(
-                        child: Center(
-                          child: Text("You have not created any rooms yet"),
-                        ),
-                      );
-                    }
-                    if (notArchived.length == 0) {
-                      return Container(
-                        child: Center(
-                          child: Text("All your rooms are archived"),
-                        ),
-                      );
-                    }
-                    if (seachValue.isNotEmpty &&
-                        notArchivedAndSearched.length == 0) {
-                      return Container(
-                        child: Center(
-                          child: Text("not found!"),
-                        ),
-                      );
-                    }
-
-                    return Container(
-                      child: GroupList(groupsList: notArchivedAndSearched),
-                    );
-                  }),
-                  Obx(() {
-                    final notCreatedByMe = controller.groupsImIn.value.values
-                        .where((element) => element.creator.id != myId)
-                        .toList();
-                    final searchValue = controller.searchValue.value;
-                    if (notCreatedByMe.length == 0) {
-                      return Container(
-                        child: Center(
-                          child: Text("You have not joined any rooms yet"),
-                        ),
-                      );
-                    }
-                    final searchedGroups = notCreatedByMe
-                        .where((element) => element.name
-                            .toLowerCase()
-                            .contains(searchValue.toLowerCase()))
-                        .toList();
-                    if (searchValue.isNotEmpty && searchedGroups.length == 0) {
-                      return Container(
-                        child: Center(
-                          child: Text("not found!"),
-                        ),
-                      );
-                    }
-                    return Container(
-                      child: GroupList(groupsList: searchedGroups),
-                    );
-                  }),
-                  Obx(() {
-                    final archived = controller.groupsImIn.value.values
-                        .where((element) => element.archived == true)
-                        .toList();
-                    final searchValue = controller.searchValue.value;
-                    if (archived.length == 0) {
-                      return Container(
-                        child: Center(
-                          child: Text("Your archive is empty"),
-                        ),
-                      );
-                    }
-                    final searchedGroups = archived
-                        .where((element) => element.name
-                            .toLowerCase()
-                            .contains(searchValue.toLowerCase()))
-                        .toList();
-                    if (searchValue.isNotEmpty && searchedGroups.length == 0) {
-                      return Container(
-                        child: Center(
-                          child: Text("not found!"),
-                        ),
-                      );
-                    }
-                    return Container(
-                      child: GroupList(groupsList: searchedGroups),
-                    );
-                  }),
-                ],
-              ),
+    return Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          space5,
+          Text(
+            "My Rooms",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: Container(
+              child: GetBuilder<GlobalController>(
+                  id: GlobalUpdateIds.showArchivedGroups,
+                  builder: (globalController) {
+                    return Obx(
+                      () {
+                        final showArchived =
+                            globalController.showArchivedGroups.value;
+                        final allGroups = controller.allGroups.value;
+                        final isLoading = allGroups.isEmpty;
+                        List<FirebaseGroup> groups = allGroups.values
+                            .where(
+                              (group) => group.members.contains(myId),
+                            )
+                            .toList();
+
+                        if (!showArchived) {
+                          groups = groups
+                              .where((group) => group.archived != true)
+                              .toList();
+                        }
+                        if (isLoading) {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        if (groups.isEmpty) {
+                          return Container(
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Hero(
+                                    tag: 'logo',
+                                    child: Container(
+                                      height: 100,
+                                      child: Assets.images.logo.image(),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Welcome to Podium',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Text(
+                                    myUser.fullName,
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Text(
+                                    'try joining some rooms',
+                                  ),
+                                  space10,
+                                  Button(
+                                      text: 'See All Rooms',
+                                      type: ButtonType.gradient,
+                                      blockButton: true,
+                                      onPressed: () {
+                                        Navigate.to(
+                                          type: NavigationTypes.offAllNamed,
+                                          route: Routes.ALL_GROUPS,
+                                        );
+                                      })
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
+                        return GroupList(groupsList: groups);
+                      },
+                    );
+                  }),
+            ),
+          )
+        ],
       ),
-    );
-  }
-}
-
-class SearchInput extends GetWidget<HomeController> {
-  const SearchInput({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Input(
-          hintText: "search among your created/joined rooms",
-          onChanged: controller.search),
-      height: 60,
     );
   }
 }

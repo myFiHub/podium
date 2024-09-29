@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -72,18 +73,27 @@ class AllGroupsList extends GetWidget<AllGroupsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final groups = controller.searchedGroups.value;
-      final groupsController = Get.find<GroupsController>();
-      List<FirebaseGroup> groupsList =
-          // ignore: unnecessary_null_comparison
-          groups != null ? groups.values.toList() : [];
-      if (groupsList.isEmpty && groupsController.groups.value != null) {
-        groupsList = groupsController.groups.value!.values.toList();
-      }
-      return GroupList(
-        groupsList: groupsList,
-      );
-    });
+    return GetBuilder<GlobalController>(
+        id: GlobalUpdateIds.showArchivedGroups,
+        builder: (globalController) {
+          return Obx(() {
+            final groups = controller.searchedGroups.value;
+            final showArchived = globalController.showArchivedGroups.value;
+            final groupsController = Get.find<GroupsController>();
+            List<FirebaseGroup> groupsList =
+                // ignore: unnecessary_null_comparison
+                groups != null ? groups.values.toList() : [];
+            if (groupsList.isEmpty && groupsController.groups.value != null) {
+              groupsList = groupsController.groups.value!.values.toList();
+            }
+            if (!showArchived) {
+              groupsList =
+                  groupsList.where((group) => group.archived != true).toList();
+            }
+            return GroupList(
+              groupsList: groupsList,
+            );
+          });
+        });
   }
 }

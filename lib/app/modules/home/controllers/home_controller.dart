@@ -1,22 +1,28 @@
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
 
 class HomeController extends GetxController {
   final GroupsController groupsController = Get.find<GroupsController>();
+  final globalController = Get.find<GlobalController>();
   final groupsImIn = Rx<Map<String, FirebaseGroup>>({});
   final allGroups = Rx<Map<String, FirebaseGroup>>({});
-  final searchValue = Rx<String>("");
+  final showArchived = false.obs;
 
   @override
   void onInit() async {
     allGroups.value = groupsController.groups.value;
+    showArchived.value = globalController.showArchivedGroups.value;
     if (allGroups.value.isNotEmpty) {
       extractMyGroups(allGroups.value);
     }
     groupsController.groups.listen((groups) {
       extractMyGroups(groups);
+    });
+    globalController.showArchivedGroups.listen((value) {
+      showArchived.value = value;
     });
 
     super.onInit();
@@ -41,9 +47,5 @@ class HomeController extends GetxController {
     );
     groupsImIn.value = groupsImInMapConverted;
     allGroups.value = groups;
-  }
-
-  search(String value) {
-    searchValue.value = value;
   }
 }

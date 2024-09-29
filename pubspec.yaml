@@ -40,7 +40,7 @@ dependencies:
   firebase_analytics: ^11.3.3
   pretty_dio_logger: ^1.4.0
   textfield_tags: ^3.0.1
-  squadron: ^6.0.0
+  squadron: ^6.0.3
 
 dependency_overrides:
   web: ^0.5.0

@@ -15,4 +15,5 @@ class StorageKeys {
   static final selectedWalletName = 'selectedWalletName';
   static final externalWalletChainId = 'externalWalletChainId';
   static final particleWalletChainId = 'particleWalletChainId';
+  static final showArchivedGroups = 'showArchivedGroups';
 }

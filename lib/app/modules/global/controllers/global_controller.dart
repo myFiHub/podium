@@ -51,6 +51,10 @@ final _checkOptions = [
   InternetCheckOption(uri: Uri.parse(movementChain.rpcUrl))
 ];
 
+class GlobalUpdateIds {
+  static const String showArchivedGroups = 'showArchivedGroups';
+}
+
 class GlobalController extends GetxController {
   static final storage = GetStorage();
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
@@ -69,6 +73,8 @@ class GlobalController extends GetxController {
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
   final isFirebaseInitialized = false.obs;
+  final showArchivedGroups =
+      RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
   String? deepLinkRoute = null;
 
   final particleWalletChainId = RxString(
@@ -159,6 +165,12 @@ class GlobalController extends GetxController {
     initializeW3MService();
     listenToWalletAddressChange();
     initializedOnce.value = true;
+  }
+
+  toggleShowArchivedGroups() {
+    showArchivedGroups.value = !showArchivedGroups.value;
+    storage.write(StorageKeys.showArchivedGroups, showArchivedGroups.value);
+    update([GlobalUpdateIds.showArchivedGroups]);
   }
 
   Future<bool> switchExternalWalletChain(String chainId) async {

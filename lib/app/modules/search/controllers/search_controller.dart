@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -15,6 +16,7 @@ final _deb = Debouncing(duration: const Duration(seconds: 1));
 class SearchPageController extends GetxController
     with FireBaseUtils, FirebaseTags {
   final groupsController = Get.find<GroupsController>();
+  final GlobalController globalController = Get.find<GlobalController>();
   final searchValue = ''.obs;
   final searchedGroups = Rx<Map<String, FirebaseGroup>>({});
   final searchedUsers = Rx<Map<String, UserInfoModel>>({});
@@ -35,6 +37,10 @@ class SearchPageController extends GetxController
         return;
       }
       final Map<String, FirebaseGroup> groups = await filterGroupName(value);
+      if (globalController.showArchivedGroups.value == false) {
+        groups.removeWhere((key, value) => value.archived == true);
+      }
+
       searchedGroups.value = groups;
       isSearching.value = true;
       _deb.debounce(() async {

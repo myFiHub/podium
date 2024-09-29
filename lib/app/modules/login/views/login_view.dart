@@ -23,9 +23,12 @@ class LoginView extends GetView<LoginController> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    height: 200,
-                    child: Assets.images.logo.image(),
+                  Hero(
+                    tag: 'logo',
+                    child: Container(
+                      height: 200,
+                      child: Assets.images.logo.image(),
+                    ),
                   ),
                   Text(
                     'Podium',

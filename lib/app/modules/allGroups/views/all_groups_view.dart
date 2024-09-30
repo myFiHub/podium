@@ -32,6 +32,7 @@ class AllGroupsView extends GetView<AllGroupsController> {
           Input(
             hintText: "search a room",
             initialValue: controller.searchValue.value,
+            autofocus: false,
             onChanged: (v) {
               controller.search(v);
             },
@@ -79,13 +80,13 @@ class AllGroupsList extends GetWidget<AllGroupsController> {
           return Obx(() {
             final groups = controller.searchedGroups.value;
             final showArchived = globalController.showArchivedGroups.value;
-            final groupsController = Get.find<GroupsController>();
+            // final groupsController = Get.find<GroupsController>();
             List<FirebaseGroup> groupsList =
                 // ignore: unnecessary_null_comparison
                 groups != null ? groups.values.toList() : [];
-            if (groupsList.isEmpty && groupsController.groups.value != null) {
-              groupsList = groupsController.groups.value!.values.toList();
-            }
+            // if (groupsList.isEmpty && groupsController.groups.value != null) {
+            //   groupsList = groupsController.groups.value!.values.toList();
+            // }
             if (!showArchived) {
               groupsList =
                   groupsList.where((group) => group.archived != true).toList();

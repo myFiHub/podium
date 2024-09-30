@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -221,7 +222,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       await firebaseSessionReference.set(jsoned);
       joinGroupAndOpenGroupDetailPage(
         groupId: newGroupId,
-        openTheRoomAfterJoining: true,
+        openTheRoomAfterJoining: group.scheduledFor == 0 ||
+            group.scheduledFor < DateTime.now().millisecondsSinceEpoch,
       );
     } catch (e) {
       deleteGroup(groupId: newGroupId);
@@ -356,11 +358,11 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
         type: NavigationTypes.toNamed,
         route: Routes.GROUP_DETAIL,
         parameters: {
-          GroupDetailsParametersKeys.groupId: group.id,
           GroupDetailsParametersKeys.enterAccess: accesses.canEnter.toString(),
           GroupDetailsParametersKeys.speakAccess: accesses.canSpeak.toString(),
           GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining:
               openTheRoomAfterJoining.toString(),
+          GroupDetailsParametersKeys.groupInfo: jsonEncode(group.toJson()),
         });
     analytics.logEvent(
       name: "group_opened",

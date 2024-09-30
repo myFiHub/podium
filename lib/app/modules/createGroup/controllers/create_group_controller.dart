@@ -231,14 +231,6 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       // means no reminder
     } else if (setFor == null) {
       return;
-    } else {
-      Get.snackbar(
-        'Reminder set',
-        setFor == 0
-            ? 'You will be reminded when Event starts'
-            : 'You will be reminded $setFor minutes before the event',
-        colorText: Colors.green,
-      );
     }
 
     String subject = roomSubject.value;

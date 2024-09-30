@@ -25,7 +25,8 @@ Future<bool> createCalendarEventForScheduledGroup({
     endDate: DateTime.fromMillisecondsSinceEpoch(scheduledFor + 30 * 60 * 1000),
     iosParams: IOSParams(
       reminder: Duration(
-          /* Ex. hours:1 */), // on iOS, you can set alarm notification after your event.
+          hours:
+              1 /* Ex. hours:1 */), // on iOS, you can set alarm notification after your event.
       url: eventUrl, // on iOS, you can set url to your event.
     ),
     androidParams: AndroidParams(
@@ -114,20 +115,20 @@ Future<int?> setReminder({
                 child: Text(timesList[i]['text'] as String,
                     style: TextStyle(color: Colors.red[i * 100])),
               ),
-            // TextButton(
-            //   onPressed: () async {
-            //     final isSet = await createCalendarEventForScheduledGroup(
-            //       eventUrl: eventUrl,
-            //       scheduledFor: scheduledFor,
-            //       title: eventName,
-            //       subject: subject,
-            //     );
+            TextButton(
+              onPressed: () async {
+                await createCalendarEventForScheduledGroup(
+                  eventUrl: eventUrl,
+                  scheduledFor: scheduledFor,
+                  title: eventName,
+                  subject: subject,
+                );
 
-            //     Navigator.pop(Get.context!, isSet ? -1 : null);
-            //   },
-            //   child: Text('use my calendar instead',
-            //       style: TextStyle(color: Colors.green[400])),
-            // ),
+                Navigator.pop(Get.context!, -1);
+              },
+              child: Text('use my calendar instead',
+                  style: TextStyle(color: Colors.green[400])),
+            ),
             TextButton(
               onPressed: () async {
                 Navigator.pop(Get.context!, -2);
@@ -158,6 +159,11 @@ Future<int?> setReminder({
       enableNotificationOnKill: Platform.isAndroid,
     );
     await Alarm.set(alarmSettings: alarmSettings);
+    Get.snackbar(
+      'Reminder Set',
+      'You will be reminded ${alarmMeBefore == 0 ? "when Event is started" : "${alarmMeBefore} minutes before the event"}',
+      colorText: Colors.green,
+    );
   }
   return alarmMeBefore;
 }

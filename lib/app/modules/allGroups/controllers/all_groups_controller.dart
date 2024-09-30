@@ -14,6 +14,8 @@ class AllGroupsController extends GetxController with FireBaseUtils {
 
   @override
   void onInit() {
+    searchedGroups.value =
+        getGroupsVisibleToMe(groupsController.groups.value, myId);
     super.onInit();
   }
 
@@ -29,16 +31,19 @@ class AllGroupsController extends GetxController with FireBaseUtils {
 
   search(String value) {
     searchValue.value = value;
-    _deb.debounce(() async {
-      final groups = await searchForGroupByName(value);
-      Map<String, FirebaseGroup> searchedGroupsMap = {};
-      if (value.isEmpty) {
-        searchedGroupsMap = groupsController.groups.value ?? {};
-      } else {
-        searchedGroupsMap = groups;
-      }
-      searchedGroups.value = getGroupsVisibleToMe(searchedGroupsMap, myId);
-    });
+    // _deb.debounce(() async {
+    final filtered = groupsController.groups.value.entries.where((element) =>
+        element.value.name.toLowerCase().contains(value.toLowerCase()));
+    //await searchForGroupByName(value);
+    final groups = Map<String, FirebaseGroup>.fromEntries(filtered);
+    // Map<String, FirebaseGroup> searchedGroupsMap = {};
+    // if (value.isEmpty) {
+    //   searchedGroupsMap = groupsController.groups.value ?? {};
+    // } else {
+    //   searchedGroupsMap = groups;
+    // }
+    searchedGroups.value = getGroupsVisibleToMe(groups, myId);
+    // });
   }
 
   refreshSearchedGroup(FirebaseGroup group) {

@@ -21,12 +21,12 @@ class GroupDetailView extends GetView<GroupDetailController> {
       body: Column(
         children: [
           Obx(() {
-            final isLoading = controller.isGettingMembers.value;
+            // final isLoading = controller.isGettingMembers.value;
             final members = controller.membersList.value;
             final group = controller.group.value;
             final accesses = controller.groupAccesses.value;
 
-            if (group == null || accesses == null || isLoading) {
+            if (group == null || accesses == null) {
               return Container(
                 width: Get.width,
                 height: Get.height - 110,
@@ -136,8 +136,8 @@ class SetReminderButton extends GetView<GroupDetailController> {
       }
 
       String text = reminderIsSetForInMinotes != null
-          ? "reminder is set for ${reminderIsSetForInMinotes.abs()} min before event"
-          : 'Remind me';
+          ? "Reminder is set for ${reminderIsSetForInMinotes.abs()} min before event"
+          : 'Set a reminder';
       if (reminderIsSetForInMinotes == 0) {
         text = 'Reminder is set for when event starts';
       }

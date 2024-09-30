@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -27,11 +28,11 @@ class JoinButtonProps {
 }
 
 class GroupDetailsParametersKeys {
-  static const String groupId = 'groupId';
   static const String enterAccess = 'enterAccess';
   static const String speakAccess = 'speakAccess';
   static const String shouldOpenJitsiAfterJoining =
       'shouldOpenJitsiAfterJoining';
+  static const String groupInfo = 'groupInfo';
 }
 
 class GroupDetailController extends GetxController with FireBaseUtils {
@@ -46,13 +47,12 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   final jointButtonContentProps =
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
   StreamSubscription<DatabaseEvent>? groupListener = null;
-  StreamSubscription<FirebaseGroup?>? localGroupListener = null;
   bool gotGroupInfo = false;
 
   final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InvitedMember>>({});
 //parameters for the group detail page
-  late String groupId;
+  late String stringedGroupInfo;
   late String enterAccess;
   late String speakAccess;
   late bool shouldOpenJitsiAfterJoining;
@@ -61,7 +61,7 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   void onInit() async {
     super.onInit();
     final params = [
-      GroupDetailsParametersKeys.groupId,
+      GroupDetailsParametersKeys.groupInfo,
       GroupDetailsParametersKeys.enterAccess,
       GroupDetailsParametersKeys.speakAccess,
       GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining
@@ -70,24 +70,26 @@ class GroupDetailController extends GetxController with FireBaseUtils {
       log.e('Missing parameters');
       return;
     }
-    groupId = Get.parameters[GroupDetailsParametersKeys.groupId]!;
+    stringedGroupInfo = Get.parameters[GroupDetailsParametersKeys.groupInfo]!;
     enterAccess = Get.parameters[GroupDetailsParametersKeys.enterAccess]!;
     speakAccess = Get.parameters[GroupDetailsParametersKeys.speakAccess]!;
     shouldOpenJitsiAfterJoining = Get.parameters[
             GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining] ==
         'true';
+
+    final groupInfo = singleGroupParser(jsonDecode(stringedGroupInfo));
     groupAccesses.value = GroupAccesses(
       canEnter: enterAccess == 'true',
       canSpeak: speakAccess == 'true',
     );
-    final remoteGroup = await getGroupInfoById(groupId);
-    if (remoteGroup != null) {
-      group.value = remoteGroup;
+    // final remoteGroup = await getGroupInfoById(groupId);
+    if (groupInfo != null) {
+      group.value = groupInfo;
       gotGroupInfo = true;
-      getMembers(remoteGroup);
+      getMembers(groupInfo);
       fetchInvitedMembers();
       scheduleChecks();
-      startListeningToGroup(remoteGroup.id, onGroupUpdate);
+      startListeningToGroup(groupInfo.id, onGroupUpdate);
     }
 
     globalController.ticker.listen((event) {
@@ -96,6 +98,9 @@ class GroupDetailController extends GetxController with FireBaseUtils {
       }
     });
     globalController.deepLinkRoute = null;
+    if (shouldOpenJitsiAfterJoining) {
+      startTheCall(accesses: groupAccesses.value!);
+    }
   }
 
   @override
@@ -106,6 +111,7 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   @override
   void onClose() {
     super.onClose();
+    groupListener?.cancel();
   }
 
   void forceUpdate() {

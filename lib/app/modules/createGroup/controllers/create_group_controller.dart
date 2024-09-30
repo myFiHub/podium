@@ -214,29 +214,28 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       );
       return;
     }
-    final ThirtyFiveMinutesFromNow =
-        DateTime.now().add(Duration(minutes: 35)).millisecondsSinceEpoch;
-    final canSetReminder =
-        isScheduled.value && scheduledFor.value > ThirtyFiveMinutesFromNow;
+
     final alarmId = Random().nextInt(100000000);
-    if (canSetReminder) {
-      final setFor = await setReminder(
-        alarmId: alarmId,
-        scheduledFor: scheduledFor.value,
-        eventName: groupName.value,
+    final setFor = await setReminder(
+      alarmId: alarmId,
+      scheduledFor: scheduledFor.value,
+      eventName: groupName.value,
+      timesList: defaultTimeList(
+        endsAt: scheduledFor.value,
+      ),
+    );
+    if (setFor == null) {
+      return;
+    } else {
+      Get.snackbar(
+        'Reminder set',
+        setFor == 0
+            ? 'You will be reminded when Event starts'
+            : 'You will be reminded $setFor minutes before the event',
+        colorText: Colors.green,
       );
-      if (setFor == null) {
-        return;
-      } else {
-        Get.snackbar(
-          'Reminder set',
-          setFor == 0
-              ? 'You will be reminded when Event starts'
-              : 'You will be reminded $setFor minutes before the event',
-          colorText: Colors.green,
-        );
-      }
     }
+
     String subject = roomSubject.value;
     if (subject.isEmpty) {
       subject = defaultSubject;

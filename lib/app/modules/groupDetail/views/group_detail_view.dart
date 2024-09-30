@@ -150,19 +150,6 @@ class SetReminderButton extends GetView<GroupDetailController> {
         reminderIsSetForInMinotes = reminder;
       }
 
-      List<Map<String, Object>> timesList = [
-        {'time': 30, 'text': '30 minutes before'},
-        {'time': 10, 'text': '10 minutes before'},
-        {'time': 5, 'text': '5 minutes before'},
-        {"time": 0, "text": "when Event starts"},
-      ];
-
-      final numberOfMinoutesToEvent =
-          (group.scheduledFor - DateTime.now().millisecondsSinceEpoch) ~/ 60000;
-      final filteredTimes = timesList
-          .where(
-              (element) => (element['time'] as int) <= numberOfMinoutesToEvent)
-          .toList();
       String text = reminderIsSetForInMinotes != null
           ? "reminder is set for ${reminderIsSetForInMinotes.abs()} min before event"
           : 'Remind me';
@@ -183,10 +170,11 @@ class SetReminderButton extends GetView<GroupDetailController> {
         blockButton: true,
         onPressed: () async {
           await setReminder(
-              alarmId: group.alarmId,
-              scheduledFor: group.scheduledFor,
-              eventName: group.name,
-              timesList: filteredTimes);
+            alarmId: group.alarmId,
+            scheduledFor: group.scheduledFor,
+            eventName: group.name,
+            timesList: defaultTimeList(endsAt: group.scheduledFor),
+          );
           controller.forceUpdate();
         },
         child: Text(

@@ -9,6 +9,22 @@ import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/logger.dart';
 
+List<Map<String, Object>> defaultTimeList({required int endsAt}) {
+  List<Map<String, Object>> timesList = [
+    {'time': 30, 'text': '30 minutes before'},
+    {'time': 10, 'text': '10 minutes before'},
+    {'time': 5, 'text': '5 minutes before'},
+    {"time": 0, "text": "when Event starts"},
+  ];
+
+  final numberOfMinoutesToEvent =
+      (endsAt - DateTime.now().millisecondsSinceEpoch) ~/ 60000;
+  final filteredTimes = timesList
+      .where((element) => (element['time'] as int) <= numberOfMinoutesToEvent)
+      .toList();
+  return filteredTimes;
+}
+
 Future<int?> setReminder({
   required int alarmId,
   List<Map<String, Object>> timesList = const [

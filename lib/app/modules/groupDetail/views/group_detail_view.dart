@@ -1,12 +1,17 @@
+import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -104,18 +109,13 @@ class GroupDetailView extends GetView<GroupDetailController> {
                             ),
                           Container(
                             width: (Get.width / 2) - 20,
-                            child: Button(
-                              type: ButtonType.gradient,
-                              onPressed: () {
-                                controller.startTheCall(accesses: accesses);
-                              },
-                              child: Text('join the room'),
-                            ),
+                            child: JoinTheRoomButton(),
                           ),
                         ],
                       ),
                       space10,
                       space10,
+                      if (group.scheduledFor != 0) SetReminderButton(),
                     ],
                   ),
                 );
@@ -125,6 +125,104 @@ class GroupDetailView extends GetView<GroupDetailController> {
         ],
       ),
     );
+  }
+}
+
+class SetReminderButton extends GetView<GroupDetailController> {
+  const SetReminderButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final group = controller.group.value;
+
+    return Obx(() {
+      if (group == null) {
+        return Container();
+      }
+      controller.forceUpdateIndicator.value;
+      final isReminderSet = Alarm.getAlarm(group.alarmId) != null;
+      int? reminderIsSetForInMinotes = null;
+      if (isReminderSet) {
+        final reminder = Alarm.getAlarm(group.alarmId)!
+            .dateTime
+            .difference(DateTime.fromMillisecondsSinceEpoch(group.scheduledFor))
+            .inMinutes;
+        reminderIsSetForInMinotes = reminder;
+      }
+
+      final isPassed =
+          group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
+      if (isPassed) {
+        return const SizedBox();
+      }
+      List<Map<String, Object>> timesList = [
+        {'time': 30, 'text': '30 minutes before'},
+        {'time': 10, 'text': '10 minutes before'},
+        {'time': 5, 'text': '5 minutes before'},
+        {"time": 0, "text": "when Event starts"},
+      ];
+
+      final numberOfMinoutesToEvent =
+          (group.scheduledFor - DateTime.now().millisecondsSinceEpoch) ~/ 60000;
+      final filteredTimes = timesList
+          .where(
+              (element) => (element['time'] as int) <= numberOfMinoutesToEvent)
+          .toList();
+      String text = reminderIsSetForInMinotes != null
+          ? "reminder is set for ${reminderIsSetForInMinotes.abs()} before event"
+          : 'Remind me';
+      if (reminderIsSetForInMinotes == 0) {
+        text = 'Reminder is set for when event starts';
+      }
+      return Button(
+        type: ButtonType.outline,
+        color: ColorName.primaryBlue,
+        blockButton: true,
+        onPressed: () async {
+          await setReminder(
+              alarmId: group.alarmId,
+              scheduledFor: group.scheduledFor,
+              eventName: group.name,
+              timesList: filteredTimes);
+          controller.forceUpdate();
+        },
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+        ),
+      );
+    });
+  }
+}
+
+class JoinTheRoomButton extends GetView<GroupDetailController> {
+  const JoinTheRoomButton({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final accesses = controller.groupAccesses.value;
+      final group = controller.group.value;
+      final joinButtonContent = controller.jointButtonContentProps.value;
+      if (accesses == null || group == null) {
+        return Container();
+      }
+
+      return Button(
+        type: ButtonType.gradient,
+        onPressed: joinButtonContent.enabled
+            ? () {
+                controller.startTheCall(accesses: accesses);
+              }
+            : null,
+        child: Text(
+          joinButtonContent.text,
+          textAlign: TextAlign.center,
+        ),
+      );
+    });
   }
 }
 

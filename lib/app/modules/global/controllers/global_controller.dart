@@ -53,7 +53,8 @@ final _checkOptions = [
 ];
 
 class GlobalUpdateIds {
-  static const String showArchivedGroups = 'showArchivedGroups';
+  static const showArchivedGroups = 'showArchivedGroups';
+  static const ticker = 'ticker';
 }
 
 class GlobalController extends GetxController {
@@ -74,6 +75,7 @@ class GlobalController extends GetxController {
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
   final isFirebaseInitialized = false.obs;
+  final ticker = 0.obs;
   final showArchivedGroups =
       RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
   String? deepLinkRoute = null;
@@ -121,7 +123,7 @@ class GlobalController extends GetxController {
       initializeParticleAuth(),
       FirebaseInit.init(),
     ]);
-
+    startTicker();
     isFirebaseInitialized.value = true;
     final res = await analytics.getSessionId();
 
@@ -167,6 +169,13 @@ class GlobalController extends GetxController {
     listenToWalletAddressChange();
     Alarm.init();
     initializedOnce.value = true;
+  }
+
+  startTicker() {
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      ticker.value++;
+      update([GlobalUpdateIds.ticker]);
+    });
   }
 
   toggleShowArchivedGroups() {

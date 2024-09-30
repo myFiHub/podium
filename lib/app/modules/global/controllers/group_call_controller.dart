@@ -8,8 +8,8 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/mixins/permissions.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/constants/meeting.dart';
@@ -27,8 +27,7 @@ class SortTypes {
   static const String timeJoined = 'timeJoined';
 }
 
-class GroupCallController extends GetxController
-    with FireBaseUtils, PermissionUtils {
+class GroupCallController extends GetxController with FireBaseUtils {
   final storage = GetStorage();
   // group session id is group id
   final groupsController = Get.find<GroupsController>();

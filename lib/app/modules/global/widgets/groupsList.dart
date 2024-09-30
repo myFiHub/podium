@@ -3,12 +3,14 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -65,6 +67,8 @@ class SingleGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isScheduled = group.scheduledFor != 0;
+
     return GestureDetector(
       onTap: () {
         controller.joinGroupAndOpenGroupDetailPage(
@@ -276,9 +280,70 @@ class SingleGroup extends StatelessWidget {
               ],
             ),
           ),
+          if (isScheduled)
+            ScheduledBanner(
+              group: group,
+            ),
         ],
       ),
     );
+  }
+}
+
+class ScheduledBanner extends StatelessWidget {
+  final FirebaseGroup group;
+  const ScheduledBanner({
+    super.key,
+    required this.group,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isStarted =
+        group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
+    final passedAtLeast2h =
+        group.scheduledFor < DateTime.now().millisecondsSinceEpoch - 7200000;
+    if (passedAtLeast2h) {
+      return const SizedBox();
+    }
+    return GetBuilder<GlobalController>(
+        id: GlobalUpdateIds.ticker,
+        builder: (globalController) {
+          final remaining = remainintTimeUntilMilSecondsFormated(
+            time: group.scheduledFor,
+            textIfAlreadyPassed: "Started",
+          );
+          return Positioned(
+            right: 5,
+            top: 8,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                foregroundDecoration: RotatedCornerDecoration.withColor(
+                  color: isStarted ? Colors.green : Colors.red,
+                  spanBaselineShift: 2,
+                  badgeSize: Size(60, 60),
+                  badgeCornerRadius: Radius.circular(4),
+                  badgePosition: BadgePosition.topEnd,
+                  textSpan: TextSpan(
+                    text: remaining,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      letterSpacing: 1,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        BoxShadow(color: Colors.yellowAccent, blurRadius: 8),
+                      ],
+                    ),
+                  ),
+                ),
+                height: 60,
+                width: 60,
+              ),
+            ),
+          );
+        });
   }
 }
 

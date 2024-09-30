@@ -1,39 +1,67 @@
+import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/groupsParser.dart';
+import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 import 'package:uuid/uuid.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
+class JoinButtonProps {
+  final bool enabled;
+  final String text;
+  JoinButtonProps({required this.enabled, required this.text});
+}
+
 class GroupDetailController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
+  final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;
+  final forceUpdateIndicator = false.obs;
   final group = Rxn<FirebaseGroup>();
   final groupAccesses = Rxn<GroupAccesses>();
   final membersList = Rx<List<UserInfoModel>>([]);
   final isGettingGroupInfo = false.obs;
+  final jointButtonContentProps =
+      Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
+  StreamSubscription<DatabaseEvent>? groupListener = null;
+  StreamSubscription<FirebaseGroup?>? localGroupListener = null;
+  bool gotGroupInfo = false;
+
   final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InvitedMember>>({});
 
   @override
   void onInit() {
-    super.onInit();
     group.listen((group) {
-      if (group != null) {
+      if (group != null && gotGroupInfo == false) {
+        gotGroupInfo = true;
         getMembers(group);
         fetchInvitedMembers();
+        scheduleChecks();
+        startListeningToGroup(group.id, onGroupUpdate);
       }
     });
+    globalController.ticker.listen((event) {
+      if (group.value != null) {
+        scheduleChecks();
+      }
+    });
+
+    super.onInit();
   }
 
   @override
@@ -44,6 +72,67 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  void forceUpdate() {
+    forceUpdateIndicator.value = !forceUpdateIndicator.value;
+  }
+
+  onGroupUpdate(DatabaseEvent data) {
+    final newData = singleGroupParser(data.snapshot.value);
+    if (newData != null) {
+      if (newData.members.length != group.value!.members.length) {
+        getMembers(newData);
+      }
+      if (newData.scheduledFor != group.value!.scheduledFor ||
+          newData.creatorJoined != group.value!.creatorJoined ||
+          newData.archived != group.value!.archived) {
+        group.value = newData;
+        scheduleChecks();
+      }
+    } else {
+      Get.snackbar('Error', 'Room is archived or deleted');
+      Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
+    }
+  }
+
+  scheduleChecks() {
+    final amICreator = group.value!.creator.id == myId;
+    final isScheduled = group.value!.scheduledFor != 0;
+    final passedScheduledTime =
+        group.value!.scheduledFor < DateTime.now().millisecondsSinceEpoch;
+    if (isScheduled) {
+      if (passedScheduledTime) {
+        if (amICreator) {
+          jointButtonContentProps.value =
+              JoinButtonProps(enabled: true, text: 'Start');
+        } else if (group.value!.creatorJoined) {
+          jointButtonContentProps.value =
+              JoinButtonProps(enabled: true, text: 'Join');
+        } else {
+          jointButtonContentProps.value =
+              JoinButtonProps(enabled: false, text: 'Waiting for creator');
+        }
+      } else {
+        if (amICreator) {
+          jointButtonContentProps.value =
+              JoinButtonProps(enabled: true, text: 'Enter room');
+        } else {
+          final remaining = remainintTimeUntilMilSecondsFormated(
+              time: group.value!.scheduledFor);
+          jointButtonContentProps.value = JoinButtonProps(
+              enabled: false, text: 'Scheduled for: ${remaining}');
+        }
+      }
+    } else {
+      if (amICreator) {
+        jointButtonContentProps.value =
+            JoinButtonProps(enabled: true, text: 'Start');
+      } else {
+        jointButtonContentProps.value =
+            JoinButtonProps(enabled: true, text: 'Join');
+      }
+    }
   }
 
   fetchInvitedMembers({String? userId}) async {

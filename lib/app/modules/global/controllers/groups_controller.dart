@@ -343,7 +343,15 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       {required FirebaseGroup group,
       required bool openTheRoomAfterJoining,
       required GroupAccesses accesses}) async {
-    final groupDetailController = Get.put(GroupDetailController());
+    final isAlreadyRegistered = Get.isRegistered<GroupDetailController>();
+    if (isAlreadyRegistered) {
+      Get.delete<GroupDetailController>();
+    }
+
+    final groupDetailController = Get.put(
+      GroupDetailController(),
+      permanent: false,
+    );
     groupDetailController.group.value = group;
     groupDetailController.groupAccesses.value = accesses;
     joiningGroupId.value = '';

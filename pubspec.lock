@@ -463,7 +463,7 @@ packages:
     source: hosted
     version: "1.0.2"
   equatable:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: equatable
       sha256: c2b87cb7756efdf69892005af546c56c0b5037f54d2a88269b4f347a505e3ca2
@@ -684,7 +684,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_bloc:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_bloc
       sha256: b594505eac31a0518bdcb4b5b79573b8d9117b193cc80cc12e17d639b10aa27a
@@ -1145,14 +1145,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
-  omni_datetime_picker:
-    dependency: "direct main"
-    description:
-      name: omni_datetime_picker
-      sha256: "585b6188f337d63b9d8e3232099d16a25a696a875d1d26a6e91577d4ab5a9f7a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.5"
   package_config:
     dependency: transitive
     description:
@@ -1425,8 +1417,16 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  rotated_corner_decoration:
+    dependency: "direct main"
+    description:
+      name: rotated_corner_decoration
+      sha256: "4ad15b18e0c2dacbfb1061370ab48c2baec62b02ec8ecdf6cdf20fbcc6de7ad6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0+1"
   rxdart:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: rxdart
       sha256: "5c3004a4a8dbb94bd4bf5412a4def4acdaa12e12f269737a5751369e12d1a962"

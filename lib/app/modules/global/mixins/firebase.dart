@@ -45,6 +45,13 @@ mixin FireBaseUtils {
     }
   }
 
+  StreamSubscription<DatabaseEvent> startListeningToGroup(
+      String groupId, void Function(DatabaseEvent) onData) {
+    final databaseRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
+    return databaseRef.onValue.listen(onData);
+  }
+
   Future<String?> saveNameForUserById(
       {required String userId, required String name}) async {
     try {

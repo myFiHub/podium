@@ -165,6 +165,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         theme: darkThemeData,
         defaultTransition: Transition.fade,
         // showPerformanceOverlay: true,
+        onDispose: () {
+          jitsiMeet.hangUp();
+        },
         builder: (_, child) {
           return SafeArea(
             child: Root(

@@ -39,9 +39,7 @@ class MyProfileView extends GetView<MyProfileController> {
               ParticleWalletManager(),
               WalletInfo(),
               WalletConnect(),
-              Expanded(
-                child: Container(),
-              ),
+              Spacer(),
               ToggleShowArchivedGroups(),
               space10,
               BugsAndFeedbacks(),

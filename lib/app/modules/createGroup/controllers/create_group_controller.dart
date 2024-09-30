@@ -1,16 +1,13 @@
-import 'dart:io';
 import 'dart:math';
-
-import 'package:alarm/alarm.dart';
-import 'package:alarm/model/alarm_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -20,7 +17,6 @@ import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:uuid/uuid.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
@@ -218,65 +214,29 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       );
       return;
     }
-    final twentyMinutesFromNow =
-        DateTime.now().add(Duration(minutes: 20)).millisecondsSinceEpoch;
-    final isGroupScheduled =
-        isScheduled.value && scheduledFor.value > twentyMinutesFromNow;
+    final ThirtyFiveMinutesFromNow =
+        DateTime.now().add(Duration(minutes: 35)).millisecondsSinceEpoch;
+    final canSetReminder =
+        isScheduled.value && scheduledFor.value > ThirtyFiveMinutesFromNow;
     final alarmId = Random().nextInt(100000000);
-    if (isGroupScheduled) {
-      final int? alarmMeBefore = await Get.dialog<int>(
-        AlertDialog(
-          title: Text('Alarm'),
-          content: Text('Do you want to set an alarm for this event?'),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            TextButton(
-              child: Text('set for 5 minutes before the event'),
-              onPressed: () {
-                Navigator.of(Get.overlayContext!).pop(5);
-              },
-            ),
-            TextButton(
-              child: Text('set for 10 minutes before the event'),
-              onPressed: () {
-                Navigator.of(Get.overlayContext!).pop(10);
-              },
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(Get.overlayContext!).pop(0);
-              },
-              child: Text('No, thanks, continue'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(Get.overlayContext!).pop(null);
-              },
-              child: Text('cancel'),
-            ),
-          ],
-        ),
+    if (canSetReminder) {
+      final setFor = await setReminder(
+        alarmId: alarmId,
+        scheduledFor: scheduledFor.value,
+        eventName: groupName.value,
       );
-      if (alarmMeBefore == null) {
+      if (setFor == null) {
         return;
       } else {
-        final alarmSettings = AlarmSettings(
-          id: alarmId,
-          dateTime: DateTime.fromMillisecondsSinceEpoch(scheduledFor.value)
-              .subtract(Duration(minutes: alarmMeBefore)),
-          assetAudioPath: 'assets/alarm.mp3',
-          loopAudio: true,
-          vibrate: true,
-          volume: 0.8,
-          fadeDuration: 3.0,
-          notificationTitle: 'Podium',
-          notificationBody: 'Your event will start in $alarmMeBefore minutes',
-          enableNotificationOnKill: Platform.isAndroid,
+        Get.snackbar(
+          'Reminder set',
+          setFor == 0
+              ? 'You will be reminded when Event starts'
+              : 'You will be reminded $setFor minutes before the event',
+          colorText: Colors.green,
         );
-        await Alarm.set(alarmSettings: alarmSettings);
       }
     }
-
     String subject = roomSubject.value;
     if (subject.isEmpty) {
       subject = defaultSubject;
@@ -299,10 +259,6 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       alarmId: alarmId,
     );
     isCreatingNewGroup.value = false;
-    // Navigate.to(
-    //   type: NavigationTypes.offAllAndToNamed,
-    //   route: Routes.HOME,
-    // );
   }
 
   openSelectTicketBottomSheet({required String buyTicketToGetPermisionFor}) {

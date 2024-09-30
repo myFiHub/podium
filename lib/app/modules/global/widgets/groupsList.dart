@@ -299,8 +299,6 @@ class ScheduledBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isStarted =
-        group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
     final passedAtLeast2h =
         group.scheduledFor < DateTime.now().millisecondsSinceEpoch - 7200000;
     if (passedAtLeast2h) {
@@ -313,6 +311,8 @@ class ScheduledBanner extends StatelessWidget {
             time: group.scheduledFor,
             textIfAlreadyPassed: "Started",
           );
+          final isStarted =
+              group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
           return Positioned(
             right: 5,
             top: 8,

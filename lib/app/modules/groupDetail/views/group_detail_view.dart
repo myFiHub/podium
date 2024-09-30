@@ -150,11 +150,6 @@ class SetReminderButton extends GetView<GroupDetailController> {
         reminderIsSetForInMinotes = reminder;
       }
 
-      final isPassed =
-          group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
-      if (isPassed) {
-        return const SizedBox();
-      }
       List<Map<String, Object>> timesList = [
         {'time': 30, 'text': '30 minutes before'},
         {'time': 10, 'text': '10 minutes before'},
@@ -169,10 +164,18 @@ class SetReminderButton extends GetView<GroupDetailController> {
               (element) => (element['time'] as int) <= numberOfMinoutesToEvent)
           .toList();
       String text = reminderIsSetForInMinotes != null
-          ? "reminder is set for ${reminderIsSetForInMinotes.abs()} before event"
+          ? "reminder is set for ${reminderIsSetForInMinotes.abs()} min before event"
           : 'Remind me';
       if (reminderIsSetForInMinotes == 0) {
         text = 'Reminder is set for when event starts';
+      }
+      final isPassed =
+          group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
+      if (isPassed) {
+        return const SizedBox();
+      }
+      if (group.alarmId == 0) {
+        return SizedBox();
       }
       return Button(
         type: ButtonType.outline,

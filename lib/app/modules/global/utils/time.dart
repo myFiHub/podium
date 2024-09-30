@@ -13,7 +13,7 @@ String remainintTimeUntilMilSecondsFormated(
   final String twoDigitHours = twoDigits(duration.inHours.remainder(24));
   final String twoDigitDays = twoDigits(duration.inDays);
   if (duration.inDays > 0) {
-    return '$twoDigitDays:$twoDigitHours:$twoDigitMinutes:$twoDigitSeconds';
+    return '$twoDigitDays d,$twoDigitHours:$twoDigitMinutes:$twoDigitSeconds';
   }
   return '$twoDigitHours:$twoDigitMinutes:$twoDigitSeconds';
 }

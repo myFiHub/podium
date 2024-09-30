@@ -1,14 +1,13 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/storage.dart';
 
 Future<int?> setReminder({
   required int alarmId,
@@ -21,6 +20,7 @@ Future<int?> setReminder({
   required int scheduledFor,
   required String eventName,
 }) async {
+  int id = alarmId == 0 ? Random().nextInt(1000000) : alarmId;
   final hasNotificationPermission =
       await getPermission(Permission.notification);
   if (!hasNotificationPermission) {
@@ -29,9 +29,9 @@ Future<int?> setReminder({
     return null;
   }
 
-  final alreadtSetAlarm = Alarm.getAlarm(alarmId);
+  final alreadtSetAlarm = Alarm.getAlarm(id);
   if (alreadtSetAlarm != null) {
-    Alarm.stop(alarmId);
+    Alarm.stop(id);
   }
 
   final int? alarmMeBefore = await Get.dialog<int>(AlertDialog(
@@ -67,7 +67,7 @@ Future<int?> setReminder({
     log.d('alarm not set');
   } else {
     final alarmSettings = AlarmSettings(
-      id: alarmId,
+      id: id,
       dateTime: DateTime.fromMillisecondsSinceEpoch(scheduledFor)
           .subtract(Duration(minutes: alarmMeBefore)),
       assetAudioPath: 'assets/alarm.mp3',
@@ -76,7 +76,9 @@ Future<int?> setReminder({
       volume: 0.8,
       fadeDuration: 3.0,
       notificationTitle: 'Podium',
-      notificationBody: '${eventName} will start in $alarmMeBefore minutes',
+      notificationBody: alarmMeBefore == 0
+          ? "${eventName} Started"
+          : '${eventName} will start in $alarmMeBefore minutes',
       enableNotificationOnKill: Platform.isAndroid,
     );
     await Alarm.set(alarmSettings: alarmSettings);

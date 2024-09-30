@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../bloc/omni_datetime_picker_bloc.dart';
@@ -118,7 +119,14 @@ class TimePickerSpinner extends StatelessWidget {
                             hour = hour.padLeft(2, '0');
                           }
 
-                          return Center(child: Text(hour));
+                          return Center(
+                            child: Text(
+                              hour,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -148,7 +156,13 @@ class TimePickerSpinner extends StatelessWidget {
                           if (isForce2Digits) {
                             minute = minute.padLeft(2, '0');
                           }
-                          return Center(child: Text(minute));
+                          return Center(
+                              child: Text(
+                            minute,
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ));
                         },
                       ),
                     ),

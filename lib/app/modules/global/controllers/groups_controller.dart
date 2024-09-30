@@ -333,43 +333,41 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     } else {
       joiningGroupId.value = '';
       _openGroup(
-          group: group,
-          openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
-          accesses: accesses);
+        group: group,
+        openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
+        accesses: accesses,
+      );
     }
   }
 
-  _openGroup(
-      {required FirebaseGroup group,
-      required bool openTheRoomAfterJoining,
-      required GroupAccesses accesses}) async {
+  _openGroup({
+    required FirebaseGroup group,
+    required bool openTheRoomAfterJoining,
+    required GroupAccesses accesses,
+  }) async {
     final isAlreadyRegistered = Get.isRegistered<GroupDetailController>();
     if (isAlreadyRegistered) {
       Get.delete<GroupDetailController>();
     }
 
-    final groupDetailController = Get.put(
-      GroupDetailController(),
-      permanent: false,
-    );
-    groupDetailController.group.value = group;
-    groupDetailController.groupAccesses.value = accesses;
     joiningGroupId.value = '';
+
     Navigate.to(
-      type: NavigationTypes.toNamed,
-      route: Routes.GROUP_DETAIL,
-    );
+        type: NavigationTypes.toNamed,
+        route: Routes.GROUP_DETAIL,
+        parameters: {
+          GroupDetailsParametersKeys.groupId: group.id,
+          GroupDetailsParametersKeys.enterAccess: accesses.canEnter.toString(),
+          GroupDetailsParametersKeys.speakAccess: accesses.canSpeak.toString(),
+          GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining:
+              openTheRoomAfterJoining.toString(),
+        });
     analytics.logEvent(
       name: "group_opened",
       parameters: {
         "group_id": group.id,
       },
     );
-    if (openTheRoomAfterJoining) {
-      groupDetailController.startTheCall(
-        accesses: accesses,
-      );
-    }
   }
 
   Future<GroupAccesses> getGroupAccesses(

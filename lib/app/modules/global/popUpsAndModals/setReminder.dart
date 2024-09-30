@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,6 +9,32 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/logger.dart';
+
+Future<bool> createCalendarEventForScheduledGroup({
+  String? eventUrl,
+  required int scheduledFor,
+  required String title,
+  String? subject,
+}) async {
+  final Event event = Event(
+    title: title,
+    description: subject,
+    location: 'Podium app',
+    startDate: DateTime.fromMillisecondsSinceEpoch(scheduledFor),
+    // 30min from start
+    endDate: DateTime.fromMillisecondsSinceEpoch(scheduledFor + 30 * 60 * 1000),
+    iosParams: IOSParams(
+      reminder: Duration(
+          /* Ex. hours:1 */), // on iOS, you can set alarm notification after your event.
+      url: eventUrl, // on iOS, you can set url to your event.
+    ),
+    androidParams: AndroidParams(
+      emailInvites: [], // on Android, you can add invite emails to your event.
+    ),
+  );
+  final added = await Add2Calendar.addEvent2Cal(event);
+  return added;
+}
 
 List<Map<String, Object>> defaultTimeList({required int endsAt}) {
   List<Map<String, Object>> timesList = [
@@ -25,6 +52,23 @@ List<Map<String, Object>> defaultTimeList({required int endsAt}) {
   return filteredTimes;
 }
 
+bool isReminderAlreadySet(int alarmId) {
+  final alreadtSetAlarm = Alarm.getAlarm(alarmId);
+  if (alreadtSetAlarm != null) {
+    return true;
+  }
+  return false;
+}
+
+DateTime? getReminderTime(int alarmId) {
+  final alreadtSetAlarm = isReminderAlreadySet(alarmId);
+  if (alreadtSetAlarm) {
+    final alarm = Alarm.getAlarm(alarmId);
+    return alarm!.dateTime;
+  }
+  return null;
+}
+
 Future<int?> setReminder({
   required int alarmId,
   List<Map<String, Object>> timesList = const [
@@ -35,6 +79,8 @@ Future<int?> setReminder({
   ],
   required int scheduledFor,
   required String eventName,
+  String? subject,
+  String? eventUrl,
 }) async {
   int id = alarmId == 0 ? Random().nextInt(1000000) : alarmId;
   final hasNotificationPermission =
@@ -45,8 +91,8 @@ Future<int?> setReminder({
     return null;
   }
 
-  final alreadtSetAlarm = Alarm.getAlarm(id);
-  if (alreadtSetAlarm != null) {
+  final alreadtSetAlarm = isReminderAlreadySet(alarmId);
+  if (alreadtSetAlarm) {
     Alarm.stop(id);
   }
 
@@ -68,19 +114,33 @@ Future<int?> setReminder({
                 child: Text(timesList[i]['text'] as String,
                     style: TextStyle(color: Colors.red[i * 100])),
               ),
+            // TextButton(
+            //   onPressed: () async {
+            //     final isSet = await createCalendarEventForScheduledGroup(
+            //       eventUrl: eventUrl,
+            //       scheduledFor: scheduledFor,
+            //       title: eventName,
+            //       subject: subject,
+            //     );
+
+            //     Navigator.pop(Get.context!, isSet ? -1 : null);
+            //   },
+            //   child: Text('use my calendar instead',
+            //       style: TextStyle(color: Colors.green[400])),
+            // ),
             TextButton(
-              onPressed: () {
-                Navigator.pop(Get.context!, null);
+              onPressed: () async {
+                Navigator.pop(Get.context!, -2);
               },
-              child: Text('No Alarm', style: TextStyle(color: Colors.red)),
+              child: Text('NO REMINDER!', style: TextStyle(color: Colors.red)),
             ),
           ],
         ),
       )
     ],
   ));
-  if (alarmMeBefore == null) {
-    log.d('alarm not set');
+  if (alarmMeBefore == null || alarmMeBefore < 0) {
+    log.d(' local alarm not set');
   } else {
     final alarmSettings = AlarmSettings(
       id: id,

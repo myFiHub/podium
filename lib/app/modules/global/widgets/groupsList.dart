@@ -241,8 +241,7 @@ class SingleGroup extends StatelessWidget {
                                 },
                               );
                               Share.share(
-                                  // 'podium://group-detail/$groupId',
-                                  "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${group.id}&apn=com.web3podium");
+                                  generateGroupShareUrl(groupId: group.id));
                             },
                             icon: Icon(
                               Icons.share,
@@ -290,6 +289,10 @@ class SingleGroup extends StatelessWidget {
   }
 }
 
+generateGroupShareUrl({required String groupId}) {
+  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium";
+}
+
 class ScheduledBanner extends StatelessWidget {
   final FirebaseGroup group;
   const ScheduledBanner({
@@ -313,6 +316,10 @@ class ScheduledBanner extends StatelessWidget {
           );
           final isStarted =
               group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
+          final size = 60;
+          final remainingText = remaining.contains('d,')
+              ? remaining.split('d,').join('d\n').replaceAll('d', 'days')
+              : remaining;
           return Positioned(
             right: 5,
             top: 8,
@@ -321,15 +328,15 @@ class ScheduledBanner extends StatelessWidget {
               child: Container(
                 foregroundDecoration: RotatedCornerDecoration.withColor(
                   color: isStarted ? Colors.green : Colors.red,
-                  spanBaselineShift: 2,
-                  badgeSize: Size(60, 60),
+                  spanBaselineShift: remainingText.contains('days') ? 2 : 4,
+                  badgeSize: Size(size.toDouble(), size.toDouble()),
                   badgeCornerRadius: Radius.circular(4),
                   badgePosition: BadgePosition.topEnd,
                   textSpan: TextSpan(
-                    text: remaining,
+                    text: remainingText,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 10,
+                      fontSize: 9,
                       letterSpacing: 1,
                       fontWeight: FontWeight.bold,
                       shadows: [
@@ -338,8 +345,8 @@ class ScheduledBanner extends StatelessWidget {
                     ),
                   ),
                 ),
-                height: 60,
-                width: 60,
+                height: size.toDouble(),
+                width: size.toDouble(),
               ),
             ),
           );

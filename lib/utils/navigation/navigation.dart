@@ -21,25 +21,31 @@ class Navigate {
   static to(
       {required NavigationTypes type,
       required String route,
+      dynamic id,
+      Map<String, String>? parameters,
       dynamic arguments}) async {
     switch (type) {
       case NavigationTypes.toNamed:
-        Get.toNamed(route, arguments: arguments);
+        Get.toNamed(
+          route,
+          arguments: arguments,
+          parameters: parameters,
+        );
         break;
       case NavigationTypes.offNamed:
-        Get.offNamed(route, arguments: arguments);
+        Get.offNamed(route, arguments: arguments, parameters: parameters);
         break;
       case NavigationTypes.offAllNamed:
-        Get.offAllNamed(route, arguments: arguments);
+        Get.offAllNamed(route, arguments: arguments, parameters: parameters);
         break;
       case NavigationTypes.offAllAndToNamed:
-        Get.offAndToNamed(route, arguments: arguments);
+        Get.offAndToNamed(route, arguments: arguments, parameters: parameters);
         break;
       case NavigationTypes.offToNamed:
-        Get.offNamed(route, arguments: arguments);
+        Get.offNamed(route, arguments: arguments, parameters: parameters);
         break;
       case NavigationTypes.offAndToNamed:
-        Get.offAndToNamed(route, arguments: arguments);
+        Get.offAndToNamed(route, arguments: arguments, parameters: parameters);
         break;
     }
     if (_validRoutesForNavigation.contains(route) ||

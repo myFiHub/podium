@@ -224,7 +224,12 @@ class CreateGroupController extends GetxController with FireBaseUtils {
         endsAt: scheduledFor.value,
       ),
     );
-    if (setFor == null) {
+    if (setFor == -1) {
+      // means use calendar
+    }
+    if (setFor == -2) {
+      // means no reminder
+    } else if (setFor == null) {
       return;
     } else {
       Get.snackbar(

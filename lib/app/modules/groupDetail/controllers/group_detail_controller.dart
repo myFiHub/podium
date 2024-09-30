@@ -26,6 +26,14 @@ class JoinButtonProps {
   JoinButtonProps({required this.enabled, required this.text});
 }
 
+class GroupDetailsParametersKeys {
+  static const String groupId = 'groupId';
+  static const String enterAccess = 'enterAccess';
+  static const String speakAccess = 'speakAccess';
+  static const String shouldOpenJitsiAfterJoining =
+      'shouldOpenJitsiAfterJoining';
+}
+
 class GroupDetailController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
   final GlobalController globalController = Get.find<GlobalController>();
@@ -43,25 +51,51 @@ class GroupDetailController extends GetxController with FireBaseUtils {
 
   final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InvitedMember>>({});
+//parameters for the group detail page
+  late String groupId;
+  late String enterAccess;
+  late String speakAccess;
+  late bool shouldOpenJitsiAfterJoining;
 
   @override
-  void onInit() {
-    group.listen((group) {
-      if (group != null && gotGroupInfo == false) {
-        gotGroupInfo = true;
-        getMembers(group);
-        fetchInvitedMembers();
-        scheduleChecks();
-        startListeningToGroup(group.id, onGroupUpdate);
-      }
-    });
+  void onInit() async {
+    super.onInit();
+    final params = [
+      GroupDetailsParametersKeys.groupId,
+      GroupDetailsParametersKeys.enterAccess,
+      GroupDetailsParametersKeys.speakAccess,
+      GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining
+    ];
+    if (params.any((element) => Get.parameters[element] == null)) {
+      log.e('Missing parameters');
+      return;
+    }
+    groupId = Get.parameters[GroupDetailsParametersKeys.groupId]!;
+    enterAccess = Get.parameters[GroupDetailsParametersKeys.enterAccess]!;
+    speakAccess = Get.parameters[GroupDetailsParametersKeys.speakAccess]!;
+    shouldOpenJitsiAfterJoining = Get.parameters[
+            GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining] ==
+        'true';
+    groupAccesses.value = GroupAccesses(
+      canEnter: enterAccess == 'true',
+      canSpeak: speakAccess == 'true',
+    );
+    final remoteGroup = await getGroupInfoById(groupId);
+    if (remoteGroup != null) {
+      group.value = remoteGroup;
+      gotGroupInfo = true;
+      getMembers(remoteGroup);
+      fetchInvitedMembers();
+      scheduleChecks();
+      startListeningToGroup(remoteGroup.id, onGroupUpdate);
+    }
+
     globalController.ticker.listen((event) {
       if (group.value != null) {
         scheduleChecks();
       }
     });
-
-    super.onInit();
+    globalController.deepLinkRoute = null;
   }
 
   @override
@@ -79,6 +113,7 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   }
 
   onGroupUpdate(DatabaseEvent data) {
+    if (group.value == null) return;
     final newData = singleGroupParser(data.snapshot.value);
     if (newData != null) {
       if (newData.members.length != group.value!.members.length) {

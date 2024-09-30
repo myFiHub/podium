@@ -12,6 +12,7 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
+import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
@@ -57,7 +58,7 @@ class GlobalUpdateIds {
   static const ticker = 'ticker';
 }
 
-class GlobalController extends GetxController {
+class GlobalController extends GetxController with FireBaseUtils {
   static final storage = GetStorage();
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
@@ -363,7 +364,7 @@ class GlobalController extends GetxController {
     return;
   }
 
-  openDeepLinkGroup(String route) {
+  openDeepLinkGroup(String route) async {
     if (route.contains(Routes.GROUP_DETAIL)) {
       Navigate.to(
         type: NavigationTypes.offAllNamed,

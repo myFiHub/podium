@@ -1,17 +1,12 @@
-import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -25,103 +20,93 @@ class GroupDetailView extends GetView<GroupDetailController> {
     return Scaffold(
       body: Column(
         children: [
-          Obx(
-            () {
-              final isLoading = controller.isGettingMembers.value;
-              final members = controller.membersList.value;
-              final group = controller.group.value;
-              final GlobalController globalController = Get.find();
-              final myUser = globalController.currentUserInfo.value;
-              final accesses = controller.groupAccesses.value;
-              if (accesses == null) {
-                return Container(
-                  child: Text('No Accesses defined'),
-                );
-              }
-              final myId = myUser!.id;
-              if (group == null) {
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-              final iAmOwner = group.creator.id == myId;
-              if (isLoading) {
-                return Center(child: CircularProgressIndicator());
-              } else {
-                return Expanded(
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        group.name,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+          Obx(() {
+            final isLoading = controller.isGettingMembers.value;
+            final members = controller.membersList.value;
+            final group = controller.group.value;
+            final accesses = controller.groupAccesses.value;
+
+            if (group == null || accesses == null || isLoading) {
+              return Container(
+                width: Get.width,
+                height: Get.height - 110,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final iAmOwner = group.creator.id == myId;
+
+            return Expanded(
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    group.name,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (group.subject != null)
+                    Text(
+                      group.subject!,
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: Colors.grey[400],
                       ),
-                      if (group.subject != null)
-                        Text(
-                          group.subject!,
-                          style: TextStyle(
-                            fontSize: 22,
-                            color: Colors.grey[400],
+                    ),
+                  if (iAmOwner)
+                    Text(
+                      "Access Type: ${parseAccessType(group.accessType)}",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  Text(
+                    "Speakers: ${parseSpeakerType(group.speakerType)}",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                  Expanded(
+                    child: UserList(
+                      usersList: members,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      if (canInvite(
+                        group: group,
+                        currentUserId: myId,
+                      ))
+                        Container(
+                          width: (Get.width / 2) - 20,
+                          child: Button(
+                            type: ButtonType.outline,
+                            onPressed: () {
+                              openInviteBottomSheet(
+                                  canInviteToSpeak: canInviteToSpeak(
+                                group: group,
+                                currentUserId: myId,
+                              ));
+                            },
+                            child: Text('Invite users'),
                           ),
                         ),
-                      if (iAmOwner)
-                        Text(
-                          "Access Type: ${parseAccessType(group.accessType)}",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                      Text(
-                        "Speakers: ${parseSpeakerType(group.speakerType)}",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[400],
-                        ),
+                      Container(
+                        width: (Get.width / 2) - 20,
+                        child: JoinTheRoomButton(),
                       ),
-                      Expanded(
-                        child: UserList(
-                          usersList: members,
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          if (canInvite(
-                            group: group,
-                            currentUserId: myId,
-                          ))
-                            Container(
-                              width: (Get.width / 2) - 20,
-                              child: Button(
-                                type: ButtonType.outline,
-                                onPressed: () {
-                                  openInviteBottomSheet(
-                                      canInviteToSpeak: canInviteToSpeak(
-                                    group: group,
-                                    currentUserId: myId,
-                                  ));
-                                },
-                                child: Text('Invite users'),
-                              ),
-                            ),
-                          Container(
-                            width: (Get.width / 2) - 20,
-                            child: JoinTheRoomButton(),
-                          ),
-                        ],
-                      ),
-                      space10,
-                      space10,
-                      if (group.scheduledFor != 0) SetReminderButton(),
                     ],
                   ),
-                );
-              }
-            },
-          ),
+                  space10,
+                  space10,
+                  if (group.scheduledFor != 0) SetReminderButton(),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -140,11 +125,11 @@ class SetReminderButton extends GetView<GroupDetailController> {
         return Container();
       }
       controller.forceUpdateIndicator.value;
-      final isReminderSet = Alarm.getAlarm(group.alarmId) != null;
+      final reminderTime = getReminderTime(group.alarmId);
+
       int? reminderIsSetForInMinotes = null;
-      if (isReminderSet) {
-        final reminder = Alarm.getAlarm(group.alarmId)!
-            .dateTime
+      if (reminderTime != null) {
+        final reminder = reminderTime
             .difference(DateTime.fromMillisecondsSinceEpoch(group.scheduledFor))
             .inMinutes;
         reminderIsSetForInMinotes = reminder;

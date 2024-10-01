@@ -78,7 +78,7 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       is24HourMode: true,
       theme: ThemeData.dark(),
       type: OmniDateTimePickerType.dateAndTime,
-      firstDate: DateTime.now(),
+      firstDate: DateTime.now().add(Duration(minutes: 5)),
       lastDate: DateTime.now().add(Duration(days: 365)),
       minutesInterval: 5,
     );
@@ -216,21 +216,23 @@ class CreateGroupController extends GetxController with FireBaseUtils {
     }
 
     final alarmId = Random().nextInt(100000000);
-    final setFor = await setReminder(
-      alarmId: alarmId,
-      scheduledFor: scheduledFor.value,
-      eventName: groupName.value,
-      timesList: defaultTimeList(
-        endsAt: scheduledFor.value,
-      ),
-    );
-    if (setFor == -1) {
-      // means use calendar
-    }
-    if (setFor == -2) {
-      // means no reminder
-    } else if (setFor == null) {
-      return;
+    if (scheduledFor.value != 0) {
+      final setFor = await setReminder(
+        alarmId: alarmId,
+        scheduledFor: scheduledFor.value,
+        eventName: groupName.value,
+        timesList: defaultTimeList(
+          endsAt: scheduledFor.value,
+        ),
+      );
+      if (setFor == -1) {
+        // means use calendar
+      }
+      if (setFor == -2) {
+        // means no reminder
+      } else if (setFor == null) {
+        return;
+      }
     }
 
     String subject = roomSubject.value;

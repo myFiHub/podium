@@ -7,9 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/contracts/cheerBoo.dart';
-import 'package:podium/contracts/friendTech.dart';
-import 'package:podium/contracts/proxy.dart';
+import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -22,44 +20,36 @@ import 'package:podium/env.dart' as Environment;
 
 import 'package:reown_appkit/reown_appkit.dart';
 
-// final proxyContract = getContract(
-//   abi: ProxyContract.abi,
-//   address: ProxyContract.address,
-//   name: "TransparentUpgradeableProxy",
-// );
-
 mixin BlockChainInteractions {
   Future<dynamic> cheerOrBoo({
     required String target,
     required List<String> receiverAddresses,
     required num amount,
     required bool cheer,
+    required String chainId,
   }) async {
     final globalController = Get.find<GlobalController>();
     final service = globalController.web3ModalService;
-
-    final selectedChain = globalController.web3ModalService.selectedChain;
-
-    if (selectedChain == null) {
-      return null;
-    } else if (cheerBooAddress == ZERO_ADDRESS) {
-      return null;
-    }
-
     final transaction = Transaction(
       from: parsAddress(service.session!.address!),
       value: parseValue(amount),
     );
     final targetWallet = parsAddress(target);
     final receivers = receiverAddresses.map((e) => parsAddress(e)).toList();
-
+    final contract = getDeployedContract(
+      contract: Contracts.cheerboo,
+      chainId: chainId,
+    );
+    if (contract == null) {
+      return null;
+    }
     service.launchConnectedWallet();
 
     try {
       final response = await service.requestWriteContract(
         topic: service.session!.topic,
         chainId: service.selectedChain!.chainId,
-        deployedContract: cheerBooContract,
+        deployedContract: contract,
         functionName: 'cheerOrBoo',
         transaction: transaction,
         parameters: [
@@ -100,18 +90,20 @@ mixin BlockChainInteractions {
   Future<BigInt?> ext_getBuyPrice({
     required String sharesSubject,
     required num shareAmount,
+    required String chainId,
   }) async {
     final globalController = Get.find<GlobalController>();
     final service = globalController.web3ModalService;
-    if (starsArenaAddress == ZERO_ADDRESS) {
+    final contract =
+        getDeployedContract(contract: Contracts.starsArena, chainId: chainId);
+    if (contract == null) {
       return null;
     }
-
     // service.launchConnectedWallet();
     try {
       final sharesSubjectWallet = parsAddress(sharesSubject);
       final response = await service.requestReadContract(
-        deployedContract: starsArenaContract,
+        deployedContract: contract,
         topic: service.session!.topic,
         chainId: service.selectedChain!.chainId,
         functionName: 'getBuyPriceAfterFee',
@@ -131,17 +123,19 @@ mixin BlockChainInteractions {
 
   Future<BigInt?> ext_getMyShares({
     required String sharesSubject,
+    required String chainId,
   }) async {
     final globalController = Get.find<GlobalController>();
     final service = globalController.web3ModalService;
     final sharesSubjectWallet = parsAddress(sharesSubject);
-    if (starsArenaAddress == ZERO_ADDRESS) {
+    final contract =
+        getDeployedContract(contract: Contracts.starsArena, chainId: chainId);
+    if (contract == null) {
       return null;
     }
-
     try {
       final response = await service.requestReadContract(
-        deployedContract: starsArenaContract,
+        deployedContract: contract,
         topic: service.session!.topic,
         chainId: service.selectedChain!.chainId,
         functionName: 'getMyShares',
@@ -157,12 +151,18 @@ mixin BlockChainInteractions {
     }
   }
 
-  particle_getMyShares({
+  particle_getMyShares_arena({
     required String sharesSubject,
+    required String chainId,
   }) async {
     final sharesSubjectWallet = sharesSubject;
     final myAddress = await Evm.getAddress();
-    final contractAddress = starsArenaAddress;
+    final contract =
+        getDeployedContract(contract: Contracts.starsArena, chainId: chainId);
+    if (contract == null) {
+      return null;
+    }
+    final contractAddress = contract.address.hex;
     final methodName = 'getMyShares';
     final parameters = [sharesSubjectWallet];
     const abiJson = StarsArenaSmartContract.abi;
@@ -200,18 +200,27 @@ mixin BlockChainInteractions {
     }
   }
 
+  Future<BigInt?> particle_getMyShares_friendthech(
+      {required String sharesSubject, required String chainId}) async {
+    return null;
+  }
+
   Future<bool> ext_buySharesWithReferrer({
     String? referrerAddress,
     required String sharesSubject,
     num shareAmount = 1,
+    required String chainId,
   }) async {
-    final referrer = referrerAddress ?? fihubAddress;
+    final referrer = referrerAddress ?? fihubAddress(chainId);
     if (referrer == null) {
       Get.snackbar("Error", "Referrer address not found");
       return false;
     }
     final bigIntValue = await ext_getBuyPrice(
-        sharesSubject: sharesSubject, shareAmount: shareAmount);
+      sharesSubject: sharesSubject,
+      shareAmount: shareAmount,
+      chainId: chainId,
+    );
     if (bigIntValue == null) {
       return false;
     }
@@ -222,7 +231,11 @@ mixin BlockChainInteractions {
       from: parsAddress(service.session!.address!),
       value: EtherAmount.inWei(bigIntValue),
     );
-    if (starsArenaAddress == ZERO_ADDRESS) {
+    final contract = getDeployedContract(
+      contract: Contracts.starsArena,
+      chainId: chainId,
+    );
+    if (contract == null) {
       return false;
     }
 
@@ -233,7 +246,7 @@ mixin BlockChainInteractions {
       final response = await service.requestWriteContract(
         topic: service.session!.topic,
         chainId: service.selectedChain!.chainId,
-        deployedContract: starsArenaContract,
+        deployedContract: contract,
         functionName: 'buySharesWithReferrer',
         transaction: transaction,
         parameters: [
@@ -265,10 +278,18 @@ mixin BlockChainInteractions {
   Future<BigInt?> particle_getBuyPrice({
     required String sharesSubject,
     num shareAmount = 1,
+    required String chainId,
   }) async {
     final sharesSubjectWallet = sharesSubject;
     final myAddress = await Evm.getAddress();
-    final contractAddress = starsArenaAddress;
+    final contract = getDeployedContract(
+      contract: Contracts.starsArena,
+      chainId: chainId,
+    );
+    if (contract == null) {
+      return null;
+    }
+    final contractAddress = contract.address.hex;
     final methodName = 'getBuyPriceAfterFee';
     final parameters = [sharesSubjectWallet, shareAmount.toString()];
     const abiJson = StarsArenaSmartContract.abi;
@@ -298,8 +319,9 @@ mixin BlockChainInteractions {
     String? referrerAddress,
     required String sharesSubject,
     num shareAmount = 1,
+    required String chainId,
   }) async {
-    final referrer = referrerAddress ?? fihubAddress;
+    final referrer = referrerAddress ?? fihubAddress(chainId);
     if (referrer == null) {
       Get.snackbar("Error", "Referrer address not found");
       return false;
@@ -307,21 +329,28 @@ mixin BlockChainInteractions {
     final buyPrice = await particle_getBuyPrice(
       sharesSubject: sharesSubject,
       shareAmount: shareAmount,
+      chainId: chainId,
     );
     if (buyPrice == null) {
       return false;
     }
-    log.d(buyPrice.toInt());
     final sharesSubjectWallet = sharesSubject;
     final myAddress = await Evm.getAddress();
-    final contractAddress = starsArenaAddress;
+    final contract = getDeployedContract(
+      contract: Contracts.starsArena,
+      chainId: chainId,
+    );
+    if (contract == null) {
+      return false;
+    }
+
     final methodName = 'buySharesWithReferrer';
     final parameters = [sharesSubjectWallet, shareAmount.toString(), referrer];
     const abiJson = StarsArenaSmartContract.abi;
     final abiJsonString = jsonEncode(abiJson);
     try {
       final data = await EvmService.customMethod(
-        contractAddress,
+        contract.address.hex,
         methodName,
         parameters,
         abiJsonString,
@@ -330,7 +359,7 @@ mixin BlockChainInteractions {
         myAddress,
         data,
         buyPrice,
-        contractAddress,
+        contract.address.hex,
         gasFeeLevel: GasFeeLevel.high,
       );
       final signature = await Evm.sendTransaction(transaction);
@@ -391,17 +420,6 @@ EtherAmount parseValue(num amount) {
   return EtherAmount.inWei(v);
 }
 
-DeployedContract getContract(
-    {required abi, required String address, required String name}) {
-  return DeployedContract(
-    ContractAbi.fromJson(
-      jsonEncode(abi),
-      name,
-    ),
-    EthereumAddress.fromHex(address),
-  );
-}
-
 BigInt doubleToBigIntWei(num v) {
   final BigInt weiToEthRatio = BigInt.from(10).pow(18);
   final BigInt vInWei = BigInt.from(v * weiToEthRatio.toInt());
@@ -431,68 +449,8 @@ void _copyToClipboard(String text, {String? prefix}) {
   );
 }
 
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-String? get fihubAddress {
-  return Environment.Env.fihubAddress(particleChianId) ?? ZERO_ADDRESS;
-}
-
-String get starsArenaAddress {
-  // we should call the proxy contract for StarsArena, since StarsArena is upgradeable
-  final address = Environment.Env.starsArenaProxyAddress(particleChianId);
-  if (address == null || address.isEmpty) {
-    Get.snackbar("Error", "StarsArena address not found",
-        colorText: Colors.red);
-    return ZERO_ADDRESS;
-  }
-  return address;
-}
-
-DeployedContract get starsArenaContract {
-  return getContract(
-    abi: StarsArenaSmartContract.abi,
-    address: starsArenaAddress,
-    name: "StarsArena",
-  );
-}
-
-String get cheerBooAddress {
-  final address = Environment.Env.cheerBooAddress(externalWalletChianId);
-  if (address == null || address.isEmpty) {
-    Get.snackbar(
-      "Error",
-      "please switch to Movement chain, on your wallet and try again",
-      colorText: Colors.red,
-    );
-    return ZERO_ADDRESS;
-  }
-  return address;
-}
-
-get cheerBooContract {
-  return getContract(
-    abi: CheerBoo.abi,
-    address: cheerBooAddress,
-    name: "CheerBoo",
-  );
-}
-
-get friendTechAddress {
-  final aadress = Environment.Env.friendtechAddress(particleChianId);
-  if (aadress == null || aadress.isEmpty) {
-    Get.snackbar(
-        "Error", "please switch to Base chain, on your wallet and try again",
-        colorText: Colors.red);
-    return ZERO_ADDRESS;
-  }
-  return aadress;
-}
-
-get friendTechSmartContract {
-  return getContract(
-    abi: FriendTechContract.abi,
-    address: friendTechAddress,
-    name: "FriendtechSharesV1",
-  );
+String? fihubAddress(String chainId) {
+  return Environment.Env.fihubAddress(particleChianId);
 }
 
 class WalletNames {

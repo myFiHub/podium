@@ -263,8 +263,12 @@ class SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
                       text: 'Arena Ticket Holders',
                     ),
                     DropDownItem(
-                      value: RoomAccessTypes.onlyFriendTechTicketHolders,
+                      value: RoomSpeakerTypes.onlyFriendTechTicketHolders,
                       text: 'FriendTech Ticket Holders',
+                    ),
+                    DropDownItem(
+                      value: RoomSpeakerTypes.onlyPodiumPassHolders,
+                      text: 'Podium Pass Holders',
                       enabled: false,
                     ),
                   ],
@@ -346,7 +350,6 @@ class SelectRoomAccessType extends GetWidget<CreateGroupController> {
                     DropDownItem(
                       value: RoomAccessTypes.onlyFriendTechTicketHolders,
                       text: 'FriendTech Ticket Holders',
-                      enabled: false,
                     ),
                     DropDownItem(
                       value: RoomAccessTypes.onlyPodiumPassHolders,

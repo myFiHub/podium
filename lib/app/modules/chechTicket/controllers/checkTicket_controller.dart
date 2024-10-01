@@ -11,6 +11,7 @@ import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:particle_base/particle_base.dart' as ParticleBase;
 
 class TicketSeller {
   final UserInfoModel userInfo;
@@ -20,6 +21,7 @@ class TicketSeller {
   bool checking;
   String? speakTicketType;
   String? accessTicketType;
+
   final String address;
 
   get hasSeparateTickets =>
@@ -306,11 +308,13 @@ class CheckticketController extends GetxController
       bought = await particle_buySharesWithReferrer(
         sharesSubject:
             extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+        chainId: externalWalletChianId,
       );
     } else {
       bought = await ext_buySharesWithReferrer(
         sharesSubject:
             extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+        chainId: externalWalletChianId,
       );
       log.d('bought: $bought');
     }
@@ -357,8 +361,15 @@ class CheckticketController extends GetxController
     final List<Future> arrayToCall = [];
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
       if (group.value!.accessType == RoomAccessTypes.onlyArenaTicketHolders) {
-        arrayToCall.add(particle_getMyShares(
+        arrayToCall.add(particle_getMyShares_arena(
           sharesSubject: userAddress,
+          chainId: particleChianId,
+        ));
+      } else if (group.value!.accessType ==
+          RoomAccessTypes.onlyFriendTechTicketHolders) {
+        arrayToCall.add(particle_getMyShares_friendthech(
+          sharesSubject: userAddress,
+          chainId: particleChianId,
         ));
       } else {
         log.f('FIXME: add support for other ticket types ');
@@ -370,8 +381,15 @@ class CheckticketController extends GetxController
 
     if (allUsersToBuyTicketFrom.value[userId]?.speakTicketType != null) {
       if (group.value!.speakerType == RoomSpeakerTypes.onlyArenaTicketHolders) {
-        arrayToCall.add(particle_getMyShares(
+        arrayToCall.add(particle_getMyShares_arena(
           sharesSubject: userAddress,
+          chainId: particleChianId,
+        ));
+      } else if (group.value!.accessType ==
+          RoomSpeakerTypes.onlyFriendTechTicketHolders) {
+        arrayToCall.add(particle_getMyShares_friendthech(
+          sharesSubject: userAddress,
+          chainId: particleChianId,
         ));
       } else {
         log.f('FIXME: add support for other ticket types');
@@ -399,14 +417,16 @@ accessIsBuyableByTicket(FirebaseGroup group) {
   final groupAccessType = group.accessType;
   return groupAccessType == RoomAccessTypes.onlyArenaTicketHolders ||
       groupAccessType == RoomAccessTypes.onlyFriendTechTicketHolders ||
-      groupAccessType == RoomAccessTypes.onlyPodiumPassHolders;
+      groupAccessType == RoomAccessTypes.onlyPodiumPassHolders ||
+      groupAccessType == RoomAccessTypes.onlyFriendTechTicketHolders;
 }
 
 speakIsBuyableByTicket(FirebaseGroup group) {
   final groupSpeakType = group.speakerType;
   return groupSpeakType == RoomSpeakerTypes.onlyArenaTicketHolders ||
       groupSpeakType == RoomSpeakerTypes.onlyFriendTechTicketHolders ||
-      groupSpeakType == RoomSpeakerTypes.onlyPodiumPassHolders;
+      groupSpeakType == RoomSpeakerTypes.onlyPodiumPassHolders ||
+      groupSpeakType == RoomSpeakerTypes.onlyFriendTechTicketHolders;
 }
 
 canEnterWithoutATicket(FirebaseGroup group) {

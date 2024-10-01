@@ -439,6 +439,8 @@ String parseSpeakerType(String? speakerType) {
       return "Only Invited Users";
     case RoomSpeakerTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
+    case RoomSpeakerTypes.onlyFriendTechTicketHolders:
+      return "Only Friendtech Ticket Holders";
     case RoomSpeakerTypes.onlyPodiumPassHolders:
       return "Only Podium Pass Holders";
 
@@ -459,6 +461,8 @@ String parseAccessType(String? accessType) {
       return "Only Invited Users";
     case RoomAccessTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
+    case RoomAccessTypes.onlyFriendTechTicketHolders:
+      return "Only Friendtech Ticket Holders";
     case RoomAccessTypes.onlyPodiumPassHolders:
       return "Only Podium Pass Holders";
     default:

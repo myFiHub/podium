@@ -10,6 +10,8 @@ class Env {
       String.fromEnvironment("starsArenaAddress_Avalanche_Mainnet");
   static const starsArenaProxyAddress_Avalanche_Mainnet =
       String.fromEnvironment("starsArenaProxyAddress_Avalanche_Mainnet");
+  static const friendtechAddress_BaseChain_Mainnet =
+      String.fromEnvironment("friendtechAddress_BaseChain_Mainnet");
   static const cheerBooAddress_Movement_Devnet =
       String.fromEnvironment("cheerBooAddress_Movement_Devnet");
   static const minimumCheerBooAmount =
@@ -65,6 +67,15 @@ class Env {
     switch (chainId) {
       case '30732':
         return cheerBooAddress_Movement_Devnet;
+      default:
+        return null;
+    }
+  }
+
+  static String? friendtechAddress(String chainId) {
+    switch (chainId) {
+      case '8453':
+        return friendtechAddress_BaseChain_Mainnet;
       default:
         return null;
     }

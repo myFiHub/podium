@@ -8,6 +8,7 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
+import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/proxy.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -472,6 +473,25 @@ get cheerBooContract {
     abi: CheerBoo.abi,
     address: cheerBooAddress,
     name: "CheerBoo",
+  );
+}
+
+get friendTechAddress {
+  final aadress = Environment.Env.friendtechAddress(particleChianId);
+  if (aadress == null || aadress.isEmpty) {
+    Get.snackbar(
+        "Error", "please switch to Base chain, on your wallet and try again",
+        colorText: Colors.red);
+    return ZERO_ADDRESS;
+  }
+  return aadress;
+}
+
+get friendTechSmartContract {
+  return getContract(
+    abi: FriendTechContract.abi,
+    address: friendTechAddress,
+    name: "FriendtechSharesV1",
   );
 }
 

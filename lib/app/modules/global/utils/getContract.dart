@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/env.dart' as Environment;
+import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
@@ -16,37 +18,43 @@ enum Contracts {
 
 DeployedContract? getDeployedContract(
     {required Contracts contract, required String chainId}) {
+  DeployedContract? deployedContract = null;
   switch (contract) {
     case Contracts.starsArena:
       {
         if (_starsArenaAddress(chainId) != ZERO_ADDRESS) {
-          return starsArenaContract(chainId);
-        } else {
-          log.f('Chain $chainId is not supported for StarsArena');
+          deployedContract = starsArenaContract(chainId);
         }
       }
       break;
     case Contracts.cheerboo:
       {
         if (_cheerBooAddress(chainId) != ZERO_ADDRESS) {
-          return cheerBooContract(chainId);
-        } else {
-          log.f('Chain $chainId is not supported for CheerBoo');
+          deployedContract = cheerBooContract(chainId);
         }
       }
       break;
     case Contracts.friendTech:
       {
         if (_friendTechAddress(chainId) != ZERO_ADDRESS) {
-          return friendTechContract(chainId);
-        } else {
-          log.f('Chain $chainId is not supported for FriendTech');
+          deployedContract = friendTechContract(chainId);
         }
       }
     default:
-      return null;
+      {
+        log.e("Invalid contract");
+        deployedContract = null;
+      }
   }
-  return null;
+  if (deployedContract == null) {
+    log.e("Contract not deployed");
+    final chainName =
+        ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
+            .name;
+    Get.snackbar("Error", "Contract is not deployed on $chainName");
+  }
+
+  return deployedContract;
 }
 
 _friendTechAddress(String chainId) {

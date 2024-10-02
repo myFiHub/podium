@@ -61,7 +61,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     await toggleGroupArchive(groupId: group.id, archive: archive);
     Get.snackbar(
       "Success",
-      "Group ${archive ? "archived" : "is available again"}",
+      "Room ${archive ? "archived" : "is available again"}",
       colorText: Colors.green,
     );
     final remoteGroup = await getGroupInfoById(group.id);
@@ -403,9 +403,10 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     }
     if (group.members.contains(myUser.id))
       return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
-    if (group.accessType == null || group.accessType == RoomAccessTypes.public)
+    if (group.accessType == null ||
+        group.accessType == FreeRoomAccessTypes.public)
       return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
-    if (group.accessType == RoomAccessTypes.onlyLink) {
+    if (group.accessType == FreeRoomAccessTypes.onlyLink) {
       if (joiningByLink == true) {
         return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
       } else {
@@ -419,7 +420,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     }
 
     final invitedMembers = group.invitedMembers;
-    if (group.accessType == RoomAccessTypes.invitees) {
+    if (group.accessType == FreeRoomAccessTypes.invitees) {
       if (invitedMembers[myUser.id] != null)
         return GroupAccesses(
           canEnter: true,

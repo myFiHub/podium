@@ -2,7 +2,7 @@ import 'package:podium/env.dart';
 
 class FriendTechContract {
   static String contractAddress = Env.friendtechAddress_BaseChain_Mainnet;
-  static String abi = '''[
+  static const abi = [
     {
       "anonymous": false,
       "inputs": [
@@ -263,5 +263,5 @@ class FriendTechContract {
       "stateMutability": "nonpayable",
       "type": "function"
     }
-  ]''';
+  ];
 }

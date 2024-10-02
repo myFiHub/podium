@@ -8,6 +8,7 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -21,7 +22,7 @@ import 'package:podium/env.dart' as Environment;
 import 'package:reown_appkit/reown_appkit.dart';
 
 mixin BlockChainInteractions {
-  Future<dynamic> cheerOrBoo({
+  Future<dynamic> ext_cheerOrBoo({
     required String target,
     required List<String> receiverAddresses,
     required num amount,
@@ -202,7 +203,264 @@ mixin BlockChainInteractions {
 
   Future<BigInt?> particle_getMyShares_friendthech(
       {required String sharesSubject, required String chainId}) async {
-    return null;
+    final sharesSubjectWallet = sharesSubject;
+    final myAddress = await Evm.getAddress();
+    final contract =
+        getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
+    if (contract == null) {
+      return null;
+    }
+    final contractAddress = contract.address.hex;
+    final methodName = 'sharesBalance';
+    final parameters = [myAddress, sharesSubjectWallet];
+    const abiJson = FriendTechContract.abi;
+    final abiJsonString = jsonEncode(abiJson);
+    if (externalWalletChianId != '' &&
+        externalWalletChianId != chainId &&
+        externalWalletAddress != null &&
+        externalWalletAddress!.isNotEmpty) {
+      Get.snackbar(
+        "Could't check external wallet address",
+        "Please switch to ${chainNameById(chainId)} chain",
+        colorText: Colors.red,
+      );
+    }
+    final savedParticleChainId = particleChianId;
+
+    final chainInfo = particleChainInfoByChainId(chainId);
+    if (chainInfo == null) {
+      log.f("chain info not found");
+      return null;
+    }
+    if (chainInfo.id.toString() != savedParticleChainId) {
+      await ParticleBase.setChainInfo(chainInfo);
+    }
+    try {
+      final results = await Future.wait([
+        EvmService.readContract(
+          myAddress,
+          BigInt.zero,
+          contractAddress,
+          methodName,
+          parameters,
+          abiJsonString,
+        ),
+        if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty)
+          EvmService.readContract(
+            externalWalletAddress!,
+            BigInt.zero,
+            contractAddress,
+            methodName,
+            parameters,
+            abiJsonString,
+          ),
+      ]);
+      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
+      if (chainId != savedParticleChainId && olderChainInfo != null) {
+        await ParticleBase.setChainInfo(olderChainInfo);
+      }
+      if (results[0] == '0x') {
+        log.f(
+            'result 0: ${results[0]}, contract might not be deployed on this chain');
+        return BigInt.zero;
+      }
+
+      BigInt sum = BigInt.zero;
+      for (var result in results) {
+        if (result != null) {
+          sum += BigInt.parse(result);
+        }
+      }
+      return sum;
+    } catch (e) {
+      log.e('error : $e');
+      return null;
+    }
+  }
+
+  Future<BigInt?> particle_getFriendTechTicketPrice({
+    required String sharesSubject,
+    int numberOfTickets = 1,
+    required String chainId,
+  }) async {
+    final sharesSubjectWallet = sharesSubject;
+    final myAddress = await Evm.getAddress();
+    final contract =
+        getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
+    if (contract == null) {
+      return null;
+    }
+    final contractAddress = contract.address.hex;
+    final methodName = 'getBuyPriceAfterFee';
+    final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
+    const abiJson = FriendTechContract.abi;
+    final abiJsonString = jsonEncode(abiJson);
+    final savedChainId = particleChianId;
+    final chainInfo = particleChainInfoByChainId(chainId);
+    if (chainInfo == null) {
+      log.f("chain info not found");
+      return null;
+    }
+    if (chainInfo.id.toString() != savedChainId) {
+      await ParticleBase.setChainInfo(chainInfo);
+    }
+
+    try {
+      final result = await EvmService.readContract(
+        myAddress,
+        BigInt.zero,
+        contractAddress,
+        methodName,
+        parameters,
+        abiJsonString,
+      );
+      final olderChainInfo = particleChainInfoByChainId(savedChainId);
+      if (chainId != savedChainId && olderChainInfo != null) {
+        await ParticleBase.setChainInfo(olderChainInfo);
+      }
+      try {
+        return BigInt.parse(result);
+      } catch (e) {
+        log.e('error : $e');
+        return null;
+      }
+    } catch (e) {
+      log.e('error : $e');
+      if (chainInfo.id.toString() != savedChainId) {
+        await ParticleBase.setChainInfo(chainInfo);
+      }
+      return null;
+    }
+  }
+
+  particle_buyFriendTechTicket({
+    required String sharesSubject,
+    int numberOfTickets = 1,
+    required String chainId,
+  }) async {
+    final sharesSubjectWallet = sharesSubject;
+    final myAddress = await Evm.getAddress();
+    final contract =
+        getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
+    if (contract == null) {
+      return false;
+    }
+    final buyPrice = await particle_getFriendTechTicketPrice(
+      sharesSubject: sharesSubject,
+      numberOfTickets: numberOfTickets,
+      chainId: chainId,
+    );
+    if (buyPrice == null) {
+      return false;
+    }
+    final contractAddress = contract.address.hex;
+    final methodName = 'buyShares';
+    final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
+    const abiJson = FriendTechContract.abi;
+    final abiJsonString = jsonEncode(abiJson);
+    final savedChainId = particleChianId;
+    final chainInfo = particleChainInfoByChainId(chainId);
+    if (chainInfo == null) {
+      log.f("chain info not found");
+      return false;
+    }
+    if (chainInfo.id.toString() != savedChainId) {
+      await ParticleBase.setChainInfo(chainInfo);
+    }
+
+    final olderChainInfo = particleChainInfoByChainId(savedChainId);
+    try {
+      final data = await EvmService.customMethod(
+        contractAddress,
+        methodName,
+        parameters,
+        abiJsonString,
+      );
+      final transaction = await EvmService.createTransaction(
+        myAddress,
+        data,
+        buyPrice,
+        contractAddress,
+        gasFeeLevel: GasFeeLevel.high,
+      );
+      final signature = await Evm.sendTransaction(transaction);
+      if (chainId != savedChainId && olderChainInfo != null) {
+        await ParticleBase.setChainInfo(olderChainInfo);
+      }
+      if (signature.length > 10) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log.e('error : $e');
+      if (chainId != savedChainId && olderChainInfo != null) {
+        await ParticleBase.setChainInfo(olderChainInfo);
+      }
+
+      if (e
+          .toString()
+          .contains("Only the shares' subject can buy the first share")) {
+        Get.snackbar("Error", "target user is not yet registered on friendtech",
+            colorText: Colors.red);
+      }
+
+      return false;
+    }
+  }
+
+  Future<bool> ext_buyFirendtechTicket({
+    required String sharesSubject,
+    int numberOfTickets = 1,
+    required String chainId,
+  }) async {
+    final buyPrice = await particle_getFriendTechTicketPrice(
+      sharesSubject: sharesSubject,
+      numberOfTickets: numberOfTickets,
+      chainId: chainId,
+    );
+    if (buyPrice == null) {
+      return false;
+    }
+    final globalController = Get.find<GlobalController>();
+    final service = globalController.web3ModalService;
+    final transaction = Transaction(
+      from: parsAddress(service.session!.address!),
+      value: parseValue(buyPrice.toDouble()),
+    );
+    final contract = getDeployedContract(
+      contract: Contracts.friendTech,
+      chainId: chainId,
+    );
+    if (contract == null) {
+      return false;
+    }
+    final sharesSubjectWallet = parsAddress(sharesSubject);
+    service.launchConnectedWallet();
+    try {
+      final response = await service.requestWriteContract(
+        topic: service.session!.topic,
+        chainId: service.selectedChain!.chainId,
+        deployedContract: contract,
+        functionName: 'buyShares',
+        transaction: transaction,
+        parameters: [
+          sharesSubjectWallet,
+          numberOfTickets.toString(),
+        ],
+      );
+      if (response == "User rejected") {
+        Get.snackbar("Error", "transaction rejected");
+      }
+      if (response == null) {
+        Get.snackbar("Error", "transaction failed");
+        return false;
+      } else {
+        return true;
+      }
+    } catch (e) {
+      log.e('error : $e');
+      return false;
+    }
   }
 
   Future<bool> ext_buySharesWithReferrer({
@@ -458,7 +716,7 @@ class WalletNames {
   static const external = "External Wallet";
 }
 
-Future<String?> choseAWallet() async {
+Future<String?> choseAWallet({required String chainId}) async {
   if (externalWalletAddress == null) {
     return WalletNames.particle;
   }
@@ -476,24 +734,27 @@ Future<String?> choseAWallet() async {
     AlertDialog(
       title: Text("Choose a wallet"),
       backgroundColor: ColorName.cardBackground,
-      content: SelectChainContent(),
+      content: SelectChainContent(
+        chainId: chainId,
+      ),
     ),
   );
   return selectedWallet;
 }
 
 class SelectChainContent extends GetView<GlobalController> {
-  const SelectChainContent({super.key});
+  final String chainId;
+  const SelectChainContent({super.key, required this.chainId});
 
   @override
   Widget build(BuildContext context) {
     final store = GetStorage();
 
     return Obx(() {
-      final avalancheChainId = "43114";
+      final targetChainId = chainId;
       final externalChaiId = controller.externalWalletChainId.value;
       final externalWalletEnabled =
-          externalChaiId.isNotEmpty && externalChaiId == avalancheChainId;
+          externalChaiId.isNotEmpty && externalChaiId == targetChainId;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -534,7 +795,7 @@ class SelectChainContent extends GetView<GlobalController> {
                   : null),
           if (externalWalletEnabled == false)
             Text(
-              "to use External Wallet, please switch to Avalanche chain (${avalancheChainId}) on your wallet and try again",
+              "to use External Wallet, please switch to Avalanche chain (${targetChainId}) on your wallet and try again",
               style: TextStyle(color: Colors.red, fontSize: 12),
               textAlign: TextAlign.center,
             ),

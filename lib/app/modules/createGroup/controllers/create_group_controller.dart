@@ -24,8 +24,8 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
-  final roomAccessType = RoomAccessTypes.public.obs;
-  final roomSpeakerType = RoomSpeakerTypes.everyone.obs;
+  final roomAccessType = FreeRoomAccessTypes.public.obs;
+  final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
   final selectedUsersToBuyTicketFrom_ToAccessRoom = <UserInfoModel>[].obs;
   final selectedUsersToBuyticketFrom_ToSpeak = <UserInfoModel>[].obs;
   final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
@@ -90,34 +90,36 @@ class CreateGroupController extends GetxController with FireBaseUtils {
 
   get shouldSelectTicketHolersForSpeaking {
     return (roomSpeakerType.value ==
-                RoomSpeakerTypes.onlyFriendTechTicketHolders ||
-            roomSpeakerType.value == RoomSpeakerTypes.onlyArenaTicketHolders ||
-            roomSpeakerType.value == RoomSpeakerTypes.onlyPodiumPassHolders) &&
+                BuyableTicketTypes.onlyFriendTechTicketHolders ||
+            roomSpeakerType.value ==
+                BuyableTicketTypes.onlyArenaTicketHolders ||
+            roomSpeakerType.value ==
+                BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyticketFrom_ToSpeak.isEmpty &&
         addressesToAddForSpeaking.isEmpty;
   }
 
   get shouldSelectTicketHolersForAccess {
     return ((roomAccessType.value ==
-                RoomAccessTypes.onlyFriendTechTicketHolders) ||
-            roomAccessType.value == RoomAccessTypes.onlyArenaTicketHolders ||
-            roomAccessType.value == RoomAccessTypes.onlyPodiumPassHolders) &&
+                BuyableTicketTypes.onlyFriendTechTicketHolders) ||
+            roomAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+            roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyTicketFrom_ToAccessRoom.isEmpty &&
         addressesToAddForEntering.isEmpty;
   }
 
   get shouldBuyTicketToSpeak {
     return roomSpeakerType.value ==
-            RoomSpeakerTypes.onlyFriendTechTicketHolders ||
-        roomSpeakerType.value == RoomSpeakerTypes.onlyArenaTicketHolders ||
-        roomSpeakerType.value == RoomSpeakerTypes.onlyPodiumPassHolders;
+            BuyableTicketTypes.onlyFriendTechTicketHolders ||
+        roomSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        roomSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   get shouldBuyTicketToAccess {
     return roomAccessType.value ==
-            RoomAccessTypes.onlyFriendTechTicketHolders ||
-        roomAccessType.value == RoomAccessTypes.onlyArenaTicketHolders ||
-        roomAccessType.value == RoomAccessTypes.onlyPodiumPassHolders;
+            BuyableTicketTypes.onlyFriendTechTicketHolders ||
+        roomAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   toggleUserToSelectedList(UserInfoModel user, String ticketPermissiontype) {
@@ -616,13 +618,16 @@ class SelectUsersToBuyTicketFromBottomSheetContent
   }
 }
 
-class RoomAccessTypes {
-  static const public = 'public';
-  static const onlyLink = 'onlyLink';
-  static const invitees = 'invitees';
+class BuyableTicketTypes {
   static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
+}
+
+class FreeRoomAccessTypes {
+  static const public = 'public';
+  static const onlyLink = 'onlyLink';
+  static const invitees = 'invitees';
 }
 
 class TicketPermissionType {
@@ -636,13 +641,9 @@ class TicketTypes {
   static const friendTech = 'friendTech';
 }
 
-class RoomSpeakerTypes {
+class FreeRoomSpeakerTypes {
   static const everyone = 'everyone';
   static const invitees = 'invitees';
-  // static const onlyCreator = 'onlyCreator';
-  static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
-  static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
-  static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }
 
 class SelectBoxOption {

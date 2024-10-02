@@ -390,7 +390,7 @@ class OngoingGroupCallController extends GetxController
       }
 
       ///////////////////////
-      final res = await cheerOrBoo(
+      final res = await ext_cheerOrBoo(
         target: targetAddress,
         receiverAddresses: receiverAddresses,
         amount: parsedAmount,

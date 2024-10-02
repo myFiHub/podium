@@ -1,31 +1,30 @@
 import 'package:get/get.dart';
 import 'package:particle_base/particle_base.dart';
-import 'package:reown_appkit/reown_appkit.dart';
-import 'package:podium/env.dart' as Environment;
+import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/utils/logger.dart';
 
-particle_switchAndAction<T>(
-    {required String chainIdToTemporarilySwitchTo,
-    required Function action}) async {
+particle_switchAndAction<T>({
+  required String chainIdToTemporarilySwitchTo,
+  required Function action,
+}) async {
   final originalChainInfo = await ParticleBase.getChainInfo();
-  final targetChainInfo = ChainInfo.getChain(
-    int.parse(chainIdToTemporarilySwitchTo),
-    ReownAppKitModalNetworks.getNetworkById(
-      Environment.Env.chainNamespace,
-      chainIdToTemporarilySwitchTo,
-    )!
-        .name,
-  );
+  if (originalChainInfo.id.toString() == chainIdToTemporarilySwitchTo) {
+    return await action();
+  }
+  final targetChainInfo =
+      particleChainInfoByChainId(chainIdToTemporarilySwitchTo);
   if (targetChainInfo == null) {
     Get.snackbar('Error', 'Invalid chain id');
-    return;
+    return null;
   }
   try {
     await ParticleBase.setChainInfo(targetChainInfo);
-    await action();
+    final T res = await action();
     await ParticleBase.setChainInfo(originalChainInfo);
-    return true;
+    return res;
   } catch (e) {
+    log.e(e);
     Get.snackbar('Error', 'Error occured while switching chain');
-    return false;
+    return null;
   }
 }

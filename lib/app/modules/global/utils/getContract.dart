@@ -1,11 +1,14 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/env.dart' as Environment;
+import 'package:particle_base/model/chain_info.dart' as ChainInfo;
+
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
@@ -48,13 +51,32 @@ DeployedContract? getDeployedContract(
   }
   if (deployedContract == null) {
     log.e("Contract not deployed");
-    final chainName =
-        ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
-            .name;
-    Get.snackbar("Error", "Contract is not deployed on $chainName");
+
+    Get.snackbar(
+      "Error",
+      "Contract is not deployed on ${chainNameById(chainId)}",
+      colorText: Colors.red,
+    );
   }
 
   return deployedContract;
+}
+
+chainNameById(String chainId) {
+  final name =
+      ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)
+          ?.name;
+  if (name == null) {
+    return "Unknown";
+  }
+  return name;
+}
+
+ChainInfo.ChainInfo? particleChainInfoByChainId(String chainId) {
+  return ChainInfo.ChainInfo.getChain(
+    int.parse(chainId),
+    chainNameById(chainId),
+  );
 }
 
 _friendTechAddress(String chainId) {

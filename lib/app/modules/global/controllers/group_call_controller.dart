@@ -263,7 +263,7 @@ class GroupCallController extends GetxController with FireBaseUtils {
 bool canISpeak({required FirebaseGroup group}) {
   final iAmTheCreator = group.creator.id == myId;
   if (iAmTheCreator) return true;
-  if (group.speakerType == RoomSpeakerTypes.invitees) {
+  if (group.speakerType == FreeRoomSpeakerTypes.invitees) {
     // check if I am invited and am invited to speak
     final invitedMember = group.invitedMembers[myId];
     if (invitedMember != null && invitedMember.invitedToSpeak) return true;
@@ -271,7 +271,7 @@ bool canISpeak({required FirebaseGroup group}) {
   }
 
   final iAmAllowedToSpeak = group.speakerType == null ||
-      group.speakerType == RoomSpeakerTypes.everyone;
+      group.speakerType == FreeRoomSpeakerTypes.everyone;
 
   return iAmAllowedToSpeak;
 }

@@ -14,6 +14,7 @@ import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -225,30 +226,32 @@ class GlobalController extends GetxController with FireBaseUtils {
     return success;
   }
 
-  Future<bool> switchParticleWalletChain(String chainId) async {
-    final chain = ChainInfo.ChainInfo.getChain(
-      int.parse(chainId),
-      ReownAppKitModalNetworks.getNetworkById(
-        Env.chainNamespace,
-        chainId,
-      )!
-          .name,
-    );
+  Future<bool> switchParticleWalletChain(
+    String chainId, {
+    bool alsoSave = false,
+  }) async {
+    final chain = particleChainInfoByChainId(chainId);
     if (chain == null) {
       log.e("chain not found");
-      storage.remove(StorageKeys.particleWalletChainId);
+      if (alsoSave == true) {
+        storage.remove(StorageKeys.particleWalletChainId);
+      }
       return false;
     }
     final done = await ParticleBase.ParticleBase.setChainInfo(chain);
     if (!done) {
       log.e("error switching chain");
-      storage.remove(StorageKeys.particleWalletChainId);
+      if (alsoSave == true) {
+        storage.remove(StorageKeys.particleWalletChainId);
+      }
       return false;
     }
-    final selectedChainId = ParticleBase.ParticleBase.getChainId();
-    particleWalletChainId.value = selectedChainId.toString();
-    storage.write(
-        StorageKeys.particleWalletChainId, selectedChainId.toString());
+    if (alsoSave == true) {
+      final selectedChainId = ParticleBase.ParticleBase.getChainId();
+      particleWalletChainId.value = selectedChainId.toString();
+      storage.write(
+          StorageKeys.particleWalletChainId, selectedChainId.toString());
+    }
     return true;
   }
 

@@ -93,8 +93,8 @@ class FirebaseGroup {
     data[idKey] = id;
     data[creatorKey] = creator.toJson();
     data[membersKey] = members;
-    data[accessTypeKey] = accessType ?? RoomAccessTypes.public;
-    data[speakerTypeKey] = speakerType ?? RoomSpeakerTypes.everyone;
+    data[accessTypeKey] = accessType ?? FreeRoomAccessTypes.public;
+    data[speakerTypeKey] = speakerType ?? FreeRoomSpeakerTypes.everyone;
     data[subjectKey] = subject ?? defaultSubject;
     data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     data[invitedMembersKey] = invitedMembers;

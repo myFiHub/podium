@@ -433,15 +433,15 @@ String parseSpeakerType(String? speakerType) {
   switch (speakerType) {
     case null:
       return "Everyone";
-    case RoomSpeakerTypes.everyone:
+    case FreeRoomSpeakerTypes.everyone:
       return "Everyone";
-    case RoomSpeakerTypes.invitees:
+    case FreeRoomSpeakerTypes.invitees:
       return "Only Invited Users";
-    case RoomSpeakerTypes.onlyArenaTicketHolders:
+    case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
-    case RoomSpeakerTypes.onlyFriendTechTicketHolders:
+    case BuyableTicketTypes.onlyFriendTechTicketHolders:
       return "Only Friendtech Ticket Holders";
-    case RoomSpeakerTypes.onlyPodiumPassHolders:
+    case BuyableTicketTypes.onlyPodiumPassHolders:
       return "Only Podium Pass Holders";
 
     default:
@@ -453,17 +453,17 @@ String parseAccessType(String? accessType) {
   switch (accessType) {
     case null:
       return "Public";
-    case RoomAccessTypes.public:
+    case FreeRoomAccessTypes.public:
       return "Public";
-    case RoomAccessTypes.onlyLink:
+    case FreeRoomAccessTypes.onlyLink:
       return "Only By Link";
-    case RoomAccessTypes.invitees:
+    case FreeRoomAccessTypes.invitees:
       return "Only Invited Users";
-    case RoomAccessTypes.onlyArenaTicketHolders:
+    case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
-    case RoomAccessTypes.onlyFriendTechTicketHolders:
+    case BuyableTicketTypes.onlyFriendTechTicketHolders:
       return "Only Friendtech Ticket Holders";
-    case RoomAccessTypes.onlyPodiumPassHolders:
+    case BuyableTicketTypes.onlyPodiumPassHolders:
       return "Only Podium Pass Holders";
     default:
       return "Public";
@@ -479,10 +479,10 @@ canShareGroupUrl({required FirebaseGroup group}) {
   if (iAmCreator) {
     return true;
   }
-  if (group.accessType == RoomAccessTypes.public) {
+  if (group.accessType == FreeRoomAccessTypes.public) {
     return true;
   }
-  if (group.accessType == RoomAccessTypes.onlyLink) {
+  if (group.accessType == FreeRoomAccessTypes.onlyLink) {
     if (group.members.contains(myId)) {
       return true;
     }

@@ -198,7 +198,7 @@ class CheckticketController extends GetxController
     final results = await Future.wait(
       allUsersToBuyTicketFrom.value.entries.map(
         (e) => checkIfIveBoughtTheTicketFromUser(
-          e.value.address,
+          e.value.userInfo,
           e.value.userInfo.id,
         ),
       ),
@@ -414,7 +414,7 @@ class CheckticketController extends GetxController
   }
 
   Future<GroupAccesses> checkIfIveBoughtTheTicketFromUser(
-    String userAddress,
+    UserInfoModel user,
     String userId,
   ) async {
     final myUser = globalController.currentUserInfo.value!;
@@ -426,13 +426,13 @@ class CheckticketController extends GetxController
       if (group.value!.accessType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
         arrayToCall.add(particle_getMyShares_arena(
-          sharesSubject: userAddress,
+          sharesSubject: user.defaultWalletAddress ?? '',
           chainId: particleChianId,
         ));
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        arrayToCall.add(particle_getShares_friendthech(
-          sellerAddress: userAddress,
+        arrayToCall.add(particle_getUserShares_friendTech(
+          user: user,
           // chainId: particleChianId,
           //temporarlly use hadcoded chainId
           chainId: baseChainId,
@@ -449,19 +449,15 @@ class CheckticketController extends GetxController
       if (group.value!.speakerType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
         arrayToCall.add(particle_getMyShares_arena(
-          sharesSubject: userAddress,
+          sharesSubject: user.defaultWalletAddress ?? '',
           chainId: particleChianId,
         ));
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        arrayToCall.add(
-          particle_getShares_friendthech(
-            sellerAddress: userAddress,
-            // chainId: particleChianId,
-            //temporarlly use hadcoded chainId
-            chainId: baseChainId,
-          ),
-        );
+        arrayToCall.add(particle_getUserShares_friendTech(
+          user: user,
+          chainId: baseChainId,
+        ));
       } else {
         log.f('FIXME: add support for other ticket types');
       }

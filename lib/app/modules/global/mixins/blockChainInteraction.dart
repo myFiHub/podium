@@ -8,10 +8,12 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:particle_base/particle_base.dart';
 import 'package:podium/utils/storage.dart';
@@ -201,12 +203,61 @@ mixin BlockChainInteractions {
     }
   }
 
-  Future<BigInt?> particle_getShares_friendthech({
+  Future<BigInt> particle_getUserShares_friendTech({
+    required UserInfoModel user,
+    required String chainId,
+  }) async {
+    final savedParticleChainId = particleChianId;
+    final chainInfo = particleChainInfoByChainId(chainId);
+    if (chainInfo == null) {
+      log.f("chain info not found");
+      return BigInt.zero;
+    }
+    if (chainInfo.id.toString() != savedParticleChainId) {
+      await ParticleBase.setChainInfo(chainInfo);
+    }
+    try {
+      final defaultWallet = user.defaultWalletAddress;
+      final particleWallet = user.particleWalletAddress;
+      BigInt numberOfShares = BigInt.zero;
+      final List<Future<dynamic>> arrayToCall = [];
+      if (particleWallet != null) {
+        arrayToCall.add(_particle_getShares_friendthech(
+            sellerAddress: particleWallet, chainId: chainId));
+      }
+      if (defaultWallet != null) {
+        if (defaultWallet != particleWallet) {
+          arrayToCall.add(_particle_getShares_friendthech(
+              sellerAddress: defaultWallet, chainId: chainId));
+        }
+      }
+      final results = await Future.wait(arrayToCall);
+      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
+      if (chainId != savedParticleChainId && olderChainInfo != null) {
+        await ParticleBase.setChainInfo(olderChainInfo);
+      }
+      for (var result in results) {
+        if (result != null) {
+          numberOfShares += BigInt.parse(result.toString());
+        }
+      }
+      return numberOfShares;
+    } catch (e) {
+      log.e('error : $e');
+      Get.snackbar("Error", "Could not get user shares", colorText: Colors.red);
+      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
+      if (chainId != savedParticleChainId && olderChainInfo != null) {
+        await ParticleBase.setChainInfo(olderChainInfo);
+      }
+      return BigInt.zero;
+    }
+  }
+
+  Future<BigInt?> _particle_getShares_friendthech({
     required String sellerAddress,
     required String chainId,
-    String? buyerAddress,
   }) async {
-    final buyerWalletAddress = buyerAddress ?? await Evm.getAddress();
+    final buyerWalletAddress = await Evm.getAddress();
     final contract =
         getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
     if (contract == null) {
@@ -227,16 +278,7 @@ mixin BlockChainInteractions {
         colorText: Colors.red,
       );
     }
-    final savedParticleChainId = particleChianId;
 
-    final chainInfo = particleChainInfoByChainId(chainId);
-    if (chainInfo == null) {
-      log.f("chain info not found");
-      return null;
-    }
-    if (chainInfo.id.toString() != savedParticleChainId) {
-      await ParticleBase.setChainInfo(chainInfo);
-    }
     try {
       final results = await Future.wait([
         EvmService.readContract(
@@ -257,10 +299,7 @@ mixin BlockChainInteractions {
             abiJsonString,
           ),
       ]);
-      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
-      if (chainId != savedParticleChainId && olderChainInfo != null) {
-        await ParticleBase.setChainInfo(olderChainInfo);
-      }
+
       if (results[0] == '0x') {
         log.f(
             'result 0: ${results[0]}, contract might not be deployed on this chain');
@@ -335,7 +374,34 @@ mixin BlockChainInteractions {
     }
   }
 
-  particle_buyFriendTechTicket({
+  Future<bool> particle_activate_friendtechWallet(
+      {required String chainId}) async {
+    try {
+      final myWalletAddress = await Evm.getAddress();
+
+      final bought = await particle_buyFriendTechTicket(
+          sharesSubject: myWalletAddress, chainId: chainId);
+      return bought;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> ext_activate_friendtechWallet({required String chainId}) async {
+    if (externalWalletAddress == null) {
+      return false;
+    }
+    if (externalWalletAddress!.isEmpty) {
+      return false;
+    }
+    final bought = await ext_buyFirendtechTicket(
+      sharesSubject: externalWalletAddress!,
+      chainId: chainId,
+    );
+    return bought;
+  }
+
+  Future<bool> particle_buyFriendTechTicket({
     required String sharesSubject,
     int numberOfTickets = 1,
     required String chainId,
@@ -437,8 +503,8 @@ mixin BlockChainInteractions {
       return false;
     }
     final sharesSubjectWallet = parsAddress(sharesSubject);
-    service.launchConnectedWallet();
     try {
+      service.launchConnectedWallet();
       final response = await service.requestWriteContract(
         topic: service.session!.topic,
         chainId: service.selectedChain!.chainId,
@@ -447,7 +513,7 @@ mixin BlockChainInteractions {
         transaction: transaction,
         parameters: [
           sharesSubjectWallet,
-          numberOfTickets.toString(),
+          BigInt.from(numberOfTickets),
         ],
       );
       if (response == "User rejected") {
@@ -461,6 +527,7 @@ mixin BlockChainInteractions {
       }
     } catch (e) {
       log.e('error : $e');
+
       return false;
     }
   }

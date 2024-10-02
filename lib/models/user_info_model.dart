@@ -65,6 +65,18 @@ class UserInfoModel {
     return walletAddress;
   }
 
+  String? get particleWalletAddress {
+    final firstParticleAddress = savedParticleUserInfo?.wallets
+        .where(
+          (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
+        )
+        .toList();
+    if (firstParticleAddress != null && firstParticleAddress.isNotEmpty) {
+      return firstParticleAddress.first.address;
+    }
+    return null;
+  }
+
   UserInfoModel.fromJson(Map<String, dynamic> json) {
     id = json[idKey];
     fullName = json[fullNameKey];

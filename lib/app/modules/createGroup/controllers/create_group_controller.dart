@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -18,7 +19,6 @@ import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:particle_base/model/chain_info.dart' as ChainInfo;
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
@@ -163,12 +163,61 @@ class CreateGroupController extends GetxController
     }
     loadingUserIds.add(user.id);
     try {
-      final walletAddressToCheck = user.defaultWalletAddress;
-      final shares = await particle_getShares_friendthech(
-        sellerAddress: user.defaultWalletAddress ?? '',
-        chainId: ChainInfo.ChainInfo.Base.id.toString(),
+      BigInt numberOfShares = await particle_getUserShares_friendTech(
+        user: user,
+        chainId: baseChainId,
       );
-      return true;
+
+      bool hasTicket = false;
+
+      if (numberOfShares.toInt() > 0) {
+        hasTicket = true;
+      } else {
+        if (user.id != myId) {
+          hasTicket = false;
+          Get.snackbar(
+            'Error',
+            "User isn't yet active on FriendTech",
+            colorText: Colors.orange,
+          );
+        } else {
+          final agreedToBuyTicketForSelf = await showActivatePopup();
+          if (agreedToBuyTicketForSelf != true) {
+            return false;
+          }
+          final selectedWallet = await choseAWallet(chainId: baseChainId);
+          if (selectedWallet == null) {
+            return false;
+          }
+          if (selectedWallet == WalletNames.particle) {
+            final bought = await particle_activate_friendtechWallet(
+              chainId: baseChainId,
+            );
+            if (bought) {
+              Get.snackbar(
+                "Success",
+                "account activated",
+                colorText: Colors.green,
+              );
+            }
+            return bought;
+          } else {
+            final bought = await ext_activate_friendtechWallet(
+              chainId: baseChainId,
+            );
+            if (bought) {
+              Get.snackbar(
+                "Success",
+                "account activated",
+                colorText: Colors.green,
+              );
+            }
+            return bought;
+          }
+        }
+      }
+
+      return hasTicket;
     } catch (e) {
       log.e(e);
     } finally {
@@ -295,6 +344,31 @@ class CreateGroupController extends GetxController
       ),
     );
   }
+}
+
+Future<bool?> showActivatePopup() async {
+  return await Get.dialog<bool>(
+    AlertDialog(
+      backgroundColor: ColorName.cardBackground,
+      title: Text('Activate Wallet'),
+      content:
+          Text('Your wallet is not activated on Friendtech yet, activate it?'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(false);
+          },
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(true);
+          },
+          child: Text('Activate'),
+        ),
+      ],
+    ),
+  );
 }
 
 class ScheduledGroupDateSelector extends GetView<CreateGroupController> {

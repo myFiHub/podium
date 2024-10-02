@@ -147,7 +147,11 @@ class CreateGroupController extends GetxController
     }
   }
 
-  checkIfUserCanBeAddedToList({
+  Future<bool> checkIfAddressCanBeaddedToTheList(String address) async {
+    return false;
+  }
+
+  Future<bool> checkIfUserCanBeAddedToList({
     required UserInfoModel user,
     required String ticketPermissionType,
   }) async {
@@ -164,10 +168,10 @@ class CreateGroupController extends GetxController
     loadingUserIds.add(user.id);
     try {
       BigInt numberOfShares = await particle_getUserShares_friendTech(
-        user: user,
+        defaultWallet: user.defaultWalletAddress!,
+        particleWallet: user.particleWalletAddress!,
         chainId: baseChainId,
       );
-
       bool hasTicket = false;
 
       if (numberOfShares.toInt() > 0) {
@@ -237,11 +241,22 @@ class CreateGroupController extends GetxController
     addressesToAddForEntering.remove(address);
   }
 
-  addAddressForSpeaking(String address) {
-    // add if it is not already added
-    if (!addressesToAddForSpeaking.contains(address)) {
-      addressesToAddForSpeaking.add(address);
-    }
+  addAddressForSpeaking(String address) async {
+    try {
+      // add to loading addressesif it doesn't exist
+      if (!loadingAddresses.contains(address)) {
+        loadingAddresses.add(address);
+      }
+
+      final canAdd = await checkIfAddressCanBeaddedToTheList(address);
+      // add if it is not already added
+      if (canAdd) {
+        if (!addressesToAddForSpeaking.contains(address)) {
+          addressesToAddForSpeaking.add(address);
+        }
+      }
+    } catch (e) {
+    } finally {}
   }
 
   removeAddressForSpeaking(String address) {
@@ -351,8 +366,21 @@ Future<bool?> showActivatePopup() async {
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
       title: Text('Activate Wallet'),
-      content:
-          Text('Your wallet is not activated on Friendtech yet, activate it?'),
+      content: RichText(
+        text: TextSpan(
+          text:
+              'You need to activate your wallet to buy tickets for this event. Do you want to activate it now?',
+          style: TextStyle(color: Colors.white),
+          children: [
+            if (externalWalletAddress == null)
+              TextSpan(
+                text:
+                    '\n(your external wallet is disconnected\n we checked against your particle wallet address)',
+                style: TextStyle(color: Colors.red),
+              ),
+          ],
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: () {

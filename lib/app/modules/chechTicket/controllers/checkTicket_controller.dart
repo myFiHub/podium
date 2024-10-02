@@ -432,7 +432,8 @@ class CheckticketController extends GetxController
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         arrayToCall.add(particle_getUserShares_friendTech(
-          user: user,
+          defaultWallet: user.defaultWalletAddress!,
+          particleWallet: user.particleWalletAddress!,
           // chainId: particleChianId,
           //temporarlly use hadcoded chainId
           chainId: baseChainId,
@@ -455,7 +456,8 @@ class CheckticketController extends GetxController
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         arrayToCall.add(particle_getUserShares_friendTech(
-          user: user,
+          defaultWallet: user.defaultWalletAddress!,
+          particleWallet: user.particleWalletAddress!,
           chainId: baseChainId,
         ));
       } else {

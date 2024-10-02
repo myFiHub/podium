@@ -708,6 +708,7 @@ class GlobalController extends GetxController with FireBaseUtils {
   connectToWallet({void Function()? afterConnection}) async {
     try {
       // web3ModalService.disconnect();
+      await web3ModalService.init();
       await web3ModalService.openModalView();
       final address =
           await BlockChainUtils.retrieveConnectedWallet(web3ModalService);

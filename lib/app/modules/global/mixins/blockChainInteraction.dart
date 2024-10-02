@@ -8,7 +8,6 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -204,7 +203,8 @@ mixin BlockChainInteractions {
   }
 
   Future<BigInt> particle_getUserShares_friendTech({
-    required UserInfoModel user,
+    required String defaultWallet,
+    required String particleWallet,
     required String chainId,
   }) async {
     final savedParticleChainId = particleChianId;
@@ -217,21 +217,38 @@ mixin BlockChainInteractions {
       await ParticleBase.setChainInfo(chainInfo);
     }
     try {
-      final defaultWallet = user.defaultWalletAddress;
-      final particleWallet = user.particleWalletAddress;
       BigInt numberOfShares = BigInt.zero;
+      final myExternalWallet = externalWalletAddress;
       final List<Future<dynamic>> arrayToCall = [];
-      if (particleWallet != null) {
-        arrayToCall.add(_particle_getShares_friendthech(
-            sellerAddress: particleWallet, chainId: chainId));
-      }
-      if (defaultWallet != null) {
+      // check if i bought any of the user's addresses tickets
+      arrayToCall.add(_particle_getShares_friendthech(
+        sellerAddress: particleWallet,
+        chainId: chainId,
+      ));
+      if (defaultWallet != particleWallet) {
         if (defaultWallet != particleWallet) {
           arrayToCall.add(_particle_getShares_friendthech(
-              sellerAddress: defaultWallet, chainId: chainId));
+            sellerAddress: defaultWallet,
+            chainId: chainId,
+          ));
         }
       }
+
+      if (myExternalWallet != null) {
+        arrayToCall.add(_particle_getShares_friendthech(
+          sellerAddress: myExternalWallet,
+          chainId: chainId,
+          buyerAddress: particleWallet,
+        ));
+        arrayToCall.add(_particle_getShares_friendthech(
+          sellerAddress: myExternalWallet,
+          chainId: chainId,
+          buyerAddress: defaultWallet,
+        ));
+      }
+
       final results = await Future.wait(arrayToCall);
+      log.d(results);
       final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
       if (chainId != savedParticleChainId && olderChainInfo != null) {
         await ParticleBase.setChainInfo(olderChainInfo);
@@ -256,8 +273,9 @@ mixin BlockChainInteractions {
   Future<BigInt?> _particle_getShares_friendthech({
     required String sellerAddress,
     required String chainId,
+    String? buyerAddress,
   }) async {
-    final buyerWalletAddress = await Evm.getAddress();
+    final buyerWalletAddress = buyerAddress ?? await Evm.getAddress();
     final contract =
         getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
     if (contract == null) {

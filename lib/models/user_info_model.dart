@@ -46,35 +46,24 @@ class UserInfoModel {
     this.loginTypeIdentifier,
   });
 
-  String? get defaultWalletAddress {
+  String get defaultWalletAddress {
     final walletAddress = localWalletAddress;
-    try {
-      if (walletAddress.isEmpty || walletAddress == null) {
-        final firstParticleAddress = savedParticleUserInfo?.wallets.where(
-          (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
-        );
-        if (firstParticleAddress != null && firstParticleAddress.isNotEmpty) {
-          return firstParticleAddress.first.address;
-        } else {
-          return null;
-        }
-      }
-    } catch (e) {
-      return null;
+    if (walletAddress.isEmpty) {
+      final firstParticleAddress = savedParticleUserInfo?.wallets.where(
+        (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
+      );
+      return firstParticleAddress!.first.address;
     }
     return walletAddress;
   }
 
-  String? get particleWalletAddress {
+  String get particleWalletAddress {
     final firstParticleAddress = savedParticleUserInfo?.wallets
         .where(
           (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
         )
         .toList();
-    if (firstParticleAddress != null && firstParticleAddress.isNotEmpty) {
-      return firstParticleAddress.first.address;
-    }
-    return null;
+    return firstParticleAddress!.first.address;
   }
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {

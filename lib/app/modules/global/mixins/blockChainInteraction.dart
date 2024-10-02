@@ -201,10 +201,12 @@ mixin BlockChainInteractions {
     }
   }
 
-  Future<BigInt?> particle_getMyShares_friendthech(
-      {required String sharesSubject, required String chainId}) async {
-    final sharesSubjectWallet = sharesSubject;
-    final myAddress = await Evm.getAddress();
+  Future<BigInt?> particle_getShares_friendthech({
+    required String sellerAddress,
+    required String chainId,
+    String? buyerAddress,
+  }) async {
+    final buyerWalletAddress = buyerAddress ?? await Evm.getAddress();
     final contract =
         getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
     if (contract == null) {
@@ -212,7 +214,7 @@ mixin BlockChainInteractions {
     }
     final contractAddress = contract.address.hex;
     final methodName = 'sharesBalance';
-    final parameters = [myAddress, sharesSubjectWallet];
+    final parameters = [buyerWalletAddress, sellerAddress];
     const abiJson = FriendTechContract.abi;
     final abiJsonString = jsonEncode(abiJson);
     if (externalWalletChianId != '' &&
@@ -238,7 +240,7 @@ mixin BlockChainInteractions {
     try {
       final results = await Future.wait([
         EvmService.readContract(
-          myAddress,
+          buyerWalletAddress,
           BigInt.zero,
           contractAddress,
           methodName,

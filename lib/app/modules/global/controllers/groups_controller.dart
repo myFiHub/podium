@@ -12,7 +12,6 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
@@ -174,7 +173,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
           .map(
             (e) => UserTicket(
               userId: e.id,
-              userAddress: extractAddressFromUserModel(user: e) ?? '',
+              userAddress: e.defaultWalletAddress ?? '',
             ),
           )
           .toList(),
@@ -182,7 +181,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
           .map(
             (e) => UserTicket(
               userId: e.id,
-              userAddress: extractAddressFromUserModel(user: e) ?? '',
+              userAddress: e.defaultWalletAddress ?? '',
             ),
           )
           .toList(),

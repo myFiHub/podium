@@ -7,12 +7,11 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:particle_base/particle_base.dart' as ParticleBase;
 
 class TicketSeller {
   final UserInfoModel userInfo;
@@ -191,7 +190,7 @@ class CheckticketController extends GetxController
         accessTicketType: requiredAccessTypeForThisUser,
         checking: true,
         buying: false,
-        address: extractAddressFromUserModel(user: value) ?? '',
+        address: value.defaultWalletAddress ?? '',
       );
     });
     allUsersToBuyTicketFrom.refresh();
@@ -316,7 +315,7 @@ class CheckticketController extends GetxController
   Future<bool> buyTicketFromTicketSellerOnFriendTech({
     required TicketSeller ticketSeller,
   }) async {
-    final selectedWallet = await choseAWallet(chainId: '8453');
+    final selectedWallet = await choseAWallet(chainId: baseChainId);
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
     if (selectedWallet == null) {
@@ -327,17 +326,15 @@ class CheckticketController extends GetxController
     bool bought = false;
     if (selectedWallet == WalletNames.particle) {
       bought = await particle_buyFriendTechTicket(
-        sharesSubject:
-            extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+        sharesSubject: ticketSeller.userInfo.defaultWalletAddress ?? '',
         // temp chainId hardcoded
-        chainId: '8453',
+        chainId: baseChainId,
       );
     } else {
       bought = await ext_buyFirendtechTicket(
-        sharesSubject:
-            extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+        sharesSubject: ticketSeller.userInfo.defaultWalletAddress ?? '',
         // temp chainId hardcoded
-        chainId: '8453',
+        chainId: baseChainId,
         numberOfTickets: 1,
       );
     }
@@ -363,7 +360,7 @@ class CheckticketController extends GetxController
   Future<bool> buyTicketFromTicketSellerOnArena({
     required TicketSeller ticketSeller,
   }) async {
-    final selectedWallet = await choseAWallet(chainId: '43114');
+    final selectedWallet = await choseAWallet(chainId: avalancheChainId);
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
     if (selectedWallet == null) {
@@ -374,14 +371,12 @@ class CheckticketController extends GetxController
     bool bought = false;
     if (selectedWallet == WalletNames.particle) {
       bought = await particle_buySharesWithReferrer(
-        sharesSubject:
-            extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+        sharesSubject: ticketSeller.userInfo.defaultWalletAddress ?? '',
         chainId: externalWalletChianId,
       );
     } else {
       bought = await ext_buySharesWithReferrer(
-        sharesSubject:
-            extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+        sharesSubject: ticketSeller.userInfo.defaultWalletAddress ?? '',
         chainId: externalWalletChianId,
       );
       log.d('bought: $bought');
@@ -436,11 +431,11 @@ class CheckticketController extends GetxController
         ));
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        arrayToCall.add(particle_getMyShares_friendthech(
-          sharesSubject: userAddress,
+        arrayToCall.add(particle_getShares_friendthech(
+          sellerAddress: userAddress,
           // chainId: particleChianId,
           //temporarlly use hadcoded chainId
-          chainId: '8453',
+          chainId: baseChainId,
         ));
       } else {
         log.f('FIXME: add support for other ticket types ');
@@ -460,11 +455,11 @@ class CheckticketController extends GetxController
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         arrayToCall.add(
-          particle_getMyShares_friendthech(
-            sharesSubject: userAddress,
+          particle_getShares_friendthech(
+            sellerAddress: userAddress,
             // chainId: particleChianId,
             //temporarlly use hadcoded chainId
-            chainId: '8453',
+            chainId: baseChainId,
           ),
         );
       } else {

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:podium/contracts/chainIds.dart';
+
 class Env {
   static const initialExternalWalletChainId =
       String.fromEnvironment("initialExternalWalletChainId");
@@ -37,47 +39,42 @@ class Env {
       String.fromEnvironment("VERSION", defaultValue: '1.0.4');
 
   static String? starsArenaAddress(String chainId) {
-    switch (chainId) {
-      case '43114':
-        return starsArenaAddress_Avalanche_Mainnet;
-      default:
-        return null;
+    if (chainId == avalancheChainId) {
+      return starsArenaAddress_Avalanche_Mainnet;
+    } else {
+      return null;
     }
   }
 
   static String? starsArenaProxyAddress(String chainId) {
-    switch (chainId) {
-      case '43114':
-        return starsArenaProxyAddress_Avalanche_Mainnet;
-      default:
-        return null;
+    if (chainId == avalancheChainId) {
+      return starsArenaProxyAddress_Avalanche_Mainnet;
+    } else {
+      return null;
     }
   }
 
   static String? fihubAddress(String chainId) {
-    switch (chainId) {
-      case '43114':
-        return fihubAddress_Avalanche_MainNet;
-      default:
-        return null;
+    if (chainId == avalancheChainId) {
+      return fihubAddress_Avalanche_MainNet;
+    } else {
+      return null;
     }
   }
 
   static String? cheerBooAddress(String chainId) {
-    switch (chainId) {
-      case '30732':
-        return cheerBooAddress_Movement_Devnet;
-      default:
-        return null;
+    if (chainId == movementChainId) {
+      return cheerBooAddress_Movement_Devnet;
+    } else {
+      return null;
     }
   }
 
   static String? friendtechAddress(String chainId) {
-    switch (chainId) {
-      case '8453':
-        return friendtechAddress_BaseChain_Mainnet;
-      default:
-        return null;
+    if (chainId == baseChainId) {
+      return friendtechAddress_BaseChain_Mainnet;
+    } else {
+      return null;
     }
   }
 }

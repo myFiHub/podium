@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -17,10 +18,12 @@ import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+import 'package:particle_base/model/chain_info.dart' as ChainInfo;
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
-class CreateGroupController extends GetxController with FireBaseUtils {
+class CreateGroupController extends GetxController
+    with FireBaseUtils, BlockChainInteractions {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
@@ -31,6 +34,8 @@ class CreateGroupController extends GetxController with FireBaseUtils {
   final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
   final addressesToAddForEntering = RxList<String>([]);
   final addressesToAddForSpeaking = RxList<String>([]);
+  final loadingUserIds = RxList<String>([]);
+  final loadingAddresses = RxList<String>([]);
   final isScheduled = false.obs;
   final scheduledFor = 0.obs;
   final searchValueForSeletTickets = "".obs;
@@ -122,33 +127,54 @@ class CreateGroupController extends GetxController with FireBaseUtils {
         roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
-  toggleUserToSelectedList(UserInfoModel user, String ticketPermissiontype) {
-    if (ticketPermissiontype == TicketPermissionType.speak) {
-      final list =
-          selectedUsersToBuyticketFrom_ToSpeak.value.map((e) => e.id).toList();
-      if (list.contains(user.id)) {
-        selectedUsersToBuyticketFrom_ToSpeak.value.removeWhere((element) {
-          return element.id == user.id;
-        });
-      } else {
-        selectedUsersToBuyticketFrom_ToSpeak.value.add(user);
+  toggleUserToSelectedList(
+    UserInfoModel user,
+    String ticketPermissiontype,
+  ) async {
+    final list = ticketPermissiontype == TicketPermissionType.speak
+        ? selectedUsersToBuyticketFrom_ToSpeak
+        : selectedUsersToBuyTicketFrom_ToAccessRoom;
+    if (list.contains(user)) {
+      list.remove(user);
+    } else {
+      final canAdd = await checkIfUserCanBeAddedToList(
+        user: user,
+        ticketPermissionType: ticketPermissiontype,
+      );
+      if (canAdd) {
+        list.add(user);
       }
-      selectedUsersToBuyticketFrom_ToSpeak.refresh();
-    } else if (ticketPermissiontype == TicketPermissionType.access) {
-      final list = selectedUsersToBuyTicketFrom_ToAccessRoom.value
-          .map((e) => e.id)
-          .toList();
-      if (list.contains(user.id)) {
-        selectedUsersToBuyTicketFrom_ToAccessRoom.value.removeWhere(
-          (element) {
-            return element.id == user.id;
-          },
-        );
-      } else {
-        selectedUsersToBuyTicketFrom_ToAccessRoom.value.add(user);
-      }
-      selectedUsersToBuyTicketFrom_ToAccessRoom.refresh();
     }
+  }
+
+  checkIfUserCanBeAddedToList({
+    required UserInfoModel user,
+    required String ticketPermissionType,
+  }) async {
+    if (ticketPermissionType == TicketPermissionType.access &&
+        roomAccessType.value !=
+            BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      return true;
+    }
+    if (ticketPermissionType == TicketPermissionType.speak &&
+        roomSpeakerType.value !=
+            BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      return true;
+    }
+    loadingUserIds.add(user.id);
+    try {
+      final walletAddressToCheck = user.defaultWalletAddress;
+      final shares = await particle_getShares_friendthech(
+        sellerAddress: user.defaultWalletAddress ?? '',
+        chainId: ChainInfo.ChainInfo.Base.id.toString(),
+      );
+      return true;
+    } catch (e) {
+      log.e(e);
+    } finally {
+      loadingUserIds.remove(user.id);
+    }
+    return false;
   }
 
   addAddressForEntering(String address) {
@@ -417,16 +443,14 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           return element.id != myId;
                         },
                       );
+                      final loadingIds = controller.loadingUserIds.value;
+                      final loadingAddresses =
+                          controller.loadingAddresses.value;
                       final selsectedListOfUsersToBuyTicketFromInOrderToSpeak =
                           controller.selectedUsersToBuyticketFrom_ToSpeak.value;
                       final selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom =
                           controller
-                              .selectedUsersToBuyTicketFrom_ToAccessRoom.value
-                              .where(
-                        (element) {
-                          return element.id != myId;
-                        },
-                      ).toList();
+                              .selectedUsersToBuyTicketFrom_ToAccessRoom.value;
                       List<String> selectedIds = [];
                       List<UserInfoModel> selectedUsers;
                       if (buyTicketToGetPermisionFor ==
@@ -525,7 +549,14 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (element.user != null)
+                                    if (element.user != null &&
+                                        loadingIds.contains(element.user!.id))
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 18.0),
+                                        child: GFLoader(),
+                                      )
+                                    else if (element.user != null)
                                       GFCheckbox(
                                         onChanged: (v) {
                                           if (element.user != null) {
@@ -538,8 +569,16 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                         },
                                         value: selectedIds
                                             .contains(element.user!.id),
-                                      ),
-                                    if (element.address != null)
+                                      )
+                                    else if (element.address != null &&
+                                        loadingAddresses
+                                            .contains(element.address))
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 18.0),
+                                        child: GFLoader(),
+                                      )
+                                    else if (element.address != null)
                                       GFCheckbox(
                                         onChanged: (v) {
                                           if (element.address != null) {

@@ -13,10 +13,12 @@ class MyProfileController extends GetxController with BlockChainInteractions {
   final isExternalWalletActivatedOnFriendTech = false.obs;
   final loadingParticleActivation = false.obs;
   final loadingExternalWalletActivation = false.obs;
-
+  get liveExternalChainId {
+    // final service=globalController.web3ModalService.
+  }
   @override
   void onInit() {
-    globalController.connectedWalletAddress.listen((address) {
+    globalController.externalWalletChainId.listen((address) {
       if (address.isNotEmpty && externalWalletChianId == baseChainId) {
         checkExternalWalletActivation();
       }
@@ -67,6 +69,10 @@ class MyProfileController extends GetxController with BlockChainInteractions {
       );
       return;
     }
+    final isActivated = await checkExternalWalletActivation();
+    if (isActivated != false) {
+      return;
+    }
     loadingExternalWalletActivation.value = true;
     final activated = await ext_activate_friendtechWallet(
       chainId: baseChainId,
@@ -75,12 +81,12 @@ class MyProfileController extends GetxController with BlockChainInteractions {
     isExternalWalletActivatedOnFriendTech.value = activated;
   }
 
-  checkExternalWalletActivation() async {
-    if (loadingExternalWalletActivation.value) return;
+  Future<bool?> checkExternalWalletActivation() async {
+    if (loadingExternalWalletActivation.value) return null;
     if (externalWalletChianId != baseChainId) {
       isExternalWalletActivatedOnFriendTech.value = false;
       isExternalWalletActivatedOnFriendTech.value = false;
-      return;
+      return false;
     }
     loadingExternalWalletActivation.value = true;
     final particleAddress = await Evm.getAddress();
@@ -88,7 +94,7 @@ class MyProfileController extends GetxController with BlockChainInteractions {
     if (externalWalletAddress.isEmpty) {
       isExternalWalletActivatedOnFriendTech.value = false;
       loadingExternalWalletActivation.value = false;
-      return;
+      return false;
     } else {
       final activeWallets = await particle_friendTech_getActiveUserWallets(
         particleAddress: particleAddress,
@@ -98,7 +104,7 @@ class MyProfileController extends GetxController with BlockChainInteractions {
       final isActivated = activeWallets.isExternalWalletActive;
       isExternalWalletActivatedOnFriendTech.value = isActivated;
       loadingExternalWalletActivation.value = false;
-      return;
+      return isActivated;
     }
   }
 

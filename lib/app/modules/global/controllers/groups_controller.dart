@@ -522,7 +522,7 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
   final result = await Get.dialog(
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
-      title: Text("${isCurrentlyArchived ? "Un" : ""}Archive Group"),
+      title: Text("${isCurrentlyArchived ? "Un" : ""}Archive Room"),
       content: RichText(
         text: TextSpan(
           text: "Are you sure you want to ",
@@ -534,7 +534,7 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
                 color: !isCurrentlyArchived ? Colors.red : Colors.green,
               ),
             ),
-            TextSpan(text: " this group?"),
+            TextSpan(text: " this Room?"),
           ],
         ),
       ),

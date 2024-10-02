@@ -736,7 +736,11 @@ class GlobalController extends GetxController with FireBaseUtils {
   disconnect() async {
     final removed = await removeUserWalletAddressOnFirebase();
     if (removed) {
-      web3ModalService.disconnect();
+      try {
+        web3ModalService.disconnect();
+      } catch (e) {
+        log.e(e);
+      }
       storage.remove(StorageKeys.externalWalletChainId);
       storage.remove(StorageKeys.selectedWalletName);
       connectedWalletAddress.value = '';

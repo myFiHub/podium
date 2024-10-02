@@ -190,7 +190,7 @@ class CheckticketController extends GetxController
         accessTicketType: requiredAccessTypeForThisUser,
         checking: true,
         buying: false,
-        address: value.defaultWalletAddress ?? '',
+        address: value.defaultWalletAddress,
       );
     });
     allUsersToBuyTicketFrom.refresh();
@@ -250,16 +250,8 @@ class CheckticketController extends GetxController
   buyTicket({
     required TicketSeller ticketSeller,
   }) async {
-    if (ticketSeller.accessTicketType != null &&
-        ticketSeller.speakTicketType != null &&
-        ticketSeller.accessTicketType != ticketSeller.speakTicketType) {
-      log.f('FIXME: we should show a dialog to ask which ticket to buy');
-      Get.snackbar(
-          "Update Required", "Please update the app to buy tickets about258");
-      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
-      allUsersToBuyTicketFrom.refresh();
-      return;
-    }
+    final ticketAccessType =
+        ticketSeller.accessTicketType ?? ticketSeller.speakTicketType;
     try {
       final groupAccessType = group.value!.accessType;
       final groupSpeakerType = group.value!.speakerType;
@@ -284,9 +276,6 @@ class CheckticketController extends GetxController
         return;
       }
       if (ticketSeller.shouldOnlyBuyOneTicket) {
-        final ticketAccessType =
-            ticketSeller.accessTicketType ?? ticketSeller.speakTicketType;
-
         if (ticketAccessType == BuyableTicketTypes.onlyArenaTicketHolders) {
           await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
         } else if (ticketAccessType ==
@@ -324,35 +313,44 @@ class CheckticketController extends GetxController
       return false;
     }
     bool bought = false;
+    final activeWallets = await particle_friendTech_getActiveUserWallets(
+      particleAddress: ticketSeller.userInfo.particleWalletAddress,
+      externalWalletAddress: ticketSeller.userInfo.defaultWalletAddress,
+      chainId: baseChainId,
+    );
+    if (!activeWallets.hasActiveWallet) {
+      Get.snackbar("User is not active", "User is not active");
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+      allUsersToBuyTicketFrom.refresh();
+      return false;
+    }
+    final preferedWalletAddress = activeWallets.preferedWalletAddress;
     if (selectedWallet == WalletNames.particle) {
       bought = await particle_buyFriendTechTicket(
-        sharesSubject: ticketSeller.userInfo.defaultWalletAddress ?? '',
+        sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
         chainId: baseChainId,
       );
     } else {
       bought = await ext_buyFirendtechTicket(
-        sharesSubject: ticketSeller.userInfo.defaultWalletAddress ?? '',
+        sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
         chainId: baseChainId,
-        numberOfTickets: 1,
       );
     }
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
-    if (ticketSeller.accessTicketType ==
-            BuyableTicketTypes.onlyArenaTicketHolders ||
-        ticketSeller.speakTicketType ==
-            BuyableTicketTypes.onlyArenaTicketHolders) {
-      allUsersToBuyTicketFrom
-          .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
-    }
+
     if (ticketSeller.speakTicketType ==
-            BuyableTicketTypes.onlyArenaTicketHolders ||
-        ticketSeller.accessTicketType ==
-            BuyableTicketTypes.onlyArenaTicketHolders) {
+        BuyableTicketTypes.onlyFriendTechTicketHolders) {
       allUsersToBuyTicketFrom
           .value[ticketSeller.userInfo.id]!.boughtTicketToSpeak = bought;
     }
+    if (ticketSeller.accessTicketType ==
+        BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      allUsersToBuyTicketFrom
+          .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
+    }
+
     allUsersToBuyTicketFrom.refresh();
     return bought;
   }
@@ -371,12 +369,12 @@ class CheckticketController extends GetxController
     bool bought = false;
     if (selectedWallet == WalletNames.particle) {
       bought = await particle_buySharesWithReferrer(
-        sharesSubject: ticketSeller.userInfo.defaultWalletAddress ?? '',
+        sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,
       );
     } else {
       bought = await ext_buySharesWithReferrer(
-        sharesSubject: ticketSeller.userInfo.defaultWalletAddress ?? '',
+        sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,
       );
       log.d('bought: $bought');
@@ -426,16 +424,14 @@ class CheckticketController extends GetxController
       if (group.value!.accessType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
         arrayToCall.add(particle_getMyShares_arena(
-          sharesSubject: user.defaultWalletAddress ?? '',
+          sharesSubject: user.defaultWalletAddress,
           chainId: particleChianId,
         ));
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         arrayToCall.add(particle_getUserShares_friendTech(
-          defaultWallet: user.defaultWalletAddress!,
-          particleWallet: user.particleWalletAddress!,
-          // chainId: particleChianId,
-          //temporarlly use hadcoded chainId
+          defaultWallet: user.defaultWalletAddress,
+          particleWallet: user.particleWalletAddress,
           chainId: baseChainId,
         ));
       } else {
@@ -450,14 +446,14 @@ class CheckticketController extends GetxController
       if (group.value!.speakerType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
         arrayToCall.add(particle_getMyShares_arena(
-          sharesSubject: user.defaultWalletAddress ?? '',
+          sharesSubject: user.defaultWalletAddress,
           chainId: particleChianId,
         ));
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         arrayToCall.add(particle_getUserShares_friendTech(
-          defaultWallet: user.defaultWalletAddress!,
-          particleWallet: user.particleWalletAddress!,
+          defaultWallet: user.defaultWalletAddress,
+          particleWallet: user.particleWalletAddress,
           chainId: baseChainId,
         ));
       } else {

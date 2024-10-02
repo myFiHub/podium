@@ -190,29 +190,30 @@ class ParticleWalletManager extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Obx(() {
-          final particleAuthUserInfo = controller.particleAuthUserInfo.value;
-          final wallets = particleAuthUserInfo?.wallets ?? [];
-          final walletsToShow = wallets
-              .where((w) =>
-                  w.publicAddress.isNotEmpty && w.chainName == 'evm_chain')
-              .toList();
-          return particleAuthUserInfo == null
-              ? Container()
-              : Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: ColorName.greyText,
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Column(
+    return Obx(() {
+      final particleAuthUserInfo = controller.particleAuthUserInfo.value;
+      final wallets = particleAuthUserInfo?.wallets ?? [];
+      final walletsToShow = wallets
+          .where(
+              (w) => w.publicAddress.isNotEmpty && w.chainName == 'evm_chain')
+          .toList();
+      return particleAuthUserInfo == null
+          ? Container()
+          : Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: ColorName.greyText,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Row(
@@ -280,7 +281,88 @@ class ParticleWalletManager extends GetView<GlobalController> {
                           .toList()
                     ],
                   ),
-                );
+                  FriendTeckActivationButton()
+                ],
+              ),
+            );
+    });
+  }
+}
+
+class FriendTechExternalWalletActivationButton
+    extends GetWidget<MyProfileController> {
+  const FriendTechExternalWalletActivationButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          'FriendTech',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Obx(() {
+          final isLoading = controller.loadingExternalWalletActivation.value;
+          final isActivated =
+              controller.isExternalWalletActivatedOnFriendTech.value;
+          return Button(
+            loading: isLoading,
+            size: ButtonSize.SMALL,
+            textStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isActivated ? Colors.green[400] : Colors.red[100],
+            ),
+            onPressed: (isActivated || isLoading)
+                ? null
+                : () async {
+                    await controller.activateExternalWallet();
+                  },
+            type: ButtonType.gradient,
+            text: isActivated ? 'Activated' : 'Activate',
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class FriendTeckActivationButton extends GetWidget<MyProfileController> {
+  const FriendTeckActivationButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          'FriendTech',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Obx(() {
+          final isLoading = controller.loadingParticleActivation.value;
+          final isActivated = controller.isParticleActivatedOnFriendTech.value;
+          return Button(
+            loading: isLoading,
+            size: ButtonSize.SMALL,
+            textStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isActivated ? Colors.green[400] : Colors.red[100],
+            ),
+            onPressed: (isActivated || isLoading)
+                ? null
+                : () async {
+                    await controller.checkParticleWalletActivation();
+                  },
+            type: ButtonType.gradient,
+            text: isActivated ? 'Activated' : 'Activate',
+          );
         }),
       ],
     );
@@ -292,25 +374,25 @@ class WalletInfo extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Obx(() {
-          final connectedWalletAddress =
-              controller.connectedWalletAddress.value;
-          return connectedWalletAddress == ''
-              ? Container()
-              : Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: ColorName.greyText,
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Column(
+    return Obx(() {
+      final connectedWalletAddress = controller.connectedWalletAddress.value;
+      return connectedWalletAddress == ''
+          ? Container()
+          : Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: ColorName.greyText,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
                     children: [
                       Row(
                         children: [
@@ -366,10 +448,11 @@ class WalletInfo extends GetView<GlobalController> {
                             ],
                           )),
                     ],
-                  ));
-        }),
-      ],
-    );
+                  ),
+                  FriendTechExternalWalletActivationButton()
+                ],
+              ));
+    });
   }
 }
 

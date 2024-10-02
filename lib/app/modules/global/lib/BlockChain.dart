@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:particle_base/model/chain_info.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
@@ -11,7 +10,8 @@ import 'package:http/http.dart';
 final movementChain = ReownAppKitModalNetworkInfo(
   name: 'Movement Testnet',
   chainId: '30732',
-  chainIcon: "https://docs.movementnetwork.xyz/img/logo.svg",
+  chainIcon:
+      "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg",
   currency: 'MOVE',
   rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
   explorerUrl: 'https://explorer.devnet.imola.movementlabs.xyz',

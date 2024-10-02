@@ -127,6 +127,36 @@ class CreateGroupController extends GetxController
         roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
+  toggleAddressForSelectedList(
+      String address, String ticketPermissionType) async {
+    final list = ticketPermissionType == TicketPermissionType.speak
+        ? addressesToAddForSpeaking
+        : addressesToAddForEntering;
+    if (list.contains(address)) {
+      list.remove(address);
+    } else {
+      if (!loadingAddresses.contains(address)) {
+        loadingAddresses.add(address);
+      }
+      final isActive = (await particle_friendTech_getActiveUserWallets(
+        particleAddress: address,
+        chainId: baseChainId,
+      ))
+          .hasActiveWallet;
+      // remove from loading
+      loadingAddresses.remove(address);
+      if (isActive) {
+        list.add(address);
+      } else {
+        Get.snackbar(
+          'Error',
+          "Addredss isn't yet active on FriendTech",
+          colorText: Colors.orange,
+        );
+      }
+    }
+  }
+
   toggleUserToSelectedList(
     UserInfoModel user,
     String ticketPermissiontype,
@@ -147,7 +177,17 @@ class CreateGroupController extends GetxController
     }
   }
 
-  Future<bool> checkIfAddressCanBeaddedToTheList(String address) async {
+  bool _shouldCheckIfUserIsActive(String ticketPermissionType) {
+    if (ticketPermissionType == TicketPermissionType.access &&
+        roomAccessType.value ==
+            BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      return true;
+    }
+    if (ticketPermissionType == TicketPermissionType.speak &&
+        roomSpeakerType.value ==
+            BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      return true;
+    }
     return false;
   }
 
@@ -155,26 +195,19 @@ class CreateGroupController extends GetxController
     required UserInfoModel user,
     required String ticketPermissionType,
   }) async {
-    if (ticketPermissionType == TicketPermissionType.access &&
-        roomAccessType.value !=
-            BuyableTicketTypes.onlyFriendTechTicketHolders) {
-      return true;
-    }
-    if (ticketPermissionType == TicketPermissionType.speak &&
-        roomSpeakerType.value !=
-            BuyableTicketTypes.onlyFriendTechTicketHolders) {
+    if (!_shouldCheckIfUserIsActive(ticketPermissionType)) {
       return true;
     }
     loadingUserIds.add(user.id);
     try {
-      BigInt numberOfShares = await particle_getUserShares_friendTech(
-        defaultWallet: user.defaultWalletAddress!,
-        particleWallet: user.particleWalletAddress!,
+      final activeWallets = await particle_friendTech_getActiveUserWallets(
+        particleAddress: user.particleWalletAddress,
+        externalWalletAddress: user.defaultWalletAddress,
         chainId: baseChainId,
       );
+      final isActive = activeWallets.hasActiveWallet;
       bool hasTicket = false;
-
-      if (numberOfShares.toInt() > 0) {
+      if (isActive) {
         hasTicket = true;
       } else {
         if (user.id != myId) {
@@ -230,33 +263,8 @@ class CreateGroupController extends GetxController
     return false;
   }
 
-  addAddressForEntering(String address) {
-    // add if it is not already added
-    if (!addressesToAddForEntering.contains(address)) {
-      addressesToAddForEntering.add(address);
-    }
-  }
-
   removeAddressForEntering(String address) {
     addressesToAddForEntering.remove(address);
-  }
-
-  addAddressForSpeaking(String address) async {
-    try {
-      // add to loading addressesif it doesn't exist
-      if (!loadingAddresses.contains(address)) {
-        loadingAddresses.add(address);
-      }
-
-      final canAdd = await checkIfAddressCanBeaddedToTheList(address);
-      // add if it is not already added
-      if (canAdd) {
-        if (!addressesToAddForSpeaking.contains(address)) {
-          addressesToAddForSpeaking.add(address);
-        }
-      }
-    } catch (e) {
-    } finally {}
   }
 
   removeAddressForSpeaking(String address) {
@@ -466,6 +474,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
               space10,
               Obx(() {
                 final searchValue = controller.searchValueForSeletTickets.value;
+                final loadingAddresses = controller.loadingAddresses.value;
+                final hasLoadingAddress = loadingAddresses.isNotEmpty;
                 bool isAddress =
                     controller.checkIfValueIsDirectAddress(searchValue);
                 try {} catch (e) {}
@@ -473,59 +483,69 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                   height: 70,
                   child: Input(
                     controller: inputController,
-                    suffixIcon: searchValue.isEmpty
-                        ? IconButton(
-                            onPressed: () async {
-                              final clipboardData =
-                                  await Clipboard.getData(Clipboard.kTextPlain);
-                              String? clipboardText = clipboardData?.text;
-                              if (clipboardText != null) {
-                                if (controller.checkIfValueIsDirectAddress(
-                                    clipboardText)) {
-                                  if (buyTicketToGetPermisionFor ==
-                                      TicketPermissionType.speak) {
-                                    controller
-                                        .addAddressForSpeaking(clipboardText);
-                                  } else if (buyTicketToGetPermisionFor ==
-                                      TicketPermissionType.access) {
-                                    controller
-                                        .addAddressForEntering(clipboardText);
-                                  }
-                                } else {
-                                  inputController.text = clipboardText;
-                                  controller.searchUsers(clipboardText);
-                                }
-                              }
-                            },
-                            icon: Icon(
-                              Icons.paste,
-                              color: Colors.grey,
-                            ),
+                    suffixIcon: hasLoadingAddress
+                        ? SizedBox(
+                            width: 50,
+                            child: GFLoader(),
                           )
-                        : isAddress
+                        : searchValue.isEmpty
                             ? IconButton(
-                                onPressed: () {
-                                  if (buyTicketToGetPermisionFor ==
-                                      TicketPermissionType.speak) {
-                                    controller
-                                        .addAddressForSpeaking(searchValue);
-                                  } else if (buyTicketToGetPermisionFor ==
-                                      TicketPermissionType.access) {
-                                    controller
-                                        .addAddressForEntering(searchValue);
+                                onPressed: () async {
+                                  final clipboardData = await Clipboard.getData(
+                                      Clipboard.kTextPlain);
+                                  String? clipboardText = clipboardData?.text;
+                                  if (clipboardText != null) {
+                                    if (controller.checkIfValueIsDirectAddress(
+                                        clipboardText)) {
+                                      if (buyTicketToGetPermisionFor ==
+                                          TicketPermissionType.speak) {
+                                        controller.toggleAddressForSelectedList(
+                                            clipboardText,
+                                            TicketPermissionType.speak);
+                                      } else if (buyTicketToGetPermisionFor ==
+                                          TicketPermissionType.access) {
+                                        controller.toggleAddressForSelectedList(
+                                            clipboardText,
+                                            TicketPermissionType.access);
+                                      }
+                                    } else {
+                                      inputController.text = clipboardText;
+                                      controller.searchUsers(clipboardText);
+                                    }
                                   }
-                                  controller.searchUsers('');
-                                  inputController.clear();
                                 },
-                                icon: Icon(Icons.check, color: Colors.green),
+                                icon: Icon(
+                                  Icons.paste,
+                                  color: Colors.grey,
+                                ),
                               )
-                            : IconButton(
-                                onPressed: () {
-                                  controller.searchUsers('');
-                                  inputController.clear();
-                                },
-                                icon: Icon(Icons.close, color: Colors.red),
-                              ),
+                            : isAddress
+                                ? IconButton(
+                                    onPressed: () {
+                                      if (buyTicketToGetPermisionFor ==
+                                          TicketPermissionType.speak) {
+                                        controller.toggleAddressForSelectedList(
+                                            searchValue,
+                                            TicketPermissionType.speak);
+                                      } else if (buyTicketToGetPermisionFor ==
+                                          TicketPermissionType.access) {
+                                        controller.toggleAddressForSelectedList(
+                                            searchValue,
+                                            TicketPermissionType.access);
+                                      }
+                                      controller.searchUsers('');
+                                      inputController.clear();
+                                    },
+                                    icon:
+                                        Icon(Icons.check, color: Colors.green),
+                                  )
+                                : IconButton(
+                                    onPressed: () {
+                                      controller.searchUsers('');
+                                      inputController.clear();
+                                    },
+                                    icon: Icon(Icons.close, color: Colors.red),
+                                  ),
                     hintText: 'Enter the Name/address',
                     onChanged: (value) {
                       controller.searchUsers(value);

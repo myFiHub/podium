@@ -202,6 +202,72 @@ mixin BlockChainInteractions {
     }
   }
 
+  Future<UserActiveWalletOnFriendtech> particle_friendTech_getActiveUserWallets(
+      {required String particleAddress,
+      String? externalWalletAddress,
+      required String chainId}) async {
+    final List<Future<BigInt?>> arrayToCall = [];
+    final chainInfo = particleChainInfoByChainId(chainId);
+    final savedParticleChainId = particleChianId;
+    try {
+      if (chainInfo == null) {
+        log.f("chain info not found");
+        return UserActiveWalletOnFriendtech(
+          isExternalWalletActive: false,
+          isParticleWalletActive: false,
+          externalWalletAddress: externalWalletAddress,
+          particleWalletAddress: particleAddress,
+        );
+      }
+      if (chainInfo.id.toString() != savedParticleChainId) {
+        await ParticleBase.setChainInfo(chainInfo);
+      }
+      arrayToCall.add(_particle_getShares_friendthech(
+        sellerAddress: particleAddress,
+        buyerAddress: particleAddress,
+        chainId: chainId,
+      ));
+      if (externalWalletAddress != null &&
+          externalWalletAddress.isNotEmpty &&
+          externalWalletAddress != particleAddress) {
+        arrayToCall.add(_particle_getShares_friendthech(
+          sellerAddress: externalWalletAddress,
+          buyerAddress: externalWalletAddress,
+          chainId: chainId,
+        ));
+      }
+      final List<BigInt?> results = await Future.wait(arrayToCall);
+      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
+      if (chainId != savedParticleChainId && olderChainInfo != null) {
+        await ParticleBase.setChainInfo(olderChainInfo);
+      }
+      final isParticleActive = results[0] != null && results[0] != BigInt.zero;
+      bool isExternalActive = false;
+      if (results.length > 1) {
+        isExternalActive = results[1] != null && results[1] != BigInt.zero;
+      }
+
+      return UserActiveWalletOnFriendtech(
+        isExternalWalletActive: isExternalActive,
+        isParticleWalletActive: isParticleActive,
+        externalWalletAddress: externalWalletAddress,
+        particleWalletAddress: particleAddress,
+      );
+    } catch (e) {
+      log.e('error : $e');
+      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
+      if (chainId != savedParticleChainId && olderChainInfo != null) {
+        await ParticleBase.setChainInfo(olderChainInfo);
+      }
+      return UserActiveWalletOnFriendtech(
+        isExternalWalletActive: false,
+        isParticleWalletActive: false,
+        externalWalletAddress: externalWalletAddress,
+        particleWalletAddress: particleAddress,
+      );
+    }
+  }
+
   Future<BigInt> particle_getUserShares_friendTech({
     required String defaultWallet,
     required String particleWallet,
@@ -219,36 +285,37 @@ mixin BlockChainInteractions {
     try {
       BigInt numberOfShares = BigInt.zero;
       final myExternalWallet = externalWalletAddress;
+      final myParticleAddress = await Evm.getAddress();
       final List<Future<dynamic>> arrayToCall = [];
-      // check if i bought any of the user's addresses tickets
+      // check if my particle wallet bought any of the user's addresses tickets
       arrayToCall.add(_particle_getShares_friendthech(
         sellerAddress: particleWallet,
         chainId: chainId,
       ));
       if (defaultWallet != particleWallet) {
-        if (defaultWallet != particleWallet) {
+        arrayToCall.add(_particle_getShares_friendthech(
+          sellerAddress: defaultWallet,
+          chainId: chainId,
+        ));
+      }
+
+      // check if external wallet bought any of the user's addresses tickets
+      if (myExternalWallet != null) {
+        arrayToCall.add(_particle_getShares_friendthech(
+          sellerAddress: particleWallet,
+          chainId: chainId,
+          buyerAddress: myExternalWallet,
+        ));
+        if (myExternalWallet != myParticleAddress) {
           arrayToCall.add(_particle_getShares_friendthech(
             sellerAddress: defaultWallet,
             chainId: chainId,
+            buyerAddress: myExternalWallet,
           ));
         }
       }
 
-      if (myExternalWallet != null) {
-        arrayToCall.add(_particle_getShares_friendthech(
-          sellerAddress: myExternalWallet,
-          chainId: chainId,
-          buyerAddress: particleWallet,
-        ));
-        arrayToCall.add(_particle_getShares_friendthech(
-          sellerAddress: myExternalWallet,
-          chainId: chainId,
-          buyerAddress: defaultWallet,
-        ));
-      }
-
       final results = await Future.wait(arrayToCall);
-      log.d(results);
       final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
       if (chainId != savedParticleChainId && olderChainInfo != null) {
         await ParticleBase.setChainInfo(olderChainInfo);
@@ -283,7 +350,7 @@ mixin BlockChainInteractions {
     }
     final contractAddress = contract.address.hex;
     final methodName = 'sharesBalance';
-    final parameters = [buyerWalletAddress, sellerAddress];
+    final parameters = [sellerAddress, buyerWalletAddress];
     const abiJson = FriendTechContract.abi;
     final abiJsonString = jsonEncode(abiJson);
     if (externalWalletChianId != '' &&
@@ -396,7 +463,6 @@ mixin BlockChainInteractions {
       {required String chainId}) async {
     try {
       final myWalletAddress = await Evm.getAddress();
-
       final bought = await particle_buyFriendTechTicket(
           sharesSubject: myWalletAddress, chainId: chainId);
       return bought;
@@ -946,4 +1012,25 @@ class _RememberCheckBoxState extends State<RememberCheckBox> {
       ),
     );
   }
+}
+
+class UserActiveWalletOnFriendtech {
+  final bool isParticleWalletActive;
+  final bool isExternalWalletActive;
+  final String? externalWalletAddress;
+  final String particleWalletAddress;
+  bool get hasActiveWallet => isParticleWalletActive || isExternalWalletActive;
+  String get preferedWalletAddress {
+    if (isExternalWalletActive && externalWalletAddress != null) {
+      return externalWalletAddress!;
+    }
+    return particleWalletAddress;
+  }
+
+  UserActiveWalletOnFriendtech({
+    required this.isParticleWalletActive,
+    required this.isExternalWalletActive,
+    required this.externalWalletAddress,
+    required this.particleWalletAddress,
+  });
 }

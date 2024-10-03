@@ -16,6 +16,8 @@ import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/throttleAndDebounce/debounce.dart';
+import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 mixin FireBaseUtils {
   Future<List<UserInfoModel>> getUsersByIds(List<String> userIds) async {
@@ -45,11 +47,17 @@ mixin FireBaseUtils {
     }
   }
 
+  // final _deb = Debouncing(duration: const Duration(seconds: 5));
+  final _thrGroup = Throttling(duration: const Duration(seconds: 1));
   StreamSubscription<DatabaseEvent> startListeningToGroup(
       String groupId, void Function(DatabaseEvent) onData) {
     final databaseRef =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
-    return databaseRef.onValue.listen(onData);
+    return databaseRef.onValue.listen((data) {
+      _thrGroup.throttle(() {
+        onData(data);
+      });
+    });
   }
 
   Future<String?> saveNameForUserById(
@@ -170,6 +178,7 @@ mixin FireBaseUtils {
     }
   }
 
+  final _sessionThrottle = Throttling(duration: const Duration(seconds: 1));
   StreamSubscription<DatabaseEvent>? startListeningToSessionMembers({
     required String sessionId,
     required void Function(Map<String, FirebaseSessionMember>) onData,
@@ -179,18 +188,20 @@ mixin FireBaseUtils {
             sessionId +
             '/${FirebaseSession.membersKey}');
     return databaseRef.onValue.listen((event) {
-      final members = event.snapshot.value as dynamic;
-      if (members != null) {
-        final Map<String, FirebaseSessionMember> membersMap = {};
-        members.keys.toList().forEach((element) {
-          final member = FirebaseSessionMember.fromJson(members[element]);
-          membersMap[element] = member;
-        });
-        onData(membersMap);
-      } else {
-        log.i('session not found');
-        return null;
-      }
+      _sessionThrottle.throttle(() {
+        final members = event.snapshot.value as dynamic;
+        if (members != null) {
+          final Map<String, FirebaseSessionMember> membersMap = {};
+          members.keys.toList().forEach((element) {
+            final member = FirebaseSessionMember.fromJson(members[element]);
+            membersMap[element] = member;
+          });
+          onData(membersMap);
+        } else {
+          log.i('session not found');
+          return null;
+        }
+      });
     });
   }
 
@@ -323,6 +334,8 @@ mixin FireBaseUtils {
     }
   }
 
+  final _remainingTimeThrottle =
+      Throttling(duration: const Duration(seconds: 1));
   StreamSubscription<DatabaseEvent>? startListeningToMyRemainingTalkingTime({
     required String groupId,
     required String userId,
@@ -333,13 +346,15 @@ mixin FireBaseUtils {
         groupId +
         '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.remainingTalkTimeKey}');
     return databaseRef.onValue.listen((event) {
-      final remainingTime = event.snapshot.value as dynamic;
-      if (remainingTime != null) {
-        onData(remainingTime);
-      } else {
-        log.i('session not found');
-        return null;
-      }
+      _remainingTimeThrottle.throttle(() {
+        final remainingTime = event.snapshot.value as dynamic;
+        if (remainingTime != null) {
+          onData(remainingTime);
+        } else {
+          log.i('session not found');
+          return null;
+        }
+      });
     });
   }
 

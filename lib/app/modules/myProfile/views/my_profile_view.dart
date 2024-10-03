@@ -358,7 +358,7 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
             onPressed: (isActivated || isLoading)
                 ? null
                 : () async {
-                    await controller.checkParticleWalletActivation();
+                    await controller.activateParticle();
                   },
             type: ButtonType.gradient,
             text: isActivated ? 'Activated' : 'Activate',

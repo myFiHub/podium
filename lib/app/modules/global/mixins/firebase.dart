@@ -178,7 +178,8 @@ mixin FireBaseUtils {
     }
   }
 
-  final _sessionThrottle = Throttling(duration: const Duration(seconds: 1));
+  final _sessionThrottle =
+      Throttling(duration: const Duration(milliseconds: 900));
   StreamSubscription<DatabaseEvent>? startListeningToSessionMembers({
     required String sessionId,
     required void Function(Map<String, FirebaseSessionMember>) onData,
@@ -335,7 +336,7 @@ mixin FireBaseUtils {
   }
 
   final _remainingTimeThrottle =
-      Throttling(duration: const Duration(seconds: 1));
+      Throttling(duration: const Duration(milliseconds: 900));
   StreamSubscription<DatabaseEvent>? startListeningToMyRemainingTalkingTime({
     required String groupId,
     required String userId,

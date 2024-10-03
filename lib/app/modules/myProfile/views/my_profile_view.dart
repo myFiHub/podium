@@ -23,28 +23,22 @@ class MyProfileView extends GetView<MyProfileController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        child: Container(
-          height: Get.height - 110,
-          padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
-          width: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              UserInfo(),
-              DefaultWallet(),
-              space10,
-              ParticleWalletManager(),
-              WalletInfo(),
-              WalletConnect(),
-              Spacer(),
-              ToggleShowArchivedGroups(),
-              space10,
-              BugsAndFeedbacks(),
-              space10,
-              LogoutButton(),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            UserInfo(),
+            DefaultWallet(),
+            space10,
+            ParticleWalletManager(),
+            WalletInfo(),
+            WalletConnect(),
+            ToggleShowArchivedGroups(),
+            space10,
+            BugsAndFeedbacks(),
+            space10,
+            LogoutButton(),
+          ],
         ),
       ),
     );

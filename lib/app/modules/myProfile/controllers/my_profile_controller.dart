@@ -82,6 +82,7 @@ class MyProfileController extends GetxController with BlockChainInteractions {
         "please switch to Base on the external wallet",
         colorText: Colors.orange,
       );
+      loadingExternalWalletActivation.value = false;
       return;
     }
     final isActivated = await checkExternalWalletActivation(silent: true);

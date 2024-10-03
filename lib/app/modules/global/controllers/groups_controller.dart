@@ -134,8 +134,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     required String speakerType,
     required String subject,
     required bool adultContent,
-    required List<UserInfoModel> requiredTicketsToAccess,
-    required List<UserInfoModel> requiredTicketsToSpeak,
+    required List<TicketSellersListMember> requiredTicketsToAccess,
+    required List<TicketSellersListMember> requiredTicketsToSpeak,
     required List<String> requiredAddressesToEnter,
     required List<String> requiredAddressesToSpeak,
     required List<String> tags,
@@ -172,16 +172,16 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       ticketsRequiredToAccess: requiredTicketsToAccess
           .map(
             (e) => UserTicket(
-              userId: e.id,
-              userAddress: e.defaultWalletAddress ?? '',
+              userId: e.user.id,
+              userAddress: e.activeAddress,
             ),
           )
           .toList(),
       ticketsRequiredToSpeak: requiredTicketsToSpeak
           .map(
             (e) => UserTicket(
-              userId: e.id,
-              userAddress: e.defaultWalletAddress ?? '',
+              userId: e.user.id,
+              userAddress: e.activeAddress,
             ),
           )
           .toList(),

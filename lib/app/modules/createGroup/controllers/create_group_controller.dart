@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:particle_auth_core/evm.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -22,6 +23,12 @@ import 'package:reown_appkit/reown_appkit.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
+class TicketSellersListMember {
+  final UserInfoModel user;
+  final String activeAddress;
+  TicketSellersListMember({required this.user, required this.activeAddress});
+}
+
 class CreateGroupController extends GetxController
     with FireBaseUtils, BlockChainInteractions {
   final groupsController = Get.find<GroupsController>();
@@ -29,8 +36,9 @@ class CreateGroupController extends GetxController
   final newGroupHasAdultContent = false.obs;
   final roomAccessType = FreeRoomAccessTypes.public.obs;
   final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
-  final selectedUsersToBuyTicketFrom_ToAccessRoom = <UserInfoModel>[].obs;
-  final selectedUsersToBuyticketFrom_ToSpeak = <UserInfoModel>[].obs;
+  final selectedUsersToBuyTicketFrom_ToAccessRoom =
+      <TicketSellersListMember>[].obs;
+  final selectedUsersToBuyticketFrom_ToSpeak = <TicketSellersListMember>[].obs;
   final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
   final addressesToAddForEntering = RxList<String>([]);
   final addressesToAddForSpeaking = RxList<String>([]);
@@ -167,12 +175,15 @@ class CreateGroupController extends GetxController
     if (list.contains(user)) {
       list.remove(user);
     } else {
-      final canAdd = await checkIfUserCanBeAddedToList(
+      final addedAddress = await checkIfUserCanBeAddedToList(
         user: user,
         ticketPermissionType: ticketPermissiontype,
       );
-      if (canAdd) {
-        list.add(user);
+      if (addedAddress != null) {
+        list.add(TicketSellersListMember(
+          user: user,
+          activeAddress: addedAddress,
+        ));
       }
     }
   }
@@ -191,12 +202,12 @@ class CreateGroupController extends GetxController
     return false;
   }
 
-  Future<bool> checkIfUserCanBeAddedToList({
+  Future<String?> checkIfUserCanBeAddedToList({
     required UserInfoModel user,
     required String ticketPermissionType,
   }) async {
     if (!_shouldCheckIfUserIsActive(ticketPermissionType)) {
-      return true;
+      return user.defaultWalletAddress;
     }
     loadingUserIds.add(user.id);
     try {
@@ -206,25 +217,25 @@ class CreateGroupController extends GetxController
         chainId: baseChainId,
       );
       final isActive = activeWallets.hasActiveWallet;
-      bool hasTicket = false;
+      final preferedWalletAddress = activeWallets.preferedWalletAddress;
       if (isActive) {
-        hasTicket = true;
+        return preferedWalletAddress;
       } else {
         if (user.id != myId) {
-          hasTicket = false;
           Get.snackbar(
             'Error',
             "User isn't yet active on FriendTech",
             colorText: Colors.orange,
           );
+          return null;
         } else {
           final agreedToBuyTicketForSelf = await showActivatePopup();
           if (agreedToBuyTicketForSelf != true) {
-            return false;
+            return null;
           }
           final selectedWallet = await choseAWallet(chainId: baseChainId);
           if (selectedWallet == null) {
-            return false;
+            return null;
           }
           if (selectedWallet == WalletNames.particle) {
             final bought = await particle_activate_friendtechWallet(
@@ -236,8 +247,10 @@ class CreateGroupController extends GetxController
                 "account activated",
                 colorText: Colors.green,
               );
+              return await Evm.getAddress();
+            } else {
+              return null;
             }
-            return bought;
           } else {
             final bought = await ext_activate_friendtechWallet(
               chainId: baseChainId,
@@ -248,19 +261,19 @@ class CreateGroupController extends GetxController
                 "account activated",
                 colorText: Colors.green,
               );
+              return externalWalletAddress;
+            } else {
+              return null;
             }
-            return bought;
           }
         }
       }
-
-      return hasTicket;
     } catch (e) {
       log.e(e);
+      return null;
     } finally {
       loadingUserIds.remove(user.id);
     }
-    return false;
   }
 
   removeAddressForEntering(String address) {
@@ -578,12 +591,16 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                       if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.speak) {
                         selectedUsers =
-                            selsectedListOfUsersToBuyTicketFromInOrderToSpeak;
+                            selsectedListOfUsersToBuyTicketFromInOrderToSpeak
+                                .map((e) => e.user)
+                                .toList();
                         selectedIds = selectedUsers.map((e) => e.id).toList();
                       } else if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.access) {
                         selectedUsers =
-                            selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom;
+                            selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom
+                                .map((e) => e.user)
+                                .toList();
                         selectedIds = selectedUsers.map((e) => e.id).toList();
                       } else {
                         return Container(

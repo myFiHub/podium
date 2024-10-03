@@ -572,9 +572,10 @@ class UserInfo extends GetView<GlobalController> {
               ),
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: Get.width - 140,
+                  width: Get.width - 110,
                   child: RichText(
                     overflow: TextOverflow.ellipsis,
                     text: TextSpan(

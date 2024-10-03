@@ -161,6 +161,24 @@ class CheckticketController extends GetxController
       getUsersByIds(accessIds),
       getUsersByIds(speakIds),
     ]);
+    // these loops are crutial to set the local wallet address to the user
+    // because when creating the group, addres saved for buyin should have been activated,
+    // that was the address that was SAVED in ticketsRequiredToAccess or ticketsRequiredToSpeak
+    for (var i = 0; i < requiredTicketsToAccess.length; i++) {
+      final user = requiredTicketsToAccess[i];
+      final userInfo =
+          usersForAccess.firstWhere((element) => element.id == user.userId);
+      userInfo.localWalletAddress = user.userAddress;
+      usersForAccess[i] = userInfo;
+    }
+    for (var i = 0; i < requiredTicketsToSpeak.length; i++) {
+      final user = requiredTicketsToSpeak[i];
+      final userInfo =
+          usersForSpeak.firstWhere((element) => element.id == user.userId);
+      userInfo.localWalletAddress = user.userAddress;
+      usersForSpeak[i] = userInfo;
+    }
+    // fake users should be added after the real users have been added and modified
 
     final (fakeUsersToAccess, fakeUsersToSpeak) = _generateFakeUsers();
 

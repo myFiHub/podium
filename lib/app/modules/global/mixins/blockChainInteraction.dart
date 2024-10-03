@@ -520,6 +520,7 @@ mixin BlockChainInteractions {
           "Insufficient $selectedChainCurrency",
           "Please top up your wallet on $selectedChainName",
           colorText: Colors.red,
+          duration: Duration(seconds: 5),
           mainButton: TextButton(
             onPressed: () {
               _copyToClipboard(myAddress, prefix: "Address");
@@ -767,6 +768,7 @@ mixin BlockChainInteractions {
         Get.snackbar(
           "Error:Insufficient $selectedChainCurrency",
           "Please top up your wallet on $selectedChainName",
+          duration: Duration(seconds: 5),
           colorText: Colors.red,
           mainButton: TextButton(
             onPressed: () {
@@ -830,7 +832,8 @@ String hexToAscii(String hexString) => List.generate(
       ),
     ).join();
 
-void _copyToClipboard(String text, {String? prefix}) {
+void _copyToClipboard(String text, {String? prefix}) async {
+  await Get.closeCurrentSnackbar();
   Clipboard.setData(ClipboardData(text: text)).then(
     (_) => Get.snackbar(
       "${prefix} Copied",

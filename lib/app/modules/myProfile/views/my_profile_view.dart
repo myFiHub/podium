@@ -6,7 +6,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
-import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/constants.dart';
@@ -15,7 +14,6 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/my_profile_controller.dart';
 
@@ -579,6 +577,42 @@ class UserInfo extends GetView<GlobalController> {
                 color: ColorName.greyText,
               ),
             ),
+            Row(
+              children: [
+                SizedBox(
+                  width: Get.width - 140,
+                  child: RichText(
+                    overflow: TextOverflow.ellipsis,
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: ColorName.greyText,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: 'ID: ',
+                        ),
+                        TextSpan(
+                          text: myUser.id,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                space5,
+                IconButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: myUser.id));
+                      Get.snackbar('Copied', 'User ID copied to clipboard',
+                          colorText: Colors.white);
+                    },
+                    icon: Icon(
+                      Icons.copy,
+                      color: Colors.grey,
+                    ))
+              ],
+            )
           ],
         ),
       );

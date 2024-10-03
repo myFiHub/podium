@@ -6,9 +6,11 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
+import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -868,7 +870,19 @@ Future<String?> choseAWallet({required String chainId}) async {
   final selectedWallet = await Get.dialog(
     barrierDismissible: true,
     AlertDialog(
-      title: Text("Choose a wallet"),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("Choose a wallet"),
+          space10,
+          Img(
+            src: particleChainInfoByChainId(chainId)?.icon ??
+                movementChain.chainIcon!,
+            alt: "logo",
+            size: 20,
+          ),
+        ],
+      ),
       backgroundColor: ColorName.cardBackground,
       content: SelectChainContent(
         chainId: chainId,

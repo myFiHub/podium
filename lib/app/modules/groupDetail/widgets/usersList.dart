@@ -35,7 +35,7 @@ class UserList extends StatelessWidget {
           }
           final userId = user.id;
           final isItME = user.id == myId;
-          return SingleUser(
+          return _SingleUser(
             key: Key(userId),
             isItME: isItME,
             userId: userId,
@@ -48,8 +48,8 @@ class UserList extends StatelessWidget {
   }
 }
 
-class SingleUser extends StatelessWidget {
-  const SingleUser({
+class _SingleUser extends StatelessWidget {
+  const _SingleUser({
     super.key,
     required this.isItME,
     required this.userId,
@@ -142,6 +142,8 @@ class SingleUser extends StatelessWidget {
                     else
                       FollowButton(
                         userId: userId,
+                        fullWidth: false,
+                        small: true,
                         key: Key(userId),
                       ),
                   ],
@@ -158,7 +160,12 @@ class SingleUser extends StatelessWidget {
 class FollowButton extends GetView<UsersController> {
   final String userId;
   final bool fullWidth;
-  const FollowButton({super.key, required this.userId, this.fullWidth = false});
+  final bool small;
+  const FollowButton(
+      {super.key,
+      required this.userId,
+      this.fullWidth = false,
+      this.small = false});
 
   @override
   Widget build(BuildContext context) {
@@ -168,6 +175,7 @@ class FollowButton extends GetView<UsersController> {
       final idsImFollowing = controller.currentUserInfo.value!.following;
       final isFollowing = idsImFollowing.contains(userId);
       return Button(
+          size: small ? ButtonSize.MEDIUM : ButtonSize.LARGE,
           onPressed: () {
             final idsImFollowing = controller.currentUserInfo.value!.following;
             final isFollowing = idsImFollowing.contains(userId);
@@ -183,7 +191,7 @@ class FollowButton extends GetView<UsersController> {
             horizontal: 10,
             vertical: 10,
           ),
-          size: ButtonSize.MEDIUM,
+          // size: ButtonSize.MEDIUM,
           child: isLoading
               ? Center(
                   child: const CircularProgressIndicator(

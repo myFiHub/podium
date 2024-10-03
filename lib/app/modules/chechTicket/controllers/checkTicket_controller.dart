@@ -247,8 +247,6 @@ class CheckticketController extends GetxController
   buyTicket({
     required TicketSeller ticketSeller,
   }) async {
-    final ticketAccessType =
-        ticketSeller.accessTicketType ?? ticketSeller.speakTicketType;
     try {
       final groupAccessType = group.value!.accessType;
       final groupSpeakerType = group.value!.speakerType;
@@ -274,17 +272,35 @@ class CheckticketController extends GetxController
       }
       if (ticketSeller.shouldBuyAccessTicket ||
           ticketSeller.shouldBuySpeakTicket) {
-        if (ticketAccessType == BuyableTicketTypes.onlyArenaTicketHolders) {
+        // buy access tickets first
+        if (((ticketSeller.accessTicketType ==
+                BuyableTicketTypes.onlyArenaTicketHolders &&
+            ticketSeller.shouldBuyAccessTicket))) {
           await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
-        } else if (ticketAccessType ==
-            BuyableTicketTypes.onlyFriendTechTicketHolders) {
+        } else if (((ticketSeller.accessTicketType ==
+                BuyableTicketTypes.onlyFriendTechTicketHolders &&
+            ticketSeller.shouldBuyAccessTicket))) {
           await buyTicketFromTicketSellerOnFriendTech(
             ticketSeller: ticketSeller,
           );
+          // End buy access tickets first
+          // then buy speak tickets
+        } else if (ticketSeller.speakTicketType ==
+                BuyableTicketTypes.onlyArenaTicketHolders &&
+            ticketSeller.shouldBuySpeakTicket) {
+          await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
+        } else if (ticketSeller.speakTicketType ==
+                BuyableTicketTypes.onlyFriendTechTicketHolders &&
+            ticketSeller.shouldBuySpeakTicket) {
+          await buyTicketFromTicketSellerOnFriendTech(
+            ticketSeller: ticketSeller,
+          );
+          // End buy speak tickets
         } else {
           log.f('FIXME: add support for other ticket types');
           Get.snackbar(
-              "Update Required", "Please update the app to buy tickets");
+              "Update Required", "Please update the app to buy tickets",
+              colorText: Colors.orange);
           allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying =
               false;
           allUsersToBuyTicketFrom.refresh();

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -152,11 +153,14 @@ Future<int?> setReminder({
       vibrate: true,
       volume: 0.8,
       fadeDuration: 3.0,
-      notificationTitle: 'Podium',
-      notificationBody: alarmMeBefore == 0
-          ? "${eventName} Started"
-          : '${eventName} will start in $alarmMeBefore minutes',
-      enableNotificationOnKill: Platform.isAndroid,
+      notificationSettings: NotificationSettings(
+        title: 'Podium',
+        body: alarmMeBefore == 0
+            ? "${eventName} Started"
+            : '${eventName} will start in $alarmMeBefore minutes',
+        icon: Assets.images.logo.path,
+        stopButton: 'Stop',
+      ),
     );
     await Alarm.set(alarmSettings: alarmSettings);
     Get.snackbar(

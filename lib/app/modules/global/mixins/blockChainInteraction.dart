@@ -512,6 +512,22 @@ mixin BlockChainInteractions {
       return false;
     } catch (e) {
       log.e('error : $e');
+      if (e.toString().contains('insufficient funds')) {
+        final selectedChain = await ParticleBase.getChainInfo();
+        final selectedChainName = selectedChain.name;
+        final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
+        Get.snackbar(
+          "Insufficient $selectedChainCurrency",
+          "Please top up your wallet on $selectedChainName",
+          colorText: Colors.red,
+          mainButton: TextButton(
+            onPressed: () {
+              _copyToClipboard(myAddress, prefix: "Address");
+            },
+            child: Text("Copy"),
+          ),
+        );
+      }
       await switchBackToSavedParticleNetwork();
       if (e
           .toString()

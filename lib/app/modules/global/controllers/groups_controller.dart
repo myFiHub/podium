@@ -465,7 +465,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     final isGroupAgeRestricted = group.hasAdultContent;
     final iAmOwner = group.creator.id == myUser.id;
     final iAmMember = group.members.contains(myUser.id);
-    final amIOver18 = myUser.isOver18 ?? false;
+    final amIOver18 = myUser.isOver18;
     if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18) {
       return true;
     }

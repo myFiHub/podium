@@ -8,6 +8,7 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -153,7 +154,7 @@ mixin BlockChainInteractions {
     }
   }
 
-  particle_getMyShares_arena({
+  Future<BigInt?> particle_getMyShares_arena({
     required String sharesSubject,
     required String chainId,
   }) async {
@@ -169,6 +170,7 @@ mixin BlockChainInteractions {
     final parameters = [sharesSubjectWallet];
     const abiJson = StarsArenaSmartContract.abi;
     final abiJsonString = jsonEncode(abiJson);
+
     try {
       final results = await Future.wait([
         EvmService.readContract(
@@ -207,11 +209,10 @@ mixin BlockChainInteractions {
       String? externalWalletAddress,
       required String chainId}) async {
     final List<Future<BigInt?>> arrayToCall = [];
-    final chainInfo = particleChainInfoByChainId(chainId);
-    final savedParticleChainId = particleChianId;
+
     try {
-      if (chainInfo == null) {
-        log.f("chain info not found");
+      final changed = await temporarilyChangeParticleNetwork(chainId);
+      if (!changed) {
         return UserActiveWalletOnFriendtech(
           isExternalWalletActive: false,
           isParticleWalletActive: false,
@@ -219,9 +220,7 @@ mixin BlockChainInteractions {
           particleWalletAddress: particleAddress,
         );
       }
-      if (chainInfo.id.toString() != savedParticleChainId) {
-        await ParticleBase.setChainInfo(chainInfo);
-      }
+
       arrayToCall.add(_particle_getShares_friendthech(
         sellerAddress: particleAddress,
         buyerAddress: particleAddress,
@@ -237,10 +236,7 @@ mixin BlockChainInteractions {
         ));
       }
       final List<BigInt?> results = await Future.wait(arrayToCall);
-      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
-      if (chainId != savedParticleChainId && olderChainInfo != null) {
-        await ParticleBase.setChainInfo(olderChainInfo);
-      }
+      await switchBackToSavedParticleNetwork();
       final isParticleActive = results[0] != null && results[0] != BigInt.zero;
       bool isExternalActive = false;
       if (results.length > 1) {
@@ -255,10 +251,7 @@ mixin BlockChainInteractions {
       );
     } catch (e) {
       log.e('error : $e');
-      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
-      if (chainId != savedParticleChainId && olderChainInfo != null) {
-        await ParticleBase.setChainInfo(olderChainInfo);
-      }
+      await switchBackToSavedParticleNetwork();
       return UserActiveWalletOnFriendtech(
         isExternalWalletActive: false,
         isParticleWalletActive: false,
@@ -273,15 +266,11 @@ mixin BlockChainInteractions {
     required String particleWallet,
     required String chainId,
   }) async {
-    final savedParticleChainId = particleChianId;
-    final chainInfo = particleChainInfoByChainId(chainId);
-    if (chainInfo == null) {
-      log.f("chain info not found");
+    final changed = await temporarilyChangeParticleNetwork(chainId);
+    if (!changed) {
       return BigInt.zero;
     }
-    if (chainInfo.id.toString() != savedParticleChainId) {
-      await ParticleBase.setChainInfo(chainInfo);
-    }
+
     try {
       BigInt numberOfShares = BigInt.zero;
       final myExternalWallet = externalWalletAddress;
@@ -316,10 +305,7 @@ mixin BlockChainInteractions {
       }
 
       final results = await Future.wait(arrayToCall);
-      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
-      if (chainId != savedParticleChainId && olderChainInfo != null) {
-        await ParticleBase.setChainInfo(olderChainInfo);
-      }
+      await switchBackToSavedParticleNetwork();
       for (var result in results) {
         if (result != null) {
           numberOfShares += BigInt.parse(result.toString());
@@ -327,12 +313,9 @@ mixin BlockChainInteractions {
       }
       return numberOfShares;
     } catch (e) {
+      await switchBackToSavedParticleNetwork();
       log.e('error : $e');
       Get.snackbar("Error", "Could not get user shares", colorText: Colors.red);
-      final olderChainInfo = particleChainInfoByChainId(savedParticleChainId);
-      if (chainId != savedParticleChainId && olderChainInfo != null) {
-        await ParticleBase.setChainInfo(olderChainInfo);
-      }
       return BigInt.zero;
     }
   }
@@ -421,14 +404,10 @@ mixin BlockChainInteractions {
     final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
     const abiJson = FriendTechContract.abi;
     final abiJsonString = jsonEncode(abiJson);
-    final savedChainId = particleChianId;
-    final chainInfo = particleChainInfoByChainId(chainId);
-    if (chainInfo == null) {
-      log.f("chain info not found");
+
+    final changed = await temporarilyChangeParticleNetwork(chainId);
+    if (!changed) {
       return null;
-    }
-    if (chainInfo.id.toString() != savedChainId) {
-      await ParticleBase.setChainInfo(chainInfo);
     }
 
     try {
@@ -440,10 +419,7 @@ mixin BlockChainInteractions {
         parameters,
         abiJsonString,
       );
-      final olderChainInfo = particleChainInfoByChainId(savedChainId);
-      if (chainId != savedChainId && olderChainInfo != null) {
-        await ParticleBase.setChainInfo(olderChainInfo);
-      }
+      await switchBackToSavedParticleNetwork();
       try {
         return BigInt.parse(result);
       } catch (e) {
@@ -452,9 +428,7 @@ mixin BlockChainInteractions {
       }
     } catch (e) {
       log.e('error : $e');
-      if (chainInfo.id.toString() != savedChainId) {
-        await ParticleBase.setChainInfo(chainInfo);
-      }
+      await switchBackToSavedParticleNetwork();
       return null;
     }
   }
@@ -511,16 +485,10 @@ mixin BlockChainInteractions {
     const abiJson = FriendTechContract.abi;
     final abiJsonString = jsonEncode(abiJson);
     final savedChainId = particleChianId;
-    final chainInfo = particleChainInfoByChainId(chainId);
-    if (chainInfo == null) {
-      log.f("chain info not found");
+    final changed = await temporarilyChangeParticleNetwork(chainId);
+    if (!changed) {
       return false;
     }
-    if (chainInfo.id.toString() != savedChainId) {
-      await ParticleBase.setChainInfo(chainInfo);
-    }
-
-    final olderChainInfo = particleChainInfoByChainId(savedChainId);
     try {
       final data = await EvmService.customMethod(
         contractAddress,
@@ -536,19 +504,15 @@ mixin BlockChainInteractions {
         gasFeeLevel: GasFeeLevel.high,
       );
       final signature = await Evm.sendTransaction(transaction);
-      if (chainId != savedChainId && olderChainInfo != null) {
-        await ParticleBase.setChainInfo(olderChainInfo);
-      }
+      await switchBackToSavedParticleNetwork();
+
       if (signature.length > 10) {
         return true;
       }
       return false;
     } catch (e) {
       log.e('error : $e');
-      if (chainId != savedChainId && olderChainInfo != null) {
-        await ParticleBase.setChainInfo(olderChainInfo);
-      }
-
+      await switchBackToSavedParticleNetwork();
       if (e
           .toString()
           .contains("Only the shares' subject can buy the first share")) {

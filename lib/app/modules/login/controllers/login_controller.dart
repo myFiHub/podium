@@ -383,6 +383,17 @@ class LoginController extends GetxController
       loginTypeIdentifier: loginTypeIdentifier,
       lowercasename: name.toLowerCase(),
     );
+    try {
+      await Evm.getAddress();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error logging in please try again, or use another method',
+        colorText: Colors.red,
+      );
+      globalController.setLoggedIn(false);
+      return;
+    }
 
     UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
       user: userToCreate,

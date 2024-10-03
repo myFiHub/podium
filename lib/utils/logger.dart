@@ -11,10 +11,10 @@ class L {
   static final log = Logger(
     filter: CustomFilter(),
     printer: PrettyPrinter(
-      methodCount: 2,
+      methodCount: 4,
       errorMethodCount: 8,
       stackTraceBeginIndex: 0,
-      lineLength: 100,
+      lineLength: 150,
       colors: true,
       printEmojis: true,
     ),

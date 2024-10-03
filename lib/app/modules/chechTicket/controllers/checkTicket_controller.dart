@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
@@ -39,6 +40,10 @@ class TicketSeller {
   }
 
   get shouldOnlyBuyOneTicket => !hasSeparateTickets;
+
+  get shouldBuyAccessTicket =>
+      accessTicketType != null && !boughtTicketToAccess;
+  get shouldBuySpeakTicket => speakTicketType != null && !boughtTicketToSpeak;
 
   TicketSeller({
     required this.userInfo,
@@ -194,20 +199,11 @@ class CheckticketController extends GetxController
       );
     });
     allUsersToBuyTicketFrom.refresh();
-
-    final results = await Future.wait(
-      allUsersToBuyTicketFrom.value.entries.map(
-        (e) => checkIfIveBoughtTheTicketFromUser(
-          e.value.userInfo,
-          e.value.userInfo.id,
-        ),
-      ),
-    );
-    final allKeys = allUsersToBuyTicketFrom.value.keys.toList();
-    for (var i = 0; i < results.length; i++) {
-      final access = results[i];
-      final key = allKeys[i];
-
+    final entries = allUsersToBuyTicketFrom.value.entries;
+    for (final entry in entries) {
+      final user = entry.value;
+      final access = await checkIfIveBoughtTheTicketFromUser(user.userInfo);
+      final key = entry.key;
       final ticketTypeToSpeakForThisSeller =
           allUsersToBuyTicketFrom.value[key]?.speakTicketType;
       final ticketTypeToAccessForThisSeller =
@@ -223,6 +219,7 @@ class CheckticketController extends GetxController
         buying: false,
       );
     }
+
     allUsersToBuyTicketFrom.refresh();
     return checkAccess();
   }
@@ -275,7 +272,8 @@ class CheckticketController extends GetxController
         allUsersToBuyTicketFrom.refresh();
         return;
       }
-      if (ticketSeller.shouldOnlyBuyOneTicket) {
+      if (ticketSeller.shouldBuyAccessTicket ||
+          ticketSeller.shouldBuySpeakTicket) {
         if (ticketAccessType == BuyableTicketTypes.onlyArenaTicketHolders) {
           await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
         } else if (ticketAccessType ==
@@ -413,65 +411,80 @@ class CheckticketController extends GetxController
 
   Future<GroupAccesses> checkIfIveBoughtTheTicketFromUser(
     UserInfoModel user,
-    String userId,
   ) async {
+    final userId = user.id;
     final myUser = globalController.currentUserInfo.value!;
     if (userId == myUser.id)
       return GroupAccesses(canEnter: true, canSpeak: true);
     GroupAccesses access = GroupAccesses(canEnter: false, canSpeak: false);
-    final List<Future> arrayToCall = [];
+
+    // check if user has access, using any ticket
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
       if (group.value!.accessType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
-        arrayToCall.add(particle_getMyShares_arena(
-          sharesSubject: user.defaultWalletAddress,
-          chainId: particleChianId,
-        ));
+        final success =
+            await temporarilyChangeParticleNetwork(avalancheChainId);
+        if (success) {
+          final myShares = await particle_getMyShares_arena(
+            sharesSubject: user.defaultWalletAddress,
+            chainId: particleChianId,
+          );
+          if (myShares != null && myShares > BigInt.zero) {
+            access.canEnter = true;
+          }
+        }
+        await switchBackToSavedParticleNetwork();
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        arrayToCall.add(particle_getUserShares_friendTech(
-          defaultWallet: user.defaultWalletAddress,
-          particleWallet: user.particleWalletAddress,
-          chainId: baseChainId,
-        ));
+        final changed = await temporarilyChangeParticleNetwork(baseChainId);
+        if (changed) {
+          final myShares = await particle_getUserShares_friendTech(
+            defaultWallet: user.defaultWalletAddress,
+            particleWallet: user.particleWalletAddress,
+            chainId: baseChainId,
+          );
+          if (myShares > BigInt.zero) {
+            access.canEnter = true;
+          }
+        }
+        await switchBackToSavedParticleNetwork();
       } else {
         log.f('FIXME: add support for other ticket types ');
       }
-    }
-    if (arrayToCall.isEmpty) {
-      arrayToCall.add(Future(() => BigInt.zero));
     }
 
     if (allUsersToBuyTicketFrom.value[userId]?.speakTicketType != null) {
       if (group.value!.speakerType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
-        arrayToCall.add(particle_getMyShares_arena(
-          sharesSubject: user.defaultWalletAddress,
-          chainId: particleChianId,
-        ));
-      } else if (group.value!.accessType ==
+        final success =
+            await temporarilyChangeParticleNetwork(avalancheChainId);
+        if (success) {
+          final myShares = await particle_getMyShares_arena(
+            sharesSubject: user.defaultWalletAddress,
+            chainId: particleChianId,
+          );
+          if (myShares != null && myShares > BigInt.zero) {
+            access.canSpeak = true;
+          }
+        }
+        await switchBackToSavedParticleNetwork();
+      } else if (group.value!.speakerType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        arrayToCall.add(particle_getUserShares_friendTech(
-          defaultWallet: user.defaultWalletAddress,
-          particleWallet: user.particleWalletAddress,
-          chainId: baseChainId,
-        ));
+        final changed = await temporarilyChangeParticleNetwork(baseChainId);
+        if (changed) {
+          final myShares = await particle_getUserShares_friendTech(
+            defaultWallet: user.defaultWalletAddress,
+            particleWallet: user.particleWalletAddress,
+            chainId: baseChainId,
+          );
+          if (myShares > BigInt.zero) {
+            access.canSpeak = true;
+          }
+        }
+        await switchBackToSavedParticleNetwork();
       } else {
         log.f('FIXME: add support for other ticket types');
       }
-    }
-    if (arrayToCall.length == 1) {
-      arrayToCall.add(Future(() => BigInt.zero));
-    }
-
-    final results = await Future.wait(arrayToCall);
-    final accessTicket = results[0] as BigInt?;
-    if (accessTicket != null && accessTicket > BigInt.zero) {
-      access.canEnter = true;
-    }
-    final speakTicket = results[1] as BigInt?;
-    if (speakTicket != null && speakTicket > BigInt.zero) {
-      access.canSpeak = true;
     }
 
     return access;

@@ -251,20 +251,24 @@ class SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
                 DropDown(
                   items: [
                     DropDownItem(
-                      value: RoomSpeakerTypes.everyone,
+                      value: FreeRoomSpeakerTypes.everyone,
                       text: 'Everyone',
                     ),
                     DropDownItem(
-                      value: RoomSpeakerTypes.invitees,
+                      value: FreeRoomSpeakerTypes.invitees,
                       text: 'Only Invited Users',
                     ),
                     DropDownItem(
-                      value: RoomSpeakerTypes.onlyArenaTicketHolders,
+                      value: BuyableTicketTypes.onlyArenaTicketHolders,
                       text: 'Arena Ticket Holders',
                     ),
                     DropDownItem(
-                      value: RoomAccessTypes.onlyFriendTechTicketHolders,
+                      value: BuyableTicketTypes.onlyFriendTechTicketHolders,
                       text: 'FriendTech Ticket Holders',
+                    ),
+                    DropDownItem(
+                      value: BuyableTicketTypes.onlyPodiumPassHolders,
+                      text: 'Podium Pass Holders',
                       enabled: false,
                     ),
                   ],
@@ -327,29 +331,28 @@ class SelectRoomAccessType extends GetWidget<CreateGroupController> {
                 DropDown(
                   items: [
                     DropDownItem(
-                      value: RoomAccessTypes.public,
+                      value: FreeRoomAccessTypes.public,
                       text: 'Everyone',
                     ),
                     DropDownItem(
-                      value: RoomAccessTypes.onlyLink,
+                      value: FreeRoomAccessTypes.onlyLink,
                       text: 'Users having the Link',
                     ),
                     DropDownItem(
-                      value: RoomAccessTypes.invitees,
+                      value: FreeRoomAccessTypes.invitees,
                       text: 'Invited Users',
                     ),
                     DropDownItem(
-                      value: RoomAccessTypes.onlyArenaTicketHolders,
+                      value: BuyableTicketTypes.onlyArenaTicketHolders,
                       text: 'Arena Ticket Holders',
                       // enabled: false,
                     ),
                     DropDownItem(
-                      value: RoomAccessTypes.onlyFriendTechTicketHolders,
+                      value: BuyableTicketTypes.onlyFriendTechTicketHolders,
                       text: 'FriendTech Ticket Holders',
-                      enabled: false,
                     ),
                     DropDownItem(
-                      value: RoomAccessTypes.onlyPodiumPassHolders,
+                      value: BuyableTicketTypes.onlyPodiumPassHolders,
                       text: 'Podium Pass Holders',
                       enabled: false,
                     ),

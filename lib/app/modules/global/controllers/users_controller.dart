@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -94,11 +95,10 @@ class UsersController extends GetxController
   openUserProfile(String userId) async {
     final user = await getUserById(userId);
     if (user != null) {
-      final profileController = Get.put(ProfileController());
-      profileController.userInfo.value = user;
       Navigate.to(
         type: NavigationTypes.toNamed,
         route: Routes.PROFILE,
+        parameters: {UserProfileParamsKeys.userInfo: jsonEncode(user.toJson())},
       );
     }
   }

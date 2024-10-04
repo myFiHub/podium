@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
-import 'package:podium/env.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:reown_appkit/reown_appkit.dart';
-
 import '../controllers/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
@@ -27,11 +23,15 @@ class ProfileView extends GetView<ProfileController> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               UserInfo(),
-              FollowButton(userId: controller.userInfo.value!.id),
+              FollowButton(
+                userId: controller.userInfo.value!.id,
+              ),
               space10,
-              BuyTicket(
-                user: controller.userInfo.value!,
-              )
+              _BuyArenaTicketButton(),
+              space10,
+              _BuyFriendTechTicket(),
+              space10,
+              _Statistics(),
             ],
           ),
         ),
@@ -40,67 +40,291 @@ class ProfileView extends GetView<ProfileController> {
   }
 }
 
-class BuyTicket extends GetView<ProfileController> {
-  final UserInfoModel user;
-  const BuyTicket({super.key, required this.user});
+class _Statistics extends GetWidget<ProfileController> {
+  const _Statistics({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isLoading = controller.isGettingTicketPrice.value;
-      final priceError = controller.getPriceError.value;
-      final connectedWallet = controller.connectedWallet.value;
-      final price = controller.ticketPriceFor1Share.value;
-      final isBuyingTicket = controller.isBuyingTicket.value;
-
-      Widget insideButton;
-
-      if (connectedWallet == '') {
-        insideButton = const Text("connect wallet to buy ticket");
-      } else {
-        if (priceError != '') {
-          insideButton = Text(priceError);
-        } else {
-          insideButton = Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Buy Ticket "),
-              Text(price.toString()),
-              space5,
-              Text(ReownAppKitModalNetworks.getNetworkById(
-                Env.chainNamespace,
-                externalWalletChianId,
-              )!
-                  .currency)
-            ],
-          );
-        }
+      final payments = controller.payments.value;
+      final loading = controller.isGettingPayments.value;
+      if (loading) {
+        return const SizedBox();
       }
-      if (price == 0.0) {
-        insideButton = const Text('Buying ticket is disabled for now :(');
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 10,
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      'Cheers received',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      payments.numberOfCheersReceived.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text(
+                      'Boos received',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      payments.numberOfBoosReceived.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            space10,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      'Cheers sent',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      payments.numberOfCheersSent.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text(
+                      'Boos sent',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      payments.numberOfBoosSent.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class _BuyArenaTicketButton extends GetWidget<ProfileController> {
+  const _BuyArenaTicketButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final user = controller.userInfo.value;
+      final isGettingPrice = controller.isGettingTicketPrice.value;
+      final isBuyingArenaTicket = controller.isBuyingArenaTicket.value;
+      final arenaTicketPrice = controller.arenaTicketPrice.value;
+      final isGettingArenaPrice = controller.loadingArenaPrice.value;
+      final numberOfBoughtTicketsByMe =
+          controller.mySharesOfArenaFromThisUser.value;
+      if (user == null) {
+        return Container();
       }
       return Button(
+        loading: isGettingPrice || isBuyingArenaTicket,
+        onPressed: (isGettingPrice || isBuyingArenaTicket)
+            ? null
+            : () {
+                controller.buyArenaTicket();
+              },
         type: ButtonType.gradient,
-        loading: isLoading || isBuyingTicket,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${particleChainInfoByChainId(avalancheChainId)!.nativeCurrency.symbol}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (isGettingArenaPrice)
+                  SizedBox(
+                    width: 10,
+                    height: 10,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                else
+                  const SizedBox(width: 10, height: 10),
+              ],
+            ),
+            if (numberOfBoughtTicketsByMe > 0)
+              RichText(
+                text: TextSpan(
+                  text: 'owned ',
+                  style: TextStyle(
+                    color: Colors.yellow,
+                    fontSize: 14,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: '$numberOfBoughtTicketsByMe',
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' Arena tickets',
+                      style: TextStyle(
+                        color: Colors.yellow,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
         blockButton: true,
-        child: insideButton,
-        onPressed: () {
-          if (price == 0.0) {
-            return;
-          }
-          if (isLoading) {
-            return;
-          }
-          if (priceError != '') {
-            controller.getBuyPriceForOneShare();
-            return;
-          }
-          if (connectedWallet == '') {
-            controller.globalController.connectToWallet();
-            return;
-          }
-          controller.buyTicket();
-        },
+        icon: Img(
+            src: particleChainInfoByChainId(avalancheChainId)!.icon, size: 20),
+      );
+    });
+  }
+}
+
+class _BuyFriendTechTicket extends GetWidget<ProfileController> {
+  const _BuyFriendTechTicket({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final user = controller.userInfo.value;
+      final isFriendTechActive = controller.isFriendTechActive.value;
+      final isGettingPrice = controller.isGettingTicketPrice.value;
+      final friendTechPrice = controller.friendTechPrice.value;
+      final isGettingFriendTechPrice = controller.loadingFriendTechPrice.value;
+      final isBuyingFriendTechTicket =
+          controller.isBuyingFriendTechTicket.value;
+      final numberOfBoughtTicketsByMe =
+          controller.mySharesOfFriendTechFromThisUser.value;
+      if (user == null) {
+        return Container();
+      }
+      return Button(
+        loading: isGettingPrice || isBuyingFriendTechTicket,
+        onPressed:
+            (!isFriendTechActive || isGettingPrice || isBuyingFriendTechTicket)
+                ? null
+                : () {
+                    controller.buyFriendTechTicket();
+                  },
+        type: ButtonType.gradient,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            !isFriendTechActive
+                ? const Text(
+                    'Friendtech address is not active',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red,
+                    ),
+                  )
+                : Row(
+                    children: [
+                      Text(
+                        'Buy Friendtech share ${friendTechPrice.toString()} ${particleChainInfoByChainId(baseChainId)!.nativeCurrency.symbol}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (isGettingFriendTechPrice)
+                        SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      else
+                        const SizedBox(width: 10, height: 10),
+                    ],
+                  ),
+            if (numberOfBoughtTicketsByMe > 0)
+              RichText(
+                text: TextSpan(
+                  text: 'owned ',
+                  style: TextStyle(
+                    color: Colors.yellow,
+                    fontSize: 14,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: '$numberOfBoughtTicketsByMe',
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' Friendtech share',
+                      style: TextStyle(
+                        color: Colors.yellow,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        blockButton: true,
+        icon: Img(
+          src: particleChainInfoByChainId(baseChainId)!.icon,
+          size: 20,
+        ),
       );
     });
   }
@@ -137,7 +361,7 @@ class UserInfo extends GetWidget<ProfileController> {
             Text(
               user.fullName,
               style: const TextStyle(
-                fontSize: 33,
+                fontSize: 22,
                 fontWeight: FontWeight.w700,
               ),
             ),

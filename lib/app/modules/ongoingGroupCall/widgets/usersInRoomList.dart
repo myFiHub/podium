@@ -3,13 +3,13 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widgetWrapper.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/utils/constants.dart';
@@ -35,7 +35,7 @@ class UsersInRoomList extends StatelessWidget {
         }
         final userId = user.id;
         final isItME = user.id == myId;
-        return SingleUserInRoom(
+        return _SingleUserInRoom(
           key: Key(user.id),
           isItME: isItME,
           userId: userId,
@@ -48,8 +48,8 @@ class UsersInRoomList extends StatelessWidget {
   }
 }
 
-class SingleUserInRoom extends StatelessWidget {
-  const SingleUserInRoom({
+class _SingleUserInRoom extends StatelessWidget {
+  const _SingleUserInRoom({
     super.key,
     required this.isItME,
     required this.userId,
@@ -293,10 +293,17 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
   @override
   Widget build(BuildContext context) {
     return GFIconButton(
-      icon: Icon(
-        cheer ? Icons.arrow_upward : Icons.arrow_downward,
-        color: cheer ? Colors.green : Colors.red,
-      ),
+      icon: cheer
+          ? Assets.images.cheer.image(
+              width: 30,
+              height: 30,
+              color: Colors.green,
+            )
+          : Assets.images.boo.image(
+              width: 30,
+              height: 30,
+              color: Colors.red,
+            ),
       onPressed: () {
         controller.cheerBoo(
           userId: userId,

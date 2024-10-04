@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -6,7 +7,9 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
+import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
+import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -20,6 +23,7 @@ class TicketSeller {
   bool checking;
   String? speakTicketType;
   String? accessTicketType;
+
   final String address;
 
   get hasSeparateTickets =>
@@ -37,6 +41,10 @@ class TicketSeller {
   }
 
   get shouldOnlyBuyOneTicket => !hasSeparateTickets;
+
+  get shouldBuyAccessTicket =>
+      accessTicketType != null && !boughtTicketToAccess;
+  get shouldBuySpeakTicket => speakTicketType != null && !boughtTicketToSpeak;
 
   TicketSeller({
     required this.userInfo,
@@ -106,6 +114,7 @@ class CheckticketController extends GetxController
       avatar: '',
       email: '',
       localWalletAddress: address,
+      savedParticleWalletAddress: address,
       following: [],
       numberOfFollowers: 0,
       savedParticleUserInfo: FirebaseParticleAuthUserInfo(
@@ -154,6 +163,24 @@ class CheckticketController extends GetxController
       getUsersByIds(accessIds),
       getUsersByIds(speakIds),
     ]);
+    // these loops are crutial to set the local wallet address to the user
+    // because when creating the group, addres saved for buyin should have been activated,
+    // that was the address that was SAVED in ticketsRequiredToAccess or ticketsRequiredToSpeak
+    for (var i = 0; i < requiredTicketsToAccess.length; i++) {
+      final user = requiredTicketsToAccess[i];
+      final userInfo =
+          usersForAccess.firstWhere((element) => element.id == user.userId);
+      userInfo.localWalletAddress = user.userAddress;
+      usersForAccess[i] = userInfo;
+    }
+    for (var i = 0; i < requiredTicketsToSpeak.length; i++) {
+      final user = requiredTicketsToSpeak[i];
+      final userInfo =
+          usersForSpeak.firstWhere((element) => element.id == user.userId);
+      userInfo.localWalletAddress = user.userAddress;
+      usersForSpeak[i] = userInfo;
+    }
+    // fake users should be added after the real users have been added and modified
 
     final (fakeUsersToAccess, fakeUsersToSpeak) = _generateFakeUsers();
 
@@ -188,24 +215,15 @@ class CheckticketController extends GetxController
         accessTicketType: requiredAccessTypeForThisUser,
         checking: true,
         buying: false,
-        address: extractAddressFromUserModel(user: value) ?? '',
+        address: value.defaultWalletAddress,
       );
     });
     allUsersToBuyTicketFrom.refresh();
-
-    final results = await Future.wait(
-      allUsersToBuyTicketFrom.value.entries.map(
-        (e) => checkIfIveBoughtTheTicketFromUser(
-          e.value.address,
-          e.value.userInfo.id,
-        ),
-      ),
-    );
-    final allKeys = allUsersToBuyTicketFrom.value.keys.toList();
-    for (var i = 0; i < results.length; i++) {
-      final access = results[i];
-      final key = allKeys[i];
-
+    final entries = allUsersToBuyTicketFrom.value.entries;
+    for (final entry in entries) {
+      final user = entry.value;
+      final access = await checkIfIveBoughtTheTicketFromUser(user.userInfo);
+      final key = entry.key;
       final ticketTypeToSpeakForThisSeller =
           allUsersToBuyTicketFrom.value[key]?.speakTicketType;
       final ticketTypeToAccessForThisSeller =
@@ -221,6 +239,7 @@ class CheckticketController extends GetxController
         buying: false,
       );
     }
+
     allUsersToBuyTicketFrom.refresh();
     return checkAccess();
   }
@@ -248,40 +267,66 @@ class CheckticketController extends GetxController
   buyTicket({
     required TicketSeller ticketSeller,
   }) async {
-    if (ticketSeller.accessTicketType != null &&
-        ticketSeller.speakTicketType != null &&
-        ticketSeller.accessTicketType != ticketSeller.speakTicketType) {
-      log.f('FIXME: we should show a dialog to ask which ticket to buy');
-      Get.snackbar("Update Required", "Please update the app to buy tickets");
-      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
-      allUsersToBuyTicketFrom.refresh();
-      return;
-    }
     try {
-      if (((group.value!.accessType != RoomAccessTypes.onlyArenaTicketHolders &&
-              isAccessBuyableByTicket) ||
-          group.value!.speakerType != RoomSpeakerTypes.onlyArenaTicketHolders &&
-              isSpeakBuyableByTicket)) {
+      final groupAccessType = group.value!.accessType;
+      final groupSpeakerType = group.value!.speakerType;
+      final unsupportedAccessTicket = (groupAccessType !=
+              BuyableTicketTypes.onlyArenaTicketHolders &&
+          groupAccessType != BuyableTicketTypes.onlyFriendTechTicketHolders &&
+          isAccessBuyableByTicket);
+      final unsupportedSpeakTicket = (groupSpeakerType !=
+              BuyableTicketTypes.onlyArenaTicketHolders &&
+          groupSpeakerType != BuyableTicketTypes.onlyFriendTechTicketHolders &&
+          isSpeakBuyableByTicket);
+
+      if (unsupportedAccessTicket || unsupportedSpeakTicket) {
         log.f('FIXME: add support for other ticket types');
-        Get.snackbar("Update Required", "Please update the app to buy tickets");
+        Get.snackbar(
+          "Update Required",
+          "Please update the app to buy tickets",
+          colorText: Colors.orange,
+        );
         allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
         allUsersToBuyTicketFrom.refresh();
         return;
       }
-      if (ticketSeller.shouldOnlyBuyOneTicket) {
-        final ticketAccessType =
-            ticketSeller.accessTicketType ?? ticketSeller.speakTicketType;
-
-        if (ticketAccessType == RoomAccessTypes.onlyArenaTicketHolders) {
+      if (ticketSeller.shouldBuyAccessTicket ||
+          ticketSeller.shouldBuySpeakTicket) {
+        // buy access tickets first
+        if (((ticketSeller.accessTicketType ==
+                BuyableTicketTypes.onlyArenaTicketHolders &&
+            ticketSeller.shouldBuyAccessTicket))) {
           await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
+        } else if (((ticketSeller.accessTicketType ==
+                BuyableTicketTypes.onlyFriendTechTicketHolders &&
+            ticketSeller.shouldBuyAccessTicket))) {
+          await buyTicketFromTicketSellerOnFriendTech(
+            ticketSeller: ticketSeller,
+          );
+          // End buy access tickets first
+          // then buy speak tickets
+        } else if (ticketSeller.speakTicketType ==
+                BuyableTicketTypes.onlyArenaTicketHolders &&
+            ticketSeller.shouldBuySpeakTicket) {
+          await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
+        } else if (ticketSeller.speakTicketType ==
+                BuyableTicketTypes.onlyFriendTechTicketHolders &&
+            ticketSeller.shouldBuySpeakTicket) {
+          await buyTicketFromTicketSellerOnFriendTech(
+            ticketSeller: ticketSeller,
+          );
+          // End buy speak tickets
         } else {
           log.f('FIXME: add support for other ticket types');
           Get.snackbar(
-              "Update Required", "Please update the app to buy tickets");
+              "Update Required", "Please update the app to buy tickets",
+              colorText: Colors.orange);
           allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying =
               false;
           allUsersToBuyTicketFrom.refresh();
         }
+      } else {
+        Get.snackbar("Update required", "tickets are not on same chain");
       }
     } catch (e) {
     } finally {
@@ -290,10 +335,66 @@ class CheckticketController extends GetxController
     }
   }
 
+  Future<bool> buyTicketFromTicketSellerOnFriendTech({
+    required TicketSeller ticketSeller,
+  }) async {
+    final selectedWallet = await choseAWallet(chainId: baseChainId);
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
+    allUsersToBuyTicketFrom.refresh();
+    if (selectedWallet == null) {
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+      allUsersToBuyTicketFrom.refresh();
+      return false;
+    }
+    bool bought = false;
+    final activeWallets = await particle_friendTech_getActiveUserWallets(
+      particleAddress: ticketSeller.userInfo.particleWalletAddress,
+      externalWalletAddress: ticketSeller.userInfo.defaultWalletAddress,
+      chainId: baseChainId,
+    );
+    if (!activeWallets.hasActiveWallet) {
+      Get.snackbar("User is not active", "User is not active");
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+      allUsersToBuyTicketFrom.refresh();
+      return false;
+    }
+    final preferedWalletAddress = activeWallets.preferedWalletAddress;
+    if (selectedWallet == WalletNames.particle) {
+      bought = await particle_buyFriendTechTicket(
+        sharesSubject: preferedWalletAddress,
+        // temp chainId hardcoded
+        chainId: baseChainId,
+        targetUserId: ticketSeller.userInfo.id,
+      );
+    } else {
+      bought = await ext_buyFirendtechTicket(
+        sharesSubject: preferedWalletAddress,
+        // temp chainId hardcoded
+        chainId: baseChainId,
+        targetUserId: ticketSeller.userInfo.id,
+      );
+    }
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+
+    if (ticketSeller.speakTicketType ==
+        BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      allUsersToBuyTicketFrom
+          .value[ticketSeller.userInfo.id]!.boughtTicketToSpeak = bought;
+    }
+    if (ticketSeller.accessTicketType ==
+        BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      allUsersToBuyTicketFrom
+          .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
+    }
+
+    allUsersToBuyTicketFrom.refresh();
+    return bought;
+  }
+
   Future<bool> buyTicketFromTicketSellerOnArena({
     required TicketSeller ticketSeller,
   }) async {
-    final selectedWallet = await choseAWallet();
+    final selectedWallet = await choseAWallet(chainId: avalancheChainId);
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
     if (selectedWallet == null) {
@@ -304,24 +405,26 @@ class CheckticketController extends GetxController
     bool bought = false;
     if (selectedWallet == WalletNames.particle) {
       bought = await particle_buySharesWithReferrer(
-        sharesSubject:
-            extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+        sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
+        chainId: externalWalletChianId,
+        targetUserId: ticketSeller.userInfo.id,
       );
     } else {
       bought = await ext_buySharesWithReferrer(
-        sharesSubject:
-            extractAddressFromUserModel(user: ticketSeller.userInfo) ?? '',
+        sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
+        chainId: externalWalletChianId,
+        targetUserId: ticketSeller.userInfo.id,
       );
       log.d('bought: $bought');
     }
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
     if (ticketSeller.accessTicketType ==
-        RoomAccessTypes.onlyArenaTicketHolders) {
+        BuyableTicketTypes.onlyArenaTicketHolders) {
       allUsersToBuyTicketFrom
           .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
     }
     if (ticketSeller.speakTicketType ==
-        RoomSpeakerTypes.onlyArenaTicketHolders) {
+        BuyableTicketTypes.onlyArenaTicketHolders) {
       allUsersToBuyTicketFrom
           .value[ticketSeller.userInfo.id]!.boughtTicketToSpeak = bought;
     }
@@ -347,48 +450,81 @@ class CheckticketController extends GetxController
   }
 
   Future<GroupAccesses> checkIfIveBoughtTheTicketFromUser(
-    String userAddress,
-    String userId,
+    UserInfoModel user,
   ) async {
+    final userId = user.id;
     final myUser = globalController.currentUserInfo.value!;
     if (userId == myUser.id)
       return GroupAccesses(canEnter: true, canSpeak: true);
     GroupAccesses access = GroupAccesses(canEnter: false, canSpeak: false);
-    final List<Future> arrayToCall = [];
+
+    // check if user has access, using any ticket
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
-      if (group.value!.accessType == RoomAccessTypes.onlyArenaTicketHolders) {
-        arrayToCall.add(particle_getMyShares(
-          sharesSubject: userAddress,
-        ));
+      if (group.value!.accessType ==
+          BuyableTicketTypes.onlyArenaTicketHolders) {
+        final success =
+            await temporarilyChangeParticleNetwork(avalancheChainId);
+        if (success) {
+          final myShares = await particle_getMyShares_arena(
+            sharesSubject: user.defaultWalletAddress,
+            chainId: particleChianId,
+          );
+          if (myShares != null && myShares > BigInt.zero) {
+            access.canEnter = true;
+          }
+        }
+        await switchBackToSavedParticleNetwork();
+      } else if (group.value!.accessType ==
+          BuyableTicketTypes.onlyFriendTechTicketHolders) {
+        final changed = await temporarilyChangeParticleNetwork(baseChainId);
+        if (changed) {
+          final myShares = await particle_getUserShares_friendTech(
+            defaultWallet: user.defaultWalletAddress,
+            particleWallet: user.particleWalletAddress,
+            chainId: baseChainId,
+          );
+          if (myShares > BigInt.zero) {
+            access.canEnter = true;
+          }
+        }
+        await switchBackToSavedParticleNetwork();
       } else {
         log.f('FIXME: add support for other ticket types ');
       }
     }
-    if (arrayToCall.isEmpty) {
-      arrayToCall.add(Future(() => BigInt.zero));
-    }
 
     if (allUsersToBuyTicketFrom.value[userId]?.speakTicketType != null) {
-      if (group.value!.speakerType == RoomSpeakerTypes.onlyArenaTicketHolders) {
-        arrayToCall.add(particle_getMyShares(
-          sharesSubject: userAddress,
-        ));
+      if (group.value!.speakerType ==
+          BuyableTicketTypes.onlyArenaTicketHolders) {
+        final success =
+            await temporarilyChangeParticleNetwork(avalancheChainId);
+        if (success) {
+          final myShares = await particle_getMyShares_arena(
+            sharesSubject: user.defaultWalletAddress,
+            chainId: particleChianId,
+          );
+          if (myShares != null && myShares > BigInt.zero) {
+            access.canSpeak = true;
+          }
+        }
+        await switchBackToSavedParticleNetwork();
+      } else if (group.value!.speakerType ==
+          BuyableTicketTypes.onlyFriendTechTicketHolders) {
+        final changed = await temporarilyChangeParticleNetwork(baseChainId);
+        if (changed) {
+          final myShares = await particle_getUserShares_friendTech(
+            defaultWallet: user.defaultWalletAddress,
+            particleWallet: user.particleWalletAddress,
+            chainId: baseChainId,
+          );
+          if (myShares > BigInt.zero) {
+            access.canSpeak = true;
+          }
+        }
+        await switchBackToSavedParticleNetwork();
       } else {
         log.f('FIXME: add support for other ticket types');
       }
-    }
-    if (arrayToCall.length == 1) {
-      arrayToCall.add(Future(() => BigInt.zero));
-    }
-
-    final results = await Future.wait(arrayToCall);
-    final accessTicket = results[0] as BigInt?;
-    if (accessTicket != null && accessTicket > BigInt.zero) {
-      access.canEnter = true;
-    }
-    final speakTicket = results[1] as BigInt?;
-    if (speakTicket != null && speakTicket > BigInt.zero) {
-      access.canSpeak = true;
     }
 
     return access;
@@ -397,16 +533,16 @@ class CheckticketController extends GetxController
 
 accessIsBuyableByTicket(FirebaseGroup group) {
   final groupAccessType = group.accessType;
-  return groupAccessType == RoomAccessTypes.onlyArenaTicketHolders ||
-      groupAccessType == RoomAccessTypes.onlyFriendTechTicketHolders ||
-      groupAccessType == RoomAccessTypes.onlyPodiumPassHolders;
+  return groupAccessType == BuyableTicketTypes.onlyArenaTicketHolders ||
+      groupAccessType == BuyableTicketTypes.onlyFriendTechTicketHolders ||
+      groupAccessType == BuyableTicketTypes.onlyPodiumPassHolders;
 }
 
 speakIsBuyableByTicket(FirebaseGroup group) {
   final groupSpeakType = group.speakerType;
-  return groupSpeakType == RoomSpeakerTypes.onlyArenaTicketHolders ||
-      groupSpeakType == RoomSpeakerTypes.onlyFriendTechTicketHolders ||
-      groupSpeakType == RoomSpeakerTypes.onlyPodiumPassHolders;
+  return groupSpeakType == BuyableTicketTypes.onlyArenaTicketHolders ||
+      groupSpeakType == BuyableTicketTypes.onlyFriendTechTicketHolders ||
+      groupSpeakType == BuyableTicketTypes.onlyPodiumPassHolders;
 }
 
 canEnterWithoutATicket(FirebaseGroup group) {
@@ -414,17 +550,17 @@ canEnterWithoutATicket(FirebaseGroup group) {
   final g = group;
   final amIInvited = g.invitedMembers[myId] != null;
   final link = globalController.deepLinkRoute;
-  final cameHereByLink = g.accessType == RoomAccessTypes.onlyLink &&
+  final cameHereByLink = g.accessType == FreeRoomAccessTypes.onlyLink &&
       link != null &&
       link.isNotEmpty &&
       link.contains(g.id);
-  if (g.accessType == RoomAccessTypes.onlyLink) {
+  if (g.accessType == FreeRoomAccessTypes.onlyLink) {
     return cameHereByLink;
   }
-  if (g.accessType == RoomAccessTypes.invitees) {
+  if (g.accessType == FreeRoomAccessTypes.invitees) {
     return amIInvited;
   }
-  if (g.accessType == RoomAccessTypes.public) {
+  if (g.accessType == FreeRoomAccessTypes.public) {
     return true;
   }
   return false;

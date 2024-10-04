@@ -14,6 +14,8 @@ import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -225,30 +227,32 @@ class GlobalController extends GetxController with FireBaseUtils {
     return success;
   }
 
-  Future<bool> switchParticleWalletChain(String chainId) async {
-    final chain = ChainInfo.ChainInfo.getChain(
-      int.parse(chainId),
-      ReownAppKitModalNetworks.getNetworkById(
-        Env.chainNamespace,
-        chainId,
-      )!
-          .name,
-    );
+  Future<bool> switchParticleWalletChain(
+    String chainId, {
+    bool alsoSave = false,
+  }) async {
+    final chain = particleChainInfoByChainId(chainId);
     if (chain == null) {
       log.e("chain not found");
-      storage.remove(StorageKeys.particleWalletChainId);
+      if (alsoSave == true) {
+        storage.remove(StorageKeys.particleWalletChainId);
+      }
       return false;
     }
     final done = await ParticleBase.ParticleBase.setChainInfo(chain);
     if (!done) {
       log.e("error switching chain");
-      storage.remove(StorageKeys.particleWalletChainId);
+      if (alsoSave == true) {
+        storage.remove(StorageKeys.particleWalletChainId);
+      }
       return false;
     }
-    final selectedChainId = ParticleBase.ParticleBase.getChainId();
-    particleWalletChainId.value = selectedChainId.toString();
-    storage.write(
-        StorageKeys.particleWalletChainId, selectedChainId.toString());
+    if (alsoSave == true) {
+      final selectedChainId = ParticleBase.ParticleBase.getChainId();
+      particleWalletChainId.value = selectedChainId.toString();
+      storage.write(
+          StorageKeys.particleWalletChainId, selectedChainId.toString());
+    }
     return true;
   }
 
@@ -649,21 +653,7 @@ class GlobalController extends GetxController with FireBaseUtils {
     firebaseUserDbReference.once().then((event) {
       final data = event.snapshot.value as dynamic;
       if (data != null) {
-        final userId = data[UserInfoModel.idKey];
-        final userFullName = data[UserInfoModel.fullNameKey];
-        final userEmail = data[UserInfoModel.emailKey];
-        final userAvatar = data[UserInfoModel.avatarUrlKey];
-        final amIover18 = data[UserInfoModel.isOver18Key] ?? false;
-        final user = UserInfoModel(
-          id: userId,
-          fullName: userFullName,
-          email: userEmail,
-          avatar: userAvatar,
-          isOver18: amIover18,
-          localWalletAddress: data[UserInfoModel.localWalletAddressKey] ?? '',
-          following: List.from(data[UserInfoModel.followingKey] ?? []),
-          numberOfFollowers: data[UserInfoModel.numberOfFollowersKey] ?? 0,
-        );
+        final user = singleUserParser(data);
         completer.complete(user);
       } else {
         completer.completeError("User not found");
@@ -705,6 +695,7 @@ class GlobalController extends GetxController with FireBaseUtils {
   connectToWallet({void Function()? afterConnection}) async {
     try {
       // web3ModalService.disconnect();
+      await web3ModalService.init();
       await web3ModalService.openModalView();
       final address =
           await BlockChainUtils.retrieveConnectedWallet(web3ModalService);
@@ -732,7 +723,11 @@ class GlobalController extends GetxController with FireBaseUtils {
   disconnect() async {
     final removed = await removeUserWalletAddressOnFirebase();
     if (removed) {
-      web3ModalService.disconnect();
+      try {
+        web3ModalService.disconnect();
+      } catch (e) {
+        log.e(e);
+      }
       storage.remove(StorageKeys.externalWalletChainId);
       storage.remove(StorageKeys.selectedWalletName);
       connectedWalletAddress.value = '';

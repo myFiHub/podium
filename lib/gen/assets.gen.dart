@@ -12,6 +12,16 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart' as _svg;
 import 'package:vector_graphics/vector_graphics.dart' as _vg;
 
+class $AssetsAudioGen {
+  const $AssetsAudioGen();
+
+  /// File path: assets/audio/blip.mp3
+  String get blip => 'assets/audio/blip.mp3';
+
+  /// List of all assets
+  List<String> get values => [blip];
+}
+
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
@@ -21,6 +31,12 @@ class $AssetsImagesGen {
 
   /// File path: assets/images/apple.png
   AssetGenImage get apple => const AssetGenImage('assets/images/apple.png');
+
+  /// File path: assets/images/boo.png
+  AssetGenImage get boo => const AssetGenImage('assets/images/boo.png');
+
+  /// File path: assets/images/cheer.png
+  AssetGenImage get cheer => const AssetGenImage('assets/images/cheer.png');
 
   /// File path: assets/images/facebook.png
   AssetGenImage get facebook =>
@@ -55,6 +71,8 @@ class $AssetsImagesGen {
   List<dynamic> get values => [
         ageRestricted,
         apple,
+        boo,
+        cheer,
         facebook,
         gIcon,
         github,
@@ -69,6 +87,7 @@ class $AssetsImagesGen {
 class Assets {
   Assets._();
 
+  static const $AssetsAudioGen audio = $AssetsAudioGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
 }
 

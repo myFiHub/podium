@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
@@ -11,7 +12,9 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
+import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/utils/analytics.dart';
@@ -176,15 +179,15 @@ class OngoingGroupCallController extends GetxController
     }
   }
 
-  updateMyLastTalkingTime() {
+  updateMyLastTalkingTime() async {
     final myUserId = globalController.currentUserInfo.value?.id;
     final group = groupCallController.group.value;
     if (group == null) {
       return;
     }
     final canSpeak = canISpeak(group: group);
-    if (myUserId != null && canSpeak) {
-      setIsTalkingInSession(
+    if (myUserId != null && canSpeak && amIMuted.value == false) {
+      await setIsTalkingInSession(
         sessionId: firebaseSession.value!.id,
         userId: myUserId,
         isTalking: true,
@@ -193,16 +196,13 @@ class OngoingGroupCallController extends GetxController
     }
   }
 
-  stopTheTimer() {
+  stopTheTimer() async {
+    await setIsTalkingInSession(
+      sessionId: firebaseSession.value!.id,
+      userId: myId,
+      isTalking: false,
+    );
     timer?.cancel();
-    final myUserId = globalController.currentUserInfo.value?.id;
-    if (myUserId != null) {
-      setIsTalkingInSession(
-        sessionId: firebaseSession.value!.id,
-        userId: myUserId,
-        isTalking: false,
-      );
-    }
   }
 
   Future<void> addToTimer(
@@ -339,10 +339,6 @@ class OngoingGroupCallController extends GetxController
       return;
     }
 
-    if (cheerBooAddress == ZERO_ADDRESS) {
-      return;
-    }
-
     final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
     if (userLocalWalletAddress != '') {
       targetAddress = userLocalWalletAddress;
@@ -354,7 +350,7 @@ class OngoingGroupCallController extends GetxController
     }
 
     if (canContinue && targetAddress != null && targetAddress != '') {
-      late List<String> receiverAddresses;
+      List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
       final myParticleUser = globalController.particleAuthUserInfo.value;
       if (myUser.localWalletAddress == targetAddress ||
@@ -394,30 +390,33 @@ class OngoingGroupCallController extends GetxController
       }
 
       ///////////////////////
-      final res = await cheerOrBoo(
-        target: targetAddress,
-        receiverAddresses: receiverAddresses,
-        amount: parsedAmount,
-        cheer: cheer,
-      );
-      if (res != null) {
-        try {
-          if ((res as String).startsWith('0x')) {
-            log.d("Cheer successful, amount: $amount");
-            log.d("final amount of time to add $finalAmountOfTimeToAdd");
-            cheer
-                ? addToTimer(
-                    seconds: finalAmountOfTimeToAdd,
-                    userId: userId,
-                  )
-                : reduceFromTimer(
-                    seconds: finalAmountOfTimeToAdd,
-                    userId: userId,
-                  );
-          }
-        } catch (e) {
-          log.e("Error updating remaining time");
-        }
+      /// TODO: add for particle when it is ready (issue is resolved on their side, issue 2)
+      bool success = false;
+      final selectedWallet =
+          WalletNames.external; //choseWallet(movementChainId);
+      if (selectedWallet == WalletNames.external) {
+        success = await ext_cheerOrBoo(
+          target: targetAddress,
+          receiverAddresses: receiverAddresses,
+          amount: parsedAmount,
+          cheer: cheer,
+          chainId: externalWalletChianId,
+        );
+      }
+
+      if (success) {
+        log.d("Cheer successful, amount: $amount");
+        log.d("final amount of time to add $finalAmountOfTimeToAdd");
+        cheer
+            ? addToTimer(
+                seconds: finalAmountOfTimeToAdd,
+                userId: userId,
+              )
+            : reduceFromTimer(
+                seconds: finalAmountOfTimeToAdd,
+                userId: userId,
+              );
+
         log.i("${cheer ? "Cheer" : "Boo"} successful");
         Get.snackbar("Success", "${cheer ? "Cheer" : "Boo"} successful");
         analytics.logEvent(name: 'cheerBoo', parameters: {
@@ -427,6 +426,24 @@ class OngoingGroupCallController extends GetxController
           'groupId': groupCallController.group.value!.id,
           'fromUser': myUser.id,
         });
+        final particleAddress = await Evm.getAddress();
+        saveNewPayment(
+            event: PaymentEvent(
+          amount: amount,
+          chainId: movementChainId,
+          type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
+          initiatorAddress: selectedWallet == WalletNames.external
+              ? externalWalletAddress!
+              : particleAddress,
+          targetAddress: targetAddress,
+          initiatorId: myId,
+          targetId: userId,
+          groupId: groupCallController.group.value!.id,
+          selfCheer: myId == userId,
+          memberIds: myId == userId
+              ? firebaseSession.value!.members.values.map((e) => e.id).toList()
+              : null,
+        ));
       } else {
         log.e("${cheer ? "Cheer" : "Boo"} failed");
         Get.snackbar("Error", "${cheer ? "Cheer" : "Boo"} failed");
@@ -443,7 +460,6 @@ class OngoingGroupCallController extends GetxController
     if (muted) {
       stopTheTimer();
       amIMuted.value = true;
-      jitsiMeet.setAudioMuted(muted);
       talkTimer.endTimer();
       final elapsed = talkTimer.timeElapsedInSeconds;
       if (elapsed > 0) {

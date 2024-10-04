@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:particle_auth_core/evm.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -20,17 +23,27 @@ import 'package:reown_appkit/reown_appkit.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
-class CreateGroupController extends GetxController with FireBaseUtils {
+class TicketSellersListMember {
+  final UserInfoModel user;
+  final String activeAddress;
+  TicketSellersListMember({required this.user, required this.activeAddress});
+}
+
+class CreateGroupController extends GetxController
+    with FireBaseUtils, BlockChainInteractions {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
-  final roomAccessType = RoomAccessTypes.public.obs;
-  final roomSpeakerType = RoomSpeakerTypes.everyone.obs;
-  final selectedUsersToBuyTicketFrom_ToAccessRoom = <UserInfoModel>[].obs;
-  final selectedUsersToBuyticketFrom_ToSpeak = <UserInfoModel>[].obs;
+  final roomAccessType = FreeRoomAccessTypes.public.obs;
+  final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
+  final selectedUsersToBuyTicketFrom_ToAccessRoom =
+      <TicketSellersListMember>[].obs;
+  final selectedUsersToBuyticketFrom_ToSpeak = <TicketSellersListMember>[].obs;
   final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
   final addressesToAddForEntering = RxList<String>([]);
   final addressesToAddForSpeaking = RxList<String>([]);
+  final loadingUserIds = RxList<String>([]);
+  final loadingAddresses = RxList<String>([]);
   final isScheduled = false.obs;
   final scheduledFor = 0.obs;
   final searchValueForSeletTickets = "".obs;
@@ -78,7 +91,7 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       is24HourMode: true,
       theme: ThemeData.dark(),
       type: OmniDateTimePickerType.dateAndTime,
-      firstDate: DateTime.now(),
+      firstDate: DateTime.now().add(Duration(minutes: 5)),
       lastDate: DateTime.now().add(Duration(days: 365)),
       minutesInterval: 5,
     );
@@ -90,81 +103,181 @@ class CreateGroupController extends GetxController with FireBaseUtils {
 
   get shouldSelectTicketHolersForSpeaking {
     return (roomSpeakerType.value ==
-                RoomSpeakerTypes.onlyFriendTechTicketHolders ||
-            roomSpeakerType.value == RoomSpeakerTypes.onlyArenaTicketHolders ||
-            roomSpeakerType.value == RoomSpeakerTypes.onlyPodiumPassHolders) &&
+                BuyableTicketTypes.onlyFriendTechTicketHolders ||
+            roomSpeakerType.value ==
+                BuyableTicketTypes.onlyArenaTicketHolders ||
+            roomSpeakerType.value ==
+                BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyticketFrom_ToSpeak.isEmpty &&
         addressesToAddForSpeaking.isEmpty;
   }
 
   get shouldSelectTicketHolersForAccess {
     return ((roomAccessType.value ==
-                RoomAccessTypes.onlyFriendTechTicketHolders) ||
-            roomAccessType.value == RoomAccessTypes.onlyArenaTicketHolders ||
-            roomAccessType.value == RoomAccessTypes.onlyPodiumPassHolders) &&
+                BuyableTicketTypes.onlyFriendTechTicketHolders) ||
+            roomAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+            roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyTicketFrom_ToAccessRoom.isEmpty &&
         addressesToAddForEntering.isEmpty;
   }
 
   get shouldBuyTicketToSpeak {
     return roomSpeakerType.value ==
-            RoomSpeakerTypes.onlyFriendTechTicketHolders ||
-        roomSpeakerType.value == RoomSpeakerTypes.onlyArenaTicketHolders ||
-        roomSpeakerType.value == RoomSpeakerTypes.onlyPodiumPassHolders;
+            BuyableTicketTypes.onlyFriendTechTicketHolders ||
+        roomSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        roomSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   get shouldBuyTicketToAccess {
     return roomAccessType.value ==
-            RoomAccessTypes.onlyFriendTechTicketHolders ||
-        roomAccessType.value == RoomAccessTypes.onlyArenaTicketHolders ||
-        roomAccessType.value == RoomAccessTypes.onlyPodiumPassHolders;
+            BuyableTicketTypes.onlyFriendTechTicketHolders ||
+        roomAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
-  toggleUserToSelectedList(UserInfoModel user, String ticketPermissiontype) {
-    if (ticketPermissiontype == TicketPermissionType.speak) {
-      final list =
-          selectedUsersToBuyticketFrom_ToSpeak.value.map((e) => e.id).toList();
-      if (list.contains(user.id)) {
-        selectedUsersToBuyticketFrom_ToSpeak.value.removeWhere((element) {
-          return element.id == user.id;
-        });
-      } else {
-        selectedUsersToBuyticketFrom_ToSpeak.value.add(user);
+  toggleAddressForSelectedList(
+      String address, String ticketPermissionType) async {
+    final list = ticketPermissionType == TicketPermissionType.speak
+        ? addressesToAddForSpeaking
+        : addressesToAddForEntering;
+    if (list.contains(address)) {
+      list.remove(address);
+    } else {
+      if (!loadingAddresses.contains(address)) {
+        loadingAddresses.add(address);
       }
-      selectedUsersToBuyticketFrom_ToSpeak.refresh();
-    } else if (ticketPermissiontype == TicketPermissionType.access) {
-      final list = selectedUsersToBuyTicketFrom_ToAccessRoom.value
-          .map((e) => e.id)
-          .toList();
-      if (list.contains(user.id)) {
-        selectedUsersToBuyTicketFrom_ToAccessRoom.value.removeWhere(
-          (element) {
-            return element.id == user.id;
-          },
+      final isActive = (await particle_friendTech_getActiveUserWallets(
+        particleAddress: address,
+        chainId: baseChainId,
+      ))
+          .hasActiveWallet;
+      // remove from loading
+      loadingAddresses.remove(address);
+      if (isActive) {
+        list.add(address);
+      } else {
+        Get.snackbar(
+          'Error',
+          "Addredss isn't yet active on FriendTech",
+          colorText: Colors.orange,
         );
-      } else {
-        selectedUsersToBuyTicketFrom_ToAccessRoom.value.add(user);
       }
-      selectedUsersToBuyTicketFrom_ToAccessRoom.refresh();
     }
   }
 
-  addAddressForEntering(String address) {
-    // add if it is not already added
-    if (!addressesToAddForEntering.contains(address)) {
-      addressesToAddForEntering.add(address);
+  toggleUserToSelectedList(
+    UserInfoModel user,
+    String ticketPermissiontype,
+  ) async {
+    final list = ticketPermissiontype == TicketPermissionType.speak
+        ? selectedUsersToBuyticketFrom_ToSpeak
+        : selectedUsersToBuyTicketFrom_ToAccessRoom;
+    if (list.contains(user)) {
+      list.remove(user);
+    } else {
+      final addedAddress = await checkIfUserCanBeAddedToList(
+        user: user,
+        ticketPermissionType: ticketPermissiontype,
+      );
+      if (addedAddress != null) {
+        list.add(TicketSellersListMember(
+          user: user,
+          activeAddress: addedAddress,
+        ));
+      }
+    }
+  }
+
+  bool _shouldCheckIfUserIsActive(String ticketPermissionType) {
+    if (ticketPermissionType == TicketPermissionType.access &&
+        roomAccessType.value ==
+            BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      return true;
+    }
+    if (ticketPermissionType == TicketPermissionType.speak &&
+        roomSpeakerType.value ==
+            BuyableTicketTypes.onlyFriendTechTicketHolders) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<String?> checkIfUserCanBeAddedToList({
+    required UserInfoModel user,
+    required String ticketPermissionType,
+  }) async {
+    if (!_shouldCheckIfUserIsActive(ticketPermissionType)) {
+      return user.defaultWalletAddress;
+    }
+    loadingUserIds.add(user.id);
+    try {
+      final activeWallets = await particle_friendTech_getActiveUserWallets(
+        particleAddress: user.particleWalletAddress,
+        externalWalletAddress: user.defaultWalletAddress,
+        chainId: baseChainId,
+      );
+      final isActive = activeWallets.hasActiveWallet;
+      final preferedWalletAddress = activeWallets.preferedWalletAddress;
+      if (isActive) {
+        return preferedWalletAddress;
+      } else {
+        if (user.id != myId) {
+          Get.snackbar(
+            'Error',
+            "User isn't yet active on FriendTech",
+            colorText: Colors.orange,
+          );
+          return null;
+        } else {
+          final agreedToBuyTicketForSelf = await showActivatePopup();
+          if (agreedToBuyTicketForSelf != true) {
+            return null;
+          }
+          final selectedWallet = await choseAWallet(chainId: baseChainId);
+          if (selectedWallet == null) {
+            return null;
+          }
+          if (selectedWallet == WalletNames.particle) {
+            final bought = await particle_activate_friendtechWallet(
+              chainId: baseChainId,
+            );
+            if (bought) {
+              Get.snackbar(
+                "Success",
+                "account activated",
+                colorText: Colors.green,
+              );
+              return await Evm.getAddress();
+            } else {
+              return null;
+            }
+          } else {
+            final bought = await ext_activate_friendtechWallet(
+              chainId: baseChainId,
+            );
+            if (bought) {
+              Get.snackbar(
+                "Success",
+                "account activated",
+                colorText: Colors.green,
+              );
+              return externalWalletAddress;
+            } else {
+              return null;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      log.e(e);
+      return null;
+    } finally {
+      loadingUserIds.remove(user.id);
     }
   }
 
   removeAddressForEntering(String address) {
     addressesToAddForEntering.remove(address);
-  }
-
-  addAddressForSpeaking(String address) {
-    // add if it is not already added
-    if (!addressesToAddForSpeaking.contains(address)) {
-      addressesToAddForSpeaking.add(address);
-    }
   }
 
   removeAddressForSpeaking(String address) {
@@ -216,21 +329,23 @@ class CreateGroupController extends GetxController with FireBaseUtils {
     }
 
     final alarmId = Random().nextInt(100000000);
-    final setFor = await setReminder(
-      alarmId: alarmId,
-      scheduledFor: scheduledFor.value,
-      eventName: groupName.value,
-      timesList: defaultTimeList(
-        endsAt: scheduledFor.value,
-      ),
-    );
-    if (setFor == -1) {
-      // means use calendar
-    }
-    if (setFor == -2) {
-      // means no reminder
-    } else if (setFor == null) {
-      return;
+    if (scheduledFor.value != 0) {
+      final setFor = await setReminder(
+        alarmId: alarmId,
+        scheduledFor: scheduledFor.value,
+        eventName: groupName.value,
+        timesList: defaultTimeList(
+          endsAt: scheduledFor.value,
+        ),
+      );
+      if (setFor == -1) {
+        // means use calendar
+      }
+      if (setFor == -2) {
+        // means no reminder
+      } else if (setFor == null) {
+        return;
+      }
     }
 
     String subject = roomSubject.value;
@@ -265,6 +380,44 @@ class CreateGroupController extends GetxController with FireBaseUtils {
       ),
     );
   }
+}
+
+Future<bool?> showActivatePopup() async {
+  return await Get.dialog<bool>(
+    AlertDialog(
+      backgroundColor: ColorName.cardBackground,
+      title: Text('Activate Wallet'),
+      content: RichText(
+        text: TextSpan(
+          text:
+              'You need to activate your wallet to buy tickets for this event. Do you want to activate it now?',
+          style: TextStyle(color: Colors.white),
+          children: [
+            if (externalWalletAddress == null)
+              TextSpan(
+                text:
+                    '\n(your external wallet is disconnected\n we checked against your particle wallet address)',
+                style: TextStyle(color: Colors.red),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(false);
+          },
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(true);
+          },
+          child: Text('Activate'),
+        ),
+      ],
+    ),
+  );
 }
 
 class ScheduledGroupDateSelector extends GetView<CreateGroupController> {
@@ -334,6 +487,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
               space10,
               Obx(() {
                 final searchValue = controller.searchValueForSeletTickets.value;
+                final loadingAddresses = controller.loadingAddresses.value;
+                final hasLoadingAddress = loadingAddresses.isNotEmpty;
                 bool isAddress =
                     controller.checkIfValueIsDirectAddress(searchValue);
                 try {} catch (e) {}
@@ -341,59 +496,69 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                   height: 70,
                   child: Input(
                     controller: inputController,
-                    suffixIcon: searchValue.isEmpty
-                        ? IconButton(
-                            onPressed: () async {
-                              final clipboardData =
-                                  await Clipboard.getData(Clipboard.kTextPlain);
-                              String? clipboardText = clipboardData?.text;
-                              if (clipboardText != null) {
-                                if (controller.checkIfValueIsDirectAddress(
-                                    clipboardText)) {
-                                  if (buyTicketToGetPermisionFor ==
-                                      TicketPermissionType.speak) {
-                                    controller
-                                        .addAddressForSpeaking(clipboardText);
-                                  } else if (buyTicketToGetPermisionFor ==
-                                      TicketPermissionType.access) {
-                                    controller
-                                        .addAddressForEntering(clipboardText);
-                                  }
-                                } else {
-                                  inputController.text = clipboardText;
-                                  controller.searchUsers(clipboardText);
-                                }
-                              }
-                            },
-                            icon: Icon(
-                              Icons.paste,
-                              color: Colors.grey,
-                            ),
+                    suffixIcon: hasLoadingAddress
+                        ? SizedBox(
+                            width: 50,
+                            child: GFLoader(),
                           )
-                        : isAddress
+                        : searchValue.isEmpty
                             ? IconButton(
-                                onPressed: () {
-                                  if (buyTicketToGetPermisionFor ==
-                                      TicketPermissionType.speak) {
-                                    controller
-                                        .addAddressForSpeaking(searchValue);
-                                  } else if (buyTicketToGetPermisionFor ==
-                                      TicketPermissionType.access) {
-                                    controller
-                                        .addAddressForEntering(searchValue);
+                                onPressed: () async {
+                                  final clipboardData = await Clipboard.getData(
+                                      Clipboard.kTextPlain);
+                                  String? clipboardText = clipboardData?.text;
+                                  if (clipboardText != null) {
+                                    if (controller.checkIfValueIsDirectAddress(
+                                        clipboardText)) {
+                                      if (buyTicketToGetPermisionFor ==
+                                          TicketPermissionType.speak) {
+                                        controller.toggleAddressForSelectedList(
+                                            clipboardText,
+                                            TicketPermissionType.speak);
+                                      } else if (buyTicketToGetPermisionFor ==
+                                          TicketPermissionType.access) {
+                                        controller.toggleAddressForSelectedList(
+                                            clipboardText,
+                                            TicketPermissionType.access);
+                                      }
+                                    } else {
+                                      inputController.text = clipboardText;
+                                      controller.searchUsers(clipboardText);
+                                    }
                                   }
-                                  controller.searchUsers('');
-                                  inputController.clear();
                                 },
-                                icon: Icon(Icons.check, color: Colors.green),
+                                icon: Icon(
+                                  Icons.paste,
+                                  color: Colors.grey,
+                                ),
                               )
-                            : IconButton(
-                                onPressed: () {
-                                  controller.searchUsers('');
-                                  inputController.clear();
-                                },
-                                icon: Icon(Icons.close, color: Colors.red),
-                              ),
+                            : isAddress
+                                ? IconButton(
+                                    onPressed: () {
+                                      if (buyTicketToGetPermisionFor ==
+                                          TicketPermissionType.speak) {
+                                        controller.toggleAddressForSelectedList(
+                                            searchValue,
+                                            TicketPermissionType.speak);
+                                      } else if (buyTicketToGetPermisionFor ==
+                                          TicketPermissionType.access) {
+                                        controller.toggleAddressForSelectedList(
+                                            searchValue,
+                                            TicketPermissionType.access);
+                                      }
+                                      controller.searchUsers('');
+                                      inputController.clear();
+                                    },
+                                    icon:
+                                        Icon(Icons.check, color: Colors.green),
+                                  )
+                                : IconButton(
+                                    onPressed: () {
+                                      controller.searchUsers('');
+                                      inputController.clear();
+                                    },
+                                    icon: Icon(Icons.close, color: Colors.red),
+                                  ),
                     hintText: 'Enter the Name/address',
                     onChanged: (value) {
                       controller.searchUsers(value);
@@ -413,27 +578,29 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           return element.id != myId;
                         },
                       );
+                      final loadingIds = controller.loadingUserIds.value;
+                      final loadingAddresses =
+                          controller.loadingAddresses.value;
                       final selsectedListOfUsersToBuyTicketFromInOrderToSpeak =
                           controller.selectedUsersToBuyticketFrom_ToSpeak.value;
                       final selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom =
                           controller
-                              .selectedUsersToBuyTicketFrom_ToAccessRoom.value
-                              .where(
-                        (element) {
-                          return element.id != myId;
-                        },
-                      ).toList();
+                              .selectedUsersToBuyTicketFrom_ToAccessRoom.value;
                       List<String> selectedIds = [];
                       List<UserInfoModel> selectedUsers;
                       if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.speak) {
                         selectedUsers =
-                            selsectedListOfUsersToBuyTicketFromInOrderToSpeak;
+                            selsectedListOfUsersToBuyTicketFromInOrderToSpeak
+                                .map((e) => e.user)
+                                .toList();
                         selectedIds = selectedUsers.map((e) => e.id).toList();
                       } else if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.access) {
                         selectedUsers =
-                            selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom;
+                            selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom
+                                .map((e) => e.user)
+                                .toList();
                         selectedIds = selectedUsers.map((e) => e.id).toList();
                       } else {
                         return Container(
@@ -521,7 +688,14 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (element.user != null)
+                                    if (element.user != null &&
+                                        loadingIds.contains(element.user!.id))
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 18.0),
+                                        child: GFLoader(),
+                                      )
+                                    else if (element.user != null)
                                       GFCheckbox(
                                         onChanged: (v) {
                                           if (element.user != null) {
@@ -534,8 +708,16 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                         },
                                         value: selectedIds
                                             .contains(element.user!.id),
-                                      ),
-                                    if (element.address != null)
+                                      )
+                                    else if (element.address != null &&
+                                        loadingAddresses
+                                            .contains(element.address))
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 18.0),
+                                        child: GFLoader(),
+                                      )
+                                    else if (element.address != null)
                                       GFCheckbox(
                                         onChanged: (v) {
                                           if (element.address != null) {
@@ -614,13 +796,16 @@ class SelectUsersToBuyTicketFromBottomSheetContent
   }
 }
 
-class RoomAccessTypes {
-  static const public = 'public';
-  static const onlyLink = 'onlyLink';
-  static const invitees = 'invitees';
+class BuyableTicketTypes {
   static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
   static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
+}
+
+class FreeRoomAccessTypes {
+  static const public = 'public';
+  static const onlyLink = 'onlyLink';
+  static const invitees = 'invitees';
 }
 
 class TicketPermissionType {
@@ -634,13 +819,9 @@ class TicketTypes {
   static const friendTech = 'friendTech';
 }
 
-class RoomSpeakerTypes {
+class FreeRoomSpeakerTypes {
   static const everyone = 'everyone';
   static const invitees = 'invitees';
-  // static const onlyCreator = 'onlyCreator';
-  static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
-  static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
-  static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }
 
 class SelectBoxOption {

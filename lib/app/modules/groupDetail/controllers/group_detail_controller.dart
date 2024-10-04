@@ -46,7 +46,6 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   final isGettingGroupInfo = false.obs;
   final jointButtonContentProps =
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
-  StreamSubscription<DatabaseEvent>? groupListener = null;
   bool gotGroupInfo = false;
 
   final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
@@ -111,7 +110,6 @@ class GroupDetailController extends GetxController with FireBaseUtils {
   @override
   void onClose() {
     super.onClose();
-    groupListener?.cancel();
   }
 
   void forceUpdate() {

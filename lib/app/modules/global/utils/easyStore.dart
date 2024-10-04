@@ -20,7 +20,7 @@ String? get externalWalletAddress {
   return address;
 }
 
-get externalWalletChianId {
+String get externalWalletChianId {
   final GlobalController globalController = Get.find();
   return globalController.externalWalletChainId.value;
 }

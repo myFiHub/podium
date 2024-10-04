@@ -12,7 +12,6 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/utils/extractAddressFromUserModel.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
@@ -61,7 +60,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     await toggleGroupArchive(groupId: group.id, archive: archive);
     Get.snackbar(
       "Success",
-      "Group ${archive ? "archived" : "is available again"}",
+      "Room ${archive ? "archived" : "is available again"}",
       colorText: Colors.green,
     );
     final remoteGroup = await getGroupInfoById(group.id);
@@ -135,8 +134,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     required String speakerType,
     required String subject,
     required bool adultContent,
-    required List<UserInfoModel> requiredTicketsToAccess,
-    required List<UserInfoModel> requiredTicketsToSpeak,
+    required List<TicketSellersListMember> requiredTicketsToAccess,
+    required List<TicketSellersListMember> requiredTicketsToSpeak,
     required List<String> requiredAddressesToEnter,
     required List<String> requiredAddressesToSpeak,
     required List<String> tags,
@@ -173,16 +172,16 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       ticketsRequiredToAccess: requiredTicketsToAccess
           .map(
             (e) => UserTicket(
-              userId: e.id,
-              userAddress: extractAddressFromUserModel(user: e) ?? '',
+              userId: e.user.id,
+              userAddress: e.activeAddress,
             ),
           )
           .toList(),
       ticketsRequiredToSpeak: requiredTicketsToSpeak
           .map(
             (e) => UserTicket(
-              userId: e.id,
-              userAddress: extractAddressFromUserModel(user: e) ?? '',
+              userId: e.user.id,
+              userAddress: e.activeAddress,
             ),
           )
           .toList(),
@@ -403,9 +402,10 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     }
     if (group.members.contains(myUser.id))
       return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
-    if (group.accessType == null || group.accessType == RoomAccessTypes.public)
+    if (group.accessType == null ||
+        group.accessType == FreeRoomAccessTypes.public)
       return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
-    if (group.accessType == RoomAccessTypes.onlyLink) {
+    if (group.accessType == FreeRoomAccessTypes.onlyLink) {
       if (joiningByLink == true) {
         return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
       } else {
@@ -419,7 +419,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     }
 
     final invitedMembers = group.invitedMembers;
-    if (group.accessType == RoomAccessTypes.invitees) {
+    if (group.accessType == FreeRoomAccessTypes.invitees) {
       if (invitedMembers[myUser.id] != null)
         return GroupAccesses(
           canEnter: true,
@@ -465,7 +465,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     final isGroupAgeRestricted = group.hasAdultContent;
     final iAmOwner = group.creator.id == myUser.id;
     final iAmMember = group.members.contains(myUser.id);
-    final amIOver18 = myUser.isOver18 ?? false;
+    final amIOver18 = myUser.isOver18;
     if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18) {
       return true;
     }
@@ -522,7 +522,7 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
   final result = await Get.dialog(
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
-      title: Text("${isCurrentlyArchived ? "Un" : ""}Archive Group"),
+      title: Text("${isCurrentlyArchived ? "Un" : ""}Archive Room"),
       content: RichText(
         text: TextSpan(
           text: "Are you sure you want to ",
@@ -534,7 +534,7 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
                 color: !isCurrentlyArchived ? Colors.red : Colors.green,
               ),
             ),
-            TextSpan(text: " this group?"),
+            TextSpan(text: " this Room?"),
           ],
         ),
       ),

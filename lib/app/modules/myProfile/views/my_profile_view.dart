@@ -273,7 +273,7 @@ class ParticleWalletManager extends GetView<GlobalController> {
                           .toList()
                     ],
                   ),
-                  FriendTeckActivationButton()
+                  // FriendTeckActivationButton()
                 ],
               ),
             );
@@ -442,7 +442,7 @@ class WalletInfo extends GetView<GlobalController> {
                           )),
                     ],
                   ),
-                  FriendTechExternalWalletActivationButton()
+                  // FriendTechExternalWalletActivationButton()
                 ],
               ));
     });

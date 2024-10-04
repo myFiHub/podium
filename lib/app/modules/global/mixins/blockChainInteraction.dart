@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
@@ -15,7 +16,7 @@ import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:particle_base/particle_base.dart';
 import 'package:podium/utils/storage.dart';
@@ -26,7 +27,7 @@ import 'package:podium/env.dart' as Environment;
 import 'package:reown_appkit/reown_appkit.dart';
 
 mixin BlockChainInteractions {
-  Future<dynamic> ext_cheerOrBoo({
+  Future<bool> ext_cheerOrBoo({
     required String target,
     required List<String> receiverAddresses,
     required num amount,
@@ -46,7 +47,7 @@ mixin BlockChainInteractions {
       chainId: chainId,
     );
     if (contract == null) {
-      return null;
+      return false;
     }
     service.launchConnectedWallet();
 
@@ -68,13 +69,13 @@ mixin BlockChainInteractions {
       }
       if (response == null) {
         Get.snackbar("Error", "transaction failed");
-        return null;
+        return false;
       } else {
-        return response;
+        return (response as String).startsWith('0x') && response.length > 10;
       }
     } catch (e) {
       log.e('error : $e');
-      return null;
+      return false;
     }
   }
 
@@ -440,14 +441,19 @@ mixin BlockChainInteractions {
     try {
       final myWalletAddress = await Evm.getAddress();
       final bought = await particle_buyFriendTechTicket(
-          sharesSubject: myWalletAddress, chainId: chainId);
+        sharesSubject: myWalletAddress,
+        chainId: chainId,
+        targetUserId: myId,
+      );
       return bought;
     } catch (e) {
       return false;
     }
   }
 
-  Future<bool> ext_activate_friendtechWallet({required String chainId}) async {
+  Future<bool> ext_activate_friendtechWallet({
+    required String chainId,
+  }) async {
     if (externalWalletAddress == null) {
       return false;
     }
@@ -457,6 +463,7 @@ mixin BlockChainInteractions {
     final bought = await ext_buyFirendtechTicket(
       sharesSubject: externalWalletAddress!,
       chainId: chainId,
+      targetUserId: myId,
     );
     return bought;
   }
@@ -465,6 +472,7 @@ mixin BlockChainInteractions {
     required String sharesSubject,
     int numberOfTickets = 1,
     required String chainId,
+    required String targetUserId,
   }) async {
     final sharesSubjectWallet = sharesSubject;
     final myAddress = await Evm.getAddress();
@@ -486,7 +494,6 @@ mixin BlockChainInteractions {
     final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
     const abiJson = FriendTechContract.abi;
     final abiJsonString = jsonEncode(abiJson);
-    final savedChainId = particleChianId;
     final changed = await temporarilyChangeParticleNetwork(chainId);
     if (!changed) {
       return false;
@@ -509,6 +516,19 @@ mixin BlockChainInteractions {
       await switchBackToSavedParticleNetwork();
 
       if (signature.length > 10) {
+        if (targetUserId != myId) {
+          saveNewPayment(
+            event: PaymentEvent(
+              type: PaymentTypes.frienTechTicket,
+              targetAddress: sharesSubjectWallet,
+              amount: bigIntWeiToDouble(buyPrice).toString(),
+              initiatorAddress: myAddress,
+              initiatorId: myId,
+              targetId: targetUserId,
+            ),
+          );
+        }
+
         return true;
       }
       return false;
@@ -547,6 +567,7 @@ mixin BlockChainInteractions {
     required String sharesSubject,
     int numberOfTickets = 1,
     required String chainId,
+    required String targetUserId,
   }) async {
     final buyPrice = await particle_getFriendTechTicketPrice(
       sharesSubject: sharesSubject,
@@ -590,7 +611,22 @@ mixin BlockChainInteractions {
         Get.snackbar("Error", "transaction failed");
         return false;
       } else {
-        return true;
+        final isValid =
+            (response as String).startsWith('0x') && response.length > 10;
+        if (isValid && targetUserId != myId) {
+          saveNewPayment(
+            event: PaymentEvent(
+              type: PaymentTypes.frienTechTicket,
+              targetAddress: sharesSubjectWallet.hex,
+              amount: bigIntWeiToDouble(buyPrice).toString(),
+              initiatorAddress: externalWalletAddress!,
+              initiatorId: myId,
+              targetId: targetUserId,
+            ),
+          );
+          return true;
+        }
+        return false;
       }
     } catch (e) {
       log.e('error : $e');
@@ -603,6 +639,7 @@ mixin BlockChainInteractions {
     String? referrerAddress,
     required String sharesSubject,
     num shareAmount = 1,
+    required String targetUserId,
     required String chainId,
   }) async {
     final referrer = referrerAddress ?? fihubAddress(chainId);
@@ -653,6 +690,19 @@ mixin BlockChainInteractions {
           response is String &&
           response.startsWith("0x") &&
           response.length > 10;
+      if (success) {
+        saveNewPayment(
+          event: PaymentEvent(
+            type: PaymentTypes.arenaTicket,
+            targetAddress: sharesSubjectWallet.hex,
+            amount: bigIntWeiToDouble(bigIntValue).toString(),
+            initiatorAddress: externalWalletAddress!,
+            initiatorId: myId,
+            targetId: targetUserId,
+          ),
+        );
+      }
+
       return success;
     } on JsonRpcError catch (e) {
       if (e.message != null) {
@@ -712,6 +762,7 @@ mixin BlockChainInteractions {
   Future<bool> particle_buySharesWithReferrer({
     String? referrerAddress,
     required String sharesSubject,
+    required String targetUserId,
     num shareAmount = 1,
     required String chainId,
   }) async {
@@ -728,6 +779,7 @@ mixin BlockChainInteractions {
     if (buyPrice == null) {
       return false;
     }
+
     final sharesSubjectWallet = sharesSubject;
     final myAddress = await Evm.getAddress();
     final contract = getDeployedContract(
@@ -758,6 +810,17 @@ mixin BlockChainInteractions {
       );
       final signature = await Evm.sendTransaction(transaction);
       if (signature.length > 10) {
+        saveNewPayment(
+          event: PaymentEvent(
+            type: PaymentTypes.arenaTicket,
+            targetAddress: sharesSubjectWallet,
+            amount: bigIntWeiToDouble(buyPrice).toString(),
+            initiatorAddress: myAddress,
+            initiatorId: myId,
+            targetId: targetUserId,
+          ),
+        );
+
         return true;
       }
       return false;

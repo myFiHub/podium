@@ -9,6 +9,7 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -113,6 +114,7 @@ class CheckticketController extends GetxController
       avatar: '',
       email: '',
       localWalletAddress: address,
+      savedParticleWalletAddress: address,
       following: [],
       numberOfFollowers: 0,
       savedParticleUserInfo: FirebaseParticleAuthUserInfo(
@@ -362,12 +364,14 @@ class CheckticketController extends GetxController
         sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
         chainId: baseChainId,
+        targetUserId: ticketSeller.userInfo.id,
       );
     } else {
       bought = await ext_buyFirendtechTicket(
         sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
         chainId: baseChainId,
+        targetUserId: ticketSeller.userInfo.id,
       );
     }
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
@@ -403,11 +407,13 @@ class CheckticketController extends GetxController
       bought = await particle_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,
+        targetUserId: ticketSeller.userInfo.id,
       );
     } else {
       bought = await ext_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,
+        targetUserId: ticketSeller.userInfo.id,
       );
       log.d('bought: $bought');
     }

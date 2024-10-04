@@ -364,6 +364,8 @@ class LoginController extends GetxController
     final walletsToSave = particleUser.wallets
         .map((e) =>
             ParticleAuthWallet(address: e.publicAddress, chain: e.chainName))
+        .toList()
+        .where((element) => element.chain == 'evm_chain')
         .toList();
     final particleWalletInfo = FirebaseParticleAuthUserInfo(
       uuid: userId,
@@ -376,6 +378,7 @@ class LoginController extends GetxController
       email: email,
       avatar: avatar,
       localWalletAddress: '',
+      savedParticleWalletAddress: particleWalletInfo.wallets.first.address,
       savedParticleUserInfo: particleWalletInfo,
       following: [],
       numberOfFollowers: 0,
@@ -397,7 +400,6 @@ class LoginController extends GetxController
 
     UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
       user: userToCreate,
-      logintype: loginType,
     );
 
     if (user == null) {

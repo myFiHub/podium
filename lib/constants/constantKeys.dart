@@ -7,4 +7,5 @@ class FireBaseConstants {
   static final versionCheckRef = 'versionCheck/';
   static final jitsiServerAddressRef = "va/";
   static final tags = "tags/";
+  static final cheersAndBooes = "cheersAndBooes/";
 }

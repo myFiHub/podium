@@ -10,6 +10,7 @@ class UserInfoModel {
   late List<String> following;
   String? lowercasename;
   late ParticleUser.UserInfo? localParticleUserInfo;
+  late String savedParticleWalletAddress;
   late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
   late int numberOfFollowers;
   bool isOver18 = false;
@@ -29,6 +30,7 @@ class UserInfoModel {
   static String isOver18Key = 'isOver18';
   static String loginTypeKey = 'loginType';
   static String loginTypeIdentifierKey = 'loginTypeIdentifier';
+  static String savedParticleWalletAddressKey = 'savedParticleWalletAddress';
 
   UserInfoModel({
     required this.id,
@@ -38,6 +40,7 @@ class UserInfoModel {
     required this.localWalletAddress,
     required this.following,
     required this.numberOfFollowers,
+    required this.savedParticleWalletAddress,
     this.lowercasename,
     this.localParticleUserInfo,
     this.savedParticleUserInfo,
@@ -78,7 +81,11 @@ class UserInfoModel {
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
+    savedParticleWalletAddress =
+        json[savedParticleWalletAddressKey] ?? particleWalletAddress;
     loginTypeIdentifier = json[loginTypeIdentifierKey];
+    savedParticleUserInfo =
+        json[savedParticleUserInfoKey] ?? particleWalletAddress;
   }
 
   Map<String, dynamic> toJson() {
@@ -98,6 +105,7 @@ class UserInfoModel {
     data[isOver18Key] = isOver18;
     data[loginTypeKey] = loginType;
     data[loginTypeIdentifierKey] = loginTypeIdentifier;
+    data[savedParticleWalletAddressKey] = savedParticleWalletAddress;
     return data;
   }
 
@@ -111,6 +119,7 @@ class UserInfoModel {
     int? numberOfFollowers,
     String? lowercasename,
     ParticleUser.UserInfo? localParticleUserInfo,
+    String? savedParticleWalletAddress,
     FirebaseParticleAuthUserInfo? savedParticleUserInfo,
     bool? isOver18,
     String? loginType,
@@ -131,6 +140,8 @@ class UserInfoModel {
           savedParticleUserInfo ?? this.savedParticleUserInfo,
       isOver18: isOver18 ?? this.isOver18,
       loginType: loginType ?? this.loginType,
+      savedParticleWalletAddress:
+          savedParticleWalletAddress ?? this.savedParticleWalletAddress,
       loginTypeIdentifier: loginTypeIdentifier ?? this.loginTypeIdentifier,
     );
   }

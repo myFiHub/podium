@@ -29,6 +29,10 @@ UserInfoModel? singleUserParser(dynamic value) {
       id: id,
       avatar: avatar,
       isOver18: isOver18,
+      savedParticleWalletAddress:
+          parsed[FirebaseParticleAuthUserInfo.walletsKey][0]
+                  [ParticleAuthWallet.addressKey] ??
+              '',
       localWalletAddress: value[UserInfoModel.localWalletAddressKey] ?? '',
       following: List.from(value[UserInfoModel.followingKey] ?? []),
       numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,

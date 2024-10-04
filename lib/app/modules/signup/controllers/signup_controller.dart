@@ -70,59 +70,60 @@ class SignUpController extends GetxController with ParticleAuthUtils {
   }
 
   signUp() async {
-    isSigningUp.value = true;
-    final enteredEmail = email.value;
-    final enteredPassword = password.value;
-    final enteredFullName = fullName.value;
-    try {
-      final particleUser = await particleLogin(email.value);
-      if (particleUser != null) {
-        globalController.particleAuthUserInfo.value = particleUser;
-      } else {
-        Get.snackbar('Error', 'Error Signing up');
-        return;
-      }
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: enteredEmail,
-        password: enteredPassword,
-      );
-      final createdUserId = credential.user!.uid;
+    // isSigningUp.value = true;
+    // final enteredEmail = email.value;
+    // final enteredPassword = password.value;
+    // final enteredFullName = fullName.value;
+    // try {
+    //   final particleUser = await particleLogin(email.value);
+    //   if (particleUser != null) {
+    //     globalController.particleAuthUserInfo.value = particleUser;
+    //   } else {
+    //     Get.snackbar('Error', 'Error Signing up');
+    //     return;
+    //   }
+    //   final credential =
+    //       await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    //     email: enteredEmail,
+    //     password: enteredPassword,
+    //   );
+    //   final createdUserId = credential.user!.uid;
 
-      final downloadUrl = await uploadFile(userId: credential.user!.uid);
-      final usersDatabaseReference = FirebaseDatabase.instance
-          .ref('${FireBaseConstants.usersRef}$createdUserId');
+    //   final downloadUrl = await uploadFile(userId: credential.user!.uid);
+    //   final usersDatabaseReference = FirebaseDatabase.instance
+    //       .ref('${FireBaseConstants.usersRef}$createdUserId');
 
-      final UserInfoModel userToCreate = UserInfoModel(
-        id: createdUserId,
-        fullName: enteredFullName,
-        email: enteredEmail,
-        avatar: downloadUrl,
-        localWalletAddress: '',
-        following: [],
-        numberOfFollowers: 0,
-        lowercasename: enteredFullName.toLowerCase(),
-      );
-      await usersDatabaseReference.set(userToCreate.toJson());
-      final LoginController loginController = Get.put(LoginController());
-      loginController.login(
-          manualEmail: enteredEmail,
-          manualPassword: enteredPassword,
-          fromSignUp: true);
-    } on FirebaseAuthException catch (e) {
-      log.e('firebase auth error :' + e.toString());
-      if (e.code == 'email-already-in-use') {
-        Get.snackbar('Error', 'this email is already in use',
-            colorText: Colors.orange);
-      } else {
-        Get.snackbar('Error', 'Something went wrong', colorText: Colors.red);
-      }
-    } on FirebaseException catch (e) {
-      log.e('firebase error :' + e.toString());
-    } catch (e) {
-      log.e('error :' + e.toString());
-    } finally {
-      isSigningUp.value = false;
-    }
+    //   final UserInfoModel userToCreate = UserInfoModel(
+    //     id: createdUserId,
+    //     fullName: enteredFullName,
+    //     email: enteredEmail,
+    //     avatar: downloadUrl,
+    //     savedParticleWalletAddress: ,
+    //     localWalletAddress: '',
+    //     following: [],
+    //     numberOfFollowers: 0,
+    //     lowercasename: enteredFullName.toLowerCase(),
+    //   );
+    //   await usersDatabaseReference.set(userToCreate.toJson());
+    //   final LoginController loginController = Get.put(LoginController());
+    //   loginController.login(
+    //       manualEmail: enteredEmail,
+    //       manualPassword: enteredPassword,
+    //       fromSignUp: true);
+    // } on FirebaseAuthException catch (e) {
+    //   log.e('firebase auth error :' + e.toString());
+    //   if (e.code == 'email-already-in-use') {
+    //     Get.snackbar('Error', 'this email is already in use',
+    //         colorText: Colors.orange);
+    //   } else {
+    //     Get.snackbar('Error', 'Something went wrong', colorText: Colors.red);
+    //   }
+    // } on FirebaseException catch (e) {
+    //   log.e('firebase error :' + e.toString());
+    // } catch (e) {
+    //   log.e('error :' + e.toString());
+    // } finally {
+    //   isSigningUp.value = false;
+    // }
   }
 }

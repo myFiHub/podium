@@ -9,6 +9,7 @@ import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
@@ -96,17 +97,7 @@ mixin FireBaseUtils {
     final user = snapshot.value as dynamic;
     if (user != null) {
       final userValues = user.values.toList()[0];
-      final userInfo = UserInfoModel(
-        fullName: userValues[UserInfoModel.fullNameKey],
-        email: userValues[UserInfoModel.emailKey],
-        id: userValues[UserInfoModel.idKey],
-        isOver18: userValues[UserInfoModel.isOver18Key] ?? false,
-        avatar: userValues[UserInfoModel.avatarUrlKey],
-        localWalletAddress:
-            userValues[UserInfoModel.localWalletAddressKey] ?? '',
-        following: List.from(userValues[UserInfoModel.followingKey] ?? []),
-        numberOfFollowers: userValues[UserInfoModel.numberOfFollowersKey] ?? 0,
-      );
+      final userInfo = singleUserParser(userValues);
       return userInfo;
     } else {
       return null;
@@ -723,46 +714,45 @@ mixin FireBaseUtils {
 
   Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
     required UserInfoModel user,
-    required String logintype,
   }) async {
     try {
-      final databaseRef = FirebaseDatabase.instance
+      final userRef = FirebaseDatabase.instance
           .ref(
             FireBaseConstants.usersRef,
           )
           .child(
             user.id,
           );
-      final snapshot = await databaseRef.get();
+      final snapshot = await userRef.get();
       final userSnapshot = snapshot.value as dynamic;
       if (userSnapshot != null) {
-        analytics.logLogin(loginMethod: logintype);
-
+        final loginType = user.loginType!;
+        analytics.logLogin(loginMethod: loginType);
         final savedLogintype = userSnapshot[UserInfoModel.loginTypeKey];
-        if (savedLogintype != logintype) {
-          databaseRef.child(UserInfoModel.loginTypeKey).set(logintype);
+        if (savedLogintype != loginType) {
+          userRef.child(UserInfoModel.loginTypeKey).set(loginType);
+        }
+        final particleWalletAddress = user.particleWalletAddress;
+        final savedParticleWalletAddress =
+            userSnapshot[UserInfoModel.savedParticleWalletAddressKey];
+        if (savedParticleWalletAddress != particleWalletAddress) {
+          userRef
+              .child(UserInfoModel.savedParticleWalletAddressKey)
+              .set(particleWalletAddress);
         }
         final savedLoginTypeIdentifier =
             userSnapshot[UserInfoModel.loginTypeIdentifierKey];
         if (savedLoginTypeIdentifier != user.loginTypeIdentifier) {
-          databaseRef
+          userRef
               .child(UserInfoModel.loginTypeIdentifierKey)
               .set(user.loginTypeIdentifier);
         }
 
-        final retrievedUser = UserInfoModel(
-          fullName: userSnapshot[UserInfoModel.fullNameKey],
-          email: userSnapshot[UserInfoModel.emailKey],
-          id: userSnapshot[UserInfoModel.idKey],
-          avatar: userSnapshot[UserInfoModel.avatarUrlKey],
-          isOver18: userSnapshot[UserInfoModel.isOver18Key] ?? false,
-          localWalletAddress:
-              userSnapshot[UserInfoModel.localWalletAddressKey] ?? '',
-          following: List.from(userSnapshot[UserInfoModel.followingKey] ?? []),
-          numberOfFollowers:
-              userSnapshot[UserInfoModel.numberOfFollowersKey] ?? 0,
-          lowercasename: userSnapshot[UserInfoModel.lowercasenameKey] ??
-              userSnapshot[UserInfoModel.fullNameKey].toLowerCase(),
+        final UserInfoModel? retrievedUser =
+            singleUserParser(userSnapshot)?.copyWith(
+          loginType: loginType,
+          savedParticleWalletAddress: particleWalletAddress,
+          loginTypeIdentifier: user.loginTypeIdentifier,
         );
 
         final savedParticleUserInfo =
@@ -787,12 +777,14 @@ mixin FireBaseUtils {
                 )
                 .toList(),
           );
-          retrievedUser.savedParticleUserInfo = particleInfo;
+          if (retrievedUser != null) {
+            retrievedUser.savedParticleUserInfo = particleInfo;
+          }
         }
         return retrievedUser;
       } else {
-        databaseRef.set(user.toJson());
-        analytics.logSignUp(signUpMethod: logintype);
+        userRef.set(user.toJson());
+        analytics.logSignUp(signUpMethod: user.loginType!);
         return user;
       }
     } catch (e) {
@@ -830,4 +822,14 @@ mixin FireBaseUtils {
       return [];
     }
   }
+}
+
+Future<bool> saveNewPayment({required PaymentEvent event}) {
+  final databaseRef =
+      FirebaseDatabase.instance.ref(FireBaseConstants.cheersAndBooes);
+  final newEventRef = databaseRef.push();
+  return newEventRef.set(event.toJson()).then((value) => true).catchError((e) {
+    log.e(e);
+    return false;
+  });
 }

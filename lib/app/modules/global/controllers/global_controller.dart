@@ -15,6 +15,7 @@ import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -652,21 +653,7 @@ class GlobalController extends GetxController with FireBaseUtils {
     firebaseUserDbReference.once().then((event) {
       final data = event.snapshot.value as dynamic;
       if (data != null) {
-        final userId = data[UserInfoModel.idKey];
-        final userFullName = data[UserInfoModel.fullNameKey];
-        final userEmail = data[UserInfoModel.emailKey];
-        final userAvatar = data[UserInfoModel.avatarUrlKey];
-        final amIover18 = data[UserInfoModel.isOver18Key] ?? false;
-        final user = UserInfoModel(
-          id: userId,
-          fullName: userFullName,
-          email: userEmail,
-          avatar: userAvatar,
-          isOver18: amIover18,
-          localWalletAddress: data[UserInfoModel.localWalletAddressKey] ?? '',
-          following: List.from(data[UserInfoModel.followingKey] ?? []),
-          numberOfFollowers: data[UserInfoModel.numberOfFollowersKey] ?? 0,
-        );
+        final user = singleUserParser(data);
         completer.complete(user);
       } else {
         completer.completeError("User not found");

@@ -6,13 +6,10 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
-import 'package:podium/app/modules/home/controllers/home_controller.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/models/firebase_group_model.dart';
 
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:rxdart/streams.dart';
 
 class UserProfileParamsKeys {
   static const userInfo = 'userInfo';
@@ -22,7 +19,6 @@ class ProfileController extends GetxController with BlockChainInteractions {
   final userInfo = Rxn<UserInfoModel>();
   final globalController = Get.find<GlobalController>();
   final groupsController = Get.find<GroupsController>();
-  final homeController = Get.find<HomeController>();
   final connectedWallet = ''.obs;
   final isGettingTicketPrice = false.obs;
   final isBuyingArenaTicket = false.obs;
@@ -127,11 +123,13 @@ class ProfileController extends GetxController with BlockChainInteractions {
         bought = await particle_buyFriendTechTicket(
           sharesSubject: preferedAddress,
           chainId: baseChainId,
+          targetUserId: userInfo.value!.id,
         );
       } else {
         bought = await ext_buyFirendtechTicket(
           sharesSubject: preferedAddress,
           chainId: baseChainId,
+          targetUserId: userInfo.value!.id,
         );
       }
       if (bought) {
@@ -167,11 +165,13 @@ class ProfileController extends GetxController with BlockChainInteractions {
         bought = await particle_buySharesWithReferrer(
           sharesSubject: userInfo.value!.defaultWalletAddress,
           chainId: avalancheChainId,
+          targetUserId: userInfo.value!.id,
         );
       } else {
         bought = await ext_buySharesWithReferrer(
           sharesSubject: userInfo.value!.defaultWalletAddress,
           chainId: avalancheChainId,
+          targetUserId: userInfo.value!.id,
         );
       }
       if (bought) {

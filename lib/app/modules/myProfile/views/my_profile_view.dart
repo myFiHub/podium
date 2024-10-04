@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
+import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/constants.dart';
@@ -14,8 +16,6 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-
-import '../controllers/my_profile_controller.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
   const MyProfileView({Key? key}) : super(key: key);
@@ -33,6 +33,9 @@ class MyProfileView extends GetView<MyProfileController> {
             ParticleWalletManager(),
             WalletInfo(),
             WalletConnect(),
+            space10,
+            _Statistics(),
+            space10,
             ToggleShowArchivedGroups(),
             space10,
             BugsAndFeedbacks(),
@@ -610,6 +613,214 @@ class UserInfo extends GetView<GlobalController> {
             )
           ],
         ),
+      );
+    });
+  }
+}
+
+class _Statistics extends GetWidget<MyProfileController> {
+  const _Statistics({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final payments = controller.payments.value;
+      final loading = controller.isGettingPayments.value;
+      if (loading) {
+        return const CircularProgressIndicator();
+      }
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: ColorName.greyText,
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          'Cheers received',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          payments.numberOfCheersReceived.toString(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          'Boos received',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          payments.numberOfBoosReceived.toString(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                space10,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          'Cheers sent',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          payments.numberOfCheersSent.toString(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          'Boos sent',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          payments.numberOfBoosSent.toString(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          space10,
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: ColorName.greyText,
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Column(children: [
+              Text(
+                'Earned',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.green[200],
+                ),
+              ),
+              if (payments.income.entries.isEmpty)
+                Text(
+                  'Nothing yet',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: ColorName.greyText,
+                  ),
+                ),
+              ...payments.income.entries.map(
+                (e) {
+                  final chainInfo = particleChainInfoByChainId(e.key);
+                  final currency = chainInfo.nativeCurrency.symbol;
+                  final chainName = chainInfo.name;
+                  final chainIcon = chainInfo.icon;
+                  return Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                chainName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              space5,
+                              Img(src: chainIcon, size: 20),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                e.value.toString(),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              space5,
+                              Text(
+                                currency,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      space5,
+                      // separetor
+                      if (e.key != payments.income.entries.last.key)
+                        Container(
+                          height: 1,
+                          color: ColorName.greyText,
+                        ),
+                    ],
+                  );
+                },
+              ).toList(),
+            ]),
+          ),
+        ],
       );
     });
   }

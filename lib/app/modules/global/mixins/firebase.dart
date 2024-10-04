@@ -17,7 +17,6 @@ import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 mixin FireBaseUtils {
@@ -46,6 +45,75 @@ mixin FireBaseUtils {
       log.f('Error getting users by ids: $e');
       return [];
     }
+  }
+
+  PaymentEvent? _parseSinglePayment(dynamic value) {
+    try {
+      final payment = PaymentEvent(
+        initiatorAddress: value[PaymentEvent.initiatorAddressKey],
+        targetAddress: value[PaymentEvent.targetAddressKey],
+        groupId: value[PaymentEvent.groupIdKey],
+        memberIds: value[PaymentEvent.memberIdsKey] ?? [],
+        selfCheer: value[PaymentEvent.selfCheerKey],
+        initiatorId: value[PaymentEvent.initiatorIdKey],
+        targetId: value[PaymentEvent.targetIdKey],
+        amount: value[PaymentEvent.amountKey],
+        type: value[PaymentEvent.typeKey],
+        chainId: value[PaymentEvent.chainIdKey],
+      );
+      return payment;
+    } catch (e) {
+      log.e(e);
+      return null;
+    }
+  }
+
+  Future<List<PaymentEvent>> getReceivedPayments(
+      {required String userId}) async {
+    final DatabaseReference _database = FirebaseDatabase.instance.ref();
+    Query query = _database
+        .child(FireBaseConstants.paymentEvents)
+        .orderByChild(PaymentEvent.targetIdKey)
+        .startAt(userId);
+    DataSnapshot snapshot = await query.get();
+    if (snapshot.value != null) {
+      final payments = snapshot.value as dynamic;
+      final List<PaymentEvent> paymentsList = [];
+      payments.forEach((key, value) {
+        final payment = _parseSinglePayment(value);
+        if (payment != null) {
+          paymentsList.add(payment);
+        } else {
+          log.e('Error parsing payment,id: $key');
+        }
+      });
+      return paymentsList;
+    }
+    return [];
+  }
+
+  Future<List<PaymentEvent>> getInitiatedPayments(
+      {required String userId}) async {
+    final DatabaseReference _database = FirebaseDatabase.instance.ref();
+    Query query = _database
+        .child(FireBaseConstants.paymentEvents)
+        .orderByChild(PaymentEvent.initiatorIdKey)
+        .startAt(userId);
+    DataSnapshot snapshot = await query.get();
+    if (snapshot.value != null) {
+      final payments = snapshot.value as dynamic;
+      final List<PaymentEvent> paymentsList = [];
+      payments.forEach((key, value) {
+        final payment = _parseSinglePayment(value);
+        if (payment != null) {
+          paymentsList.add(payment);
+        } else {
+          log.e('Error parsing payment,id: $key');
+        }
+      });
+      return paymentsList;
+    }
+    return [];
   }
 
   // final _deb = Debouncing(duration: const Duration(seconds: 5));
@@ -826,7 +894,7 @@ mixin FireBaseUtils {
 
 Future<bool> saveNewPayment({required PaymentEvent event}) {
   final databaseRef =
-      FirebaseDatabase.instance.ref(FireBaseConstants.cheersAndBooes);
+      FirebaseDatabase.instance.ref(FireBaseConstants.paymentEvents);
   final newEventRef = databaseRef.push();
   return newEventRef.set(event.toJson()).then((value) => true).catchError((e) {
     log.e(e);

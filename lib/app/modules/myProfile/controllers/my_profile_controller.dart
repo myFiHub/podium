@@ -3,20 +3,40 @@ import 'package:get/get.dart';
 import 'package:particle_auth_core/evm.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class MyProfileController extends GetxController with BlockChainInteractions {
+class Payments {
+  int numberOfCheersReceived = 0;
+  int numberOfBoosReceived = 0;
+  int numberOfCheersSent = 0;
+  int numberOfBoosSent = 0;
+  Map<String, double> income = {};
+  Payments(
+      {this.numberOfCheersReceived = 0,
+      this.numberOfBoosReceived = 0,
+      this.numberOfCheersSent = 0,
+      this.numberOfBoosSent = 0,
+      required this.income});
+}
+
+class MyProfileController extends GetxController
+    with BlockChainInteractions, FireBaseUtils {
   final globalController = Get.find<GlobalController>();
   final isParticleActivatedOnFriendTech = false.obs;
   final isExternalWalletActivatedOnFriendTech = false.obs;
   final loadingParticleActivation = false.obs;
   final loadingExternalWalletActivation = false.obs;
-  get liveExternalChainId {
-    // final service=globalController.web3ModalService.
-  }
+  final isGettingPayments = false.obs;
+  final payments = Rx(Payments(
+    income: {},
+  ));
+
   @override
   void onInit() {
     globalController.externalWalletChainId.listen((address) {
@@ -24,8 +44,9 @@ class MyProfileController extends GetxController with BlockChainInteractions {
         checkExternalWalletActivation();
       }
     });
-    checkParticleWalletActivation();
-    checkExternalWalletActivation();
+    _getPayments();
+    // checkParticleWalletActivation();
+    // checkExternalWalletActivation();
     super.onInit();
   }
 
@@ -37,6 +58,48 @@ class MyProfileController extends GetxController with BlockChainInteractions {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _getPayments() async {
+    isGettingPayments.value = true;
+    final (received, paid) = await (
+      getReceivedPayments(
+        userId: myId,
+      ),
+      getInitiatedPayments(
+        userId: myId,
+      )
+    ).wait;
+    final _payments = Payments(
+      numberOfCheersReceived: 0,
+      numberOfBoosReceived: 0,
+      numberOfCheersSent: 0,
+      numberOfBoosSent: 0,
+      income: {},
+    );
+
+    received.forEach((element) {
+      if (element.type == PaymentTypes.cheer) {
+        _payments.numberOfCheersReceived++;
+      } else if (element.type == PaymentTypes.boo) {
+        _payments.numberOfBoosReceived++;
+      }
+      if (_payments.income[element.chainId] == null) {
+        _payments.income[element.chainId] = 0;
+      }
+      _payments.income[element.chainId] =
+          _payments.income[element.chainId]! + double.parse(element.amount);
+    });
+    paid.forEach((element) {
+      if (element.type == PaymentTypes.cheer) {
+        _payments.numberOfCheersSent++;
+      } else if (element.type == PaymentTypes.boo) {
+        _payments.numberOfBoosSent++;
+      }
+    });
+    isGettingPayments.value = false;
+    payments.value = _payments;
+    payments.refresh();
   }
 
   Future<bool> checkParticleWalletActivation({bool? silent}) async {

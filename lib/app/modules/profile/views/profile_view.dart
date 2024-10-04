@@ -30,11 +30,125 @@ class ProfileView extends GetView<ProfileController> {
               _BuyArenaTicketButton(),
               space10,
               _BuyFriendTechTicket(),
+              space10,
+              _Statistics(),
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+class _Statistics extends GetWidget<ProfileController> {
+  const _Statistics({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final payments = controller.payments.value;
+      final loading = controller.isGettingPayments.value;
+      if (loading) {
+        return const SizedBox();
+      }
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 10,
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      'Cheers received',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      payments.numberOfCheersReceived.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text(
+                      'Boos received',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      payments.numberOfBoosReceived.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            space10,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      'Cheers sent',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      payments.numberOfCheersSent.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text(
+                      'Boos sent',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      payments.numberOfBoosSent.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -48,6 +162,7 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
       final isGettingPrice = controller.isGettingTicketPrice.value;
       final isBuyingArenaTicket = controller.isBuyingArenaTicket.value;
       final arenaTicketPrice = controller.arenaTicketPrice.value;
+      final isGettingArenaPrice = controller.loadingArenaPrice.value;
       final numberOfBoughtTicketsByMe =
           controller.mySharesOfArenaFromThisUser.value;
       if (user == null) {
@@ -64,12 +179,26 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Buy Arena ticket ${arenaTicketPrice.toString()} ${particleChainInfoByChainId(avalancheChainId)!.nativeCurrency.symbol}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
+            Row(
+              children: [
+                Text(
+                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${particleChainInfoByChainId(avalancheChainId)!.nativeCurrency.symbol}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (isGettingArenaPrice)
+                  SizedBox(
+                    width: 10,
+                    height: 10,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                else
+                  const SizedBox(width: 10, height: 10),
+              ],
             ),
             if (numberOfBoughtTicketsByMe > 0)
               RichText(
@@ -115,6 +244,7 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
       final isFriendTechActive = controller.isFriendTechActive.value;
       final isGettingPrice = controller.isGettingTicketPrice.value;
       final friendTechPrice = controller.friendTechPrice.value;
+      final isGettingFriendTechPrice = controller.loadingFriendTechPrice.value;
       final isBuyingFriendTechTicket =
           controller.isBuyingFriendTechTicket.value;
       final numberOfBoughtTicketsByMe =
@@ -143,12 +273,26 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
                       color: Colors.red,
                     ),
                   )
-                : Text(
-                    'Buy Friendtech share ${friendTechPrice.toString()} ${particleChainInfoByChainId(baseChainId)!.nativeCurrency.symbol}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                : Row(
+                    children: [
+                      Text(
+                        'Buy Friendtech share ${friendTechPrice.toString()} ${particleChainInfoByChainId(baseChainId)!.nativeCurrency.symbol}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (isGettingFriendTechPrice)
+                        SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      else
+                        const SizedBox(width: 10, height: 10),
+                    ],
                   ),
             if (numberOfBoughtTicketsByMe > 0)
               RichText(
@@ -217,7 +361,7 @@ class UserInfo extends GetWidget<ProfileController> {
             Text(
               user.fullName,
               style: const TextStyle(
-                fontSize: 33,
+                fontSize: 22,
                 fontWeight: FontWeight.w700,
               ),
             ),

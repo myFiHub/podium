@@ -525,6 +525,7 @@ mixin BlockChainInteractions {
               initiatorAddress: myAddress,
               initiatorId: myId,
               targetId: targetUserId,
+              chainId: chainId,
             ),
           );
         }
@@ -622,6 +623,7 @@ mixin BlockChainInteractions {
               initiatorAddress: externalWalletAddress!,
               initiatorId: myId,
               targetId: targetUserId,
+              chainId: chainId,
             ),
           );
           return true;
@@ -699,6 +701,7 @@ mixin BlockChainInteractions {
             initiatorAddress: externalWalletAddress!,
             initiatorId: myId,
             targetId: targetUserId,
+            chainId: chainId,
           ),
         );
       }
@@ -818,9 +821,9 @@ mixin BlockChainInteractions {
             initiatorAddress: myAddress,
             initiatorId: myId,
             targetId: targetUserId,
+            chainId: chainId,
           ),
         );
-
         return true;
       }
       return false;

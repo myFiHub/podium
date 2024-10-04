@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
@@ -72,11 +73,12 @@ chainNameById(String chainId) {
   return name;
 }
 
-ChainInfo.ChainInfo? particleChainInfoByChainId(String chainId) {
+ChainInfo.ChainInfo particleChainInfoByChainId(String chainId) {
   return ChainInfo.ChainInfo.getChain(
-    int.parse(chainId),
-    chainNameById(chainId),
-  );
+        int.parse(chainId),
+        chainNameById(chainId),
+      ) ??
+      movementChainOnParticle;
 }
 
 _friendTechAddress(String chainId) {

@@ -12,6 +12,7 @@ class PaymentEvent {
   String amount;
   String initiatorAddress;
   String initiatorId;
+  String chainId;
   String? groupId;
   bool? selfCheer = false;
   List<String>? memberIds = [];
@@ -25,6 +26,7 @@ class PaymentEvent {
   static String groupIdKey = 'groupId';
   static String selfCheerKey = 'selfCheer';
   static String memberIdsKey = 'memberIds';
+  static String chainIdKey = 'chainId';
 
   PaymentEvent({
     required this.type,
@@ -36,6 +38,7 @@ class PaymentEvent {
     this.groupId,
     this.selfCheer,
     this.memberIds,
+    required this.chainId,
   });
 
   Map<String, dynamic> toJson() {
@@ -49,20 +52,7 @@ class PaymentEvent {
     data[groupIdKey] = groupId;
     data[selfCheerKey] = selfCheer;
     data[memberIdsKey] = memberIds;
+    data[chainIdKey] = chainId;
     return data;
-  }
-
-  factory PaymentEvent.fromJson(Map<String, dynamic> json) {
-    return PaymentEvent(
-      type: json[typeKey],
-      targetAddress: json[targetAddressKey],
-      amount: json[amountKey],
-      initiatorAddress: json[initiatorAddressKey],
-      initiatorId: json[initiatorIdKey],
-      targetId: json[targetIdKey],
-      groupId: json[groupIdKey],
-      selfCheer: json[selfCheerKey] ?? false,
-      memberIds: List<String>.from(json[memberIdsKey] ?? []),
-    );
   }
 }

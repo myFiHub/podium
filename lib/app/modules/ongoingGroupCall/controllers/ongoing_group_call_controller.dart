@@ -12,6 +12,7 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
@@ -429,6 +430,7 @@ class OngoingGroupCallController extends GetxController
         saveNewPayment(
             event: PaymentEvent(
           amount: amount,
+          chainId: movementChainId,
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external
               ? externalWalletAddress!

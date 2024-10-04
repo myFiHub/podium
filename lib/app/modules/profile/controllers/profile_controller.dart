@@ -3,12 +3,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
+import 'package:podium/app/modules/home/controllers/home_controller.dart';
 import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/models/firebase_group_model.dart';
 
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:rxdart/streams.dart';
 
 class UserProfileParamsKeys {
   static const userInfo = 'userInfo';
@@ -17,6 +21,8 @@ class UserProfileParamsKeys {
 class ProfileController extends GetxController with BlockChainInteractions {
   final userInfo = Rxn<UserInfoModel>();
   final globalController = Get.find<GlobalController>();
+  final groupsController = Get.find<GroupsController>();
+  final homeController = Get.find<HomeController>();
   final connectedWallet = ''.obs;
   final isGettingTicketPrice = false.obs;
   final isBuyingArenaTicket = false.obs;
@@ -27,7 +33,6 @@ class ProfileController extends GetxController with BlockChainInteractions {
   final activeFriendTechWallets = Rxn<UserActiveWalletOnFriendtech>();
   final mySharesOfFriendTechFromThisUser = 0.obs;
   final mySharesOfArenaFromThisUser = 0.obs;
-
   @override
   void onInit() {
     final stringedUserInfo = Get.parameters[UserProfileParamsKeys.userInfo]!;
@@ -130,6 +135,14 @@ class ProfileController extends GetxController with BlockChainInteractions {
         );
       }
       if (bought) {
+        final newShares = await particle_getUserShares_friendTech(
+          defaultWallet: userInfo.value!.defaultWalletAddress,
+          particleWallet: userInfo.value!.particleWalletAddress,
+          chainId: baseChainId,
+        );
+        if (newShares != BigInt.zero) {
+          mySharesOfFriendTechFromThisUser.value = newShares.toInt();
+        }
         Get.snackbar('Success', 'Friendtech ticket bought',
             colorText: Colors.green);
       } else {
@@ -162,6 +175,13 @@ class ProfileController extends GetxController with BlockChainInteractions {
         );
       }
       if (bought) {
+        final newShares = await particle_getMyShares_arena(
+          sharesSubject: userInfo.value!.defaultWalletAddress,
+          chainId: avalancheChainId,
+        );
+        if (newShares != null) {
+          mySharesOfArenaFromThisUser.value = newShares.toInt();
+        }
         Get.snackbar('Success', 'Arena ticket bought', colorText: Colors.green);
       } else {
         Get.snackbar('Error', 'Error buying Arena ticket',

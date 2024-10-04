@@ -3,7 +3,7 @@
 part of 'groupsParser_squadran.dart';
 
 // **************************************************************************
-// Generator: WorkerGenerator 6.0.3
+// Generator: WorkerGenerator 6.0.6
 // **************************************************************************
 
 /// WorkerService class for GroupsParser
@@ -47,8 +47,7 @@ base class GroupsParserWorker extends Worker implements GroupsParser {
   @override
   Future<Map<String, FirebaseGroup>> parseGroups(
           [dynamic data, String? myId]) =>
-      send(_$GroupsParserWorkerService._$parseGroupsId,
-              args: [data, myId], inspectRequest: true, inspectResponse: true)
+      send(_$GroupsParserWorkerService._$parseGroupsId, args: [data, myId])
           .then(_$X.$5);
 }
 

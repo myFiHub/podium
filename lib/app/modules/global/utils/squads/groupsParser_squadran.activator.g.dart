@@ -1,7 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
-// Generator: WorkerGenerator 6.0.3
+// Generator: WorkerGenerator 6.0.6
 // **************************************************************************
 
 import 'groupsParser_squadran.stub.g.dart'
@@ -9,4 +9,4 @@ import 'groupsParser_squadran.stub.g.dart'
     if (dart.library.io) 'groupsParser_squadran.vm.g.dart';
 
 /// Service activator for GroupsParser
-final $GroupsParserActivator = $getGroupsParserActivator;
+const $GroupsParserActivator = $getGroupsParserActivator;

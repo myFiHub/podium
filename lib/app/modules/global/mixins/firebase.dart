@@ -157,6 +157,7 @@ mixin FireBaseUtils {
     if (startedToTalkAt != null && isTalking) {
       await startedToTalkAtRef.set(startedToTalkAt);
     }
+
     await databaseRef.set(isTalking);
   }
 

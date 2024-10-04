@@ -176,15 +176,15 @@ class OngoingGroupCallController extends GetxController
     }
   }
 
-  updateMyLastTalkingTime() {
+  updateMyLastTalkingTime() async {
     final myUserId = globalController.currentUserInfo.value?.id;
     final group = groupCallController.group.value;
     if (group == null) {
       return;
     }
     final canSpeak = canISpeak(group: group);
-    if (myUserId != null && canSpeak) {
-      setIsTalkingInSession(
+    if (myUserId != null && canSpeak && amIMuted.value == false) {
+      await setIsTalkingInSession(
         sessionId: firebaseSession.value!.id,
         userId: myUserId,
         isTalking: true,
@@ -193,16 +193,13 @@ class OngoingGroupCallController extends GetxController
     }
   }
 
-  stopTheTimer() {
+  stopTheTimer() async {
+    await setIsTalkingInSession(
+      sessionId: firebaseSession.value!.id,
+      userId: myId,
+      isTalking: false,
+    );
     timer?.cancel();
-    final myUserId = globalController.currentUserInfo.value?.id;
-    if (myUserId != null) {
-      setIsTalkingInSession(
-        sessionId: firebaseSession.value!.id,
-        userId: myUserId,
-        isTalking: false,
-      );
-    }
   }
 
   Future<void> addToTimer(
@@ -440,7 +437,6 @@ class OngoingGroupCallController extends GetxController
     if (muted) {
       stopTheTimer();
       amIMuted.value = true;
-      jitsiMeet.setAudioMuted(muted);
       talkTimer.endTimer();
       final elapsed = talkTimer.timeElapsedInSeconds;
       if (elapsed > 0) {

@@ -26,21 +26,21 @@ DeployedContract? getDeployedContract(
   switch (contract) {
     case Contracts.starsArena:
       {
-        if (starsArenaAddress(chainId) != ZERO_ADDRESS) {
+        if (_starsArenaAddress(chainId) != ZERO_ADDRESS) {
           deployedContract = starsArenaContract(chainId);
         }
       }
       break;
     case Contracts.cheerboo:
       {
-        if (cheerBooAddress(chainId) != ZERO_ADDRESS) {
+        if (_cheerBooAddress(chainId) != ZERO_ADDRESS) {
           deployedContract = cheerBooContract(chainId);
         }
       }
       break;
     case Contracts.friendTech:
       {
-        if (friendTechAddress(chainId) != ZERO_ADDRESS) {
+        if (_friendTechAddress(chainId) != ZERO_ADDRESS) {
           deployedContract = friendTechContract(chainId);
         }
       }
@@ -81,7 +81,7 @@ ChainInfo.ChainInfo particleChainInfoByChainId(String chainId) {
       movementChainOnParticle;
 }
 
-String friendTechAddress(String chainId) {
+String _friendTechAddress(String chainId) {
   final aadress = Environment.Env.friendtechAddress(chainId);
   if (aadress == null || aadress.isEmpty) {
     return ZERO_ADDRESS;
@@ -92,12 +92,12 @@ String friendTechAddress(String chainId) {
 friendTechContract(String chainId) {
   return _getContract(
     abi: FriendTechContract.abi,
-    address: friendTechAddress(chainId),
+    address: _friendTechAddress(chainId),
     name: "FriendtechSharesV1",
   );
 }
 
-String starsArenaAddress(String chainId) {
+String _starsArenaAddress(String chainId) {
   // we should call the proxy contract for StarsArena, since StarsArena is upgradeable
   final address = Environment.Env.starsArenaProxyAddress(particleChianId);
   if (address == null || address.isEmpty) {
@@ -107,7 +107,7 @@ String starsArenaAddress(String chainId) {
 }
 
 DeployedContract? starsArenaContract(String chainId) {
-  final starsArenaAddressString = starsArenaAddress(chainId);
+  final starsArenaAddressString = _starsArenaAddress(chainId);
   final contract = _getContract(
     abi: StarsArenaSmartContract.abi,
     address: starsArenaAddressString,
@@ -127,7 +127,7 @@ DeployedContract _getContract(
   );
 }
 
-String cheerBooAddress(String chainId) {
+String _cheerBooAddress(String chainId) {
   final address = Environment.Env.cheerBooAddress(externalWalletChianId);
   if (address == null || address.isEmpty) {
     return ZERO_ADDRESS;
@@ -136,7 +136,7 @@ String cheerBooAddress(String chainId) {
 }
 
 DeployedContract? cheerBooContract(String chainId) {
-  final cheerBooAddressString = cheerBooAddress(chainId);
+  final cheerBooAddressString = _cheerBooAddress(chainId);
   return _getContract(
     abi: CheerBoo.abi,
     address: cheerBooAddressString,

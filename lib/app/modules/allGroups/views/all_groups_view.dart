@@ -32,13 +32,16 @@ class AllGroupsView extends GetView<AllGroupsController> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            Input(
-              hintText: "search a room",
-              initialValue: controller.searchValue.value,
-              autofocus: false,
-              onChanged: (v) {
-                controller.search(v);
-              },
+            SizedBox(
+              height: 70,
+              child: Input(
+                hintText: "search a room",
+                initialValue: controller.searchValue.value,
+                autofocus: false,
+                onChanged: (v) {
+                  controller.search(v);
+                },
+              ),
             ),
             Expanded(
               child: Container(

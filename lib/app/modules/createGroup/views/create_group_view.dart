@@ -116,7 +116,7 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text(
-                  'Schedule Room',
+                  'Scheduled Room',
                   style: TextStyle(
                     color: Colors.grey[400],
                     fontSize: 18,

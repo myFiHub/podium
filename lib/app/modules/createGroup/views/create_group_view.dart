@@ -8,6 +8,7 @@ import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -66,13 +67,11 @@ class _SelectPicture extends GetWidget<CreateGroupController> {
             Obx(
               () {
                 final selectedFile = controller.fileLocalAddress.value;
-                final name = controller.groupName.value;
                 return Column(
                   children: [
                     selectedFile == ''
                         ? Img(
-                            src: '',
-                            alt: name.isEmpty ? myUser.fullName : name,
+                            src: Constants.logoUrl,
                             size: 100,
                           )
                         : GFAvatar(

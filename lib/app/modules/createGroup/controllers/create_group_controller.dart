@@ -212,7 +212,7 @@ class CreateGroupController extends GetxController
       } else {
         Get.snackbar(
           'Error',
-          "Addredss isn't yet active on FriendTech",
+          "Address isn't yet active on FriendTech",
           colorText: Colors.orange,
         );
       }
@@ -226,8 +226,9 @@ class CreateGroupController extends GetxController
     final list = ticketPermissiontype == TicketPermissionType.speak
         ? selectedUsersToBuyticketFrom_ToSpeak
         : selectedUsersToBuyTicketFrom_ToAccessRoom;
-    if (list.contains(user)) {
-      list.remove(user);
+    final usersMap = list.map((e) => e.user.id).toList();
+    if (usersMap.contains(user.id)) {
+      list.removeWhere((e) => e.user.id == user.id);
     } else {
       final addedAddress = await checkIfUserCanBeAddedToList(
         user: user,

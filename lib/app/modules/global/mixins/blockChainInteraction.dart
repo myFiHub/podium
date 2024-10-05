@@ -339,16 +339,6 @@ mixin BlockChainInteractions {
     final parameters = [sellerAddress, buyerWalletAddress];
     const abiJson = FriendTechContract.abi;
     final abiJsonString = jsonEncode(abiJson);
-    if (externalWalletChianId != '' &&
-        externalWalletChianId != chainId &&
-        externalWalletAddress != null &&
-        externalWalletAddress!.isNotEmpty) {
-      Get.snackbar(
-        "Could't check external wallet address",
-        "Please switch to ${chainNameById(chainId)} chain",
-        colorText: Colors.red,
-      );
-    }
 
     try {
       final results = await Future.wait([

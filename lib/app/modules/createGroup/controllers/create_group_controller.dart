@@ -17,6 +17,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -409,7 +410,7 @@ class CreateGroupController extends GetxController
     final accessType = roomAccessType.value;
     final speakerType = roomSpeakerType.value;
     final id = Uuid().v4();
-    final imageUrl = await uploadFile(groupId: id);
+    String imageUrl = await uploadFile(groupId: id);
 
     await groupsController.createGroup(
       id: id,

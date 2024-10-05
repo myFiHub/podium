@@ -108,7 +108,9 @@ class SingleGroup extends StatelessWidget {
                         Row(
                           children: [
                             Img(
-                              src: group.imageUrl ?? '',
+                              src: Uri.parse(group.imageUrl ?? "").isAbsolute
+                                  ? group.imageUrl!
+                                  : Constants.logoUrl,
                               alt: group.name,
                             ),
                             space10,

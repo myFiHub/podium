@@ -211,11 +211,11 @@ class ProfileController extends GetxController
       }
       if (bought) {
         mySharesOfFriendTechFromThisUser.value++;
-        Get.snackbar('Success', 'Friendtech ticket bought',
+        Get.snackbar('Success', 'Bought Friendtech Key ',
             colorText: Colors.green);
         getFriendTechPriceAndMyShare(delay: 5);
       } else {
-        Get.snackbar('Error', 'Error buying Friendtech ticket',
+        Get.snackbar('Error', 'Error buying Friendtech key',
             colorText: Colors.red);
       }
     } catch (e) {

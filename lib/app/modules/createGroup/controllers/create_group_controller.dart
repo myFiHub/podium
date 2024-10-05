@@ -189,22 +189,30 @@ class CreateGroupController extends GetxController
         roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
-  toggleAddressForSelectedList(
-      String address, String ticketPermissionType) async {
+  toggleAddressForSelectedList({
+    required String address,
+    required String ticketPermissionType,
+  }) async {
     final list = ticketPermissionType == TicketPermissionType.speak
         ? addressesToAddForSpeaking
         : addressesToAddForEntering;
+    final ticketType = ticketPermissionType == TicketPermissionType.speak
+        ? roomSpeakerType.value
+        : roomAccessType.value;
     if (list.contains(address)) {
       list.remove(address);
     } else {
       if (!loadingAddresses.contains(address)) {
         loadingAddresses.add(address);
       }
-      final isActive = (await particle_friendTech_getActiveUserWallets(
-        particleAddress: address,
-        chainId: baseChainId,
-      ))
-          .hasActiveWallet;
+      final isActive =
+          ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
+              ? true
+              : (await particle_friendTech_getActiveUserWallets(
+                  particleAddress: address,
+                  chainId: baseChainId,
+                ))
+                  .hasActiveWallet;
       // remove from loading
       loadingAddresses.remove(address);
       if (isActive) {
@@ -219,25 +227,31 @@ class CreateGroupController extends GetxController
     }
   }
 
-  toggleUserToSelectedList(
-    UserInfoModel user,
-    String ticketPermissiontype,
-  ) async {
+  toggleUserToSelectedList({
+    required UserInfoModel user,
+    required String ticketPermissiontype,
+  }) async {
     final list = ticketPermissiontype == TicketPermissionType.speak
         ? selectedUsersToBuyticketFrom_ToSpeak
         : selectedUsersToBuyTicketFrom_ToAccessRoom;
+    final ticketType = ticketPermissiontype == TicketPermissionType.speak
+        ? roomSpeakerType.value
+        : roomAccessType.value;
     final usersMap = list.map((e) => e.user.id).toList();
     if (usersMap.contains(user.id)) {
       list.removeWhere((e) => e.user.id == user.id);
     } else {
-      final addedAddress = await checkIfUserCanBeAddedToList(
-        user: user,
-        ticketPermissionType: ticketPermissiontype,
-      );
-      if (addedAddress != null) {
+      final activeAddress =
+          ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
+              ? user.defaultWalletAddress
+              : await checkIfUserCanBeAddedToList(
+                  user: user,
+                  ticketPermissionType: ticketPermissiontype,
+                );
+      if (activeAddress != null) {
         list.add(TicketSellersListMember(
           user: user,
-          activeAddress: addedAddress,
+          activeAddress: activeAddress,
         ));
       }
     }
@@ -437,7 +451,9 @@ class CreateGroupController extends GetxController
     isCreatingNewGroup.value = false;
   }
 
-  openSelectTicketBottomSheet({required String buyTicketToGetPermisionFor}) {
+  openSelectTicketBottomSheet({
+    required String buyTicketToGetPermisionFor,
+  }) {
     searchValueForSeletTickets.value = "";
     Get.dialog(
       SelectUsersToBuyTicketFromBottomSheetContent(
@@ -578,13 +594,17 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       if (buyTicketToGetPermisionFor ==
                                           TicketPermissionType.speak) {
                                         controller.toggleAddressForSelectedList(
-                                            clipboardText,
-                                            TicketPermissionType.speak);
+                                          address: clipboardText,
+                                          ticketPermissionType:
+                                              TicketPermissionType.speak,
+                                        );
                                       } else if (buyTicketToGetPermisionFor ==
                                           TicketPermissionType.access) {
                                         controller.toggleAddressForSelectedList(
-                                            clipboardText,
-                                            TicketPermissionType.access);
+                                          address: clipboardText,
+                                          ticketPermissionType:
+                                              TicketPermissionType.access,
+                                        );
                                       }
                                     } else {
                                       inputController.text = clipboardText;
@@ -603,13 +623,17 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       if (buyTicketToGetPermisionFor ==
                                           TicketPermissionType.speak) {
                                         controller.toggleAddressForSelectedList(
-                                            searchValue,
-                                            TicketPermissionType.speak);
+                                          address: searchValue,
+                                          ticketPermissionType:
+                                              TicketPermissionType.speak,
+                                        );
                                       } else if (buyTicketToGetPermisionFor ==
                                           TicketPermissionType.access) {
                                         controller.toggleAddressForSelectedList(
-                                            searchValue,
-                                            TicketPermissionType.access);
+                                          address: searchValue,
+                                          ticketPermissionType:
+                                              TicketPermissionType.access,
+                                        );
                                       }
                                       controller.searchUsers('');
                                       inputController.clear();
@@ -765,8 +789,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                         onChanged: (v) {
                                           if (element.user != null) {
                                             controller.toggleUserToSelectedList(
-                                              element.user!,
-                                              buyTicketToGetPermisionFor,
+                                              user: element.user!,
+                                              ticketPermissiontype:
+                                                  buyTicketToGetPermisionFor,
                                             );
                                             return;
                                           }

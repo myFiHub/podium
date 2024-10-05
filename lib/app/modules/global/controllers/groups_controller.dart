@@ -25,18 +25,36 @@ import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-import 'package:uuid/uuid.dart';
+import 'package:ably_flutter/ably_flutter.dart' as ably;
+import 'package:podium/env.dart';
 
 class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
+  final groupChannels = Rx<Map<String, ably.RealtimeChannel>>({});
   final groups = Rx<Map<String, FirebaseGroup>>({});
   final gettingAllGroups = true.obs;
   StreamSubscription<DatabaseEvent>? subscription;
+  final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
 
   @override
   void onInit() {
     super.onInit();
+    realtimeInstance.connection
+        .on(ably.ConnectionEvent.connected)
+        .listen((ably.ConnectionStateChange stateChange) async {
+      switch (stateChange.current) {
+        case ably.ConnectionState.connected:
+          log.d('Connected to Ably!');
+          break;
+        case ably.ConnectionState.failed:
+          log.d('The connection to Ably failed.');
+          // Failed connection
+          break;
+        default:
+          break;
+      }
+    });
 
     globalController.loggedIn.listen((loggedIn) {
       getRealtimeGroups(loggedIn);
@@ -85,25 +103,6 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     );
   }
 
-  getAllGroupsFromFirebase() async {
-    final databaseReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
-    final snapShot = await databaseReference.get();
-    final data = snapShot.value as Map<dynamic, dynamic>?;
-    if (data != null) {
-      try {
-        final Map<String, FirebaseGroup> groupsMap = await groupsParser(data);
-        if (globalController.currentUserInfo.value != null) {
-          final myUser = globalController.currentUserInfo.value!;
-          final myId = myUser.id;
-          groups.value = getGroupsVisibleToMe(groupsMap, myId);
-        }
-      } catch (e) {
-        log.e(e);
-      }
-    }
-  }
-
   getAllGroups() async {
     gettingAllGroups.value = true;
     final databaseReference =
@@ -127,6 +126,12 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       final myUser = globalController.currentUserInfo.value!;
       final myId = myUser.id;
       groups.value = getGroupsVisibleToMe(groupsMap, myId);
+      groups.value.values.forEach((element) {
+        if (groupChannels.value[element.id] == null) {
+          final channel = realtimeInstance.channels.get(element.id);
+          groupChannels.value[element.id] = channel;
+        }
+      });
     }
   }
 

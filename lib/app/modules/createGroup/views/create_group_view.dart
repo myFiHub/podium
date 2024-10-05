@@ -30,7 +30,9 @@ class CreateGroupView extends GetView<CreateGroupController> {
                 _RoomNameInput(),
                 space5,
                 _SubjectInput(),
-                space5,
+                SizedBox(
+                  height: 8,
+                ),
                 _TagsInput(),
                 _SelectRoomAccessType(),
                 space10,

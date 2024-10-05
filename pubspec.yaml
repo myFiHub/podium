@@ -15,6 +15,7 @@ dependencies:
   share_plus: ^10.0.2
   app_links: ^6.3.2
   fl_toast: ^3.2.0
+  ably_flutter: ^1.2.34
   floating_draggable_widget: ^2.1.5
   dropdown_button2: ^2.3.9
   firebase_core: ^3.6.0

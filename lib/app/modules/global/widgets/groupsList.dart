@@ -325,8 +325,7 @@ class ScheduledBanner extends StatelessWidget {
           return Positioned(
             right: 5,
             top: 8,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            child: IgnorePointer(
               child: Container(
                 foregroundDecoration: RotatedCornerDecoration.withColor(
                   color: isStarted ? Colors.green : Colors.red,

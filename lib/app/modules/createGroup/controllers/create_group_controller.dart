@@ -412,22 +412,27 @@ class CreateGroupController extends GetxController
     final id = Uuid().v4();
     String imageUrl = await uploadFile(groupId: id);
 
-    await groupsController.createGroup(
-      id: id,
-      imageUrl: imageUrl,
-      name: groupName.value,
-      accessType: accessType,
-      speakerType: speakerType,
-      subject: subject,
-      tags: tags.value,
-      adultContent: newGroupHasAdultContent.value,
-      requiredTicketsToAccess: selectedUsersToBuyTicketFrom_ToAccessRoom.value,
-      requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
-      requiredAddressesToEnter: addressesToAddForEntering.value,
-      requiredAddressesToSpeak: addressesToAddForSpeaking.value,
-      scheduledFor: scheduledFor.value,
-      alarmId: alarmId,
-    );
+    try {
+      await groupsController.createGroup(
+        id: id,
+        imageUrl: imageUrl,
+        name: groupName.value,
+        accessType: accessType,
+        speakerType: speakerType,
+        subject: subject,
+        tags: tags.value,
+        adultContent: newGroupHasAdultContent.value,
+        requiredTicketsToAccess:
+            selectedUsersToBuyTicketFrom_ToAccessRoom.value,
+        requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
+        requiredAddressesToEnter: addressesToAddForEntering.value,
+        requiredAddressesToSpeak: addressesToAddForSpeaking.value,
+        scheduledFor: scheduledFor.value,
+        alarmId: alarmId,
+      );
+      // preventing from creating the same name if controller is not deleted
+      groupName.value = "";
+    } catch (e) {}
     isCreatingNewGroup.value = false;
   }
 

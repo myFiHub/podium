@@ -16,12 +16,20 @@ class AllGroupsController extends GetxController with FireBaseUtils {
   void onInit() {
     searchedGroups.value =
         getGroupsVisibleToMe(groupsController.groups.value, myId);
+    groupsController.groups.listen((event) {
+      search(searchValue.value);
+    });
     super.onInit();
   }
 
   @override
   void onReady() {
     super.onReady();
+  }
+
+  Future<void> refresh() async {
+    await groupsController.getAllGroups();
+    search(searchValue.value);
   }
 
   @override

@@ -104,6 +104,32 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     }
   }
 
+  getAllGroups() async {
+    gettingAllGroups.value = true;
+    final databaseReference =
+        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
+    final results = await databaseReference.once();
+    final data = results.snapshot.value as Map<dynamic, dynamic>?;
+    if (data != null) {
+      try {
+        await _parseAndSetGroups(data);
+      } catch (e) {
+        log.e(e);
+      } finally {
+        gettingAllGroups.value = false;
+      }
+    }
+  }
+
+  _parseAndSetGroups(Map<dynamic, dynamic> data) async {
+    final Map<String, FirebaseGroup> groupsMap = await groupsParser(data);
+    if (globalController.currentUserInfo.value != null) {
+      final myUser = globalController.currentUserInfo.value!;
+      final myId = myUser.id;
+      groups.value = getGroupsVisibleToMe(groupsMap, myId);
+    }
+  }
+
   getRealtimeGroups(bool loggedIn) {
     if (loggedIn) {
       gettingAllGroups.value = true;
@@ -113,23 +139,22 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
         final data = event.snapshot.value as Map<dynamic, dynamic>?;
         if (data != null) {
           try {
-            final myUser = globalController.currentUserInfo.value!;
-            final myId = myUser.id;
-            final groupsMap = await groupsParser(data);
-            groups.value = getGroupsVisibleToMe(groupsMap, myId);
-            gettingAllGroups.value = false;
+            await _parseAndSetGroups(data);
           } catch (e) {
             log.e(e);
+          } finally {
+            gettingAllGroups.value = false;
           }
         }
       });
     } else {
-      subscription?.cancel();
+      // subscription?.cancel();
     }
   }
 
   createGroup({
     required String name,
+    required String id,
     required String accessType,
     required String speakerType,
     required String subject,
@@ -141,12 +166,12 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     required List<String> tags,
     required int scheduledFor,
     required int alarmId,
+    String? imageUrl,
   }) async {
-    final newGroupId = Uuid().v4();
     final firebaseGroupsReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + newGroupId);
-    final firebaseSessionReference = FirebaseDatabase.instance
-        .ref(FireBaseConstants.sessionsRef + newGroupId);
+        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + id);
+    final firebaseSessionReference =
+        FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + id);
     final myUser = globalController.currentUserInfo.value!;
     final creator = FirebaseGroupCreator(
       id: myUser.id,
@@ -155,7 +180,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       avatar: myUser.avatar,
     );
     final group = FirebaseGroup(
-      id: newGroupId,
+      id: id,
+      imageUrl: imageUrl,
       name: name,
       creator: creator,
       accessType: accessType,
@@ -194,11 +220,11 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
         ...tags.map((tag) => saveNewTagIfNeeded(tag: tag, group: group)),
       ]);
 
-      groups.value![newGroupId] = group;
+      groups.value![id] = group;
       final newFirebaseSession = FirebaseSession(
         name: name,
         createdBy: myUser.id,
-        id: newGroupId,
+        id: id,
         accessType: group.accessType,
         speakerType: group.speakerType,
         subject: group.subject,
@@ -219,13 +245,18 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       );
       final jsoned = newFirebaseSession.toJson();
       await firebaseSessionReference.set(jsoned);
+      GroupsController groupsController = Get.find();
+      groupsController.groups.value.addAll(
+        {id: group},
+      );
+      groupsController.groups.refresh();
       joinGroupAndOpenGroupDetailPage(
-        groupId: newGroupId,
+        groupId: id,
         openTheRoomAfterJoining: group.scheduledFor == 0 ||
             group.scheduledFor < DateTime.now().millisecondsSinceEpoch,
       );
     } catch (e) {
-      deleteGroup(groupId: newGroupId);
+      deleteGroup(groupId: id);
       Get.snackbar("Error", "Failed to create group");
       log.f("Error creating group: $e");
     }

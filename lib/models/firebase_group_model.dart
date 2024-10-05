@@ -30,6 +30,7 @@ class FirebaseGroup {
   String id;
   FirebaseGroupCreator creator;
   List<String> members;
+  String? imageUrl;
   Map<String, InvitedMember> invitedMembers = {};
   String? accessType;
   String? speakerType;
@@ -64,6 +65,7 @@ class FirebaseGroup {
   static String tagsKey = 'tags';
   static String scheduledForKey = 'ScheduledFor';
   static String alarmIdKey = 'alarmId';
+  static String imageUrlKey = 'imageUrl';
 
   FirebaseGroup({
     required this.name,
@@ -85,6 +87,7 @@ class FirebaseGroup {
     this.tags = const [],
     this.scheduledFor = 0,
     this.alarmId = 0,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toJson() {
@@ -110,6 +113,7 @@ class FirebaseGroup {
     data[requiredAddressesToSpeakKey] = requiredAddressesToSpeak;
     data[scheduledForKey] = scheduledFor;
     data[alarmIdKey] = alarmId;
+    data[imageUrlKey] = imageUrl;
     return data;
   }
 }

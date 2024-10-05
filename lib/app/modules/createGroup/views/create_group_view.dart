@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -21,18 +25,19 @@ class CreateGroupView extends GetView<CreateGroupController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                RoomNameInput(),
-                SubjectInput(),
-                TagsInput(),
-                SelectRoomAccessType(),
+                _SelectPicture(),
+                _RoomNameInput(),
+                _SubjectInput(),
+                _TagsInput(),
+                _SelectRoomAccessType(),
                 space10,
-                SelectRoomSpeakerType(),
+                _SelectRoomSpeakerType(),
                 space10,
-                ScheduleToggle(),
+                _ScheduleToggle(),
                 space10,
-                AdultsCheckbox(),
+                _AdultsCheckbox(),
                 space10,
-                CreateButton(),
+                _CreateButton(),
               ],
             ),
           ),
@@ -42,8 +47,57 @@ class CreateGroupView extends GetView<CreateGroupController> {
   }
 }
 
-class ScheduleToggle extends GetView<CreateGroupController> {
-  const ScheduleToggle({super.key});
+class _SelectPicture extends GetWidget<CreateGroupController> {
+  const _SelectPicture({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: GestureDetector(
+        onTap: () {
+          controller.pickImage();
+        },
+        child: Column(
+          children: [
+            space10,
+            Obx(
+              () {
+                final selectedFile = controller.fileLocalAddress.value;
+                final name = controller.groupName.value;
+                return Column(
+                  children: [
+                    selectedFile == ''
+                        ? Img(
+                            src: '',
+                            alt: name.isEmpty ? myUser.fullName : name,
+                          )
+                        : GFAvatar(
+                            backgroundImage: FileImage(File(selectedFile)),
+                            shape: GFAvatarShape.circle,
+                            radius: 50.0,
+                          ),
+                    Text(
+                      'Select Picture',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ScheduleToggle extends GetView<CreateGroupController> {
+  const _ScheduleToggle({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -112,8 +166,8 @@ millisecondsToFormattedDateWithTime(int milliseconds) {
   return '$day/$month/$year $hour:$minute';
 }
 
-class TagsInput extends GetWidget<CreateGroupController> {
-  const TagsInput({
+class _TagsInput extends GetWidget<CreateGroupController> {
+  const _TagsInput({
     super.key,
   });
 
@@ -127,8 +181,8 @@ class TagsInput extends GetWidget<CreateGroupController> {
   }
 }
 
-class SubjectInput extends GetWidget<CreateGroupController> {
-  const SubjectInput({
+class _SubjectInput extends GetWidget<CreateGroupController> {
+  const _SubjectInput({
     super.key,
   });
 
@@ -143,8 +197,8 @@ class SubjectInput extends GetWidget<CreateGroupController> {
   }
 }
 
-class RoomNameInput extends GetWidget<CreateGroupController> {
-  const RoomNameInput({
+class _RoomNameInput extends GetWidget<CreateGroupController> {
+  const _RoomNameInput({
     super.key,
   });
 
@@ -158,8 +212,8 @@ class RoomNameInput extends GetWidget<CreateGroupController> {
   }
 }
 
-class CreateButton extends GetWidget<CreateGroupController> {
-  const CreateButton({
+class _CreateButton extends GetWidget<CreateGroupController> {
+  const _CreateButton({
     super.key,
   });
 
@@ -192,8 +246,8 @@ class CreateButton extends GetWidget<CreateGroupController> {
   }
 }
 
-class AdultsCheckbox extends GetView<CreateGroupController> {
-  const AdultsCheckbox({
+class _AdultsCheckbox extends GetView<CreateGroupController> {
+  const _AdultsCheckbox({
     super.key,
   });
 
@@ -226,8 +280,8 @@ class AdultsCheckbox extends GetView<CreateGroupController> {
   }
 }
 
-class SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
-  const SelectRoomSpeakerType({
+class _SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
+  const _SelectRoomSpeakerType({
     super.key,
   });
 
@@ -306,8 +360,8 @@ class SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
   }
 }
 
-class SelectRoomAccessType extends GetWidget<CreateGroupController> {
-  const SelectRoomAccessType({
+class _SelectRoomAccessType extends GetWidget<CreateGroupController> {
+  const _SelectRoomAccessType({
     super.key,
   });
 

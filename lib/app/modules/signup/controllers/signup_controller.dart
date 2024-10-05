@@ -20,9 +20,9 @@ class SignUpController extends GetxController with ParticleAuthUtils {
   final email = ''.obs;
   final password = ''.obs;
   final confirmPassword = ''.obs;
-  final fileLocalAddress = ''.obs;
   final avatarSelectError = ''.obs;
   late File selectedFile;
+  final fileLocalAddress = ''.obs;
   final ImagePicker _picker = ImagePicker();
 
   @override

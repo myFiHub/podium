@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -18,52 +17,57 @@ class AllGroupsView extends GetView<AllGroupsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 20),
-          const Text(
-            "All Rooms",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Input(
-            hintText: "search a room",
-            initialValue: controller.searchValue.value,
-            autofocus: false,
-            onChanged: (v) {
-              controller.search(v);
-            },
-          ),
-          Expanded(
-            child: Container(
-              child: AllGroupsList(),
-            ),
-          ),
-          Button(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Create Room'),
-                  const SizedBox(width: 10),
-                  const Icon(Icons.add, color: Colors.white, size: 24),
-                ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await controller.refresh();
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              "All Rooms",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
               ),
-              shape: ButtonShape.pills,
-              type: ButtonType.gradient,
-              onPressed: () {
-                Navigate.to(
-                  type: NavigationTypes.toNamed,
-                  route: Routes.CREATE_GROUP,
-                );
-              }),
-          space10,
-          space10,
-        ],
+            ),
+            Input(
+              hintText: "search a room",
+              initialValue: controller.searchValue.value,
+              autofocus: false,
+              onChanged: (v) {
+                controller.search(v);
+              },
+            ),
+            Expanded(
+              child: Container(
+                child: AllGroupsList(),
+              ),
+            ),
+            Button(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Create Room'),
+                    const SizedBox(width: 10),
+                    const Icon(Icons.add, color: Colors.white, size: 24),
+                  ],
+                ),
+                shape: ButtonShape.pills,
+                type: ButtonType.gradient,
+                onPressed: () {
+                  Navigate.to(
+                    type: NavigationTypes.toNamed,
+                    route: Routes.CREATE_GROUP,
+                  );
+                }),
+            space10,
+            space10,
+          ],
+        ),
       ),
     );
   }

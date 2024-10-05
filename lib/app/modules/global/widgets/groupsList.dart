@@ -108,8 +108,8 @@ class SingleGroup extends StatelessWidget {
                         Row(
                           children: [
                             Img(
-                              src: creatorAvatar,
-                              alt: group.creator.fullName,
+                              src: group.imageUrl ?? '',
+                              alt: group.name,
                             ),
                             space10,
                             Column(

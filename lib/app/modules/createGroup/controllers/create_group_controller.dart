@@ -1,14 +1,18 @@
+import 'dart:io';
 import 'dart:math';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:particle_auth_core/evm.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -20,6 +24,7 @@ import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+import 'package:uuid/uuid.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
@@ -36,6 +41,7 @@ class CreateGroupController extends GetxController
   final newGroupHasAdultContent = false.obs;
   final roomAccessType = FreeRoomAccessTypes.public.obs;
   final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
+
   final selectedUsersToBuyTicketFrom_ToAccessRoom =
       <TicketSellersListMember>[].obs;
   final selectedUsersToBuyticketFrom_ToSpeak = <TicketSellersListMember>[].obs;
@@ -50,6 +56,13 @@ class CreateGroupController extends GetxController
   final tags = RxList<String>([]);
   final roomSubject = defaultSubject.obs;
   final groupName = "".obs;
+
+// image
+  final fileLocalAddress = ''.obs;
+  final ImagePicker _picker = ImagePicker();
+  File? selectedFile;
+  //end
+
   @override
   void onInit() {
     super.onInit();
@@ -63,6 +76,46 @@ class CreateGroupController extends GetxController
   @override
   void onClose() {
     super.onClose();
+  }
+
+  pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      selectedFile = File(pickedFile
+          .path); // Use this to store the image in the database or cloud storage
+      fileLocalAddress.value = pickedFile.path;
+    } else {
+      log.e('No image selected.');
+    }
+  }
+
+  Future<String> uploadFile({required groupId}) async {
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('${FireBaseConstants.groupsRef}$groupId');
+
+    if (selectedFile == null) {
+      return "";
+    }
+    // check if file is less than 2mb
+    final fileSize = selectedFile!.lengthSync();
+    if (fileSize > 2 * 1024 * 1024) {
+      Get.snackbar(
+        'Error',
+        'Image size must be less than 2MB',
+        colorText: Colors.red,
+      );
+      return "";
+    }
+    // Upload the image to Firebase Storage
+    final uploadTask = storageRef.putFile(selectedFile!);
+
+    // Wait for the upload to complete
+    final snapshot = await uploadTask.whenComplete(() {});
+
+    // Get the download URL of the uploaded image
+    final downloadUrl = await snapshot.ref.getDownloadURL();
+    return downloadUrl;
   }
 
   toggleScheduled() {
@@ -355,7 +408,12 @@ class CreateGroupController extends GetxController
     isCreatingNewGroup.value = true;
     final accessType = roomAccessType.value;
     final speakerType = roomSpeakerType.value;
+    final id = Uuid().v4();
+    final imageUrl = await uploadFile(groupId: id);
+
     await groupsController.createGroup(
+      id: id,
+      imageUrl: imageUrl,
       name: groupName.value,
       accessType: accessType,
       speakerType: speakerType,

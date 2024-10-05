@@ -22,11 +22,13 @@ class Img extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isUrl = Uri.parse(src).isAbsolute;
+
     return Container(
       width: size ?? width ?? 70,
       height: size ?? height ?? 70,
       child: CachedNetworkImage(
-        imageUrl: src,
+        imageUrl: isUrl ? src : avatarPlaceHolder(alt ?? "OO"),
         placeholder: (context, url) => GFShimmer(
           secondaryColor: ColorName.pageBackground,
           mainColor: ColorName.cardBorder,

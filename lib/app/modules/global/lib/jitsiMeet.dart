@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
@@ -17,7 +16,6 @@ const MethodChannel jitsiMethodChannel = MethodChannel('jitsi_meet_wrapper');
 JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
   Get.put<OngoingGroupCallController>(OngoingGroupCallController());
   final groupCallController = Get.find<GroupCallController>();
-  final globalController = Get.find<GlobalController>();
   return JitsiMeetEventListener(
     conferenceJoined: (url) async {
       Navigate.to(

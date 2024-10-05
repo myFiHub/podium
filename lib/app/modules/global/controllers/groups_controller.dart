@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,6 +13,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
@@ -28,6 +30,25 @@ import 'package:podium/utils/navigation/navigation.dart';
 import 'package:ably_flutter/ably_flutter.dart' as ably;
 import 'package:podium/env.dart';
 
+final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
+
+sendGroupPeresenceEvent(
+    {required String groupId, required String eventName}) async {
+  final channel = realtimeInstance.channels.get(groupId);
+  channel.presence.enter(eventName);
+}
+
+class GroupPresenceEventNames {
+  static const enter = "enter";
+  static const leave = "leave";
+  static const talking = "talking";
+  static const groupId = "groupId";
+}
+
+class RealtimeChannelNames {
+  static const groupsPresence = "groups:presence";
+}
+
 class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
@@ -35,7 +56,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final groups = Rx<Map<String, FirebaseGroup>>({});
   final gettingAllGroups = true.obs;
   StreamSubscription<DatabaseEvent>? subscription;
-  final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
+  final numberOfPresentUsers = Rx<Map<String, int>>({});
+  late RealtimeChannel groupsPresenceChannel;
 
   @override
   void onInit() {
@@ -58,6 +80,22 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
 
     globalController.loggedIn.listen((loggedIn) {
       getRealtimeGroups(loggedIn);
+      if (loggedIn) {
+        realtimeInstance.options.clientId = myId;
+        groupsPresenceChannel =
+            realtimeInstance.channels.get(RealtimeChannelNames.groupsPresence);
+        groupsPresenceChannel.presence
+            .subscribe(action: PresenceAction.enter)
+            .listen((message) {
+          final userId = message.clientId!;
+          final groupId = message.data;
+        });
+        groupsPresenceChannel.presence
+            .subscribe(action: PresenceAction.leave)
+            .listen((message) {
+          print(message.data);
+        });
+      }
     });
   }
 
@@ -83,7 +121,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     );
     final remoteGroup = await getGroupInfoById(group.id);
     if (remoteGroup != null) {
-      groups.value![group.id] = remoteGroup;
+      groups.value[group.id] = remoteGroup;
       groups.refresh();
       if (Get.isRegistered<AllGroupsController>()) {
         final AllGroupsController allGroupsController = Get.find();
@@ -126,12 +164,6 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       final myUser = globalController.currentUserInfo.value!;
       final myId = myUser.id;
       groups.value = getGroupsVisibleToMe(groupsMap, myId);
-      groups.value.values.forEach((element) {
-        if (groupChannels.value[element.id] == null) {
-          final channel = realtimeInstance.channels.get(element.id);
-          groupChannels.value[element.id] = channel;
-        }
-      });
     }
   }
 

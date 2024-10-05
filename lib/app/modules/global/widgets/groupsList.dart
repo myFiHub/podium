@@ -35,7 +35,7 @@ class GroupList extends StatelessWidget {
           if (creatorAvatar == defaultAvatar) {
             creatorAvatar = avatarPlaceHolder(group.creator.fullName);
           }
-          return SingleGroup(
+          return _SingleGroup(
             key: Key(group.id),
             controller: controller,
             amICreator: amICreator,
@@ -49,8 +49,8 @@ class GroupList extends StatelessWidget {
   }
 }
 
-class SingleGroup extends StatelessWidget {
-  const SingleGroup({
+class _SingleGroup extends StatelessWidget {
+  const _SingleGroup({
     super.key,
     required this.controller,
     required this.amICreator,
@@ -71,9 +71,12 @@ class SingleGroup extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        controller.joinGroupAndOpenGroupDetailPage(
-          groupId: group.id,
-        );
+        final channel =
+            realtimeInstance.channels.get(RealtimeChannelNames.groupsPresence);
+        channel.presence.enter(group.id);
+        // controller.joinGroupAndOpenGroupDetailPage(
+        //   groupId: group.id,
+        // );
       },
       child: Stack(
         children: [

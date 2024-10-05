@@ -69,7 +69,7 @@ class DropDown extends StatelessWidget {
           onChanged(value!);
         },
         buttonStyleData: ButtonStyleData(
-          height: 65,
+          height: 55,
           width: Get.width - 20,
           padding: const EdgeInsets.only(left: 14, right: 14),
           decoration: BoxDecoration(

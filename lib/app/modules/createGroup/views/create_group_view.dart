@@ -20,14 +20,16 @@ class CreateGroupView extends GetView<CreateGroupController> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
-          padding: const EdgeInsets.only(top: 80),
+          padding: const EdgeInsets.only(top: 30),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 _SelectPicture(),
                 _RoomNameInput(),
+                space5,
                 _SubjectInput(),
+                space5,
                 _TagsInput(),
                 _SelectRoomAccessType(),
                 space10,
@@ -61,7 +63,6 @@ class _SelectPicture extends GetWidget<CreateGroupController> {
         },
         child: Column(
           children: [
-            space10,
             Obx(
               () {
                 final selectedFile = controller.fileLocalAddress.value;
@@ -72,19 +73,22 @@ class _SelectPicture extends GetWidget<CreateGroupController> {
                         ? Img(
                             src: '',
                             alt: name.isEmpty ? myUser.fullName : name,
+                            size: 100,
                           )
                         : GFAvatar(
                             backgroundImage: FileImage(File(selectedFile)),
                             shape: GFAvatarShape.circle,
                             radius: 50.0,
                           ),
+                    space5,
                     Text(
-                      'Select Picture',
+                      'Room Image',
                       style: TextStyle(
                         color: Colors.grey[400],
-                        fontSize: 18,
+                        fontSize: 14,
                       ),
                     ),
+                    space10,
                   ],
                 );
               },
@@ -173,10 +177,13 @@ class _TagsInput extends GetWidget<CreateGroupController> {
 
   @override
   Widget build(BuildContext context) {
-    return DynamicTags(
-      onTagsChanged: (values) {
-        controller.setTags(values);
-      },
+    return SizedBox(
+      height: 70,
+      child: DynamicTags(
+        onTagsChanged: (values) {
+          controller.setTags(values);
+        },
+      ),
     );
   }
 }
@@ -188,11 +195,14 @@ class _SubjectInput extends GetWidget<CreateGroupController> {
 
   @override
   Widget build(BuildContext context) {
-    return Input(
-      initialValue: controller.roomSubject.value,
-      hintText: 'Main Subject (optional)',
-      onChanged: (value) => controller.roomSubject.value = value,
-      marginvertical: 0,
+    return SizedBox(
+      height: 60,
+      child: Input(
+        initialValue: controller.roomSubject.value,
+        hintText: 'Main Subject (optional)',
+        onChanged: (value) => controller.roomSubject.value = value,
+        marginvertical: 0,
+      ),
     );
   }
 }
@@ -204,10 +214,13 @@ class _RoomNameInput extends GetWidget<CreateGroupController> {
 
   @override
   Widget build(BuildContext context) {
-    return Input(
-      hintText: 'Room Name',
-      onChanged: (value) => controller.groupName.value = value,
-      marginvertical: 0,
+    return SizedBox(
+      height: 60,
+      child: Input(
+        hintText: 'Room Name',
+        onChanged: (value) => controller.groupName.value = value,
+        marginvertical: 0,
+      ),
     );
   }
 }
@@ -449,7 +462,7 @@ class SelectUserstoBuyTicketFrom extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 30,
+      top: 25,
       right: 30,
       child: GestureDetector(
         onTap: () {

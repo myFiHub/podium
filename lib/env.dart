@@ -32,6 +32,8 @@ class Env {
   static const appStoreUrl = String.fromEnvironment("appStoreUrl");
   static const baseDeepLinkUrl = String.fromEnvironment("baseDeepLinkUrl");
   static const chainNamespace = String.fromEnvironment("chainNamespace");
+  static const albyApiKey = String.fromEnvironment("alby_apiKey");
+
   static const fihubAddress_Avalanche_MainNet =
       String.fromEnvironment("fihubAddress_Avalanche_MainNet");
 

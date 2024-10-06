@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -29,13 +30,18 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         await groupCallController.setCreatorJoinedToTrue(groupId: group.id);
       }
       groupCallController.haveOngoingCall.value = true;
-      groupCallController.setIsUserPresentInSession(
-        groupId: groupCallController.group.value!.id,
-        userId: myId,
-        isPresent: true,
+      // groupCallController.setIsUserPresentInSession(
+      //   groupId: groupCallController.group.value!.id,
+      //   userId: myId,
+      //   isPresent: true,
+      // );
+      await groupCallController.updateGroupLastActiveAt(
+        groupId: group.id,
+        lastActiveAt: DateTime.now().millisecondsSinceEpoch,
       );
 
       await Future.delayed(Duration(seconds: 3));
+      sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);
       await jitsiMeet.retrieveParticipantsInfo();
 
       log.d("conferenceJoined: url: $url");
@@ -61,20 +67,6 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
     },
     conferenceTerminated: (url, error) {
       log.f("conferenceTerminated: url: $url, error: $error");
-      Navigate.to(
-        route: Routes.HOME,
-        type: NavigationTypes.offNamed,
-      );
-
-      groupCallController.setIsUserPresentInSession(
-        groupId: groupCallController.group.value!.id,
-        userId: myId,
-        isPresent: false,
-      );
-      groupCallController.cleanupAfterCall();
-      if (Get.isRegistered<OngoingGroupCallController>()) {
-        Get.delete<OngoingGroupCallController>();
-      }
     },
     participantsInfoRetrieved: (participantsInfo) {
       try {
@@ -89,7 +81,20 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       }
     },
     readyToClose: () {
-      log.d("readyToClose");
+      Navigate.to(
+        route: Routes.HOME,
+        type: NavigationTypes.offNamed,
+      );
+      sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.leave);
+      // groupCallController.setIsUserPresentInSession(
+      //   groupId: groupCallController.group.value!.id,
+      //   userId: myId,
+      //   isPresent: false,
+      // );
+      groupCallController.cleanupAfterCall();
+      if (Get.isRegistered<OngoingGroupCallController>()) {
+        Get.delete<OngoingGroupCallController>();
+      }
     },
     like: (idWithAddedAtSign, participantId) async {
       final OngoingGroupCallController ongoingGroupCallController =

@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
@@ -30,7 +29,9 @@ class CreateGroupView extends GetView<CreateGroupController> {
                 _RoomNameInput(),
                 space5,
                 _SubjectInput(),
-                space5,
+                SizedBox(
+                  height: 8,
+                ),
                 _TagsInput(),
                 _SelectRoomAccessType(),
                 space10,

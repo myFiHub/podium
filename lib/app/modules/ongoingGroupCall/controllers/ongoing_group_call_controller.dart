@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -92,18 +93,18 @@ class OngoingGroupCallController extends GetxController
         // sort based on last talking time to show the most recent talker first
         membersList
             .sort((a, b) => b.startedToTalkAt.compareTo(a.startedToTalkAt));
-        final talkingIdsList = membersList
-            .where((element) => element.isTalking)
-            .map((e) => e.id)
-            .toList();
-        if (talkingIdsList.length != talkingIds.value.length) {
-          talkingIds.value = talkingIdsList;
-          final GroupCallController groupCallController =
-              Get.find<GroupCallController>();
-          groupCallController.updateTalkingMembers(
-            ids: talkingIdsList,
-          );
-        }
+        // final talkingIdsList = membersList
+        //     .where((element) => element.isTalking)
+        //     .map((e) => e.id)
+        //     .toList();
+        // if (talkingIdsList.length != talkingIds.value.length) {
+        //   talkingIds.value = talkingIdsList;
+        //   final GroupCallController groupCallController =
+        //       Get.find<GroupCallController>();
+        //   groupCallController.updateTalkingMembers(
+        //     ids: talkingIdsList,
+        //   );
+        // }
         sessionMembers.forEach((key, value) {
           remainingTimeMap[key] = value.remainingTalkTime;
         });
@@ -457,11 +458,14 @@ class OngoingGroupCallController extends GetxController
   }
 
   audioMuteChanged({required bool muted}) {
+    final groupId = groupCallController.group.value!.id;
     if (muted) {
       stopTheTimer();
       amIMuted.value = true;
       talkTimer.endTimer();
       final elapsed = talkTimer.timeElapsedInSeconds;
+      sendGroupPeresenceEvent(
+          groupId: groupId, eventName: eventNames.notTalking);
       if (elapsed > 0) {
         analytics.logEvent(
           name: 'talked',
@@ -485,6 +489,7 @@ class OngoingGroupCallController extends GetxController
         jitsiMeet.setAudioMuted(true);
         return;
       }
+      sendGroupPeresenceEvent(groupId: groupId, eventName: eventNames.talking);
       amIMuted.value = false;
       jitsiMeet.setAudioMuted(false);
 

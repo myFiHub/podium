@@ -45,6 +45,7 @@ class FirebaseGroup {
   bool hasAdultContent = false;
   int scheduledFor = 0;
   int alarmId = 0;
+  int lastActiveAt = 0;
 
   static String idKey = 'id';
   static String nameKey = 'name';
@@ -66,6 +67,7 @@ class FirebaseGroup {
   static String scheduledForKey = 'ScheduledFor';
   static String alarmIdKey = 'alarmId';
   static String imageUrlKey = 'imageUrl';
+  static String lastActiveAtKey = 'lastActiveAt';
 
   FirebaseGroup({
     required this.name,
@@ -88,6 +90,7 @@ class FirebaseGroup {
     this.scheduledFor = 0,
     this.alarmId = 0,
     this.imageUrl,
+    this.lastActiveAt = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -114,6 +117,7 @@ class FirebaseGroup {
     data[scheduledForKey] = scheduledFor;
     data[alarmIdKey] = alarmId;
     data[imageUrlKey] = imageUrl;
+    data[lastActiveAtKey] = lastActiveAt;
     return data;
   }
 }

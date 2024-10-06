@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,6 +13,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
@@ -25,21 +27,84 @@ import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-import 'package:uuid/uuid.dart';
+import 'package:ably_flutter/ably_flutter.dart' as ably;
+import 'package:podium/env.dart';
+import 'package:podium/utils/throttleAndDebounce/throttle.dart';
+
+final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
+// detect presence time (groups that were active this milliseconds ago will be considered active)
+int dpt = 0;
+
+sendGroupPeresenceEvent(
+    {required String groupId, required String eventName}) async {
+  try {
+    if (dpt == 0) {
+      return;
+    }
+    final channel = realtimeInstance.channels.get(groupId);
+    if (eventName == eventNames.leave) {
+      channel.presence.leave(groupId);
+      return;
+    }
+    if (eventName == eventNames.talking || eventName == eventNames.notTalking) {
+      channel.presence.update(eventName);
+      return;
+    }
+    channel.presence.enter(eventName);
+  } catch (e) {
+    log.f(e);
+    analytics.logEvent(name: "send_group_presence_event_failed");
+  }
+}
+
+class eventNames {
+  static const String leave = "leave";
+  static const String talking = "talking";
+  static const String notTalking = "notTalking";
+}
 
 class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
+  final _presentUsersRefreshThrottle =
+      Throttling(duration: const Duration(seconds: 2));
+  final _takingUsersRefreshThrottle =
+      Throttling(duration: const Duration(seconds: 2));
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
+  final groupChannels = Rx<Map<String, ably.RealtimeChannel>>({});
   final groups = Rx<Map<String, FirebaseGroup>>({});
+  final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
+  final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
+  final enterListenersMap = {};
+  final updateListenersMap = {};
+  final leaveListenersMap = {};
   final gettingAllGroups = true.obs;
+  bool initializedChannels = false;
   StreamSubscription<DatabaseEvent>? subscription;
 
   @override
   void onInit() {
     super.onInit();
+    realtimeInstance.connection
+        .on(ably.ConnectionEvent.connected)
+        .listen((ably.ConnectionStateChange stateChange) async {
+      switch (stateChange.current) {
+        case ably.ConnectionState.connected:
+          log.d('Connected to Ably!');
+          break;
+        case ably.ConnectionState.failed:
+          log.d('The connection to Ably failed.');
+          // Failed connection
+          break;
+        default:
+          break;
+      }
+    });
 
     globalController.loggedIn.listen((loggedIn) {
       getRealtimeGroups(loggedIn);
+      if (loggedIn) {
+        realtimeInstance.options.clientId = myId;
+      }
     });
   }
 
@@ -51,6 +116,18 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _refreshPresentUsers() {
+    _presentUsersRefreshThrottle.throttle(() {
+      presentUsersInGroupsMap.refresh();
+    });
+  }
+
+  _refreshTakingUsers() {
+    _takingUsersRefreshThrottle.throttle(() {
+      takingUsersInGroupsMap.refresh();
+    });
   }
 
   toggleArchive({required FirebaseGroup group}) async {
@@ -65,7 +142,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     );
     final remoteGroup = await getGroupInfoById(group.id);
     if (remoteGroup != null) {
-      groups.value![group.id] = remoteGroup;
+      groups.value[group.id] = remoteGroup;
       groups.refresh();
       if (Get.isRegistered<AllGroupsController>()) {
         final AllGroupsController allGroupsController = Get.find();
@@ -85,40 +162,25 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     );
   }
 
-  getAllGroupsFromFirebase() async {
-    final databaseReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
-    final snapShot = await databaseReference.get();
-    final data = snapShot.value as Map<dynamic, dynamic>?;
-    if (data != null) {
-      try {
-        final Map<String, FirebaseGroup> groupsMap = await groupsParser(data);
-        if (globalController.currentUserInfo.value != null) {
-          final myUser = globalController.currentUserInfo.value!;
-          final myId = myUser.id;
-          groups.value = getGroupsVisibleToMe(groupsMap, myId);
-        }
-      } catch (e) {
-        log.e(e);
-      }
-    }
-  }
-
+  final _getAllGroupsthrottle =
+      Throttling(duration: const Duration(seconds: 5));
   getAllGroups() async {
-    gettingAllGroups.value = true;
-    final databaseReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
-    final results = await databaseReference.once();
-    final data = results.snapshot.value as Map<dynamic, dynamic>?;
-    if (data != null) {
-      try {
-        await _parseAndSetGroups(data);
-      } catch (e) {
-        log.e(e);
-      } finally {
-        gettingAllGroups.value = false;
+    _getAllGroupsthrottle.throttle(() async {
+      gettingAllGroups.value = true;
+      final databaseReference =
+          FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
+      final results = await databaseReference.once();
+      final data = results.snapshot.value as Map<dynamic, dynamic>?;
+      if (data != null) {
+        try {
+          await _parseAndSetGroups(data);
+        } catch (e) {
+          log.e(e);
+        } finally {
+          gettingAllGroups.value = false;
+        }
       }
-    }
+    });
   }
 
   _parseAndSetGroups(Map<dynamic, dynamic> data) async {
@@ -126,26 +188,178 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     if (globalController.currentUserInfo.value != null) {
       final myUser = globalController.currentUserInfo.value!;
       final myId = myUser.id;
-      groups.value = getGroupsVisibleToMe(groupsMap, myId);
+      final unsorted = getGroupsVisibleToMe(groupsMap, myId);
+      // sort groups by last active time
+      final sorted = unsorted.entries.toList()
+        ..sort((a, b) {
+          final aTime = a.value.lastActiveAt;
+          final bTime = b.value.lastActiveAt;
+          return bTime.compareTo(aTime);
+        });
+      final sortedMap = Map<String, FirebaseGroup>.fromEntries(sorted);
+      groups.value = sortedMap;
+
+      initializeChannels();
     }
   }
 
+  initializeChannels() async {
+    // if (initializedChannels) return;
+    final groupsMap = groups.value;
+    // readt detectPresenceTime from firebase
+    try {
+      final detectPresenceTimeRef =
+          FirebaseDatabase.instance.ref(FireBaseConstants.detectPresenceTime);
+      final detectPresenceTimeSnapshot = await detectPresenceTimeRef.get();
+      final detectPresenceTime = detectPresenceTimeSnapshot.value;
+      if (detectPresenceTime != null) {
+        dpt = detectPresenceTime as int;
+      }
+    } catch (e) {}
+    if (dpt == 0) {
+      return;
+    }
+    log.d("Detect presence time: $dpt");
+
+    final groupsThatWereActiveRecently = groupsMap.entries.where((element) {
+      final group = element.value;
+      final lastActiveAt = group.lastActiveAt;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final diff = now - lastActiveAt;
+      final isActive = diff < (1 * dpt);
+      if (isActive) {
+        log.d(
+            "Group ${group.name} was active at ${DateTime.fromMillisecondsSinceEpoch(lastActiveAt)}");
+      }
+      return isActive;
+    }).toList();
+    final currentChannels = groupChannels.value;
+    groupsThatWereActiveRecently.forEach((element) {
+      final groupId = element.key;
+      if (currentChannels[groupId] == null) {
+        final channel = realtimeInstance.channels.get(groupId);
+        currentChannels[groupId] = channel;
+      }
+    });
+    groupChannels.value = currentChannels;
+    await _getCurrentNumberOfPresentUsers();
+    _startListeners();
+  }
+
+  _getCurrentNumberOfPresentUsers() async {
+    final allChannels = groupChannels.value;
+    final List<Future<List<PresenceMessage>>> arrayToCall = [];
+    allChannels.entries.forEach((element) async {
+      arrayToCall.add(element.value.presence.get());
+    });
+    final results = await Future.wait(arrayToCall);
+    final Map<String, List<String>> tmpMap = {};
+    for (var i = 0; i < results.length; i++) {
+      final groupId = allChannels.entries.elementAt(i).key;
+      final currentPresentUsers = results[i].map((e) => e.clientId!).toList();
+      tmpMap[groupId] = currentPresentUsers;
+    }
+    presentUsersInGroupsMap.value = tmpMap;
+  }
+
+  _startListeners() {
+    groupChannels.value.entries.forEach((element) {
+      final channel = element.value;
+      if (enterListenersMap[element.key] == null) {
+        enterListenersMap[element.key] = element;
+        channel.presence
+            .subscribe(action: PresenceAction.enter)
+            .listen((message) {
+          _handleNewEnterMessage(groupId: element.key, message: message);
+        });
+      }
+      if (leaveListenersMap[element.key] == null) {
+        leaveListenersMap[element.key] = element;
+        channel.presence
+            .subscribe(action: PresenceAction.leave)
+            .listen((message) {
+          _handleLeaveEvent(groupId: element.key, clientId: message.clientId!);
+        });
+      }
+      if (updateListenersMap[element.key] == null) {
+        updateListenersMap[element.key] = element;
+        channel.presence
+            .subscribe(action: PresenceAction.update)
+            .listen((message) {
+          _hanldeNewUpdateMessage(groupId: element.key, message: message);
+        });
+      }
+    });
+    initializedChannels = true;
+  }
+
+  _handleNewEnterMessage(
+      {required String groupId, required PresenceMessage message}) {
+    final currentListForThisGroup =
+        presentUsersInGroupsMap.value[groupId] ?? [];
+    currentListForThisGroup.add(message.clientId!);
+    presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+    _refreshPresentUsers();
+  }
+
+  _hanldeNewUpdateMessage(
+      {required String groupId, required PresenceMessage message}) {
+    if (message.data == eventNames.talking) {
+      final currentListForThisGroup =
+          takingUsersInGroupsMap.value[groupId] ?? [];
+      currentListForThisGroup.add(message.clientId!);
+      takingUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      log.d("Talking users: $currentListForThisGroup");
+      _refreshTakingUsers();
+    } else if (message.data == eventNames.notTalking) {
+      final currentListForThisGroup =
+          takingUsersInGroupsMap.value[groupId] ?? [];
+      currentListForThisGroup.remove(message.clientId!);
+      takingUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      _refreshTakingUsers();
+    }
+  }
+
+  _handleLeaveEvent({required String groupId, required String clientId}) {
+    final currentListForThisGroup =
+        presentUsersInGroupsMap.value[groupId] ?? [];
+    if (currentListForThisGroup.contains(clientId)) {
+      currentListForThisGroup.remove(clientId);
+      presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      _refreshPresentUsers();
+    }
+    final currentTakingListForThisGroup =
+        takingUsersInGroupsMap.value[groupId] ?? [];
+    if (currentTakingListForThisGroup.contains(clientId)) {
+      currentTakingListForThisGroup.remove(clientId);
+      takingUsersInGroupsMap.value[groupId] = currentTakingListForThisGroup;
+      _refreshTakingUsers();
+    }
+  }
+
+  List<String> getPresentUsersInGroup(String groupId) {
+    return presentUsersInGroupsMap.value[groupId] ?? [];
+  }
+
   getRealtimeGroups(bool loggedIn) {
+    final liveThrottle = Throttling(duration: const Duration(seconds: 5));
     if (loggedIn) {
       gettingAllGroups.value = true;
       final databaseReference =
           FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
       subscription = databaseReference.onValue.listen((event) async {
-        final data = event.snapshot.value as Map<dynamic, dynamic>?;
-        if (data != null) {
-          try {
-            await _parseAndSetGroups(data);
-          } catch (e) {
-            log.e(e);
-          } finally {
-            gettingAllGroups.value = false;
+        liveThrottle.throttle(() async {
+          final data = event.snapshot.value as Map<dynamic, dynamic>?;
+          if (data != null) {
+            try {
+              await _parseAndSetGroups(data);
+            } catch (e) {
+              log.e(e);
+            } finally {
+              gettingAllGroups.value = false;
+            }
           }
-        }
+        });
       });
     } else {
       // subscription?.cancel();
@@ -193,6 +407,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       tags: tags.map((e) => e).toList(),
       alarmId: alarmId,
       creatorJoined: false,
+      lastActiveAt: DateTime.now().millisecondsSinceEpoch,
       requiredAddressesToEnter: requiredAddressesToEnter,
       requiredAddressesToSpeak: requiredAddressesToSpeak,
       ticketsRequiredToAccess: requiredTicketsToAccess
@@ -283,6 +498,9 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     bool? joiningByLink,
   }) async {
     if (groupId.isEmpty) return;
+    if (joiningGroupId != '') {
+      return;
+    }
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
     final firebaseSessionsReference =
@@ -299,6 +517,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
+      joiningGroupId.value = '';
       return;
     }
 
@@ -307,13 +526,17 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       joiningByLink: joiningByLink,
     );
     log.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
-    if (accesses.canEnter == false) return;
+    if (accesses.canEnter == false) {
+      joiningGroupId.value = '';
+      return;
+    }
 
     final hasAgeVerified = await _showAreYouOver18Dialog(
       group: group,
       myUser: myUser,
     );
     if (!hasAgeVerified) {
+      joiningGroupId.value = '';
       return;
     }
 
@@ -360,6 +583,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       } catch (e) {
         Get.snackbar("Error", "Failed to join group");
         log.f("Error joining group: $e");
+      } finally {
         joiningGroupId.value = '';
       }
     } else {
@@ -381,8 +605,6 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     if (isAlreadyRegistered) {
       Get.delete<GroupDetailController>();
     }
-
-    joiningGroupId.value = '';
 
     Navigate.to(
         type: NavigationTypes.toNamed,
@@ -533,7 +755,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   }
 }
 
-getGroupsVisibleToMe(Map<String, FirebaseGroup> groups, String myId) {
+Map<String, FirebaseGroup> getGroupsVisibleToMe(
+    Map<String, FirebaseGroup> groups, String myId) {
   return groups;
   // final filteredGroups = groups.entries.where((element) {
   //   if (element.value.privacyType == RoomPrivacyTypes.public ||

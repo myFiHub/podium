@@ -1,3 +1,4 @@
+import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
@@ -10,6 +11,7 @@ import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:pulsator/pulsator.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -30,17 +32,11 @@ class GroupList extends StatelessWidget {
           final group = groupsList[index];
           final name = group.name;
           final amICreator = group.creator.id == myId;
-          String creatorAvatar = group.creator.avatar;
-
-          if (creatorAvatar == defaultAvatar) {
-            creatorAvatar = avatarPlaceHolder(group.creator.fullName);
-          }
-          return SingleGroup(
+          return _SingleGroup(
             key: Key(group.id),
             controller: controller,
             amICreator: amICreator,
             name: name,
-            creatorAvatar: creatorAvatar,
             group: group,
           );
         },
@@ -49,28 +45,38 @@ class GroupList extends StatelessWidget {
   }
 }
 
-class SingleGroup extends StatelessWidget {
-  const SingleGroup({
+class _SingleGroup extends StatelessWidget {
+  const _SingleGroup({
     super.key,
     required this.controller,
     required this.amICreator,
     required this.name,
-    required this.creatorAvatar,
     required this.group,
   });
 
   final GroupsController controller;
   final bool amICreator;
   final String name;
-  final String creatorAvatar;
   final FirebaseGroup group;
 
   @override
   Widget build(BuildContext context) {
     final isScheduled = group.scheduledFor != 0;
 
-    return GestureDetector(
-      onTap: () {
+    return Bounce(
+      tapDelay: Duration(milliseconds: 20),
+      scaleFactor: 0.97,
+      onTap: () async {
+        // final delay = 2;
+        // sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);
+        // await Future.delayed(Duration(seconds: delay));
+        // sendGroupPeresenceEvent(
+        //     groupId: group.id, eventName: eventNames.talking);
+        // await Future.delayed(Duration(seconds: delay));
+        // sendGroupPeresenceEvent(
+        //     groupId: group.id, eventName: eventNames.notTalking);
+        // await Future.delayed(Duration(seconds: delay));
+        // sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.leave);
         controller.joinGroupAndOpenGroupDetailPage(
           groupId: group.id,
         );
@@ -93,7 +99,7 @@ class SingleGroup extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
+                        SizedBox(
                           width: Get.width - 75,
                           child: Text(
                             name,
@@ -117,7 +123,7 @@ class SingleGroup extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
+                                SizedBox(
                                   width: Get.width - 170,
                                   child: RichText(
                                       overflow: TextOverflow.ellipsis,
@@ -152,7 +158,7 @@ class SingleGroup extends StatelessWidget {
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
-                                    Container(
+                                    SizedBox(
                                       width: Get.width - 170,
                                       child: Text(
                                         " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
@@ -266,7 +272,7 @@ class SingleGroup extends StatelessWidget {
                     )
                   ],
                 ),
-                JoiningIndicator(
+                _JoiningIndicator(
                   groupId: group.id,
                 ),
                 if (group.hasAdultContent)
@@ -282,12 +288,62 @@ class SingleGroup extends StatelessWidget {
             ),
           ),
           if (isScheduled)
-            ScheduledBanner(
+            _ScheduledBanner(
               group: group,
+              key: Key(group.id + 'scheduledBanner'),
             ),
+          _NumberOfActiveUsers(
+            groupId: group.id,
+            key: Key(group.id + 'numberOfActiveUsers'),
+          ),
         ],
       ),
     );
+  }
+}
+
+class _NumberOfActiveUsers extends GetView<GroupsController> {
+  final String groupId;
+  const _NumberOfActiveUsers({
+    super.key,
+    required this.groupId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final allActiveUsers = controller.presentUsersInGroupsMap.value;
+      final activeInThisGroup = allActiveUsers[groupId] ?? [];
+      final numberOfActiveUsers = activeInThisGroup.length;
+      return numberOfActiveUsers == 0
+          ? SizedBox()
+          : Container(
+              width: 40,
+              height: 40,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Pulsator(
+                    style: PulseStyle(color: Colors.red),
+                    duration: Duration(seconds: 2),
+                    count: 5,
+                    repeat: 0,
+                    startFromScratch: false,
+                    autoStart: true,
+                    fit: PulseFit.contain,
+                    child: Text(
+                      "${numberOfActiveUsers}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+    });
   }
 }
 
@@ -295,9 +351,9 @@ generateGroupShareUrl({required String groupId}) {
   return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium";
 }
 
-class ScheduledBanner extends StatelessWidget {
+class _ScheduledBanner extends StatelessWidget {
   final FirebaseGroup group;
-  const ScheduledBanner({
+  const _ScheduledBanner({
     super.key,
     required this.group,
   });
@@ -410,9 +466,9 @@ class SingleTag extends StatelessWidget {
   }
 }
 
-class JoiningIndicator extends GetView<GroupsController> {
+class _JoiningIndicator extends GetView<GroupsController> {
   final groupId;
-  const JoiningIndicator({super.key, required this.groupId});
+  const _JoiningIndicator({super.key, required this.groupId});
 
   @override
   Widget build(BuildContext context) {

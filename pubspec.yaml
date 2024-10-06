@@ -15,6 +15,7 @@ dependencies:
   share_plus: ^10.0.2
   app_links: ^6.3.2
   fl_toast: ^3.2.0
+  ably_flutter: ^1.2.34
   floating_draggable_widget: ^2.1.5
   dropdown_button2: ^2.3.9
   firebase_core: ^3.6.0
@@ -44,7 +45,9 @@ dependencies:
   squadron: ^6.0.3
   flutter_bloc: ^8.1.6
   equatable: ^2.0.5
+  pulsator: ^1.0.0+2
   rxdart: ^0.28.0
+  bounce: ^1.0.2
   rotated_corner_decoration: ^2.1.0
   add_2_calendar: ^3.0.1
 

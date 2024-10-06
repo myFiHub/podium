@@ -46,6 +46,17 @@ class GroupCallController extends GetxController with FireBaseUtils {
     sortType.value = storage.read(StorageKeys.ongoingCallSortType) ??
         SortTypes.recentlyTalked;
     super.onInit();
+    groupsController.takingUsersInGroupsMap.listen((takingUsersInGroupsMap) {
+      if (group.value != null) {
+        final groupId = group.value!.id;
+        final takingUsers = takingUsersInGroupsMap[groupId];
+        if (takingUsers != null) {
+          final takingUserIds = takingUsers.map((e) => e).toList();
+          updateTalkingMembers(ids: takingUserIds);
+        }
+      }
+    });
+
     group.listen((activeGroup) {
       members.value = [];
       if (activeGroup != null) {

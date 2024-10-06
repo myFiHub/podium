@@ -81,7 +81,7 @@ ChainInfo.ChainInfo particleChainInfoByChainId(String chainId) {
       movementChainOnParticle;
 }
 
-_friendTechAddress(String chainId) {
+String _friendTechAddress(String chainId) {
   final aadress = Environment.Env.friendtechAddress(chainId);
   if (aadress == null || aadress.isEmpty) {
     return ZERO_ADDRESS;

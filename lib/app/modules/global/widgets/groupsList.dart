@@ -497,7 +497,7 @@ String parseSpeakerType(String? speakerType) {
     case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
     case BuyableTicketTypes.onlyFriendTechTicketHolders:
-      return "Only Friendtech Ticket Holders";
+      return "Only Friendtech Key Holders";
     case BuyableTicketTypes.onlyPodiumPassHolders:
       return "Only Podium Pass Holders";
 
@@ -519,7 +519,7 @@ String parseAccessType(String? accessType) {
     case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
     case BuyableTicketTypes.onlyFriendTechTicketHolders:
-      return "Only Friendtech Ticket Holders";
+      return "Only Friendtech Key Holders";
     case BuyableTicketTypes.onlyPodiumPassHolders:
       return "Only Podium Pass Holders";
     default:

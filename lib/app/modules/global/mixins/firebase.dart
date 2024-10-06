@@ -229,6 +229,62 @@ mixin FireBaseUtils {
     await databaseRef.set(isTalking);
   }
 
+  Future<bool> unfollowUser(String userId) async {
+    final databaseRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.followers + userId);
+    final snapshot = await databaseRef.get();
+    final followers = snapshot.value as dynamic;
+    if (followers != null) {
+      final followersList = List.from(followers);
+      if (followersList.contains(myId)) {
+        followersList.remove(myId);
+        await databaseRef.set(followersList);
+        return true;
+      } else {
+        return true;
+      }
+    } else {
+      return true;
+    }
+  }
+
+  Future<bool> addFollowerToUser(
+      {required String userId, required String followerId}) async {
+    final databaseRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.followers + userId);
+    final snapshot = await databaseRef.get();
+    final followers = snapshot.value as dynamic;
+    if (followers != null) {
+      final followersList = List.from(followers);
+      if (followersList.contains(followerId)) {
+        return true;
+      }
+      followersList.add(followerId);
+      await databaseRef.set(followersList);
+      return true;
+    } else {
+      await databaseRef.set([followerId]);
+      return true;
+    }
+  }
+
+  Future<List<String>> followersOfUser(String userId) async {
+    final databaseRef = FirebaseDatabase.instance.ref();
+    final followersRef = databaseRef.child(FireBaseConstants.followers);
+    final snapshot = await followersRef.get();
+    final followers = snapshot.value as dynamic;
+    if (followers != null) {
+      final userFollowers = followers[userId];
+      if (userFollowers != null) {
+        return List.from(userFollowers);
+      } else {
+        return [];
+      }
+    } else {
+      return [];
+    }
+  }
+
   Future<bool> setCreatorJoinedToTrue({required String groupId}) async {
     final databaseRef = FirebaseDatabase.instance.ref(
         FireBaseConstants.groupsRef +

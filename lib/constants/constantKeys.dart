@@ -1,5 +1,6 @@
 class FireBaseConstants {
   static final usersRef = 'users/';
+  static final followers = 'followers/';
   // update together, don't forget to update firebase rules
   static final groupsRef = 'groups_v1/';
   static final sessionsRef = 'sessions_v1/';
@@ -7,6 +8,7 @@ class FireBaseConstants {
   static final notificationsRef = 'notifications_v1/';
   // end
   static final versionRef = 'version/';
+  static final forceUpdate = 'forceUpdate/';
   static final versionCheckRef = 'versionCheck/';
   static final jitsiServerAddressRef = "va/";
   static final paymentEvents = "paymentEvents/";

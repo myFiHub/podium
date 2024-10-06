@@ -41,7 +41,7 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       );
 
       await Future.delayed(Duration(seconds: 3));
-      sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);
+      sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.enter);
       await jitsiMeet.retrieveParticipantsInfo();
 
       log.d("conferenceJoined: url: $url");

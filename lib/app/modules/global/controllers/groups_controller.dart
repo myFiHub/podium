@@ -50,7 +50,9 @@ sendGroupPeresenceEvent(
       channel.presence.update(eventName);
       return;
     }
-    channel.presence.enter(eventName);
+    if (eventName == eventNames.enter) {
+      channel.presence.enter(groupId);
+    }
   } catch (e) {
     log.f(e);
     analytics.logEvent(name: "send_group_presence_event_failed");
@@ -58,6 +60,7 @@ sendGroupPeresenceEvent(
 }
 
 class eventNames {
+  static const String enter = "enter";
   static const String leave = "leave";
   static const String talking = "talking";
   static const String notTalking = "notTalking";

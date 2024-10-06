@@ -310,15 +310,13 @@ class GlobalController extends GetxController with FireBaseUtils {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
           log.i("Internet connected");
-          if (!initializedOnce.value) {
-            final (versionResolved, serverAddress) = await (
-              checkVersion(),
-              getJitsiServerAddress(),
-            ).wait;
+          final (versionResolved, serverAddress) = await (
+            checkVersion(),
+            getJitsiServerAddress(),
+          ).wait;
 
-            if (versionResolved && serverAddress != null) {
-              await initializeApp();
-            }
+          if (versionResolved && serverAddress != null) {
+            await initializeApp();
           }
 
           break;
@@ -441,22 +439,40 @@ class GlobalController extends GetxController with FireBaseUtils {
         FirebaseDatabase.instance.ref(FireBaseConstants.versionRef);
     final shouldCheckVersionRef =
         FirebaseDatabase.instance.ref(FireBaseConstants.versionCheckRef);
-    final shouldCheckVersionEvent = await shouldCheckVersionRef.get();
+    final forceUpdateRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.forceUpdate);
+    final (
+      shouldCheckVersionEvent,
+      forceUpdateEvent,
+      versionEvent,
+    ) = await (
+      shouldCheckVersionRef.get(),
+      forceUpdateRef.get(),
+      versionRef.get()
+    ).wait;
+    bool forcetToUpdate = false;
+    if (forceUpdateEvent.value is bool) {
+      forcetToUpdate = forceUpdateEvent.value as bool;
+    }
     final shouldCheckVersion = shouldCheckVersionEvent.value as dynamic;
     if (shouldCheckVersion == false) {
       log.d('version check disabled');
       return true;
     }
     // listen to version changes
-    final event = await versionRef.get();
-    final data = event.value as dynamic;
+    final data = versionEvent.value as dynamic;
     final version = data as String?;
     if (version == null) {
       log.e('version not found');
       return (true);
     }
     final currentVersion = Env.VERSION.split('+')[0];
-    if (version != currentVersion && ignoredOrAcceptedVersion != version) {
+    final numberedLocalVersion = int.parse(currentVersion.replaceAll('.', ''));
+    final numberedRemoteVersion = int.parse(version.replaceAll('.', ''));
+    final isRemoteVersionGreater = numberedRemoteVersion > numberedLocalVersion;
+    if (version != currentVersion &&
+        ignoredOrAcceptedVersion != version &&
+        isRemoteVersionGreater) {
       log.e('New version available');
       Get.dialog(
         barrierDismissible: false,
@@ -468,16 +484,17 @@ class GlobalController extends GetxController with FireBaseUtils {
             color: ColorName.black,
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                Get.backLegacy();
-              },
-              child: const Text(
-                'Later',
-                style: TextStyle(color: ColorName.black),
+            if (!forcetToUpdate)
+              TextButton(
+                onPressed: () {
+                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
+                  Get.backLegacy();
+                },
+                child: const Text(
+                  'Later',
+                  style: TextStyle(color: ColorName.black),
+                ),
               ),
-            ),
             TextButton(
               onPressed: () {
                 storage.write(StorageKeys.ignoredOrAcceptedVersion, version);

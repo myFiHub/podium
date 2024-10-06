@@ -29,4 +29,3 @@ class CustomFilter extends LogFilter {
 }
 
 final log = L.log;
-final logError = log.e;

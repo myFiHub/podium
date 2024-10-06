@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/notification_model.dart';
@@ -55,7 +56,10 @@ class UsersController extends GetxController
       try {
         followingsInProgress[id] = id;
         followingsInProgress.refresh();
-        await startFollowing ? follow(id) : unfollow(id);
+        await startFollowing
+            ? Future.wait<void>(
+                [follow(id), addFollowerToUser(userId: id, followerId: myId)])
+            : [unfollow(id), unfollowUser(user.id)];
         final globalController = Get.find<GlobalController>();
         final myUser = globalController.currentUserInfo.value;
         if (startFollowing) {

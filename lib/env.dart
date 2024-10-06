@@ -38,7 +38,7 @@ class Env {
       String.fromEnvironment("fihubAddress_Avalanche_MainNet");
 
   static const VERSION =
-      String.fromEnvironment("VERSION", defaultValue: '1.0.4');
+      String.fromEnvironment("VERSION", defaultValue: '1.0.5');
 
   static String? starsArenaAddress(String chainId) {
     if (chainId == avalancheChainId) {

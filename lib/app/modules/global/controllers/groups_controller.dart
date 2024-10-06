@@ -37,19 +37,24 @@ int dpt = 0;
 
 sendGroupPeresenceEvent(
     {required String groupId, required String eventName}) async {
-  if (dpt == 0) {
-    return;
+  try {
+    if (dpt == 0) {
+      return;
+    }
+    final channel = realtimeInstance.channels.get(groupId);
+    if (eventName == eventNames.leave) {
+      channel.presence.leave(groupId);
+      return;
+    }
+    if (eventName == eventNames.talking || eventName == eventNames.notTalking) {
+      channel.presence.update(eventName);
+      return;
+    }
+    channel.presence.enter(eventName);
+  } catch (e) {
+    log.f(e);
+    analytics.logEvent(name: "send_group_presence_event_failed");
   }
-  final channel = realtimeInstance.channels.get(groupId);
-  if (eventName == eventNames.leave) {
-    channel.presence.leave(groupId);
-    return;
-  }
-  if (eventName == eventNames.talking || eventName == eventNames.notTalking) {
-    channel.presence.update(eventName);
-    return;
-  }
-  channel.presence.enter(eventName);
 }
 
 class eventNames {

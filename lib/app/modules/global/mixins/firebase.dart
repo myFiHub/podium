@@ -74,7 +74,31 @@ mixin FireBaseUtils {
     Query query = _database
         .child(FireBaseConstants.paymentEvents)
         .orderByChild(PaymentEvent.targetIdKey)
-        .startAt(userId);
+        .equalTo(userId);
+    DataSnapshot snapshot = await query.get();
+    if (snapshot.value != null) {
+      final payments = snapshot.value as dynamic;
+      final List<PaymentEvent> paymentsList = [];
+      payments.forEach((key, value) {
+        final payment = _parseSinglePayment(value);
+        if (payment != null) {
+          paymentsList.add(payment);
+        } else {
+          log.e('Error parsing payment,id: $key');
+        }
+      });
+      return paymentsList;
+    }
+    return [];
+  }
+
+  Future<List<PaymentEvent>> getInitiatedPayments(
+      {required String userId}) async {
+    final DatabaseReference _database = FirebaseDatabase.instance.ref();
+    Query query = _database
+        .child(FireBaseConstants.paymentEvents)
+        .orderByChild(PaymentEvent.initiatorIdKey)
+        .equalTo(userId);
     DataSnapshot snapshot = await query.get();
     if (snapshot.value != null) {
       final payments = snapshot.value as dynamic;
@@ -99,30 +123,6 @@ mixin FireBaseUtils {
             groupId +
             '/${FirebaseGroup.lastActiveAtKey}');
     await databaseRef.set(lastActiveAt);
-  }
-
-  Future<List<PaymentEvent>> getInitiatedPayments(
-      {required String userId}) async {
-    final DatabaseReference _database = FirebaseDatabase.instance.ref();
-    Query query = _database
-        .child(FireBaseConstants.paymentEvents)
-        .orderByChild(PaymentEvent.initiatorIdKey)
-        .startAt(userId);
-    DataSnapshot snapshot = await query.get();
-    if (snapshot.value != null) {
-      final payments = snapshot.value as dynamic;
-      final List<PaymentEvent> paymentsList = [];
-      payments.forEach((key, value) {
-        final payment = _parseSinglePayment(value);
-        if (payment != null) {
-          paymentsList.add(payment);
-        } else {
-          log.e('Error parsing payment,id: $key');
-        }
-      });
-      return paymentsList;
-    }
-    return [];
   }
 
   // final _deb = Debouncing(duration: const Duration(seconds: 5));

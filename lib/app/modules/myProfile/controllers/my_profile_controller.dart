@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:particle_auth_core/evm.dart';
@@ -5,7 +6,6 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/utils/logger.dart';
@@ -16,7 +16,7 @@ class Payments {
   int numberOfBoosReceived = 0;
   int numberOfCheersSent = 0;
   int numberOfBoosSent = 0;
-  Map<String, double> income = {};
+  Map<String, String> income = {};
   Payments(
       {this.numberOfCheersReceived = 0,
       this.numberOfBoosReceived = 0,
@@ -61,45 +61,50 @@ class MyProfileController extends GetxController
   }
 
   _getPayments() async {
-    isGettingPayments.value = true;
-    final (received, paid) = await (
-      getReceivedPayments(
-        userId: myId,
-      ),
-      getInitiatedPayments(
-        userId: myId,
-      )
-    ).wait;
-    final _payments = Payments(
-      numberOfCheersReceived: 0,
-      numberOfBoosReceived: 0,
-      numberOfCheersSent: 0,
-      numberOfBoosSent: 0,
-      income: {},
-    );
+    try {
+      isGettingPayments.value = true;
+      final (received, paid) = await (
+        getReceivedPayments(
+          userId: myId,
+        ),
+        getInitiatedPayments(
+          userId: myId,
+        )
+      ).wait;
+      final _payments = Payments(
+        numberOfCheersReceived: 0,
+        numberOfBoosReceived: 0,
+        numberOfCheersSent: 0,
+        numberOfBoosSent: 0,
+        income: {},
+      );
 
-    received.forEach((element) {
-      if (element.type == PaymentTypes.cheer) {
-        _payments.numberOfCheersReceived++;
-      } else if (element.type == PaymentTypes.boo) {
-        _payments.numberOfBoosReceived++;
-      }
-      if (_payments.income[element.chainId] == null) {
-        _payments.income[element.chainId] = 0;
-      }
-      _payments.income[element.chainId] =
-          _payments.income[element.chainId]! + double.parse(element.amount);
-    });
-    paid.forEach((element) {
-      if (element.type == PaymentTypes.cheer) {
-        _payments.numberOfCheersSent++;
-      } else if (element.type == PaymentTypes.boo) {
-        _payments.numberOfBoosSent++;
-      }
-    });
-    isGettingPayments.value = false;
-    payments.value = _payments;
-    payments.refresh();
+      received.forEach((element) {
+        if (element.type == PaymentTypes.cheer) {
+          _payments.numberOfCheersReceived++;
+        } else if (element.type == PaymentTypes.boo) {
+          _payments.numberOfBoosReceived++;
+        }
+        if (_payments.income[element.chainId] == null) {
+          _payments.income[element.chainId] = '0.0';
+        }
+        final addedDecimal = Decimal.parse(_payments.income[element.chainId]!) +
+            Decimal.parse(element.amount);
+        _payments.income[element.chainId] = addedDecimal.toString();
+      });
+      paid.forEach((element) {
+        if (element.type == PaymentTypes.cheer) {
+          _payments.numberOfCheersSent++;
+        } else if (element.type == PaymentTypes.boo) {
+          _payments.numberOfBoosSent++;
+        }
+      });
+      isGettingPayments.value = false;
+      payments.value = _payments;
+      payments.refresh();
+    } catch (e) {
+      log.e(e);
+    }
   }
 
   Future<bool> checkParticleWalletActivation({bool? silent}) async {

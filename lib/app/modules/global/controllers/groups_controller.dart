@@ -15,6 +15,7 @@ import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
+import 'package:podium/app/modules/global/utils/squads/jsoner.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -431,7 +432,9 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
           .toList(),
       scheduledFor: scheduledFor,
     );
-    final jsonedGroup = group.toJson();
+    final jsonerWorker = JsonerWorker();
+    final jsonedGroup = await jsonerWorker.jsoner(group); // group.toJson();
+    jsonerWorker.stop();
     try {
       await Future.wait([
         firebaseGroupsReference.set(jsonedGroup),
@@ -461,18 +464,22 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
           )
         },
       );
-      final jsoned = newFirebaseSession.toJson();
+      final jsonerWorker = JsonerWorker();
+      final jsoned = await jsonerWorker
+          .jsoner(newFirebaseSession); //newFirebaseSession.toJson();
+      jsonerWorker.stop();
       await firebaseSessionReference.set(jsoned);
       GroupsController groupsController = Get.find();
       groupsController.groups.value.addAll(
         {id: group},
       );
-      groupsController.groups.refresh();
       joinGroupAndOpenGroupDetailPage(
         groupId: id,
         openTheRoomAfterJoining: group.scheduledFor == 0 ||
             group.scheduledFor < DateTime.now().millisecondsSinceEpoch,
       );
+      await Future.delayed(Duration(seconds: 1));
+      groupsController.groups.refresh();
     } catch (e) {
       deleteGroup(groupId: id);
       Get.snackbar("Error", "Failed to create group");

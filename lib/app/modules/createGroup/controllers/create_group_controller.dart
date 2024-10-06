@@ -237,6 +237,12 @@ class CreateGroupController extends GetxController
     final ticketType = ticketPermissiontype == TicketPermissionType.speak
         ? roomSpeakerType.value
         : roomAccessType.value;
+    if (user.defaultWalletAddress.isEmpty) {
+      Get.snackbar('Error', 'User has no wallet address',
+          colorText: Colors.red);
+      return;
+    }
+
     final usersMap = list.map((e) => e.user.id).toList();
     if (usersMap.contains(user.id)) {
       list.removeWhere((e) => e.user.id == user.id);
@@ -413,6 +419,7 @@ class CreateGroupController extends GetxController
       if (setFor == -2) {
         // means no reminder
       } else if (setFor == null) {
+        // means tap on back or outside
         return;
       }
     }
@@ -425,7 +432,10 @@ class CreateGroupController extends GetxController
     final accessType = roomAccessType.value;
     final speakerType = roomSpeakerType.value;
     final id = Uuid().v4();
-    String imageUrl = await uploadFile(groupId: id);
+    String imageUrl = "";
+    if (selectedFile != null) {
+      imageUrl = await uploadFile(groupId: id);
+    }
 
     try {
       await groupsController.createGroup(

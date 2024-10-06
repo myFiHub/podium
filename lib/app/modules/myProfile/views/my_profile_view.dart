@@ -733,6 +733,7 @@ class _Statistics extends GetWidget<MyProfileController> {
           ),
           space10,
           Container(
+            width: Get.width - 2,
             padding: const EdgeInsets.symmetric(
               horizontal: 8,
               vertical: 10,

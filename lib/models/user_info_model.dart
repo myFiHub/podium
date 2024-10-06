@@ -55,7 +55,10 @@ class UserInfoModel {
       final firstParticleAddress = savedParticleUserInfo?.wallets.where(
         (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
       );
-      return firstParticleAddress!.first.address;
+      if (firstParticleAddress == null || firstParticleAddress.isEmpty) {
+        return '';
+      }
+      return firstParticleAddress.first.address;
     }
     return walletAddress;
   }

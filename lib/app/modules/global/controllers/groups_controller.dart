@@ -157,21 +157,25 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     );
   }
 
+  final _getAllGroupsthrottle =
+      Throttling(duration: const Duration(seconds: 5));
   getAllGroups() async {
-    gettingAllGroups.value = true;
-    final databaseReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
-    final results = await databaseReference.once();
-    final data = results.snapshot.value as Map<dynamic, dynamic>?;
-    if (data != null) {
-      try {
-        await _parseAndSetGroups(data);
-      } catch (e) {
-        log.e(e);
-      } finally {
-        gettingAllGroups.value = false;
+    _getAllGroupsthrottle.throttle(() async {
+      gettingAllGroups.value = true;
+      final databaseReference =
+          FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
+      final results = await databaseReference.once();
+      final data = results.snapshot.value as Map<dynamic, dynamic>?;
+      if (data != null) {
+        try {
+          await _parseAndSetGroups(data);
+        } catch (e) {
+          log.e(e);
+        } finally {
+          gettingAllGroups.value = false;
+        }
       }
-    }
+    });
   }
 
   _parseAndSetGroups(Map<dynamic, dynamic> data) async {
@@ -179,7 +183,17 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     if (globalController.currentUserInfo.value != null) {
       final myUser = globalController.currentUserInfo.value!;
       final myId = myUser.id;
-      groups.value = getGroupsVisibleToMe(groupsMap, myId);
+      final unsorted = getGroupsVisibleToMe(groupsMap, myId);
+      // sort groups by last active time
+      final sorted = unsorted.entries.toList()
+        ..sort((a, b) {
+          final aTime = a.value.lastActiveAt;
+          final bTime = b.value.lastActiveAt;
+          return bTime.compareTo(aTime);
+        });
+      final sortedMap = Map<String, FirebaseGroup>.fromEntries(sorted);
+      groups.value = sortedMap;
+
       initializeChannels();
     }
   }
@@ -323,21 +337,24 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   }
 
   getRealtimeGroups(bool loggedIn) {
+    final liveThrottle = Throttling(duration: const Duration(seconds: 5));
     if (loggedIn) {
       gettingAllGroups.value = true;
       final databaseReference =
           FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
       subscription = databaseReference.onValue.listen((event) async {
-        final data = event.snapshot.value as Map<dynamic, dynamic>?;
-        if (data != null) {
-          try {
-            await _parseAndSetGroups(data);
-          } catch (e) {
-            log.e(e);
-          } finally {
-            gettingAllGroups.value = false;
+        liveThrottle.throttle(() async {
+          final data = event.snapshot.value as Map<dynamic, dynamic>?;
+          if (data != null) {
+            try {
+              await _parseAndSetGroups(data);
+            } catch (e) {
+              log.e(e);
+            } finally {
+              gettingAllGroups.value = false;
+            }
           }
-        }
+        });
       });
     } else {
       // subscription?.cancel();
@@ -726,7 +743,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   }
 }
 
-getGroupsVisibleToMe(Map<String, FirebaseGroup> groups, String myId) {
+Map<String, FirebaseGroup> getGroupsVisibleToMe(
+    Map<String, FirebaseGroup> groups, String myId) {
   return groups;
   // final filteredGroups = groups.entries.where((element) {
   //   if (element.value.privacyType == RoomPrivacyTypes.public ||

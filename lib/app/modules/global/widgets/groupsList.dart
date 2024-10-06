@@ -71,12 +71,9 @@ class _SingleGroup extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        final channel =
-            realtimeInstance.channels.get(RealtimeChannelNames.groupsPresence);
-        channel.presence.enter(group.id);
-        // controller.joinGroupAndOpenGroupDetailPage(
-        //   groupId: group.id,
-        // );
+        controller.joinGroupAndOpenGroupDetailPage(
+          groupId: group.id,
+        );
       },
       child: Stack(
         children: [
@@ -285,12 +282,50 @@ class _SingleGroup extends StatelessWidget {
             ),
           ),
           if (isScheduled)
-            ScheduledBanner(
+            _ScheduledBanner(
               group: group,
+              key: Key(group.id + 'scheduledBanner'),
             ),
+          _NumberOfActiveUsers(
+            groupId: group.id,
+            key: Key(group.id + 'numberOfActiveUsers'),
+          ),
         ],
       ),
     );
+  }
+}
+
+class _NumberOfActiveUsers extends GetView<GroupsController> {
+  final String groupId;
+  const _NumberOfActiveUsers({
+    super.key,
+    required this.groupId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final allActiveUsers = controller.presentUsersInGroupsMap.value;
+      final activeUsers = allActiveUsers[groupId] ?? [];
+      final numberOfActiveUsers = activeUsers.length;
+      return numberOfActiveUsers == 0
+          ? SizedBox()
+          : Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: ColorName.secondaryBlue.withOpacity(1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                "${numberOfActiveUsers} Active",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            );
+    });
   }
 }
 
@@ -298,9 +333,9 @@ generateGroupShareUrl({required String groupId}) {
   return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium";
 }
 
-class ScheduledBanner extends StatelessWidget {
+class _ScheduledBanner extends StatelessWidget {
   final FirebaseGroup group;
-  const ScheduledBanner({
+  const _ScheduledBanner({
     super.key,
     required this.group,
   });

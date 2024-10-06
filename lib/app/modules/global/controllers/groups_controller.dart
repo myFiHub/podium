@@ -38,26 +38,16 @@ sendGroupPeresenceEvent(
   channel.presence.enter(eventName);
 }
 
-class GroupPresenceEventNames {
-  static const enter = "enter";
-  static const leave = "leave";
-  static const talking = "talking";
-  static const groupId = "groupId";
-}
-
-class RealtimeChannelNames {
-  static const groupsPresence = "groups:presence";
-}
-
 class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
   final groupChannels = Rx<Map<String, ably.RealtimeChannel>>({});
   final groups = Rx<Map<String, FirebaseGroup>>({});
+  final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
+  final enterListenersMap = {};
+  final leaveListenersMap = {};
   final gettingAllGroups = true.obs;
   StreamSubscription<DatabaseEvent>? subscription;
-  final numberOfPresentUsers = Rx<Map<String, int>>({});
-  late RealtimeChannel groupsPresenceChannel;
 
   @override
   void onInit() {
@@ -82,19 +72,6 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       getRealtimeGroups(loggedIn);
       if (loggedIn) {
         realtimeInstance.options.clientId = myId;
-        groupsPresenceChannel =
-            realtimeInstance.channels.get(RealtimeChannelNames.groupsPresence);
-        groupsPresenceChannel.presence
-            .subscribe(action: PresenceAction.enter)
-            .listen((message) {
-          final userId = message.clientId!;
-          final groupId = message.data;
-        });
-        groupsPresenceChannel.presence
-            .subscribe(action: PresenceAction.leave)
-            .listen((message) {
-          print(message.data);
-        });
       }
     });
   }
@@ -164,7 +141,90 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       final myUser = globalController.currentUserInfo.value!;
       final myId = myUser.id;
       groups.value = getGroupsVisibleToMe(groupsMap, myId);
+      initializeChannels();
     }
+  }
+
+  initializeChannels() async {
+    final groupsMap = groups.value;
+    final oneHoureInMilliseconds = 3600000;
+    final groupsThatWereActiveRecently = groupsMap.entries.where((element) {
+      final group = element.value;
+      final lastActiveAt = group.lastActiveAt;
+      if (lastActiveAt != 0) {
+        log.d(
+            "Group ${group.name} was active at ${DateTime.fromMillisecondsSinceEpoch(lastActiveAt)}");
+      }
+      ;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final diff = now - lastActiveAt;
+      return diff < (1 * oneHoureInMilliseconds);
+    }).toList();
+    final currentChannels = groupChannels.value;
+    groupsThatWereActiveRecently.forEach((element) {
+      final groupId = element.key;
+      if (currentChannels[groupId] == null) {
+        final channel = realtimeInstance.channels.get(groupId);
+        currentChannels[groupId] = channel;
+      }
+    });
+    groupChannels.value = currentChannels;
+    await _getCurrentNumberOfPresentUsers();
+    _startListeners();
+  }
+
+  _getCurrentNumberOfPresentUsers() async {
+    final allChannels = groupChannels.value;
+    final List<Future<List<PresenceMessage>>> arrayToCall = [];
+    allChannels.entries.forEach((element) async {
+      arrayToCall.add(element.value.presence.get());
+    });
+    final results = await Future.wait(arrayToCall);
+    final Map<String, List<String>> tmpMap = {};
+    for (var i = 0; i < results.length; i++) {
+      final groupId = allChannels.entries.elementAt(i).key;
+      final currentPresentUsers = results[i].map((e) => e.clientId!).toList();
+      tmpMap[groupId] = currentPresentUsers;
+    }
+    presentUsersInGroupsMap.value = tmpMap;
+  }
+
+  _startListeners() {
+    groupChannels.value.entries.forEach((element) {
+      final channel = element.value;
+      if (enterListenersMap[element.key] == null) {
+        enterListenersMap[element.key] = element;
+        channel.presence
+            .subscribe(action: PresenceAction.enter)
+            .listen((message) {
+          final groupId = element.key;
+          final currentListForThisGroup =
+              presentUsersInGroupsMap.value[groupId] ?? [];
+          currentListForThisGroup.add(message.clientId!);
+          presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+          log.d("Present users: ${currentListForThisGroup}");
+          presentUsersInGroupsMap.refresh();
+        });
+      }
+      if (leaveListenersMap[element.key] == null) {
+        leaveListenersMap[element.key] = element;
+        channel.presence
+            .subscribe(action: PresenceAction.leave)
+            .listen((message) {
+          final groupId = element.key;
+          final currentListForThisGroup =
+              presentUsersInGroupsMap.value[groupId] ?? [];
+          currentListForThisGroup.remove(message.clientId!);
+          presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+          log.d("Present users: ${currentListForThisGroup}");
+          presentUsersInGroupsMap.refresh();
+        });
+      }
+    });
+  }
+
+  List<String> getPresentUsersInGroup(String groupId) {
+    return presentUsersInGroupsMap.value[groupId] ?? [];
   }
 
   getRealtimeGroups(bool loggedIn) {
@@ -230,6 +290,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       tags: tags.map((e) => e).toList(),
       alarmId: alarmId,
       creatorJoined: false,
+      lastActiveAt: DateTime.now().millisecondsSinceEpoch,
       requiredAddressesToEnter: requiredAddressesToEnter,
       requiredAddressesToSpeak: requiredAddressesToSpeak,
       ticketsRequiredToAccess: requiredTicketsToAccess

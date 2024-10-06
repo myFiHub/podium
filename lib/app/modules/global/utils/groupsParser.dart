@@ -62,7 +62,7 @@ FirebaseGroup? singleGroupParser(value) {
     final tags = value[FirebaseGroup.tagsKey] ?? [];
     final List<String> parsedTags = tags.map((e) => e).toList().cast<String>();
     final int alarmId = value[FirebaseGroup.alarmIdKey] ?? 0;
-
+    final lastActiveAt = value[FirebaseGroup.lastActiveAtKey] ?? 0;
     final creatorUser = FirebaseGroupCreator(
       fullName: creatorName,
       email: creatorEmail,
@@ -75,6 +75,7 @@ FirebaseGroup? singleGroupParser(value) {
       imageUrl: imageUrl,
       creator: creatorUser,
       members: members,
+      lastActiveAt: lastActiveAt,
       accessType: accessType,
       speakerType: speakerType,
       subject: subject,

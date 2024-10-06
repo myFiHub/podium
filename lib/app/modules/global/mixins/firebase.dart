@@ -92,6 +92,15 @@ mixin FireBaseUtils {
     return [];
   }
 
+  Future updateGroupLastActiveAt(
+      {required String groupId, required int lastActiveAt}) async {
+    final databaseRef = FirebaseDatabase.instance.ref(
+        FireBaseConstants.groupsRef +
+            groupId +
+            '/${FirebaseGroup.lastActiveAtKey}');
+    await databaseRef.set(lastActiveAt);
+  }
+
   Future<List<PaymentEvent>> getInitiatedPayments(
       {required String userId}) async {
     final DatabaseReference _database = FirebaseDatabase.instance.ref();

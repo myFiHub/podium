@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -34,8 +35,14 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         userId: myId,
         isPresent: true,
       );
+      await groupCallController.updateGroupLastActiveAt(
+        groupId: group.id,
+        lastActiveAt: DateTime.now().millisecondsSinceEpoch,
+      );
 
       await Future.delayed(Duration(seconds: 3));
+      final channel = realtimeInstance.channels.get(group.id);
+      channel.presence.leave(group.id);
       await jitsiMeet.retrieveParticipantsInfo();
 
       log.d("conferenceJoined: url: $url");
@@ -65,6 +72,8 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         route: Routes.HOME,
         type: NavigationTypes.offNamed,
       );
+      final channel = realtimeInstance.channels.get(group.id);
+      channel.presence.leave(group.id);
 
       groupCallController.setIsUserPresentInSession(
         groupId: groupCallController.group.value!.id,

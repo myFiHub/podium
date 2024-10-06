@@ -160,7 +160,8 @@ class GroupDetailController extends GetxController with FireBaseUtils {
           final remaining = remainintTimeUntilMilSecondsFormated(
               time: group.value!.scheduledFor);
           jointButtonContentProps.value = JoinButtonProps(
-              enabled: false, text: 'Scheduled for: ${remaining}');
+              enabled: false,
+              text: 'Scheduled for:\n ${remaining.replaceAll(' ', '')}');
         }
       }
     } else {

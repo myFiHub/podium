@@ -1,3 +1,4 @@
+import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
@@ -62,7 +63,9 @@ class _SingleGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final isScheduled = group.scheduledFor != 0;
 
-    return GestureDetector(
+    return Bounce(
+      tapDelay: Duration(milliseconds: 20),
+      scaleFactor: 0.97,
       onTap: () async {
         // final delay = 2;
         // sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);

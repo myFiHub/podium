@@ -498,6 +498,9 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     bool? joiningByLink,
   }) async {
     if (groupId.isEmpty) return;
+    if (joiningGroupId != '') {
+      return;
+    }
     final firebaseGroupsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
     final firebaseSessionsReference =
@@ -514,6 +517,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
+      joiningGroupId.value = '';
       return;
     }
 
@@ -522,13 +526,17 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       joiningByLink: joiningByLink,
     );
     log.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
-    if (accesses.canEnter == false) return;
+    if (accesses.canEnter == false) {
+      joiningGroupId.value = '';
+      return;
+    }
 
     final hasAgeVerified = await _showAreYouOver18Dialog(
       group: group,
       myUser: myUser,
     );
     if (!hasAgeVerified) {
+      joiningGroupId.value = '';
       return;
     }
 
@@ -575,6 +583,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       } catch (e) {
         Get.snackbar("Error", "Failed to join group");
         log.f("Error joining group: $e");
+      } finally {
         joiningGroupId.value = '';
       }
     } else {
@@ -596,8 +605,6 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     if (isAlreadyRegistered) {
       Get.delete<GroupDetailController>();
     }
-
-    joiningGroupId.value = '';
 
     Navigate.to(
         type: NavigationTypes.toNamed,

@@ -29,24 +29,51 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:ably_flutter/ably_flutter.dart' as ably;
 import 'package:podium/env.dart';
+import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
+// detect presence time (groups that were active this milliseconds ago will be considered active)
+int dpt = 0;
 
 sendGroupPeresenceEvent(
     {required String groupId, required String eventName}) async {
+  if (dpt == 0) {
+    return;
+  }
   final channel = realtimeInstance.channels.get(groupId);
+  if (eventName == eventNames.leave) {
+    channel.presence.leave(groupId);
+    return;
+  }
+  if (eventName == eventNames.talking || eventName == eventNames.notTalking) {
+    channel.presence.update(eventName);
+    return;
+  }
   channel.presence.enter(eventName);
 }
 
+class eventNames {
+  static const String leave = "leave";
+  static const String talking = "talking";
+  static const String notTalking = "notTalking";
+}
+
 class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
+  final _presentUsersRefreshThrottle =
+      Throttling(duration: const Duration(seconds: 2));
+  final _takingUsersRefreshThrottle =
+      Throttling(duration: const Duration(seconds: 2));
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
   final groupChannels = Rx<Map<String, ably.RealtimeChannel>>({});
   final groups = Rx<Map<String, FirebaseGroup>>({});
   final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
+  final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final enterListenersMap = {};
+  final updateListenersMap = {};
   final leaveListenersMap = {};
   final gettingAllGroups = true.obs;
+  bool initializedChannels = false;
   StreamSubscription<DatabaseEvent>? subscription;
 
   @override
@@ -84,6 +111,18 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _refreshPresentUsers() {
+    _presentUsersRefreshThrottle.throttle(() {
+      presentUsersInGroupsMap.refresh();
+    });
+  }
+
+  _refreshTakingUsers() {
+    _takingUsersRefreshThrottle.throttle(() {
+      takingUsersInGroupsMap.refresh();
+    });
   }
 
   toggleArchive({required FirebaseGroup group}) async {
@@ -146,19 +185,34 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   }
 
   initializeChannels() async {
+    // if (initializedChannels) return;
     final groupsMap = groups.value;
-    final oneHoureInMilliseconds = 3600000;
+    // readt detectPresenceTime from firebase
+    try {
+      final detectPresenceTimeRef =
+          FirebaseDatabase.instance.ref(FireBaseConstants.detectPresenceTime);
+      final detectPresenceTimeSnapshot = await detectPresenceTimeRef.get();
+      final detectPresenceTime = detectPresenceTimeSnapshot.value;
+      if (detectPresenceTime != null) {
+        dpt = detectPresenceTime as int;
+      }
+    } catch (e) {}
+    if (dpt == 0) {
+      return;
+    }
+    log.d("Detect presence time: $dpt");
+
     final groupsThatWereActiveRecently = groupsMap.entries.where((element) {
       final group = element.value;
       final lastActiveAt = group.lastActiveAt;
-      if (lastActiveAt != 0) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final diff = now - lastActiveAt;
+      final isActive = diff < (1 * dpt);
+      if (isActive) {
         log.d(
             "Group ${group.name} was active at ${DateTime.fromMillisecondsSinceEpoch(lastActiveAt)}");
       }
-      ;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final diff = now - lastActiveAt;
-      return diff < (1 * oneHoureInMilliseconds);
+      return isActive;
     }).toList();
     final currentChannels = groupChannels.value;
     groupsThatWereActiveRecently.forEach((element) {
@@ -197,13 +251,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
         channel.presence
             .subscribe(action: PresenceAction.enter)
             .listen((message) {
-          final groupId = element.key;
-          final currentListForThisGroup =
-              presentUsersInGroupsMap.value[groupId] ?? [];
-          currentListForThisGroup.add(message.clientId!);
-          presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
-          log.d("Present users: ${currentListForThisGroup}");
-          presentUsersInGroupsMap.refresh();
+          _handleNewEnterMessage(groupId: element.key, message: message);
         });
       }
       if (leaveListenersMap[element.key] == null) {
@@ -211,16 +259,63 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
         channel.presence
             .subscribe(action: PresenceAction.leave)
             .listen((message) {
-          final groupId = element.key;
-          final currentListForThisGroup =
-              presentUsersInGroupsMap.value[groupId] ?? [];
-          currentListForThisGroup.remove(message.clientId!);
-          presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
-          log.d("Present users: ${currentListForThisGroup}");
-          presentUsersInGroupsMap.refresh();
+          _handleLeaveEvent(groupId: element.key, clientId: message.clientId!);
+        });
+      }
+      if (updateListenersMap[element.key] == null) {
+        updateListenersMap[element.key] = element;
+        channel.presence
+            .subscribe(action: PresenceAction.update)
+            .listen((message) {
+          _hanldeNewUpdateMessage(groupId: element.key, message: message);
         });
       }
     });
+    initializedChannels = true;
+  }
+
+  _handleNewEnterMessage(
+      {required String groupId, required PresenceMessage message}) {
+    final currentListForThisGroup =
+        presentUsersInGroupsMap.value[groupId] ?? [];
+    currentListForThisGroup.add(message.clientId!);
+    presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+    _refreshPresentUsers();
+  }
+
+  _hanldeNewUpdateMessage(
+      {required String groupId, required PresenceMessage message}) {
+    if (message.data == eventNames.talking) {
+      final currentListForThisGroup =
+          takingUsersInGroupsMap.value[groupId] ?? [];
+      currentListForThisGroup.add(message.clientId!);
+      takingUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      log.d("Talking users: $currentListForThisGroup");
+      _refreshTakingUsers();
+    } else if (message.data == eventNames.notTalking) {
+      final currentListForThisGroup =
+          takingUsersInGroupsMap.value[groupId] ?? [];
+      currentListForThisGroup.remove(message.clientId!);
+      takingUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      _refreshTakingUsers();
+    }
+  }
+
+  _handleLeaveEvent({required String groupId, required String clientId}) {
+    final currentListForThisGroup =
+        presentUsersInGroupsMap.value[groupId] ?? [];
+    if (currentListForThisGroup.contains(clientId)) {
+      currentListForThisGroup.remove(clientId);
+      presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      _refreshPresentUsers();
+    }
+    final currentTakingListForThisGroup =
+        takingUsersInGroupsMap.value[groupId] ?? [];
+    if (currentTakingListForThisGroup.contains(clientId)) {
+      currentTakingListForThisGroup.remove(clientId);
+      takingUsersInGroupsMap.value[groupId] = currentTakingListForThisGroup;
+      _refreshTakingUsers();
+    }
   }
 
   List<String> getPresentUsersInGroup(String groupId) {

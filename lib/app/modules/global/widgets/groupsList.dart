@@ -10,6 +10,7 @@ import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:pulsator/pulsator.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -30,17 +31,11 @@ class GroupList extends StatelessWidget {
           final group = groupsList[index];
           final name = group.name;
           final amICreator = group.creator.id == myId;
-          String creatorAvatar = group.creator.avatar;
-
-          if (creatorAvatar == defaultAvatar) {
-            creatorAvatar = avatarPlaceHolder(group.creator.fullName);
-          }
           return _SingleGroup(
             key: Key(group.id),
             controller: controller,
             amICreator: amICreator,
             name: name,
-            creatorAvatar: creatorAvatar,
             group: group,
           );
         },
@@ -55,14 +50,12 @@ class _SingleGroup extends StatelessWidget {
     required this.controller,
     required this.amICreator,
     required this.name,
-    required this.creatorAvatar,
     required this.group,
   });
 
   final GroupsController controller;
   final bool amICreator;
   final String name;
-  final String creatorAvatar;
   final FirebaseGroup group;
 
   @override
@@ -70,9 +63,17 @@ class _SingleGroup extends StatelessWidget {
     final isScheduled = group.scheduledFor != 0;
 
     return GestureDetector(
-      onTap: () {
-        // final channel = realtimeInstance.channels.get(group.id);
-        // channel.presence.enter(group.id);
+      onTap: () async {
+        // final delay = 2;
+        // sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);
+        // await Future.delayed(Duration(seconds: delay));
+        // sendGroupPeresenceEvent(
+        //     groupId: group.id, eventName: eventNames.talking);
+        // await Future.delayed(Duration(seconds: delay));
+        // sendGroupPeresenceEvent(
+        //     groupId: group.id, eventName: eventNames.notTalking);
+        // await Future.delayed(Duration(seconds: delay));
+        // sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.leave);
         controller.joinGroupAndOpenGroupDetailPage(
           groupId: group.id,
         );
@@ -95,7 +96,7 @@ class _SingleGroup extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
+                        SizedBox(
                           width: Get.width - 75,
                           child: Text(
                             name,
@@ -119,7 +120,7 @@ class _SingleGroup extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
+                                SizedBox(
                                   width: Get.width - 170,
                                   child: RichText(
                                       overflow: TextOverflow.ellipsis,
@@ -154,7 +155,7 @@ class _SingleGroup extends StatelessWidget {
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
-                                    Container(
+                                    SizedBox(
                                       width: Get.width - 170,
                                       child: Text(
                                         " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
@@ -268,7 +269,7 @@ class _SingleGroup extends StatelessWidget {
                     )
                   ],
                 ),
-                JoiningIndicator(
+                _JoiningIndicator(
                   groupId: group.id,
                 ),
                 if (group.hasAdultContent)
@@ -309,22 +310,34 @@ class _NumberOfActiveUsers extends GetView<GroupsController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final allActiveUsers = controller.presentUsersInGroupsMap.value;
-      final activeUsers = allActiveUsers[groupId] ?? [];
-      final numberOfActiveUsers = activeUsers.length;
+      final activeInThisGroup = allActiveUsers[groupId] ?? [];
+      final numberOfActiveUsers = activeInThisGroup.length;
       return numberOfActiveUsers == 0
           ? SizedBox()
           : Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: ColorName.secondaryBlue.withOpacity(1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                "${numberOfActiveUsers} Active",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                ),
+              width: 40,
+              height: 40,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Pulsator(
+                    style: PulseStyle(color: Colors.red),
+                    duration: Duration(seconds: 2),
+                    count: 5,
+                    repeat: 0,
+                    startFromScratch: false,
+                    autoStart: true,
+                    fit: PulseFit.contain,
+                    child: Text(
+                      "${numberOfActiveUsers}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
     });
@@ -450,9 +463,9 @@ class SingleTag extends StatelessWidget {
   }
 }
 
-class JoiningIndicator extends GetView<GroupsController> {
+class _JoiningIndicator extends GetView<GroupsController> {
   final groupId;
-  const JoiningIndicator({super.key, required this.groupId});
+  const _JoiningIndicator({super.key, required this.groupId});
 
   @override
   Widget build(BuildContext context) {

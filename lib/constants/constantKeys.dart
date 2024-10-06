@@ -10,4 +10,5 @@ class FireBaseConstants {
   static final versionCheckRef = 'versionCheck/';
   static final jitsiServerAddressRef = "va/";
   static final paymentEvents = "paymentEvents/";
+  static final detectPresenceTime = "detectPresenceTime/";
 }

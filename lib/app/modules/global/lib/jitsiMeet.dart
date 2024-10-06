@@ -30,19 +30,18 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         await groupCallController.setCreatorJoinedToTrue(groupId: group.id);
       }
       groupCallController.haveOngoingCall.value = true;
-      groupCallController.setIsUserPresentInSession(
-        groupId: groupCallController.group.value!.id,
-        userId: myId,
-        isPresent: true,
-      );
+      // groupCallController.setIsUserPresentInSession(
+      //   groupId: groupCallController.group.value!.id,
+      //   userId: myId,
+      //   isPresent: true,
+      // );
       await groupCallController.updateGroupLastActiveAt(
         groupId: group.id,
         lastActiveAt: DateTime.now().millisecondsSinceEpoch,
       );
 
       await Future.delayed(Duration(seconds: 3));
-      final channel = realtimeInstance.channels.get(group.id);
-      channel.presence.leave(group.id);
+      sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);
       await jitsiMeet.retrieveParticipantsInfo();
 
       log.d("conferenceJoined: url: $url");
@@ -68,22 +67,6 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
     },
     conferenceTerminated: (url, error) {
       log.f("conferenceTerminated: url: $url, error: $error");
-      Navigate.to(
-        route: Routes.HOME,
-        type: NavigationTypes.offNamed,
-      );
-      final channel = realtimeInstance.channels.get(group.id);
-      channel.presence.leave(group.id);
-
-      groupCallController.setIsUserPresentInSession(
-        groupId: groupCallController.group.value!.id,
-        userId: myId,
-        isPresent: false,
-      );
-      groupCallController.cleanupAfterCall();
-      if (Get.isRegistered<OngoingGroupCallController>()) {
-        Get.delete<OngoingGroupCallController>();
-      }
     },
     participantsInfoRetrieved: (participantsInfo) {
       try {
@@ -98,7 +81,20 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       }
     },
     readyToClose: () {
-      log.d("readyToClose");
+      Navigate.to(
+        route: Routes.HOME,
+        type: NavigationTypes.offNamed,
+      );
+      sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.leave);
+      // groupCallController.setIsUserPresentInSession(
+      //   groupId: groupCallController.group.value!.id,
+      //   userId: myId,
+      //   isPresent: false,
+      // );
+      groupCallController.cleanupAfterCall();
+      if (Get.isRegistered<OngoingGroupCallController>()) {
+        Get.delete<OngoingGroupCallController>();
+      }
     },
     like: (idWithAddedAtSign, participantId) async {
       final OngoingGroupCallController ongoingGroupCallController =

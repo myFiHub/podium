@@ -71,6 +71,8 @@ class _SingleGroup extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
+        // final channel = realtimeInstance.channels.get(group.id);
+        // channel.presence.enter(group.id);
         controller.joinGroupAndOpenGroupDetailPage(
           groupId: group.id,
         );

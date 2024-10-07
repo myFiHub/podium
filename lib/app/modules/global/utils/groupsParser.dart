@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -99,15 +100,30 @@ FirebaseGroup? singleGroupParser(value) {
 }
 
 Future<Map<String, FirebaseGroup>> groupsParser(data) async {
-  Map<String, FirebaseGroup> groupsMap = {};
+  // Map<String, FirebaseGroup> groupsMap = {};
+  // data.forEach((key, value) {
+  //   final group = singleGroupParser(value);
+  //   if (group != null &&
+  //       (group.archived == false || group.creator.id == myId)) {
+  //     groupsMap[group.id] = group;
+  //   }
+  // });
+  // return groupsMap;
 
-  data.forEach((key, value) {
+  final parsed = await compute(_computeGroups, [data, myId]);
+  return parsed;
+}
+
+Map<String, FirebaseGroup> _computeGroups(List<dynamic> args) {
+  final groups = args[0];
+  final myId = args[1];
+  Map<String, FirebaseGroup> groupsMap = {};
+  groups.forEach((key, value) {
     final group = singleGroupParser(value);
     if (group != null &&
         (group.archived == false || group.creator.id == myId)) {
       groupsMap[group.id] = group;
     }
   });
-
   return groupsMap;
 }

@@ -50,10 +50,10 @@ packages:
     dependency: "direct main"
     description:
       name: alarm
-      sha256: ae370064c2e48c580ad24fa566f64b04cee6fc2222dba99d90f0d8700334eaf2
+      sha256: "31d4e22d0ad2a2d9f3aea720edaa52cbe419d4842d05348c7dd6edb5683a9579"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.1"
+    version: "4.0.2"
   analyzer:
     dependency: transitive
     description:

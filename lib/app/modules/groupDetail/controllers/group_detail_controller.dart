@@ -34,7 +34,7 @@ class GroupDetailsParametersKeys {
   static const String groupInfo = 'groupInfo';
 }
 
-class GroupDetailController extends GetxController with FireBaseUtils {
+class GroupDetailController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;

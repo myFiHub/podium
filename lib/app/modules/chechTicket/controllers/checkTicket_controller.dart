@@ -79,8 +79,7 @@ class TicketSeller {
   }
 }
 
-class CheckticketController extends GetxController
-    with FireBaseUtils, BlockChainInteractions {
+class CheckticketController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final GroupsController groupsController = Get.find<GroupsController>();
   final Map<String, UserInfoModel> usersToBuyTicketFromInOrderToHaveAccess = {};

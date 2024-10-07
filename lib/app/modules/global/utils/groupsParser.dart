@@ -110,8 +110,8 @@ Future<Map<String, FirebaseGroup>> groupsParser(data) async {
   // });
   // return groupsMap;
 
-  final parsed = await compute(_computeGroups, [data, myId]);
-  return parsed;
+  final groupsMap = await compute(_computeGroups, [data, myId]);
+  return groupsMap;
 }
 
 Map<String, FirebaseGroup> _computeGroups(List<dynamic> args) {

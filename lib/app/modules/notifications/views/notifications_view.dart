@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/utils/styles.dart';
@@ -76,7 +77,7 @@ class NotificationsView extends GetView<NotificationsController> {
                                         Button(
                                           size: ButtonSize.SMALL,
                                           onPressed: () {
-                                            controller.markNotificationAsRead(
+                                            markNotificationAsRead(
                                               notificationId: notif.id,
                                             );
                                           },

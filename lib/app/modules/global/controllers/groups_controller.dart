@@ -67,7 +67,7 @@ class eventNames {
   static const String notTalking = "notTalking";
 }
 
-class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
+class GroupsController extends GetxController with FirebaseTags {
   final _presentUsersRefreshThrottle =
       Throttling(duration: const Duration(seconds: 2));
   final _takingUsersRefreshThrottle =

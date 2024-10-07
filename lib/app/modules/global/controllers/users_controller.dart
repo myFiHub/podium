@@ -14,8 +14,7 @@ import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
 
-class UsersController extends GetxController
-    with FireBaseUtils, BlockChainInteractions {
+class UsersController extends GetxController {
   final globalController = Get.find<GlobalController>();
   // current user is set by listening to global controller's currentUserInfo
   final currentUserInfo = Rxn<UserInfoModel>();

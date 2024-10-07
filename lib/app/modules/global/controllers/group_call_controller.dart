@@ -27,7 +27,7 @@ class SortTypes {
   static const String timeJoined = 'timeJoined';
 }
 
-class GroupCallController extends GetxController with FireBaseUtils {
+class GroupCallController extends GetxController {
   final storage = GetStorage();
   // group session id is group id
   final groupsController = Get.find<GroupsController>();

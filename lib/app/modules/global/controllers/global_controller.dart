@@ -60,7 +60,7 @@ class GlobalUpdateIds {
   static const ticker = 'ticker';
 }
 
-class GlobalController extends GetxController with FireBaseUtils {
+class GlobalController extends GetxController {
   static final storage = GetStorage();
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;

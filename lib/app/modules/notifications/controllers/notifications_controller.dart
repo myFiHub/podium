@@ -10,7 +10,7 @@ import 'package:podium/models/notification_model.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:uuid/uuid.dart';
 
-class NotificationsController extends GetxController with FireBaseUtils {
+class NotificationsController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
   final notifications = <FirebaseNotificationModel>[].obs;
   final numberOfUnreadNotifications = 0.obs;

@@ -35,8 +35,7 @@ class TicketSellersListMember {
   TicketSellersListMember({required this.user, required this.activeAddress});
 }
 
-class CreateGroupController extends GetxController
-    with FireBaseUtils, BlockChainInteractions {
+class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;

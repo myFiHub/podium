@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -27,7 +28,7 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       final groupCreator = groupCallController.group.value!.creator.id;
       final iAmCreator = groupCreator == myUserId;
       if (group.creatorJoined != true && iAmCreator) {
-        await groupCallController.setCreatorJoinedToTrue(groupId: group.id);
+        await setCreatorJoinedToTrue(groupId: group.id);
       }
       groupCallController.haveOngoingCall.value = true;
       // groupCallController.setIsUserPresentInSession(
@@ -35,7 +36,7 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       //   userId: myId,
       //   isPresent: true,
       // );
-      await groupCallController.updateGroupLastActiveAt(
+      await updateGroupLastActiveAt(
         groupId: group.id,
         lastActiveAt: DateTime.now().millisecondsSinceEpoch,
       );

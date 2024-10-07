@@ -29,8 +29,7 @@ class Payments {
       this.numberOfBoosSent = 0});
 }
 
-class ProfileController extends GetxController
-    with BlockChainInteractions, FireBaseUtils {
+class ProfileController extends GetxController {
   final userInfo = Rxn<UserInfoModel>();
   final globalController = Get.find<GlobalController>();
   final groupsController = Get.find<GroupsController>();

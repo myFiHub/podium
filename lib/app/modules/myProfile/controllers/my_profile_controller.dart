@@ -25,8 +25,7 @@ class Payments {
       required this.income});
 }
 
-class MyProfileController extends GetxController
-    with BlockChainInteractions, FireBaseUtils {
+class MyProfileController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final isParticleActivatedOnFriendTech = false.obs;
   final isExternalWalletActivatedOnFriendTech = false.obs;

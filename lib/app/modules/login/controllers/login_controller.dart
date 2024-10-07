@@ -24,8 +24,7 @@ import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:uuid/uuid.dart';
 
-class LoginController extends GetxController
-    with ParticleAuthUtils, FireBaseUtils {
+class LoginController extends GetxController with ParticleAuthUtils {
   final globalController = Get.find<GlobalController>();
   final isLoggingIn = false.obs;
   final $isAutoLoggingIn = false.obs;

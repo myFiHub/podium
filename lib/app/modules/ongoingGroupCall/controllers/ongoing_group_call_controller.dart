@@ -46,8 +46,7 @@ class MyTalkTimer {
   }
 }
 
-class OngoingGroupCallController extends GetxController
-    with FireBaseUtils, BlockChainInteractions {
+class OngoingGroupCallController extends GetxController {
   final groupCallController = Get.find<GroupCallController>();
   final globalController = Get.find<GlobalController>();
   final firebaseSession = Rxn<FirebaseSession>();

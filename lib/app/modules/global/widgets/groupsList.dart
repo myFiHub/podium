@@ -101,7 +101,7 @@ class _SingleGroup extends StatelessWidget {
                           width: Get.width - 75,
                           child: Text(
                             name,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                               overflow: TextOverflow.ellipsis,
@@ -114,8 +114,9 @@ class _SingleGroup extends StatelessWidget {
                             Img(
                               src: Uri.parse(group.imageUrl ?? "").isAbsolute
                                   ? group.imageUrl!
-                                  : Constants.logoUrl,
+                                  : '',
                               alt: group.name,
+                              ifEmpty: Assets.images.logo.path,
                             ),
                             space10,
                             Column(
@@ -127,7 +128,7 @@ class _SingleGroup extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       text: TextSpan(
                                         children: [
-                                          TextSpan(
+                                          const TextSpan(
                                             text: "Created by:",
                                             style: TextStyle(
                                               fontSize: 10,
@@ -151,7 +152,7 @@ class _SingleGroup extends StatelessWidget {
                                 space5,
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.subject,
                                       color: ColorName.greyText,
                                       size: 14,
@@ -160,7 +161,7 @@ class _SingleGroup extends StatelessWidget {
                                       width: Get.width - 170,
                                       child: Text(
                                         " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w400,
                                           color: ColorName.greyText,
@@ -173,7 +174,7 @@ class _SingleGroup extends StatelessWidget {
                                 space5,
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.lock,
                                       color: ColorName.greyText,
                                       size: 14,
@@ -181,7 +182,7 @@ class _SingleGroup extends StatelessWidget {
                                     space5,
                                     Text(
                                       parseAccessType(group.accessType),
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
                                         color: ColorName.greyText,
@@ -192,7 +193,7 @@ class _SingleGroup extends StatelessWidget {
                                 space5,
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.mic,
                                       color: ColorName.greyText,
                                       size: 14,
@@ -200,7 +201,7 @@ class _SingleGroup extends StatelessWidget {
                                     space5,
                                     Text(
                                       parseSpeakerType(group.speakerType),
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
                                         color: ColorName.greyText,
@@ -211,7 +212,7 @@ class _SingleGroup extends StatelessWidget {
                                 space5,
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.group,
                                       color: ColorName.greyText,
                                       size: 14,
@@ -249,7 +250,7 @@ class _SingleGroup extends StatelessWidget {
                               Share.share(
                                   generateGroupShareUrl(groupId: group.id));
                             },
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.share,
                               color: ColorName.greyText,
                             ),
@@ -331,7 +332,7 @@ class _NumberOfActiveUsers extends GetView<GroupsController> {
                     fit: PulseFit.contain,
                     child: Text(
                       "${numberOfActiveUsers}",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -385,17 +386,18 @@ class _ScheduledBanner extends StatelessWidget {
                   color: isStarted ? Colors.green : Colors.red,
                   spanBaselineShift: remainingText.contains('days') ? 2 : 4,
                   badgeSize: Size(size.toDouble(), size.toDouble()),
-                  badgeCornerRadius: Radius.circular(4),
+                  badgeCornerRadius: const Radius.circular(4),
                   badgePosition: BadgePosition.topEnd,
                   textSpan: TextSpan(
                     text: remainingText,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 9,
                       letterSpacing: 1,
                       fontWeight: FontWeight.bold,
                       shadows: [
-                        BoxShadow(color: Colors.yellowAccent, blurRadius: 8),
+                        const BoxShadow(
+                            color: Colors.yellowAccent, blurRadius: 8),
                       ],
                     ),
                   ),
@@ -420,7 +422,7 @@ class TagsWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      margin: const EdgeInsets.only(top: 8),
       width: Get.width - 74,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -454,7 +456,7 @@ class SingleTag extends StatelessWidget {
       ),
       child: Text(
         tagName,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w400,
           color: ColorName.greyText,
@@ -478,7 +480,7 @@ class _JoiningIndicator extends GetView<GroupsController> {
       return Positioned(
         right: Get.width / 2 - 20,
         bottom: 40,
-        child: CircularProgressIndicator(),
+        child: const CircularProgressIndicator(),
       );
     });
   }

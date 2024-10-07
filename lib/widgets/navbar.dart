@@ -70,7 +70,7 @@ class PodiumNavbar extends GetView<GlobalController> {
           height: 0,
         );
       }
-      final bottomSpace = MediaQuery.of(context).viewInsets.bottom;
+      final bottomSpace = MediaQuery.viewInsetsOf(context).bottom;
       return Container(
         height: bottomSpace == 0 ? navbarHeight : 0,
         color: ColorName.navbarBackground,

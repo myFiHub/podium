@@ -79,16 +79,24 @@ class MyProfileController extends GetxController {
       );
 
       received.forEach((element) {
-        if (element.type == PaymentTypes.cheer) {
-          _payments.numberOfCheersReceived++;
-        } else if (element.type == PaymentTypes.boo) {
-          _payments.numberOfBoosReceived++;
-        }
+        String thisIncome = '0.0';
         if (_payments.income[element.chainId] == null) {
-          _payments.income[element.chainId] = '0.0';
+          _payments.income[element.chainId] = thisIncome;
+        }
+        if (element.type == PaymentTypes.cheer ||
+            element.type == PaymentTypes.boo) {
+          thisIncome = (Decimal.parse(element.amount) * Decimal.parse("0.95"))
+              .toString();
+          if (element.type == PaymentTypes.cheer) {
+            _payments.numberOfCheersReceived++;
+          } else if (element.type == PaymentTypes.boo) {
+            _payments.numberOfBoosReceived++;
+          }
+        } else {
+          thisIncome = element.amount;
         }
         final addedDecimal = Decimal.parse(_payments.income[element.chainId]!) +
-            Decimal.parse(element.amount);
+            Decimal.parse(thisIncome);
         _payments.income[element.chainId] = addedDecimal.toString();
       });
       paid.forEach((element) {

@@ -17,7 +17,6 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -476,18 +475,18 @@ Future<bool?> showActivatePopup() async {
   return await Get.dialog<bool>(
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
-      title: Text('Activate Wallet'),
+      title: const Text('Activate Wallet'),
       content: RichText(
         text: TextSpan(
           text:
               'You need to activate your wallet to buy tickets for this event. Do you want to activate it now?',
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
           children: [
             if (externalWalletAddress == null)
-              TextSpan(
+              const TextSpan(
                 text:
                     '\n(your external wallet is disconnected\n we checked against your particle wallet address)',
-                style: TextStyle(color: Colors.red),
+                style: const TextStyle(color: Colors.red),
               ),
           ],
         ),
@@ -497,13 +496,13 @@ Future<bool?> showActivatePopup() async {
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(false);
           },
-          child: Text('Cancel'),
+          child: const Text('Cancel'),
         ),
         TextButton(
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(true);
           },
-          child: Text('Activate'),
+          child: const Text('Activate'),
         ),
       ],
     ),
@@ -518,17 +517,17 @@ class ScheduledGroupDateSelector extends GetView<CreateGroupController> {
     return SingleChildScrollView(
       child: Container(
         width: Get.width,
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
           color: ColorName.cardBackground,
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
         ),
-        child: Column(
+        child: const Column(
           children: [
-            Text('Select Date and Time'),
+            const Text('Select Date and Time'),
           ],
         ),
       ),
@@ -551,16 +550,16 @@ class SelectUsersToBuyTicketFromBottomSheetContent
       child: Material(
         child: Container(
           color: ColorName.cardBackground,
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           height: Get.height * 0.5,
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Search user',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -570,7 +569,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                       controller.listOfSearchedUsersToBuyTicketFrom.value = [];
                       Get.close();
                     },
-                    icon: Icon(Icons.close),
+                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
@@ -587,9 +586,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                   child: Input(
                     controller: inputController,
                     suffixIcon: hasLoadingAddress
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 50,
-                            child: GFLoader(),
+                            child: const GFLoader(),
                           )
                         : searchValue.isEmpty
                             ? IconButton(
@@ -621,7 +620,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                     }
                                   }
                                 },
-                                icon: Icon(
+                                icon: const Icon(
                                   Icons.paste,
                                   color: Colors.grey,
                                 ),
@@ -647,15 +646,16 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       controller.searchUsers('');
                                       inputController.clear();
                                     },
-                                    icon:
-                                        Icon(Icons.check, color: Colors.green),
+                                    icon: const Icon(Icons.check,
+                                        color: Colors.green),
                                   )
                                 : IconButton(
                                     onPressed: () {
                                       controller.searchUsers('');
                                       inputController.clear();
                                     },
-                                    icon: Icon(Icons.close, color: Colors.red),
+                                    icon: const Icon(Icons.close,
+                                        color: Colors.red),
                                   ),
                     hintText: 'Enter the Name/address',
                     onChanged: (value) {
@@ -702,8 +702,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                         selectedIds = selectedUsers.map((e) => e.id).toList();
                       } else {
                         return Container(
-                          child: Center(
-                            child: Text('Error, type is not valid'),
+                          child: const Center(
+                            child: const Text('Error, type is not valid'),
                           ),
                         );
                       }
@@ -734,7 +734,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           return Column(
                             children: [
                               ListTile(
-                                contentPadding: EdgeInsets.only(left: 12),
+                                contentPadding: const EdgeInsets.only(left: 12),
                                 title: Column(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
@@ -760,7 +760,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                               length: 20,
                                             ),
                                             textAlign: TextAlign.start,
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 14,
                                             ),
@@ -774,7 +774,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                             "user ID: " +
                                                 truncate(element.user!.id,
                                                     length: 12),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               color: Colors.grey,
                                               fontSize: 12,
                                             ),
@@ -791,7 +791,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       Padding(
                                         padding:
                                             const EdgeInsets.only(right: 18.0),
-                                        child: GFLoader(),
+                                        child: const GFLoader(),
                                       )
                                     else if (element.user != null)
                                       GFCheckbox(
@@ -814,7 +814,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       Padding(
                                         padding:
                                             const EdgeInsets.only(right: 18.0),
-                                        child: GFLoader(),
+                                        child: const GFLoader(),
                                       )
                                     else if (element.address != null)
                                       GFCheckbox(
@@ -870,8 +870,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                 }
                 if (!ready) {
                   return Container(
-                    child: Center(
-                      child: Text(
+                    child: const Center(
+                      child: const Text(
                         'Select Users, or Enter Address',
                         textAlign: TextAlign.center,
                       ),
@@ -884,7 +884,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                   onPressed: () {
                     Get.close();
                   },
-                  child: Text('Done'),
+                  child: const Text('Done'),
                 );
               })
             ],

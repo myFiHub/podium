@@ -15,7 +15,7 @@ class CheckTicketView extends GetWidget<CheckticketController> {
       child: Material(
         child: Container(
           color: ColorName.cardBackground,
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Column(
             children: [
               Header(),
@@ -31,7 +31,7 @@ class CheckTicketView extends GetWidget<CheckticketController> {
                     final allUsersList =
                         allUsersToBuyTicketFrom.values.toList();
                     return isLoading
-                        ? CircularProgressIndicator()
+                        ? const CircularProgressIndicator()
                         : Container(
                             height: Get.height - 190,
                             child: Scrollbar(
@@ -109,7 +109,7 @@ class EnterButton extends GetView<CheckticketController> {
               Text(
                 'you will be able to speak if you buy 1 the ticket to Speak',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.red,
                   fontSize: 12,
                 ),
@@ -123,7 +123,7 @@ class EnterButton extends GetView<CheckticketController> {
         child: Text(
             'you will be able to Enter if you buy 1 ticket required for Entering the room',
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.red,
               fontSize: 14,
             )),
@@ -166,16 +166,16 @@ class TicketBuyObserver extends GetView<CheckticketController> {
             children: [
               RichText(
                   text: TextSpan(children: [
-                TextSpan(
+                const TextSpan(
                     text: 'Remaining Tickets to ',
                     style: TextStyle(fontSize: 16, color: ColorName.greyText)),
-                TextSpan(
+                const TextSpan(
                     text: 'Enter: ',
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.green, fontWeight: FontWeight.bold)),
                 TextSpan(
                     text: '$remainingTicketsToEnter  ',
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: ColorName.greyText,
                         fontWeight: FontWeight.bold)),
                 if (!canSpeak && !showRawSpeakerType)
@@ -187,7 +187,7 @@ class TicketBuyObserver extends GetView<CheckticketController> {
                 if (!canSpeak && !showRawSpeakerType)
                   TextSpan(
                       text: '$remainingTicketsToSpeak',
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: ColorName.greyText,
                           fontWeight: FontWeight.bold)),
               ])),
@@ -196,9 +196,10 @@ class TicketBuyObserver extends GetView<CheckticketController> {
           if (showRawSpeakerType)
             RichText(
                 text: TextSpan(children: [
-              TextSpan(
+              const TextSpan(
                   text: 'Speakers: ',
-                  style: TextStyle(fontSize: 16, color: ColorName.greyText)),
+                  style:
+                      const TextStyle(fontSize: 16, color: ColorName.greyText)),
               TextSpan(
                   text: parseSpeakerType(group.speakerType),
                   style: TextStyle(
@@ -227,11 +228,11 @@ class SingleTicketHolder extends StatelessWidget {
     final address = ticketSeller.address;
     return Container(
       key: ValueKey(ticketSeller.userInfo.id),
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: const BoxDecoration(
         color: ColorName.pageBackground,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -243,15 +244,16 @@ class SingleTicketHolder extends StatelessWidget {
               children: [
                 Text(userInfo.fullName,
                     overflow: TextOverflow.ellipsis,
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
                 space10,
                 Text(
                     truncate(
                       address,
                       length: 16,
                     ),
-                    style: TextStyle(fontSize: 16, color: ColorName.greyText)),
+                    style: const TextStyle(
+                        fontSize: 16, color: ColorName.greyText)),
               ],
             ),
           ),
@@ -275,25 +277,28 @@ class Header extends StatelessWidget {
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Row(
         children: [
-          Text('Buy Tickets to:',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          const Text('Buy Tickets to:',
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           space10,
-          Text('Enter',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          const Text('Enter',
+              style:
+                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
           space10,
           Icon(Icons.login, color: Colors.red),
           space10,
-          Text('and Speak',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          const Text('and Speak',
+              style:
+                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
           space10,
-          Icon(Icons.mic, color: Colors.red)
+          const Icon(Icons.mic, color: Colors.red)
         ],
       ),
       IconButton(
           onPressed: () {
             Get.close();
           },
-          icon: Icon(Icons.close))
+          icon: const Icon(Icons.close))
     ]);
   }
 }
@@ -333,9 +338,10 @@ class Actions extends StatelessWidget {
 
     return Container(
       child: checking || buying
-          ? SizedBox(child: CircularProgressIndicator(), width: 20, height: 20)
+          ? SizedBox(
+              child: const CircularProgressIndicator(), width: 20, height: 20)
           : alreadyBoughtRequiredTickets
-              ? Icon(Icons.check, color: Colors.green)
+              ? const Icon(Icons.check, color: Colors.green)
               : Tooltip(
                   message: actionButtonText,
                   child: GestureDetector(
@@ -345,20 +351,21 @@ class Actions extends StatelessWidget {
                       );
                     },
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                           color: Colors.green,
-                          borderRadius: BorderRadius.circular(5)),
-                      padding: EdgeInsets.all(5),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5))),
+                      padding: const EdgeInsets.all(5),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (shouldBuyTicketToAccess &&
                               accessTicketType != null)
-                            Icon(
+                            const Icon(
                               Icons.login,
                             ),
                           if (shouldBuyTicketToSpeak && speakTicketType != null)
-                            Icon(
+                            const Icon(
                               Icons.mic,
                             ),
                         ],

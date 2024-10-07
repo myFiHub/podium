@@ -4,8 +4,6 @@ import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
-import 'squads/groupsParser_squadran.dart';
-
 FirebaseGroup? singleGroupParser(value) {
   String groupId = '';
   try {
@@ -101,9 +99,6 @@ FirebaseGroup? singleGroupParser(value) {
 }
 
 Future<Map<String, FirebaseGroup>> groupsParser(data) async {
-  // final groupParserWorker = GroupsParserWorker();
-  // final groupsMap = await groupParserWorker.parseGroups(data, myId);
-  // groupParserWorker.stop();
   Map<String, FirebaseGroup> groupsMap = {};
 
   data.forEach((key, value) {

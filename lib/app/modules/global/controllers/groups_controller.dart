@@ -434,9 +434,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
           .toList(),
       scheduledFor: scheduledFor,
     );
-    // final jsonerWorker = JsonerWorker();
-    final jsonedGroup = group.toJson(); // await jsonerWorker.jsoner(group);
-    // jsonerWorker.stop();
+    final jsonedGroup = group.toJson();
     try {
       await Future.wait([
         firebaseGroupsReference.set(jsonedGroup),
@@ -466,10 +464,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
           )
         },
       );
-      // final jsonerWorker = JsonerWorker();
-      final jsoned = newFirebaseSession
-          .toJson(); // await jsonerWorker.jsoner(newFirebaseSession);
-      // jsonerWorker.stop();
+      final jsoned = newFirebaseSession.toJson();
       await firebaseSessionReference.set(jsoned);
       GroupsController groupsController = Get.find();
       groupsController.groups.value.addAll(

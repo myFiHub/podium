@@ -43,7 +43,6 @@ dependencies:
   firebase_analytics: ^11.3.3
   pretty_dio_logger: ^1.4.0
   textfield_tags: ^3.0.1
-  squadron: ^6.0.3
   flutter_bloc: ^8.1.6
   equatable: ^2.0.5
   pulsator: ^1.0.0+2

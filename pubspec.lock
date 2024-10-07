@@ -1663,7 +1663,7 @@ packages:
     source: hosted
     version: "2.5.4"
   squadron:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: squadron
       sha256: c2cf875db0ba82382caacbdd6ffd5f49344e3e2a4d931d749ff63cd9bacb1075

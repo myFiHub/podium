@@ -76,7 +76,7 @@ class LoginView extends GetView<LoginController> {
                             controller.loginWithX(ignoreIfNotLoggedIn: false);
                           },
                           text: 'LOGIN WITH X',
-                          icon: Assets.images.xPlatform.svg(
+                          icon: Assets.images.xPlatform.image(
                             width: 20,
                             height: 20,
                             color: ColorName.white,

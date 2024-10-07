@@ -86,11 +86,6 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         type: NavigationTypes.offNamed,
       );
       sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.leave);
-      // groupCallController.setIsUserPresentInSession(
-      //   groupId: groupCallController.group.value!.id,
-      //   userId: myId,
-      //   isPresent: false,
-      // );
       groupCallController.cleanupAfterCall();
       if (Get.isRegistered<OngoingGroupCallController>()) {
         Get.delete<OngoingGroupCallController>();

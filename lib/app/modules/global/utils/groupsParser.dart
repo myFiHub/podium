@@ -101,8 +101,18 @@ FirebaseGroup? singleGroupParser(value) {
 }
 
 Future<Map<String, FirebaseGroup>> groupsParser(data) async {
-  final groupParserWorker = GroupsParserWorker();
-  final groupsMap = await groupParserWorker.parseGroups(data, myId);
-  groupParserWorker.stop();
+  // final groupParserWorker = GroupsParserWorker();
+  // final groupsMap = await groupParserWorker.parseGroups(data, myId);
+  // groupParserWorker.stop();
+  Map<String, FirebaseGroup> groupsMap = {};
+
+  data.forEach((key, value) {
+    final group = singleGroupParser(value);
+    if (group != null &&
+        (group.archived == false || group.creator.id == myId)) {
+      groupsMap[group.id] = group;
+    }
+  });
+
   return groupsMap;
 }

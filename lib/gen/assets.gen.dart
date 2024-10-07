@@ -63,9 +63,9 @@ class $AssetsImagesGen {
   AssetGenImage get particleIcon =>
       const AssetGenImage('assets/images/particle_icon.png');
 
-  /// File path: assets/images/x_platform.svg
-  SvgGenImage get xPlatform =>
-      const SvgGenImage('assets/images/x_platform.svg');
+  /// File path: assets/images/x_platform.png
+  AssetGenImage get xPlatform =>
+      const AssetGenImage('assets/images/x_platform.png');
 
   /// List of all assets
   List<dynamic> get values => [

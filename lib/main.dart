@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/env.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/providers/api.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
@@ -66,6 +67,13 @@ void main() async {
   await GetStorage.init();
   HttpApis.configure();
   runApp(MyApp());
+}
+
+preCache(BuildContext context) {
+  Assets.images.values.forEach((asset) {
+    if (!asset.path.contains('.svg'))
+      precacheImage(AssetImage(asset.path), context);
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -158,6 +166,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    preCache(context);
     return ReownAppKitModalTheme(
       isDarkMode: _isDarkMode,
       themeData: _themeData,

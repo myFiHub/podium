@@ -63,9 +63,7 @@ class _SingleGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final isScheduled = group.scheduledFor != 0;
 
-    return Bounce(
-      tapDelay: Duration(milliseconds: 20),
-      scaleFactor: 0.97,
+    return GestureDetector(
       onTap: () async {
         // final delay = 2;
         // sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);

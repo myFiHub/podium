@@ -15,7 +15,6 @@ import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
-import 'package:podium/app/modules/global/utils/squads/jsoner.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -53,6 +52,7 @@ sendGroupPeresenceEvent(
     }
     if (eventName == eventNames.enter) {
       channel.presence.enter(groupId);
+      return;
     }
   } catch (e) {
     log.f(e);
@@ -78,6 +78,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
   final groups = Rx<Map<String, FirebaseGroup>>({});
   final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
+  final tmpPresentUsersInGroupsMap = <String, List<String>>{};
+  final tmpTakingUsersInGroupsMap = <String, List<String>>{};
   final enterListenersMap = {};
   final updateListenersMap = {};
   final leaveListenersMap = {};
@@ -124,12 +126,14 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
 
   _refreshPresentUsers() {
     _presentUsersRefreshThrottle.throttle(() {
+      presentUsersInGroupsMap.value = tmpPresentUsersInGroupsMap;
       presentUsersInGroupsMap.refresh();
     });
   }
 
   _refreshTakingUsers() {
     _takingUsersRefreshThrottle.throttle(() {
+      takingUsersInGroupsMap.value = tmpTakingUsersInGroupsMap;
       takingUsersInGroupsMap.refresh();
     });
   }
@@ -263,7 +267,8 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
       final currentPresentUsers = results[i].map((e) => e.clientId!).toList();
       tmpMap[groupId] = currentPresentUsers;
     }
-    presentUsersInGroupsMap.value = tmpMap;
+    tmpPresentUsersInGroupsMap.addAll(tmpMap);
+    _refreshPresentUsers();
   }
 
   _startListeners() {
@@ -299,50 +304,47 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
 
   _handleNewEnterMessage(
       {required String groupId, required PresenceMessage message}) {
-    final currentListForThisGroup =
-        presentUsersInGroupsMap.value[groupId] ?? [];
+    final currentListForThisGroup = tmpPresentUsersInGroupsMap[groupId] ?? [];
     currentListForThisGroup.add(message.clientId!);
-    presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+    tmpPresentUsersInGroupsMap[groupId] = currentListForThisGroup;
     _refreshPresentUsers();
   }
 
   _hanldeNewUpdateMessage(
       {required String groupId, required PresenceMessage message}) {
     if (message.data == eventNames.talking) {
-      final currentListForThisGroup =
-          takingUsersInGroupsMap.value[groupId] ?? [];
+      final currentListForThisGroup = tmpTakingUsersInGroupsMap[groupId] ?? [];
       currentListForThisGroup.add(message.clientId!);
-      takingUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
       log.d("Talking users: $currentListForThisGroup");
       _refreshTakingUsers();
     } else if (message.data == eventNames.notTalking) {
-      final currentListForThisGroup =
-          takingUsersInGroupsMap.value[groupId] ?? [];
+      final currentListForThisGroup = tmpTakingUsersInGroupsMap[groupId] ?? [];
       currentListForThisGroup.remove(message.clientId!);
-      takingUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
+      log.d("Talking users: $currentListForThisGroup");
       _refreshTakingUsers();
     }
   }
 
   _handleLeaveEvent({required String groupId, required String clientId}) {
-    final currentListForThisGroup =
-        presentUsersInGroupsMap.value[groupId] ?? [];
+    final currentListForThisGroup = tmpPresentUsersInGroupsMap[groupId] ?? [];
     if (currentListForThisGroup.contains(clientId)) {
       currentListForThisGroup.remove(clientId);
-      presentUsersInGroupsMap.value[groupId] = currentListForThisGroup;
+      tmpPresentUsersInGroupsMap[groupId] = currentListForThisGroup;
       _refreshPresentUsers();
     }
     final currentTakingListForThisGroup =
-        takingUsersInGroupsMap.value[groupId] ?? [];
+        tmpTakingUsersInGroupsMap[groupId] ?? [];
     if (currentTakingListForThisGroup.contains(clientId)) {
       currentTakingListForThisGroup.remove(clientId);
-      takingUsersInGroupsMap.value[groupId] = currentTakingListForThisGroup;
+      tmpTakingUsersInGroupsMap[groupId] = currentTakingListForThisGroup;
       _refreshTakingUsers();
     }
   }
 
   List<String> getPresentUsersInGroup(String groupId) {
-    return presentUsersInGroupsMap.value[groupId] ?? [];
+    return tmpPresentUsersInGroupsMap[groupId] ?? [];
   }
 
   getRealtimeGroups(bool loggedIn) {
@@ -432,16 +434,16 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
           .toList(),
       scheduledFor: scheduledFor,
     );
-    final jsonerWorker = JsonerWorker();
-    final jsonedGroup = await jsonerWorker.jsoner(group); // group.toJson();
-    jsonerWorker.stop();
+    // final jsonerWorker = JsonerWorker();
+    final jsonedGroup = group.toJson(); // await jsonerWorker.jsoner(group);
+    // jsonerWorker.stop();
     try {
       await Future.wait([
         firebaseGroupsReference.set(jsonedGroup),
         ...tags.map((tag) => saveNewTagIfNeeded(tag: tag, group: group)),
       ]);
 
-      groups.value![id] = group;
+      groups.value[id] = group;
       final newFirebaseSession = FirebaseSession(
         name: name,
         createdBy: myUser.id,
@@ -464,10 +466,10 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
           )
         },
       );
-      final jsonerWorker = JsonerWorker();
-      final jsoned = await jsonerWorker
-          .jsoner(newFirebaseSession); //newFirebaseSession.toJson();
-      jsonerWorker.stop();
+      // final jsonerWorker = JsonerWorker();
+      final jsoned = newFirebaseSession
+          .toJson(); // await jsonerWorker.jsoner(newFirebaseSession);
+      // jsonerWorker.stop();
       await firebaseSessionReference.set(jsoned);
       GroupsController groupsController = Get.find();
       groupsController.groups.value.addAll(
@@ -495,7 +497,7 @@ class GroupsController extends GetxController with FireBaseUtils, FirebaseTags {
     try {
       firebaseGroupsReference.remove();
       firebaseSessionReference.remove();
-      groups.value!.remove(groupId);
+      groups.value.remove(groupId);
     } catch (e) {
       Get.snackbar("Error", "Failed to delete group");
       log.f("Error deleting group: $e");

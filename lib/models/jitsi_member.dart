@@ -5,7 +5,9 @@ import 'dart:convert';
  */
 
 List<JitsiMember> convertJitsiMembersResponseToReadableJson(String res) {
-  String result = res.replaceAll('=', '":"');
+  String result = res.replaceAll('api/?name=', '********************');
+  result = result.replaceAll('=', '":"');
+  result = result.replaceAll('********************', 'api/?name=');
   result = result.replaceAll('{', '{"');
   result = result.replaceAll('}', '"}');
   result = result.replaceAll(', ', '", "');
@@ -27,7 +29,7 @@ class JitsiMember {
   late String role;
   late String avatarUrl;
   late String email;
-  late bool isLocal;
+  late String isLocal;
 
   static String participantIdKey = 'participantId';
   static String nameKey = 'name';

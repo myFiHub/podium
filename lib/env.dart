@@ -1,8 +1,21 @@
+import 'dart:convert';
+
+import 'package:podium/contracts/chainIds.dart';
+
 class Env {
-  static const chainId = String.fromEnvironment("chainId");
-  // static const starsArenaAddress = String.fromEnvironment("starsArenaAddress");
-  // static const proxyAddress = String.fromEnvironment("proxyAddress");
-  static const cheerBooAddress = String.fromEnvironment("cheerBooAddress");
+  static const initialExternalWalletChainId =
+      String.fromEnvironment("initialExternalWalletChainId");
+  static const initialParticleWalletChainId =
+      String.fromEnvironment("initialParticleWalletChainId");
+
+  static const starsArenaAddress_Avalanche_Mainnet =
+      String.fromEnvironment("starsArenaAddress_Avalanche_Mainnet");
+  static const starsArenaProxyAddress_Avalanche_Mainnet =
+      String.fromEnvironment("starsArenaProxyAddress_Avalanche_Mainnet");
+  static const friendtechAddress_BaseChain_Mainnet =
+      String.fromEnvironment("friendtechAddress_BaseChain_Mainnet");
+  static const cheerBooAddress_Movement_Devnet =
+      String.fromEnvironment("cheerBooAddress_Movement_Devnet");
   static const minimumCheerBooAmount =
       String.fromEnvironment("minimumCheerBooAmount");
   static const cheerBooTimeMultiplication =
@@ -10,18 +23,62 @@ class Env {
 
   // from walletConnect
   static const projectId = String.fromEnvironment('projectId');
-  // from CometChat
-  // static const cometChatAppId = String.fromEnvironment("cometChatAppId");
-  // static const cometChatRegion = String.fromEnvironment("cometChatRegion");
-  // static const cometChatAuthKey = String.fromEnvironment("cometChatAuthKey");
-  static const cometChatRestApiKey =
-      String.fromEnvironment("cometChatRestApiKey");
   // from particle auth
   static const particleProjectId = String.fromEnvironment("particleProjectId");
   static const particleClientKey = String.fromEnvironment("particleClientKey");
   static const particleAppId = String.fromEnvironment("particleAppId");
   static const environment = String.fromEnvironment("environment");
   static const jitsiServerUrl = String.fromEnvironment("jitsiServerUrl");
+  static const appStoreUrl = String.fromEnvironment("appStoreUrl");
+  static const baseDeepLinkUrl = String.fromEnvironment("baseDeepLinkUrl");
+  static const chainNamespace = String.fromEnvironment("chainNamespace");
+  static const albyApiKey = String.fromEnvironment("alby_apiKey");
+
+  static const fihubAddress_Avalanche_MainNet =
+      String.fromEnvironment("fihubAddress_Avalanche_MainNet");
+
+  static const VERSION =
+      String.fromEnvironment("VERSION", defaultValue: '1.0.5');
+
+  static String? starsArenaAddress(String chainId) {
+    if (chainId == avalancheChainId) {
+      return starsArenaAddress_Avalanche_Mainnet;
+    } else {
+      return null;
+    }
+  }
+
+  static String? starsArenaProxyAddress(String chainId) {
+    if (chainId == avalancheChainId) {
+      return starsArenaProxyAddress_Avalanche_Mainnet;
+    } else {
+      return null;
+    }
+  }
+
+  static String? fihubAddress(String chainId) {
+    if (chainId == avalancheChainId) {
+      return fihubAddress_Avalanche_MainNet;
+    } else {
+      return null;
+    }
+  }
+
+  static String? cheerBooAddress(String chainId) {
+    if (chainId == movementChainId) {
+      return cheerBooAddress_Movement_Devnet;
+    } else {
+      return null;
+    }
+  }
+
+  static String? friendtechAddress(String chainId) {
+    if (chainId == baseChainId) {
+      return friendtechAddress_BaseChain_Mainnet;
+    } else {
+      return null;
+    }
+  }
 }
 
 const DEV = 'dev';

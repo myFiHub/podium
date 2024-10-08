@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/widgets/chainIcons.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/navbar.dart';
 
 class Root extends StatelessWidget {
@@ -13,20 +17,121 @@ class Root extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: AnimatedBgbWrapper(
-            child: child,
-          ),
+        Column(
+          children: [
+            Expanded(
+              child: AnimatedBgbWrapper(
+                child: child,
+              ),
+            ),
+            PodiumNavbar(),
+          ],
         ),
-        PodiumNavbar(),
+        // InternetConnectionChecker(),
+        // ConnectedNetworks(),
       ],
     );
   }
 }
 
-class AnimatedBgbWrapper extends GetWidget<GlobalController> {
+class ConnectedNetworks extends GetWidget<GlobalController> {
+  const ConnectedNetworks({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+        top: 0,
+        left: 0,
+        child: Obx(() {
+          controller.particleWalletChainId.value;
+          controller.externalWalletChainId.value;
+          final connectedExternalWalletAddress =
+              controller.connectedWalletAddress.value;
+          // final externalWalletIcon= ;
+          return Container(
+            constraints: BoxConstraints(maxHeight: 60),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    SizedBox(width: 4),
+                    Assets.images.particleIcon.image(
+                      width: 10,
+                      height: 10,
+                    ),
+                    space5,
+                    Icon(Icons.link_sharp),
+                    space5,
+                    ParticleWalletChainIcon(),
+                  ],
+                ),
+                if (connectedExternalWalletAddress != '')
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 2,
+                      ),
+                      Icon(
+                        Icons.wallet,
+                        size: 16,
+                      ),
+                      SizedBox(
+                        width: 2,
+                      ),
+                      Icon(Icons.link_sharp),
+                      space5,
+                      ExternalWalletChainIcon(),
+                    ],
+                  ),
+              ],
+            ),
+          );
+        }));
+  }
+}
+
+class InternetConnectionChecker extends GetView<GlobalController> {
+  const InternetConnectionChecker({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final connected = controller.isConnectedToInternet.value;
+      final AppLifecycleState state = controller.appLifecycleState.value;
+      return connected && state != AppLifecycleState.paused
+          ? const SizedBox()
+          : Positioned(
+              child: Material(
+                child: Container(
+                  color: Colors.black.withOpacity(0.3),
+                  child: Row(
+                    children: [
+                      Text(
+                        'connection issue',
+                        style: TextStyle(
+                          color: Colors.red[700],
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.wifi_off,
+                        color: Colors.red,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              bottom: 70,
+              left: Get.width / 2 - 100,
+            );
+    });
+  }
+}
+
+class AnimatedBgbWrapper extends GetView<GlobalController> {
   final Widget child;
   const AnimatedBgbWrapper({super.key, required this.child});
 
@@ -36,10 +141,10 @@ class AnimatedBgbWrapper extends GetWidget<GlobalController> {
       final loggedIn = controller.loggedIn.value;
       return AnimatedContainer(
           child: child,
-          duration: const Duration(seconds: 2),
+          duration: const Duration(seconds: 1),
           decoration: BoxDecoration(
             gradient: RadialGradient(
-              center: loggedIn ? Alignment(0, -1) : Alignment(-0.1, -0.4),
+              center: loggedIn ? Alignment(0, -1) : Alignment(-0.0, -0.1),
               colors: loggedIn ? _linearColors : _cirularColors,
               radius: loggedIn ? 2.0 : 1.0,
             ),
@@ -53,9 +158,10 @@ final _linearColors = [
   ColorName.pageBgGradientEnd,
 ];
 final _cirularColors = [
+  ColorName.pageBgGradientStart.withOpacity(0.6),
   ColorName.pageBgGradientStart.withOpacity(0.5),
   ColorName.pageBgGradientStart.withOpacity(0.4),
-  ColorName.pageBgGradientStart.withOpacity(0.1),
-  ColorName.pageBgGradientStart.withOpacity(0.05),
-  ColorName.pageBgGradientStart.withOpacity(0),
+  ColorName.pageBgGradientStart.withOpacity(0.3),
+  ColorName.pageBgGradientStart.withOpacity(0.2),
+  // ColorName.pageBgGradientStart.withOpacity(0.1),
 ];

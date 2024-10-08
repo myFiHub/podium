@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
 const navbarHeight = 60.0;
@@ -15,11 +18,13 @@ class NavbarItem {
   final String route;
   final IconData icon;
   final String label;
+  final Widget? overlay;
 
   NavbarItem({
     required this.route,
     required this.icon,
     required this.label,
+    this.overlay,
   });
 }
 
@@ -43,6 +48,7 @@ final List<NavbarItem> navbarItems = [
     route: Routes.NOTIFICATIONS,
     icon: Icons.notifications_outlined,
     label: 'Notifications',
+    overlay: NotificationBadge(),
   ),
   NavbarItem(
     route: Routes.MY_PROFILE,
@@ -51,26 +57,28 @@ final List<NavbarItem> navbarItems = [
   ),
 ];
 
-class PodiumNavbar extends GetWidget<GlobalController> {
+class PodiumNavbar extends GetView<GlobalController> {
   const PodiumNavbar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: navbarHeight,
-      color: ColorName.navbarBackground,
-      child: Obx(() {
-        final activeRoute = controller.activeRoute.value;
-        if (_routesWithoutNavbar.contains(activeRoute)) {
-          return Container(
-            height: 0,
-          );
-        }
-        return BottomNav(
-          activeRoute: activeRoute,
+    return Obx(() {
+      final loggedIn = controller.loggedIn.value;
+      final activeRoute = controller.activeRoute.value;
+      if (_routesWithoutNavbar.contains(activeRoute) || loggedIn == false) {
+        return SizedBox(
+          height: 0,
         );
-      }),
-    );
+      }
+      final bottomSpace = MediaQuery.viewInsetsOf(context).bottom;
+      return Container(
+        height: bottomSpace == 0 ? navbarHeight : 0,
+        color: ColorName.navbarBackground,
+        child: BottomNav(
+          activeRoute: activeRoute,
+        ),
+      );
+    });
   }
 }
 
@@ -89,6 +97,7 @@ class BottomNav extends StatelessWidget {
               route: item.route,
               icon: item.icon,
               label: item.label,
+              overlay: item.overlay,
             ),
           ),
         ),
@@ -102,25 +111,34 @@ Widget _buildNavItem({
   required String route,
   required IconData icon,
   required String label,
+  Widget? overlay,
 }) {
   final activeRoute = Get.find<GlobalController>().activeRoute.value;
   final isActive = activeRoute == route;
   return GestureDetector(
-    onTap: () {
-      Navigate.to(type: NavigationTypes.offNamed, route: route);
+    onTap: () async {
+      final canNavigateToNewRoute = await canNavigate();
+      if (canNavigateToNewRoute != true) {
+        return;
+      }
+      jitsiMeet.hangUp();
+      Navigate.to(
+        type: NavigationTypes.offAllNamed,
+        route: route,
+      );
     },
     child: Column(
       children: [
         AnimatedContainer(
           duration: _animationDuration,
-          width: 30,
+          width: 24,
           padding: EdgeInsets.only(bottom: 8, top: 18),
           decoration: isActive
               ? BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
                       color: Colors.blue,
-                      width: 5,
+                      width: 2,
                     ),
                   ),
                   borderRadius: BorderRadius.only(
@@ -140,8 +158,8 @@ Widget _buildNavItem({
                     bottomLeft: Radius.circular(0),
                   ),
                 ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
               AnimatedScale(
                 scale: isActive ? 1.3 : 1,
@@ -151,6 +169,7 @@ Widget _buildNavItem({
                 ),
                 duration: _animationDuration,
               ),
+              if (overlay != null) overlay,
             ],
           ),
         ),
@@ -158,4 +177,41 @@ Widget _buildNavItem({
       ],
     ),
   );
+}
+
+class NotificationBadge extends GetWidget<NotificationsController> {
+  const NotificationBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final numberOfUnreadNotifications =
+          controller.numberOfUnreadNotifications.value;
+      return numberOfUnreadNotifications > 0
+          ? Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 20,
+                  minHeight: 20,
+                ),
+                child: Text(
+                  numberOfUnreadNotifications.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : Container();
+    });
+  }
 }

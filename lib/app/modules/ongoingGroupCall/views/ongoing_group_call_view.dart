@@ -1,20 +1,70 @@
+import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
-import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/popListener.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widgetWrapper.dart';
+import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
+import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/dateUtils.dart';
+import 'package:podium/utils/styles.dart';
+import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/textField/textFieldRounded.dart';
 import '../controllers/ongoing_group_call_controller.dart';
 
 class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: GroupCall(),
+    return FloatingDraggableWidget(
+      mainScreenWidget: Scaffold(
+        body: GroupCall(),
+      ),
+      floatingWidget: Obx(() {
+        final isGroupCallControllerRegistered =
+            Get.isRegistered<GroupCallController>();
+        final isControllerRegistered =
+            Get.isRegistered<OngoingGroupCallController>();
+
+        if (!isGroupCallControllerRegistered) {
+          return Container(
+            width: 0,
+            height: 0,
+          );
+        }
+        final groupCallController = Get.find<GroupCallController>();
+        final group = groupCallController.group.value;
+
+        if (group == null || !isControllerRegistered) {
+          return Container(
+            width: 0,
+            height: 0,
+          );
+        }
+        final isMuted = controller.amIMuted.value;
+        final canITalk = groupCallController.canTalk.value;
+        if (!canITalk) {
+          return Container(
+            width: 0,
+            height: 0,
+          );
+        }
+        return FloatingActionButton(
+          backgroundColor: isMuted ? Colors.red : Colors.green,
+          onPressed: () {
+            jitsiMeet.setAudioMuted(!isMuted);
+          },
+          tooltip: 'mute',
+          child: Icon(
+            isMuted ? Icons.mic_off : Icons.mic,
+          ),
+        );
+      }),
+      floatingWidgetHeight: 50,
+      floatingWidgetWidth: 50,
+      dx: Get.width - 80,
+      dy: 50,
     );
   }
 }
@@ -26,9 +76,6 @@ class GroupCall extends GetView<GroupCallController> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        PopListener(
-          warningMessage: "Tap again to leave the room",
-        ),
         GroupInfo(),
         SessionInfo(),
         MembersList(),
@@ -37,7 +84,7 @@ class GroupCall extends GetView<GroupCallController> {
   }
 }
 
-class SessionInfo extends GetWidget<OngoingGroupCallController> {
+class SessionInfo extends GetView<OngoingGroupCallController> {
   const SessionInfo({super.key});
 
   @override
@@ -46,18 +93,39 @@ class SessionInfo extends GetWidget<OngoingGroupCallController> {
       children: [
         Obx(
           () {
+            final isAdmin = controller.amIAdmin.value;
             final remainingTimeInMillisecond =
-                controller.remainingTimeTimer.value ?? 0;
-            if (remainingTimeInMillisecond == double.maxFinite.toInt()) {
+                controller.remainingTimeTimer.value;
+            if (remainingTimeInMillisecond == -1) {
+              return Text(
+                "loading...",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 36,
+                ),
+              );
+            }
+            if (isAdmin) {
               return Container(
                 child: const Center(
                   child: Text('presenting as admin'),
                 ),
               );
             }
+            final list = formatDuration(remainingTimeInMillisecond);
+            final joined = list.join(":");
+            final isSmall = int.parse(list[0]) == 0 && int.parse(list[1]) < 2;
             return remainingTimeInMillisecond != 0
-                ? Text(
-                    formatDuration(remainingTimeInMillisecond),
+                ? Container(
+                    child: Text(
+                      joined,
+                      style: TextStyle(
+                        color: isSmall ? Colors.red : Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 36,
+                      ),
+                    ),
                   )
                 : Container(
                     child: const Center(
@@ -74,7 +142,7 @@ class SessionInfo extends GetWidget<OngoingGroupCallController> {
   }
 }
 
-class GroupInfo extends GetWidget<GroupCallController> {
+class GroupInfo extends GetView<GroupCallController> {
   const GroupInfo({super.key});
 
   @override
@@ -84,15 +152,22 @@ class GroupInfo extends GetWidget<GroupCallController> {
       return group != null
           ? Container(
               padding: const EdgeInsets.all(10),
-              child: Column(
+              child: Row(
                 children: [
                   Text(
                     group.name,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
+                  space5,
+                  Text("by"),
+                  space5,
                   Text(
                     group.creator.fullName,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -104,13 +179,16 @@ class GroupInfo extends GetWidget<GroupCallController> {
 
 const spaceBetween = const SizedBox(width: 10);
 
-class MembersList extends GetWidget<GroupCallController> {
+class MembersList extends GetView<GroupCallController> {
   const MembersList({super.key});
 
   @override
   Widget build(BuildContext context) {
     final globalController = Get.find<GlobalController>();
     final myUser = globalController.currentUserInfo.value;
+    if (controller.group.value == null) {
+      return Container();
+    }
     if (myUser == null) {
       return Container(
         child: const Center(
@@ -119,141 +197,142 @@ class MembersList extends GetWidget<GroupCallController> {
       );
     }
     return Expanded(
-      child: Container(
-        child: Obx(() {
-          final members = controller.members.value;
-          return ListView.builder(
-            itemCount: members.length,
-            itemBuilder: (context, index) {
-              final member = members[index];
-              final isMe = myUser.id == member.id;
-              return GFCard(
-                content: Container(
-                  child: Row(
-                    children: <Widget>[
-                      CircleAvatar(
-                        backgroundImage: NetworkImage(member.avatar),
+      // height: Get.height - 190,
+      child: Column(
+        children: [
+          Container(
+            child: Expanded(
+              child: DefaultTabController(
+                length: 3,
+                child: Scaffold(
+                  appBar: AppBar(
+                    backgroundColor: Colors.transparent,
+                    toolbarHeight: 0,
+                    bottom: TabBar(
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicatorColor: ColorName.primaryBlue,
+                      labelColor: ColorName.primaryBlue,
+                      unselectedLabelColor: Colors.grey,
+                      tabs: [
+                        Tab(
+                          child: Text("All Members"),
+                        ),
+                        Tab(
+                          child: Text("Search"),
+                        ),
+                        Obx(() {
+                          final talkingMembers =
+                              controller.talkingMembers.value;
+                          return Tab(
+                            child: Text("Talking (${talkingMembers.length})"),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  body: TabBarView(
+                    children: [
+                      Obx(
+                        () {
+                          final members = controller.sortedMembers.value;
+                          //  sort the users based on the sort type, biggest to smallest
+                          return UsersInRoomList(
+                            usersList: members,
+                          );
+                        },
                       ),
-                      spaceBetween,
                       Container(
-                        width: 80,
-                        child: Text(
-                          member.fullName,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: isMe ? Colors.green : Colors.white,
-                          ),
-                        ),
+                        child: SearchInRoom(),
                       ),
-                      spaceBetween,
-                      if (controller.haveOngoingCall.value)
-                        Actions(
-                          userId: member.id,
-                          key: Key(member.id),
-                        ),
+                      Obx(
+                        () {
+                          final members = controller.talkingMembers.value;
+                          return UsersInRoomList(
+                            usersList: members,
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
-              );
-            },
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class Actions extends GetView<OngoingGroupCallController> {
-  final String userId;
-  const Actions({required this.userId, Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final globalController = Get.find<GlobalController>();
-    final myUser = globalController.currentUserInfo.value;
-    final myId = myUser!.id;
-    return Expanded(
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          if (userId != myId) LikeDislike(userId: userId, isLike: true),
-          if (userId != myId) LikeDislike(userId: userId, isLike: false),
-          if (userId != myId) CheerBoo(cheer: false, userId: userId),
-          CheerBoo(cheer: true, userId: userId),
+              ),
+            ),
+          ),
+          space5,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              if (canInvite(
+                group: controller.group.value!,
+                currentUserId: myUser.id,
+              ))
+                Container(
+                  width: (Get.width / 2) - 20,
+                  child: Button(
+                    type: ButtonType.outline,
+                    onPressed: () {
+                      openInviteBottomSheet(
+                        canInviteToSpeak: canInviteToSpeak(
+                          group: controller.group.value!,
+                          currentUserId: myUser.id,
+                        ),
+                      );
+                    },
+                    child: Text('Invite users'),
+                  ),
+                ),
+              Container(
+                width: (Get.width / 2) - 20,
+                child: Button(
+                  onPressed: () {
+                    controller.runHome();
+                  },
+                  text: "Leave the Room",
+                  type: ButtonType.solid,
+                  color: ButtonColors.DANGER,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class CheerBoo extends GetWidget<OngoingGroupCallController> {
-  final bool cheer;
-  final String userId;
-  const CheerBoo({super.key, required this.cheer, required this.userId});
+class SearchInRoom extends GetView<GroupCallController> {
+  const SearchInRoom({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GFIconButton(
-      icon: Icon(
-        cheer ? Icons.handshake_rounded : Icons.timelapse,
-        color: cheer ? Colors.green : Colors.red,
-      ),
-      onPressed: () {
-        controller.cheerBoo(
-          userId: userId,
-          cheer: cheer,
-        );
-      },
-      type: GFButtonType.transparent,
-    );
-  }
-}
-
-class LikeDislike extends GetWidget<OngoingGroupCallController> {
-  final bool isLike;
-  final String userId;
-  const LikeDislike({
-    super.key,
-    required this.userId,
-    required this.isLike,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 50,
-      child: Center(
-        child: Obx(() {
-          final timers = controller.timers.value;
-          final storageKey = generateKeyForStorageAndObserver(
-              userId: userId,
-              groupId: controller.groupCallController.group.value!.id,
-              like: isLike);
-          final finishAt = timers[storageKey];
-          return WidgetWithTimer(
-            finishAt: finishAt,
-            storageKey: storageKey,
-            onComplete: () {
-              controller.timers.update((val) {
-                val!.remove(storageKey);
-              });
+    return Column(
+      children: [
+        Container(
+          height: 50,
+          child: Input(
+            hintText: "Search",
+            onChanged: (value) {
+              controller.searchedValueInMeet.value = value;
             },
-            child: GFIconButton(
-              icon: Icon(
-                isLike ? Icons.thumb_up_rounded : Icons.thumb_down_rounded,
-                color: isLike ? Colors.green : Colors.red,
+          ),
+        ),
+        Obx(
+          () {
+            final members = controller.sortedMembers.value;
+            final searchedValue = controller.searchedValueInMeet.value;
+            final filteredMembers = members.where((element) {
+              return element.name
+                  .toLowerCase()
+                  .contains(searchedValue.toLowerCase());
+            }).toList();
+            return Expanded(
+              child: UsersInRoomList(
+                usersList: filteredMembers,
               ),
-              onPressed: () {
-                isLike
-                    ? controller.onLikeClicked(userId)
-                    : controller.onDislikeClicked(userId);
-              },
-              type: GFButtonType.transparent,
-            ),
-          );
-        }),
-      ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

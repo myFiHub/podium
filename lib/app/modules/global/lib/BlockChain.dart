@@ -1,64 +1,90 @@
 import 'package:get/get.dart';
+import 'package:particle_base/model/chain_info.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:reown_appkit/reown_appkit.dart';
+import 'package:http/http.dart';
 
-final movementChain = W3MChainInfo(
-  chainName: 'Movement Testnet',
-  namespace: 'eip155:30732',
+final movementChain = ReownAppKitModalNetworkInfo(
+  name: 'Movement Testnet',
   chainId: '30732',
-  chainIcon: "https://docs.movementnetwork.xyz/img/logo.svg",
-  tokenName: 'MOVE',
-  rpcUrl: 'https://mevm.testnet.imola.movementlabs.xyz',
-  blockExplorer: W3MBlockExplorer(
-    name: 'movement explorer',
-    url: 'https://explorer.testnet.imola.movementlabs.xyz',
-  ),
+  chainIcon:
+      "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg",
+  currency: 'MOVE',
+  rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
+  explorerUrl: 'https://explorer.devnet.imola.movementlabs.xyz',
+);
+final movementChainOnParticle = ChainInfo(
+  int.parse(movementChain.chainId),
+  'Movement',
+  'evm',
+  movementChain.chainIcon!,
+  movementChain.name,
+  movementChain.chainId == '30732' ? 'Testnet' : 'Mainnet',
+  'https://docs.movementnetwork.xyz',
+  ChainInfoNativeCurrency('Movement', 'MOVE', 18),
+  movementChain.rpcUrl,
+  '',
+  movementChain.explorerUrl,
+  [ChainInfoFeature(Env.chainNamespace.toUpperCase())],
 );
 
 class BlockChainUtils {
-  static Future<W3MService> initializewm3Service(
-    W3MService _w3mService,
+  static Future<ReownAppKitModal> initializewm3Service(
+    ReownAppKitModal _w3mService,
     RxString connectedWalletAddress,
     RxBool w3serviceInitialized,
   ) async {
-    W3MChainPresets.chains.addAll({
-      '30732': movementChain,
-    });
     // W3MChainPresets.chains.addAll(W3MChainPresets.testChains);
-    _w3mService.addListener(() {
+    _w3mService.addListener(() async {
       if (_w3mService.session == null) {
         connectedWalletAddress.value = '';
         return;
       }
-      final session = _w3mService.session!;
-      final accounts = session.getAccounts();
-      final currentNamespace = _w3mService.selectedChain?.namespace;
-      if (accounts != null) {
-        final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
-        if (chainsNamespaces.contains(currentNamespace)) {
-          final account = accounts.firstWhere(
-            (account) => account.contains('$currentNamespace:'),
-          );
-          final address = account.replaceFirst('$currentNamespace:', '');
-          connectedWalletAddress.value = address;
-        }
-      } else {
-        connectedWalletAddress.value = '';
-      }
-      log.i('Connected Wallet Address: ${connectedWalletAddress.value}');
+      final address = await retrieveConnectedWallet(_w3mService);
+      connectedWalletAddress.value = address;
     });
-    void _onModalConnect(ModalConnect? event) {
+    void _onModalConnect(ModalConnect? event) async {
+      if (_w3mService.session == null) {
+        connectedWalletAddress.value = '';
+        return;
+      }
+      final address = await retrieveConnectedWallet(_w3mService);
+      connectedWalletAddress.value = address;
+      if (event != null) {
+        String chainId = event.session.chainId;
+        if (chainId.contains(':')) {
+          chainId = chainId.split(':')[1];
+        }
+        if (chainId == externalWalletChianId) return;
+        final GlobalController globalController = Get.find<GlobalController>();
+        await globalController.switchExternalWalletChain(chainId);
+      }
+      log.d(
+          'Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${_w3mService.session?.chainId}');
       log.i('[initializewm3Service] _onModalConnect ${event?.toString()}');
     }
 
+    // ignore: unused_element
     void _onModalUpdate(ModalConnect? event) {
       log.i('[initializewm3Service] _onModalUpdate ${event?.toString()}');
     }
 
-    void _onModalNetworkChange(ModalNetworkChange? event) {
+    void _onModalNetworkChange(ModalNetworkChange? event) async {
       log.i(
           '[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
+      if (event != null) {
+        GlobalController globalController = Get.find<GlobalController>();
+
+        String chainId = event.chainId;
+        if (chainId.contains(':')) {
+          chainId = chainId.split(':')[1];
+        }
+        if (chainId == externalWalletChianId) return;
+        await globalController.switchExternalWalletChain(chainId);
+      }
     }
 
     void _onModalDisconnect(ModalDisconnect? event) {
@@ -85,6 +111,15 @@ class BlockChainUtils {
 
     void _onSessionEvent(SessionEvent? event) {
       log.i('[initializewm3Service] _onSessionEvent ${event?.toString()}');
+      String? eventChainId = event?.chainId;
+      if (eventChainId != null && eventChainId.isNotEmpty) {
+        if (eventChainId.contains(':')) {
+          eventChainId = eventChainId.split(':')[1];
+        }
+        if (eventChainId == externalWalletChianId) return;
+        final GlobalController globalController = Get.find<GlobalController>();
+        globalController.switchExternalWalletChain(eventChainId);
+      }
     }
 
     void _onRelayClientConnect(EventArgs? event) {
@@ -110,22 +145,24 @@ class BlockChainUtils {
     _w3mService.onSessionUpdateEvent.subscribe(_onSessionUpdate);
     _w3mService.onSessionEventEvent.subscribe(_onSessionEvent);
     // relayClient subscriptions
-    _w3mService.web3App!.core.relayClient.onRelayClientConnect.subscribe(
+    _w3mService.appKit!.core.relayClient.onRelayClientConnect.subscribe(
       _onRelayClientConnect,
     );
-    _w3mService.web3App!.core.relayClient.onRelayClientError.subscribe(
+    _w3mService.appKit!.core.relayClient.onRelayClientError.subscribe(
       _onRelayClientError,
     );
-    _w3mService.web3App!.core.relayClient.onRelayClientDisconnect.subscribe(
+    _w3mService.appKit!.core.relayClient.onRelayClientDisconnect.subscribe(
       _onRelayClientDisconnect,
     );
 
     try {
       await _w3mService.init();
-      const chainId = Env.chainId;
+      _startListeningToCheerBoEvents();
+      final chainId = externalWalletChianId;
+      // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
         await _w3mService.selectChain(
-          W3MChainPresets.chains[chainId],
+          ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId),
           switchChain: true,
         );
         _w3mService.loadAccountData().then((_) {
@@ -137,4 +174,97 @@ class BlockChainUtils {
     }
     return _w3mService;
   }
+
+  static Future<String> retrieveConnectedWallet(
+      ReownAppKitModal _w3mService) async {
+    final GlobalController globalController = Get.find<GlobalController>();
+    if (globalController.web3ModalService.session == null) {
+      return '';
+    }
+    if (_w3mService.session == null) {
+      return '';
+    }
+    final session = _w3mService.session;
+    final connectedChain = session!.chainId;
+    String chainId = connectedChain;
+
+    // if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty) {
+    //   final globalController = Get.find<GlobalController>();
+    //   if (connectedChain != externalWalletChianId) {
+    //     if (chainId.contains(':')) {
+    //       chainId = chainId.split(':')[1];
+    //     }
+    //     await globalController.switchExternalWalletChain(chainId);
+    //   }
+    // }
+
+    final accounts = session.getAccounts();
+    final currentNamespace = '${Env.chainNamespace}:${chainId}';
+    if (accounts != null && accounts.isNotEmpty) {
+      final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
+      if (chainsNamespaces.contains(currentNamespace)) {
+        final account = accounts.firstWhere(
+          (account) => account.contains('$currentNamespace:'),
+        );
+        final address = account.replaceFirst('$currentNamespace:', '');
+        return address;
+      } else {
+        return '';
+      }
+    } else {
+      return '';
+    }
+  }
+
+  static _startListeningToCheerBoEvents() {
+    ////
+    // final cheerEventToListenTo = _getContractEventListener(
+    //     contract: cheerBooContract, eventName: 'Cheer');
+    // cheerEventToListenTo.take(1).listen((event) {
+    //   log.i('^^^^^^^^^^^^^^^^^^^^Cheer event: $event^^^^^^^^^^^^^^^^^^^');
+    // });
+    ////
+    // final booEventToListenTo =
+    //     _getContractEventListener(contract: cheerBooContract, eventName: 'Boo');
+    // booEventToListenTo.take(1).listen((event) {
+    //   log.i('^^^^^^^^^^^^^^^Boo event: $event^^^^^^^^^^^^^^^^^^^^^');
+    // });
+    ////
+  }
+}
+
+Stream<FilterEvent> _getContractEventListener({
+  required DeployedContract contract,
+  required String eventName,
+  chainId = Env.initialExternalWalletChainId,
+}) {
+  final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace,
+      chainId)!; // final GlobalController globalController = Get.find<GlobalController>();
+  // final web3ModalService = globalController.web3ModalService;
+  // final web3Client = web3ModalService.reconnectRelay();
+  // final web3Client = Web3Client(chain.rpcUrl, Client());
+  final client = Web3Client(
+    chain.rpcUrl,
+    Client(),
+    // socketConnector: () {
+    //   return IOWebSocketChannel.connect(chain.rpcUrl.replaceAll('https', 'ws'))
+    //       .cast<String>();
+    // },
+  );
+
+  final event = contract.event(eventName);
+
+  final options = FilterOptions(
+    address: contract.address,
+    fromBlock: BlockNum.genesis(),
+    toBlock: BlockNum.current(),
+    topics: [
+      // [bytesToHex(event.signature, padToEvenLength: true, include0x: true)],
+    ],
+  );
+  // final options = FilterOptions.events(
+  //   contract: contract,
+  //   event: event,
+  // );
+  return client.events(options);
 }

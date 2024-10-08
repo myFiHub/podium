@@ -7,6 +7,7 @@ class PodiumTextField extends FormField<String> {
       this.controller,
       this.fieldinitialValue,
       this.focusNode,
+      this.formField,
       this.decoration,
       this.keyboardType = TextInputType.text,
       this.textCapitalization = TextCapitalization.none,
@@ -56,6 +57,7 @@ class PodiumTextField extends FormField<String> {
             key: key,
             builder: (FormFieldState<String> field) => _GfTextFieldState(
                   state: field,
+                  formField: formField ?? false,
                   controller: controller,
                   focusNode: focusNode,
                   decoration: decoration,
@@ -153,6 +155,7 @@ class PodiumTextField extends FormField<String> {
   final Radius? cursorRadius;
   final Color? cursorColor;
   final Color? color;
+  final formField;
   final Radius? borderradius;
   final Brightness? keyboardAppearance;
   final EdgeInsets scrollPadding;
@@ -169,6 +172,7 @@ class _GfTextFieldState extends StatefulWidget {
       this.controller,
       this.initialValuex = '',
       this.focusNode,
+      required this.formField,
       this.decoration,
       this.keyboardType = TextInputType.text,
       this.textCapitalization = TextCapitalization.none,
@@ -220,6 +224,7 @@ class _GfTextFieldState extends StatefulWidget {
   final String initialValuex;
   final FocusNode? focusNode;
   final InputDecoration? decoration;
+  final bool formField;
   final TextInputType? keyboardType;
   final TextCapitalization textCapitalization;
   final TextInputAction? textInputAction;
@@ -286,7 +291,7 @@ class _GfTextFieldStateState extends State<_GfTextFieldState>
   Widget build(BuildContext context) {
     super.build(context);
     return Container(
-      height: 59,
+      height: widget.formField ? 87 : 59,
       child: TextFormField(
         controller: widget.controller ?? controller,
         focusNode: widget.focusNode,

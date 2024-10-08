@@ -1,9 +1,12 @@
 {
-  "environment": "*",
-  "chainId": "*",
+  "environment": "dev",
+  "chainNamespace": "eip155",
+  "chainId": "30732",
+  "starsArenaAddress": "*",
+  "proxyAddress": "*",
   "cheerBooAddress": "*",
   "minimumCheerBooAmount": "0.01",
-  "cheerBooTimeMultiplication": "30",
+  "cheerBooTimeMultiplication": "300",
   "projectId": "*",
   "cometChatAppId": "*",
   "cometChatRegion": "*",
@@ -12,5 +15,7 @@
   "particleProjectId": "*",
   "particleClientKey": "*",
   "particleAppId": "*",
-  "jitsiServerUrl": "*"
+  "jitsiServerUrl": "*",
+  "appStoreUrl": "https://play.google.com/store/apps/details?id=com.web3podium",
+  "baseDeepLinkUrl": "https://web3podium.page.link"
 }

@@ -2,11 +2,11 @@ import 'package:get/get.dart';
 
 import '../controllers/chat_controller.dart';
 
-class ChatBinding extends Bindings {
+class ChatBinding extends Binding {
   @override
-  void dependencies() {
-    Get.lazyPut<ChatController>(
-      () => ChatController(),
-    );
-  }
+  dependencies() => [
+        Bind.lazyPut<ChatController>(
+          () => ChatController(),
+        )
+      ];
 }

@@ -1,0 +1,234 @@
+I/ImeTracker( 4755): com.web3podium:a8fd58c8: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true
+D/InputMethodManager( 4755): showSoftInput() view=androidx.appcompat.widget.AppCompatEditText{43ee8b8 VFED..CL. .F.P.... 45,0-860,144 #7f0a0118 app:id/etPhoneOrEmail aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InsetsController( 4755): show(ime(), fromIme=true)
+I/ImeTracker( 4755): com.web3podium:a8fd58c8: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+I/AssistStructure( 4755): Flattened final assist data: 3256 bytes, containing 2 windows, 24 views
+I/okhttp.OkHttpClient( 4755): --> POST https://api.particle.network/code?project_uuid=2ba651e8-528b-493b-a570-ab62fe2489d6&project_client_key=c1o3pOIT9seszfmH9DSmMb7td8TDi4UNJWZbMmw1&project_app_uuid=d28e3658-4a8e-4d4a-aba1-1f7fff6d9038&sdk_version=android_2.1.10&device_id=064a3a38-bdbf-45e6-957e-8d418ad9e1d6&random_str=c0c1f8e1-5318-44d9-92db-c88b0f28ed42&timestamp=1728261299&mac=a38684b47537604b26e2ce6d31f99b418764fb290337c98729e15f76bc3b7395
+I/okhttp.OkHttpClient( 4755): Content-Length: 58
+I/okhttp.OkHttpClient( 4755): Auth-Type: Basic
+I/okhttp.OkHttpClient( 4755): Authorization: Basic UGNKQnRycXE2OVREcFF0WTpvR2pQWFNnS1A5UXRteFdRVWtyZnJVdnZtc0c2MnQ=
+I/okhttp.OkHttpClient( 4755): Content-Type: application/json
+I/okhttp.OkHttpClient( 4755): {"cf_turnstile_response":"","email":"mhsnprvr4@gmail.com"}
+I/okhttp.OkHttpClient( 4755): --> END POST (58-byte body)
+V/Ok2Curl ( 4755): curl -X POST -H "Auth-Type:Basic" -H "Authorization:Basic UGNKQnRycXE2OVREcFF0WTpvR2pQWFNnS1A5UXRteFdRVWtyZnJVdnZtc0c2MnQ=" -H "Content-Type:application/json" -d '{"cf_turnstile_response":"","email":"mhsnprvr4@gmail.com"}' "https://api.particle.network/code?project_uuid=2ba651e8-528b-493b-a570-ab62fe2489d6&project_client_key=c1o3pOIT9seszfmH9DSmMb7td8TDi4UNJWZbMmw1&project_app_uuid=d28e3658-4a8e-4d4a-aba1-1f7fff6d9038&sdk_version=android_2.1.10&device_id=064a3a38-bdbf-45e6-957e-8d418ad9e1d6&random_str=c0c1f8e1-5318-44d9-92db-c88b0f28ed42&timestamp=1728261299&mac=a38684b47537604b26e2ce6d31f99b418764fb290337c98729e15f76bc3b7395"
+I/okhttp.OkHttpClient( 4755): <-- 201 https://api.particle.network/code?project_uuid=2ba651e8-528b-493b-a570-ab62fe2489d6&project_client_key=c1o3pOIT9seszfmH9DSmMb7td8TDi4UNJWZbMmw1&project_app_uuid=d28e3658-4a8e-4d4a-aba1-1f7fff6d9038&sdk_version=android_2.1.10&device_id=064a3a38-bdbf-45e6-957e-8d418ad9e1d6&random_str=c0c1f8e1-5318-44d9-92db-c88b0f28ed42&timestamp=1728261299&mac=a38684b47537604b26e2ce6d31f99b418764fb290337c98729e15f76bc3b7395 (337ms)
+I/okhttp.OkHttpClient( 4755): date: Mon, 07 Oct 2024 00:34:59 GMT
+I/okhttp.OkHttpClient( 4755): content-type: application/json; charset=utf-8
+I/okhttp.OkHttpClient( 4755): content-length: 16
+I/okhttp.OkHttpClient( 4755): vary: Origin
+I/okhttp.OkHttpClient( 4755): access-control-allow-origin: *
+I/okhttp.OkHttpClient( 4755): cf-cache-status: DYNAMIC
+I/okhttp.OkHttpClient( 4755): set-cookie: __cf_bm=nMCB.aHt3j1_NdHaxT3LHtg1k.SaJtAlPTnHLXYidgo-1728261299-1.0.1.1-IarebSOOAupiionfzS_3XCbLfnB3uTcM1HhUW7JqbaJk0G5Jy9wR1m7AIm6R.ejzaHRZiNUa3d0x0X9dwYgZUw; path=/; expires=Mon, 07-Oct-24 01:04:59 GMT; domain=.particle.network; HttpOnly; Secure; SameSite=None
+I/okhttp.OkHttpClient( 4755): server: cloudflare
+I/okhttp.OkHttpClient( 4755): cf-ray: 8ce9cf0108ef5aaf-VIE
+I/okhttp.OkHttpClient( 4755): {"success":true}
+I/okhttp.OkHttpClient( 4755): <-- END HTTP (16-byte body)
+I/ImeTracker( 4755): com.web3podium:79d80f0f: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InputMethodManager( 4755): showSoftInput() view=com.particle.auth.customview.PNPasswordEditText{e9cfc5c VFED..CL. .F....ID 0,0-0,0 #7f0a0117 app:id/etCode aid=1073741825} flags=0 reason=SHOW_SOFT_INPUT
+I/ImeTracker( 4755): com.web3podium:b32d13c3: onRequestHide at ORIGIN_CLIENT reason HIDE_TOGGLE_SOFT_INPUT fromUser false
+W/RemoteInputConnectionImpl( 4755): requestCursorUpdates on inactive InputConnection
+I/AssistStructure( 4755): Flattened final assist data: 4228 bytes, containing 2 windows, 30 views
+W/WindowOnBackDispatcher( 4755): sendCancelIfRunning: isInProgress=false callback=ImeCallback=ImeOnBackInvokedCallback@146239924 Callback=android.window.IOnBackInvokedCallback$Stub$Proxy@5f4e21d
+D/InsetsController( 4755): show(ime(), fromIme=true)
+I/ImeTracker( 4755): com.web3podium:eb6d2df6: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+D/InsetsController( 4755): show(ime(), fromIme=true)
+I/ImeTracker( 4755): com.web3podium:79d80f0f: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+I/ImeTracker( 4755): com.web3podium:a749ca3: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true
+D/InputMethodManager( 4755): showSoftInput() view=com.particle.auth.customview.PNPasswordEditText{e9cfc5c VFED..CL. .F.P.... 0,0-880,129 #7f0a0117 app:id/etCode aid=1073741825} flags=0 reason=SHOW_SOFT_INPUT
+D/InsetsController( 4755): show(ime(), fromIme=true)
+I/ImeTracker( 4755): com.web3podium:a749ca3: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+I/ImeTracker( 4755): com.web3podium:4a1330e6: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+D/InsetsController( 4755): hide(ime(), fromIme=true)
+W/WindowOnBackDispatcher( 4755): sendCancelIfRunning: isInProgress=false callback=ImeCallback=ImeOnBackInvokedCallback@146239924 Callback=android.window.IOnBackInvokedCallback$Stub$Proxy@76c046b
+I/okhttp.OkHttpClient( 4755): --> POST https://api.particle.network/login?project_uuid=2ba651e8-528b-493b-a570-ab62fe2489d6&project_client_key=c1o3pOIT9seszfmH9DSmMb7td8TDi4UNJWZbMmw1&project_app_uuid=d28e3658-4a8e-4d4a-aba1-1f7fff6d9038&sdk_version=android_2.1.10&device_id=064a3a38-bdbf-45e6-957e-8d418ad9e1d6&random_str=e941ab8f-7dbe-4759-bc48-cda317124106&timestamp=1728261317&mac=91686faf33d2a1096e3cc3a4b263854ef549b407bbbe1c616c073cf60100f2d6
+I/okhttp.OkHttpClient( 4755): Content-Length: 47
+I/okhttp.OkHttpClient( 4755): Auth-Type: Basic
+I/okhttp.OkHttpClient( 4755): Authorization: Basic UGNKQnRycXE2OVREcFF0WTpvR2pQWFNnS1A5UXRteFdRVWtyZnJVdnZtc0c2MnQ=
+I/okhttp.OkHttpClient( 4755): Content-Type: application/json
+I/okhttp.OkHttpClient( 4755): {"code":"842800","email":"mhsnprvr4@gmail.com"}
+I/okhttp.OkHttpClient( 4755): --> END POST (47-byte body)
+V/Ok2Curl ( 4755): curl -X POST -H "Auth-Type:Basic" -H "Authorization:Basic UGNKQnRycXE2OVREcFF0WTpvR2pQWFNnS1A5UXRteFdRVWtyZnJVdnZtc0c2MnQ=" -H "Content-Type:application/json" -d '{"code":"842800","email":"mhsnprvr4@gmail.com"}' "https://api.particle.network/login?project_uuid=2ba651e8-528b-493b-a570-ab62fe2489d6&project_client_key=c1o3pOIT9seszfmH9DSmMb7td8TDi4UNJWZbMmw1&project_app_uuid=d28e3658-4a8e-4d4a-aba1-1f7fff6d9038&sdk_version=android_2.1.10&device_id=064a3a38-bdbf-45e6-957e-8d418ad9e1d6&random_str=e941ab8f-7dbe-4759-bc48-cda317124106&timestamp=1728261317&mac=91686faf33d2a1096e3cc3a4b263854ef549b407bbbe1c616c073cf60100f2d6"
+I/ImeTracker( 4755): com.web3podium:71d77c0e: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_ON_ANIMATION_STATE_CHANGED fromUser false
+I/ImeTracker( 4755): com.web3podium:4a1330e6: onHidden
+I/okhttp.OkHttpClient( 4755): <-- 201 https://api.particle.network/login?project_uuid=2ba651e8-528b-493b-a570-ab62fe2489d6&project_client_key=c1o3pOIT9seszfmH9DSmMb7td8TDi4UNJWZbMmw1&project_app_uuid=d28e3658-4a8e-4d4a-aba1-1f7fff6d9038&sdk_version=android_2.1.10&device_id=064a3a38-bdbf-45e6-957e-8d418ad9e1d6&random_str=e941ab8f-7dbe-4759-bc48-cda317124106&timestamp=1728261317&mac=91686faf33d2a1096e3cc3a4b263854ef549b407bbbe1c616c073cf60100f2d6 (635ms)
+I/okhttp.OkHttpClient( 4755): date: Mon, 07 Oct 2024 00:35:17 GMT
+I/okhttp.OkHttpClient( 4755): content-type: application/json; charset=utf-8
+I/okhttp.OkHttpClient( 4755): content-length: 2545
+I/okhttp.OkHttpClient( 4755): vary: Origin
+I/okhttp.OkHttpClient( 4755): access-control-allow-origin: *
+I/okhttp.OkHttpClient( 4755): cf-cache-status: DYNAMIC
+I/okhttp.OkHttpClient( 4755): set-cookie: __cf_bm=tk0q.gLOtaUtocxtg.z2NA1l8ZyvKnKIpUvjCo7pcNI-1728261317-1.0.1.1-zgLSbu0u7pOOl1oy99YknvSLUB2jpoEsaMpCKVUIzIOHAgJhv78yrCwj3H12rbDnuFjpdbHnudbKQnB5ITlAlQ; path=/; expires=Mon, 07-Oct-24 01:05:17 GMT; domain=.particle.network; HttpOnly; Secure; SameSite=None
+I/okhttp.OkHttpClient( 4755): server: cloudflare
+I/okhttp.OkHttpClient( 4755): cf-ray: 8ce9cf7169795aaf-VIE
+I/okhttp.OkHttpClient( 4755): {"uuid":"367112d4-2876-4f22-a724-f0da75cfd7f9","created_at":"2024-10-03T08:37:50.000Z","updated_at":"2024-10-03T08:37:50.000Z","phone":null,"email":"mhsnprvr4@gmail.com","name":null,"avatar":null,"facebook_id":null,"facebook_email":null,"google_id":null,"google_email":null,"apple_id":null,"apple_email":null,"twitter_id":null,"twitter_email":null,"telegram_id":null,"telegram_phone":null,"discord_id":null,"discord_email":null,"github_id":null,"github_email":null,"twitch_id":null,"twitch_email":null,"microsoft_id":null,"microsoft_email":null,"linkedin_id":null,"linkedin_email":null,"jwt_id":null,"passkeys_id":null,"thirdparty_user_info":null,"mac_key":"9a81c635-d753-4021-a15c-7c9405b22438","token":"db7dae42-7c05-439b-8f04-b1e84ab9c760","wallets":[{"public_address":null,"encrypted_data":"","encrypted_type":0,"encrypted_kms_data_key":"","uuid":"3eca6740-ee49-4623-b37a-d439654ea96f","type":0,"chain_name":"solana","created_at":"2024-10-03T08:37:50.000Z","updated_at":"2024-10-03T08:37:50.000Z","user_uuid":"367112d4-2876-4f22-a724-f0da75cfd7f9"},{"public_address":null,"encrypted_data":"","encrypted_type":0,"encrypted_kms_data_key":"","uuid":"1870f7bb-7907-4c0d-a028-1c03a1be841a","type":0,"chain_name":"evm_chain","created_at":"2024-10-03T08:37:50.000Z","updated_at":"2024-10-03T08:37:50.000Z","user_uuid":"367112d4-2876-4f22-a724-f0da75cfd7f9"}],"cognito_result":{"region":"us-west-1","identity_id":"us-west-1:c246e3e6-3bdd-c37a-577c-24b8100c0794","id_token":"eyJraWQiOiJ1cy13ZXN0LTE1IiwidHlwIjoiSldTIiwiYWxnIjoiUlM1MTIifQ.eyJzdWIiOiJ1cy13ZXN0LTE6YzI0NmUzZTYtM2JkZC1jMzdhLTU3N2MtMjRiODEwMGMwNzk0IiwiYXVkIjoidXMtd2VzdC0xOjI1ZGNmNmExLTljN2UtNDhjZS1iNTNlLTNiOTc0MjgxYjdiZSIsImFtciI6WyJhdXRoZW50aWNhdGVkIiwibmV0d29yay5wYXJ0aWNsZS5sb2dpbiIsIm5ldHdvcmsucGFydGljbGUubG9naW46dXMtd2VzdC0xOjI1ZGNmNmExLTljN2UtNDhjZS1iNTNlLTNiOTc0MjgxYjdiZTozNjcxMTJkNC0yODc2LTRmMjItYTcyNC1mMGRhNzVjZmQ3ZjkiXSwiaXNzIjoiaHR0cHM6Ly9jb2duaXRvLWlkZW50aXR5LmFtYXpvbmF3cy5jb20iLCJleHAiOjE3MjgzNDc3MTcsImlhdCI6MTcyODI2MTMxN30.K57jHLacJnFFMbrAHUMhTIejpk3W6Q-BrOkEPzbKFBso6GpCRNPXwYQkDpdcUkrr_TdlFU3_u2A7iHR3zAGJWyB66pxO6TWZkhqOvZ9DyqqUh-QM0pwuXnmPjTs1PwUAs5PR_udg5a8C_i3s_36BT7sbNDVDy9Ocj88P7OJm93GdPEhvj6Gn8XtdQ6rc8KubF0ff5SFGQ7sTe5nogR3-0BdUeMyWvNXDPS1De2ReuxXL5_M95Qg-G2hJqQnYO-ZOiyczgdjUiSP49glTn07H7T4_dGM2oqBcMJrgCZSqoy4P7o7F2tj72VedYAQJjKGX6vrQ3hIwaeMrz0Kc3LMoUQ","kms_key_id":"mrk-530746535ea8494caa879a0984b786d9"},"security_account":{"email":null,"phone":null,"has_set_master_password":false,"has_set_payment_password":false,"payment_password_updated_at":null}}
+I/okhttp.OkHttpClient( 4755): <-- END HTTP (2545-byte body)
+D/nativeloader( 4755): Load /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk!/lib/x86_64/libthresh_sig_wasm.so using ns clns-9 from class loader (caller=/data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk!classes26.dex): ok
+W/LogFactory( 4755): Truncating log tag length as it exceed 23, the limit imposed by Android on certain API Levels
+D/TrafficStats( 4755): tagSocket(226) with statsTag=0xffffffff, statsUid=-1
+V/com.amazonaws.request( 4755): Parsing service response JSON
+D/com.amazonaws.request( 4755): CRC32Checksum = null
+D/com.amazonaws.request( 4755): content encoding = null
+V/com.amazonaws.request( 4755): Done parsing service response
+D/AWS4Signer( 4755): AWS4 Canonical Request: '"POST
+D/AWS4Signer( 4755): /
+D/AWS4Signer( 4755):
+D/AWS4Signer( 4755): host:kms.us-west-1.amazonaws.com
+D/AWS4Signer( 4755): x-amz-date:20241007T003519Z
+D/AWS4Signer( 4755): x-amz-security-token:IQoJb3JpZ2luX2VjEMn//////////wEaCXVzLXdlc3QtMSJHMEUCIQCcbKpZ8GCicLYHZQVkdLVugjJg2RK+DuxC6qfhcsBz0gIgWelLVq9nxaI/LeHEgIxQVPNUk0Ecbpc70gvXUrm5cvQqowQIIhAEGgw4MzQ0MTI5OTYxNTUiDJDxm2YAHZg+aoIkQSqABHuPuJtde1zsTl7k5KuR6mOuL8QD0pu1MyKS3IZc1WNmNqsOUElbRrDnwTrdd26YWA4iqs7mVjJg+sM75aZjHKZ0ToylhbqX5Wjyyjar4akSNvjB0sMKGfoKDB1T2Dc7M1BsNnMqMN5ZWzd+z2QGnBAqKzYtXD+bhU0aHXTewf5V9AdiohB1Op626izlwYxfXUcVnZxsjx/pEEGkuR5qOjSNr8SjbWfPZd1S+NO/rWF+3c2WVlmM2MHPhhUWR5x3LWaqcI0AFfwWfPRsAtzari+2hv4FsZdnC+qgDEAFsP3ALLeqWW6zq2O2uaCQ5eD8BiId9rhB9JPXi3lARrCIHhMp4i21oUX+xc2b/omBKGnMIlHwKBBHuKsc8amxvu+ntl0bouJT4lkw4f6ekui8R/JwzQEQdE1iSEEDvBgfbVpntezNtjurUKiWHtRzJJbjqqvSIVaDB0B3BDeVq8UCAuSRC5RPalLRuizG28EgLi/LwN0D7WFmfReUihfbkaCj+na4Q/Mx0LD/zTgs80lgEBTWyMKhRPhrBd3nHbUkP2pMlvQQkWejppdiQcsldB81ERxyIR4gziYo3qYH1axI0aOgX7JlmJuAOpROEbyYkJ35xnIABXDVqvJ2eOJvYq/cBUJzgmrH63ixgebzah+Jk7mQ+xdknQK+aiyC5CGBhJuLMMfZjLgGOoUC0LcYWBDDGLpQNoZO2Rlveuv6eOgvDyZia4rU2TSVdb2lT03az2t+e7wq2A1mz0OCCLxicPFxUYHk2M2EMRTnUO5BXx5G4QcPWOjG/fiVEvubdVn2u5kbYrNHiZ6K6WGxEEFdIt5QYklchJObggYEVO2/5GBzA4y4Or60bcPHJCSQBWi5O+FI/N8oEq6fpPer9jCwHAi3QvwoqiS5jxwbWkBzhb9epXoL5UEeTHpgUYGKuJ7irS8/HLyiSijd+tj2a2Kd5VuFW4PQti2gsKQQSJNUxxJKF7ZDWQuG3lquO9aUKGnOcm3evO3swzsgfmqNqdWy1WNaIRnqzUqhhWI1q9imZ0ly
+D/AWS4Signer( 4755): x-amz-target:TrentService.GenerateDataKey
+D/AWS4Signer( 4755):
+D/AWS4Signer( 4755): host;x-amz-date;x-amz-security-token;x-amz-target
+D/AWS4Signer( 4755): b00a3977739ce28dca0c3e624b754b5928cac0dbe461022b812922fae4bc390b"
+D/AWS4Signer( 4755): AWS4 String to Sign: '"AWS4-HMAC-SHA256
+D/AWS4Signer( 4755): 20241007T003519Z
+D/AWS4Signer( 4755): 20241007/us-west-1/kms/aws4_request
+D/AWS4Signer( 4755): 64b6a581ffad26540c352f3a6ac30640625ec3617bd47666afaafcaf566e3741"
+D/TrafficStats( 4755): tagSocket(273) with statsTag=0xffffffff, statsUid=-1
+V/com.amazonaws.request( 4755): Parsing service response JSON
+D/com.amazonaws.request( 4755): CRC32Checksum = null
+D/com.amazonaws.request( 4755): content encoding = null
+V/com.amazonaws.request( 4755): Done parsing service response
+F/libc    ( 4755): Fatal signal 4 (SIGILL), code 2 (ILL_ILLOPN), fault addr 0x7d3b09a78e7b in tid 5204 (DefaultDispatch), pid 4755 (com.web3podium)
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+Build fingerprint: 'google/sdk_gphone64_x86_64/emu64xa:VanillaIceCream/AP31.240426.022.B1/11834390:user/release-keys'
+Revision: '0'
+ABI: 'x86_64'
+Timestamp: 2024-10-07 04:05:25.179509200+0330
+Process uptime: 66s
+Cmdline: com.web3podium
+pid: 4755, tid: 5204, name: DefaultDispatch  >>> com.web3podium <<<
+uid: 10211
+signal 4 (SIGILL), code 2 (ILL_ILLOPN), fault addr 0x00007d3b09a78e7b
+    rax 510e527fade682d1  rbx 6a09e667f3bcc908  rcx bb67ae8584caa73b  rdx 0000000000000001
+    r8  9b05688c2b3e6c1f  r9  00007d3b0e8a0b38  r10 0000000000000002  r11 0000000000000002
+    r12 3c6ef372fe94f82b  r13 a54ff53a5f1d36f1  r14 0000000000000080  r15 00007d3b0e8a0930
+    rdi 00007d3b0e8a08e0  rsi 00007d3b0e8a0860
+    rbp 1f83d9abfb41bd6b  rsp 00007d3b0e8a0390  rip 00007d3b09a78e7b
+123 total frames
+backtrace:
+      #00 pc 00000000003e7e7b  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000)
+      #01 pc 00000000003e7a80  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000)
+      #02 pc 00000000003ac9c7  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000)
+      #03 pc 00000000003acc96  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000)
+      #04 pc 00000000003a593f  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000)
+      #05 pc 00000000003a46af  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000)
+      #06 pc 0000000000287e20  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000)
+      #07 pc 00000000002a091f  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000)
+      #08 pc 000000000029c103  /data/app/~~9w7PLLNoR6OqSjvXVHeodA==/com.web3podium-F_5pr83Vu3q3XUBTJdUqxw==/base.apk (offset 0x12150000) (Java_com_particle_mpc_MPCNative_ecdsaKeygen+243)
+      #09 pc 000000000022b5eb  /apex/com.android.art/lib64/libart.so (art_quick_generic_jni_trampoline+219) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #10 pc 00000000002124b6  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #11 pc 000000000046629f  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+255) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #12 pc 00000000005dbe93  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2339) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #13 pc 0000000000233418  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+15560) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #14 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #15 pc 00000000010ea198  <anonymous:7d3a91251000>
+      #16 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #17 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #18 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #19 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #20 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #21 pc 00000000010ea16c  <anonymous:7d3a91251000>
+      #22 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #23 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #24 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #25 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #26 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #27 pc 00000000010ea148  <anonymous:7d3a91251000>
+      #28 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #29 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #30 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #31 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #32 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #33 pc 00000000005ff790  <anonymous:7d3a91251000>
+      #34 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #35 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #36 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #37 pc 0000000000233418  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+15560) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #38 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #39 pc 00000000005ba780  <anonymous:7d3a91251000>
+      #40 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #41 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #42 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #43 pc 0000000000233418  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+15560) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #44 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #45 pc 00000000005ba9e0  <anonymous:7d3a91251000>
+      #46 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #47 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #48 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #49 pc 0000000000233418  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+15560) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #50 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #51 pc 00000000010ea330  <anonymous:7d3a91251000>
+      #52 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #53 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #54 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #55 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #56 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #57 pc 00000000010aa760  <anonymous:7d3a91251000>
+      #58 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #59 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #60 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #61 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #62 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #63 pc 00000000010a9de4  <anonymous:7d3a91251000>
+      #64 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #65 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #66 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #67 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #68 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #69 pc 00000000010a4cf8  <anonymous:7d3a91251000>
+      #70 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #71 pc 0000000000949649  /apex/com.android.art/lib64/libart.so (artQuickToInterpreterBridge+969) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #72 pc 000000000022b77c  /apex/com.android.art/lib64/libart.so (art_quick_to_interpreter_bridge+140) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #73 pc 00000000004a6661  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith+273)
+      #74 pc 00000000002c480a  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (kotlinx.coroutines.DispatchedTask.run+1258)
+      #75 pc 0000000000212154  /apex/com.android.art/lib64/libart.so (art_quick_invoke_stub+756) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #76 pc 000000000046626c  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+204) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #77 pc 00000000005dbe93  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2339) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #78 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #79 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #80 pc 00000000005faac0  <anonymous:7d3a91251000>
+      #81 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #82 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #83 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #84 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #85 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #86 pc 0000000000602bac  <anonymous:7d3a91251000>
+      #87 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #88 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #89 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #90 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #91 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #92 pc 0000000000601bc8  <anonymous:7d3a91251000>
+      #93 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #94 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #95 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #96 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #97 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #98 pc 0000000000600670  <anonymous:7d3a91251000>
+      #99 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #100 pc 0000000000949649  /apex/com.android.art/lib64/libart.so (artQuickToInterpreterBridge+969) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #101 pc 000000000022b77c  /apex/com.android.art/lib64/libart.so (art_quick_to_interpreter_bridge+140) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #102 pc 00000000004a0dec  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker+300)
+      #103 pc 000000000022cffb  /apex/com.android.art/lib64/libart.so (art_quick_osr_stub+27) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #104 pc 0000000000609157  /apex/com.android.art/lib64/libart.so (art::jit::Jit::MaybeDoOnStackReplacement(art::Thread*, art::ArtMethod*, unsigned int, int, art::JValue*)+471) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #105 pc 0000000000231260  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+6928) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #106 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #107 pc 0000000000600788  <anonymous:7d3a91251000>
+      #108 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #109 pc 00000000005db20e  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame*, art::JValue*)+110) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #110 pc 00000000005dbe79  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>(art::ArtMethod*, art::Thread*, art::ShadowFrame&, art::Instruction const*, unsigned short, bool, art::JValue*)+2313) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #111 pc 00000000002331db  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*)+14987) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #112 pc 000000000022d2e5  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #113 pc 0000000000600770  <anonymous:7d3a91251000>
+      #114 pc 00000000005d47fc  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238)+652) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #115 pc 0000000000949649  /apex/com.android.art/lib64/libart.so (artQuickToInterpreterBridge+969) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #116 pc 000000000022b77c  /apex/com.android.art/lib64/libart.so (art_quick_to_interpreter_bridge+140) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #117 pc 0000000000212154  /apex/com.android.art/lib64/libart.so (art_quick_invoke_stub+756) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #118 pc 000000000046626c  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+204) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #119 pc 000000000088aef4  /apex/com.android.art/lib64/libart.so (art::Thread::CreateCallback(void*)+1444) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #120 pc 000000000088a945  /apex/com.android.art/lib64/libart.so (art::Thread::CreateCallbackWithUffdGc(void*)+5) (BuildId: 0f9df5105eaf1344abace228ce27a397)
+      #121 pc 000000000006d2fa  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+58) (BuildId: 81c1fbfee9904a1dc89f2a3eb88aa8ff)
+      #122 pc 00000000000601a8  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+56) (BuildId: 81c1fbfee9904a1dc89f2a3eb88aa8ff)
+Lost connection to device.
+
+Exited.

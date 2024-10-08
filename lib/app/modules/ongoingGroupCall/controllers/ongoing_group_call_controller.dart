@@ -1,33 +1,66 @@
 import 'dart:async';
 
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
+import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
+import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
-const amountToAddForLike = 10 * 1000; // 10 seconds
-const amountToReduceForDislike = 10 * 1000; // 10 seconds
+const amountToAddForLikeInSeconds = 10; // 10 seconds
+const amountToReduceForDislikeInSeconds = 10; // 10 seconds
 
-class OngoingGroupCallController extends GetxController
-    with FireBaseUtils, BlockChainInteractions {
+class MyTalkTimer {
+  int startedAt = DateTime.now().millisecondsSinceEpoch;
+  int endedAt = 0;
+  startTimer() {
+    startedAt = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  endTimer() {
+    endedAt = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  int get timeElapsedInSeconds {
+    final elapsed =
+        int.parse(((endedAt - startedAt) / 1000).toStringAsFixed(0));
+    if (elapsed < 0) {
+      return 0;
+    }
+    return elapsed;
+  }
+}
+
+class OngoingGroupCallController extends GetxController {
   final groupCallController = Get.find<GroupCallController>();
   final globalController = Get.find<GlobalController>();
   final firebaseSession = Rxn<FirebaseSession>();
   final mySession = Rxn<FirebaseSessionMember>();
   final jitsiMembers = Rxn<List<JitsiMember>>();
+  final allRemainingTimesMap = Rx<Map<String, int>>({});
+  final talkTimer = MyTalkTimer();
   final amIAdmin = false.obs;
-  final remainingTimeTimer = 0.obs;
+  final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
+  final talkingIds = Rx<List<String>>([]);
+  StreamSubscription<DatabaseEvent>? sessionMembersSubscription = null;
+  StreamSubscription<DatabaseEvent>? mySessionSubscription = null;
 
   Timer? timer;
 
@@ -46,10 +79,37 @@ class OngoingGroupCallController extends GetxController
     firebaseSession.value = await getSessionData(
       groupId: ongoingGroupCallGroup.id,
     );
-    startListeningToMyRemainingTalkingTime(
+    mySessionSubscription = startListeningToMyRemainingTalkingTime(
       groupId: ongoingGroupCallGroup.id,
       userId: myUser.id,
       onData: onRemainingTimeUpdate,
+    );
+    sessionMembersSubscription = startListeningToSessionMembers(
+      sessionId: ongoingGroupCallGroup.id,
+      onData: (sessionMembers) {
+        final Map<String, int> remainingTimeMap = {};
+        final membersList = sessionMembers.values.toList();
+        // sort based on last talking time to show the most recent talker first
+        membersList
+            .sort((a, b) => b.startedToTalkAt.compareTo(a.startedToTalkAt));
+        // final talkingIdsList = membersList
+        //     .where((element) => element.isTalking)
+        //     .map((e) => e.id)
+        //     .toList();
+        // if (talkingIdsList.length != talkingIds.value.length) {
+        //   talkingIds.value = talkingIdsList;
+        //   final GroupCallController groupCallController =
+        //       Get.find<GroupCallController>();
+        //   groupCallController.updateTalkingMembers(
+        //     ids: talkingIdsList,
+        //   );
+        // }
+        sessionMembers.forEach((key, value) {
+          remainingTimeMap[key] = value.remainingTalkTime;
+        });
+        allRemainingTimesMap.value.addAll(remainingTimeMap);
+        allRemainingTimesMap.refresh();
+      },
     );
   }
 
@@ -61,12 +121,17 @@ class OngoingGroupCallController extends GetxController
   @override
   void onClose() async {
     super.onClose();
-    stopListeningToMySession();
     stopTheTimer();
+    stopSubscriptions();
     mySession.value = null;
     firebaseSession.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
+  }
+
+  stopSubscriptions() {
+    sessionMembersSubscription?.cancel();
+    mySessionSubscription?.cancel();
   }
 
   onRemainingTimeUpdate(int? remainingTime) {
@@ -100,12 +165,11 @@ class OngoingGroupCallController extends GetxController
           if (!amIMuted.value) {
             final v = remainingTimeTimer.value - 1000;
             remainingTimeTimer.value = v;
-            final myUserId = globalController.currentUserInfo.value!.id;
             if (v == 0) {
-              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myUserId);
+              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
               t.cancel();
             } else {
-              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myUserId);
+              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
             }
           }
         } else {
@@ -115,15 +179,48 @@ class OngoingGroupCallController extends GetxController
     }
   }
 
-  stopTheTimer() {
+  updateMyLastTalkingTime() async {
+    final myUserId = globalController.currentUserInfo.value?.id;
+    final group = groupCallController.group.value;
+    if (group == null) {
+      return;
+    }
+    final isGroupCallRegistered = Get.isRegistered<GroupCallController>();
+    if (isGroupCallRegistered) {
+      final GroupCallController groupCallController =
+          Get.find<GroupCallController>();
+      final canSpeak = groupCallController.canTalk.value;
+      if (myUserId != null && canSpeak && amIMuted.value == false) {
+        await setIsTalkingInSession(
+          sessionId: firebaseSession.value!.id,
+          userId: myUserId,
+          isTalking: true,
+          startedToTalkAt: DateTime.now().millisecondsSinceEpoch,
+        );
+      }
+    }
+  }
+
+  stopTheTimer() async {
+    await setIsTalkingInSession(
+      sessionId: firebaseSession.value!.id,
+      userId: myId,
+      isTalking: false,
+    );
     timer?.cancel();
   }
 
   Future<void> addToTimer(
       {required int seconds, required String userId}) async {
-    if (amIAdmin.value) {
+    if (groupCallController.group.value == null) {
+      Get.snackbar("Unknown error", "please join again");
       return;
     }
+    final creatorId = groupCallController.group.value!.creator.id;
+    if (creatorId == userId) {
+      return;
+    }
+    log.d("adding ${seconds} seconds to ${userId}");
     final milliseconds = seconds * 1000;
     final remainingTalkTimeForUser = await getUserRemainingTalkTime(
       groupId: groupCallController.group.value!.id,
@@ -143,7 +240,12 @@ class OngoingGroupCallController extends GetxController
 
   Future<void> reduceFromTimer(
       {required int seconds, required String userId}) async {
-    if (amIAdmin.value) {
+    if (groupCallController.group.value == null) {
+      Get.snackbar("Unknown error", "please join again");
+      return;
+    }
+    final creatorId = groupCallController.group.value!.creator.id;
+    if (creatorId == userId) {
       return;
     }
     final milliseconds = seconds * 1000;
@@ -178,22 +280,30 @@ class OngoingGroupCallController extends GetxController
   }
 
   onLikeClicked(String userId) async {
-    log.d("Like clicked $userId");
+    final myUser = globalController.currentUserInfo.value!;
     final key = generateKeyForStorageAndObserver(
-        userId: userId,
-        groupId: groupCallController.group.value!.id,
-        like: true);
+      userId: userId,
+      groupId: groupCallController.group.value!.id,
+      like: true,
+    );
     timers.value[key] = DateTime.now().millisecondsSinceEpoch +
         likeDislikeTimeoutInMilliSeconds;
     timers.refresh();
     await addToTimer(
-      seconds: amountToAddForLike,
+      seconds: amountToAddForLikeInSeconds,
       userId: userId,
+    );
+    analytics.logEvent(
+      name: 'like',
+      parameters: {
+        'targetUser': userId,
+        'groupId': groupCallController.group.value!.id,
+        'fromUser': myUser.id,
+      },
     );
   }
 
   onDislikeClicked(String userId) async {
-    log.d("Dislike clicked $userId");
     final key = generateKeyForStorageAndObserver(
         userId: userId,
         groupId: groupCallController.group.value!.id,
@@ -202,31 +312,69 @@ class OngoingGroupCallController extends GetxController
         likeDislikeTimeoutInMilliSeconds;
     timers.refresh();
     await reduceFromTimer(
-      seconds: amountToReduceForDislike,
+      seconds: amountToReduceForDislikeInSeconds,
       userId: userId,
+    );
+    final myUser = globalController.currentUserInfo.value!;
+    analytics.logEvent(
+      name: 'dislike',
+      parameters: {
+        'targetUser': userId,
+        'groupId': groupCallController.group.value!.id,
+        'fromUser': myUser.id,
+      },
     );
   }
 
-  cheerBoo({required String userId, required bool cheer}) async {
-    final calContinue = checkWalletConnected();
-    final target = await getUserLocalWalletAddress(userId);
-    if (calContinue && target != '') {
-      late List<String> receiverAddresses;
+  cheerBoo(
+      {required String userId, required bool cheer, bool? fromMeetPage}) async {
+    String? targetAddress;
+    final bool canContinue = checkWalletConnected(
+      afterConnection: () {
+        cheerBoo(userId: userId, cheer: cheer);
+      },
+    );
+
+    if (!canContinue) {
+      Get.snackbar(
+        "external wallet connection required",
+        "please connect your wallet first",
+        colorText: Colors.orange,
+      );
+      return;
+    }
+
+    final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
+    if (userLocalWalletAddress != '') {
+      targetAddress = userLocalWalletAddress;
+    } else {
+      final particleUserWallets = await getParticleAuthWalletsForUser(userId);
+      if (particleUserWallets.length > 0) {
+        targetAddress = particleUserWallets[0].address;
+      }
+    }
+
+    if (canContinue && targetAddress != null && targetAddress != '') {
+      List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
-      if (myUser.localWalletAddress == userId) {
+      final myParticleUser = globalController.particleAuthUserInfo.value;
+      if (myUser.localWalletAddress == targetAddress ||
+          (myParticleUser != null &&
+              myParticleUser.wallets![0].publicAddress == targetAddress)) {
         receiverAddresses = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
       } else {
-        receiverAddresses = [target];
+        receiverAddresses = [targetAddress];
       }
       if (receiverAddresses.length == 0) {
         log.e("No wallets found in session");
         Get.snackbar("Error", "receiver wallet not found");
         return;
       }
-      final String? amount =
-          await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
+      final String? amount = fromMeetPage == true
+          ? Env.minimumCheerBooAmount
+          : await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
       if (amount == null) {
         log.e("Amount not selected");
         return;
@@ -247,54 +395,124 @@ class OngoingGroupCallController extends GetxController
       }
 
       ///////////////////////
-      final res = await cheerOrBoo(
-        target: target,
-        receiverAddresses: receiverAddresses,
-        amount: parsedAmount,
-        cheer: cheer,
-      );
-      if (res != null) {
-        try {
-          if ((res as String).startsWith('0x')) {
-            log.d("Cheer successful, amount: $amount");
-            log.d("final amount of time to add $finalAmountOfTimeToAdd");
-            cheer
-                ? addToTimer(
-                    seconds: finalAmountOfTimeToAdd,
-                    userId: userId,
-                  )
-                : reduceFromTimer(
-                    seconds: finalAmountOfTimeToAdd,
-                    userId: userId,
-                  );
-          }
-        } catch (e) {
-          log.e("Error updating remaining time");
-        }
-        log.i("Cheer successful");
-        Get.snackbar("Success", "Cheer successful");
+      /// TODO: add for particle when it is ready (issue is resolved on their side, issue 2)
+      bool success = false;
+      final selectedWallet =
+          WalletNames.external; //choseWallet(movementChainId);
+      if (selectedWallet == WalletNames.external) {
+        success = await ext_cheerOrBoo(
+          target: targetAddress,
+          receiverAddresses: receiverAddresses,
+          amount: parsedAmount,
+          cheer: cheer,
+          chainId: externalWalletChianId,
+        );
+      }
+
+      if (success) {
+        log.d("Cheer successful, amount: $amount");
+        log.d("final amount of time to add $finalAmountOfTimeToAdd");
+        cheer
+            ? addToTimer(
+                seconds: finalAmountOfTimeToAdd,
+                userId: userId,
+              )
+            : reduceFromTimer(
+                seconds: finalAmountOfTimeToAdd,
+                userId: userId,
+              );
+
+        log.i("${cheer ? "Cheer" : "Boo"} successful");
+        Get.snackbar("Success", "${cheer ? "Cheer" : "Boo"} successful");
+        analytics.logEvent(name: 'cheerBoo', parameters: {
+          'cheer': cheer,
+          'amount': amount,
+          'target': userId,
+          'groupId': groupCallController.group.value!.id,
+          'fromUser': myUser.id,
+        });
+        final particleAddress = await Evm.getAddress();
+        saveNewPayment(
+            event: PaymentEvent(
+          amount: amount,
+          chainId: movementChainId,
+          type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
+          initiatorAddress: selectedWallet == WalletNames.external
+              ? externalWalletAddress!
+              : particleAddress,
+          targetAddress: targetAddress,
+          initiatorId: myId,
+          targetId: userId,
+          groupId: groupCallController.group.value!.id,
+          selfCheer: myId == userId,
+          memberIds: myId == userId
+              ? firebaseSession.value!.members.values.map((e) => e.id).toList()
+              : null,
+        ));
       } else {
-        log.e("Cheer failed");
-        Get.snackbar("Error", "Cheer failed");
+        log.e("${cheer ? "Cheer" : "Boo"} failed");
+        Get.snackbar("Error", "${cheer ? "Cheer" : "Boo"} failed");
       }
       ///////////////////////
-    } else if (target == '') {
+    } else if (targetAddress == '' || targetAddress == null) {
       log.e("User has not connected wallet for some reason");
       Get.snackbar("Error", "User has not connected wallet for some reason");
       return;
     }
   }
 
-  onBooClick(String userId) {
-    log.d("Boo clicked $userId");
+  audioMuteChanged({required bool muted}) {
+    final groupId = groupCallController.group.value!.id;
+    if (muted) {
+      stopTheTimer();
+      amIMuted.value = true;
+      talkTimer.endTimer();
+      final elapsed = talkTimer.timeElapsedInSeconds;
+      sendGroupPeresenceEvent(
+          groupId: groupId, eventName: eventNames.notTalking);
+      if (elapsed > 0) {
+        analytics.logEvent(
+          name: 'talked',
+          parameters: {
+            'timeInSeconds': elapsed,
+            'userId': myId,
+            'groupId': groupCallController.group.value!.id,
+          },
+        );
+      }
+    } else {
+      final groupCreator = groupCallController.group.value!.creator.id;
+      final remainingTime = remainingTimeTimer;
+      if (remainingTime <= 0 && myId != groupCreator) {
+        Get.snackbar(
+          "You have run out of time",
+          "",
+          colorText: Colors.red,
+        );
+        amIMuted.value = true;
+        jitsiMeet.setAudioMuted(true);
+        return;
+      }
+      sendGroupPeresenceEvent(groupId: groupId, eventName: eventNames.talking);
+      amIMuted.value = false;
+      jitsiMeet.setAudioMuted(false);
+
+      startTheTimer();
+      if (remainingTimeTimer > 0) {
+        talkTimer.startTimer();
+        updateMyLastTalkingTime();
+      }
+    }
+    // log.d("audioMutedChanged: $muted");
   }
 
-  checkWalletConnected() {
+  checkWalletConnected({void Function()? afterConnection}) {
     final connectedWalletAddress =
         globalController.connectedWalletAddress.value;
     if (connectedWalletAddress == '') {
-      final service = globalController.web3ModalService;
-      service.openModal(Get.context!);
+      globalController.connectToWallet(afterConnection: () {
+        afterConnection!();
+      });
       return false;
     }
     return true;

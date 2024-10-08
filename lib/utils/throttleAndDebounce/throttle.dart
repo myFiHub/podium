@@ -46,7 +46,6 @@ final class Throttling<T> extends Stream<ThrottlingStatus>
     _duration = value;
   }
 
-  /// {@nodoc}
   Timer? _timer;
 
   /// Is ready to accept new events
@@ -58,7 +57,6 @@ final class Throttling<T> extends Stream<ThrottlingStatus>
   /// Waiting for the end of the pause
   bool get isBusy => !isIdle;
 
-  /// {@nodoc}
   final StreamController<ThrottlingStatus> _stateSC =
       StreamController<ThrottlingStatus>.broadcast(sync: true);
 

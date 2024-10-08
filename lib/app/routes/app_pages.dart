@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:podium/app/modules/groupDetail/views/group_by_id_landing.dart';
 
 import '../modules/allGroups/bindings/all_groups_binding.dart';
 import '../modules/allGroups/views/all_groups_view.dart';
@@ -20,6 +21,8 @@ import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
 import '../modules/ongoingGroupCall/bindings/ongoing_group_call_binding.dart';
 import '../modules/ongoingGroupCall/views/ongoing_group_call_view.dart';
+import '../modules/playground/bindings/playground_binding.dart';
+import '../modules/playground/views/playground_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/search/bindings/search_binding.dart';
@@ -61,6 +64,14 @@ class AppPages {
       name: _Paths.GROUP_DETAIL,
       page: () => const GroupDetailView(),
       binding: GroupDetailBinding(),
+      children: [
+        GetPage(
+          name: '/:id',
+          page: () => GroupByIdLandingScreen(),
+          transition: Transition.native,
+          preventDuplicates: false,
+        ),
+      ],
     ),
     GetPage(
       name: _Paths.EDIT_GROUP,
@@ -106,6 +117,11 @@ class AppPages {
       name: _Paths.ALL_GROUPS,
       page: () => const AllGroupsView(),
       binding: AllGroupsBinding(),
+    ),
+    GetPage(
+      name: _Paths.PLAYGROUND,
+      page: () => const PlaygroundView(),
+      binding: PlaygroundBinding(),
     ),
   ];
 }

@@ -2,11 +2,11 @@ import 'package:get/get.dart';
 
 import '../controllers/notifications_controller.dart';
 
-class NotificationsBinding extends Bindings {
+class NotificationsBinding extends Binding {
   @override
-  void dependencies() {
-    Get.lazyPut<NotificationsController>(
-      () => NotificationsController(),
-    );
-  }
+  dependencies() => [
+        Bind.lazyPut<NotificationsController>(
+          () => NotificationsController(),
+        )
+      ];
 }

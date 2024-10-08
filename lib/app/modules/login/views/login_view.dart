@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:form_builder_validators/form_builder_validators.dart';
-
 import 'package:get/get.dart';
-import 'package:getwidget/components/text_field/gf_text_field_rounded.dart';
-import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:podium/widgets/textField/textFieldRounded.dart';
 
 import '../controllers/login_controller.dart';
 
@@ -27,77 +23,178 @@ class LoginView extends GetView<LoginController> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    height: 200,
-                    child: Assets.images.logo.image(),
+                  Hero(
+                    tag: 'logo',
+                    child: Container(
+                      height: 200,
+                      child: Assets.images.logo.image(),
+                    ),
                   ),
-                  Text('Welcome to',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.normal,
-                      )),
                   Text(
                     'Podium',
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  space10,
-                  FormBuilderField(
-                    builder: (FormFieldState<String?> field) {
-                      return Input(
-                        hintText: 'Email',
-                        onChanged: (value) => controller.email.value = value,
-                        validator: FormBuilderValidators.compose([
-                          FormBuilderValidators.required(),
-                          FormBuilderValidators.email(),
-                        ]),
-                      );
-                    },
-                    name: 'email',
-                  ),
-                  space10,
-                  FormBuilderField(
-                    builder: (FormFieldState<String?> field) {
-                      return Input(
-                        onChanged: (value) => controller.password.value = value,
-                        hintText: 'Password',
-                        obscureText: true,
-                        validator: FormBuilderValidators.compose([
-                          FormBuilderValidators.required(),
-                          FormBuilderValidators.minLength(6),
-                        ]),
-                      );
-                    },
-                    name: 'password',
-                  ),
-                  space10,
+                  Text('Where attention pays.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                      )),
                   Obx(() {
-                    final loading = controller.isLoggingIn.value;
-                    return Button(
-                      loading: loading,
-                      type: ButtonType.gradient,
-                      blockButton: true,
-                      onPressed: () {
-                        final re = _formKey.currentState?.saveAndValidate();
-                        if (re == true) {
-                          controller.login();
-                        }
-                      },
-                      text: 'LOGIN',
+                    final isLoggingIn = controller.isLoggingIn.value ||
+                        controller.globalController.isAutoLoggingIn.value;
+                    if (isLoggingIn) {
+                      return Column(
+                        children: [
+                          space10,
+                          CircularProgressIndicator(),
+                          space10,
+                          Text('please wait...'),
+                        ],
+                      );
+                    }
+                    return Column(
+                      children: [
+                        space10,
+                        Button(
+                          onPressed: () {
+                            controller.loginWithEmail(
+                              ignoreIfNotLoggedIn: false,
+                            );
+                          },
+                          text: 'LOGIN WITH EMAIL',
+                          size: ButtonSize.LARGE,
+                          type: ButtonType.solid,
+                          color: ColorName.black,
+                          blockButton: true,
+                        ),
+                        space10,
+                        Button(
+                          onPressed: () {
+                            controller.loginWithX(ignoreIfNotLoggedIn: false);
+                          },
+                          text: 'LOGIN WITH X',
+                          icon: Assets.images.xPlatform.image(
+                            width: 20,
+                            height: 20,
+                            color: ColorName.white,
+                          ),
+                          size: ButtonSize.LARGE,
+                          type: ButtonType.solid,
+                          color: ColorName.black,
+                          blockButton: true,
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Button(
+                          onPressed: () {
+                            controller.loginWithGoogle(
+                                ignoreIfNotLoggedIn: false);
+                          },
+                          text: 'LOGIN WITH GOOGLE',
+                          icon: Assets.images.gIcon.image(
+                            width: 20,
+                          ),
+                          size: ButtonSize.LARGE,
+                          type: ButtonType.solid,
+                          color: ColorName.black,
+                          blockButton: true,
+                        ),
+                        space10,
+                        Text(
+                          "Or login with other methods:",
+                          style: TextStyle(
+                            color: ColorName.greyText,
+                            fontSize: 12,
+                          ),
+                        ),
+                        space10,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: ColorName.black,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: IconButton(
+                                  onPressed: () {
+                                    controller.loginWithFaceBook(
+                                      ignoreIfNotLoggedIn: false,
+                                    );
+                                  },
+                                  icon: Assets.images.facebook.image(
+                                    color: ColorName.white,
+                                    height: 25,
+                                  )),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: ColorName.black,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: IconButton(
+                                onPressed: () {
+                                  controller.loginWithApple(
+                                    ignoreIfNotLoggedIn: false,
+                                  );
+                                },
+                                icon: Assets.images.apple.image(
+                                  color: ColorName.white,
+                                  height: 25,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: ColorName.black,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: IconButton(
+                                onPressed: () {
+                                  controller.loginWithLinkedIn(
+                                    ignoreIfNotLoggedIn: false,
+                                  );
+                                },
+                                icon: Assets.images.linkedin.image(
+                                  height: 25,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: ColorName.black,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: IconButton(
+                                onPressed: () {
+                                  controller.loginWithGithub(
+                                    ignoreIfNotLoggedIn: false,
+                                  );
+                                },
+                                icon: Assets.images.github.image(
+                                  color: ColorName.white,
+                                  height: 25,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     );
                   }),
-                  Button(
-                    onPressed: () {
-                      Navigate.to(
-                        type: NavigationTypes.toNamed,
-                        route: Routes.SIGNUP,
-                      );
-                    },
-                    text: 'CREATE ACCOUNT',
-                    type: ButtonType.transparent,
-                  )
+                  space10,
+                  Text(
+                    "Version: " + Env.VERSION,
+                    style: const TextStyle(
+                      color: ColorName.greyText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
             ),

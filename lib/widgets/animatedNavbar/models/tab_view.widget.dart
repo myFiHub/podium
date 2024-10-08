@@ -4,6 +4,7 @@ class _CustomTabView extends StatefulWidget {
   const _CustomTabView({
     final Key? key,
     this.builder,
+    // ignore:unused_element
     this.routeAndNavigatorSettings,
   }) : super(key: key);
   final WidgetBuilder? builder;

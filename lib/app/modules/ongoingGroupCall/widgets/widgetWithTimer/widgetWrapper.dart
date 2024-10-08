@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/utils.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/timer.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
@@ -30,7 +29,8 @@ class WidgetWithTimer extends StatelessWidget {
 
   duration(int finishTime) {
     final remaining = finishTime - DateTime.now().millisecondsSinceEpoch;
-    if (remaining < 0) {
+    if (remaining <= 0) {
+      onComplete!();
       return 0;
     }
     return int.parse((remaining / 1000).toString().split(".")[0]);
@@ -51,6 +51,7 @@ class WidgetWithTimer extends StatelessWidget {
       GetStorage().remove(storageKey);
       return child;
     }
+
     return CircularCountDownTimer(
       duration: duration(finishTime),
       initialDuration: 0,

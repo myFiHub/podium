@@ -1,16 +1,28 @@
 # podium
 
-A new Flutter project.
-
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+in jitsi_plugin/android/build.gradle, change the line:
+url "D:/my_projects/podium_fihub/jitsi_plugin/android/libs"
+from D:/my_projects/podium_fihub/jitsi_plugin/android/libs, to "your project location"/jitsi_plugin/android/libs
 
-A few resources to get you started if this is your first Flutter project:
+add this to firebase realtime database rules
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```json
+{
+  "rules": {
+    "notifications": {
+      ".indexOn": ["targetUserId"]
+    }
+  }
+}
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+fill the environment variables in the env/dev.json file (like the example file env/dev.example.json) and run the following commands:
+
+```bash
+flutter pub get
+dart pub global activate flutterfire_cli
+flutterfire configure
+flutter run --dart-define-from-file=env/dev.json
+```

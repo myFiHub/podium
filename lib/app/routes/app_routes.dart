@@ -18,6 +18,7 @@ abstract class Routes {
   static const SEARCH = _Paths.SEARCH;
   static const NOTIFICATIONS = _Paths.NOTIFICATIONS;
   static const ALL_GROUPS = _Paths.ALL_GROUPS;
+  static const PLAYGROUND = _Paths.PLAYGROUND;
 }
 
 abstract class _Paths {
@@ -37,4 +38,5 @@ abstract class _Paths {
   static const SEARCH = '/search';
   static const NOTIFICATIONS = '/notifications';
   static const ALL_GROUPS = '/all-groups';
+  static const PLAYGROUND = '/playground';
 }

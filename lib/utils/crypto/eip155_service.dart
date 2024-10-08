@@ -1,14 +1,11 @@
 import 'dart:convert';
 
-import 'package:intl/intl.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
-
 // ignore: depend_on_referenced_packages
 import 'package:convert/convert.dart';
 
-import 'test_data/aave_contract.dart';
 import 'test_data/test_data.dart';
-import 'test_data/usdt_contract.dart';
+
+import 'package:reown_appkit/reown_appkit.dart';
 
 enum EIP155UIMethods {
   personalSign,
@@ -67,7 +64,7 @@ class EIP155 {
   }
 
   static Future<dynamic> callMethod({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String topic,
     required EIP155UIMethods method,
     required String chainId,
@@ -120,7 +117,7 @@ class EIP155 {
   }
 
   static Future<dynamic> requestAccounts({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
   }) async {
     return await w3mService.request(
       topic: w3mService.session!.topic,
@@ -133,7 +130,7 @@ class EIP155 {
   }
 
   static Future<dynamic> personalSign({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String message,
   }) async {
     final bytes = utf8.encode(message);
@@ -153,7 +150,7 @@ class EIP155 {
   }
 
   static Future<dynamic> ethSignTypedData({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String data,
   }) async {
     return await w3mService.request(
@@ -170,7 +167,7 @@ class EIP155 {
   }
 
   static Future<dynamic> ethSignTypedDataV3({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String data,
   }) async {
     return await w3mService.request(
@@ -187,7 +184,7 @@ class EIP155 {
   }
 
   static Future<dynamic> ethSignTypedDataV4({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required String data,
   }) async {
     return await w3mService.request(
@@ -204,7 +201,7 @@ class EIP155 {
   }
 
   static Future<dynamic> ethSendTransaction({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
     required Transaction transaction,
     required EIP155UIMethods method,
   }) async {
@@ -221,7 +218,7 @@ class EIP155 {
   }
 
   static Future<dynamic> walletWatchAsset({
-    required W3MService w3mService,
+    required ReownAppKitModal w3mService,
   }) async {
     return await w3mService.request(
       topic: w3mService.session!.topic,
@@ -242,181 +239,184 @@ class EIP155 {
     );
   }
 
-  // Example of calling `transfer` function from AAVE token Smart Contract
-  static Future<dynamic> callTestSmartContract({
-    required W3MService w3mService,
-    required String action,
-  }) async {
-    // Create DeployedContract object using contract's ABI and address
-    final deployedContract = DeployedContract(
-      ContractAbi.fromJson(
-        jsonEncode(AAVESepoliaContract.contractABI),
-        'AAVE Token (Sepolia)',
-      ),
-      EthereumAddress.fromHex(AAVESepoliaContract.contractAddress),
-    );
+  // // Example of calling `transfer` function from AAVE token Smart Contract
+  // static Future<dynamic> callTestSmartContract({
+  //   required W3MService w3mService,
+  //   required String action,
+  // }) async {
+  //   // Create DeployedContract object using contract's ABI and address
+  //   final deployedContract = DeployedContract(
+  //     ContractAbi.fromJson(
+  //       jsonEncode(AAVESepoliaContract.contractABI),
+  //       'AAVE Token (Sepolia)',
+  //     ),
+  //     EthereumAddress.fromHex(AAVESepoliaContract.contractAddress),
+  //   );
 
-    switch (action) {
-      case 'read':
-        return _readSmartContract(
-          w3mService: w3mService,
-          contract: deployedContract,
-        );
-      case 'write':
-        // return await w3mService.requestWriteContract(
-        //   topic: w3mService.session?.topic ?? '',
-        //   chainId: 'eip155:11155111',
-        //   deployedContract: deployedContract,
-        //   functionName: 'subscribe',
-        //   parameters: [],
-        //   transaction: Transaction(
-        //     from: EthereumAddress.fromHex(w3mService.session!.address!),
-        //     value: EtherAmount.fromInt(EtherUnit.finney, 1),
-        //   ),
-        // );
-        // we first call `decimals` function, which is a read function,
-        // to check how much decimal we need to use to parse the amount value
-        final decimals = await w3mService.requestReadContract(
-          deployedContract: deployedContract,
-          functionName: 'decimals',
-        );
-        final d = (decimals.first as BigInt);
-        final requestValue = _formatValue(0.01, decimals: d);
+  //   switch (action) {
+  //     case 'read':
+  //       return _readSmartContract(
+  //         w3mService: w3mService,
+  //         contract: deployedContract,
+  //       );
+  //     case 'write':
+  //       // return await w3mService.requestWriteContract(
+  //       //   topic: w3mService.session?.topic ?? '',
+  //       //   chainId: 'eip155:11155111',
+  //       //   deployedContract: deployedContract,
+  //       //   functionName: 'subscribe',
+  //       //   parameters: [],
+  //       //   transaction: Transaction(
+  //       //     from: EthereumAddress.fromHex(w3mService.session!.address!),
+  //       //     value: EtherAmount.fromInt(EtherUnit.finney, 1),
+  //       //   ),
+  //       // );
+  //       // we first call `decimals` function, which is a read function,
+  //       // to check how much decimal we need to use to parse the amount value
+  //       final decimals = await w3mService.requestReadContract(
+  //         deployedContract: deployedContract,
+  //         functionName: 'decimals',
+  //       );
+  //       final d = (decimals.first as BigInt);
+  //       final requestValue = _formatValue(0.01, decimals: d);
 
-        // now we call `transfer` write function with the parsed value.
-        return w3mService.requestWriteContract(
-          topic: w3mService.session!.topic,
-          chainId: w3mService.selectedChain!.namespace,
-          deployedContract: deployedContract,
-          functionName: 'transfer',
-          transaction: Transaction(
-            from: EthereumAddress.fromHex(w3mService.session!.address!),
-          ),
-          parameters: [
-            EthereumAddress.fromHex(
-              '0x59e2f66C0E96803206B6486cDb39029abAE834c0',
-            ),
-            requestValue, // == 0.12
-          ],
-        );
-      // payable function with no parameters such as:
-      // {
-      //   "inputs": [],
-      //   "name": "functionName",
-      //   "outputs": [],
-      //   "stateMutability": "payable",
-      //   "type": "function"
-      // },
-      // return w3mService.requestWriteContract(
-      //   topic: w3mService.session?.topic ?? '',
-      //   chainId: 'eip155:11155111',
-      //   rpcUrl: 'https://ethereum-sepolia.publicnode.com',
-      //   deployedContract: deployedContract,
-      //   functionName: 'functionName',
-      //   transaction: Transaction(
-      //     from: EthereumAddress.fromHex(w3mService.session!.address!),
-      //     value: EtherAmount.fromInt(EtherUnit.finney, 1),
-      //   ),
-      //   parameters: [],
-      // );
-      default:
-        return Future.value();
-    }
-  }
+  //       // now we call `transfer` write function with the parsed value.
+  //       return w3mService.requestWriteContract(
+  //         topic: w3mService.session!.topic,
+  //         chainId: w3mService.selectedChain!.namespace,
+  //         deployedContract: deployedContract,
+  //         functionName: 'transfer',
+  //         transaction: Transaction(
+  //           from: EthereumAddress.fromHex(w3mService.session!.address!),
+  //         ),
+  //         parameters: [
+  //           EthereumAddress.fromHex(
+  //             '0x59e2f66C0E96803206B6486cDb39029abAE834c0',
+  //           ),
+  //           requestValue, // == 0.12
+  //         ],
+  //       );
+  //     // payable function with no parameters such as:
+  //     // {
+  //     //   "inputs": [],
+  //     //   "name": "functionName",
+  //     //   "outputs": [],
+  //     //   "stateMutability": "payable",
+  //     //   "type": "function"
+  //     // },
+  //     // return w3mService.requestWriteContract(
+  //     //   topic: w3mService.session?.topic ?? '',
+  //     //   chainId: 'eip155:11155111',
+  //     //   rpcUrl: 'https://ethereum-sepolia.publicnode.com',
+  //     //   deployedContract: deployedContract,
+  //     //   functionName: 'functionName',
+  //     //   transaction: Transaction(
+  //     //     from: EthereumAddress.fromHex(w3mService.session!.address!),
+  //     //     value: EtherAmount.fromInt(EtherUnit.finney, 1),
+  //     //   ),
+  //     //   parameters: [],
+  //     // );
+  //     default:
+  //       return Future.value();
+  //   }
+  // }
 
-  // Example of calling `transfer` function from USDT token Smart Contract
-  static Future<dynamic> callUSDTSmartContract({
-    required W3MService w3mService,
-    required String action,
-  }) async {
-    // Create DeployedContract object using contract's ABI and address
-    final deployedContract = DeployedContract(
-      ContractAbi.fromJson(
-        jsonEncode(USDTContract.contractABI),
-        'Tether USD',
-      ),
-      EthereumAddress.fromHex(USDTContract.contractAddress),
-    );
+  // // Example of calling `transfer` function from USDT token Smart Contract
+  // static Future<dynamic> callUSDTSmartContract({
+  //   required W3MService w3mService,
+  //   required String action,
+  // }) async {
+  //   // Create DeployedContract object using contract's ABI and address
+  //   final deployedContract = DeployedContract(
+  //     ContractAbi.fromJson(
+  //       jsonEncode(USDTContract.contractABI),
+  //       'Tether USD',
+  //     ),
+  //     EthereumAddress.fromHex(USDTContract.contractAddress),
+  //   );
 
-    switch (action) {
-      case 'read':
-        return _readSmartContract(
-          w3mService: w3mService,
-          contract: deployedContract,
-        );
-      case 'write':
-        // we first call `decimals` function, which is a read function,
-        // to check how much decimal we need to use to parse the amount value
-        final decimals = await w3mService.requestReadContract(
-          deployedContract: deployedContract,
-          functionName: 'decimals',
-        );
-        final d = (decimals.first as BigInt);
-        final requestValue = _formatValue(0.23, decimals: d);
-        // now we call `transfer` write function with the parsed value.
-        return w3mService.requestWriteContract(
-          topic: w3mService.session!.topic,
-          chainId: w3mService.selectedChain!.namespace,
-          deployedContract: deployedContract,
-          functionName: 'transfer',
-          transaction: Transaction(
-            from: EthereumAddress.fromHex(w3mService.session!.address!),
-          ),
-          parameters: [
-            EthereumAddress.fromHex(
-              '0x59e2f66C0E96803206B6486cDb39029abAE834c0',
-            ),
-            requestValue, // == 0.23
-          ],
-        );
-      default:
-        return Future.value();
-    }
-  }
+  //   switch (action) {
+  //     case 'read':
+  //       return _readSmartContract(
+  //         w3mService: w3mService,
+  //         contract: deployedContract,
+  //       );
+  //     case 'write':
+  //       // we first call `decimals` function, which is a read function,
+  //       // to check how much decimal we need to use to parse the amount value
+  //       final decimals = await w3mService.requestReadContract(
+  //         deployedContract: deployedContract,
+  //         functionName: 'decimals',
+  //       );
+  //       final d = (decimals.first as BigInt);
+  //       final requestValue = _formatValue(0.23, decimals: d);
+  //       // now we call `transfer` write function with the parsed value.
+  //       return w3mService.requestWriteContract(
+  //         topic: w3mService.session!.topic,
+  //         chainId: w3mService.selectedChain!.namespace,
+  //         deployedContract: deployedContract,
+  //         functionName: 'transfer',
+  //         transaction: Transaction(
+  //           from: EthereumAddress.fromHex(w3mService.session!.address!),
+  //         ),
+  //         parameters: [
+  //           EthereumAddress.fromHex(
+  //             '0x59e2f66C0E96803206B6486cDb39029abAE834c0',
+  //           ),
+  //           requestValue, // == 0.23
+  //         ],
+  //       );
+  //     default:
+  //       return Future.value();
+  //   }
+  // }
 
-  static Future<dynamic> _readSmartContract({
-    required W3MService w3mService,
-    required DeployedContract contract,
-  }) async {
-    final results = await Future.wait([
-      // results[0]
-      w3mService.requestReadContract(
-        deployedContract: contract,
-        functionName: 'name',
-      ),
-      // results[1]
-      w3mService.requestReadContract(
-        deployedContract: contract,
-        functionName: 'totalSupply',
-      ),
-      // results[2]
-      w3mService.requestReadContract(
-        deployedContract: contract,
-        functionName: 'balanceOf',
-        parameters: [
-          EthereumAddress.fromHex(w3mService.session!.address!),
-        ],
-      ),
-      // results[4]
-      w3mService.requestReadContract(
-        deployedContract: contract,
-        functionName: 'decimals',
-      ),
-    ]);
+  // static Future<dynamic> _readSmartContract({
+  //   required W3MService w3mService,
+  //   required DeployedContract contract,
+  // }) async {
+  //   final results = await Future.wait([
+  //     // results[0]
+  //     w3mService.requestReadContract(
+  //       deployedContract: contract,
+  //       functionName: 'name',
+  //       topic: null,
+  //       chainId:
 
-    //
-    final name = (results[0].first as String);
-    final multiplier = _multiplier(results[3].first);
-    final total = (results[1].first as BigInt) / BigInt.from(multiplier);
-    final balance = (results[2].first as BigInt) / BigInt.from(multiplier);
-    final formatter = NumberFormat("#,##0.00000", "en_US");
+  //     ),
+  //     // results[1]
+  //     w3mService.requestReadContract(
+  //       deployedContract: contract,
+  //       functionName: 'totalSupply',
+  //     ),
+  //     // results[2]
+  //     w3mService.requestReadContract(
+  //       deployedContract: contract,
+  //       functionName: 'balanceOf',
+  //       parameters: [
+  //         EthereumAddress.fromHex(w3mService.session!.address!),
+  //       ],
+  //     ),
+  //     // results[4]
+  //     w3mService.requestReadContract(
+  //       deployedContract: contract,
+  //       functionName: 'decimals',
+  //     ),
+  //   ]);
 
-    return {
-      'name': name,
-      'totalSupply': formatter.format(total),
-      'balance': formatter.format(balance),
-    };
-  }
+  //   //
+  //   final name = (results[0].first as String);
+  //   final multiplier = _multiplier(results[3].first);
+  //   final total = (results[1].first as BigInt) / BigInt.from(multiplier);
+  //   final balance = (results[2].first as BigInt) / BigInt.from(multiplier);
+  //   final formatter = NumberFormat("#,##0.00000", "en_US");
+
+  //   return {
+  //     'name': name,
+  //     'totalSupply': formatter.format(total),
+  //     'balance': formatter.format(balance),
+  //   };
+  // }
 
   static BigInt _formatValue(num value, {required BigInt decimals}) {
     final multiplier = _multiplier(decimals);

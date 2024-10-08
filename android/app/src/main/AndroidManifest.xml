@@ -5,6 +5,7 @@
      tools:replace="android:label"
         android:label="podium"
         android:name="${applicationName}"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -15,6 +16,18 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
+<meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
+<intent-filter android:autoVerify="true">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="podium" android:host="group-detail" />
+    <data android:scheme="http" android:host="web3podium.page.link" />
+    <data android:scheme="https"  />
+        <data android:scheme="http" android:host="web3podium.page.link/group-detail" />
+    <data android:scheme="https"  />
+</intent-filter>
+
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
                  while the Flutter UI initializes. After that, this theme continues
@@ -56,4 +69,29 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+<!-- to use calendar -->
+<queries>
+  <intent>
+    <action android:name="android.intent.action.INSERT" />
+    <data android:mimeType="vnd.android.cursor.item/event" />
+  </intent>
+</queries>
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+<!-- end-  to use calendar -->
+
+    <!-- to connect to internet -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- to read images from gallry -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- to access mic -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- to access notification -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- to remove warning in google play -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
+
+
 </manifest>

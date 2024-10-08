@@ -15,7 +15,9 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
-
+release-keystore.jks
+debug-info
+env/**/*.json
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
@@ -44,7 +46,6 @@ app.*.map.json
 /android/app/release
 /firebase.json
 /env/dev.json
+/env/prod.json
 /android/app/google-service.json
-flutterfire.bat
-get.bat
-get.bat
+/lib/firebase_options.dart

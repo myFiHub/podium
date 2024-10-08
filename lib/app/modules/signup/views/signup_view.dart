@@ -10,7 +10,6 @@ import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/signup/controllers/signup_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';

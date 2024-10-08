@@ -85,6 +85,7 @@ class GroupsController extends GetxController with FirebaseTags {
   final leaveListenersMap = {};
   final gettingAllGroups = true.obs;
   bool initializedChannels = false;
+  bool gotDetectPresenceTime = false;
   StreamSubscription<DatabaseEvent>? subscription;
 
   @override
@@ -216,12 +217,15 @@ class GroupsController extends GetxController with FirebaseTags {
     final groupsMap = groups.value;
     // readt detectPresenceTime from firebase
     try {
-      final detectPresenceTimeRef =
-          FirebaseDatabase.instance.ref(FireBaseConstants.detectPresenceTime);
-      final detectPresenceTimeSnapshot = await detectPresenceTimeRef.get();
-      final detectPresenceTime = detectPresenceTimeSnapshot.value;
-      if (detectPresenceTime != null) {
-        dpt = detectPresenceTime as int;
+      if (!gotDetectPresenceTime) {
+        final detectPresenceTimeRef =
+            FirebaseDatabase.instance.ref(FireBaseConstants.detectPresenceTime);
+        final detectPresenceTimeSnapshot = await detectPresenceTimeRef.get();
+        final detectPresenceTime = detectPresenceTimeSnapshot.value;
+        if (detectPresenceTime != null) {
+          gotDetectPresenceTime = true;
+          dpt = detectPresenceTime as int;
+        }
       }
     } catch (e) {}
     if (dpt == 0) {

@@ -177,6 +177,7 @@ class GroupCallController extends GetxController {
     searchedValueInMeet.value = '';
     final groupId = group.value?.id;
     if (groupId != null) {
+      sendGroupPeresenceEvent(groupId: groupId, eventName: eventNames.leave);
       final userId = myId;
       setIsUserPresentInSession(
         groupId: groupId,

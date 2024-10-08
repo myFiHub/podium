@@ -68,10 +68,15 @@ class eventNames {
 }
 
 class GroupsController extends GetxController with FirebaseTags {
-  final _presentUsersRefreshThrottle =
-      Throttling(duration: const Duration(seconds: 2));
-  final _takingUsersRefreshThrottle =
-      Throttling(duration: const Duration(seconds: 2));
+  // final _presentUsersRefreshThrottle =
+  //     Throttling(duration: const Duration(seconds: 2));
+  // final _takingUsersRefreshThrottle =
+  //     Throttling(duration: const Duration(seconds: 2));
+  bool _shouldUpdatePresentUsers = false; // This is the flag you'll be checking
+  late Timer _timerForPresentUsers;
+  late Timer _timerForTakingUsers;
+  bool _shouldUpdateTakingUsers = false;
+
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
   final groupChannels = Rx<Map<String, ably.RealtimeChannel>>({});
@@ -91,6 +96,22 @@ class GroupsController extends GetxController with FirebaseTags {
   @override
   void onInit() {
     super.onInit();
+
+    _timerForPresentUsers = Timer.periodic(Duration(seconds: 2), (timer) {
+      if (_shouldUpdatePresentUsers) {
+        presentUsersInGroupsMap.value = tmpPresentUsersInGroupsMap;
+        presentUsersInGroupsMap.refresh();
+        _shouldUpdatePresentUsers = false;
+      }
+    });
+    _timerForTakingUsers = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_shouldUpdateTakingUsers) {
+        takingUsersInGroupsMap.value = tmpTakingUsersInGroupsMap;
+        takingUsersInGroupsMap.refresh();
+        _shouldUpdateTakingUsers = false;
+      }
+    });
+
     realtimeInstance.connection
         .on(ably.ConnectionEvent.connected)
         .listen((ably.ConnectionStateChange stateChange) async {
@@ -123,20 +144,9 @@ class GroupsController extends GetxController with FirebaseTags {
   @override
   void onClose() {
     super.onClose();
-  }
-
-  _refreshPresentUsers() {
-    _presentUsersRefreshThrottle.throttle(() {
-      presentUsersInGroupsMap.value = tmpPresentUsersInGroupsMap;
-      presentUsersInGroupsMap.refresh();
-    });
-  }
-
-  _refreshTakingUsers() {
-    _takingUsersRefreshThrottle.throttle(() {
-      takingUsersInGroupsMap.value = tmpTakingUsersInGroupsMap;
-      takingUsersInGroupsMap.refresh();
-    });
+    subscription?.cancel();
+    _timerForPresentUsers.cancel();
+    _timerForTakingUsers.cancel();
   }
 
   toggleArchive({required FirebaseGroup group}) async {
@@ -272,7 +282,7 @@ class GroupsController extends GetxController with FirebaseTags {
       tmpMap[groupId] = currentPresentUsers;
     }
     tmpPresentUsersInGroupsMap.addAll(tmpMap);
-    _refreshPresentUsers();
+    _shouldUpdatePresentUsers = true;
   }
 
   _startListeners() {
@@ -311,7 +321,7 @@ class GroupsController extends GetxController with FirebaseTags {
     final currentListForThisGroup = tmpPresentUsersInGroupsMap[groupId] ?? [];
     currentListForThisGroup.add(message.clientId!);
     tmpPresentUsersInGroupsMap[groupId] = currentListForThisGroup;
-    _refreshPresentUsers();
+    _shouldUpdatePresentUsers = true;
   }
 
   _hanldeNewUpdateMessage(
@@ -321,13 +331,13 @@ class GroupsController extends GetxController with FirebaseTags {
       currentListForThisGroup.add(message.clientId!);
       tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
       log.d("Talking users: $currentListForThisGroup");
-      _refreshTakingUsers();
+      _shouldUpdateTakingUsers = true;
     } else if (message.data == eventNames.notTalking) {
       final currentListForThisGroup = tmpTakingUsersInGroupsMap[groupId] ?? [];
       currentListForThisGroup.remove(message.clientId!);
       tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
       log.d("Talking users: $currentListForThisGroup");
-      _refreshTakingUsers();
+      _shouldUpdateTakingUsers = true;
     }
   }
 
@@ -336,14 +346,15 @@ class GroupsController extends GetxController with FirebaseTags {
     if (currentListForThisGroup.contains(clientId)) {
       currentListForThisGroup.remove(clientId);
       tmpPresentUsersInGroupsMap[groupId] = currentListForThisGroup;
-      _refreshPresentUsers();
+      _shouldUpdatePresentUsers = true;
     }
     final currentTakingListForThisGroup =
         tmpTakingUsersInGroupsMap[groupId] ?? [];
     if (currentTakingListForThisGroup.contains(clientId)) {
       currentTakingListForThisGroup.remove(clientId);
       tmpTakingUsersInGroupsMap[groupId] = currentTakingListForThisGroup;
-      _refreshTakingUsers();
+
+      _shouldUpdateTakingUsers = true;
     }
   }
 

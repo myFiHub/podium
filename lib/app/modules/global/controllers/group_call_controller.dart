@@ -40,6 +40,7 @@ class GroupCallController extends GetxController {
   final talkingMembers = Rx<List<FirebaseSessionMember>>([]);
   final searchedValueInMeet = Rx<String>('');
   final sortType = Rx<String>(SortTypes.recentlyTalked);
+  final canTalk = false.obs;
 
   @override
   void onInit() {
@@ -196,7 +197,8 @@ class GroupCallController extends GetxController {
     final globalController = Get.find<GlobalController>();
     final iAmAllowedToSpeak = accessOverRides != null
         ? accessOverRides.canSpeak
-        : canISpeak(group: groupToJoin);
+        : canISpeakWithoutTicket(group: groupToJoin);
+    canTalk.value = iAmAllowedToSpeak;
     bool hasMicAccess = false;
     if (iAmAllowedToSpeak) {
       hasMicAccess = await getPermission(Permission.microphone);
@@ -206,6 +208,7 @@ class GroupCallController extends GetxController {
           "mic permission is required in order to join the call",
           colorText: Colors.orange,
         );
+        canTalk.value = false;
       }
     }
     final hasNotificationPermission =
@@ -271,7 +274,7 @@ class GroupCallController extends GetxController {
   }
 }
 
-bool canISpeak({required FirebaseGroup group}) {
+bool canISpeakWithoutTicket({required FirebaseGroup group}) {
   final iAmTheCreator = group.creator.id == myId;
   if (iAmTheCreator) return true;
   if (group.speakerType == FreeRoomSpeakerTypes.invitees) {

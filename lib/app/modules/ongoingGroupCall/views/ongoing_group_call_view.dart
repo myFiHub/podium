@@ -24,24 +24,26 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
       floatingWidget: Obx(() {
         final isGroupCallControllerRegistered =
             Get.isRegistered<GroupCallController>();
+        final isControllerRegistered =
+            Get.isRegistered<OngoingGroupCallController>();
+
         if (!isGroupCallControllerRegistered) {
           return Container(
             width: 0,
             height: 0,
           );
         }
-        final group = controller.groupCallController.group.value;
+        final groupCallController = Get.find<GroupCallController>();
+        final group = groupCallController.group.value;
 
-        if (group == null) {
+        if (group == null || !isControllerRegistered) {
           return Container(
             width: 0,
             height: 0,
           );
         }
         final isMuted = controller.amIMuted.value;
-        final canITalk = canISpeak(
-          group: group,
-        );
+        final canITalk = groupCallController.canTalk.value;
         if (!canITalk) {
           return Container(
             width: 0,

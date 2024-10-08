@@ -185,14 +185,19 @@ class OngoingGroupCallController extends GetxController {
     if (group == null) {
       return;
     }
-    final canSpeak = canISpeak(group: group);
-    if (myUserId != null && canSpeak && amIMuted.value == false) {
-      await setIsTalkingInSession(
-        sessionId: firebaseSession.value!.id,
-        userId: myUserId,
-        isTalking: true,
-        startedToTalkAt: DateTime.now().millisecondsSinceEpoch,
-      );
+    final isGroupCallRegistered = Get.isRegistered<GroupCallController>();
+    if (isGroupCallRegistered) {
+      final GroupCallController groupCallController =
+          Get.find<GroupCallController>();
+      final canSpeak = groupCallController.canTalk.value;
+      if (myUserId != null && canSpeak && amIMuted.value == false) {
+        await setIsTalkingInSession(
+          sessionId: firebaseSession.value!.id,
+          userId: myUserId,
+          isTalking: true,
+          startedToTalkAt: DateTime.now().millisecondsSinceEpoch,
+        );
+      }
     }
   }
 

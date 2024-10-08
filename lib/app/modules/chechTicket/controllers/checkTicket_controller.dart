@@ -510,7 +510,7 @@ class CheckticketController extends GetxController {
   }
 
   bool get canSpeakWithoutATicket {
-    return canISpeak(group: group.value!);
+    return canISpeakWithoutTicket(group: group.value!);
   }
 
   bool get canEnterWithoutTicket {

@@ -661,13 +661,16 @@ class GroupsController extends GetxController with FirebaseTags {
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
     if (group.members.contains(myUser.id))
-      return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
+      return GroupAccesses(
+          canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
     if (group.accessType == null ||
         group.accessType == FreeRoomAccessTypes.public)
-      return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
+      return GroupAccesses(
+          canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
     if (group.accessType == FreeRoomAccessTypes.onlyLink) {
       if (joiningByLink == true) {
-        return GroupAccesses(canEnter: true, canSpeak: canISpeak(group: group));
+        return GroupAccesses(
+            canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
       } else {
         Get.snackbar(
           "Error",
@@ -683,7 +686,7 @@ class GroupsController extends GetxController with FirebaseTags {
       if (invitedMembers[myUser.id] != null)
         return GroupAccesses(
           canEnter: true,
-          canSpeak: canISpeak(group: group),
+          canSpeak: canISpeakWithoutTicket(group: group),
         );
       else {
         Get.snackbar(

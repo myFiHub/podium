@@ -22,7 +22,16 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
         body: GroupCall(),
       ),
       floatingWidget: Obx(() {
+        final isGroupCallControllerRegistered =
+            Get.isRegistered<GroupCallController>();
+        if (!isGroupCallControllerRegistered) {
+          return Container(
+            width: 0,
+            height: 0,
+          );
+        }
         final group = controller.groupCallController.group.value;
+
         if (group == null) {
           return Container(
             width: 0,

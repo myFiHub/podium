@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -18,10 +19,13 @@ import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:pulsator/pulsator.dart';
 
 class UsersInRoomList extends StatelessWidget {
   final List<FirebaseSessionMember> usersList;
-  const UsersInRoomList({super.key, required this.usersList});
+  final String groupId;
+  const UsersInRoomList(
+      {super.key, required this.usersList, required this.groupId});
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -36,33 +40,34 @@ class UsersInRoomList extends StatelessWidget {
         final userId = user.id;
         final isItME = user.id == myId;
         return _SingleUserInRoom(
-          key: Key(user.id),
-          isItME: isItME,
-          userId: userId,
-          user: user,
-          name: name,
-          avatar: avatar,
-        );
+            key: Key(user.id),
+            isItME: isItME,
+            userId: userId,
+            user: user,
+            name: name,
+            avatar: avatar,
+            groupId: groupId);
       },
     );
   }
 }
 
 class _SingleUserInRoom extends StatelessWidget {
-  const _SingleUserInRoom({
-    super.key,
-    required this.isItME,
-    required this.userId,
-    required this.user,
-    required this.name,
-    required this.avatar,
-  });
+  const _SingleUserInRoom(
+      {super.key,
+      required this.isItME,
+      required this.userId,
+      required this.user,
+      required this.name,
+      required this.avatar,
+      required this.groupId});
 
   final bool isItME;
   final String userId;
   final FirebaseSessionMember user;
   final String name;
   final String avatar;
+  final String groupId;
 
   @override
   Widget build(BuildContext context) {
@@ -83,8 +88,7 @@ class _SingleUserInRoom extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
                 color: ColorName.cardBackground,
-                border: Border.all(
-                    color: isItME ? Colors.green : ColorName.cardBorder),
+                border: Border.all(color: ColorName.cardBorder),
                 borderRadius: const BorderRadius.all(const Radius.circular(8))),
             margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             padding: const EdgeInsets.all(8),
@@ -101,11 +105,14 @@ class _SingleUserInRoom extends StatelessWidget {
                           Container(
                             width: Get.width * 0.3,
                             child: Text(
-                              name,
-                              style: const TextStyle(
+                              isItME ? "You" : name,
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                                 overflow: TextOverflow.ellipsis,
+                                color: isItME
+                                    ? Colors.green[200]
+                                    : ColorName.white,
                               ),
                             ),
                           ),
@@ -159,12 +166,59 @@ class _SingleUserInRoom extends StatelessWidget {
                     Actions(userId: userId),
                   ],
                 ),
+                Positioned(
+                    top: -5,
+                    right: 0,
+                    child: _TalkingIndicator(
+                      groupId: groupId,
+                      userId: userId,
+                      key: Key(user.id + 'talking'),
+                    )),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+class _TalkingIndicator extends GetView<GroupsController> {
+  final String groupId;
+  final String userId;
+  const _TalkingIndicator(
+      {super.key, required this.groupId, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final talkingMembers = controller.takingUsersInGroupsMap.value;
+      final talkingUsers = talkingMembers[groupId];
+      if (talkingUsers == null) {
+        return const SizedBox();
+      }
+      final isTalking = talkingUsers.contains(userId);
+      return !isTalking
+          ? const SizedBox()
+          : Container(
+              width: 40,
+              height: 40,
+              child: Pulsator(
+                style: PulseStyle(color: Colors.green),
+                duration: Duration(seconds: 2),
+                count: 2,
+                repeat: 5,
+                startFromScratch: false,
+                autoStart: true,
+                fit: PulseFit.contain,
+                child: const Icon(
+                  Icons.mic,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            );
+    });
   }
 }
 

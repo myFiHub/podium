@@ -238,6 +238,7 @@ class MembersList extends GetView<GroupCallController> {
                           //  sort the users based on the sort type, biggest to smallest
                           return UsersInRoomList(
                             usersList: members,
+                            groupId: controller.group.value!.id,
                           );
                         },
                       ),
@@ -249,6 +250,7 @@ class MembersList extends GetView<GroupCallController> {
                           final members = controller.talkingMembers.value;
                           return UsersInRoomList(
                             usersList: members,
+                            groupId: controller.group.value!.id,
                           );
                         },
                       ),
@@ -328,6 +330,7 @@ class SearchInRoom extends GetView<GroupCallController> {
             return Expanded(
               child: UsersInRoomList(
                 usersList: filteredMembers,
+                groupId: controller.group.value!.id,
               ),
             );
           },

@@ -252,7 +252,7 @@ Stream<FilterEvent> _getContractEventListener({
     // },
   );
 
-  final event = contract.event(eventName);
+  // final _event = contract.event(eventName);
 
   final options = FilterOptions(
     address: contract.address,

@@ -231,13 +231,7 @@ class GlobalController extends GetxController {
     bool alsoSave = false,
   }) async {
     final chain = particleChainInfoByChainId(chainId);
-    if (chain == null) {
-      log.e("chain not found");
-      if (alsoSave == true) {
-        storage.remove(StorageKeys.particleWalletChainId);
-      }
-      return false;
-    }
+
     final done = await ParticleBase.ParticleBase.setChainInfo(chain);
     if (!done) {
       log.e("error switching chain");

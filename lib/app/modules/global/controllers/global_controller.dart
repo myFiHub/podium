@@ -125,6 +125,16 @@ class GlobalController extends GetxController {
       initializeParticleAuth(),
       FirebaseInit.init(),
     ]);
+    // final firebaseUserDbReference =
+    //     FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
+    // final users = firebaseUserDbReference.once().then((event) {
+    //   final data = event.snapshot.value as dynamic;
+    //   if (data != null) {
+    //     final numberOfUsers = data.length;
+    //     log.f("number of users: $numberOfUsers");
+    //   }
+    // });
+
     startTicker();
     isFirebaseInitialized.value = true;
     final res = await analytics.getSessionId();

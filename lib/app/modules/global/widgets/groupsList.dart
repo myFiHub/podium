@@ -379,7 +379,7 @@ class _ScheduledBanner extends StatelessWidget {
               : remaining;
           return Positioned(
             right: 5,
-            top: 8,
+            top: 7,
             child: IgnorePointer(
               child: Container(
                 foregroundDecoration: RotatedCornerDecoration.withColor(

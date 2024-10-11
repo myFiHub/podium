@@ -8,9 +8,7 @@ Future<bool> temporarilyChangeParticleNetwork(String chainId) async {
     return true;
   }
   final chainInfo = particleChainInfoByChainId(chainId);
-  if (chainInfo == null) {
-    return false;
-  }
+
   await ParticleBase.setChainInfo(chainInfo);
   return true;
 }
@@ -18,9 +16,11 @@ Future<bool> temporarilyChangeParticleNetwork(String chainId) async {
 Future<bool> switchBackToSavedParticleNetwork() async {
   final savedChainId = particleChianId;
   final chainInfo = particleChainInfoByChainId(savedChainId);
-  if (chainInfo == null) {
-    return false;
-  }
   await ParticleBase.setChainInfo(chainInfo);
   return true;
+}
+
+Future<ChainInfo> getCurrentParticleChain() async {
+  final chainId = await ParticleBase.getChainId();
+  return particleChainInfoByChainId(chainId.toString());
 }

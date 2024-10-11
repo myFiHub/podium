@@ -26,10 +26,10 @@ packages:
     dependency: "direct main"
     description:
       name: ably_flutter
-      sha256: cd7865da714f86a72a6fe5060619b9f9a0e171ef1fe0caaba77f18c3640be5f7
+      sha256: dcf23524367210dbabbf3365a2e4d1b1c7d0ae46a653ab0de362096c2b19bb29
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.34"
+    version: "1.2.35"
   adaptive_number:
     dependency: transitive
     description:
@@ -50,10 +50,10 @@ packages:
     dependency: "direct main"
     description:
       name: alarm
-      sha256: "31d4e22d0ad2a2d9f3aea720edaa52cbe419d4842d05348c7dd6edb5683a9579"
+      sha256: "544f39ba46fcdb06c2d26fd6223d4f97cd3dd2f16c10f7f5b5ff45d169347178"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.2"
+    version: "4.0.3"
   analyzer:
     dependency: transitive
     description:
@@ -759,10 +759,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_form_builder
-      sha256: b42ad8a9b3e8a629eb0fee8e4feaf7c2862fc40808ebf9f7ddc9da798e890136
+      sha256: c278ef69b08957d484f83413f0e77b656a39b7a7bb4eb8a295da3a820ecc6545
       url: "https://pub.dev"
     source: hosted
-    version: "9.4.1"
+    version: "9.5.0"
   flutter_gen_core:
     dependency: transitive
     description:
@@ -1509,18 +1509,18 @@ packages:
     dependency: "direct main"
     description:
       name: share_plus
-      sha256: "468c43f285207c84bcabf5737f33b914ceb8eb38398b91e5e3ad1698d1b72a52"
+      sha256: fec12c3c39f01e4df1ec6ad92b6e85503c5ca64ffd6e28d18c9ffe53fcc4cb11
       url: "https://pub.dev"
     source: hosted
-    version: "10.0.2"
+    version: "10.0.3"
   share_plus_platform_interface:
     dependency: transitive
     description:
       name: share_plus_platform_interface
-      sha256: "6ababf341050edff57da8b6990f11f4e99eaba837865e2e6defe16d039619db5"
+      sha256: c57c0bbfec7142e3a0f55633be504b796af72e60e3c791b44d5a017b985f7a48
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.0"
+    version: "5.0.1"
   shared_preferences:
     dependency: transitive
     description:
@@ -1938,10 +1938,10 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: a79dbe579cb51ecd6d30b17e0cae4e0ea15e2c0e66f69ad4198f22a6789e94f4
+      sha256: "68d1e89a91ed61ad9c370f9f8b6effed9ae5e0ede22a270bdfa6daf79fc2290a"
       url: "https://pub.dev"
     source: hosted
-    version: "5.5.1"
+    version: "5.5.4"
   x25519:
     dependency: transitive
     description:

@@ -752,7 +752,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                     icon: const Icon(Icons.close,
                                         color: Colors.red),
                                   ),
-                    hintText: 'Enter the Name/address',
+                    hintText:
+                        'Enter the Name/address${ticketType == BuyableTicketTypes.onlyArenaTicketHolders ? '/handle' : ''}',
                     onChanged: (value) {
                       controller.searchUsers(value, ticketType: ticketType);
                     },

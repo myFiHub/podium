@@ -12,11 +12,16 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -34,6 +39,17 @@ class TicketSellersListMember {
   TicketSellersListMember({required this.user, required this.activeAddress});
 }
 
+class SearchedUser {
+  final UserInfoModel? podiumUserInfo;
+  final StarsArenaUser? arenaUserInfo;
+  final bool? isArenaUser;
+  SearchedUser({
+    this.podiumUserInfo,
+    this.arenaUserInfo,
+    this.isArenaUser = false,
+  });
+}
+
 class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
@@ -44,7 +60,7 @@ class CreateGroupController extends GetxController {
   final selectedUsersToBuyTicketFrom_ToAccessRoom =
       <TicketSellersListMember>[].obs;
   final selectedUsersToBuyticketFrom_ToSpeak = <TicketSellersListMember>[].obs;
-  final listOfSearchedUsersToBuyTicketFrom = <UserInfoModel>[].obs;
+  final listOfSearchedUsersToBuyTicketFrom = <SearchedUser>[].obs;
   final addressesToAddForEntering = RxList<String>([]);
   final addressesToAddForSpeaking = RxList<String>([]);
   final loadingUserIds = RxList<String>([]);
@@ -225,6 +241,50 @@ class CreateGroupController extends GetxController {
     }
   }
 
+  toggleArenaUser({
+    required StarsArenaUser user,
+    required String ticketPermissiontype,
+  }) {
+    final list = ticketPermissiontype == TicketPermissionType.speak
+        ? selectedUsersToBuyticketFrom_ToSpeak
+        : selectedUsersToBuyTicketFrom_ToAccessRoom;
+    final ticketType = ticketPermissiontype == TicketPermissionType.speak
+        ? roomSpeakerType.value
+        : roomAccessType.value;
+    if (user.address.isEmpty) {
+      Get.snackbar('Error', 'User has no wallet address',
+          colorText: Colors.red);
+      return;
+    }
+    final usersMap = list.map((e) => e.user.id).toList();
+    if (usersMap.contains(arenaUserIdPrefix + user.id)) {
+      list.removeWhere((e) => e.user.id == arenaUserIdPrefix + user.id);
+    } else {
+      list.add(TicketSellersListMember(
+        user: UserInfoModel(
+          id: arenaUserIdPrefix + user.id,
+          fullName: user.twitterName,
+          email: '',
+          avatar: user.twitterPicture,
+          localWalletAddress: user.defaultAddress,
+          following: [],
+          numberOfFollowers: 0,
+          savedParticleWalletAddress: user.defaultAddress,
+          savedParticleUserInfo: FirebaseParticleAuthUserInfo(
+            wallets: [
+              ParticleAuthWallet(
+                address: user.defaultAddress,
+                chain: 'evm_chain',
+              )
+            ],
+            uuid: '',
+          ),
+        ),
+        activeAddress: user.address,
+      ));
+    }
+  }
+
   toggleUserToSelectedList({
     required UserInfoModel user,
     required String ticketPermissiontype,
@@ -364,11 +424,32 @@ class CreateGroupController extends GetxController {
       return;
     }
     _deb.debounce(() async {
-      final isAddress = checkIfValueIsDirectAddress(value);
-      log.d('Is address: $isAddress');
-      final users = await searchForUserByName(value);
-      listOfSearchedUsersToBuyTicketFrom.value = users.values.toList();
-      ;
+      loadingAddresses.add(value);
+      try {
+        final isAddress = checkIfValueIsDirectAddress(value);
+        log.d('Is address: $isAddress');
+        final (users, arenaUser) = await (
+          searchForUserByName(value),
+          HttpApis.getUserFromStarsArenaByHandle(value)
+        ).wait;
+        final podiumUsers = users.values
+            .toList()
+            .map((e) => SearchedUser(
+                  podiumUserInfo: e,
+                ))
+            .toList();
+        listOfSearchedUsersToBuyTicketFrom.value = [
+          if (arenaUser != null)
+            SearchedUser(
+              arenaUserInfo: arenaUser,
+              isArenaUser: true,
+            ),
+          ...podiumUsers
+        ];
+      } catch (e) {
+      } finally {
+        loadingAddresses.remove(value);
+      }
     });
   }
 
@@ -669,13 +750,15 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                 child: Container(
                   child: Obx(
                     () {
-                      final users = controller
+                      final podiumUsers = controller
                           .listOfSearchedUsersToBuyTicketFrom.value
                           .where(
                         (element) {
-                          return element.id != myId;
+                          return element.isArenaUser != true &&
+                              element.podiumUserInfo!.id != myId;
                         },
-                      );
+                      ).toList();
+
                       final loadingIds = controller.loadingUserIds.value;
                       final loadingAddresses =
                           controller.loadingAddresses.value;
@@ -709,17 +792,36 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                       }
                       // move selectedIds to the top of the list then my id to the top of them
                       List<UserInfoModel> listOfUsers = [];
+
+                      final starsArenaUsers = controller
+                          .listOfSearchedUsersToBuyTicketFrom.value
+                          .where(
+                        (element) {
+                          return element.isArenaUser == true &&
+                              !selectedIds.contains(arenaUserIdPrefix +
+                                  element.arenaUserInfo!.id);
+                        },
+                      ).toList();
+
                       listOfUsers.add(myUser);
                       final SelectedUsersExceptMe =
                           selectedUsers.where((element) => element.id != myId);
                       listOfUsers.addAll([...SelectedUsersExceptMe]);
-                      listOfUsers.addAll(users.where(
-                          (element) => !selectedIds.contains(element.id)));
+                      final notSelectedPodiumUsers = podiumUsers.where(
+                          (element) => !selectedIds
+                              .contains(element.podiumUserInfo!.id));
+                      listOfUsers.addAll(notSelectedPodiumUsers.map(
+                        (e) => e.podiumUserInfo!,
+                      ));
                       final listOfAddresses = buyTicketToGetPermisionFor ==
                               TicketPermissionType.speak
                           ? controller.addressesToAddForSpeaking
                           : controller.addressesToAddForEntering;
                       List<SelectBoxOption> options = [];
+                      for (var user in starsArenaUsers) {
+                        options.add(
+                            SelectBoxOption(arenaUser: user.arenaUserInfo));
+                      }
                       for (var address in listOfAddresses) {
                         options.add(SelectBoxOption(address: address));
                       }
@@ -731,6 +833,84 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                         itemCount: options.length,
                         itemBuilder: (context, index) {
                           final element = options[index];
+
+                          if (element.arenaUser != null) {
+                            final StarsArenaUser user = element.arenaUser!;
+
+                            final verifiedOnArena = user.userConfirmed;
+                            final verifiedOnTwitter = user.twitterConfirmed;
+                            final numberOfFollowers = user.followerCount;
+                            final fullName = user.twitterName;
+                            final avatar = user.twitterPicture;
+                            return Column(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 12, top: 6, bottom: 6),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Img(
+                                                src: avatar,
+                                                alt: fullName,
+                                                size: 20,
+                                              ),
+                                              space5,
+                                              Text(
+                                                fullName,
+                                              )
+                                            ],
+                                          ),
+                                          Text(
+                                            "Followers: ${numberOfFollowers}",
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                          if (verifiedOnTwitter)
+                                            Text(
+                                              "verified on twitter",
+                                              style: TextStyle(
+                                                  color: Colors.blue[400],
+                                                  fontSize: 12),
+                                            ),
+                                          if (verifiedOnTwitter &&
+                                              verifiedOnArena)
+                                            space5,
+                                          if (verifiedOnArena)
+                                            Text(
+                                              "verified on Stars Arena",
+                                              style: TextStyle(
+                                                  color: Colors.red[400],
+                                                  fontSize: 12),
+                                            ),
+                                        ],
+                                      ),
+                                      GFCheckbox(
+                                          onChanged: (v) {
+                                            controller.toggleArenaUser(
+                                              user: element.arenaUser!,
+                                              ticketPermissiontype:
+                                                  buyTicketToGetPermisionFor,
+                                            );
+                                          },
+                                          value: selectedIds.contains(
+                                              arenaUserIdPrefix + user.id))
+                                    ],
+                                  ),
+                                ),
+                                Divider(color: Colors.grey[900]),
+                              ],
+                            );
+                          }
+
                           return Column(
                             children: [
                               ListTile(
@@ -740,6 +920,20 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                   children: [
                                     Row(
                                       children: [
+                                        if (element.user != null)
+                                          Row(
+                                            children: [
+                                              Img(
+                                                src: element.user?.avatar ==
+                                                        defaultAvatar
+                                                    ? ''
+                                                    : element.user!.avatar,
+                                                alt: element.user!.fullName,
+                                                size: 20,
+                                              ),
+                                              space5
+                                            ],
+                                          ),
                                         if (element.user != null)
                                           Text(
                                             element.user!.id == myId
@@ -926,7 +1120,8 @@ class FreeRoomSpeakerTypes {
 class SelectBoxOption {
   UserInfoModel? user;
   String? address;
-  SelectBoxOption({this.user, this.address});
+  StarsArenaUser? arenaUser;
+  SelectBoxOption({this.user, this.address, this.arenaUser});
 }
 
 const defaultSubject = "";

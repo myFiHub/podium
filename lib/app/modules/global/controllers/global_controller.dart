@@ -12,7 +12,6 @@ import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
@@ -126,6 +125,16 @@ class GlobalController extends GetxController {
       initializeParticleAuth(),
       FirebaseInit.init(),
     ]);
+    // final firebaseUserDbReference =
+    //     FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
+    // final users = firebaseUserDbReference.once().then((event) {
+    //   final data = event.snapshot.value as dynamic;
+    //   if (data != null) {
+    //     final numberOfUsers = data.length;
+    //     log.f("number of users: $numberOfUsers");
+    //   }
+    // });
+
     startTicker();
     isFirebaseInitialized.value = true;
     final res = await analytics.getSessionId();
@@ -232,13 +241,7 @@ class GlobalController extends GetxController {
     bool alsoSave = false,
   }) async {
     final chain = particleChainInfoByChainId(chainId);
-    if (chain == null) {
-      log.e("chain not found");
-      if (alsoSave == true) {
-        storage.remove(StorageKeys.particleWalletChainId);
-      }
-      return false;
-    }
+
     final done = await ParticleBase.ParticleBase.setChainInfo(chain);
     if (!done) {
       log.e("error switching chain");
@@ -315,7 +318,9 @@ class GlobalController extends GetxController {
             getJitsiServerAddress(),
           ).wait;
 
-          if (versionResolved && serverAddress != null) {
+          if (versionResolved &&
+              serverAddress != null &&
+              !initializedOnce.value) {
             await initializeApp();
           }
 

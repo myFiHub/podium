@@ -9,7 +9,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/providers/api.dart';
+import 'package:podium/providers/api/api.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';

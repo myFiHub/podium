@@ -9,10 +9,12 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 
 class TicketSeller {
@@ -129,6 +131,29 @@ class CheckticketController extends GetxController {
     return fakeUser;
   }
 
+  userModelFromStarsArenaUserInfo({required StarsArenaUser user}) {
+    final fakeUser = UserInfoModel(
+      id: user.id,
+      fullName: user.twitterName,
+      avatar: user.twitterPicture,
+      email: '',
+      localWalletAddress: user.defaultAddress,
+      savedParticleWalletAddress: user.defaultAddress,
+      following: [],
+      numberOfFollowers: 0,
+      savedParticleUserInfo: FirebaseParticleAuthUserInfo(
+        wallets: [
+          ParticleAuthWallet(
+            address: user.defaultAddress,
+            chain: 'evm_chain',
+          )
+        ],
+        uuid: '',
+      ),
+    );
+    return fakeUser;
+  }
+
   (List<UserInfoModel>, List<UserInfoModel>) _generateFakeUsers() {
     final requiredDirectAddressesToAccess =
         group.value!.requiredAddressesToEnter;
@@ -156,17 +181,57 @@ class CheckticketController extends GetxController {
     final requiredTicketsToAccess = group.value!.ticketsRequiredToAccess;
     final requiredTicketsToSpeak = group.value!.ticketsRequiredToSpeak;
 
-    final accessIds = requiredTicketsToAccess.map((e) => e.userId).toList();
-    final speakIds = requiredTicketsToSpeak.map((e) => e.userId).toList();
+    final accessIds = requiredTicketsToAccess
+        .map((e) => e.userId)
+        .where((e) => !e.contains(arenaUserIdPrefix))
+        .toList();
+    final speakIds = requiredTicketsToSpeak
+        .map((e) => e.userId)
+        .where((e) => !e.contains(arenaUserIdPrefix))
+        .toList();
     final [usersForAccess, usersForSpeak] = await Future.wait([
       getUsersByIds(accessIds),
       getUsersByIds(speakIds),
     ]);
+// when we were saving a user that was added by handle, we added $arenaUserIdPrefix at the start ot the user id
+// now we should fetch them separately and add them to ticket list
+
+    final directArenaAccessIds = requiredTicketsToAccess
+        .map((e) => e.userId)
+        .where((e) => e.contains(arenaUserIdPrefix))
+        .map((e) => e.replaceAll(arenaUserIdPrefix, ''))
+        .toList();
+    final directArenaSpeakIds = requiredTicketsToSpeak
+        .map((e) => e.userId)
+        .where((e) => e.contains(arenaUserIdPrefix))
+        .map((e) => e.replaceAll(arenaUserIdPrefix, ''))
+        .toList();
+
+    final directArenaUsersForAccess = await Future.wait(
+        directArenaAccessIds.map((e) => HttpApis.getUserFromStarsArenaById(e)));
+    final directArenaUsersForSpeak = await Future.wait(
+        directArenaSpeakIds.map((e) => HttpApis.getUserFromStarsArenaById(e)));
+    directArenaUsersForAccess.forEach((res) {
+      if (res != null) {
+        usersForAccess.add(userModelFromStarsArenaUserInfo(user: res));
+      }
+    });
+    directArenaUsersForSpeak.forEach((res) {
+      if (res != null) {
+        usersForSpeak.add(userModelFromStarsArenaUserInfo(user: res));
+      }
+    });
+
+// end of direct arena user adding
+
     // these loops are crutial to set the local wallet address to the user
     // because when creating the group, addres saved for buyin should have been activated,
     // that was the address that was SAVED in ticketsRequiredToAccess or ticketsRequiredToSpeak
     for (var i = 0; i < requiredTicketsToAccess.length; i++) {
       final user = requiredTicketsToAccess[i];
+      if (user.userId.contains(arenaUserIdPrefix)) {
+        continue;
+      }
       final userInfo =
           usersForAccess.firstWhere((element) => element.id == user.userId);
       userInfo.localWalletAddress = user.userAddress;
@@ -174,6 +239,9 @@ class CheckticketController extends GetxController {
     }
     for (var i = 0; i < requiredTicketsToSpeak.length; i++) {
       final user = requiredTicketsToSpeak[i];
+      if (user.userId.contains(arenaUserIdPrefix)) {
+        continue;
+      }
       final userInfo =
           usersForSpeak.firstWhere((element) => element.id == user.userId);
       userInfo.localWalletAddress = user.userAddress;
@@ -203,9 +271,13 @@ class CheckticketController extends GetxController {
     };
     mergedUsers.forEach((key, value) {
       final requiredAccessTypeForThisUser =
-          accessIds.contains(key) ? group.value!.accessType : null;
+          (accessIds.contains(key) || directArenaAccessIds.contains(key))
+              ? group.value!.accessType
+              : null;
       final requiredSpeakTypeForThisUser =
-          speakIds.contains(key) ? group.value!.speakerType : null;
+          (speakIds.contains(key) || directArenaSpeakIds.contains(key))
+              ? group.value!.speakerType
+              : null;
       allUsersToBuyTicketFrom.value[key] = TicketSeller(
         userInfo: value,
         boughtTicketToAccess: false,

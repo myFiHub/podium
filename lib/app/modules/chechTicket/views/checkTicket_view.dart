@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/chechTicket/controllers/checkTicket_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
@@ -242,10 +243,20 @@ class SingleTicketHolder extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(userInfo.fullName,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    if (userInfo.avatar.isNotEmpty)
+                      Img(
+                        src: userInfo.avatar,
+                        size: 30,
+                      ),
+                    if (userInfo.avatar.isNotEmpty) space10,
+                    Text(userInfo.fullName,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                  ],
+                ),
                 space10,
                 Text(
                     truncate(

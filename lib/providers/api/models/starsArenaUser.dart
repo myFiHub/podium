@@ -13,11 +13,11 @@ class StarsArenaUser {
   final String lastLoginTwitterPicture;
   final String? bannerUrl;
   final String address;
-  final String addressBeforeDynamicMigration;
-  final String dynamicAddress;
+  final String? addressBeforeDynamicMigration;
+  final String? dynamicAddress;
   final String? ethereumAddress;
   final String? solanaAddress;
-  final String prevAddress;
+  final String? prevAddress;
   final bool addressConfirmed;
   final String twitterDescription;
   final bool signedUp;
@@ -47,11 +47,11 @@ class StarsArenaUser {
     required this.lastLoginTwitterPicture,
     this.bannerUrl,
     required this.address,
-    required this.addressBeforeDynamicMigration,
-    required this.dynamicAddress,
+    this.addressBeforeDynamicMigration,
+    this.dynamicAddress,
     this.ethereumAddress,
     this.solanaAddress,
-    required this.prevAddress,
+    this.prevAddress,
     required this.addressConfirmed,
     required this.twitterDescription,
     required this.signedUp,

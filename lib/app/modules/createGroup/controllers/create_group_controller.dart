@@ -65,6 +65,7 @@ class CreateGroupController extends GetxController {
   final addressesToAddForSpeaking = RxList<String>([]);
   final loadingUserIds = RxList<String>([]);
   final loadingAddresses = RxList<String>([]);
+  final showLoadingOnSearchInput = false.obs;
   final isScheduled = false.obs;
   final scheduledFor = 0.obs;
   final searchValueForSeletTickets = "".obs;
@@ -417,20 +418,23 @@ class CreateGroupController extends GetxController {
     addressesToAddForSpeaking.remove(address);
   }
 
-  searchUsers(String value) async {
+  searchUsers(String value, {String? ticketType}) async {
     searchValueForSeletTickets.value = value;
     if (value.isEmpty) {
       listOfSearchedUsersToBuyTicketFrom.value = [];
       return;
     }
+    // loadingAddresses.add(value);
+    showLoadingOnSearchInput.value = true;
+    log.d(ticketType);
     _deb.debounce(() async {
-      loadingAddresses.add(value);
       try {
         final isAddress = checkIfValueIsDirectAddress(value);
-        log.d('Is address: $isAddress');
         final (users, arenaUser) = await (
           searchForUserByName(value),
-          HttpApis.getUserFromStarsArenaByHandle(value)
+          ticketType == BuyableTicketTypes.onlyArenaTicketHolders
+              ? HttpApis.getUserFromStarsArenaByHandle(value)
+              : Future.value(null)
         ).wait;
         final podiumUsers = users.values
             .toList()
@@ -448,7 +452,7 @@ class CreateGroupController extends GetxController {
         ];
       } catch (e) {
       } finally {
-        loadingAddresses.remove(value);
+        showLoadingOnSearchInput.value = false;
       }
     });
   }
@@ -659,6 +663,11 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                 final searchValue = controller.searchValueForSeletTickets.value;
                 final loadingAddresses = controller.loadingAddresses.value;
                 final hasLoadingAddress = loadingAddresses.isNotEmpty;
+                final isInputBusy = controller.showLoadingOnSearchInput.value;
+                final ticketType =
+                    buyTicketToGetPermisionFor == TicketPermissionType.speak
+                        ? controller.roomSpeakerType.value
+                        : controller.roomAccessType.value;
                 bool isAddress =
                     controller.checkIfValueIsDirectAddress(searchValue);
                 try {} catch (e) {}
@@ -666,7 +675,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                   height: 70,
                   child: Input(
                     controller: inputController,
-                    suffixIcon: hasLoadingAddress
+                    suffixIcon: hasLoadingAddress || isInputBusy
                         ? const SizedBox(
                             width: 50,
                             child: const GFLoader(),
@@ -697,7 +706,10 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       }
                                     } else {
                                       inputController.text = clipboardText;
-                                      controller.searchUsers(clipboardText);
+                                      controller.searchUsers(
+                                        clipboardText,
+                                        ticketType: ticketType,
+                                      );
                                     }
                                   }
                                 },
@@ -724,7 +736,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                               TicketPermissionType.access,
                                         );
                                       }
-                                      controller.searchUsers('');
+                                      controller.searchUsers(
+                                        '',
+                                      );
                                       inputController.clear();
                                     },
                                     icon: const Icon(Icons.check,
@@ -740,7 +754,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                   ),
                     hintText: 'Enter the Name/address',
                     onChanged: (value) {
-                      controller.searchUsers(value);
+                      controller.searchUsers(value, ticketType: ticketType);
                     },
                     autofocus: true,
                   ),
@@ -1002,9 +1016,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                         value: selectedIds
                                             .contains(element.user!.id),
                                       )
-                                    else if (element.address != null &&
+                                    else if ((element.address != null &&
                                         loadingAddresses
-                                            .contains(element.address))
+                                            .contains(element.address)))
                                       Padding(
                                         padding:
                                             const EdgeInsets.only(right: 18.0),

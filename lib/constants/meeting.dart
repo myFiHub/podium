@@ -65,7 +65,7 @@ class MeetingConstants {
         displayName: myUser.fullName,
         // this is crucial for us to pass the email like this,
         // since cheering and booing listeners return email,
-        // we use that email to determine who is being cheered
+        // we use that email to determine who is being cheered/booed
         email: transformIdToEmailLike(myUser.id),
         avatar: avatar,
       ),

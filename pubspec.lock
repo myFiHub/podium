@@ -1053,10 +1053,10 @@ packages:
   jitsi_meet_flutter_sdk:
     dependency: "direct main"
     description:
-      path: jitsi_plugin
+      path: jitsi-meet-flutter-sdk
       relative: true
     source: path
-    version: "0.4.2"
+    version: "10.2.1"
   js:
     dependency: transitive
     description:

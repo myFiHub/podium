@@ -68,7 +68,6 @@ class MeetingConstants {
         // we use that email to determine who is being cheered
         email: transformIdToEmailLike(myUser.id),
         avatar: avatar,
-        id: myUser.id,
       ),
     );
   }

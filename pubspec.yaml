@@ -52,7 +52,7 @@ dependencies:
   json_annotation: ^4.9.0
 
   jitsi_meet_flutter_sdk:
-    path: ./jitsi_plugin
+    path: ./jitsi-meet-flutter-sdk
 
 dependency_overrides:
   web: ^0.5.0

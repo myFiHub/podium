@@ -318,7 +318,9 @@ class GlobalController extends GetxController {
             getJitsiServerAddress(),
           ).wait;
 
-          if (versionResolved && serverAddress != null) {
+          if (versionResolved &&
+              serverAddress != null &&
+              !initializedOnce.value) {
             await initializeApp();
           }
 

@@ -7,6 +7,8 @@ avatarPlaceHolder(String? name) {
   return 'https://ui-avatars.com/api/?name=${n.replaceAll(' ', '+')}.png';
 }
 
+const arenaUserIdPrefix = 'arena:';
+
 class Constants {
   static const smallScreen = 640;
   static const String aud = 'https://walletconnect.org/login';

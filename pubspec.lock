@@ -1053,10 +1053,10 @@ packages:
   jitsi_meet_flutter_sdk:
     dependency: "direct main"
     description:
-      path: jitsi_plugin
+      path: jitsi-meet-flutter-sdk
       relative: true
     source: path
-    version: "0.4.2"
+    version: "10.2.1"
   js:
     dependency: transitive
     description:
@@ -1066,7 +1066,7 @@ packages:
     source: hosted
     version: "0.6.7"
   json_annotation:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: json_annotation
       sha256: "1ce844379ca14835a50d2f019a3099f419082cfdd231cd86a142af94dd5c6bb1"

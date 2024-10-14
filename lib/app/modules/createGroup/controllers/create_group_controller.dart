@@ -249,9 +249,6 @@ class CreateGroupController extends GetxController {
     final list = ticketPermissiontype == TicketPermissionType.speak
         ? selectedUsersToBuyticketFrom_ToSpeak
         : selectedUsersToBuyTicketFrom_ToAccessRoom;
-    final ticketType = ticketPermissiontype == TicketPermissionType.speak
-        ? roomSpeakerType.value
-        : roomAccessType.value;
     if (user.address.isEmpty) {
       Get.snackbar('Error', 'User has no wallet address',
           colorText: Colors.red);

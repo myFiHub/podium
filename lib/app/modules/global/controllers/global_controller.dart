@@ -81,7 +81,7 @@ class GlobalController extends GetxController {
   final ticker = 0.obs;
   final showArchivedGroups =
       RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
-  String? deepLinkRoute = null;
+  final deepLinkRoute = ''.obs;
 
   final particleWalletChainId = RxString(
       (storage.read(StorageKeys.particleWalletChainId) ??
@@ -390,17 +390,39 @@ class GlobalController extends GetxController {
         groupId: groupId,
         joiningByLink: true,
       );
-      deepLinkRoute = null;
+      deepLinkRoute.value = '';
       activeRoute.value = Routes.HOME;
     }
   }
 
   setDeepLinkRoute(String route) async {
-    deepLinkRoute = route;
+    deepLinkRoute.value = route;
     if (loggedIn.value) {
       log.e("logged in, opening deep link $route");
-      openDeepLinkGroup(route);
+      if (route.contains(Routes.GROUP_DETAIL)) {
+        openDeepLinkGroup(route);
+      } else if (route.contains('referral')) {
+        openLoginPageWithReferral(route);
+      } else {
+        log.e("deep link not handled");
+      }
     }
+  }
+
+  openLoginPageWithReferral(String route) {
+    log.f("opening login page with referral");
+    final referrerId = _extractReferrerId(route);
+    if (loggedIn.value) {
+      setLoggedIn(false);
+      return;
+    }
+    Navigate.to(
+      type: NavigationTypes.offAllNamed,
+      route: Routes.LOGIN,
+      parameters: {
+        LoginParametersKeys.referrerId: referrerId,
+      },
+    );
   }
 
   Future<bool> removeUserWalletAddressOnFirebase() async {
@@ -625,12 +647,21 @@ class GlobalController extends GetxController {
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
-      if (deepLinkRoute != null) {
-        final route = deepLinkRoute!;
-        openDeepLinkGroup(route);
+      if (deepLinkRoute.value.isNotEmpty) {
+        final route = deepLinkRoute;
+        openDeepLinkGroup(route.value);
         return;
       }
     }
+  }
+
+  _extractReferrerId(String route) {
+    final splited = route.split('referral');
+    if (splited.length < 2) {
+      log.f("splited: $splited");
+      return;
+    }
+    return splited[1];
   }
 
   _logout() async {
@@ -649,11 +680,21 @@ class GlobalController extends GetxController {
       log.e("error disconnecting wallet $e");
       isLoggingOut.value = false;
     }
+
     log.f('Navigating to login page');
+    final rerouteWithReferral =
+        deepLinkRoute.isNotEmpty && deepLinkRoute.contains('referral');
+    String referrerId = '';
+    if (rerouteWithReferral) {
+      referrerId = _extractReferrerId(deepLinkRoute.value) ?? '';
+    }
+
     Navigate.to(
-      type: NavigationTypes.offAllNamed,
-      route: Routes.LOGIN,
-    );
+        type: NavigationTypes.offAllNamed,
+        route: Routes.LOGIN,
+        parameters: {
+          if (referrerId.isNotEmpty) LoginParametersKeys.referrerId: referrerId,
+        });
     firebaseUserCredential.value = null;
     try {
       await FirebaseAuth.instance.signOut();

@@ -1,14 +1,22 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/logger.dart';
 
-UserInfoModel get myUser {
+UserInfoModel? get myUser {
   final GlobalController globalController = Get.find();
-  return globalController.currentUserInfo.value!;
+  return globalController.currentUserInfo.value;
 }
 
 String get myId {
-  return myUser.id;
+  if (myUser == null) {
+    log.f('****************************myUser is null************************');
+    return '';
+  }
+  if (myUser!.id == '') {
+    log.f('****************************myId is empty************************');
+  }
+  return myUser!.id;
 }
 
 String? get externalWalletAddress {

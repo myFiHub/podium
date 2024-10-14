@@ -3,21 +3,27 @@ import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
+import 'package:podium/app/modules/global/utils/referalsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
+import 'package:podium/constants/constantConfigs.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/notification_model.dart';
+import 'package:podium/models/podiumDefinedEntryAddress.dart';
+import 'package:podium/models/referral.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
+import 'package:uuid/uuid.dart';
 
 final _sessionThrottle =
     Throttling(duration: const Duration(milliseconds: 900));
@@ -49,6 +55,128 @@ Future<List<UserInfoModel>> getUsersByIds(List<String> userIds) async {
   } catch (e) {
     log.f('Error getting users by ids: $e');
     return [];
+  }
+}
+
+Future<UserInfoModel?> getUserById(String userId) async {
+  final databaseRef = FirebaseDatabase.instance.ref();
+  final usersRef =
+      databaseRef.child(FireBaseConstants.usersRef.replaceFirst('/', ''));
+  final snapshot = await usersRef.child(userId).get();
+  final user = snapshot.value as dynamic;
+  if (user != null) {
+    final userInfo = singleUserParser(user);
+    return userInfo;
+  } else {
+    return null;
+  }
+}
+
+Future<Map<String, Referral>> getAllTheUserReferals(
+    {required String userId}) async {
+  final databaseRef =
+      FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + userId);
+  final result = await databaseRef.get();
+  if (result.value != null) {
+    final remainingMap = referralsParser(result.value);
+    return remainingMap;
+  } else {
+    return {};
+  }
+}
+
+Future<List<PodiumDefinedEntryAddress>> getPodiumDefinedEntryAddresses() async {
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.podiumDefinedEntryAddresses);
+  final snapshot = await databaseRef.get();
+  final addresses = snapshot.value as dynamic;
+  if (addresses != null) {
+    final List<PodiumDefinedEntryAddress> addressesList = [];
+    addresses.forEach((value) {
+      final address = PodiumDefinedEntryAddress(
+        handle: value['handle'],
+        type: value['type'],
+        address: value['address'],
+      );
+      addressesList.add(address);
+    });
+    return addressesList;
+  } else {
+    return [];
+  }
+}
+
+Future<bool> initializeUseReferalCodes({
+  required String userId,
+}) async {
+  try {
+    final databaseRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + userId);
+    // generate 100 random referal codes
+    final Map<String, dynamic> codes = {};
+    for (int i = 0; i < ReferalConstants.initialNumberOfReferrals; i++) {
+      final referalCode = Uuid().v4().substring(0, 6);
+      final referral = Referral(usedBy: '');
+      codes[referalCode] = referral.toJson();
+    }
+    await databaseRef.update(codes);
+    return true;
+  } catch (e) {
+    log.e(e);
+    return false;
+  }
+}
+
+Future<String?> setUsedByToReferral({
+  required String userId,
+  required String referralCode,
+  required String usedById,
+}) async {
+  try {
+    final databaseRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.referalsRef + userId + '/$referralCode');
+    final snapshot = await databaseRef.get();
+    final referral = snapshot.value as dynamic;
+    if (referral != null) {
+      final referralModel = singleReferralParser(referral);
+      if (referralModel.usedBy == null || referralModel.usedBy!.isEmpty) {
+        await databaseRef.child(Referral.usedByKey).set(usedById);
+        return referralModel.usedBy;
+      } else {
+        return referralModel.usedBy;
+      }
+    } else {
+      return null;
+    }
+  } catch (e) {
+    log.e(e);
+    return null;
+  }
+}
+
+startListeningToMyReferals(void Function(Map<String, Referral>) onData) {
+  final databaseRef =
+      FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + myId);
+  return databaseRef.onValue.listen((event) {
+    final referals = event.snapshot.value as dynamic;
+    if (referals != null) {
+      final referralsMap = referralsParser(referals);
+      onData(referralsMap);
+    } else {
+      onData({});
+    }
+  });
+}
+
+addRandomReferalCodeToUser({required String userId}) async {
+  try {
+    final referalCode = Uuid().v4().substring(0, 6);
+    final referral = Referral(usedBy: '');
+    final databaseRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.referalsRef + userId + '/${referalCode}');
+    await databaseRef.set(referral.toJson());
+  } catch (e) {
+    log.e(e);
   }
 }
 

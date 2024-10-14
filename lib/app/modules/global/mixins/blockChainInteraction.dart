@@ -757,7 +757,7 @@ Future<BigInt?> particle_getBuyPrice({
 Future<bool> particle_buySharesWithReferrer({
   String? referrerAddress,
   required String sharesSubject,
-  required String targetUserId,
+  String? targetUserId,
   num shareAmount = 1,
   required String chainId,
 }) async {
@@ -805,17 +805,19 @@ Future<bool> particle_buySharesWithReferrer({
     );
     final signature = await Evm.sendTransaction(transaction);
     if (signature.length > 10) {
-      saveNewPayment(
-        event: PaymentEvent(
-          type: PaymentTypes.arenaTicket,
-          targetAddress: sharesSubjectWallet,
-          amount: bigIntWeiToDouble(buyPrice).toString(),
-          initiatorAddress: myAddress,
-          initiatorId: myId,
-          targetId: targetUserId,
-          chainId: chainId,
-        ),
-      );
+      if (targetUserId != null) {
+        saveNewPayment(
+          event: PaymentEvent(
+            type: PaymentTypes.arenaTicket,
+            targetAddress: sharesSubjectWallet,
+            amount: bigIntWeiToDouble(buyPrice).toString(),
+            initiatorAddress: myAddress,
+            initiatorId: myId,
+            targetId: targetUserId,
+            chainId: chainId,
+          ),
+        );
+      }
       return true;
     }
     return false;

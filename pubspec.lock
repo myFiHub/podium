@@ -26,10 +26,10 @@ packages:
     dependency: "direct main"
     description:
       name: ably_flutter
-      sha256: dcf23524367210dbabbf3365a2e4d1b1c7d0ae46a653ab0de362096c2b19bb29
+      sha256: "4fab719782a497cc5c5666e4fd8c77d5f1d1780e1cbceac2efb2014f8bd27cb4"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.35"
+    version: "1.2.36"
   adaptive_number:
     dependency: transitive
     description:
@@ -1734,6 +1734,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  toasty_box:
+    dependency: "direct main"
+    description:
+      name: toasty_box
+      sha256: f43694033701ca181de719e2487bf2b39b80b6c9fa4e9e3f27ae99b7f5ce5db3
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
   typed_data:
     dependency: transitive
     description:

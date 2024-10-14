@@ -17,6 +17,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -204,10 +205,9 @@ class GroupCallController extends GetxController {
     if (iAmAllowedToSpeak) {
       hasMicAccess = await getPermission(Permission.microphone);
       if (!hasMicAccess) {
-        Get.snackbar(
-          "warning",
-          "mic permission is required in order to join the call",
-          colorText: Colors.orange,
+        Toast.warning(
+          title: 'Microphone access required',
+          message: 'Please allow microphone access to speak',
         );
         canTalk.value = false;
       }
@@ -228,10 +228,9 @@ class GroupCallController extends GetxController {
     if ((myUser.localWalletAddress == '' ||
             globalController.connectedWalletAddress == '') &&
         particleWalletAddress == null) {
-      Get.snackbar(
-        "Wallet connection required",
-        "Please connect your wallet first",
-        colorText: ColorName.white,
+      Toast.warning(
+        title: 'Wallet required',
+        message: 'Please connect a wallet to join',
       );
       globalController.connectToWallet(
         afterConnection: () {

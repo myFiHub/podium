@@ -24,6 +24,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -154,10 +155,9 @@ class GroupsController extends GetxController with FirebaseTags {
     if (canContinue == null || canContinue == false) return;
     final archive = !group.archived;
     await toggleGroupArchive(groupId: group.id, archive: archive);
-    Get.snackbar(
-      "Success",
-      "Room ${archive ? "archived" : "is available again"}",
-      colorText: Colors.green,
+    Toast.success(
+      title: "Success",
+      message: "Room ${archive ? "archived" : "is available again"}",
     );
     final remoteGroup = await getGroupInfoById(group.id);
     if (remoteGroup != null) {
@@ -494,7 +494,10 @@ class GroupsController extends GetxController with FirebaseTags {
       groupsController.groups.refresh();
     } catch (e) {
       deleteGroup(groupId: id);
-      Get.snackbar("Error", "Failed to create group");
+      Toast.error(
+        title: "Error",
+        message: "Failed to create room",
+      );
       log.f("Error creating group: $e");
     }
   }
@@ -509,7 +512,10 @@ class GroupsController extends GetxController with FirebaseTags {
       firebaseSessionReference.remove();
       groups.value.remove(groupId);
     } catch (e) {
-      Get.snackbar("Error", "Failed to delete group");
+      Toast.error(
+        title: "Error",
+        message: "Failed to delete room",
+      );
       log.f("Error deleting group: $e");
     }
   }
@@ -530,10 +536,9 @@ class GroupsController extends GetxController with FirebaseTags {
     final myUser = globalController.currentUserInfo.value!;
     final group = await getGroupInfoById(groupId);
     if (group == null) {
-      Get.snackbar(
-        "Error",
-        "Failed to join the room, seems like the room is Archived or deleted",
-        colorText: Colors.red,
+      Toast.error(
+        title: "Error",
+        message: "Failed to join the room, room not found",
       );
       Navigate.to(
         type: NavigationTypes.offAllNamed,
@@ -603,7 +608,10 @@ class GroupsController extends GetxController with FirebaseTags {
           accesses: accesses,
         );
       } catch (e) {
-        Get.snackbar("Error", "Failed to join group");
+        Toast.error(
+          title: "Error",
+          message: "Failed to join the room",
+        );
         log.f("Error joining group: $e");
       } finally {
         joiningGroupId.value = '';
@@ -654,10 +662,9 @@ class GroupsController extends GetxController with FirebaseTags {
     if (accessIsBuyableByTicket(group) || speakIsBuyableByTicket(group)) {
       final results = await checkTicket(group: group);
       if (results?.canEnter == false) {
-        Get.snackbar(
-          "Error",
-          "You don't have required tickets to join this room",
-          colorText: Colors.red,
+        Toast.error(
+          title: "Error",
+          message: "You need a ticket to join this room",
         );
         return GroupAccesses(canEnter: false, canSpeak: false);
       } else {
@@ -668,10 +675,9 @@ class GroupsController extends GetxController with FirebaseTags {
     }
 
     if (group.archived) {
-      Get.snackbar(
-        "Error",
-        "This group is archived, you can't join it",
-        colorText: Colors.red,
+      Toast.error(
+        title: "Error",
+        message: "This room is archived",
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
@@ -687,28 +693,28 @@ class GroupsController extends GetxController with FirebaseTags {
         return GroupAccesses(
             canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
       } else {
-        Get.snackbar(
-          "Error",
-          "This is a private room, you need an invite link to join",
-          colorText: Colors.red,
+        Toast.error(
+          title: "Error",
+          message: "This is a private room, you need an invite link to join",
         );
+
         return GroupAccesses(canEnter: false, canSpeak: false);
       }
     }
 
     final invitedMembers = group.invitedMembers;
     if (group.accessType == FreeRoomAccessTypes.invitees) {
-      if (invitedMembers[myUser.id] != null)
+      if (invitedMembers[myUser.id] != null) {
         return GroupAccesses(
           canEnter: true,
           canSpeak: canISpeakWithoutTicket(group: group),
         );
-      else {
-        Get.snackbar(
-          "Error",
-          "You are not invited to this room",
-          colorText: Colors.red,
+      } else {
+        Toast.error(
+          title: "Error",
+          message: "You need an invite to join this room",
         );
+        return GroupAccesses(canEnter: false, canSpeak: false);
       }
     }
 

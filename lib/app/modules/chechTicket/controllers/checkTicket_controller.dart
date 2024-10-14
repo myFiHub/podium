@@ -14,6 +14,7 @@ import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -422,10 +423,10 @@ class CheckticketController extends GetxController {
 
       if (unsupportedAccessTicket || unsupportedSpeakTicket) {
         log.f('FIXME: add support for other ticket types');
-        Get.snackbar(
-          "Update Required",
-          "Please update the app to buy tickets",
-          colorText: Colors.orange,
+
+        Toast.warning(
+          title: "Update Required",
+          message: "Please update the app to buy tickets",
         );
         allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
         allUsersToBuyTicketFrom.refresh();
@@ -459,15 +460,21 @@ class CheckticketController extends GetxController {
           // End buy speak tickets
         } else {
           log.f('FIXME: add support for other ticket types');
-          Get.snackbar(
-              "Update Required", "Please update the app to buy tickets",
-              colorText: Colors.orange);
+
+          Toast.warning(
+            title: "Update Required",
+            message: "Please update the app to buy tickets",
+          );
+
           allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying =
               false;
           allUsersToBuyTicketFrom.refresh();
         }
       } else {
-        Get.snackbar("Update required", "tickets are not on same chain");
+        Toast.warning(
+          title: "Update required",
+          message: "tickets are not on same chain",
+        );
       }
     } catch (e) {
     } finally {
@@ -494,7 +501,10 @@ class CheckticketController extends GetxController {
       chainId: baseChainId,
     );
     if (!activeWallets.hasActiveWallet) {
-      Get.snackbar("User is not active", "User is not active");
+      Toast.warning(
+        title: "User not activated",
+        message: "",
+      );
       allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
       allUsersToBuyTicketFrom.refresh();
       return false;

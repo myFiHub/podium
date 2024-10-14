@@ -22,6 +22,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
@@ -351,7 +352,7 @@ class GlobalController extends GetxController {
       currentUserInfo.refresh();
     } catch (e) {
       log.e("error saving wallet address $e");
-      Get.snackbar('Error', 'Error saving wallet address, try again');
+      Toast.error(message: "Error saving wallet address, try again");
     }
   }
 

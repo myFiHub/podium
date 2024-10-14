@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -152,10 +153,9 @@ class MyProfileController extends GetxController {
   activateExternalWallet() async {
     loadingExternalWalletActivation.value = true;
     if (externalWalletChianId != baseChainId) {
-      Get.snackbar(
-        "Chain not supported",
-        "please switch to Base on the external wallet",
-        colorText: Colors.orange,
+      Toast.error(
+        message:
+            "Chain not supported, please switch to Base on the external wallet",
       );
       loadingExternalWalletActivation.value = false;
       return;

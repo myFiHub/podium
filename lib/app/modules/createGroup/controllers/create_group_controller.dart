@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:particle_auth_core/evm.dart';
@@ -21,6 +22,7 @@ import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
@@ -116,11 +118,7 @@ class CreateGroupController extends GetxController {
     // check if file is less than 2mb
     final fileSize = selectedFile!.lengthSync();
     if (fileSize > 2 * 1024 * 1024) {
-      Get.snackbar(
-        'Error',
-        'Image size must be less than 2MB',
-        colorText: Colors.red,
-      );
+      Toast.error(message: 'Image size must be less than 2MB');
       return "";
     }
     // Upload the image to Firebase Storage
@@ -233,10 +231,9 @@ class CreateGroupController extends GetxController {
       if (isActive) {
         list.add(address);
       } else {
-        Get.snackbar(
-          'Error',
-          "Address isn't yet active on FriendTech",
-          colorText: Colors.orange,
+        Toast.warning(
+          title: "Address isn't yet active on FriendTech",
+          message: "",
         );
       }
     }
@@ -250,8 +247,7 @@ class CreateGroupController extends GetxController {
         ? selectedUsersToBuyticketFrom_ToSpeak
         : selectedUsersToBuyTicketFrom_ToAccessRoom;
     if (user.address.isEmpty) {
-      Get.snackbar('Error', 'User has no wallet address',
-          colorText: Colors.red);
+      Toast.error(message: 'User has no wallet address');
       return;
     }
     final usersMap = list.map((e) => e.user.id).toList();
@@ -294,8 +290,7 @@ class CreateGroupController extends GetxController {
         ? roomSpeakerType.value
         : roomAccessType.value;
     if (user.defaultWalletAddress.isEmpty) {
-      Get.snackbar('Error', 'User has no wallet address',
-          colorText: Colors.red);
+      Toast.error(message: 'User has no wallet address');
       return;
     }
 
@@ -353,10 +348,9 @@ class CreateGroupController extends GetxController {
         return preferedWalletAddress;
       } else {
         if (user.id != myId) {
-          Get.snackbar(
-            'Error',
-            "User isn't yet active on FriendTech",
-            colorText: Colors.orange,
+          Toast.warning(
+            title: "User isn't yet active on FriendTech",
+            message: "",
           );
           return null;
         } else {
@@ -373,11 +367,7 @@ class CreateGroupController extends GetxController {
               chainId: baseChainId,
             );
             if (bought) {
-              Get.snackbar(
-                "Success",
-                "account activated",
-                colorText: Colors.green,
-              );
+              Toast.success(message: 'Account activated');
               return await Evm.getAddress();
             } else {
               return null;
@@ -387,11 +377,7 @@ class CreateGroupController extends GetxController {
               chainId: baseChainId,
             );
             if (bought) {
-              Get.snackbar(
-                "Success",
-                "account activated",
-                colorText: Colors.green,
-              );
+              Toast.success(message: 'Account activated');
               return externalWalletAddress;
             } else {
               return null;
@@ -468,18 +454,10 @@ class CreateGroupController extends GetxController {
 
   create() async {
     if (groupName.value.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'room name cannot be empty',
-        colorText: Colors.red,
-      );
+      Toast.error(message: 'room name cannot be empty');
       return;
     } else if (groupName.value.length < 5) {
-      Get.snackbar(
-        'Error',
-        'room name must be at least 5 characters',
-        colorText: Colors.red,
-      );
+      Toast.error(message: 'room name must be at least 5 characters');
       return;
     }
 

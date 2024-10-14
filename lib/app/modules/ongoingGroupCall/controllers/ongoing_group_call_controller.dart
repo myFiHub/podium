@@ -18,6 +18,7 @@ import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -213,7 +214,7 @@ class OngoingGroupCallController extends GetxController {
   Future<void> addToTimer(
       {required int seconds, required String userId}) async {
     if (groupCallController.group.value == null) {
-      Get.snackbar("Unknown error", "please join again");
+      Toast.error(message: "Unknown error, please join again");
       return;
     }
     final creatorId = groupCallController.group.value!.creator.id;
@@ -241,7 +242,7 @@ class OngoingGroupCallController extends GetxController {
   Future<void> reduceFromTimer(
       {required int seconds, required String userId}) async {
     if (groupCallController.group.value == null) {
-      Get.snackbar("Unknown error", "please join again");
+      Toast.error(message: "Unknown error, please join again");
       return;
     }
     final creatorId = groupCallController.group.value!.creator.id;
@@ -336,10 +337,9 @@ class OngoingGroupCallController extends GetxController {
     );
 
     if (!canContinue) {
-      Get.snackbar(
-        "external wallet connection required",
-        "please connect your wallet first",
-        colorText: Colors.orange,
+      Toast.error(
+        title: "external wallet connection required",
+        message: " please connect your wallet first",
       );
       return;
     }
@@ -369,7 +369,10 @@ class OngoingGroupCallController extends GetxController {
       }
       if (receiverAddresses.length == 0) {
         log.e("No wallets found in session");
-        Get.snackbar("Error", "receiver wallet not found");
+        Toast.error(
+          title: "Error",
+          message: "receiver wallet not found",
+        );
         return;
       }
       final String? amount = fromMeetPage == true
@@ -390,7 +393,10 @@ class OngoingGroupCallController extends GetxController {
         finalAmountOfTimeToAdd = (divided * parsedMultiplier).toInt();
       } catch (e) {
         log.e("something went wrong parsing amount");
-        Get.snackbar("Error", "Amount is not a number");
+        Toast.error(
+          title: "Error",
+          message: "Amount is not a number",
+        );
         return;
       }
 
@@ -423,7 +429,10 @@ class OngoingGroupCallController extends GetxController {
               );
 
         log.i("${cheer ? "Cheer" : "Boo"} successful");
-        Get.snackbar("Success", "${cheer ? "Cheer" : "Boo"} successful");
+        Toast.success(
+          title: "Success",
+          message: "${cheer ? "Cheer" : "Boo"} successful",
+        );
         analytics.logEvent(name: 'cheerBoo', parameters: {
           'cheer': cheer,
           'amount': amount,
@@ -451,12 +460,18 @@ class OngoingGroupCallController extends GetxController {
         ));
       } else {
         log.e("${cheer ? "Cheer" : "Boo"} failed");
-        Get.snackbar("Error", "${cheer ? "Cheer" : "Boo"} failed");
+        Toast.error(
+          title: "Error",
+          message: "${cheer ? "Cheer" : "Boo"} failed",
+        );
       }
       ///////////////////////
     } else if (targetAddress == '' || targetAddress == null) {
       log.e("User has not connected wallet for some reason");
-      Get.snackbar("Error", "User has not connected wallet for some reason");
+      Toast.error(
+        title: "Error",
+        message: "User has not connected wallet for some reason",
+      );
       return;
     }
   }
@@ -484,10 +499,9 @@ class OngoingGroupCallController extends GetxController {
       final groupCreator = groupCallController.group.value!.creator.id;
       final remainingTime = remainingTimeTimer;
       if (remainingTime <= 0 && myId != groupCreator) {
-        Get.snackbar(
-          "You have run out of time",
-          "",
-          colorText: Colors.red,
+        Toast.error(
+          title: "You have ran out of time",
+          message: "",
         );
         amIMuted.value = true;
         jitsiMeet.setAudioMuted(true);

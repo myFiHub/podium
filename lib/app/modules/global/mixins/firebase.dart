@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
+import 'package:podium/app/modules/global/utils/referalsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
 import 'package:podium/constants/constantKeys.dart';
@@ -14,10 +15,12 @@ import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/notification_model.dart';
+import 'package:podium/models/referral.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
+import 'package:uuid/uuid.dart';
 
 final _sessionThrottle =
     Throttling(duration: const Duration(milliseconds: 900));
@@ -49,6 +52,69 @@ Future<List<UserInfoModel>> getUsersByIds(List<String> userIds) async {
   } catch (e) {
     log.f('Error getting users by ids: $e');
     return [];
+  }
+}
+
+Future<Map<String, Referral>> getRemainingReferalsForUser(
+    {required String userId}) async {
+  final databaseRef =
+      FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + userId);
+  final query = databaseRef.orderByChild(Referral.usedByKey).equalTo('');
+  final result = await query.get();
+  if (result.value != null) {
+    final map = result.value as dynamic;
+    final Map<String, Referral> remainingMap = {};
+    map.entries.forEach((element) {
+      final referral = Referral(usedBy: element.value[Referral.usedByKey]);
+      remainingMap[element.key] = referral;
+    });
+    return remainingMap;
+  } else {
+    return {};
+  }
+}
+
+Future<Map<String, Referral>> getAllTheUserReferals(
+    {required String userId}) async {
+  final databaseRef =
+      FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + userId);
+  final result = await databaseRef.get();
+  if (result.value != null) {
+    final map = result.value as dynamic;
+    final Map<String, Referral> remainingMap = {};
+    map.entries.forEach((element) {
+      final referral = Referral(usedBy: element.value[Referral.usedByKey]);
+      remainingMap[element.key] = referral;
+    });
+    return remainingMap;
+  } else {
+    return {};
+  }
+}
+
+startListeningToMyReferals(void Function(Map<String, Referral>) onData) {
+  final databaseRef =
+      FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + myId);
+  return databaseRef.onValue.listen((event) {
+    final referals = event.snapshot.value as dynamic;
+    if (referals != null) {
+      final referralsMap = referralsParser(referals);
+      onData(referralsMap);
+    } else {
+      onData({});
+    }
+  });
+}
+
+addRandomReferalCodeToUser({required String userId}) async {
+  try {
+    final referalCode = Uuid().v4().substring(0, 6);
+    final referral = Referral(usedBy: '');
+    final databaseRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.referalsRef + userId + '/${referalCode}');
+    await databaseRef.set(referral.toJson());
+  } catch (e) {
+    log.e(e);
   }
 }
 

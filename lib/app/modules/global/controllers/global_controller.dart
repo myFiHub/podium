@@ -399,7 +399,11 @@ class GlobalController extends GetxController {
     deepLinkRoute = route;
     if (loggedIn.value) {
       log.e("logged in, opening deep link $route");
-      openDeepLinkGroup(route);
+      if (route.contains(Routes.GROUP_DETAIL)) {
+        openDeepLinkGroup(route);
+      } else {
+        log.e("deep link not handled");
+      }
     }
   }
 

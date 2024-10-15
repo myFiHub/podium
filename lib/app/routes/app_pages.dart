@@ -56,6 +56,11 @@ class AppPages {
       binding: LoginBinding(),
     ),
     GetPage(
+      name: _Paths.REFERRED,
+      page: () => const LoginView(),
+      binding: LoginBinding(),
+    ),
+    GetPage(
       name: _Paths.CREATE_GROUP,
       page: () => const CreateGroupView(),
       binding: CreateGroupBinding(),

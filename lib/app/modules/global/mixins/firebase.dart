@@ -55,37 +55,13 @@ Future<List<UserInfoModel>> getUsersByIds(List<String> userIds) async {
   }
 }
 
-Future<Map<String, Referral>> getRemainingReferalsForUser(
-    {required String userId}) async {
-  final databaseRef =
-      FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + userId);
-  final query = databaseRef.orderByChild(Referral.usedByKey).equalTo('');
-  final result = await query.get();
-  if (result.value != null) {
-    final map = result.value as dynamic;
-    final Map<String, Referral> remainingMap = {};
-    map.entries.forEach((element) {
-      final referral = Referral(usedBy: element.value[Referral.usedByKey]);
-      remainingMap[element.key] = referral;
-    });
-    return remainingMap;
-  } else {
-    return {};
-  }
-}
-
 Future<Map<String, Referral>> getAllTheUserReferals(
     {required String userId}) async {
   final databaseRef =
       FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + userId);
   final result = await databaseRef.get();
   if (result.value != null) {
-    final map = result.value as dynamic;
-    final Map<String, Referral> remainingMap = {};
-    map.entries.forEach((element) {
-      final referral = Referral(usedBy: element.value[Referral.usedByKey]);
-      remainingMap[element.key] = referral;
-    });
+    final remainingMap = referralsParser(result.value);
     return remainingMap;
   } else {
     return {};

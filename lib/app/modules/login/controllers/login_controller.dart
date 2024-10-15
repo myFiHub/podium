@@ -25,6 +25,10 @@ import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:uuid/uuid.dart';
 
+class LoginParametersKeys {
+  static const referrerId = 'referrerId';
+}
+
 class LoginController extends GetxController with ParticleAuthUtils {
   final globalController = Get.find<GlobalController>();
   final isLoggingIn = false.obs;
@@ -32,9 +36,14 @@ class LoginController extends GetxController with ParticleAuthUtils {
   final email = ''.obs;
   final password = ''.obs;
   Function? afterLogin = null;
+  String referrerId = '';
+  final referrer = Rxn<UserInfoModel>();
+  final referrerIsFul = false.obs;
 
   @override
   void onInit() {
+    referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
+    log.i('deepLinkRoute: $referrerId');
     $isAutoLoggingIn.value = globalController.isAutoLoggingIn.value;
     globalController.isAutoLoggingIn.listen((v) {
       $isAutoLoggingIn.value = v;
@@ -43,13 +52,42 @@ class LoginController extends GetxController with ParticleAuthUtils {
   }
 
   @override
-  void onReady() {
+  void onReady() async {
     super.onReady();
+    Future.delayed(Duration(seconds: 0), () async {
+      final referrerId =
+          _extractReferrerId(globalController.deepLinkRoute ?? '');
+      if (referrerId.isNotEmpty) {
+        final (referrerUser, allTheReferrals) = await (
+          getUsersByIds([referrerId]),
+          getAllTheUserReferals(userId: referrerId)
+        ).wait;
+        if (referrerUser.isNotEmpty) {
+          referrer.value = referrerUser.first;
+          globalController.deepLinkRoute = '';
+          if (allTheReferrals.isNotEmpty) {
+            final remainingReferrals = allTheReferrals.values
+                .where((element) => element.usedBy == '')
+                .toList();
+            referrerIsFul.value = remainingReferrals.isEmpty;
+          }
+        }
+      }
+    });
   }
 
   @override
   void onClose() {
     super.onClose();
+  }
+
+  String _extractReferrerId(String route) {
+    final splited = route.split('referral/');
+    if (splited.length < 2) {
+      log.f("splited: $splited");
+      return '';
+    }
+    return splited[1];
   }
 
   login({String? manualEmail, String? manualPassword, bool? fromSignUp}) async {
@@ -394,7 +432,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
   }) async {
     final userId = id;
     if (email.isEmpty) {
-      //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
+      //this is just a placeholder, we use user id as jitsi email
       email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
     }
     final walletsToSave = particleUser.wallets

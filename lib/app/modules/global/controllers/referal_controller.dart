@@ -41,12 +41,6 @@ class ReferalController extends GetxController {
     myReferalsStream?.cancel();
   }
 
-  Future<Map<String, Referral>> getRemainingReferals(
-      {required String userId}) async {
-    final referals = await getRemainingReferalsForUser(userId: userId);
-    return referals;
-  }
-
   Future<Map<String, Referral>> getAllTheReferals(
       {required String userId}) async {
     final referals = await getAllTheUserReferals(userId: userId);
@@ -54,11 +48,11 @@ class ReferalController extends GetxController {
   }
 
   referButtonClicked() async {
-    Clipboard.setData(ClipboardData(
-        text:
-            '${generateReferralLink()}${globalController.currentUserInfo.value?.id}'));
+    Clipboard.setData(ClipboardData(text: '${generateReferralLink()}'));
     Toast.success(
-        title: 'Copied!', message: 'Referral link copied to clipboard');
+      title: 'Copied!',
+      message: 'Referral link copied to clipboard',
+    );
   }
 }
 

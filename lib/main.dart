@@ -37,6 +37,7 @@ Future<void> initDeepLinks() async {
 }
 
 processLink(String? link) async {
+  // await Future.delayed(Duration(seconds: 0));
   if (link != null) {
     log.f('deep link: $link');
     late String deepLinkedPage;

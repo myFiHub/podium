@@ -401,10 +401,28 @@ class GlobalController extends GetxController {
       log.e("logged in, opening deep link $route");
       if (route.contains(Routes.GROUP_DETAIL)) {
         openDeepLinkGroup(route);
+      } else if (route.contains('referral')) {
+        openLoginPageWithReferral(route);
       } else {
         log.e("deep link not handled");
       }
     }
+  }
+
+  openLoginPageWithReferral(String route) {
+    log.f("opening login page with referral");
+    final referrerId = _extractReferrerId(route);
+    if (loggedIn.value) {
+      setLoggedIn(false);
+      return;
+    }
+    Navigate.to(
+      type: NavigationTypes.offAllNamed,
+      route: Routes.LOGIN,
+      parameters: {
+        LoginParametersKeys.referrerId: referrerId,
+      },
+    );
   }
 
   Future<bool> removeUserWalletAddressOnFirebase() async {
@@ -637,6 +655,15 @@ class GlobalController extends GetxController {
     }
   }
 
+  _extractReferrerId(String route) {
+    final splited = route.split('referral');
+    if (splited.length < 2) {
+      log.f("splited: $splited");
+      return;
+    }
+    return splited[1];
+  }
+
   _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
@@ -653,11 +680,22 @@ class GlobalController extends GetxController {
       log.e("error disconnecting wallet $e");
       isLoggingOut.value = false;
     }
+
     log.f('Navigating to login page');
+    final rerouteWithReferral = deepLinkRoute != null &&
+        deepLinkRoute!.isNotEmpty &&
+        deepLinkRoute!.contains('referral');
+    String referrerId = '';
+    if (rerouteWithReferral) {
+      referrerId = _extractReferrerId(deepLinkRoute!) ?? '';
+    }
+
     Navigate.to(
-      type: NavigationTypes.offAllNamed,
-      route: Routes.LOGIN,
-    );
+        type: NavigationTypes.offAllNamed,
+        route: Routes.LOGIN,
+        parameters: {
+          if (referrerId.isNotEmpty) LoginParametersKeys.referrerId: referrerId,
+        });
     firebaseUserCredential.value = null;
     try {
       await FirebaseAuth.instance.signOut();

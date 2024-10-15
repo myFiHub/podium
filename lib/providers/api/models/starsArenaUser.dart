@@ -13,6 +13,7 @@ class StarsArenaUser {
   final String? ethereumAddress;
   final String? solanaAddress;
   final String? prevAddress;
+  final String? keyPrice;
   final bool addressConfirmed;
   final int followerCount;
   final int followingsCount;
@@ -36,6 +37,7 @@ class StarsArenaUser {
     required this.twitterFollowers,
     required this.userConfirmed,
     required this.twitterConfirmed,
+    this.keyPrice,
   });
   get defaultAddress {
     return address;

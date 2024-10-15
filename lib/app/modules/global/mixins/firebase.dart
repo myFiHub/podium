@@ -85,14 +85,25 @@ Future<Map<String, Referral>> getAllTheUserReferals(
   }
 }
 
-addPodiumDefinedEntryAddressToUser() async {
+Future<List<PodiumDefinedEntryAddress>> getPodiumDefinedEntryAddresses() async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.podiumDefinedEntryAddresses);
-  await databaseRef.set([
-    PodiumDefinedEntryAddress(
-        address: '0xdf307a079ea6216b19921dd9fba864caad31c32b',
-        type: BuyableTicketTypes.onlyArenaTicketHolders)
-  ]);
+  final snapshot = await databaseRef.get();
+  final addresses = snapshot.value as dynamic;
+  if (addresses != null) {
+    final List<PodiumDefinedEntryAddress> addressesList = [];
+    addresses.forEach((value) {
+      final address = PodiumDefinedEntryAddress(
+        handle: value['handle'],
+        type: value['type'],
+        address: value['address'],
+      );
+      addressesList.add(address);
+    });
+    return addressesList;
+  } else {
+    return [];
+  }
 }
 
 Future<bool> initializeUseReferalCodes({

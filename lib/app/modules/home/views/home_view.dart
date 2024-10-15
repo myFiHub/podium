@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -21,6 +22,11 @@ class HomeView extends GetView<HomeController> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
+          Button(
+              onPressed: () {
+                addPodiumDefinedEntryAddressToUser();
+              },
+              text: 'Add'),
           space5,
           Text(
             "My Rooms",

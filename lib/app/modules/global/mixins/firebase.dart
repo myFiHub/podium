@@ -3,18 +3,21 @@ import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/referalsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
+import 'package:podium/constants/constantConfigs.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/notification_model.dart';
+import 'package:podium/models/podiumDefinedEntryAddress.dart';
 import 'package:podium/models/referral.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
@@ -79,6 +82,37 @@ Future<Map<String, Referral>> getAllTheUserReferals(
     return remainingMap;
   } else {
     return {};
+  }
+}
+
+addPodiumDefinedEntryAddressToUser() async {
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.podiumDefinedEntryAddresses);
+  await databaseRef.set([
+    PodiumDefinedEntryAddress(
+        address: '0xdf307a079ea6216b19921dd9fba864caad31c32b',
+        type: BuyableTicketTypes.onlyArenaTicketHolders)
+  ]);
+}
+
+Future<bool> initializeUseReferalCodes({
+  required String userId,
+}) async {
+  try {
+    final databaseRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + userId);
+    // generate 100 random referal codes
+    final Map<String, dynamic> codes = {};
+    for (int i = 0; i < ReferalConstants.initialNumberOfReferrals; i++) {
+      final referalCode = Uuid().v4().substring(0, 6);
+      final referral = Referral(usedBy: '');
+      codes[referalCode] = referral.toJson();
+    }
+    await databaseRef.update(codes);
+    return true;
+  } catch (e) {
+    log.e(e);
+    return false;
   }
 }
 

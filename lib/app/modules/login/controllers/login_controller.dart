@@ -541,6 +541,10 @@ class LoginController extends GetxController with ParticleAuthUtils {
   Future<bool> _canContinueAuthentication(UserInfoModel user) async {
     final registeredUser = await getUserById(user.id);
     if (registeredUser != null) {
+      final refers = await getAllTheUserReferals(userId: user.id);
+      if (refers.isEmpty) {
+        await initializeUseReferalCodes(userId: user.id);
+      }
       return true;
     }
     if (registeredUser == null && referrer.value != null) {

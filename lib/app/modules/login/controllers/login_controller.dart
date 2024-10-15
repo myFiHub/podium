@@ -53,10 +53,24 @@ class LoginController extends GetxController with ParticleAuthUtils {
 
   @override
   void onReady() async {
+    initialReferral();
+    globalController.deepLinkRoute.listen((v) {
+      if (v.isNotEmpty) {
+        initialReferral();
+      }
+    });
     super.onReady();
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+  }
+
+  initialReferral() async {
     Future.delayed(Duration(seconds: 0), () async {
       final referrerId =
-          _extractReferrerId(globalController.deepLinkRoute ?? '');
+          _extractReferrerId(globalController.deepLinkRoute.value);
       if (referrerId.isNotEmpty) {
         final (referrerUser, allTheReferrals) = await (
           getUsersByIds([referrerId]),
@@ -64,7 +78,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
         ).wait;
         if (referrerUser.isNotEmpty) {
           referrer.value = referrerUser.first;
-          globalController.deepLinkRoute = '';
+          globalController.deepLinkRoute.value = '';
           if (allTheReferrals.isNotEmpty) {
             final remainingReferrals = allTheReferrals.values
                 .where((element) => element.usedBy == '')
@@ -74,11 +88,6 @@ class LoginController extends GetxController with ParticleAuthUtils {
         }
       }
     });
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
   }
 
   String _extractReferrerId(String route) {
@@ -300,7 +309,9 @@ class LoginController extends GetxController with ParticleAuthUtils {
           id: particleUser.uuid,
           name: particleUser.name!,
           email: particleUser.linkedinEmail ?? '',
-          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
+          avatar: particleUser.thirdpartyUserInfo?.userInfo.picture ??
+              particleUser.avatar ??
+              avatarPlaceHolder(particleUser.name),
           particleUser: particleUser,
           loginType: LoginType.linkedin,
           loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
@@ -526,7 +537,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
     }
   }
 
-  _canContinueAuthentication(UserInfoModel user) async {
+  Future<bool> _canContinueAuthentication(UserInfoModel user) async {
     final registeredUser = await getUserById(user.id);
     if (registeredUser != null) {
       return true;
@@ -552,7 +563,10 @@ class LoginController extends GetxController with ParticleAuthUtils {
         final firstAvailableCode = allReferreReferrals.keys.firstWhere(
             (element) => allReferreReferrals[element]!.usedBy == '');
         final code = await setUsedByToReferral(
-            userId: referrerId, referralCode: firstAvailableCode);
+          userId: referrer.value!.id,
+          referralCode: firstAvailableCode,
+          usedById: user.id,
+        );
         if (code == null) {
           Toast.error(
             message: 'error while registering by referral',
@@ -562,6 +576,11 @@ class LoginController extends GetxController with ParticleAuthUtils {
           return true;
         }
       }
+    } else {
+      Toast.error(
+        message: 'You need a referrer to use Podium',
+      );
+      return false;
     }
   }
 

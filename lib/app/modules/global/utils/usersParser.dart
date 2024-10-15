@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:podium/app/modules/global/utils/pascalWords.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -24,7 +25,7 @@ UserInfoModel? singleUserParser(dynamic value) {
     });
 
     final user = UserInfoModel(
-      fullName: name,
+      fullName: getPascalWords(name),
       email: email,
       id: id,
       avatar: avatar,

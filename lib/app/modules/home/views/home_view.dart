@@ -78,7 +78,7 @@ class HomeView extends GetView<HomeController> {
                                     ),
                                   ),
                                   Text(
-                                    myUser.fullName,
+                                    myUser!.fullName,
                                     style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.w700,

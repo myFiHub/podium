@@ -64,7 +64,10 @@ class ReferalSystem extends GetView<ReferalController> {
           final count = allReferrals.length;
           final remaining =
               allReferrals.where((element) => element.usedBy == '').length;
-
+          final numberOfAllReferals = allReferrals.length;
+          if (numberOfAllReferals == 0) {
+            return const SizedBox();
+          }
           return Button(
             onPressed: remaining == 0
                 ? null
@@ -86,9 +89,9 @@ class ReferalSystem extends GetView<ReferalController> {
                 ),
                 if (remaining > 0)
                   WidgetSpan(
-                    child: Padding(
+                    child: const Padding(
                       padding: const EdgeInsets.only(left: 10),
-                      child: Icon(
+                      child: const Icon(
                         Icons.person_add,
                         size: 20,
                         color: Colors.green,
@@ -98,8 +101,8 @@ class ReferalSystem extends GetView<ReferalController> {
                 if (remaining > 0)
                   WidgetSpan(
                       child: Text(
-                    ' $count/$remaining remaining',
-                    style: TextStyle(
+                    ' $remaining/$count remaining',
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white,
                       fontWeight: FontWeight.w700,

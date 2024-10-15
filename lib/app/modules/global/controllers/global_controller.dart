@@ -81,7 +81,7 @@ class GlobalController extends GetxController {
   final ticker = 0.obs;
   final showArchivedGroups =
       RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
-  String? deepLinkRoute = null;
+  final deepLinkRoute = ''.obs;
 
   final particleWalletChainId = RxString(
       (storage.read(StorageKeys.particleWalletChainId) ??
@@ -390,13 +390,13 @@ class GlobalController extends GetxController {
         groupId: groupId,
         joiningByLink: true,
       );
-      deepLinkRoute = null;
+      deepLinkRoute.value = '';
       activeRoute.value = Routes.HOME;
     }
   }
 
   setDeepLinkRoute(String route) async {
-    deepLinkRoute = route;
+    deepLinkRoute.value = route;
     if (loggedIn.value) {
       log.e("logged in, opening deep link $route");
       if (route.contains(Routes.GROUP_DETAIL)) {
@@ -647,9 +647,9 @@ class GlobalController extends GetxController {
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
-      if (deepLinkRoute != null) {
-        final route = deepLinkRoute!;
-        openDeepLinkGroup(route);
+      if (deepLinkRoute.value.isNotEmpty) {
+        final route = deepLinkRoute;
+        openDeepLinkGroup(route.value);
         return;
       }
     }
@@ -682,12 +682,11 @@ class GlobalController extends GetxController {
     }
 
     log.f('Navigating to login page');
-    final rerouteWithReferral = deepLinkRoute != null &&
-        deepLinkRoute!.isNotEmpty &&
-        deepLinkRoute!.contains('referral');
+    final rerouteWithReferral =
+        deepLinkRoute.isNotEmpty && deepLinkRoute.contains('referral');
     String referrerId = '';
     if (rerouteWithReferral) {
-      referrerId = _extractReferrerId(deepLinkRoute!) ?? '';
+      referrerId = _extractReferrerId(deepLinkRoute.value) ?? '';
     }
 
     Navigate.to(

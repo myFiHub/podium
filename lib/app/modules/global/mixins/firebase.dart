@@ -82,8 +82,11 @@ Future<Map<String, Referral>> getAllTheUserReferals(
   }
 }
 
-Future<String?> setUsedByToReferral(
-    {required String userId, required String referralCode}) async {
+Future<String?> setUsedByToReferral({
+  required String userId,
+  required String referralCode,
+  required String usedById,
+}) async {
   try {
     final databaseRef = FirebaseDatabase.instance
         .ref(FireBaseConstants.referalsRef + userId + '/$referralCode');
@@ -92,7 +95,7 @@ Future<String?> setUsedByToReferral(
     if (referral != null) {
       final referralModel = singleReferralParser(referral);
       if (referralModel.usedBy == null || referralModel.usedBy!.isEmpty) {
-        await databaseRef.child(Referral.usedByKey).set(myId);
+        await databaseRef.child(Referral.usedByKey).set(usedById);
         return referralModel.usedBy;
       } else {
         return referralModel.usedBy;

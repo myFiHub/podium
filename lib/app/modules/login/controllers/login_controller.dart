@@ -470,6 +470,12 @@ class LoginController extends GetxController with ParticleAuthUtils {
       return;
     }
 
+    final canContinueAuthentication =
+        await _canContinueAuthentication(userToCreate);
+    if (!canContinueAuthentication) {
+      globalController.setLoggedIn(false);
+      return;
+    }
     UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
       user: userToCreate,
     );
@@ -517,6 +523,45 @@ class LoginController extends GetxController with ParticleAuthUtils {
       Toast.error(
         message: 'A name is required',
       );
+    }
+  }
+
+  _canContinueAuthentication(UserInfoModel user) async {
+    final registeredUser = await getUserById(user.id);
+    if (registeredUser != null) {
+      return true;
+    }
+    if (registeredUser == null && referrer.value != null) {
+      if (referrer.value == null) {
+        Toast.error(
+          message: 'You need a referrer to use Podium',
+        );
+        return false;
+      }
+      final allReferreReferrals =
+          await getAllTheUserReferals(userId: referrer.value!.id);
+      final remainingReferrals = allReferreReferrals.values.where(
+        (element) => element.usedBy == '',
+      );
+      if (remainingReferrals.isEmpty) {
+        Toast.error(
+          message: 'Referrer has no more referrals',
+        );
+        return false;
+      } else {
+        final firstAvailableCode = allReferreReferrals.keys.firstWhere(
+            (element) => allReferreReferrals[element]!.usedBy == '');
+        final code = await setUsedByToReferral(
+            userId: referrerId, referralCode: firstAvailableCode);
+        if (code == null) {
+          Toast.error(
+            message: 'error while registering by referral',
+          );
+          return false;
+        } else {
+          return true;
+        }
+      }
     }
   }
 

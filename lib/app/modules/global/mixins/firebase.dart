@@ -55,6 +55,20 @@ Future<List<UserInfoModel>> getUsersByIds(List<String> userIds) async {
   }
 }
 
+Future<UserInfoModel?> getUserById(String userId) async {
+  final databaseRef = FirebaseDatabase.instance.ref();
+  final usersRef =
+      databaseRef.child(FireBaseConstants.usersRef.replaceFirst('/', ''));
+  final snapshot = await usersRef.child(userId).get();
+  final user = snapshot.value as dynamic;
+  if (user != null) {
+    final userInfo = singleUserParser(user);
+    return userInfo;
+  } else {
+    return null;
+  }
+}
+
 Future<Map<String, Referral>> getAllTheUserReferals(
     {required String userId}) async {
   final databaseRef =
@@ -65,6 +79,30 @@ Future<Map<String, Referral>> getAllTheUserReferals(
     return remainingMap;
   } else {
     return {};
+  }
+}
+
+Future<String?> setUsedByToReferral(
+    {required String userId, required String referralCode}) async {
+  try {
+    final databaseRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.referalsRef + userId + '/$referralCode');
+    final snapshot = await databaseRef.get();
+    final referral = snapshot.value as dynamic;
+    if (referral != null) {
+      final referralModel = singleReferralParser(referral);
+      if (referralModel.usedBy == null || referralModel.usedBy!.isEmpty) {
+        await databaseRef.child(Referral.usedByKey).set(myId);
+        return referralModel.usedBy;
+      } else {
+        return referralModel.usedBy;
+      }
+    } else {
+      return null;
+    }
+  } catch (e) {
+    log.e(e);
+    return null;
   }
 }
 

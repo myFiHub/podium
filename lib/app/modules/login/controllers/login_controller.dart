@@ -460,6 +460,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
     final userToCreate = UserInfoModel(
       id: userId,
       fullName: name,
+      referrer: referrer.value?.id ?? '',
       email: email,
       avatar: avatar,
       localWalletAddress: '',

@@ -13,6 +13,7 @@ UserInfoModel? singleUserParser(dynamic value) {
     final String id = value[UserInfoModel.idKey];
     final avatar = value[UserInfoModel.avatarUrlKey];
     final isOver18 = value[UserInfoModel.isOver18Key] ?? false;
+    final referrer = value[UserInfoModel.referrerKey] ?? '';
     final parsed =
         jsonDecode(value[UserInfoModel.savedParticleUserInfoKey] ?? "{}");
     final wallets =
@@ -28,6 +29,7 @@ UserInfoModel? singleUserParser(dynamic value) {
       fullName: getPascalWords(name),
       email: email,
       id: id,
+      referrer: referrer,
       avatar: avatar,
       isOver18: isOver18,
       savedParticleWalletAddress:

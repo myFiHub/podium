@@ -14,6 +14,7 @@ class UserInfoModel {
   late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
   late int numberOfFollowers;
   bool isOver18 = false;
+  String referrer = '';
   String? loginType;
   String? loginTypeIdentifier;
 
@@ -31,6 +32,7 @@ class UserInfoModel {
   static String loginTypeKey = 'loginType';
   static String loginTypeIdentifierKey = 'loginTypeIdentifier';
   static String savedParticleWalletAddressKey = 'savedParticleWalletAddress';
+  static String referrerKey = 'referrer';
 
   UserInfoModel({
     required this.id,
@@ -47,6 +49,7 @@ class UserInfoModel {
     this.isOver18 = false,
     this.loginType,
     this.loginTypeIdentifier,
+    this.referrer = '',
   });
 
   String get defaultWalletAddress {
@@ -84,6 +87,7 @@ class UserInfoModel {
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
+    referrer = json[referrerKey] ?? '';
     savedParticleWalletAddress =
         json[savedParticleWalletAddressKey] ?? particleWalletAddress;
     loginTypeIdentifier = json[loginTypeIdentifierKey];
@@ -109,6 +113,7 @@ class UserInfoModel {
     data[loginTypeKey] = loginType;
     data[loginTypeIdentifierKey] = loginTypeIdentifier;
     data[savedParticleWalletAddressKey] = savedParticleWalletAddress;
+    data[referrerKey] = referrer;
     return data;
   }
 
@@ -127,6 +132,7 @@ class UserInfoModel {
     bool? isOver18,
     String? loginType,
     String? loginTypeIdentifier,
+    String? referrer,
   }) {
     return UserInfoModel(
       id: id ?? this.id,
@@ -146,6 +152,7 @@ class UserInfoModel {
       savedParticleWalletAddress:
           savedParticleWalletAddress ?? this.savedParticleWalletAddress,
       loginTypeIdentifier: loginTypeIdentifier ?? this.loginTypeIdentifier,
+      referrer: referrer ?? this.referrer,
     );
   }
 }

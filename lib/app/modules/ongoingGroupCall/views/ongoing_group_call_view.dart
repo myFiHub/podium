@@ -90,12 +90,13 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          color: Colors.black,
-          height: 60,
-          width: (Get.width / 2) - 60,
-        ),
+        // Container(
+        //   color: Colors.black,
+        //   width: (Get.width / 2) - 60,
+        //   height: 50,
+        // ),
         Obx(
           () {
             final isAdmin = controller.amIAdmin.value;

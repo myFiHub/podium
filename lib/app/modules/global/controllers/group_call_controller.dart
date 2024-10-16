@@ -42,6 +42,7 @@ class GroupCallController extends GetxController {
   final searchedValueInMeet = Rx<String>('');
   final sortType = Rx<String>(SortTypes.recentlyTalked);
   final canTalk = false.obs;
+  final keysMap = Rx<Map<String, GlobalKey>>({});
 
   @override
   void onInit() {
@@ -98,6 +99,11 @@ class GroupCallController extends GetxController {
   }
 
   ///////////////////////////////////////////////////////////////
+
+  setSortedMembers({required List<FirebaseSessionMember> members}) {
+    final sorted = sortMembers(members: members);
+    sortedMembers.value = sorted;
+  }
 
   updateTalkingMembers({required List<String> ids}) {
     final talkingMembersList = members.value.where((element) {

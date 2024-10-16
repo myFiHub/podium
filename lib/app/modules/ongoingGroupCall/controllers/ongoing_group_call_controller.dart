@@ -54,6 +54,12 @@ class InteractionKeys {
   static const targetId = 'targetId';
 }
 
+class Reaction {
+  String targetId;
+  String reaction;
+  Reaction({required this.targetId, required this.reaction});
+}
+
 class OngoingGroupCallController extends GetxController {
   final groupCallController = Get.find<GroupCallController>();
   final globalController = Get.find<GlobalController>();
@@ -67,6 +73,9 @@ class OngoingGroupCallController extends GetxController {
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
+  final lastReaction = Rx<Reaction>(
+    Reaction(targetId: '', reaction: ''),
+  );
   StreamSubscription<DatabaseEvent>? sessionMembersSubscription = null;
   StreamSubscription<DatabaseEvent>? mySessionSubscription = null;
   StreamSubscription<PresenceMessage>? presenceUpdateStream = null;
@@ -218,8 +227,16 @@ class OngoingGroupCallController extends GetxController {
   }) {
     final initiatorUser = firebaseSession.value!.members[initiatorId];
     final targetUser = firebaseSession.value!.members[targetId];
+
+    // final userWidgetLocation=
     log.d(
         "action: $action, initiator: ${initiatorUser!.name}, target: ${targetUser!.name}");
+    lastReaction.value = Reaction(targetId: targetId, reaction: action);
+    update(['confetti' + targetId]);
+    Future.delayed(Duration(milliseconds: 10), () {
+      lastReaction.value = Reaction(targetId: '', reaction: '');
+    });
+    // lastReaction.value = Reaction(targetId: '', reaction: '');
     // final initiatorUser=groupCallController.
   }
 

@@ -381,7 +381,7 @@ class _TalkingIndicator extends GetView<GroupsController> {
                 style: PulseStyle(color: Colors.green),
                 duration: Duration(seconds: 2),
                 count: 2,
-                repeat: 5,
+                repeat: 0,
                 startFromScratch: false,
                 autoStart: true,
                 fit: PulseFit.contain,

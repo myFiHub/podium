@@ -10,12 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
   reown_appkit: ^1.0.1
-  alarm: ^4.0.3
+  alarm: ^4.0.4
   intl: ^0.19.0
   decimal: ^3.0.2
   share_plus: ^10.0.3
   app_links: ^6.3.2
-  fl_toast: ^3.2.0
+  flutter_confetti: ^0.3.1
   ably_flutter: ^1.2.36
   floating_draggable_widget: ^2.1.5
   dropdown_button2: ^2.3.9

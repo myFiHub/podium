@@ -171,14 +171,13 @@ class LoginController extends GetxController with ParticleAuthUtils {
         return;
       }
     } catch (e) {
+      isLoggingIn.value = false;
       log.e('Error logging in with Email: $e');
       Toast.error(
         message: 'Error logging in',
       );
       return;
-    } finally {
-      isLoggingIn.value = false;
-    }
+    } finally {}
   }
 
   loginWithX({required bool ignoreIfNotLoggedIn}) async {
@@ -206,14 +205,13 @@ class LoginController extends GetxController with ParticleAuthUtils {
         return;
       }
     } catch (e) {
+      isLoggingIn.value = false;
       log.e('Error logging in with X: $e');
       Toast.error(
         message: 'Error logging in',
       );
       return;
-    } finally {
-      isLoggingIn.value = false;
-    }
+    } finally {}
   }
 
   loginWithGoogle({required bool ignoreIfNotLoggedIn}) async {
@@ -241,14 +239,13 @@ class LoginController extends GetxController with ParticleAuthUtils {
         return;
       }
     } catch (e) {
+      isLoggingIn.value = false;
       log.e('Error logging in with Google: $e');
       Toast.error(
         message: 'Error logging in',
       );
       return;
-    } finally {
-      isLoggingIn.value = false;
-    }
+    } finally {}
   }
 
   loginWithLinkedIn({required bool ignoreIfNotLoggedIn}) async {
@@ -274,14 +271,13 @@ class LoginController extends GetxController with ParticleAuthUtils {
         return;
       }
     } catch (e) {
+      isLoggingIn.value = false;
       log.e('Error logging in with LinkedIn: $e');
       Toast.error(
         message: 'Error logging in',
       );
       return;
-    } finally {
-      isLoggingIn.value = false;
-    }
+    } finally {}
   }
 
   loginWithFaceBook({required bool ignoreIfNotLoggedIn}) async {
@@ -307,14 +303,13 @@ class LoginController extends GetxController with ParticleAuthUtils {
         return;
       }
     } catch (e) {
+      isLoggingIn.value = false;
       log.e('Error logging in with Facebook: $e');
       Toast.error(
         message: 'Error logging in',
       );
       return;
-    } finally {
-      isLoggingIn.value = false;
-    }
+    } finally {}
   }
 
   loginWithApple({required bool ignoreIfNotLoggedIn}) async {
@@ -340,14 +335,13 @@ class LoginController extends GetxController with ParticleAuthUtils {
         return;
       }
     } catch (e) {
+      isLoggingIn.value = false;
       log.e('Error logging in with Apple: $e');
       Toast.error(
         message: 'Error logging in',
       );
       return;
-    } finally {
-      isLoggingIn.value = false;
-    }
+    } finally {}
   }
 
   loginWithGithub({required bool ignoreIfNotLoggedIn}) async {
@@ -373,14 +367,13 @@ class LoginController extends GetxController with ParticleAuthUtils {
         return;
       }
     } catch (e) {
+      isLoggingIn.value = false;
       log.e('Error logging in with Apple: $e');
       Toast.error(
         message: 'Error logging in',
       );
       return;
-    } finally {
-      isLoggingIn.value = false;
-    }
+    } finally {}
   }
 
   _socialLogin({
@@ -429,6 +422,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
         message: 'Error logging in, please try again, or use another method',
       );
       globalController.setLoggedIn(false);
+      isLoggingIn.value = false;
       return;
     }
 
@@ -458,6 +452,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
           message: 'Error logging in',
         );
         globalController.setLoggedIn(false);
+        isLoggingIn.value = false;
         return;
       }
     } else {
@@ -479,6 +474,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
       Toast.error(
         message: 'A name is required',
       );
+      isLoggingIn.value = false;
     }
   }
 

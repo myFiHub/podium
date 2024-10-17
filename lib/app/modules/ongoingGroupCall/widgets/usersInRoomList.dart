@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -8,6 +11,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
+import 'package:podium/app/modules/ongoingGroupCall/widgets/likePath.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widgetWrapper.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -15,6 +19,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -40,7 +45,7 @@ class UsersInRoomList extends StatelessWidget {
         final userId = user.id;
         final isItME = user.id == myId;
         return _SingleUserInRoom(
-            key: Key(user.id),
+            key: Key(user.id + 'singleUserCard'),
             isItME: isItME,
             userId: userId,
             user: user,
@@ -177,9 +182,178 @@ class _SingleUserInRoom extends StatelessWidget {
               ],
             ),
           ),
+          _ConfettiDetector(
+            userId: userId,
+          ),
         ],
       ),
     );
+  }
+}
+
+class _ConfettiDetector extends StatelessWidget {
+  final String userId;
+  const _ConfettiDetector({super.key, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    final key = GlobalKey();
+    return GetBuilder<OngoingGroupCallController>(
+        id: 'confetti' + userId,
+        builder: (controller) {
+          final lastReaction = controller.lastReaction.value;
+          if (lastReaction.targetId == userId) {
+            _shootReaction(
+              context: context,
+              reaction: lastReaction,
+            );
+          }
+          return IgnorePointer(
+            child: SizedBox(
+              key: key,
+              height: 0,
+              width: 0,
+            ),
+          );
+        });
+  }
+}
+
+_shootLike(BuildContext context) {
+  final RenderBox renderBox = context.findRenderObject() as RenderBox;
+  final position = renderBox.localToGlobal(Offset.zero);
+  List<Color> colors = [
+    Color.fromARGB(255, 255, 0, 0),
+    Color.fromARGB(255, 255, 0, 123),
+    Color.fromARGB(255, 232, 0, 0),
+    Color.fromARGB(255, 255, 108, 172),
+    Color.fromARGB(255, 255, 184, 233)
+  ];
+
+  final options = ConfettiOptions(
+      spread: 30,
+      ticks: 70,
+      gravity: 0.5,
+      decay: 0.97,
+      y: (position.dy / Get.height) + (30 / Get.height),
+      x: (position.dx / Get.width) + 0.1,
+      startVelocity: 5,
+      colors: colors);
+  Confetti.launch(context,
+      options: options.copyWith(
+        particleCount: 1,
+      ),
+      particleBuilder: (index) => LikePath());
+}
+
+_shootDisLike(BuildContext context) {
+  final RenderBox renderBox = context.findRenderObject() as RenderBox;
+  final position = renderBox.localToGlobal(Offset.zero);
+  List<Color> colors = [
+    Color.fromARGB(255, 255, 0, 0),
+    Color.fromARGB(255, 255, 0, 123),
+    Color.fromARGB(255, 232, 0, 0),
+    Color.fromARGB(255, 255, 108, 172),
+    Color.fromARGB(255, 255, 184, 233)
+  ];
+
+  final options = ConfettiOptions(
+      spread: 30,
+      ticks: 40,
+      gravity: 0.5,
+      decay: 0.97,
+      y: (position.dy / Get.height) + (30 / Get.height),
+      x: (position.dx / Get.width) + 0.1,
+      startVelocity: 0,
+      colors: colors);
+  Confetti.launch(context,
+      options: options.copyWith(
+        particleCount: 1,
+      ),
+      particleBuilder: (index) => DislikePath());
+}
+
+_shootCheer(BuildContext context) {
+  final RenderBox renderBox = context.findRenderObject() as RenderBox;
+  final position = renderBox.localToGlobal(Offset.zero);
+  List<Color> colors = [
+    Colors.green,
+    Colors.red,
+    Colors.blue,
+    Colors.yellow,
+    Colors.purple,
+  ];
+
+  final options = ConfettiOptions(
+      spread: 30,
+      ticks: 120,
+      gravity: 0.5,
+      decay: 0.97,
+      y: (position.dy / Get.height) + (30 / Get.height),
+      x: (position.dx / Get.width) + 0.1,
+      startVelocity: 10,
+      colors: colors);
+  Confetti.launch(context,
+      options: options.copyWith(
+        particleCount: 1,
+      ),
+      particleBuilder: (index) => CheerPath());
+  Confetti.launch(context,
+      options: options.copyWith(
+        particleCount: 50,
+        scalar: 1,
+      ));
+}
+
+_shootBoo(BuildContext context) {
+  final RenderBox renderBox = context.findRenderObject() as RenderBox;
+  final position = renderBox.localToGlobal(Offset.zero);
+  List<Color> colors = [
+    Colors.red,
+  ];
+
+  final options = ConfettiOptions(
+      spread: 30,
+      ticks: 120,
+      gravity: 0.5,
+      decay: 0.97,
+      y: (position.dy / Get.height) + (30 / Get.height),
+      x: (position.dx / Get.width) + 0.1,
+      startVelocity: 0,
+      colors: colors);
+  Confetti.launch(context,
+      options: options.copyWith(
+        particleCount: 1,
+      ),
+      particleBuilder: (index) => BooPath());
+  Confetti.launch(context,
+      options: options.copyWith(
+        particleCount: 50,
+        gravity: 2,
+        startVelocity: 5,
+      ));
+}
+
+_shootReaction({required BuildContext context, required Reaction reaction}) {
+  if (reaction.reaction == eventNames.like) {
+    Timer(Duration.zero, () {
+      _shootLike(context);
+    });
+  }
+  if (reaction.reaction == eventNames.dislike) {
+    Timer(Duration.zero, () {
+      _shootDisLike(context);
+    });
+  }
+  if (reaction.reaction == eventNames.cheer) {
+    Timer(Duration.zero, () {
+      _shootCheer(context);
+    });
+  }
+  if (reaction.reaction == eventNames.boo) {
+    Timer(Duration.zero, () {
+      _shootBoo(context);
+    });
   }
 }
 
@@ -207,7 +381,7 @@ class _TalkingIndicator extends GetView<GroupsController> {
                 style: PulseStyle(color: Colors.green),
                 duration: Duration(seconds: 2),
                 count: 2,
-                repeat: 5,
+                repeat: 0,
                 startFromScratch: false,
                 autoStart: true,
                 fit: PulseFit.contain,
@@ -321,11 +495,14 @@ class Actions extends GetView<OngoingGroupCallController> {
       child: Wrap(
         alignment: WrapAlignment.center,
         children: [
-          Row(
-            children: [
-              if (userId != myId) LikeDislike(userId: userId, isLike: true),
-              if (userId != myId) LikeDislike(userId: userId, isLike: false),
-            ],
+          SizedBox(
+            height: 40,
+            child: Row(
+              children: [
+                if (userId != myId) LikeDislike(userId: userId, isLike: true),
+                if (userId != myId) LikeDislike(userId: userId, isLike: false),
+              ],
+            ),
           ),
           Row(
             children: [

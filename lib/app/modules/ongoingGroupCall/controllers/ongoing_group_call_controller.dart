@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -47,6 +48,31 @@ class MyTalkTimer {
   }
 }
 
+class InteractionKeys {
+  static const action = 'action';
+  static const initiatorId = 'initiatorId';
+  static const targetId = 'targetId';
+}
+
+class Reaction {
+  String targetId;
+  String reaction;
+  Reaction({required this.targetId, required this.reaction});
+}
+
+class ReactionLogElement {
+  FirebaseSessionMember target;
+  FirebaseSessionMember initiator;
+  String reaction;
+  int addedAt = DateTime.now().millisecondsSinceEpoch;
+
+  ReactionLogElement({
+    required this.target,
+    required this.initiator,
+    required this.reaction,
+  });
+}
+
 class OngoingGroupCallController extends GetxController {
   final groupCallController = Get.find<GroupCallController>();
   final globalController = Get.find<GlobalController>();
@@ -60,8 +86,15 @@ class OngoingGroupCallController extends GetxController {
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
+
+  final reactionLog = Rx<List<ReactionLogElement>>([]);
+
+  final lastReaction = Rx<Reaction>(
+    Reaction(targetId: '', reaction: ''),
+  );
   StreamSubscription<DatabaseEvent>? sessionMembersSubscription = null;
   StreamSubscription<DatabaseEvent>? mySessionSubscription = null;
+  StreamSubscription<PresenceMessage>? presenceUpdateStream = null;
 
   Timer? timer;
 
@@ -69,6 +102,28 @@ class OngoingGroupCallController extends GetxController {
   void onInit() async {
     super.onInit();
     final ongoingGroupCallGroup = groupCallController.group.value!;
+
+    final channel = realtimeInstance.channels.get(ongoingGroupCallGroup.id);
+    presenceUpdateStream = channel.presence
+        .subscribe(action: PresenceAction.update)
+        .listen((message) {
+      if (!(message.data is String)) {
+        if (message.data is Map &&
+            eventNames
+                .isInteraction((message.data as Map)[InteractionKeys.action])) {
+          final data = message.data as Map;
+          final initiatorId = data[InteractionKeys.initiatorId];
+          final targetId = data[InteractionKeys.targetId];
+          final action = data[InteractionKeys.action];
+          _handleInteractionEvent(
+            action: action,
+            initiatorId: initiatorId,
+            targetId: targetId,
+          );
+        }
+      }
+    });
+
     final myUser = globalController.currentUserInfo.value!;
     if (myUser.id == ongoingGroupCallGroup.creator.id) {
       amIAdmin.value = true;
@@ -122,12 +177,22 @@ class OngoingGroupCallController extends GetxController {
   @override
   void onClose() async {
     super.onClose();
+    presenceUpdateStream?.cancel();
     stopTheTimer();
     stopSubscriptions();
     mySession.value = null;
     firebaseSession.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
+  }
+
+  _addToReactionLog({required ReactionLogElement element}) {
+    // max length of reaction log is 5
+    if (reactionLog.value.length >= 5) {
+      reactionLog.value.removeAt(0);
+    }
+    reactionLog.value.add(element);
+    reactionLog.refresh();
   }
 
   stopSubscriptions() {
@@ -178,6 +243,32 @@ class OngoingGroupCallController extends GetxController {
         }
       });
     }
+  }
+
+  _handleInteractionEvent({
+    required String action,
+    required String initiatorId,
+    required String targetId,
+  }) {
+    final initiatorUser = firebaseSession.value!.members[initiatorId];
+    final targetUser = firebaseSession.value!.members[targetId];
+
+    // final userWidgetLocation=
+    // log.d(
+    //     "action: $action, initiator: ${initiatorUser!.name}, target: ${targetUser!.name}");
+    final element = ReactionLogElement(
+      initiator: initiatorUser!,
+      target: targetUser!,
+      reaction: action,
+    );
+    _addToReactionLog(element: element);
+    lastReaction.value = Reaction(targetId: targetId, reaction: action);
+    update(['confetti' + targetId]);
+    Future.delayed(Duration(milliseconds: 10), () {
+      lastReaction.value = Reaction(targetId: '', reaction: '');
+    });
+    // lastReaction.value = Reaction(targetId: '', reaction: '');
+    // final initiatorUser=groupCallController.
   }
 
   updateMyLastTalkingTime() async {
@@ -281,6 +372,14 @@ class OngoingGroupCallController extends GetxController {
   }
 
   onLikeClicked(String userId) async {
+    sendGroupPeresenceEvent(
+        groupId: groupCallController.group.value!.id,
+        eventName: eventNames.like,
+        eventData: {
+          InteractionKeys.initiatorId: myId,
+          InteractionKeys.targetId: userId,
+          InteractionKeys.action: eventNames.like,
+        });
     final myUser = globalController.currentUserInfo.value!;
     final key = generateKeyForStorageAndObserver(
       userId: userId,
@@ -305,6 +404,14 @@ class OngoingGroupCallController extends GetxController {
   }
 
   onDislikeClicked(String userId) async {
+    sendGroupPeresenceEvent(
+        groupId: groupCallController.group.value!.id,
+        eventName: eventNames.dislike,
+        eventData: {
+          InteractionKeys.initiatorId: myId,
+          InteractionKeys.targetId: userId,
+          InteractionKeys.action: eventNames.dislike,
+        });
     final key = generateKeyForStorageAndObserver(
         userId: userId,
         groupId: groupCallController.group.value!.id,
@@ -433,6 +540,15 @@ class OngoingGroupCallController extends GetxController {
           title: "Success",
           message: "${cheer ? "Cheer" : "Boo"} successful",
         );
+        final eventString = cheer ? eventNames.cheer : eventNames.boo;
+        sendGroupPeresenceEvent(
+            groupId: groupCallController.group.value!.id,
+            eventName: eventString,
+            eventData: {
+              InteractionKeys.initiatorId: myId,
+              InteractionKeys.targetId: userId,
+              InteractionKeys.action: eventString,
+            });
         analytics.logEvent(name: 'cheerBoo', parameters: {
           'cheer': cheer,
           'amount': amount,

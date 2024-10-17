@@ -36,8 +36,30 @@ final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
 // detect presence time (groups that were active this milliseconds ago will be considered active)
 int dpt = 0;
 
+class eventNames {
+  static const String enter = "enter";
+  static const String leave = "leave";
+  static const String talking = "talking";
+  static const String notTalking = "notTalking";
+  // interactions
+  static const String like = "like";
+  static const String dislike = "dislike";
+  static const String cheer = "cheer";
+  static const String boo = "boo";
+  static isInteraction(String eventName) {
+    return [
+      like,
+      dislike,
+      cheer,
+      boo,
+    ].contains(eventName);
+  }
+}
+
 sendGroupPeresenceEvent(
-    {required String groupId, required String eventName}) async {
+    {required String groupId,
+    required String eventName,
+    Map<String, dynamic>? eventData}) async {
   try {
     if (dpt == 0) {
       return;
@@ -50,6 +72,9 @@ sendGroupPeresenceEvent(
     if (eventName == eventNames.talking || eventName == eventNames.notTalking) {
       channel.presence.update(eventName);
       return;
+    } else if (eventNames.isInteraction(eventName)) {
+      channel.presence.update(eventData);
+      return;
     }
     if (eventName == eventNames.enter) {
       channel.presence.enter(groupId);
@@ -59,13 +84,6 @@ sendGroupPeresenceEvent(
     log.f(e);
     analytics.logEvent(name: "send_group_presence_event_failed");
   }
-}
-
-class eventNames {
-  static const String enter = "enter";
-  static const String leave = "leave";
-  static const String talking = "talking";
-  static const String notTalking = "notTalking";
 }
 
 class GroupsController extends GetxController with FirebaseTags {
@@ -326,18 +344,24 @@ class GroupsController extends GetxController with FirebaseTags {
 
   _hanldeNewUpdateMessage(
       {required String groupId, required PresenceMessage message}) {
-    if (message.data == eventNames.talking) {
-      final currentListForThisGroup = tmpTakingUsersInGroupsMap[groupId] ?? [];
-      currentListForThisGroup.add(message.clientId!);
-      tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
-      log.d("Talking users: $currentListForThisGroup");
-      _shouldUpdateTakingUsers = true;
-    } else if (message.data == eventNames.notTalking) {
-      final currentListForThisGroup = tmpTakingUsersInGroupsMap[groupId] ?? [];
-      currentListForThisGroup.remove(message.clientId!);
-      tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
-      log.d("Talking users: $currentListForThisGroup");
-      _shouldUpdateTakingUsers = true;
+    if (message.data is String) {
+      if (message.data == eventNames.talking) {
+        final currentListForThisGroup =
+            tmpTakingUsersInGroupsMap[groupId] ?? [];
+        currentListForThisGroup.add(message.clientId!);
+        tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
+        log.d("Talking users: $currentListForThisGroup");
+        _shouldUpdateTakingUsers = true;
+      } else if (message.data == eventNames.notTalking) {
+        final currentListForThisGroup =
+            tmpTakingUsersInGroupsMap[groupId] ?? [];
+        currentListForThisGroup.remove(message.clientId!);
+        tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
+        log.d("Talking users: $currentListForThisGroup");
+        _shouldUpdateTakingUsers = true;
+      }
+    } else {
+      log.d("Interaction: ${message.data}");
     }
   }
 

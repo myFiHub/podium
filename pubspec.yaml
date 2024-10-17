@@ -1,5 +1,5 @@
 name: podium
-version: 1.0.7+43
+version: 1.0.8+44
 publish_to: none
 description: web3 Podium.
 environment:

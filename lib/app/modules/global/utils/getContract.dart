@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
@@ -11,6 +12,7 @@ import 'package:podium/env.dart' as Environment;
 import 'package:particle_base/model/chain_info.dart' as ChainInfo;
 
 import 'package:podium/env.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
@@ -52,11 +54,8 @@ DeployedContract? getDeployedContract(
   }
   if (deployedContract == null) {
     log.e("Contract not deployed");
-
-    Get.snackbar(
-      "Error",
-      "Contract is not deployed on ${chainNameById(chainId)}",
-      colorText: Colors.red,
+    Toast.error(
+      message: "Contract is not deployed on ${chainNameById(chainId)}",
     );
   }
 

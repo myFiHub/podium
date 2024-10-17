@@ -11,6 +11,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 class UserProfileParamsKeys {
@@ -210,12 +211,16 @@ class ProfileController extends GetxController {
       }
       if (bought) {
         mySharesOfFriendTechFromThisUser.value++;
-        Get.snackbar('Success', 'Bought Friendtech Key ',
-            colorText: Colors.green);
+        Toast.success(
+          title: 'Success',
+          message: 'Bought Friendtech Key',
+        );
         getFriendTechPriceAndMyShare(delay: 5);
       } else {
-        Get.snackbar('Error', 'Error buying Friendtech key',
-            colorText: Colors.red);
+        Toast.error(
+          title: 'Error',
+          message: 'Error buying Friendtech key',
+        );
       }
     } catch (e) {
     } finally {
@@ -246,11 +251,10 @@ class ProfileController extends GetxController {
       }
       if (bought) {
         mySharesOfArenaFromThisUser.value++;
-        Get.snackbar('Success', 'Arena ticket bought', colorText: Colors.green);
+        Toast.success(title: 'Success', message: 'Arena ticket bought');
         getArenaPriceAndMyShares(delay: 5);
       } else {
-        Get.snackbar('Error', 'Error buying Arena ticket',
-            colorText: Colors.red);
+        Toast.error(title: 'Error', message: 'Error buying Arena ticket');
       }
     } catch (e) {
     } finally {

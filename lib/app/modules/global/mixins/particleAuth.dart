@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
 import 'package:particle_base/model/login_info.dart' as PLoginInfo;
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 List<PLoginInfo.SupportAuthType> _supportAuthType =
@@ -48,10 +49,8 @@ mixin ParticleAuthUtils {
     } catch (e) {
       log.e(e);
       if (e.toString().contains("Thirdparty auth error")) {
-        Get.snackbar(
-          "Error",
-          "Thirdparty auth error",
-          colorText: Colors.red,
+        Toast.error(
+          message: "Thirdparty auth error",
         );
       }
 

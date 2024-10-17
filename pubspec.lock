@@ -26,10 +26,10 @@ packages:
     dependency: "direct main"
     description:
       name: ably_flutter
-      sha256: dcf23524367210dbabbf3365a2e4d1b1c7d0ae46a653ab0de362096c2b19bb29
+      sha256: "4fab719782a497cc5c5666e4fd8c77d5f1d1780e1cbceac2efb2014f8bd27cb4"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.35"
+    version: "1.2.36"
   adaptive_number:
     dependency: transitive
     description:
@@ -50,10 +50,10 @@ packages:
     dependency: "direct main"
     description:
       name: alarm
-      sha256: "544f39ba46fcdb06c2d26fd6223d4f97cd3dd2f16c10f7f5b5ff45d169347178"
+      sha256: "3e48d40a84f63548c4a6ac60858edb1ffaae23c9064452d5d6a5d066daabb52c"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.3"
+    version: "4.0.5"
   analyzer:
     dependency: transitive
     description:
@@ -710,14 +710,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-  fl_toast:
-    dependency: "direct main"
-    description:
-      name: fl_toast
-      sha256: "0f7bbce90d1b75463a414c6a5476e45bd93fa7c4adccce1690076f4d1ef77c42"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.0"
   floating_draggable_widget:
     dependency: "direct main"
     description:
@@ -747,6 +739,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.1"
+  flutter_confetti:
+    dependency: "direct main"
+    description:
+      name: flutter_confetti
+      sha256: "5482453c220f74d3c705c4077c9a892a28c6f9e93528f18cf0c9e41bb74d11a5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1"
   flutter_fgbg:
     dependency: transitive
     description:
@@ -1734,6 +1734,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  toasty_box:
+    dependency: "direct main"
+    description:
+      name: toasty_box
+      sha256: f43694033701ca181de719e2487bf2b39b80b6c9fa4e9e3f27ae99b7f5ce5db3
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
   typed_data:
     dependency: transitive
     description:

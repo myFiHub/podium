@@ -13,6 +13,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -129,7 +130,7 @@ class GroupDetailController extends GetxController {
         scheduleChecks();
       }
     } else {
-      Get.snackbar('Error', 'Room is archived or deleted');
+      Toast.error(message: 'Room is archived or deleted');
       Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
     }
   }

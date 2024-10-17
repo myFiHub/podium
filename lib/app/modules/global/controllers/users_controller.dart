@@ -10,6 +10,7 @@ import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -80,16 +81,17 @@ class UsersController extends GetxController {
         followingsInProgress.remove(id);
         followingsInProgress.refresh();
         Get.closeCurrentSnackbar();
-        Get.snackbar(
-          "${startFollowing ? "" : "un"}followed",
-          "${startFollowing ? "" : "un"}followed ${user.fullName}",
-          colorText: Colors.white,
+        Toast.info(
+          title: "${startFollowing ? "" : "un"}followed",
+          message: "${startFollowing ? "" : "un"}followed ${user.fullName}",
         );
       } catch (e) {
         followingsInProgress.remove(id);
         followingsInProgress.refresh();
-        Get.snackbar(
-            'Error', 'Error ${startFollowing ? "" : "un"}following user');
+        Toast.error(
+          title: 'Error',
+          message: 'Error ${startFollowing ? "" : "un"}following user',
+        );
       }
     }
   }

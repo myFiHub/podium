@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/chechTicket/controllers/checkTicket_controller.dart';
+import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
@@ -72,8 +73,10 @@ class EnterButton extends GetView<CheckticketController> {
           controller.canEnterWithoutTicket;
 
       final canSpeak = controller.allUsersToBuyTicketFrom.value.values.any(
-          (element) =>
-              element.boughtTicketToSpeak && element.speakTicketType != null);
+              (element) =>
+                  element.boughtTicketToSpeak &&
+                  element.speakTicketType != null) ||
+          canISpeakWithoutTicket(group: controller.group.value!);
 
       final remainingTicketsToTalk = controller
           .allUsersToBuyTicketFrom.value.values

@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:particle_base/particle_base.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 particle_switchAndAction<T>({
@@ -14,7 +15,7 @@ particle_switchAndAction<T>({
   final targetChainInfo =
       particleChainInfoByChainId(chainIdToTemporarilySwitchTo);
   if (targetChainInfo == null) {
-    Get.snackbar('Error', 'Invalid chain id');
+    Toast.error(message: 'Invalid chain id');
     return null;
   }
   try {
@@ -24,7 +25,7 @@ particle_switchAndAction<T>({
     return res;
   } catch (e) {
     log.e(e);
-    Get.snackbar('Error', 'Error occured while switching chain');
+    Toast.error(message: 'Error occured while switching chain');
     return null;
   }
 }

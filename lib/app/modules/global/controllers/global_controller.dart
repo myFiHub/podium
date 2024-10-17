@@ -22,6 +22,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
@@ -273,9 +274,11 @@ class GlobalController extends GetxController {
       final chainName =
           ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
               .name;
-      final particleChain = particleWalletChainId == '30732'
-          ? movementChainOnParticle
-          : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
+      final particleChain =
+          //  movementChainOnParticle;
+          particleWalletChainId == '30732'
+              ? movementChainOnParticle
+              : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
       if (particleChain == null) {
         log.f("${chainId} chain not found on particle");
         return Future.error("particle chain not initialized");
@@ -298,6 +301,12 @@ class GlobalController extends GetxController {
         particleChain,
         particleEnvironment,
       );
+      // final selectedChan =
+      //     await ParticleBase.ParticleBase.setChainInfo(particleChain);
+      // if (selectedChan) {
+      //   final chain = await ParticleBase.ParticleBase.getChainInfo();
+      //   log.i("chain info: $chain");
+      // }
       log.i('##########particle auth initialized');
       return Future.value();
     } catch (e) {
@@ -351,7 +360,7 @@ class GlobalController extends GetxController {
       currentUserInfo.refresh();
     } catch (e) {
       log.e("error saving wallet address $e");
-      Get.snackbar('Error', 'Error saving wallet address, try again');
+      Toast.error(message: "Error saving wallet address, try again");
     }
   }
 

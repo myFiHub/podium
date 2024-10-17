@@ -15,6 +15,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
@@ -62,23 +63,31 @@ class LoginController extends GetxController with ParticleAuthUtils {
         try {
           final isConnected = await ParticleAuthCore.isConnected();
           if (isConnected) {
-            Get.snackbar('Error', 'Error logging in');
+            // Toast.error(
+            //   message: 'Already logged in',
+            // );
             return;
           }
           particleUser = await ParticleAuthCore.getUserInfo();
           globalController.particleAuthUserInfo.value = particleUser;
         } catch (e) {
           log.e('Error logging in from signUp => particle auth: $e');
-          Get.snackbar('Error', 'Error logging in');
+          Toast.error(
+            message: 'Error logging in',
+          );
           return;
         }
-        Get.snackbar('Success', 'Account created successfully, logging in');
+        Toast.success(
+          message: 'Account created successfully, logging in',
+        );
       } else {
         particleUser = await particleLogin(email.value);
         if (particleUser != null) {
           globalController.particleAuthUserInfo.value = particleUser;
         } else {
-          Get.snackbar('Error', 'Error logging in');
+          Toast.error(
+            message: 'Error logging in',
+          );
           return;
         }
       }
@@ -93,7 +102,9 @@ class LoginController extends GetxController with ParticleAuthUtils {
         final currentUserInfo =
             await globalController.getUserInfoById(user!.uid);
         if (currentUserInfo == null) {
-          Get.snackbar('Error', 'Error logging in');
+          Toast.error(
+            message: 'Error logging in',
+          );
           return;
         }
         await saveParticleUserInfoToFirebaseIfNeeded(
@@ -121,7 +132,9 @@ class LoginController extends GetxController with ParticleAuthUtils {
       final errorMessage = e.message == 'invalid-credential'
           ? 'Invalid email or password'
           : e.message;
-      Get.snackbar('Error', errorMessage ?? 'Error logging in');
+      Toast.error(
+        message: errorMessage ?? 'Error logging in',
+      );
     } catch (e) {
       log.e('Error signing in: $e');
     } finally {
@@ -151,17 +164,20 @@ class LoginController extends GetxController with ParticleAuthUtils {
         );
       } else {
         if (ignoreIfNotLoggedIn == false) {
-          Get.snackbar('Error', 'Error logging in');
+          Toast.error(
+            message: 'Error logging in',
+          );
         }
         return;
       }
     } catch (e) {
-      log.e('Error logging in with Email: $e');
-      Get.snackbar('Error', 'Error logging in');
-      return;
-    } finally {
       isLoggingIn.value = false;
-    }
+      log.e('Error logging in with Email: $e');
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    } finally {}
   }
 
   loginWithX({required bool ignoreIfNotLoggedIn}) async {
@@ -182,21 +198,20 @@ class LoginController extends GetxController with ParticleAuthUtils {
         );
       } else {
         if (ignoreIfNotLoggedIn == false) {
-          Get.snackbar(
-            'Error',
-            'Error logging in',
-            colorText: Colors.red,
+          Toast.error(
+            message: 'Error logging in',
           );
         }
         return;
       }
     } catch (e) {
-      log.e('Error logging in with X: $e');
-      Get.snackbar('Error', 'Error logging in');
-      return;
-    } finally {
       isLoggingIn.value = false;
-    }
+      log.e('Error logging in with X: $e');
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    } finally {}
   }
 
   loginWithGoogle({required bool ignoreIfNotLoggedIn}) async {
@@ -217,17 +232,20 @@ class LoginController extends GetxController with ParticleAuthUtils {
         );
       } else {
         if (!ignoreIfNotLoggedIn) {
-          Get.snackbar('Error', 'Error logging in');
+          Toast.error(
+            message: 'Error logging in',
+          );
         }
         return;
       }
     } catch (e) {
-      log.e('Error logging in with Google: $e');
-      Get.snackbar('Error', 'Error logging in');
-      return;
-    } finally {
       isLoggingIn.value = false;
-    }
+      log.e('Error logging in with Google: $e');
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    } finally {}
   }
 
   loginWithLinkedIn({required bool ignoreIfNotLoggedIn}) async {
@@ -247,16 +265,19 @@ class LoginController extends GetxController with ParticleAuthUtils {
           loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
-        Get.snackbar('Error', 'Error logging in');
+        Toast.error(
+          message: 'Error logging in',
+        );
         return;
       }
     } catch (e) {
-      log.e('Error logging in with LinkedIn: $e');
-      Get.snackbar('Error', 'Error logging in');
-      return;
-    } finally {
       isLoggingIn.value = false;
-    }
+      log.e('Error logging in with LinkedIn: $e');
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    } finally {}
   }
 
   loginWithFaceBook({required bool ignoreIfNotLoggedIn}) async {
@@ -276,16 +297,19 @@ class LoginController extends GetxController with ParticleAuthUtils {
           loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
-        Get.snackbar('Error', 'Error logging in');
+        Toast.error(
+          message: 'Error logging in',
+        );
         return;
       }
     } catch (e) {
-      log.e('Error logging in with Facebook: $e');
-      Get.snackbar('Error', 'Error logging in');
-      return;
-    } finally {
       isLoggingIn.value = false;
-    }
+      log.e('Error logging in with Facebook: $e');
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    } finally {}
   }
 
   loginWithApple({required bool ignoreIfNotLoggedIn}) async {
@@ -305,16 +329,19 @@ class LoginController extends GetxController with ParticleAuthUtils {
           loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
-        Get.snackbar('Error', 'Error logging in');
+        Toast.error(
+          message: 'Error logging in',
+        );
         return;
       }
     } catch (e) {
-      log.e('Error logging in with Apple: $e');
-      Get.snackbar('Error', 'Error logging in');
-      return;
-    } finally {
       isLoggingIn.value = false;
-    }
+      log.e('Error logging in with Apple: $e');
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    } finally {}
   }
 
   loginWithGithub({required bool ignoreIfNotLoggedIn}) async {
@@ -334,16 +361,19 @@ class LoginController extends GetxController with ParticleAuthUtils {
           loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
         );
       } else {
-        Get.snackbar('Error', 'Error logging in');
+        Toast.error(
+          message: 'Error logging in',
+        );
         return;
       }
     } catch (e) {
-      log.e('Error logging in with Apple: $e');
-      Get.snackbar('Error', 'Error logging in');
-      return;
-    } finally {
       isLoggingIn.value = false;
-    }
+      log.e('Error logging in with Apple: $e');
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    } finally {}
   }
 
   _socialLogin({
@@ -388,12 +418,11 @@ class LoginController extends GetxController with ParticleAuthUtils {
     try {
       await Evm.getAddress();
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Error logging in please try again, or use another method',
-        colorText: Colors.red,
+      Toast.error(
+        message: 'Error logging in, please try again, or use another method',
       );
       globalController.setLoggedIn(false);
+      isLoggingIn.value = false;
       return;
     }
 
@@ -402,7 +431,9 @@ class LoginController extends GetxController with ParticleAuthUtils {
     );
 
     if (user == null) {
-      Get.snackbar('Error', 'Error logging in');
+      Toast.error(
+        message: 'Error logging in',
+      );
       return;
     }
     late String? savedName;
@@ -417,8 +448,11 @@ class LoginController extends GetxController with ParticleAuthUtils {
       }
       user = myUser;
       if (user == null) {
-        Get.snackbar('Error', 'Error logging in');
+        Toast.error(
+          message: 'Error logging in',
+        );
         globalController.setLoggedIn(false);
+        isLoggingIn.value = false;
         return;
       }
     } else {
@@ -437,7 +471,10 @@ class LoginController extends GetxController with ParticleAuthUtils {
       // Navigate.toInitial();
     } else {
       globalController.setLoggedIn(false);
-      Get.snackbar("a name is required", '', colorText: Colors.red);
+      Toast.error(
+        message: 'A name is required',
+      );
+      isLoggingIn.value = false;
     }
   }
 

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:fl_toast/fl_toast.dart';
+// import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:podium/utils/constants.dart';
@@ -47,12 +47,12 @@ class MethodDialogState extends State<MethodDialog> {
             final String t = jsonEncode(snapshot.data);
             debugPrint('[ExampleApp] result $t');
             return InkWell(
-              onTap: () => _copyToClipboard(t),
+              // onTap: () => _copyToClipboard(t),
               child: Text(t),
             );
           } else if (snapshot.hasError) {
             return InkWell(
-              onTap: () => _copyToClipboard(snapshot.data.toString()),
+              // onTap: () => _copyToClipboard(snapshot.data.toString()),
               child: Text(snapshot.error.toString()),
             );
           } else {
@@ -76,17 +76,6 @@ class MethodDialogState extends State<MethodDialog> {
           ),
         ),
       ],
-    );
-  }
-
-  void _copyToClipboard(String text) {
-    Clipboard.setData(ClipboardData(text: text)).then(
-      (_) => showPlatformToast(
-        child: const Text(
-          StringConstants.copiedToClipboard,
-        ),
-        context: context,
-      ),
     );
   }
 }

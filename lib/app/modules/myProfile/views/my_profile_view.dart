@@ -10,6 +10,7 @@ import 'package:podium/app/modules/global/widgets/chainIcons.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/storage.dart';
@@ -244,10 +245,9 @@ class ParticleWalletManager extends GetView<GlobalController> {
                                     text: wallet.publicAddress,
                                   ),
                                 );
-                                Get.snackbar(
-                                  'Copied',
-                                  'Wallet address copied to clipboard',
-                                  colorText: Colors.white,
+                                Toast.neutral(
+                                  title: 'Copied',
+                                  message: 'Wallet address copied to clipboard',
                                 );
                               },
                               child: Row(
@@ -416,10 +416,9 @@ class WalletInfo extends GetView<GlobalController> {
                                 text: connectedWalletAddress,
                               ),
                             );
-                            Get.snackbar(
-                              'Copied',
-                              'Wallet address copied to clipboard',
-                              colorText: Colors.white,
+                            Toast.neutral(
+                              title: 'Copied',
+                              message: 'Wallet address copied to clipboard',
                             );
                           },
                           child: Row(
@@ -602,8 +601,10 @@ class UserInfo extends GetView<GlobalController> {
                 IconButton(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: myUser.id));
-                      Get.snackbar('Copied', 'User ID copied to clipboard',
-                          colorText: Colors.white);
+                      Toast.neutral(
+                        title: 'Copied',
+                        message: 'User ID copied to clipboard',
+                      );
                     },
                     icon: Icon(
                       Icons.copy,

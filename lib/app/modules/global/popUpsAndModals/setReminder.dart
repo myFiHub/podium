@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 Future<bool> createCalendarEventForScheduledGroup({
@@ -88,8 +89,9 @@ Future<int?> setReminder({
   final hasNotificationPermission =
       await getPermission(Permission.notification);
   if (!hasNotificationPermission) {
-    Get.snackbar('Permission Required',
-        'Please enable notifications permission to set reminders');
+    Toast.error(
+      message: 'Please enable notifications permission to set reminders',
+    );
     return null;
   }
 
@@ -163,10 +165,9 @@ Future<int?> setReminder({
       ),
     );
     await Alarm.set(alarmSettings: alarmSettings);
-    Get.snackbar(
-      'Reminder Set',
-      'You will be reminded ${alarmMeBefore == 0 ? "when Event is started" : "${alarmMeBefore} minutes before the event"}',
-      colorText: Colors.green,
+    Toast.success(
+      message:
+          'You will be reminded ${alarmMeBefore == 0 ? "when Event is started" : "${alarmMeBefore} minutes before the event"}',
     );
   }
   return alarmMeBefore;

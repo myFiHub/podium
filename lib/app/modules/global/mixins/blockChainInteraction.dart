@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -17,6 +18,7 @@ import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/cheerBooEvent.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:particle_base/particle_base.dart';
 import 'package:podium/utils/storage.dart';
@@ -64,10 +66,10 @@ Future<bool> ext_cheerOrBoo({
       ],
     );
     if (response == "User rejected") {
-      Get.snackbar("Error", "transaction rejected");
+      Toast.error(message: "transaction rejected");
     }
     if (response == null) {
-      Get.snackbar("Error", "transaction failed");
+      Toast.error(message: "transaction failed");
       return false;
     } else {
       return (response as String).startsWith('0x') && response.length > 10;
@@ -317,7 +319,7 @@ Future<BigInt> particle_getUserShares_friendTech({
   } catch (e) {
     await switchBackToSavedParticleNetwork();
     log.e('error : $e');
-    Get.snackbar("Error", "Could not get user shares", colorText: Colors.red);
+    Toast.error(message: "Could not get user shares");
     return BigInt.zero;
   }
 }
@@ -528,25 +530,26 @@ Future<bool> particle_buyFriendTechTicket({
       final selectedChain = await ParticleBase.getChainInfo();
       final selectedChainName = selectedChain.name;
       final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
-      Get.snackbar(
-        "Insufficient $selectedChainCurrency",
-        "Please top up your wallet on $selectedChainName",
-        colorText: Colors.red,
-        duration: Duration(seconds: 5),
-        mainButton: TextButton(
+      Toast.error(
+        title: "Insufficient $selectedChainCurrency",
+        message: "Please top up your wallet on $selectedChainName",
+        mainbutton: TextButton(
           onPressed: () {
             _copyToClipboard(myAddress, prefix: "Address");
           },
-          child: Text("Copy"),
+          child: Text("Copy Address"),
         ),
+        duration: 5,
       );
     }
     await switchBackToSavedParticleNetwork();
     if (e
         .toString()
         .contains("Only the shares' subject can buy the first share")) {
-      Get.snackbar("Error", "target user is not yet registered on friendtech",
-          colorText: Colors.red);
+      Toast.error(
+        title: "Error",
+        message: "Target user is not yet registered on friendtech",
+      );
     }
 
     return false;
@@ -595,10 +598,10 @@ Future<bool> ext_buyFirendtechTicket({
       ],
     );
     if (response == "User rejected") {
-      Get.snackbar("Error", "transaction rejected");
+      Toast.error(message: "transaction rejected");
     }
     if (response == null) {
-      Get.snackbar("Error", "transaction failed");
+      Toast.error(message: "transaction failed");
       return false;
     } else {
       final isValid =
@@ -635,7 +638,7 @@ Future<bool> ext_buySharesWithReferrer({
 }) async {
   final referrer = referrerAddress ?? fihubAddress(chainId);
   if (referrer == null) {
-    Get.snackbar("Error", "Referrer address not found");
+    Toast.error(message: "Referrer address not found");
     return false;
   }
   final bigIntValue = await ext_getBuyPrice(
@@ -699,9 +702,9 @@ Future<bool> ext_buySharesWithReferrer({
   } on JsonRpcError catch (e) {
     if (e.message != null) {
       if (e.message!.contains('User denied transaction')) {
-        Get.snackbar("Error", "Transaction rejected", colorText: Colors.red);
+        Toast.error(message: "Transaction rejected");
       } else {
-        Get.snackbar("Error", e.message!, colorText: Colors.red);
+        Toast.error(message: e.message!);
       }
     }
     return false;
@@ -760,7 +763,7 @@ Future<bool> particle_buySharesWithReferrer({
 }) async {
   final referrer = referrerAddress ?? fihubAddress(chainId);
   if (referrer == null) {
-    Get.snackbar("Error", "Referrer address not found");
+    Toast.error(message: "Referrer address not found");
     return false;
   }
   final buyPrice = await particle_getBuyPrice(
@@ -822,24 +825,19 @@ Future<bool> particle_buySharesWithReferrer({
       final selectedChain = await ParticleBase.getChainInfo();
       final selectedChainName = selectedChain.name;
       final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
-      Get.snackbar(
-        "Error:Insufficient $selectedChainCurrency",
-        "Please top up your wallet on $selectedChainName",
-        duration: Duration(seconds: 5),
-        colorText: Colors.red,
-        mainButton: TextButton(
+      Toast.error(
+        title: "Insufficient $selectedChainCurrency",
+        message: "Please top up your wallet on $selectedChainName",
+        mainbutton: TextButton(
           onPressed: () {
             _copyToClipboard(myAddress, prefix: "Address");
           },
-          child: Text("Copy"),
+          child: Text("Copy Address"),
         ),
+        duration: 5,
       );
     } else {
-      Get.snackbar(
-        "Error",
-        (e as dynamic).message,
-        colorText: Colors.red,
-      );
+      Toast.error(message: (e as dynamic).message);
     }
     return false;
   }
@@ -891,10 +889,9 @@ String hexToAscii(String hexString) => List.generate(
 void _copyToClipboard(String text, {String? prefix}) async {
   await Get.closeCurrentSnackbar();
   Clipboard.setData(ClipboardData(text: text)).then(
-    (_) => Get.snackbar(
-      "${prefix} Copied",
-      "",
-      colorText: Colors.green,
+    (_) => Toast.info(
+      title: "${prefix} Copied",
+      message: text,
     ),
   );
 }

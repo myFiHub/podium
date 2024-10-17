@@ -5,13 +5,13 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
+import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
-import '../controllers/ongoing_group_call_controller.dart';
 
 class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
@@ -92,11 +92,6 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Container(
-        //   color: Colors.black,
-        //   width: (Get.width / 2) - 60,
-        //   height: 50,
-        // ),
         Obx(
           () {
             final isAdmin = controller.amIAdmin.value;

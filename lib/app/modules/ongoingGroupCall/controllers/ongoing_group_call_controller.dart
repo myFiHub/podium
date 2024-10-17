@@ -60,6 +60,19 @@ class Reaction {
   Reaction({required this.targetId, required this.reaction});
 }
 
+class ReactionLogElement {
+  FirebaseSessionMember target;
+  FirebaseSessionMember initiator;
+  String reaction;
+  int addedAt = DateTime.now().millisecondsSinceEpoch;
+
+  ReactionLogElement({
+    required this.target,
+    required this.initiator,
+    required this.reaction,
+  });
+}
+
 class OngoingGroupCallController extends GetxController {
   final groupCallController = Get.find<GroupCallController>();
   final globalController = Get.find<GlobalController>();
@@ -73,6 +86,9 @@ class OngoingGroupCallController extends GetxController {
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
+
+  final reactionLog = Rx<List<ReactionLogElement>>([]);
+
   final lastReaction = Rx<Reaction>(
     Reaction(targetId: '', reaction: ''),
   );
@@ -170,6 +186,15 @@ class OngoingGroupCallController extends GetxController {
     await jitsiMeet.hangUp();
   }
 
+  _addToReactionLog({required ReactionLogElement element}) {
+    // max length of reaction log is 5
+    if (reactionLog.value.length >= 5) {
+      reactionLog.value.removeAt(0);
+    }
+    reactionLog.value.add(element);
+    reactionLog.refresh();
+  }
+
   stopSubscriptions() {
     sessionMembersSubscription?.cancel();
     mySessionSubscription?.cancel();
@@ -229,8 +254,14 @@ class OngoingGroupCallController extends GetxController {
     final targetUser = firebaseSession.value!.members[targetId];
 
     // final userWidgetLocation=
-    log.d(
-        "action: $action, initiator: ${initiatorUser!.name}, target: ${targetUser!.name}");
+    // log.d(
+    //     "action: $action, initiator: ${initiatorUser!.name}, target: ${targetUser!.name}");
+    final element = ReactionLogElement(
+      initiator: initiatorUser!,
+      target: targetUser!,
+      reaction: action,
+    );
+    _addToReactionLog(element: element);
     lastReaction.value = Reaction(targetId: targetId, reaction: action);
     update(['confetti' + targetId]);
     Future.delayed(Duration(milliseconds: 10), () {

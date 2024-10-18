@@ -94,6 +94,9 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
       children: [
         Obx(
           () {
+            if (controller == null) {
+              return SizedBox();
+            }
             final isAdmin = controller.amIAdmin.value;
             final remainingTimeInMillisecond =
                 controller.remainingTimeTimer.value;
@@ -152,8 +155,8 @@ class GroupInfo extends GetView<GroupCallController> {
       final group = controller.group.value;
       return group != null
           ? Container(
-              padding: const EdgeInsets.all(10),
-              child: Row(
+              padding: const EdgeInsets.only(top: 10),
+              child: Column(
                 children: [
                   Text(
                     group.name,
@@ -161,15 +164,7 @@ class GroupInfo extends GetView<GroupCallController> {
                       color: Colors.white,
                     ),
                   ),
-                  space5,
-                  Text("by"),
-                  space5,
-                  Text(
-                    group.creator.fullName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
+                  Text(" by ${group.creator.fullName}"),
                 ],
               ),
             )

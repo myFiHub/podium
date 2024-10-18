@@ -403,6 +403,9 @@ class RemainingTime extends GetView<OngoingGroupCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      if (controller == null) {
+        return SizedBox();
+      }
       final timersMap = controller.allRemainingTimesMap.value;
       final roomCreator = controller.groupCallController.group.value!.creator;
       final userRemainingTime = timersMap[userId];

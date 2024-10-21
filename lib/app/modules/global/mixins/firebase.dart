@@ -366,7 +366,7 @@ listenToSessionMembers({
   return databaseRef.onValue.listen(onData);
 }
 
-listenToGroupMembers({
+StreamSubscription<DatabaseEvent> listenToGroupMembers({
   required String groupId,
   required void Function(DatabaseEvent) onData,
 }) {
@@ -917,15 +917,22 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
 }
 
 Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
-    String userId) async {
+  String userId,
+) async {
   try {
-    final databaseRef = FirebaseDatabase.instance.ref(
+    final particleWalletDataRef = FirebaseDatabase.instance.ref(
       FireBaseConstants.usersRef +
           userId +
           '/${UserInfoModel.savedParticleUserInfoKey}',
     );
-    final snapshot = await databaseRef.get();
-    final particleUserInfo = snapshot.value as dynamic;
+    final savedParticleWalletAddressRef = FirebaseDatabase.instance.ref(
+      FireBaseConstants.usersRef +
+          userId +
+          '/${UserInfoModel.savedParticleWalletAddressKey}',
+    );
+
+    final walletDataSnapsot = await particleWalletDataRef.get();
+    final particleUserInfo = walletDataSnapsot.value as dynamic;
     if (particleUserInfo != null) {
       final parsed = json.decode(particleUserInfo as String);
       final wallets =
@@ -936,7 +943,19 @@ Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
           walletsList.add(ParticleAuthWallet.fromMap(element));
         }
       });
-      return walletsList;
+      if (walletsList.isNotEmpty) {
+        return walletsList;
+      } else {
+        final savedWalletSnapshot = await savedParticleWalletAddressRef.get();
+        final savedWalletAddress = savedWalletSnapshot.value as dynamic;
+        if (savedWalletAddress != null) {
+          return [
+            ParticleAuthWallet(address: savedWalletAddress, chain: 'evm_chain')
+          ];
+        } else {
+          return [];
+        }
+      }
     } else {
       return [];
     }

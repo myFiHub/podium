@@ -526,26 +526,43 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
 
   @override
   Widget build(BuildContext context) {
-    return GFIconButton(
-      icon: cheer
-          ? Assets.images.cheer.image(
-              width: 30,
-              height: 30,
-              color: Colors.green,
-            )
-          : Assets.images.boo.image(
-              width: 30,
-              height: 30,
-              color: Colors.red,
-            ),
-      onPressed: () {
-        controller.cheerBoo(
-          userId: userId,
-          cheer: cheer,
-        );
-      },
-      type: GFButtonType.transparent,
-    );
+    return Obx(() {
+      final loadingUsers = controller.loadingWalletAddressForUser.value;
+      final isCheerLoading = loadingUsers.contains("$userId-cheer");
+      final isBooLoading = loadingUsers.contains("$userId-boo");
+      return GFIconButton(
+        icon: cheer
+            ? isCheerLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(),
+                  )
+                : Assets.images.cheer.image(
+                    width: 30,
+                    height: 30,
+                    color: Colors.green,
+                  )
+            : isBooLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(),
+                  )
+                : Assets.images.boo.image(
+                    width: 30,
+                    height: 30,
+                    color: Colors.red,
+                  ),
+        onPressed: () {
+          controller.cheerBoo(
+            userId: userId,
+            cheer: cheer,
+          );
+        },
+        type: GFButtonType.transparent,
+      );
+    });
   }
 }
 

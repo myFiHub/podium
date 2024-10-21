@@ -25,7 +25,6 @@ class GroupDetailView extends GetView<GroupDetailController> {
             final members = controller.membersList.value;
             final group = controller.group.value;
             final accesses = controller.groupAccesses.value;
-
             if (group == null || accesses == null) {
               return Container(
                 width: Get.width,

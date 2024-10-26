@@ -93,8 +93,8 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                    """each ${Env.minimumCheerBooAmount} ${ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, externalWalletChianId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} ${Env.cheerBooTimeMultiplication} seconds ${widget.isCheer ? "to" : "from"} 
-                   that user's time""",
+                    """each ${Env.minimumCheerBooAmount} ${ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, externalWalletChianId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} ${Env.cheerBooTimeMultiplication} seconds ${widget.isCheer ? "to" : "from"}\nthat user's time""",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
                       color: ColorName.greyText,

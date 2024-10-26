@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -86,6 +85,8 @@ class OngoingGroupCallController extends GetxController {
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
+
+  final loadingWalletAddressForUser = RxList<String>([]);
 
   final reactionLog = Rx<List<ReactionLogElement>>([]);
 
@@ -294,11 +295,13 @@ class OngoingGroupCallController extends GetxController {
   }
 
   stopTheTimer() async {
-    await setIsTalkingInSession(
-      sessionId: firebaseSession.value!.id,
-      userId: myId,
-      isTalking: false,
-    );
+    if (firebaseSession.value != null) {
+      await setIsTalkingInSession(
+        sessionId: firebaseSession.value!.id,
+        userId: myId,
+        isTalking: false,
+      );
+    }
     timer?.cancel();
   }
 
@@ -451,6 +454,8 @@ class OngoingGroupCallController extends GetxController {
       return;
     }
 
+    loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
+    loadingWalletAddressForUser.refresh();
     final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
     if (userLocalWalletAddress != '') {
       targetAddress = userLocalWalletAddress;
@@ -460,7 +465,9 @@ class OngoingGroupCallController extends GetxController {
         targetAddress = particleUserWallets[0].address;
       }
     }
-
+    loadingWalletAddressForUser.remove("$userId-${cheer ? 'cheer' : 'boo'}");
+    loadingWalletAddressForUser.refresh();
+    log.d("target address is $targetAddress for user $userId");
     if (canContinue && targetAddress != null && targetAddress != '') {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;

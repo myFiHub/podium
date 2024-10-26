@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -43,6 +45,7 @@ class GroupCallController extends GetxController {
   final sortType = Rx<String>(SortTypes.recentlyTalked);
   final canTalk = false.obs;
   final keysMap = Rx<Map<String, GlobalKey>>({});
+  StreamSubscription<DatabaseEvent>? membersListener;
 
   @override
   void onInit() {
@@ -63,7 +66,8 @@ class GroupCallController extends GetxController {
     group.listen((activeGroup) {
       members.value = [];
       if (activeGroup != null) {
-        listenToGroupMembers(
+        membersListener?.cancel();
+        membersListener = listenToGroupMembers(
           groupId: activeGroup.id,
           onData: (data) async {
             if (data.snapshot.value != null) {
@@ -89,6 +93,7 @@ class GroupCallController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+    membersListener?.cancel();
   }
 
   /////////////////////////////////////////////////////////////
@@ -136,19 +141,26 @@ class GroupCallController extends GetxController {
     final membersList = <FirebaseSessionMember>[];
     if (snapshotMembers != null) {
       snapshotMembers.forEach((key, value) {
-        final member = FirebaseSessionMember(
-          id: key,
-          name: value[FirebaseSessionMember.nameKey],
-          avatar: value[FirebaseSessionMember.avatarKey],
-          isMuted: value[FirebaseSessionMember.isMutedKey],
-          initialTalkTime: value[FirebaseSessionMember.initialTalkTimeKey],
-          present: value[FirebaseSessionMember.presentKey],
-          remainingTalkTime: value[FirebaseSessionMember.remainingTalkTimeKey],
-          isTalking: value[FirebaseSessionMember.isTalkingKey] ?? false,
-          startedToTalkAt: value[FirebaseSessionMember.startedToTalkAtKey] ?? 0,
-          timeJoined: value[FirebaseSessionMember.timeJoinedKey] ?? 0,
-        );
-        membersList.add(member);
+        try {
+          final member = FirebaseSessionMember(
+            id: key,
+            name: value[FirebaseSessionMember.nameKey] ?? '',
+            avatar: value[FirebaseSessionMember.avatarKey],
+            isMuted: value[FirebaseSessionMember.isMutedKey],
+            initialTalkTime: value[FirebaseSessionMember.initialTalkTimeKey],
+            present: value[FirebaseSessionMember.presentKey],
+            remainingTalkTime:
+                value[FirebaseSessionMember.remainingTalkTimeKey],
+            isTalking: value[FirebaseSessionMember.isTalkingKey] ?? false,
+            startedToTalkAt:
+                value[FirebaseSessionMember.startedToTalkAtKey] ?? 0,
+            timeJoined: value[FirebaseSessionMember.timeJoinedKey] ?? 0,
+          );
+          membersList.add(member);
+        } catch (e) {
+          log.e(e.toString());
+          log.e('error in parsing member: $key');
+        }
       });
     }
 

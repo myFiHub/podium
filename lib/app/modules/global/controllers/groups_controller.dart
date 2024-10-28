@@ -248,8 +248,8 @@ class GroupsController extends GetxController with FirebaseTags {
       if (!gotDetectPresenceTime) {
         final detectPresenceTimeRef =
             FirebaseDatabase.instance.ref(FireBaseConstants.detectPresenceTime);
-        final detectPresenceTimeSnapshot = await detectPresenceTimeRef.get();
-        final detectPresenceTime = detectPresenceTimeSnapshot.value;
+        final detectPresenceTimeSnapshot = await detectPresenceTimeRef.once();
+        final detectPresenceTime = detectPresenceTimeSnapshot.snapshot.value;
         if (detectPresenceTime != null) {
           gotDetectPresenceTime = true;
           dpt = detectPresenceTime as int;
@@ -558,6 +558,7 @@ class GroupsController extends GetxController with FirebaseTags {
     final firebaseSessionsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
     final myUser = globalController.currentUserInfo.value!;
+
     final group = await getGroupInfoById(groupId);
     if (group == null) {
       Toast.error(

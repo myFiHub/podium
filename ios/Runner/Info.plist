@@ -28,6 +28,13 @@
 		<string>LaunchScreen</string>		
 		<key>NSFaceIDUsageDescription</key>
 		<string>We use Face ID for secure access to the app.</string>
+		 <key>NSMicrophoneUsageDescription</key>
+    <string>microphone</string>
+	 <key>NSCalendarsUsageDescription</key>
+    <string>Calendars</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Calendar full access</string>
+
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
 		<key>UISupportedInterfaceOrientations</key>

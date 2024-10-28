@@ -10,13 +10,13 @@ mixin FirebaseTags {
     final databaseRef = FirebaseDatabase.instance.ref();
     final tagRef = databaseRef.child(FireBaseConstants.tags).child(tagId);
     final tagGroupIdsRef = tagRef.child(Tag.groupIdsKey);
-    final currentTag = await tagRef.get();
-    if (currentTag.value == null) {
+    final currentTag = await tagRef.once();
+    if (currentTag.snapshot.value == null) {
       final tmp = Tag(id: tagId, tagName: tag, groupIds: [group.id]);
       await tagRef.set(tmp.toJson());
     } else {
       final List<dynamic> groupIds =
-          (currentTag.value as dynamic)[Tag.groupIdsKey];
+          (currentTag.snapshot.value as dynamic)[Tag.groupIdsKey];
       final parsedGroupIds = groupIds.map((e) => e).toList().cast<String>();
       if (!parsedGroupIds.contains(group.id)) {
         parsedGroupIds.add(group.id);
@@ -34,8 +34,8 @@ mixin FirebaseTags {
           .orderByChild(Tag.idKey)
           .startAt(lowerCasedTag)
           .endAt('$lowerCasedTag\uf8ff');
-      final DataSnapshot snapshot = await query.get();
-      final tags = snapshot.value;
+      final snapshot = await query.once();
+      final tags = snapshot.snapshot.value;
       if (tags == null)
         return {};
       else {

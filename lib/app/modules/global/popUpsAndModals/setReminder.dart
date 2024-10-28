@@ -110,14 +110,15 @@ Future<int?> setReminder({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            for (var i = 0; i < timesList.length; i++)
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(Get.context!, timesList[i]['time']);
-                },
-                child: Text(timesList[i]['text'] as String,
-                    style: TextStyle(color: Colors.red[i * 100])),
-              ),
+            if (Platform.isAndroid)
+              for (var i = 0; i < timesList.length; i++)
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(Get.context!, timesList[i]['time']);
+                  },
+                  child: Text(timesList[i]['text'] as String,
+                      style: TextStyle(color: Colors.red[i * 100])),
+                ),
             TextButton(
               onPressed: () async {
                 await createCalendarEventForScheduledGroup(

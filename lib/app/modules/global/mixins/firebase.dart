@@ -26,18 +26,16 @@ final _remainingTimeThrottle =
 final _thrGroup = Throttling(duration: const Duration(seconds: 1));
 
 Future<List<UserInfoModel>> getUsersByIds(List<String> userIds) async {
-  final databaseRef = FirebaseDatabase.instance.ref();
-  final usersRef =
-      databaseRef.child(FireBaseConstants.usersRef.replaceFirst('/', ''));
-  List<Future<DatabaseEvent>> users = [];
+  final usersRef = FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
+  List<Future<DataSnapshot>> users = [];
   for (String userId in userIds) {
-    users.add(usersRef.child(userId).once());
+    users.add(usersRef.child(userId).get());
   }
   try {
     final snapshots = await Future.wait(users);
     List<UserInfoModel> usersList = [];
-    for (DatabaseEvent snapshot in snapshots) {
-      final user = snapshot.snapshot.value as dynamic;
+    for (DataSnapshot snapshot in snapshots) {
+      final user = snapshot.value as dynamic;
       if (user != null) {
         final userInfo = singleUserParser(user);
         if (userInfo != null) {
@@ -79,9 +77,9 @@ Future<List<PaymentEvent>> getReceivedPayments({required String userId}) async {
       .child(FireBaseConstants.paymentEvents)
       .orderByChild(PaymentEvent.targetIdKey)
       .equalTo(userId);
-  DatabaseEvent snapshot = await query.once();
-  if (snapshot.snapshot.value != null) {
-    final payments = snapshot.snapshot.value as dynamic;
+  final snapshot = await query.get();
+  if (snapshot.value != null) {
+    final payments = snapshot.value as dynamic;
     final List<PaymentEvent> paymentsList = [];
     payments.forEach((key, value) {
       final payment = _parseSinglePayment(value);
@@ -103,9 +101,9 @@ Future<List<PaymentEvent>> getInitiatedPayments(
       .child(FireBaseConstants.paymentEvents)
       .orderByChild(PaymentEvent.initiatorIdKey)
       .equalTo(userId);
-  DatabaseEvent snapshot = await query.once();
-  if (snapshot.snapshot.value != null) {
-    final payments = snapshot.snapshot.value as dynamic;
+  final snapshot = await query.get();
+  if (snapshot.value != null) {
+    final payments = snapshot.value as dynamic;
     final List<PaymentEvent> paymentsList = [];
     payments.forEach((key, value) {
       final payment = _parseSinglePayment(value);
@@ -165,12 +163,10 @@ Future<String?> saveNameForUserById(
 }
 
 Future<UserInfoModel?> getUserByEmail(String email) async {
-  final databaseRef = FirebaseDatabase.instance.ref();
-  final usersRef =
-      databaseRef.child(FireBaseConstants.usersRef.replaceFirst('/', ''));
+  final usersRef = FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
   final snapshot =
-      await usersRef.orderByChild(UserInfoModel.emailKey).equalTo(email).once();
-  final user = snapshot.snapshot.value as dynamic;
+      await usersRef.orderByChild(UserInfoModel.emailKey).equalTo(email).get();
+  final user = snapshot.value as dynamic;
   if (user != null) {
     final userValues = user.values.toList()[0];
     final userInfo = singleUserParser(userValues);
@@ -181,10 +177,11 @@ Future<UserInfoModel?> getUserByEmail(String email) async {
 }
 
 Future<FirebaseSession?> getSessionData({required String groupId}) async {
-  final databaseRef =
-      FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
-  final snapshot = await databaseRef.once();
-  final session = snapshot.snapshot.value as dynamic;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.sessionsRef)
+      .child(groupId);
+  final snapshot = await databaseRef.get();
+  final session = snapshot.value as dynamic;
   if (session != null) {
     final jsonedMembersMap =
         session[FirebaseSession.membersKey] as Map<dynamic, dynamic>;
@@ -230,9 +227,9 @@ Future setIsTalkingInSession({
 
 Future<bool> unfollowUser(String userId) async {
   final databaseRef =
-      FirebaseDatabase.instance.ref(FireBaseConstants.followers + userId);
-  final snapshot = await databaseRef.once();
-  final followers = snapshot.snapshot.value as dynamic;
+      FirebaseDatabase.instance.ref(FireBaseConstants.followers).child(userId);
+  final snapshot = await databaseRef.get();
+  final followers = snapshot.value as dynamic;
   if (followers != null) {
     final followersList = List.from(followers);
     if (followersList.contains(myId)) {
@@ -250,9 +247,9 @@ Future<bool> unfollowUser(String userId) async {
 Future<bool> addFollowerToUser(
     {required String userId, required String followerId}) async {
   final databaseRef =
-      FirebaseDatabase.instance.ref(FireBaseConstants.followers + userId);
-  final snapshot = await databaseRef.once();
-  final followers = snapshot.snapshot.value as dynamic;
+      FirebaseDatabase.instance.ref(FireBaseConstants.followers).child(userId);
+  final snapshot = await databaseRef.get();
+  final followers = snapshot.value as dynamic;
   if (followers != null) {
     final followersList = List.from(followers);
     if (followersList.contains(followerId)) {
@@ -270,8 +267,8 @@ Future<bool> addFollowerToUser(
 Future<List<String>> followersOfUser(String userId) async {
   final databaseRef = FirebaseDatabase.instance.ref();
   final followersRef = databaseRef.child(FireBaseConstants.followers);
-  final snapshot = await followersRef.once();
-  final followers = snapshot.snapshot.value as dynamic;
+  final snapshot = await followersRef.get();
+  final followers = snapshot.value as dynamic;
   if (followers != null) {
     final userFollowers = followers[userId];
     if (userFollowers != null) {
@@ -285,13 +282,13 @@ Future<List<String>> followersOfUser(String userId) async {
 }
 
 Future<bool> setCreatorJoinedToTrue({required String groupId}) async {
-  final databaseRef = FirebaseDatabase.instance.ref(
-      FireBaseConstants.groupsRef +
-          groupId +
-          '/${FirebaseGroup.creatorJoinedKey}');
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.groupsRef)
+      .child(groupId)
+      .child(FirebaseGroup.creatorJoinedKey);
   try {
-    final isCreatorJoined = await databaseRef.once();
-    if (isCreatorJoined.snapshot.value == true) {
+    final isCreatorJoined = await databaseRef.get();
+    if (isCreatorJoined.value == true) {
       return true;
     }
     await databaseRef.set(true);
@@ -389,12 +386,13 @@ Future<Map<String, InvitedMember>> getInvitedMembers({
   required String groupId,
   String? userId,
 }) async {
-  final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants
-          .groupsRef +
-      groupId +
-      '/${FirebaseGroup.invitedMembersKey}${userId != null ? '/' + userId : ''}');
-  final snapshot = await databaseRef.once();
-  final invitedMembers = snapshot.snapshot.value as dynamic;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.groupsRef)
+      .child(groupId)
+      .child(FirebaseGroup.invitedMembersKey)
+      .child(userId != null ? userId : '');
+  final snapshot = await databaseRef.get();
+  final invitedMembers = snapshot.value as dynamic;
   if (invitedMembers != null) {
     if (userId != null) {
       final invitedMember = InvitedMember(
@@ -422,12 +420,13 @@ Future<Map<String, InvitedMember>> getInvitedMembers({
 
 Future<FirebaseSessionMember?> getUserSessionData(
     {required String groupId, required String userId}) async {
-  final databaseRef = FirebaseDatabase.instance.ref(
-      FireBaseConstants.sessionsRef +
-          groupId +
-          '/${FirebaseSession.membersKey}/$userId');
-  final snapshot = await databaseRef.once();
-  final session = snapshot.snapshot.value as dynamic;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.sessionsRef)
+      .child(groupId)
+      .child(FirebaseSession.membersKey)
+      .child(userId);
+  final snapshot = await databaseRef.get();
+  final session = snapshot.value as dynamic;
   if (session != null) {
     final firebaseSessionMember = FirebaseSessionMember.fromJson(session);
     return firebaseSessionMember;
@@ -441,12 +440,14 @@ Future<int?> getUserRemainingTalkTime({
   required String groupId,
   required String userId,
 }) async {
-  final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants
-          .sessionsRef +
-      groupId +
-      '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.remainingTalkTimeKey}');
-  final snapshot = await databaseRef.once();
-  final remainingTime = snapshot.snapshot.value as int?;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.sessionsRef)
+      .child(groupId)
+      .child(FirebaseSession.membersKey)
+      .child(userId)
+      .child(FirebaseSessionMember.remainingTalkTimeKey);
+  final snapshot = await databaseRef.get();
+  final remainingTime = snapshot.value as int?;
   if (remainingTime != null) {
     return remainingTime;
   } else {
@@ -503,11 +504,12 @@ Future setIsUserPresentInSession({
 }
 
 Future<String> getUserLocalWalletAddress(String userId) async {
-  final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants.usersRef +
-      userId +
-      '/${UserInfoModel.localWalletAddressKey}');
-  final snapshot = await databaseRef.once();
-  final localWalletAddress = snapshot.snapshot.value as dynamic;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.usersRef)
+      .child(userId)
+      .child(UserInfoModel.localWalletAddressKey);
+  final snapshot = await databaseRef.get();
+  final localWalletAddress = snapshot.value as dynamic;
   if (localWalletAddress == null) {
     return '';
   }
@@ -516,12 +518,12 @@ Future<String> getUserLocalWalletAddress(String userId) async {
 
 Future<List<String>> getListOfUserWalletsPresentInSession(
     String groupId) async {
-  final databaseRef = FirebaseDatabase.instance.ref(
-      FireBaseConstants.sessionsRef +
-          groupId +
-          '/${FirebaseSession.membersKey}');
-  final snapshot = await databaseRef.once();
-  final members = snapshot.snapshot.value as dynamic;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.sessionsRef)
+      .child(groupId)
+      .child(FirebaseSession.membersKey);
+  final snapshot = await databaseRef.get();
+  final members = snapshot.value as dynamic;
   final List<String> membersIdList = [];
   if (members == null) {
     return [];
@@ -540,13 +542,12 @@ Future<List<String>> getListOfUserWalletsPresentInSession(
 }
 
 follow(String userId) async {
-  final globalController = Get.find<GlobalController>();
-  final myUser = globalController.currentUserInfo.value!;
-  final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants.usersRef +
-      myUser.id +
-      '/${UserInfoModel.followingKey}');
-  final followingArraySnapshot = await databaseRef.once();
-  final followingArray = followingArraySnapshot.snapshot.value as dynamic;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.usersRef)
+      .child(myId)
+      .child(UserInfoModel.followingKey);
+  final followingArraySnapshot = await databaseRef.get();
+  final followingArray = followingArraySnapshot.value as dynamic;
   if (followingArray != null) {
     final following = List.from(followingArray);
     if (following.contains(userId)) {
@@ -563,13 +564,12 @@ follow(String userId) async {
 }
 
 unfollow(String userId) async {
-  final globalController = Get.find<GlobalController>();
-  final myUser = globalController.currentUserInfo.value!;
-  final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants.usersRef +
-      myUser.id +
-      '/${UserInfoModel.followingKey}');
-  final snapshot = await databaseRef.once();
-  final following = snapshot.snapshot.value as dynamic;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.usersRef)
+      .child(myId)
+      .child(UserInfoModel.followingKey);
+  final snapshot = await databaseRef.get();
+  final following = snapshot.value as dynamic;
   if (following != null) {
     final currentList = List.from(following);
     currentList.remove(userId);
@@ -582,9 +582,10 @@ unfollow(String userId) async {
 Future<FirebaseGroup?> getGroupInfoById(String groupId) async {
   if (groupId.isEmpty) return null;
   final databaseRef = FirebaseDatabase.instance.ref();
-  final groupRef = databaseRef.child(FireBaseConstants.groupsRef + groupId);
-  final snapshot = await groupRef.once();
-  final group = snapshot.snapshot.value as dynamic;
+  final groupRef =
+      databaseRef.child(FireBaseConstants.groupsRef).child(groupId);
+  final snapshot = await groupRef.get();
+  final group = snapshot.value as dynamic;
   if (group != null) {
     final groupInfo = singleGroupParser(group);
     if (groupInfo == null) {
@@ -610,10 +611,10 @@ Future<Map<String, FirebaseGroup>> searchForGroupByName(
         .orderByChild(FirebaseGroup.lowercasenameKey)
         .startAt(lowercased)
         .endAt('$lowercased\uf8ff');
-    DatabaseEvent snapshot = await query.once();
-    if (snapshot.snapshot.value != null) {
+    DataSnapshot snapshot = await query.get();
+    if (snapshot.value != null) {
       try {
-        return groupsParser(snapshot.snapshot.value);
+        return groupsParser(snapshot.value);
       } catch (e) {
         log.e(e);
         return {};
@@ -634,9 +635,9 @@ Future<Map<String, UserInfoModel>> searchForUserByName(String name) async {
         .orderByChild(UserInfoModel.lowercasenameKey)
         .startAt(name)
         .endAt('$name\uf8ff');
-    DatabaseEvent loweCaseResSnapshot = await lowercasenameQuery.once();
-    if (loweCaseResSnapshot.snapshot.value != null) {
-      return usersParser(loweCaseResSnapshot.snapshot.value)
+    DataSnapshot loweCaseResSnapshot = await lowercasenameQuery.get();
+    if (loweCaseResSnapshot.value != null) {
+      return usersParser(loweCaseResSnapshot.value)
           as Map<String, UserInfoModel>;
     }
     Query fullNameQuery = _database
@@ -644,9 +645,9 @@ Future<Map<String, UserInfoModel>> searchForUserByName(String name) async {
         .orderByChild(UserInfoModel.fullNameKey)
         .startAt(name)
         .endAt('$name\uf8ff');
-    DatabaseEvent snapshot = await fullNameQuery.once();
-    if (snapshot.snapshot.value != null) {
-      return usersParser(snapshot.snapshot.value) as Map<String, UserInfoModel>;
+    DataSnapshot snapshot = await fullNameQuery.get();
+    if (snapshot.value != null) {
+      return usersParser(snapshot.value) as Map<String, UserInfoModel>;
     }
     return {};
   } catch (e) {
@@ -677,8 +678,8 @@ Future<List<FirebaseNotificationModel>> getMyNotifications() async {
         .orderByChild(FirebaseNotificationModel.targetUserIdKey)
         .equalTo(myUser.id);
     final List<FirebaseNotificationModel> notificationsList = [];
-    final snapshot = await query.once();
-    final notifications = snapshot.snapshot.value as dynamic;
+    final snapshot = await query.get();
+    final notifications = snapshot.value as dynamic;
     if (notifications != null) {
       final list = List.from(notifications.values);
       list.forEach((value) {
@@ -787,14 +788,13 @@ saveParticleUserInfoToFirebaseIfNeeded({
   required String myUserId,
 }) async {
   try {
-    final databaseRef = FirebaseDatabase.instance.ref(
-      FireBaseConstants.usersRef +
-          myUserId +
-          '/${UserInfoModel.savedParticleUserInfoKey}',
-    );
+    final databaseRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.usersRef)
+        .child(myUserId)
+        .child(UserInfoModel.savedParticleUserInfoKey);
 
-    final snapshot = await databaseRef.once();
-    final particleUserInfo = snapshot.snapshot.value as dynamic;
+    final snapshot = await databaseRef.get();
+    final particleUserInfo = snapshot.value as dynamic;
     if (particleUserInfo != null) {
       return;
     } else {
@@ -840,14 +840,10 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
 }) async {
   try {
     final userRef = FirebaseDatabase.instance
-        .ref(
-          FireBaseConstants.usersRef,
-        )
-        .child(
-          user.id,
-        );
-    final snapshot = await userRef.once();
-    final userSnapshot = snapshot.snapshot.value as dynamic;
+        .ref(FireBaseConstants.usersRef)
+        .child(user.id);
+    final snapshot = await userRef.get();
+    final userSnapshot = snapshot.value as dynamic;
     if (userSnapshot != null) {
       final loginType = user.loginType!;
       analytics.logLogin(loginMethod: loginType);
@@ -920,19 +916,17 @@ Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
   String userId,
 ) async {
   try {
-    final particleWalletDataRef = FirebaseDatabase.instance.ref(
-      FireBaseConstants.usersRef +
-          userId +
-          '/${UserInfoModel.savedParticleUserInfoKey}',
-    );
-    final savedParticleWalletAddressRef = FirebaseDatabase.instance.ref(
-      FireBaseConstants.usersRef +
-          userId +
-          '/${UserInfoModel.savedParticleWalletAddressKey}',
-    );
+    final particleWalletDataRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.usersRef)
+        .child(userId)
+        .child(UserInfoModel.savedParticleUserInfoKey);
+    final savedParticleWalletAddressRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.usersRef)
+        .child(userId)
+        .child(UserInfoModel.savedParticleWalletAddressKey);
 
-    final walletDataSnapsot = await particleWalletDataRef.once();
-    final particleUserInfo = walletDataSnapsot.snapshot.value as dynamic;
+    final walletDataSnapsot = await particleWalletDataRef.get();
+    final particleUserInfo = walletDataSnapsot.value as dynamic;
     if (particleUserInfo != null) {
       final parsed = json.decode(particleUserInfo as String);
       final wallets =
@@ -946,9 +940,8 @@ Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
       if (walletsList.isNotEmpty) {
         return walletsList;
       } else {
-        final savedWalletSnapshot = await savedParticleWalletAddressRef.once();
-        final savedWalletAddress =
-            savedWalletSnapshot.snapshot.value as dynamic;
+        final savedWalletSnapshot = await savedParticleWalletAddressRef.get();
+        final savedWalletAddress = savedWalletSnapshot.value as dynamic;
         if (savedWalletAddress != null) {
           return [
             ParticleAuthWallet(address: savedWalletAddress, chain: 'evm_chain')

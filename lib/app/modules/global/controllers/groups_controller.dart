@@ -206,8 +206,8 @@ class GroupsController extends GetxController with FirebaseTags {
       gettingAllGroups.value = true;
       final databaseReference =
           FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
-      final results = await databaseReference.once();
-      final data = results.snapshot.value as Map<dynamic, dynamic>?;
+      final results = await databaseReference.get();
+      final data = results.value as Map<dynamic, dynamic>?;
       if (data != null) {
         try {
           await _parseAndSetGroups(data);
@@ -248,8 +248,8 @@ class GroupsController extends GetxController with FirebaseTags {
       if (!gotDetectPresenceTime) {
         final detectPresenceTimeRef =
             FirebaseDatabase.instance.ref(FireBaseConstants.detectPresenceTime);
-        final detectPresenceTimeSnapshot = await detectPresenceTimeRef.once();
-        final detectPresenceTime = detectPresenceTimeSnapshot.snapshot.value;
+        final detectPresenceTimeSnapshot = await detectPresenceTimeRef.get();
+        final detectPresenceTime = detectPresenceTimeSnapshot.value;
         if (detectPresenceTime != null) {
           gotDetectPresenceTime = true;
           dpt = detectPresenceTime as int;

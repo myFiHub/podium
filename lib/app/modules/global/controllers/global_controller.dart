@@ -369,10 +369,10 @@ class GlobalController extends GetxController {
     final userId = myId;
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
-        .child(userId + '/' + UserInfoModel.localWalletAddressKey);
-    final savedWalletAddress = await firebaseUserDbReference.once();
-    if (savedWalletAddress.snapshot.value == walletAddress ||
-        walletAddress.isEmpty) {
+        .child(userId)
+        .child(UserInfoModel.localWalletAddressKey);
+    final savedWalletAddress = await firebaseUserDbReference.get();
+    if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
       return;
     }
 
@@ -434,8 +434,8 @@ class GlobalController extends GetxController {
     final completer = Completer<String?>();
     final serverAddressRef =
         FirebaseDatabase.instance.ref(FireBaseConstants.jitsiServerAddressRef);
-    serverAddressRef.once().then((event) {
-      final data = event.snapshot.value as dynamic;
+    serverAddressRef.get().then((event) {
+      final data = event.value as dynamic;
       final serverAddress = data as String?;
       if (serverAddress == null) {
         log.e('server address not found');
@@ -461,22 +461,21 @@ class GlobalController extends GetxController {
       forceUpdateEvent,
       versionEvent,
     ) = await (
-      shouldCheckVersionRef.once(),
-      forceUpdateRef.once(),
-      versionRef.once()
+      shouldCheckVersionRef.get(),
+      forceUpdateRef.get(),
+      versionRef.get()
     ).wait;
     bool forcetToUpdate = false;
-    if (forceUpdateEvent.snapshot.value is bool) {
-      forcetToUpdate = forceUpdateEvent.snapshot.value as bool;
+    if (forceUpdateEvent.value is bool) {
+      forcetToUpdate = forceUpdateEvent.value as bool;
     }
-    final shouldCheckVersion =
-        shouldCheckVersionEvent.snapshot.value as dynamic;
+    final shouldCheckVersion = shouldCheckVersionEvent.value as dynamic;
     if (shouldCheckVersion == false) {
       log.d('version check disabled');
       return true;
     }
     // listen to version changes
-    final data = versionEvent.snapshot.value as dynamic;
+    final data = versionEvent.value as dynamic;
     final version = data as String?;
     if (version == null) {
       log.e('version not found');
@@ -683,8 +682,8 @@ class GlobalController extends GetxController {
     Completer<UserInfoModel> completer = Completer();
     final firebaseUserDbReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.usersRef).child(userId);
-    firebaseUserDbReference.once().then((event) {
-      final data = event.snapshot.value as dynamic;
+    firebaseUserDbReference.get().then((event) {
+      final data = event.value as dynamic;
       if (data != null) {
         final user = singleUserParser(data);
         completer.complete(user);

@@ -1,7 +1,6 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
 Future<bool> getPermission(Permission featureToRequest) async {
   final status = await featureToRequest.status;
   if (status.isGranted) {

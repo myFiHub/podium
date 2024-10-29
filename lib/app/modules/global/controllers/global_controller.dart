@@ -370,8 +370,9 @@ class GlobalController extends GetxController {
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId + '/' + UserInfoModel.localWalletAddressKey);
-    final savedWalletAddress = await firebaseUserDbReference.get();
-    if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
+    final savedWalletAddress = await firebaseUserDbReference.once();
+    if (savedWalletAddress.snapshot.value == walletAddress ||
+        walletAddress.isEmpty) {
       return;
     }
 
@@ -460,21 +461,22 @@ class GlobalController extends GetxController {
       forceUpdateEvent,
       versionEvent,
     ) = await (
-      shouldCheckVersionRef.get(),
-      forceUpdateRef.get(),
-      versionRef.get()
+      shouldCheckVersionRef.once(),
+      forceUpdateRef.once(),
+      versionRef.once()
     ).wait;
     bool forcetToUpdate = false;
-    if (forceUpdateEvent.value is bool) {
-      forcetToUpdate = forceUpdateEvent.value as bool;
+    if (forceUpdateEvent.snapshot.value is bool) {
+      forcetToUpdate = forceUpdateEvent.snapshot.value as bool;
     }
-    final shouldCheckVersion = shouldCheckVersionEvent.value as dynamic;
+    final shouldCheckVersion =
+        shouldCheckVersionEvent.snapshot.value as dynamic;
     if (shouldCheckVersion == false) {
       log.d('version check disabled');
       return true;
     }
     // listen to version changes
-    final data = versionEvent.value as dynamic;
+    final data = versionEvent.snapshot.value as dynamic;
     final version = data as String?;
     if (version == null) {
       log.e('version not found');

@@ -1,0 +1,584 @@
+PODS:
+  - Ably (1.2.33):
+    - AblyDeltaCodec (= 1.3.3)
+    - msgpack (= 0.4.0)
+  - ably_flutter (1.2.36):
+    - Ably (= 1.2.33)
+    - Flutter
+  - AblyDeltaCodec (1.3.3)
+  - add_2_calendar (0.0.1):
+    - Flutter
+  - Alamofire (5.9.1)
+  - alarm (0.0.1):
+    - Flutter
+  - app_links (0.0.2):
+    - Flutter
+  - app_settings (5.1.1):
+    - Flutter
+  - appcheck (1.0.3):
+    - Flutter
+  - AuthCoreAdapter (2.0.3):
+    - ConnectCommon
+    - ParticleAuthCore
+  - AWSCore (2.34.2)
+  - AWSKMS (2.34.2):
+    - AWSCore (= 2.34.2)
+  - Base58.swift (1.0.2):
+    - BigInt
+  - BigInt (5.2.0)
+  - coinbase_wallet_sdk (0.0.1):
+    - CoinbaseWalletSDK/CrossPlatform (= 1.0.4)
+    - Flutter
+  - CoinbaseWalletSDK/Client (1.0.4)
+  - CoinbaseWalletSDK/CrossPlatform (1.0.4):
+    - CoinbaseWalletSDK/Client
+  - ConnectCommon (2.0.3):
+    - BigInt (~> 5.2.0)
+    - ParticleNetworkBase
+    - RxAlamofire (~> 6.1.1)
+    - secp256k1.swift (~> 0.1)
+    - TweetNacl
+  - connectivity_plus (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - CryptoSwift (1.8.3)
+  - Firebase/Analytics (11.2.0):
+    - Firebase/Core
+  - Firebase/Auth (11.2.0):
+    - Firebase/CoreOnly
+    - FirebaseAuth (~> 11.2.0)
+  - Firebase/Core (11.2.0):
+    - Firebase/CoreOnly
+    - FirebaseAnalytics (~> 11.2.0)
+  - Firebase/CoreOnly (11.2.0):
+    - FirebaseCore (= 11.2.0)
+  - Firebase/Database (11.2.0):
+    - Firebase/CoreOnly
+    - FirebaseDatabase (~> 11.2.0)
+  - Firebase/Messaging (11.2.0):
+    - Firebase/CoreOnly
+    - FirebaseMessaging (~> 11.2.0)
+  - Firebase/Storage (11.2.0):
+    - Firebase/CoreOnly
+    - FirebaseStorage (~> 11.2.0)
+  - firebase_analytics (11.3.3):
+    - Firebase/Analytics (= 11.2.0)
+    - firebase_core
+    - Flutter
+  - firebase_auth (5.3.1):
+    - Firebase/Auth (= 11.2.0)
+    - firebase_core
+    - Flutter
+  - firebase_core (3.6.0):
+    - Firebase/CoreOnly (= 11.2.0)
+    - Flutter
+  - firebase_database (11.1.4):
+    - Firebase/Database (= 11.2.0)
+    - firebase_core
+    - Flutter
+  - firebase_messaging (15.1.3):
+    - Firebase/Messaging (= 11.2.0)
+    - firebase_core
+    - Flutter
+  - firebase_storage (12.3.4):
+    - Firebase/Storage (= 11.2.0)
+    - firebase_core
+    - Flutter
+  - FirebaseAnalytics (11.2.0):
+    - FirebaseAnalytics/AdIdSupport (= 11.2.0)
+    - FirebaseCore (~> 11.0)
+    - FirebaseInstallations (~> 11.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - FirebaseAnalytics/AdIdSupport (11.2.0):
+    - FirebaseCore (~> 11.0)
+    - FirebaseInstallations (~> 11.0)
+    - GoogleAppMeasurement (= 11.2.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - FirebaseAppCheckInterop (11.4.0)
+  - FirebaseAuth (11.2.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseAuthInterop (~> 11.0)
+    - FirebaseCore (~> 11.0)
+    - FirebaseCoreExtension (~> 11.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GTMSessionFetcher/Core (~> 3.4)
+    - RecaptchaInterop (~> 100.0)
+  - FirebaseAuthInterop (11.4.0)
+  - FirebaseCore (11.2.0):
+    - FirebaseCoreInternal (~> 11.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/Logger (~> 8.0)
+  - FirebaseCoreExtension (11.4.1):
+    - FirebaseCore (~> 11.0)
+  - FirebaseCoreInternal (11.4.2):
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+  - FirebaseDatabase (11.2.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseCore (~> 11.0)
+    - FirebaseSharedSwift (~> 11.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - leveldb-library (~> 1.22)
+  - FirebaseInstallations (11.4.0):
+    - FirebaseCore (~> 11.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - PromisesObjC (~> 2.4)
+  - FirebaseMessaging (11.2.0):
+    - FirebaseCore (~> 11.0)
+    - FirebaseInstallations (~> 11.0)
+    - GoogleDataTransport (~> 10.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/Reachability (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - nanopb (~> 3.30910.0)
+  - FirebaseSharedSwift (11.4.0)
+  - FirebaseStorage (11.2.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseAuthInterop (~> 11.0)
+    - FirebaseCore (~> 11.0)
+    - FirebaseCoreExtension (~> 11.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GTMSessionFetcher/Core (~> 3.4)
+  - Flutter (1.0.0)
+  - flutter_fgbg (0.0.1):
+    - Flutter
+  - flutter_native_splash (0.0.1):
+    - Flutter
+  - Giphy (2.2.4):
+    - libwebp
+  - GoogleAppMeasurement (11.2.0):
+    - GoogleAppMeasurement/AdIdSupport (= 11.2.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - GoogleAppMeasurement/AdIdSupport (11.2.0):
+    - GoogleAppMeasurement/WithoutAdIdSupport (= 11.2.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - GoogleAppMeasurement/WithoutAdIdSupport (11.2.0):
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - GoogleDataTransport (10.1.0):
+    - nanopb (~> 3.30910.0)
+    - PromisesObjC (~> 2.4)
+  - GoogleUtilities/AppDelegateSwizzler (8.0.2):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Network
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Environment (8.0.2):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.0.2):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/MethodSwizzler (8.0.2):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Network (8.0.2):
+    - GoogleUtilities/Logger
+    - "GoogleUtilities/NSData+zlib"
+    - GoogleUtilities/Privacy
+    - GoogleUtilities/Reachability
+  - "GoogleUtilities/NSData+zlib (8.0.2)":
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.0.2)
+  - GoogleUtilities/Reachability (8.0.2):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/UserDefaults (8.0.2):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GTMSessionFetcher/Core (3.5.0)
+  - image_picker_ios (0.0.1):
+    - Flutter
+  - jitsi_meet_flutter_sdk (10.2.1):
+    - Flutter
+    - JitsiMeetSDK (= 10.2.1)
+  - JitsiMeetSDK (10.2.1):
+    - Giphy (= 2.2.4)
+    - JitsiWebRTC (~> 124.0)
+  - JitsiWebRTC (124.0.1)
+  - leveldb-library (1.22.5)
+  - libwebp (1.3.2):
+    - libwebp/demux (= 1.3.2)
+    - libwebp/mux (= 1.3.2)
+    - libwebp/sharpyuv (= 1.3.2)
+    - libwebp/webp (= 1.3.2)
+  - libwebp/demux (1.3.2):
+    - libwebp/webp
+  - libwebp/mux (1.3.2):
+    - libwebp/demux
+  - libwebp/sharpyuv (1.3.2)
+  - libwebp/webp (1.3.2):
+    - libwebp/sharpyuv
+  - msgpack (0.4.0)
+  - nanopb (3.30910.0):
+    - nanopb/decode (= 3.30910.0)
+    - nanopb/encode (= 3.30910.0)
+  - nanopb/decode (3.30910.0)
+  - nanopb/encode (3.30910.0)
+  - package_info_plus (0.4.5):
+    - Flutter
+  - particle_auth_core (0.0.1):
+    - AuthCoreAdapter
+    - Flutter
+    - ParticleAuthCore
+    - ParticleMPCCore
+    - Thresh
+  - particle_base (0.0.1):
+    - Flutter
+    - ParticleNetworkBase
+    - ParticleNetworkChains
+  - ParticleAuthCore (2.0.3):
+    - AWSKMS (~> 2.34.2)
+    - ParticleMPCCore
+    - ParticleNetworkBase
+    - SDWebImage (~> 5.19.0)
+    - SDWebImageWebPCoder
+    - SkeletonView
+    - SnapKit (~> 5.7.1)
+    - SwiftMessages
+    - Then
+  - ParticleMPCCore (2.0.3):
+    - Base58.swift
+    - CryptoSwift (~> 1.8.1)
+    - Thresh
+  - ParticleNetworkBase (2.0.3):
+    - Alamofire (~> 5.9.0)
+    - Base58.swift
+    - BigInt (~> 5.2.0)
+    - CryptoSwift (~> 1.8.1)
+    - ParticleNetworkChains
+    - RxAlamofire (~> 6.1.1)
+    - RxCocoa (= 6.6.0)
+    - RxSwift (= 6.6.0)
+    - SwiftyJSON (~> 5.0.1)
+    - SwiftyUserDefaults (~> 5.3.0)
+  - ParticleNetworkChains (2.0.3)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - permission_handler_apple (9.3.0):
+    - Flutter
+  - PromisesObjC (2.4.0)
+  - RecaptchaInterop (100.0.0)
+  - RxAlamofire (6.1.1):
+    - RxAlamofire/Core (= 6.1.1)
+  - RxAlamofire/Core (6.1.1):
+    - Alamofire (~> 5.4)
+    - RxSwift (~> 6.0)
+  - RxCocoa (6.6.0):
+    - RxRelay (= 6.6.0)
+    - RxSwift (= 6.6.0)
+  - RxRelay (6.6.0):
+    - RxSwift (= 6.6.0)
+  - RxSwift (6.6.0)
+  - SDWebImage (5.19.7):
+    - SDWebImage/Core (= 5.19.7)
+  - SDWebImage/Core (5.19.7)
+  - SDWebImageWebPCoder (0.14.6):
+    - libwebp (~> 1.0)
+    - SDWebImage/Core (~> 5.17)
+  - secp256k1.swift (0.1.4)
+  - share_plus (0.0.1):
+    - Flutter
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - SkeletonView (1.30.4)
+  - SnapKit (5.7.1)
+  - sqflite (0.0.3):
+    - Flutter
+    - FlutterMacOS
+  - SwiftMessages (10.0.1):
+    - SwiftMessages/App (= 10.0.1)
+  - SwiftMessages/App (10.0.1)
+  - SwiftyJSON (5.0.2)
+  - SwiftyUserDefaults (5.3.0)
+  - Then (3.0.0)
+  - Thresh (2.0.3)
+  - TweetNacl (1.0.2)
+  - url_launcher_ios (0.0.1):
+    - Flutter
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - ably_flutter (from `.symlinks/plugins/ably_flutter/ios`)
+  - add_2_calendar (from `.symlinks/plugins/add_2_calendar/ios`)
+  - alarm (from `.symlinks/plugins/alarm/ios`)
+  - app_links (from `.symlinks/plugins/app_links/ios`)
+  - app_settings (from `.symlinks/plugins/app_settings/ios`)
+  - appcheck (from `.symlinks/plugins/appcheck/ios`)
+  - AuthCoreAdapter (= 2.0.3)
+  - coinbase_wallet_sdk (from `.symlinks/plugins/coinbase_wallet_sdk/ios`)
+  - ConnectCommon (= 2.0.3)
+  - connectivity_plus (from `.symlinks/plugins/connectivity_plus/darwin`)
+  - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
+  - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
+  - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
+  - firebase_database (from `.symlinks/plugins/firebase_database/ios`)
+  - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
+  - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_fgbg (from `.symlinks/plugins/flutter_fgbg/ios`)
+  - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - jitsi_meet_flutter_sdk (from `.symlinks/plugins/jitsi_meet_flutter_sdk/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - particle_auth_core (from `.symlinks/plugins/particle_auth_core/ios`)
+  - particle_base (from `.symlinks/plugins/particle_base/ios`)
+  - ParticleAuthCore (= 2.0.3)
+  - ParticleMPCCore (= 2.0.3)
+  - ParticleNetworkBase (= 2.0.3)
+  - ParticleNetworkChains (= 2.0.3)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - share_plus (from `.symlinks/plugins/share_plus/ios`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - SkeletonView (from `https://github.com/SunZhiC/SkeletonView.git`, branch `main`)
+  - sqflite (from `.symlinks/plugins/sqflite/darwin`)
+  - SwiftyUserDefaults (from `https://github.com/SunZhiC/SwiftyUserDefaults.git`, branch `master`)
+  - Thresh (= 2.0.3)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Ably
+    - AblyDeltaCodec
+    - Alamofire
+    - AuthCoreAdapter
+    - AWSCore
+    - AWSKMS
+    - Base58.swift
+    - BigInt
+    - CoinbaseWalletSDK
+    - ConnectCommon
+    - CryptoSwift
+    - Firebase
+    - FirebaseAnalytics
+    - FirebaseAppCheckInterop
+    - FirebaseAuth
+    - FirebaseAuthInterop
+    - FirebaseCore
+    - FirebaseCoreExtension
+    - FirebaseCoreInternal
+    - FirebaseDatabase
+    - FirebaseInstallations
+    - FirebaseMessaging
+    - FirebaseSharedSwift
+    - FirebaseStorage
+    - Giphy
+    - GoogleAppMeasurement
+    - GoogleDataTransport
+    - GoogleUtilities
+    - GTMSessionFetcher
+    - JitsiMeetSDK
+    - JitsiWebRTC
+    - leveldb-library
+    - libwebp
+    - msgpack
+    - nanopb
+    - ParticleAuthCore
+    - ParticleMPCCore
+    - ParticleNetworkBase
+    - ParticleNetworkChains
+    - PromisesObjC
+    - RecaptchaInterop
+    - RxAlamofire
+    - RxCocoa
+    - RxRelay
+    - RxSwift
+    - SDWebImage
+    - SDWebImageWebPCoder
+    - secp256k1.swift
+    - SnapKit
+    - SwiftMessages
+    - SwiftyJSON
+    - Then
+    - Thresh
+    - TweetNacl
+
+EXTERNAL SOURCES:
+  ably_flutter:
+    :path: ".symlinks/plugins/ably_flutter/ios"
+  add_2_calendar:
+    :path: ".symlinks/plugins/add_2_calendar/ios"
+  alarm:
+    :path: ".symlinks/plugins/alarm/ios"
+  app_links:
+    :path: ".symlinks/plugins/app_links/ios"
+  app_settings:
+    :path: ".symlinks/plugins/app_settings/ios"
+  appcheck:
+    :path: ".symlinks/plugins/appcheck/ios"
+  coinbase_wallet_sdk:
+    :path: ".symlinks/plugins/coinbase_wallet_sdk/ios"
+  connectivity_plus:
+    :path: ".symlinks/plugins/connectivity_plus/darwin"
+  firebase_analytics:
+    :path: ".symlinks/plugins/firebase_analytics/ios"
+  firebase_auth:
+    :path: ".symlinks/plugins/firebase_auth/ios"
+  firebase_core:
+    :path: ".symlinks/plugins/firebase_core/ios"
+  firebase_database:
+    :path: ".symlinks/plugins/firebase_database/ios"
+  firebase_messaging:
+    :path: ".symlinks/plugins/firebase_messaging/ios"
+  firebase_storage:
+    :path: ".symlinks/plugins/firebase_storage/ios"
+  Flutter:
+    :path: Flutter
+  flutter_fgbg:
+    :path: ".symlinks/plugins/flutter_fgbg/ios"
+  flutter_native_splash:
+    :path: ".symlinks/plugins/flutter_native_splash/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
+  jitsi_meet_flutter_sdk:
+    :path: ".symlinks/plugins/jitsi_meet_flutter_sdk/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  particle_auth_core:
+    :path: ".symlinks/plugins/particle_auth_core/ios"
+  particle_base:
+    :path: ".symlinks/plugins/particle_base/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  share_plus:
+    :path: ".symlinks/plugins/share_plus/ios"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  SkeletonView:
+    :branch: main
+    :git: https://github.com/SunZhiC/SkeletonView.git
+  sqflite:
+    :path: ".symlinks/plugins/sqflite/darwin"
+  SwiftyUserDefaults:
+    :branch: master
+    :git: https://github.com/SunZhiC/SwiftyUserDefaults.git
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
+  webview_flutter_wkwebview:
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/ios"
+
+CHECKOUT OPTIONS:
+  SkeletonView:
+    :commit: 00aebbf16bb1d00fbd2ee85b9200a23432cb88aa
+    :git: https://github.com/SunZhiC/SkeletonView.git
+  SwiftyUserDefaults:
+    :commit: 4b59143af80ebdc7e9811de521afcc33084c3e4e
+    :git: https://github.com/SunZhiC/SwiftyUserDefaults.git
+
+SPEC CHECKSUMS:
+  Ably: 1d78e5dec56db6d2cf91b10d14fea796ce591bae
+  ably_flutter: b4e0bffd35488a8c29d2ac7f35c00f80defab856
+  AblyDeltaCodec: add5d06a756b3581b12aab5b5500a320b8c55bea
+  add_2_calendar: 5eee66d5a3b99cd5e1487a7e03abd4e3ac4aff11
+  Alamofire: f36a35757af4587d8e4f4bfa223ad10be2422b8c
+  alarm: 6c1f6a9688f94cd6bf8f104c67cc26e78c9d8d13
+  app_links: e7a6750a915a9e161c58d91bc610e8cd1d4d0ad0
+  app_settings: 017320c6a680cdc94c799949d95b84cb69389ebc
+  appcheck: e1ab9d4e03736f03e0401554a134d1ed502d7629
+  AuthCoreAdapter: 476feb7b077be7ec8c198e9462f6d1bb3fea92cf
+  AWSCore: 13649d9063a6807ec37bde35c8f2da329d63d4e2
+  AWSKMS: 311bb0cb71967273de5f4657875b9f2484ec13c2
+  Base58.swift: e0e16655f9db843b8cd367593ed6f7d90d136b7f
+  BigInt: f668a80089607f521586bbe29513d708491ef2f7
+  coinbase_wallet_sdk: 7ccd4e1a7940deba6ba9bd81beece999a2268c15
+  CoinbaseWalletSDK: ea1f37512bbc69ebe07416e3b29bf840f5cc3152
+  ConnectCommon: 80364f67ca6c0eb4c954b875d9161e432a0cd9dd
+  connectivity_plus: ddd7f30999e1faaef5967c23d5b6d503d10434db
+  CryptoSwift: 967f37cea5a3294d9cce358f78861652155be483
+  Firebase: 98e6bf5278170668a7983e12971a66b2cd57fc8c
+  firebase_analytics: fbc57838bdb94eef1e0ff504f127d974ff2981ad
+  firebase_auth: 0c77e299a8f2d1c74d1b1f6b78b3d4d802c19f47
+  firebase_core: 2bedc3136ec7c7b8561c6123ed0239387b53f2af
+  firebase_database: d52bf1a2e0542f565925feed43fa5c4350576ed7
+  firebase_messaging: 15d114e1a41fc31e4fbabcd48d765a19eec94a38
+  firebase_storage: cee0d3d2e947db11289bbb57ed73a447ea111ec1
+  FirebaseAnalytics: c36efd5710c60c17558650fa58c2066eca7e9265
+  FirebaseAppCheckInterop: 1b9643ae2f1ee214488caa2f8e32b7bc2f0f3735
+  FirebaseAuth: 2a198b8cdbbbd457f08d74df7040feb0a0e7777a
+  FirebaseAuthInterop: 9ac948965ac13ec9d8a080f39490ddb2bda30520
+  FirebaseCore: a282032ae9295c795714ded2ec9c522fc237f8da
+  FirebaseCoreExtension: f1bc67a4702931a7caa097d8e4ac0a1b0d16720e
+  FirebaseCoreInternal: 35731192cab10797b88411be84940d2beb33a238
+  FirebaseDatabase: 7f0bcea9a7c0554284019a6bac1d80e7288ee831
+  FirebaseInstallations: 6ef4a1c7eb2a61ee1f74727d7f6ce2e72acf1414
+  FirebaseMessaging: c9ec7b90c399c7a6100297e9d16f8a27fc7f7152
+  FirebaseSharedSwift: 505dae2d05969dbf6d43749a642bb1bf230f0252
+  FirebaseStorage: 9353f926690b2329957860abfcbc8b4074fe45e8
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_fgbg: 31c0d1140a131daea2d342121808f6aa0dcd879d
+  flutter_native_splash: edf599c81f74d093a4daf8e17bd7a018854bc778
+  Giphy: 6b5f6986c8df4f71e01a8ef86595f426b3439fb5
+  GoogleAppMeasurement: 76d4f8b36b03bd8381fa9a7fe2cc7f99c0a2e93a
+  GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
+  GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
+  jitsi_meet_flutter_sdk: 1c75d5f7cf2f8a893d36fd6bb90d69ac02a87de9
+  JitsiMeetSDK: cdba360baf6426a2f98cdc313c5b352d8cd3bbd7
+  JitsiWebRTC: d0ae5fd6a81e771bfd82c2ee6c6bb542ebd65ee8
+  leveldb-library: e8eadf9008a61f9e1dde3978c086d2b6d9b9dc28
+  libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
+  msgpack: c85f6251873059738472ae136951cec5f30f3251
+  nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  package_info_plus: 58f0028419748fad15bf008b270aaa8e54380b1c
+  particle_auth_core: 08525d1c4253c4f49fbb6d1562a45d9187fa3f1b
+  particle_base: 3f7728b23f0733ccd5acdafcf41a69af24f8ed02
+  ParticleAuthCore: 2b42f8c30686c04dbadac92198f7eba9e99c1252
+  ParticleMPCCore: 056e8094477f999f843f016459b6845389e2932b
+  ParticleNetworkBase: 774ff74ab785602809147be5398791f64308786d
+  ParticleNetworkChains: 98daf734005d70cd0ecf8c2515b7e9d0b26aef00
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
+  RxAlamofire: beb75a1c452d0de225651db4903f5d29d034a620
+  RxCocoa: 44a80de90e25b739b5aeaae3c8c371a32e3343cc
+  RxRelay: 45eaa5db8ee4fb50e5ebd57deec0159e97fa51e6
+  RxSwift: a4b44f7d24599f674deebd1818eab82e58410632
+  SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
+  SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
+  secp256k1.swift: a7e7a214f6db6ce5db32cc6b2b45e5c4dd633634
+  share_plus: 8b6f8b3447e494cca5317c8c3073de39b3600d1f
+  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+  SkeletonView: 735bba714f75a451d998bf6f4aef5bfe9d1c803e
+  SnapKit: d612e99e678a2d3b95bf60b0705ed0a35c03484a
+  sqflite: 673a0e54cc04b7d6dba8d24fb8095b31c3a99eec
+  SwiftMessages: 759b4a0bf5c3a116a0d7e8a34b098ba83c458625
+  SwiftyJSON: f5b1bf1cd8dd53cd25887ac0eabcfd92301c6a5a
+  SwiftyUserDefaults: dd5dce66fb01565a82c3618b835f0546987eb683
+  Then: 844265ae87834bbe1147d91d5d41a404da2ec27d
+  Thresh: b74bb67a2d15eb1e9d1c26e469a8bbbf4a6128d0
+  TweetNacl: 3abf4d1d2082b0114e7a67410e300892448951e6
+  url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
+  webview_flutter_wkwebview: 2a23822e9039b7b1bc52e5add778e5d89ad488d1
+
+PODFILE CHECKSUM: 40484563cf7ed4993f40d40879559a143b98765e
+
+COCOAPODS: 1.15.2

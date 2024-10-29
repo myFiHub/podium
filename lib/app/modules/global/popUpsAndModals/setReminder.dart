@@ -130,7 +130,10 @@ Future<int?> setReminder({
 
                 Navigator.pop(Get.context!, -1);
               },
-              child: Text('use my calendar instead',
+              child: Text(
+                  Platform.isAndroid
+                      ? 'use my calendar instead'
+                      : 'set reminder on calendar',
                   style: TextStyle(color: Colors.green[400])),
             ),
             TextButton(

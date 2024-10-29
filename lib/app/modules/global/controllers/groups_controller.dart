@@ -206,8 +206,8 @@ class GroupsController extends GetxController with FirebaseTags {
       gettingAllGroups.value = true;
       final databaseReference =
           FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
-      final results = await databaseReference.once();
-      final data = results.snapshot.value as Map<dynamic, dynamic>?;
+      final results = await databaseReference.get();
+      final data = results.value as Map<dynamic, dynamic>?;
       if (data != null) {
         try {
           await _parseAndSetGroups(data);
@@ -558,6 +558,7 @@ class GroupsController extends GetxController with FirebaseTags {
     final firebaseSessionsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
     final myUser = globalController.currentUserInfo.value!;
+
     final group = await getGroupInfoById(groupId);
     if (group == null) {
       Toast.error(

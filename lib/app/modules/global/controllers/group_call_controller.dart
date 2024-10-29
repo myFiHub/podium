@@ -132,10 +132,10 @@ class GroupCallController extends GetxController {
 
   refetchSessionMembers() async {
     if (group.value == null) return;
-    final databaseRef = FirebaseDatabase.instance.ref(
-        FireBaseConstants.sessionsRef +
-            group.value!.id +
-            '/${FirebaseSession.membersKey}');
+    final databaseRef = FirebaseDatabase.instance
+        .ref(FireBaseConstants.sessionsRef)
+        .child(group.value!.id)
+        .child(FirebaseSession.membersKey);
     final snapshot = await databaseRef.get();
     final snapshotMembers = snapshot.value as dynamic;
     final membersList = <FirebaseSessionMember>[];

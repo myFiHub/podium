@@ -369,7 +369,8 @@ class GlobalController extends GetxController {
     final userId = myId;
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
-        .child(userId + '/' + UserInfoModel.localWalletAddressKey);
+        .child(userId)
+        .child(UserInfoModel.localWalletAddressKey);
     final savedWalletAddress = await firebaseUserDbReference.get();
     if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
       return;
@@ -433,8 +434,8 @@ class GlobalController extends GetxController {
     final completer = Completer<String?>();
     final serverAddressRef =
         FirebaseDatabase.instance.ref(FireBaseConstants.jitsiServerAddressRef);
-    serverAddressRef.once().then((event) {
-      final data = event.snapshot.value as dynamic;
+    serverAddressRef.get().then((event) {
+      final data = event.value as dynamic;
       final serverAddress = data as String?;
       if (serverAddress == null) {
         log.e('server address not found');
@@ -681,8 +682,8 @@ class GlobalController extends GetxController {
     Completer<UserInfoModel> completer = Completer();
     final firebaseUserDbReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.usersRef).child(userId);
-    firebaseUserDbReference.once().then((event) {
-      final data = event.snapshot.value as dynamic;
+    firebaseUserDbReference.get().then((event) {
+      final data = event.value as dynamic;
       if (data != null) {
         final user = singleUserParser(data);
         completer.complete(user);

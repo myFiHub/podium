@@ -34,7 +34,7 @@ mixin FirebaseTags {
           .orderByChild(Tag.idKey)
           .startAt(lowerCasedTag)
           .endAt('$lowerCasedTag\uf8ff');
-      final DataSnapshot snapshot = await query.get();
+      final snapshot = await query.get();
       final tags = snapshot.value;
       if (tags == null)
         return {};

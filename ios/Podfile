@@ -52,7 +52,6 @@ target 'Runner' do
 end
 
 post_install do |installer|
-  # Bitcode stripping configuration
   bitcode_strip_path = `xcrun --find bitcode_strip`.chop!
   def strip_bitcode_from_framework(bitcode_strip_path, framework_relative_path)
     framework_path = File.join(Dir.pwd, framework_relative_path)
@@ -60,16 +59,13 @@ post_install do |installer|
     puts "Stripping bitcode: #{command}"
     system(command)
   end
-  
   framework_paths = [
     "Pods/Giphy/GiphySDK/GiphyUISDK.xcframework/ios-arm64_armv7/GiphyUISDK.framework/GiphyUISDK",
   ]
-  
   framework_paths.each do |framework_relative_path|
     strip_bitcode_from_framework(bitcode_strip_path, framework_relative_path)
   end
 
-  # Existing configuration for targets
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end
@@ -87,11 +83,52 @@ post_install do |installer|
         ## dart: PermissionGroup.calendarFullAccess
         'PERMISSION_EVENTS_FULL_ACCESS=1',
 
+        ## dart: PermissionGroup.reminders
+        # 'PERMISSION_REMINDERS=1',
+
+        ## dart: PermissionGroup.contacts
+        # 'PERMISSION_CONTACTS=1',
+
+        ## dart: PermissionGroup.camera
+        # 'PERMISSION_CAMERA=1',
+
         ## dart: PermissionGroup.microphone
         'PERMISSION_MICROPHONE=1',
 
+        ## dart: PermissionGroup.speech
+        # 'PERMISSION_SPEECH_RECOGNIZER=1',
+
+        ## dart: PermissionGroup.photos
+        # 'PERMISSION_PHOTOS=1',
+
+        ## The 'PERMISSION_LOCATION' macro enables the `locationWhenInUse` and `locationAlways` permission. If
+        ## the application only requires `locationWhenInUse`, only specify the `PERMISSION_LOCATION_WHENINUSE`
+        ## macro.
+        ##
+        ## dart: [PermissionGroup.location, PermissionGroup.locationAlways, PermissionGroup.locationWhenInUse]
+        # 'PERMISSION_LOCATION=1',
+        # 'PERMISSION_LOCATION_WHENINUSE=0',
+
         ## dart: PermissionGroup.notification
         'PERMISSION_NOTIFICATIONS=1',
+
+        ## dart: PermissionGroup.mediaLibrary
+        # 'PERMISSION_MEDIA_LIBRARY=1',
+
+        ## dart: PermissionGroup.sensors
+        # 'PERMISSION_SENSORS=1',
+
+        ## dart: PermissionGroup.bluetooth
+        # 'PERMISSION_BLUETOOTH=1',
+
+        ## dart: PermissionGroup.appTrackingTransparency
+        # 'PERMISSION_APP_TRACKING_TRANSPARENCY=1',
+
+        ## dart: PermissionGroup.criticalAlerts
+        # 'PERMISSION_CRITICAL_ALERTS=1',
+
+        ## dart: PermissionGroup.criticalAlerts
+        # 'PERMISSION_ASSISTANT=1',
       ]
     end
   end

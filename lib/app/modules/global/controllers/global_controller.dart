@@ -126,6 +126,8 @@ class GlobalController extends GetxController {
       initializeParticleAuth(),
       FirebaseInit.init(),
     ]);
+    FirebaseDatabase.instance.setPersistenceEnabled(false);
+
     // final firebaseUserDbReference =
     //     FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
     // final users = firebaseUserDbReference.once().then((event) {

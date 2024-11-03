@@ -967,3 +967,10 @@ Future<bool> saveNewPayment({required PaymentEvent event}) {
     return false;
   });
 }
+
+Future<DataSnapshot> firbaseGet({
+  required DatabaseReference ref,
+}) async {
+  final res = await ref.once();
+  return res.snapshot;
+}

@@ -581,10 +581,10 @@ unfollow(String userId) async {
 
 Future<FirebaseGroup?> getGroupInfoById(String groupId) async {
   if (groupId.isEmpty) return null;
-  final databaseRef = FirebaseDatabase.instance.ref();
+  FirebaseDatabase.instance.setPersistenceEnabled(false);
   final groupRef =
-      databaseRef.child(FireBaseConstants.groupsRef).child(groupId);
-  final snapshot = await groupRef.get();
+      FirebaseDatabase.instance.ref().child(FireBaseConstants.groupsRef);
+  final snapshot = await groupRef.child(groupId).get();
   final group = snapshot.value as dynamic;
   if (group != null) {
     final groupInfo = singleGroupParser(group);

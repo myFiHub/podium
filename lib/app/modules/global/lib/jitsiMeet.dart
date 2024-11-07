@@ -92,38 +92,38 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         Get.delete<OngoingGroupCallController>();
       }
     },
-    like: (idWithAddedAtSign, participantId) async {
-      final OngoingGroupCallController ongoingGroupCallController =
-          Get.find<OngoingGroupCallController>();
-      final id = transformEmailLikeToId(idWithAddedAtSign!);
-      ongoingGroupCallController.onLikeClicked(id);
-    },
-    dislike: (idWithAddedAtSign, participantId) async {
-      final OngoingGroupCallController ongoingGroupCallController =
-          Get.find<OngoingGroupCallController>();
-      final id = transformEmailLikeToId(idWithAddedAtSign!);
-      ongoingGroupCallController.onDislikeClicked(id);
-    },
-    cheer: (idWithAddedAtSign, participantId) async {
-      final OngoingGroupCallController ongoingGroupCallController =
-          Get.find<OngoingGroupCallController>();
-      final id = transformEmailLikeToId(idWithAddedAtSign!);
-      log.f(id);
-      ongoingGroupCallController.cheerBoo(
-        userId: id,
-        cheer: true,
-        fromMeetPage: true,
-      );
-    },
-    boo: (idWithAddedAtSign, participantId) async {
-      final OngoingGroupCallController ongoingGroupCallController =
-          Get.find<OngoingGroupCallController>();
-      final id = transformEmailLikeToId(idWithAddedAtSign!);
-      ongoingGroupCallController.cheerBoo(
-        userId: id,
-        cheer: false,
-        fromMeetPage: true,
-      );
-    },
+    // like: (idWithAddedAtSign, participantId) async {
+    //   final OngoingGroupCallController ongoingGroupCallController =
+    //       Get.find<OngoingGroupCallController>();
+    //   final id = transformEmailLikeToId(idWithAddedAtSign!);
+    //   ongoingGroupCallController.onLikeClicked(id);
+    // },
+    // dislike: (idWithAddedAtSign, participantId) async {
+    //   final OngoingGroupCallController ongoingGroupCallController =
+    //       Get.find<OngoingGroupCallController>();
+    //   final id = transformEmailLikeToId(idWithAddedAtSign!);
+    //   ongoingGroupCallController.onDislikeClicked(id);
+    // },
+    // cheer: (idWithAddedAtSign, participantId) async {
+    //   final OngoingGroupCallController ongoingGroupCallController =
+    //       Get.find<OngoingGroupCallController>();
+    //   final id = transformEmailLikeToId(idWithAddedAtSign!);
+    //   log.f(id);
+    //   ongoingGroupCallController.cheerBoo(
+    //     userId: id,
+    //     cheer: true,
+    //     fromMeetPage: true,
+    //   );
+    // },
+    // boo: (idWithAddedAtSign, participantId) async {
+    //   final OngoingGroupCallController ongoingGroupCallController =
+    //       Get.find<OngoingGroupCallController>();
+    //   final id = transformEmailLikeToId(idWithAddedAtSign!);
+    //   ongoingGroupCallController.cheerBoo(
+    //     userId: id,
+    //     cheer: false,
+    //     fromMeetPage: true,
+    //   );
+    // },
   );
 }

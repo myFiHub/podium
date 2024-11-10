@@ -1053,10 +1053,9 @@ packages:
   jitsi_meet_flutter_sdk:
     dependency: "direct main"
     description:
-      name: jitsi_meet_flutter_sdk
-      sha256: fabd775fc2a7c23c1df03bd5b91ade615c54c0fb3896e84ea5b6b5ac3b920b15
-      url: "https://pub.dev"
-    source: hosted
+      path: jitsi-meet-flutter-sdk
+      relative: true
+    source: path
     version: "10.2.1"
   js:
     dependency: transitive

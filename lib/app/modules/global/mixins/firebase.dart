@@ -581,11 +581,10 @@ unfollow(String userId) async {
 
 Future<FirebaseGroup?> getGroupInfoById(String groupId) async {
   if (groupId.isEmpty) return null;
-  final databaseRef = FirebaseDatabase.instance.ref();
   final groupRef =
-      databaseRef.child(FireBaseConstants.groupsRef).child(groupId);
-  final snapshot = await groupRef.get();
-  final group = snapshot.value as dynamic;
+      FirebaseDatabase.instance.ref().child(FireBaseConstants.groupsRef);
+  final snapshot = await groupRef.child(groupId).once();
+  final group = snapshot.snapshot.value as dynamic;
   if (group != null) {
     final groupInfo = singleGroupParser(group);
     if (groupInfo == null) {
@@ -967,4 +966,11 @@ Future<bool> saveNewPayment({required PaymentEvent event}) {
     log.e(e);
     return false;
   });
+}
+
+Future<DataSnapshot> firbaseGet({
+  required DatabaseReference ref,
+}) async {
+  final res = await ref.once();
+  return res.snapshot;
 }

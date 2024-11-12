@@ -28,13 +28,35 @@
 		<string>LaunchScreen</string>		
 		<key>NSFaceIDUsageDescription</key>
 		<string>We use Face ID for secure access to the app.</string>
-		 <key>NSMicrophoneUsageDescription</key>
-    <string>microphone</string>
-	 <key>NSCalendarsUsageDescription</key>
-    <string>Calendars</string>
     <key>NSCalendarsFullAccessUsageDescription</key>
     <string>Calendar full access</string>
-
+    <!-- Camera -->
+    <key>NSCameraUsageDescription</key>
+    <string>Camera access is required for video calling</string>
+    
+    <!-- Microphone -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Microphone access is required for voice calling</string>
+    
+    <!-- Photo Library -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Photo library access is required for sharing images during meetings</string>
+    
+    <!-- Calendar -->
+    <key>NSCalendarsUsageDescription</key>
+    <string>Calendar access is required for scheduling meetings</string>
+    
+    <!-- Contacts -->
+    <key>NSContactsUsageDescription</key>
+    <string>Contacts access helps you easily invite people to meetings</string>
+    
+    <!-- Bluetooth -->
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>Bluetooth access is required for connecting to wireless headsets</string>
+    
+    <!-- Local Network -->
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Local network access is required for optimal connection quality</string>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
 		<key>UISupportedInterfaceOrientations</key>

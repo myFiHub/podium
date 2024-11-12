@@ -127,8 +127,7 @@ Future<int?> setReminder({
                   title: eventName,
                   subject: subject,
                 );
-
-                Navigator.pop(Get.context!, -1);
+                Navigator.pop<int>(Get.context!, -1);
               },
               child: Text(
                   Platform.isAndroid

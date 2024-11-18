@@ -172,7 +172,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       themeData: _themeData,
       child: GetMaterialApp(
         theme: darkThemeData,
-        defaultTransition: Transition.fade,
+        defaultTransition: Transition.native,
         // showPerformanceOverlay: true,
         onDispose: () {
           jitsiMeet.hangUp();

@@ -7,9 +7,11 @@ import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:particle_base/particle_base.dart';
 
 import '../controllers/home_controller.dart';
 
@@ -92,7 +94,7 @@ class HomeView extends GetView<HomeController> {
                                       text: 'See All Rooms',
                                       type: ButtonType.gradient,
                                       blockButton: true,
-                                      onPressed: () {
+                                      onPressed: () async {
                                         Navigate.to(
                                           type: NavigationTypes.offAllNamed,
                                           route: Routes.ALL_GROUPS,

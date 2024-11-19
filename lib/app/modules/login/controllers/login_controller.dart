@@ -88,6 +88,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
           Toast.error(
             message: 'Error logging in',
           );
+          isLoggingIn.value = false;
           return;
         }
       }
@@ -177,7 +178,9 @@ class LoginController extends GetxController with ParticleAuthUtils {
         message: 'Error logging in',
       );
       return;
-    } finally {}
+    } finally {
+      isLoggingIn.value = false;
+    }
   }
 
   loginWithX({required bool ignoreIfNotLoggedIn}) async {

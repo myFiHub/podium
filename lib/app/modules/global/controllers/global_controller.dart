@@ -276,8 +276,7 @@ class GlobalController extends GetxController {
       final chainName =
           ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
               .name;
-      final particleChain =
-          //  movementChainOnParticle;
+      final particleChain = //movementChainOnParticle;
           particleWalletChainId == '30732'
               ? movementChainOnParticle
               : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
@@ -306,8 +305,8 @@ class GlobalController extends GetxController {
       // final selectedChan =
       //     await ParticleBase.ParticleBase.setChainInfo(particleChain);
       // if (selectedChan) {
-      //   final chain = await ParticleBase.ParticleBase.getChainInfo();
-      //   log.i("chain info: $chain");
+      final chain = await ParticleBase.ParticleBase.getChainInfo();
+      log.i("active particle chain name: ${chain.fullname}");
       // }
       log.i('##########particle auth initialized');
       return Future.value();

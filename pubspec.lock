@@ -50,10 +50,10 @@ packages:
     dependency: "direct main"
     description:
       name: alarm
-      sha256: "52beb76d1c6c76a12510cd1341145f57feba8fedb2bcb43d7dca99d61ff12e72"
+      sha256: "39659a0cc55a746c8f4b2240a2e40c495880501f2f4fb9c8f15d651a2fa89198"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.11"
+    version: "4.0.12"
   analyzer:
     dependency: transitive
     description:
@@ -788,10 +788,10 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_native_splash
-      sha256: ee5c9bd2b74ea8676442fd4ab876b5d41681df49276488854d6c81a5377c0ef1
+      sha256: "1152ab0067ca5a2ebeb862fe0a762057202cceb22b7e62692dcbabf6483891bb"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.2"
+    version: "2.4.3"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -1117,10 +1117,10 @@ packages:
     dependency: "direct main"
     description:
       name: logger
-      sha256: "697d067c60c20999686a0add96cf6aba723b3aa1f83ecf806a8097231529ec32"
+      sha256: be4b23575aac7ebf01f225a241eb7f6b5641eeaf43c6a8613510fc2f8cf187d1
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.0"
+    version: "2.5.0"
   logging:
     dependency: transitive
     description:
@@ -1221,18 +1221,18 @@ packages:
     dependency: "direct main"
     description:
       name: particle_auth_core
-      sha256: "2467955dcb4497f0bbbfae8cd33a99c56ccd6c5a3736203c3195c31185c6dc29"
+      sha256: "90235f214aa68255b9e2b50ab47ad08535f60bb5e6840d44d0c2207c324c02a8"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.10"
+    version: "2.1.20"
   particle_base:
     dependency: transitive
     description:
       name: particle_base
-      sha256: bd140fc966e27cec640527020b4093ef40e65691547e1665a825f7df97c5ff45
+      sha256: ca17489e0724861cb135239fe85a8058bef602168f6a020f1e6ece82990dfce8
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.10"
+    version: "2.1.20"
   path:
     dependency: transitive
     description:

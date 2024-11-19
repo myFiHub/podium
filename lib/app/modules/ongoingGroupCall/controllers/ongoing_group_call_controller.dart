@@ -440,19 +440,19 @@ class OngoingGroupCallController extends GetxController {
   cheerBoo(
       {required String userId, required bool cheer, bool? fromMeetPage}) async {
     String? targetAddress;
-    final bool canContinue = checkWalletConnected(
-      afterConnection: () {
-        cheerBoo(userId: userId, cheer: cheer);
-      },
-    );
+    // final bool canContinue = checkWalletConnected(
+    //   afterConnection: () {
+    //     cheerBoo(userId: userId, cheer: cheer);
+    //   },
+    // );
 
-    if (!canContinue) {
-      Toast.error(
-        title: "external wallet connection required",
-        message: " please connect your wallet first",
-      );
-      return;
-    }
+    // if (!canContinue) {
+    //   Toast.error(
+    //     title: "external wallet connection required",
+    //     message: " please connect your wallet first",
+    //   );
+    //   return;
+    // }
 
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
@@ -468,7 +468,9 @@ class OngoingGroupCallController extends GetxController {
     loadingWalletAddressForUser.remove("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
     log.d("target address is $targetAddress for user $userId");
-    if (canContinue && targetAddress != null && targetAddress != '') {
+    if (
+        // canContinue &&
+        targetAddress != null && targetAddress != '') {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
       final myParticleUser = globalController.particleAuthUserInfo.value;
@@ -517,8 +519,9 @@ class OngoingGroupCallController extends GetxController {
       ///////////////////////
       /// TODO: add for particle when it is ready (issue is resolved on their side, issue 2)
       bool success = false;
-      final selectedWallet = WalletNames.external;
-      // await choseAWallet(chainId: movementChainId);
+      final selectedWallet =
+          // WalletNames.external;
+          await choseAWallet(chainId: movementChainId);
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           target: targetAddress,

@@ -517,8 +517,8 @@ class OngoingGroupCallController extends GetxController {
       ///////////////////////
       /// TODO: add for particle when it is ready (issue is resolved on their side, issue 2)
       bool success = false;
-      final selectedWallet =
-          WalletNames.external; //choseWallet(movementChainId);
+      final selectedWallet = WalletNames.external;
+      // await choseAWallet(chainId: movementChainId);
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           target: targetAddress,
@@ -526,6 +526,14 @@ class OngoingGroupCallController extends GetxController {
           amount: parsedAmount,
           cheer: cheer,
           chainId: externalWalletChianId,
+        );
+      } else if (selectedWallet == WalletNames.particle) {
+        success = await particle_cheerOrBoo(
+          target: targetAddress,
+          receiverAddresses: receiverAddresses,
+          amount: parsedAmount,
+          cheer: cheer,
+          chainId: movementChainId,
         );
       }
 

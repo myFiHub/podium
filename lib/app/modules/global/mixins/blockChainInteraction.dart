@@ -13,6 +13,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
+import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -78,6 +79,77 @@ Future<bool> ext_cheerOrBoo({
     log.e('error : $e');
     return false;
   }
+}
+
+particle_cheerOrBoo({
+  required String target,
+  required List<String> receiverAddresses,
+  required num amount,
+  required bool cheer,
+  required String chainId,
+}) async {
+  final myAddress = await Evm.getAddress();
+  final contract =
+      getDeployedContract(contract: Contracts.cheerboo, chainId: chainId);
+  if (contract == null) {
+    return null;
+  }
+////
+
+  final changed = await temporarilyChangeParticleNetwork(chainId);
+  if (!changed) {
+    return false;
+  }
+  try {
+    final contractAddress = contract.address.hex;
+    final methodName = 'cheerOrBoo';
+    final parameters = [target, receiverAddresses, cheer];
+    const abiJson = CheerBoo.abi;
+    final abiJsonString = jsonEncode(abiJson);
+    final amountInDouble = amount.toDouble();
+    final amountInWei = doubleToBigIntWei(amountInDouble);
+    final data = await EvmService.customMethod(
+      contractAddress,
+      methodName,
+      parameters,
+      abiJsonString,
+    );
+    final transaction = await EvmService.createTransaction(
+      myAddress,
+      data,
+      amountInWei,
+      contractAddress,
+      gasFeeLevel: GasFeeLevel.high,
+    );
+    final signature = await Evm.sendTransaction(transaction);
+    await switchBackToSavedParticleNetwork();
+    if (signature.length > 10) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    log.e('error : $e');
+    if (e.toString().contains('insufficient funds')) {
+      final selectedChain = await ParticleBase.getChainInfo();
+      final selectedChainName = selectedChain.name;
+      final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
+      Toast.error(
+        title: "Insufficient $selectedChainCurrency",
+        message: "Please top up your wallet on $selectedChainName",
+        mainbutton: TextButton(
+          onPressed: () {
+            _copyToClipboard(myAddress, prefix: "Address");
+          },
+          child: Text("Copy Address"),
+        ),
+        duration: 5,
+      );
+    }
+    await switchBackToSavedParticleNetwork();
+  }
+  return false;
+
+  ///
 }
 
 ///  @param referrer: Optional parameter.

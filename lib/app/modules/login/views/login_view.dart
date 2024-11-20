@@ -1,3 +1,4 @@
+import 'package:dynamic_sdk/dynamic_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
@@ -57,6 +58,24 @@ class LoginView extends GetView<LoginController> {
                     }
                     return Column(
                       children: [
+                        Button(
+                          onPressed: () async {
+                            try {
+                              await DynamicSDK.instance.auth.social.connect(
+                                provider: SocialProvider.google,
+                                redirectPathname:
+                                    'podium://dynamicSdkLogin/login_screen',
+                              );
+                            } catch (e) {
+                              print(e);
+                            }
+                          },
+                          text: 'DYNAMIC LOGIN',
+                          size: ButtonSize.LARGE,
+                          type: ButtonType.solid,
+                          color: ColorName.black,
+                          blockButton: true,
+                        ),
                         space10,
                         Button(
                           onPressed: () {

@@ -1,3 +1,4 @@
+import 'package:dynamic_sdk/dynamic_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -29,6 +30,8 @@ class Root extends StatelessWidget {
             PodiumNavbar(),
           ],
         ),
+        DynamicSDK.instance.dynamicWidget,
+
         // InternetConnectionChecker(),
         // ConnectedNetworks(),
       ],

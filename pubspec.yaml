@@ -54,6 +54,7 @@ dependencies:
   # jitsi_meet_flutter_sdk: ^10.2.1
   jitsi_meet_flutter_sdk:
     path: ./jitsi-meet-flutter-sdk
+  dynamic_sdk: ^0.0.1-alpha.3
 
 dependency_overrides:
   web: ^0.5.0

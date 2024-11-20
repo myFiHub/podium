@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dynamic_sdk/dynamic_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:get/get.dart';
@@ -582,7 +583,7 @@ class LikeDislike extends GetView<OngoingGroupCallController> {
         isLike ? Icons.thumb_up_rounded : Icons.thumb_down_rounded,
         color: isLike ? Colors.green : Colors.red,
       ),
-      onPressed: () {
+      onPressed: () async {
         isLike
             ? controller.onLikeClicked(userId)
             : controller.onDislikeClicked(userId);

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dynamic_sdk/dynamic_sdk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -124,6 +125,7 @@ class GlobalController extends GetxController {
 
     await Future.wait([
       initializeParticleAuth(),
+      initializeDynamicSDK(),
       FirebaseInit.init(),
     ]);
     FirebaseDatabase.instance.setPersistenceEnabled(false);
@@ -268,6 +270,17 @@ class GlobalController extends GetxController {
         : Env.environment == STAGE
             ? ParticleBase.Env.staging
             : ParticleBase.Env.production;
+  }
+
+  Future<void> initializeDynamicSDK() {
+    DynamicSDK.init(
+      props: ClientProps(
+        environmentId: 'bbf48190-8a32-4cb0-9bee-47cf2f70a1f7',
+        appLogoUrl: Constants.logoUrl,
+        appName: 'Podium',
+      ),
+    );
+    return Future.value();
   }
 
   Future<void> initializeParticleAuth() async {
@@ -648,6 +661,12 @@ class GlobalController extends GetxController {
     isAutoLoggingIn.value = false;
     try {
       await ParticleAuthCore.disconnect();
+    } catch (e) {
+      log.e(e);
+      isLoggingOut.value = false;
+    }
+    try {
+      DynamicSDK.instance.auth.logout();
     } catch (e) {
       log.e(e);
       isLoggingOut.value = false;

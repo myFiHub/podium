@@ -22,94 +22,111 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          space5,
-          Text(
-            "My Rooms",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+          space16,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              "Home",
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
+          space14,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              "My rooms",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              
+            ),
+          ),
+          space10,
           Expanded(
-            child: Container(
-              child: GetBuilder<GlobalController>(
-                  id: GlobalUpdateIds.showArchivedGroups,
-                  builder: (globalController) {
-                    return Obx(
-                      () {
-                        final showArchived =
-                            globalController.showArchivedGroups.value;
-                        final allGroups = controller.allGroups.value;
-                        final isLoading = allGroups.isEmpty;
-                        List<FirebaseGroup> groups = allGroups.values
-                            .where(
-                              (group) => group.members.contains(myId),
-                            )
-                            .toList();
-
-                        if (!showArchived) {
-                          groups = groups
-                              .where((group) => group.archived != true)
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                child: GetBuilder<GlobalController>(
+                    id: GlobalUpdateIds.showArchivedGroups,
+                    builder: (globalController) {
+                      return Obx(
+                        () {
+                          final showArchived =
+                              globalController.showArchivedGroups.value;
+                          final allGroups = controller.allGroups.value;
+                          final isLoading = allGroups.isEmpty;
+                          List<FirebaseGroup> groups = allGroups.values
+                              .where(
+                                (group) => group.members.contains(myId),
+                              )
                               .toList();
-                        }
-                        if (isLoading) {
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                        if (groups.isEmpty) {
-                          return Container(
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Hero(
-                                    tag: 'logo',
-                                    child: Container(
-                                      height: 100,
-                                      child: Assets.images.logo.image(),
-                                    ),
-                                  ),
-                                  Text(
-                                    'Welcome to Podium',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    myUser.fullName,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    'try joining some rooms',
-                                  ),
-                                  space10,
-                                  Button(
-                                      text: 'See All Rooms',
-                                      type: ButtonType.gradient,
-                                      blockButton: true,
-                                      onPressed: () async {
-                                        Navigate.to(
-                                          type: NavigationTypes.offAllNamed,
-                                          route: Routes.ALL_GROUPS,
-                                        );
-                                      })
-                                ],
-                              ),
-                            ),
-                          );
-                        }
 
-                        return GroupList(groupsList: groups);
-                      },
-                    );
-                  }),
+                          if (!showArchived) {
+                            groups = groups
+                                .where((group) => group.archived != true)
+                                .toList();
+                          }
+                          if (isLoading) {
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          if (groups.isEmpty) {
+                            return Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Hero(
+                                      tag: 'logo',
+                                      child: Container(
+                                        height: 100,
+                                        child: Assets.images.logo.image(),
+                                      ),
+                                    ),
+                                    Text(
+                                      'Welcome to Podium',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      myUser.fullName,
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      'try joining some rooms',
+                                    ),
+                                    space10,
+                                    Button(
+                                        text: 'See All Rooms',
+                                        type: ButtonType.gradient,
+                                        blockButton: true,
+                                        onPressed: () async {
+                                          Navigate.to(
+                                            type: NavigationTypes.offAllNamed,
+                                            route: Routes.ALL_GROUPS,
+                                          );
+                                        })
+                                  ],
+                                );
+                            
+                          }
+
+                          return GroupList(groupsList: groups);
+                        },
+                      );
+                    }),
+              ),
             ),
           )
         ],

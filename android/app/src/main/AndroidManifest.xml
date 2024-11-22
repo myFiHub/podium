@@ -2,10 +2,12 @@
  xmlns:tools="http://schemas.android.com/tools"
 >
     <application
-     tools:replace="android:label"
+        tools:replace="android:fullBackupContent,android:label,android:allowBackup"
         android:label="podium"
         android:name="${applicationName}"
         android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="false"
+        android:allowBackup="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

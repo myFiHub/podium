@@ -57,6 +57,18 @@ class LoginView extends GetView<LoginController> {
                     }
                     return Column(
                       children: [
+                        Button(
+                          onPressed: () {
+                            controller.loginWithEmail(
+                              ignoreIfNotLoggedIn: false,
+                            );
+                          },
+                          text: 'Web3Auth login',
+                          size: ButtonSize.LARGE,
+                          type: ButtonType.solid,
+                          color: ColorName.black,
+                          blockButton: true,
+                        ),
                         space10,
                         Button(
                           onPressed: () {

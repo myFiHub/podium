@@ -126,11 +126,15 @@ class GlobalController extends GetxController {
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
     ReownAppKitModalNetworks.addNetworks(Env.chainNamespace, [movementChain]);
 
-    await Future.wait([
-      initializeParticleAuth(),
-      initializeWeb3Auth(),
-      FirebaseInit.init(),
-    ]);
+    try {
+      await Future.wait([
+        initializeParticleAuth(),
+        initializeWeb3Auth(),
+        FirebaseInit.init(),
+      ]);
+    } catch (e) {
+      log.e("error initializing app $e");
+    }
     FirebaseDatabase.instance.setPersistenceEnabled(false);
 
     // final firebaseUserDbReference =
@@ -280,8 +284,8 @@ class GlobalController extends GetxController {
     await Web3AuthFlutter.init(
       Web3AuthOptions(
         clientId:
-            "BPiSMVL3f5KUXoYl3sXIra7tmpyjskvqX7Qig6VVmYggJBfhXn0JhbaP3H4xazPX8fNyazgBJJRyj76pUB20yhk",
-        network: Network.sapphire_mainnet,
+            "BPaGbQdFV7PF63sSzNBBE6XmGQoRi_7bVPuATKPScmF_vVLl4fsVrtJPZoZvM3yPXa2reYjjfo1dveHh5WCEPdE",
+        network: Network.sapphire_devnet,
         redirectUrl: resolveRedirectUrl(),
         whiteLabel: WhiteLabelData(
           appName: "Podium",
@@ -290,6 +294,7 @@ class GlobalController extends GetxController {
       ),
     );
     await Web3AuthFlutter.initialize();
+    log.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
   }
 
   Future<void> initializeParticleAuth() async {

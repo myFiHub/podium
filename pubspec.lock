@@ -1894,6 +1894,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.1"
+  web3auth_flutter:
+    dependency: "direct main"
+    description:
+      name: web3auth_flutter
+      sha256: "6590bf131dc773fda6a07ec6ee5ac2f63aa7bdaf36977fa3335b84f3083089d2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.4"
   web3dart:
     dependency: transitive
     description:

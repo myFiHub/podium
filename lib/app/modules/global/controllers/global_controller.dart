@@ -15,6 +15,7 @@ import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
+import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -35,6 +36,9 @@ import 'package:particle_base/model/user_info.dart' as ParticleUser;
 import 'package:particle_base/model/chain_info.dart' as ChainInfo;
 import 'package:particle_base/particle_base.dart' as ParticleBase;
 import 'package:alarm/alarm.dart';
+import 'package:web3auth_flutter/enums.dart';
+import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 PairingMetadata _pairingMetadata = PairingMetadata(
   name: StringConstants.w3mPageTitleV3,
@@ -124,6 +128,7 @@ class GlobalController extends GetxController {
 
     await Future.wait([
       initializeParticleAuth(),
+      initializeWeb3Auth(),
       FirebaseInit.init(),
     ]);
     FirebaseDatabase.instance.setPersistenceEnabled(false);
@@ -268,6 +273,23 @@ class GlobalController extends GetxController {
         : Env.environment == STAGE
             ? ParticleBase.Env.staging
             : ParticleBase.Env.production;
+  }
+
+  Future<void> initializeWeb3Auth() async {
+    // Initialize the Web3AuthFlutter instance.
+    await Web3AuthFlutter.init(
+      Web3AuthOptions(
+        clientId:
+            "BPiSMVL3f5KUXoYl3sXIra7tmpyjskvqX7Qig6VVmYggJBfhXn0JhbaP3H4xazPX8fNyazgBJJRyj76pUB20yhk",
+        network: Network.sapphire_mainnet,
+        redirectUrl: resolveRedirectUrl(),
+        whiteLabel: WhiteLabelData(
+          appName: "Podium",
+          mode: ThemeModes.dark,
+        ),
+      ),
+    );
+    await Web3AuthFlutter.initialize();
   }
 
   Future<void> initializeParticleAuth() async {

@@ -23,6 +23,8 @@
     <category android:name="android.intent.category.DEFAULT" />
     <category android:name="android.intent.category.BROWSABLE" />
     <data android:scheme="podium" android:host="group-detail" />
+    <data android:scheme="podium" android:host="com.web3podium" android:path="/web3auth" />
+
     <data android:scheme="http" android:host="web3podium.page.link" />
     <data android:scheme="https"  />
         <data android:scheme="http" android:host="web3podium.page.link/group-detail" />

@@ -22,20 +22,23 @@ class AllGroupsView extends GetView<AllGroupsController> {
           await controller.refresh();
         },
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            const Text(
-              "All Rooms",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
+            space16,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                "All rooms",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             SizedBox(
-              height: 70,
+              height: 55,
               child: Input(
-                hintText: "search a room",
+                hintText: "What are we looking for?",
                 initialValue: controller.searchValue.value,
                 autofocus: false,
                 onChanged: (v) {

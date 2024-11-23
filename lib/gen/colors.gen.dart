@@ -31,6 +31,8 @@ class ColorName {
   /// Color: #161D2C
   static const Color navbarBackground = Color(0xFF161D2C);
 
+  static const Color systemTrayBackground = Color(0xFF245A6C);
+
   /// Color: #141422
   static const Color pageBackground = Color(0xFF141422);
 

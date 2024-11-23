@@ -36,36 +36,48 @@ class GroupDetailView extends GetView<GroupDetailController> {
 
             return Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                    group.name,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (group.subject != null)
-                    Text(
-                      group.subject!,
-                      style: TextStyle(
-                        fontSize: 22,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  if (iAmOwner)
-                    Text(
-                      "Access Type: ${parseAccessType(group.accessType)}",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  Text(
-                    "Speakers: ${parseSpeakerType(group.speakerType)}",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[400],
-                    ),
+                  space16,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                        Text(
+                          group.name,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (group.subject != null && group.subject!.trim().isNotEmpty)
+                          Text(
+                            group.subject!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[400],
+                            ),
+                          )
+                        else
+                          SizedBox.shrink(), // Evita espacio residual
+                        if (iAmOwner)
+                          Text(
+                            "Access Type: ${parseAccessType(group.accessType)}",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        Text(
+                          "Speakers: ${parseSpeakerType(group.speakerType)}",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ]
+                    )
                   ),
                   Expanded(
                     child: UserList(

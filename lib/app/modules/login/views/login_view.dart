@@ -60,34 +60,9 @@ class LoginView extends GetView<LoginController> {
                     }
                     return Column(
                       children: [
-                        Button(
-                          onPressed: () async {
-                            await Web3AuthFlutter.login(
-                              LoginParams(
-                                loginProvider: Provider.google,
-                                mfaLevel: MFALevel.DEFAULT,
-                                // extraLoginOptions: ExtraLoginOptions(
-                                //   login_hint: "mhsnprvr@gmail.com",
-                                // ),
-                              ),
-                            );
-                            // controller.loginWithEmail(
-                            //   ignoreIfNotLoggedIn: false,
-                            // );
-                          },
-                          text: 'Web3Auth login',
-                          size: ButtonSize.LARGE,
-                          type: ButtonType.solid,
-                          color: ColorName.black,
-                          blockButton: true,
-                        ),
                         space10,
                         Button(
-                          onPressed: () {
-                            controller.loginWithEmail(
-                              ignoreIfNotLoggedIn: false,
-                            );
-                          },
+                          onPressed: () {},
                           text: 'LOGIN WITH EMAIL',
                           size: ButtonSize.LARGE,
                           type: ButtonType.solid,
@@ -97,7 +72,8 @@ class LoginView extends GetView<LoginController> {
                         space10,
                         Button(
                           onPressed: () {
-                            controller.loginWithX(ignoreIfNotLoggedIn: false);
+                            controller.socialLogin(
+                                loginMethod: Provider.twitter);
                           },
                           text: 'LOGIN WITH X',
                           icon: Assets.images.xPlatform.image(
@@ -115,8 +91,8 @@ class LoginView extends GetView<LoginController> {
                         ),
                         Button(
                           onPressed: () {
-                            controller.loginWithGoogle(
-                                ignoreIfNotLoggedIn: false);
+                            controller.socialLogin(
+                                loginMethod: Provider.google);
                           },
                           text: 'LOGIN WITH GOOGLE',
                           icon: Assets.images.gIcon.image(
@@ -146,9 +122,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               child: IconButton(
                                   onPressed: () {
-                                    controller.loginWithFaceBook(
-                                      ignoreIfNotLoggedIn: false,
-                                    );
+                                    controller.socialLogin(
+                                        loginMethod: Provider.facebook);
                                   },
                                   icon: Assets.images.facebook.image(
                                     color: ColorName.white,
@@ -162,9 +137,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               child: IconButton(
                                 onPressed: () {
-                                  controller.loginWithApple(
-                                    ignoreIfNotLoggedIn: false,
-                                  );
+                                  controller.socialLogin(
+                                      loginMethod: Provider.apple);
                                 },
                                 icon: Assets.images.apple.image(
                                   color: ColorName.white,
@@ -179,9 +153,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               child: IconButton(
                                 onPressed: () {
-                                  controller.loginWithLinkedIn(
-                                    ignoreIfNotLoggedIn: false,
-                                  );
+                                  controller.socialLogin(
+                                      loginMethod: Provider.linkedin);
                                 },
                                 icon: Assets.images.linkedin.image(
                                   height: 25,
@@ -195,9 +168,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               child: IconButton(
                                 onPressed: () {
-                                  controller.loginWithGithub(
-                                    ignoreIfNotLoggedIn: false,
-                                  );
+                                  controller.socialLogin(
+                                      loginMethod: Provider.github);
                                 },
                                 icon: Assets.images.github.image(
                                   color: ColorName.white,

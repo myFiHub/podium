@@ -15,6 +15,7 @@ import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
+import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
@@ -71,7 +72,7 @@ class GlobalController extends GetxController {
   final connectedWalletAddress = "".obs;
   final jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
-  final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
+  // final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
   final firebaseUser = Rxn<User>();
   final currentUserInfo = Rxn<UserInfoModel>();
   final activeRoute = AppPages.INITIAL.obs;
@@ -575,39 +576,11 @@ class GlobalController extends GetxController {
         isAutoLoggingIn.value = false;
         return;
       }
-      if (loginType == LoginType.emailAndPassword) {
-        await _autoLoginWithEmailAndPassword();
-        return;
-      }
       final LoginController loginController = Get.put(LoginController());
-      if (loginType == LoginType.email) {
-        await loginController.loginWithEmail(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.x) {
-        await loginController.loginWithX(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.google) {
-        await loginController.loginWithGoogle(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.facebook) {
-        await loginController.loginWithFaceBook(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.linkedin) {
-        await loginController.loginWithLinkedIn(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.apple) {
-        await loginController.loginWithApple(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.github) {
-        await loginController.loginWithGithub(ignoreIfNotLoggedIn: true);
-        return;
-      }
+      await loginController.socialLogin(
+        loginMethod: loginTypeStringToWeb3AuthProvider(loginType),
+        ignoreIfNotLoggedIn: true,
+      );
     } catch (e) {
       isAutoLoggingIn.value = false;
       Navigate.to(
@@ -615,40 +588,6 @@ class GlobalController extends GetxController {
         route: Routes.LOGIN,
       );
       return;
-    }
-  }
-
-  _autoLoginWithEmailAndPassword() async {
-    final isParticleLoggedIn = await ParticleAuthCore.isConnected();
-    if (isParticleLoggedIn) {
-      final particleUserInfo = await ParticleAuthCore.getUserInfo();
-      particleAuthUserInfo.value = particleUserInfo;
-    } else {
-      log.e("particle not logged in");
-      throw Exception("particle not logged in");
-    }
-    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-    if (isLoggedIn) {
-      final user = FirebaseAuth.instance.currentUser;
-      firebaseUser.value = user;
-      final userId = user!.uid;
-      final userInfo = await getUserInfoById(userId);
-      currentUserInfo.value = userInfo;
-      if (userInfo != null && userInfo.id.isNotEmpty) {
-        final storage = GetStorage();
-        storage.write(StorageKeys.userId, userInfo.id);
-        storage.write(StorageKeys.userAvatar, userInfo.avatar);
-        storage.write(StorageKeys.userFullName, userInfo.fullName);
-        storage.write(StorageKeys.userEmail, userInfo.email);
-        loggedIn.value = true;
-        isAutoLoggingIn.value = false;
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.HOME,
-        );
-      }
-    } else {
-      isAutoLoggingIn.value = false;
     }
   }
 

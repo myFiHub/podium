@@ -471,10 +471,8 @@ class OngoingGroupCallController extends GetxController {
     if (canContinue && targetAddress != null && targetAddress != '') {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
-      final myParticleUser = globalController.particleAuthUserInfo.value;
       if (myUser.localWalletAddress == targetAddress ||
-          (myParticleUser != null &&
-              myParticleUser.wallets![0].publicAddress == targetAddress)) {
+          (myUser.particleWalletAddress == targetAddress)) {
         receiverAddresses = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
@@ -517,8 +515,10 @@ class OngoingGroupCallController extends GetxController {
       ///////////////////////
       /// TODO: add for particle when it is ready (issue is resolved on their side, issue 2)
       bool success = false;
-      final selectedWallet = WalletNames.external;
-      // await choseAWallet(chainId: movementChainId);
+      final selectedWallet =
+          //
+          //  WalletNames.external;
+          await choseAWallet(chainId: movementChainId);
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           target: targetAddress,

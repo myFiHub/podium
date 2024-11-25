@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
@@ -12,6 +13,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
@@ -187,99 +189,98 @@ class ParticleWalletManager extends GetView<GlobalController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final particleAuthUserInfo = controller.particleAuthUserInfo.value;
-      final wallets = particleAuthUserInfo?.wallets ?? [];
-      final walletsToShow = wallets
-          .where(
-              (w) => w.publicAddress.isNotEmpty && w.chainName == 'evm_chain')
+      final walletsToShow = myUser.savedParticleUserInfo?.wallets
+          .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
           .toList();
-      return particleAuthUserInfo == null
-          ? Container()
-          : Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: ColorName.greyText,
-                  width: 1,
-                ),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Assets.images.particleIcon.image(
-                            width: 30,
-                            height: 30,
-                          ),
-                          space10,
-                          Text(
-                            'Particle Wallet${walletsToShow.length > 1 ? 's' : ''}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.blue[100],
-                            ),
-                          ),
-                          space5,
-                          Icon(Icons.link, color: Colors.blue[100]),
-                          space5,
-                          ParticleWalletChainIcon(
-                            size: 20,
-                          )
-                        ],
+      if (walletsToShow == null || walletsToShow.isEmpty) {
+        return Container();
+      }
+
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: ColorName.greyText,
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Assets.images.logo.image(
+                      width: 30,
+                      height: 30,
+                    ),
+                    space10,
+                    Text(
+                      'Podium Wallet${walletsToShow.length > 1 ? 's' : ''}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.blue[100],
                       ),
-                      space10,
-                      ...walletsToShow
-                          .map(
-                            (wallet) => GestureDetector(
-                              onTap: () async {
-                                await Clipboard.setData(
-                                  ClipboardData(
-                                    text: wallet.publicAddress,
-                                  ),
-                                );
-                                Toast.neutral(
-                                  title: 'Copied',
-                                  message: 'Wallet address copied to clipboard',
-                                );
-                              },
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.account_balance_wallet,
-                                    color: ColorName.greyText,
-                                  ),
-                                  space10,
-                                  Text(
-                                    truncate(
-                                      wallet.publicAddress,
-                                      length: 12,
-                                    ),
-                                    style: const TextStyle(
-                                      fontSize: 23,
-                                      fontWeight: FontWeight.w700,
-                                      color: ColorName.greyText,
-                                    ),
-                                  ),
-                                  space10,
-                                ],
+                    ),
+                    space5,
+                    Icon(Icons.link, color: Colors.blue[100]),
+                    space5,
+                    ParticleWalletChainIcon(
+                      size: 20,
+                    )
+                  ],
+                ),
+                space10,
+                ...walletsToShow
+                    .map(
+                      (wallet) => GestureDetector(
+                        onTap: () async {
+                          await Clipboard.setData(
+                            ClipboardData(
+                              text: wallet.address,
+                            ),
+                          );
+                          Toast.neutral(
+                            title: 'Copied',
+                            message: 'Wallet address copied to clipboard',
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.account_balance_wallet,
+                              color: ColorName.greyText,
+                            ),
+                            space10,
+                            Text(
+                              truncate(
+                                wallet.address,
+                                length: 12,
+                              ),
+                              style: const TextStyle(
+                                fontSize: 23,
+                                fontWeight: FontWeight.w700,
+                                color: ColorName.greyText,
                               ),
                             ),
-                          )
-                          .toList()
-                    ],
-                  ),
-                  // FriendTeckActivationButton()
-                ],
-              ),
-            );
+                            space10,
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList()
+              ],
+            ),
+            // FriendTeckActivationButton()
+          ],
+        ),
+      );
     });
   }
 }

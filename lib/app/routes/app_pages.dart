@@ -59,8 +59,8 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.WEB3AUTH_REDIRECTED,
-      page: () => const Web3authredirectedView(),
-      binding: Web3AuthRedirectedBinding(),
+      page: () => const LoginView(),
+      binding: LoginBinding(),
     ),
     GetPage(
       name: _Paths.CREATE_GROUP,

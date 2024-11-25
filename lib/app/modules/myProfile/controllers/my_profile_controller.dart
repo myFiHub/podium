@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -119,7 +120,11 @@ class MyProfileController extends GetxController {
     if (silent != true) {
       loadingParticleActivation.value = true;
     }
-    final particleAddress = await Evm.getAddress();
+    final particleAddress =
+        await web3AuthWalletAddress(); // await Evm.getAddress();
+    if (particleAddress == null) {
+      return false;
+    }
     final activeWallets = await particle_friendTech_getActiveUserWallets(
       particleAddress: particleAddress,
       chainId: baseChainId,
@@ -182,7 +187,14 @@ class MyProfileController extends GetxController {
       loadingExternalWalletActivation.value = true;
     }
 
-    final particleAddress = await Evm.getAddress();
+    final particleAddress = await web3AuthWalletAddress(); // Evm.getAddress();
+    if (particleAddress == null) {
+      isExternalWalletActivatedOnFriendTech.value = false;
+      if (silent != true) {
+        loadingExternalWalletActivation.value = false;
+      }
+      return false;
+    }
     final externalWalletAddress = globalController.connectedWalletAddress.value;
     if (externalWalletAddress.isEmpty) {
       isExternalWalletActivatedOnFriendTech.value = false;

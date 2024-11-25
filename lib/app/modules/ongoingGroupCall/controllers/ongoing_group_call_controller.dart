@@ -11,6 +11,7 @@ import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
 import 'package:podium/contracts/chainIds.dart';
@@ -440,19 +441,19 @@ class OngoingGroupCallController extends GetxController {
   cheerBoo(
       {required String userId, required bool cheer, bool? fromMeetPage}) async {
     String? targetAddress;
-    final bool canContinue = checkWalletConnected(
-      afterConnection: () {
-        cheerBoo(userId: userId, cheer: cheer);
-      },
-    );
+    // final bool canContinue = checkWalletConnected(
+    //   afterConnection: () {
+    //     cheerBoo(userId: userId, cheer: cheer);
+    //   },
+    // );
 
-    if (!canContinue) {
-      Toast.error(
-        title: "external wallet connection required",
-        message: " please connect your wallet first",
-      );
-      return;
-    }
+    // if (!canContinue) {
+    //   Toast.error(
+    //     title: "external wallet connection required",
+    //     message: " please connect your wallet first",
+    //   );
+    //   return;
+    // }
 
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
@@ -468,7 +469,7 @@ class OngoingGroupCallController extends GetxController {
     loadingWalletAddressForUser.remove("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
     log.d("target address is $targetAddress for user $userId");
-    if (canContinue && targetAddress != null && targetAddress != '') {
+    if (targetAddress != null && targetAddress != '') {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
       if (myUser.localWalletAddress == targetAddress ||
@@ -528,7 +529,7 @@ class OngoingGroupCallController extends GetxController {
           chainId: externalWalletChianId,
         );
       } else if (selectedWallet == WalletNames.particle) {
-        success = await particle_cheerOrBoo(
+        success = await internal_cheerOrBoo(
           target: targetAddress,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount,
@@ -565,13 +566,18 @@ class OngoingGroupCallController extends GetxController {
               InteractionKeys.action: eventString,
             });
         analytics.logEvent(name: 'cheerBoo', parameters: {
-          'cheer': cheer,
+          'cheer': cheer.toString(),
           'amount': amount,
           'target': userId,
           'groupId': groupCallController.group.value!.id,
           'fromUser': myUser.id,
         });
-        final particleAddress = await Evm.getAddress();
+        final particleAddress =
+            await web3AuthWalletAddress(); //await Evm.getAddress();
+        if (particleAddress == null) {
+          log.e("particle address is null");
+          return;
+        }
         saveNewPayment(
             event: PaymentEvent(
           amount: amount,

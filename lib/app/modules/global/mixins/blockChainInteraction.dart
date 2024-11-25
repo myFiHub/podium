@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -83,7 +82,7 @@ Future<bool> ext_cheerOrBoo({
   }
 }
 
-particle_cheerOrBoo({
+internal_cheerOrBoo({
   required String target,
   required List<String> receiverAddresses,
   required num amount,
@@ -99,58 +98,31 @@ particle_cheerOrBoo({
   if (contract == null) {
     return null;
   }
-////
 
-  final changed = await temporarilyChangeParticleNetwork(chainId);
-  if (!changed) {
-    return false;
-  }
   try {
-    final contractAddress = contract.address.hex;
     final methodName = 'cheerOrBoo';
-    final parameters = [target, receiverAddresses, cheer];
-    const abiJson = CheerBoo.abi;
-    final abiJsonString = jsonEncode(abiJson);
-    final amountInDouble = amount.toDouble();
-    final amountInWei = doubleToBigIntWei(amountInDouble);
-    final data = await EvmService.customMethod(
-      contractAddress,
-      methodName,
-      parameters,
-      abiJsonString,
+    final parameters = [
+      parsAddress(target),
+      receiverAddresses.map((e) => parsAddress(e)).toList(),
+      cheer
+    ];
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: contract.function(methodName),
+      parameters: parameters,
+      value: parseValue(amount),
     );
-    final transaction = await EvmService.createTransaction(
-      myAddress,
-      data,
-      amountInWei,
-      contractAddress,
-      gasFeeLevel: GasFeeLevel.high,
+    final signature = await sendTransaction(
+      transaction: transaction,
+      chainId: chainId,
     );
-    final signature = await Evm.sendTransaction(transaction);
-    await switchBackToSavedParticleNetwork();
-    if (signature.length > 10) {
+    if (signature != null && signature.length > 10) {
       return true;
     }
     return false;
   } catch (e) {
     log.e('error : $e');
-    if (e.toString().contains('insufficient funds')) {
-      final selectedChain = await ParticleBase.getChainInfo();
-      final selectedChainName = selectedChain.name;
-      final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
-      Toast.error(
-        title: "Insufficient $selectedChainCurrency",
-        message: "Please top up your wallet on $selectedChainName",
-        mainbutton: TextButton(
-          onPressed: () {
-            _copyToClipboard(myAddress, prefix: "Address");
-          },
-          child: Text("Copy Address"),
-        ),
-        duration: 5,
-      );
-    }
-    await switchBackToSavedParticleNetwork();
+    if (e.toString().contains('insufficient funds')) {}
   }
   return false;
 

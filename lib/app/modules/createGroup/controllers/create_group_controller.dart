@@ -13,6 +13,7 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
@@ -368,7 +369,7 @@ class CreateGroupController extends GetxController {
             );
             if (bought) {
               Toast.success(message: 'Account activated');
-              return await Evm.getAddress();
+              return await web3AuthWalletAddress(); //await Evm.getAddress();
             } else {
               return null;
             }

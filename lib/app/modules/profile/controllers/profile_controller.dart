@@ -197,7 +197,7 @@ class ProfileController extends GetxController {
       isBuyingFriendTechTicket.value = true;
       bool bought = false;
       if (mySelectedWallet == WalletNames.particle) {
-        bought = await particle_buyFriendTechTicket(
+        bought = await internal_buyFriendTechTicket(
           sharesSubject: preferedAddress,
           chainId: baseChainId,
           targetUserId: userInfo.value!.id,

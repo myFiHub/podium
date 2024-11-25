@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -14,7 +13,6 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -493,7 +491,7 @@ Future<bool> particle_activate_friendtechWallet(
     if (myWalletAddress == null) {
       return false;
     }
-    final bought = await particle_buyFriendTechTicket(
+    final bought = await internal_buyFriendTechTicket(
       sharesSubject: myWalletAddress,
       chainId: chainId,
       targetUserId: myId,
@@ -521,7 +519,7 @@ Future<bool> ext_activate_friendtechWallet({
   return bought;
 }
 
-Future<bool> particle_buyFriendTechTicket({
+Future<bool> internal_buyFriendTechTicket({
   required String sharesSubject,
   int numberOfTickets = 1,
   required String chainId,
@@ -545,33 +543,22 @@ Future<bool> particle_buyFriendTechTicket({
   if (buyPrice == null) {
     return false;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'buyShares';
-  final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
-  const abiJson = FriendTechContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
-  final changed = await temporarilyChangeParticleNetwork(chainId);
-  if (!changed) {
-    return false;
-  }
-  try {
-    final data = await EvmService.customMethod(
-      contractAddress,
-      methodName,
-      parameters,
-      abiJsonString,
-    );
-    final transaction = await EvmService.createTransaction(
-      myAddress,
-      data,
-      buyPrice,
-      contractAddress,
-      gasFeeLevel: GasFeeLevel.high,
-    );
-    final signature = await Evm.sendTransaction(transaction);
-    await switchBackToSavedParticleNetwork();
+  final parameters = [
+    parsAddress(sharesSubjectWallet),
+    numberOfTickets.toString()
+  ];
 
-    if (signature.length > 10) {
+  try {
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: contract.function(methodName),
+      parameters: parameters,
+    );
+    final signature =
+        await sendTransaction(transaction: transaction, chainId: chainId);
+
+    if (signature != null && signature.length > 10) {
       if (targetUserId != myId) {
         saveNewPayment(
           event: PaymentEvent(
@@ -591,31 +578,6 @@ Future<bool> particle_buyFriendTechTicket({
     return false;
   } catch (e) {
     log.e('error : $e');
-    if (e.toString().contains('insufficient funds')) {
-      final selectedChain = await ParticleBase.getChainInfo();
-      final selectedChainName = selectedChain.name;
-      final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
-      Toast.error(
-        title: "Insufficient $selectedChainCurrency",
-        message: "Please top up your wallet on $selectedChainName",
-        mainbutton: TextButton(
-          onPressed: () {
-            _copyToClipboard(myAddress, prefix: "Address");
-          },
-          child: Text("Copy Address"),
-        ),
-        duration: 5,
-      );
-    }
-    await switchBackToSavedParticleNetwork();
-    if (e
-        .toString()
-        .contains("Only the shares' subject can buy the first share")) {
-      Toast.error(
-        title: "Error",
-        message: "Target user is not yet registered on friendtech",
-      );
-    }
 
     return false;
   }
@@ -857,7 +819,11 @@ Future<bool> internal_buySharesWithReferrer({
   }
 
   final methodName = 'buySharesWithReferrer';
-  final parameters = [sharesSubjectWallet, shareAmount.toString(), referrer];
+  final parameters = [
+    parsAddress(sharesSubjectWallet),
+    shareAmount.toString(),
+    parsAddress(referrer)
+  ];
   try {
     final transaction = Transaction.callContract(
         contract: contract,

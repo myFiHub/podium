@@ -511,7 +511,7 @@ class CheckticketController extends GetxController {
     }
     final preferedWalletAddress = activeWallets.preferedWalletAddress;
     if (selectedWallet == WalletNames.particle) {
-      bought = await particle_buyFriendTechTicket(
+      bought = await internal_buyFriendTechTicket(
         sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
         chainId: baseChainId,

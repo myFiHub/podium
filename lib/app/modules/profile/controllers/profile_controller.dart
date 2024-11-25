@@ -237,7 +237,7 @@ class ProfileController extends GetxController {
       isBuyingArenaTicket.value = true;
       bool bought = false;
       if (mySelectedWallet == WalletNames.particle) {
-        bought = await particle_buySharesWithReferrer(
+        bought = await internal_buySharesWithReferrer(
           sharesSubject: userInfo.value!.defaultWalletAddress,
           chainId: avalancheChainId,
           targetUserId: userInfo.value!.id,

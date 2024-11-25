@@ -13,6 +13,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
@@ -849,7 +850,7 @@ Future<BigInt?> particle_getBuyPrice({
   }
 }
 
-Future<bool> particle_buySharesWithReferrer({
+Future<bool> internal_buySharesWithReferrer({
   String? referrerAddress,
   required String sharesSubject,
   required String targetUserId,
@@ -885,24 +886,14 @@ Future<bool> particle_buySharesWithReferrer({
 
   final methodName = 'buySharesWithReferrer';
   final parameters = [sharesSubjectWallet, shareAmount.toString(), referrer];
-  const abiJson = StarsArenaSmartContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
   try {
-    final data = await EvmService.customMethod(
-      contract.address.hex,
-      methodName,
-      parameters,
-      abiJsonString,
-    );
-    final transaction = await EvmService.createTransaction(
-      myAddress,
-      data,
-      buyPrice,
-      contract.address.hex,
-      gasFeeLevel: GasFeeLevel.high,
-    );
-    final signature = await Evm.sendTransaction(transaction);
-    if (signature.length > 10) {
+    final transaction = Transaction.callContract(
+        contract: contract,
+        function: contract.function(methodName),
+        parameters: parameters);
+    final signature =
+        await sendTransaction(transaction: transaction, chainId: chainId);
+    if (signature != null && signature.length > 10) {
       saveNewPayment(
         event: PaymentEvent(
           type: PaymentTypes.arenaTicket,

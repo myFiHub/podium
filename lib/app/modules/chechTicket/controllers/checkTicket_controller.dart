@@ -555,7 +555,7 @@ class CheckticketController extends GetxController {
     }
     bool bought = false;
     if (selectedWallet == WalletNames.particle) {
-      bought = await particle_buySharesWithReferrer(
+      bought = await internal_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,
         targetUserId: ticketSeller.userInfo.id,

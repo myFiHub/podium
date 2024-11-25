@@ -6,6 +6,9 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:web3auth_flutter/enums.dart';
+import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 import '../controllers/login_controller.dart';
 
@@ -58,10 +61,19 @@ class LoginView extends GetView<LoginController> {
                     return Column(
                       children: [
                         Button(
-                          onPressed: () {
-                            controller.loginWithEmail(
-                              ignoreIfNotLoggedIn: false,
+                          onPressed: () async {
+                            await Web3AuthFlutter.login(
+                              LoginParams(
+                                loginProvider: Provider.google,
+                                mfaLevel: MFALevel.DEFAULT,
+                                // extraLoginOptions: ExtraLoginOptions(
+                                //   login_hint: "mhsnprvr@gmail.com",
+                                // ),
+                              ),
                             );
+                            // controller.loginWithEmail(
+                            //   ignoreIfNotLoggedIn: false,
+                            // );
                           },
                           text: 'Web3Auth login',
                           size: ButtonSize.LARGE,

@@ -284,11 +284,17 @@ class GlobalController extends GetxController {
     await Web3AuthFlutter.init(
       Web3AuthOptions(
         clientId:
-            "BPaGbQdFV7PF63sSzNBBE6XmGQoRi_7bVPuATKPScmF_vVLl4fsVrtJPZoZvM3yPXa2reYjjfo1dveHh5WCEPdE",
-        network: Network.sapphire_devnet,
+            //
+            // "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ",
+            Env.web3AuthClientId,
+        sessionTime: 60 * 60 * 24 * 7,
+        network: Network.sapphire_mainnet,
         redirectUrl: resolveRedirectUrl(),
         whiteLabel: WhiteLabelData(
-          appName: "Podium",
+          appName:
+              //
+              // "Web3Auth Flutter Playground",
+              "Podium",
           mode: ThemeModes.dark,
         ),
       ),
@@ -673,8 +679,15 @@ class GlobalController extends GetxController {
   _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
+
     try {
       await ParticleAuthCore.disconnect();
+    } catch (e) {
+      log.e(e);
+      isLoggingOut.value = false;
+    }
+    try {
+      await Web3AuthFlutter.logout();
     } catch (e) {
       log.e(e);
       isLoggingOut.value = false;

@@ -25,6 +25,7 @@ class Env {
   static const projectId = String.fromEnvironment('projectId');
   // from particle auth
   static const particleProjectId = String.fromEnvironment("particleProjectId");
+  static const web3AuthClientId = String.fromEnvironment("web3AuthClientId");
   static const particleClientKey = String.fromEnvironment("particleClientKey");
   static const particleAppId = String.fromEnvironment("particleAppId");
   static const environment = String.fromEnvironment("environment");

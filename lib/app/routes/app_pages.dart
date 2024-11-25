@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/groupDetail/views/group_by_id_landing.dart';
+import 'package:podium/app/modules/web3Auth_redirected/bindings/web2Auth_binding.dart';
+import 'package:podium/app/modules/web3Auth_redirected/views/web3AuthRedirected_view.dart';
 
 import '../modules/allGroups/bindings/all_groups_binding.dart';
 import '../modules/allGroups/views/all_groups_view.dart';
@@ -54,6 +56,11 @@ class AppPages {
       name: _Paths.LOGIN,
       page: () => const LoginView(),
       binding: LoginBinding(),
+    ),
+    GetPage(
+      name: _Paths.WEB3AUTH_REDIRECTED,
+      page: () => const Web3authredirectedView(),
+      binding: Web3AuthRedirectedBinding(),
     ),
     GetPage(
       name: _Paths.CREATE_GROUP,

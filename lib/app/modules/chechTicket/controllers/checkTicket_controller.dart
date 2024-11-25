@@ -613,9 +613,9 @@ class CheckticketController extends GetxController {
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
       if (group.value!.accessType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
-        final myShares = await particle_getMyShares_arena(
+        final myShares = await getMyShares_arena(
           sharesSubject: user.defaultWalletAddress,
-          chainId: particleChianId,
+          chainId: avalancheChainId,
         );
         if (myShares != null && myShares > BigInt.zero) {
           access.canEnter = true;
@@ -638,9 +638,9 @@ class CheckticketController extends GetxController {
     if (allUsersToBuyTicketFrom.value[userId]?.speakTicketType != null) {
       if (group.value!.speakerType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
-        final myShares = await particle_getMyShares_arena(
+        final myShares = await getMyShares_arena(
           sharesSubject: user.defaultWalletAddress,
-          chainId: particleChianId,
+          chainId: avalancheChainId,
         );
         if (myShares != null && myShares > BigInt.zero) {
           access.canSpeak = true;

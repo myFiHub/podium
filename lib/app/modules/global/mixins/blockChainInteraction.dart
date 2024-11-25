@@ -11,6 +11,7 @@ import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/contracts/cheerBoo.dart';
@@ -88,7 +89,10 @@ particle_cheerOrBoo({
   required bool cheer,
   required String chainId,
 }) async {
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
+  if (myAddress == null) {
+    return false;
+  }
   final contract =
       getDeployedContract(contract: Contracts.cheerboo, chainId: chainId);
   if (contract == null) {
@@ -230,12 +234,15 @@ Future<BigInt?> ext_getMyShares({
   }
 }
 
-Future<BigInt?> particle_getMyShares_arena({
+Future<BigInt?> getMyShares_arena({
   required String sharesSubject,
   required String chainId,
 }) async {
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); //await Evm.getAddress();
+  if (myAddress == null) {
+    return null;
+  }
   final contract =
       getDeployedContract(contract: Contracts.starsArena, chainId: chainId);
   if (contract == null) {
@@ -350,7 +357,7 @@ Future<BigInt> particle_getUserShares_friendTech({
   try {
     BigInt numberOfShares = BigInt.zero;
     final myExternalWallet = externalWalletAddress;
-    final myParticleAddress = await Evm.getAddress();
+    final myParticleAddress = await web3AuthWalletAddress(); //Evm.getAddress();
     final List<Future<dynamic>> arrayToCall = [];
     // check if my particle wallet bought any of the user's addresses tickets
     arrayToCall.add(_particle_getShares_friendthech(
@@ -401,7 +408,11 @@ Future<BigInt?> _particle_getShares_friendthech({
   required String chainId,
   String? buyerAddress,
 }) async {
-  final buyerWalletAddress = buyerAddress ?? await Evm.getAddress();
+  final buyerWalletAddress =
+      buyerAddress ?? await web3AuthWalletAddress(); // Evm.getAddress();
+  if (buyerWalletAddress == null) {
+    return BigInt.zero;
+  }
   final contract =
       getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
   if (contract == null) {
@@ -459,7 +470,10 @@ Future<BigInt?> particle_getFriendTechTicketPrice({
   required String chainId,
 }) async {
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); //Evm.getAddress();
+  if (myAddress == null) {
+    return null;
+  }
   final contract =
       getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
   if (contract == null) {
@@ -502,7 +516,10 @@ Future<BigInt?> particle_getFriendTechTicketPrice({
 Future<bool> particle_activate_friendtechWallet(
     {required String chainId}) async {
   try {
-    final myWalletAddress = await Evm.getAddress();
+    final myWalletAddress = await web3AuthWalletAddress(); //Evm.getAddress();
+    if (myWalletAddress == null) {
+      return false;
+    }
     final bought = await particle_buyFriendTechTicket(
       sharesSubject: myWalletAddress,
       chainId: chainId,
@@ -538,7 +555,10 @@ Future<bool> particle_buyFriendTechTicket({
   required String targetUserId,
 }) async {
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
+  if (myAddress == null) {
+    return false;
+  }
   final contract =
       getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
   if (contract == null) {
@@ -792,7 +812,10 @@ Future<BigInt?> particle_getBuyPrice({
   required String chainId,
 }) async {
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
+  if (myAddress == null) {
+    return null;
+  }
   final contract = getDeployedContract(
     contract: Contracts.starsArena,
     chainId: chainId,
@@ -848,7 +871,10 @@ Future<bool> particle_buySharesWithReferrer({
   }
 
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); //Evm.getAddress();
+  if (myAddress == null) {
+    return false;
+  }
   final contract = getDeployedContract(
     contract: Contracts.starsArena,
     chainId: chainId,

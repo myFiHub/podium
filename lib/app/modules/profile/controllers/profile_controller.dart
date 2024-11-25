@@ -168,7 +168,7 @@ class ProfileController extends GetxController {
         shareAmount: 1,
         chainId: avalancheChainId,
       ),
-      particle_getMyShares_arena(
+      getMyShares_arena(
         sharesSubject: userInfo.value!.defaultWalletAddress,
         chainId: avalancheChainId,
       )

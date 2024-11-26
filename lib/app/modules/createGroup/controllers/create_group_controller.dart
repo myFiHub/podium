@@ -361,7 +361,7 @@ class CreateGroupController extends GetxController {
           if (selectedWallet == null) {
             return null;
           }
-          if (selectedWallet == WalletNames.podium) {
+          if (selectedWallet == WalletNames.internal) {
             final bought = await internal_activate_friendtechWallet(
               chainId: baseChainId,
             );

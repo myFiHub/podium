@@ -338,8 +338,9 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
           ),
         ),
         Obx(() {
-          final isLoading = controller.loadingParticleActivation.value;
-          final isActivated = controller.isParticleActivatedOnFriendTech.value;
+          final isLoading = controller.loadingInternalWalletActivation.value;
+          final isActivated =
+              controller.isInternalWalletActivatedOnFriendTech.value;
           return Button(
             loading: isLoading,
             size: ButtonSize.SMALL,
@@ -351,7 +352,7 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
             onPressed: (isActivated || isLoading)
                 ? null
                 : () async {
-                    await controller.activateParticle();
+                    await controller.activateInternalWallet();
                   },
             type: ButtonType.gradient,
             text: isActivated ? 'Activated' : 'Activate',
@@ -766,9 +767,9 @@ class _Statistics extends GetWidget<MyProfileController> {
               ...payments.income.entries.map(
                 (e) {
                   final chainInfo = chainInfoByChainId(e.key);
-                  final currency = chainInfo.nativeCurrency.symbol;
+                  final currency = chainInfo.currency;
                   final chainName = chainInfo.name;
-                  final chainIcon = chainInfo.icon;
+                  final chainIcon = chainInfo.chainIcon!;
                   return Column(
                     children: [
                       Padding(

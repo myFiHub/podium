@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -469,9 +468,9 @@ class OngoingGroupCallController extends GetxController {
     if (userLocalWalletAddress != '') {
       targetAddress = userLocalWalletAddress;
     } else {
-      final particleUserWallets = await getParticleAuthWalletsForUser(userId);
-      if (particleUserWallets.length > 0) {
-        targetAddress = particleUserWallets[0].address;
+      final internalWallets = await getInternalWalletsForUser(userId);
+      if (internalWallets.length > 0) {
+        targetAddress = internalWallets[0].address;
       }
     }
 
@@ -541,7 +540,7 @@ class OngoingGroupCallController extends GetxController {
           cheer: cheer,
           chainId: externalWalletChianId,
         );
-      } else if (selectedWallet == WalletNames.podium) {
+      } else if (selectedWallet == WalletNames.internal) {
         success = await internal_cheerOrBoo(
           target: targetAddress,
           receiverAddresses: receiverAddresses,

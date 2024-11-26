@@ -5,7 +5,6 @@ import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/env.dart' as Environment;
-import 'package:particle_base/model/chain_info.dart' as ChainInfo;
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -67,12 +66,13 @@ chainNameById(String chainId) {
   return name;
 }
 
-ChainInfo.ChainInfo chainInfoByChainId(String chainId) {
-  return ChainInfo.ChainInfo.getChain(
-        int.parse(chainId),
-        chainNameById(chainId),
-      ) ??
-      movementChainOnParticle;
+ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
+  final chain =
+      ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
+  if (chain == null) {
+    return movementChain;
+  }
+  return chain;
 }
 
 String _friendTechAddress(String chainId) {

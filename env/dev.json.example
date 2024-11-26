@@ -1,7 +1,6 @@
 {
   "environment":"*",
   "chainNamespace":"*",
-  "initialParticleWalletChainId":"*",
   "initialExternalWalletChainId":"*",
   "fihubAddress_Avalanche_MainNet":"*",
   "starsArenaAddress_Avalanche_Mainnet":"*",
@@ -12,9 +11,6 @@
   "cheerBooTimeMultiplication":"*",
   "alby_apiKey":"*",
   "projectId":"*",
-  "particleProjectId":"*",
-  "particleClientKey":"*",
-  "particleAppId":"*",
   "jitsiServerUrl":"*",
   "appStoreUrl":"*",
   "baseDeepLinkUrl":"*",

@@ -4,6 +4,7 @@ import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -182,7 +183,7 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
             Row(
               children: [
                 Text(
-                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${chainInfoByChainId(avalancheChainId)!.nativeCurrency.symbol}',
+                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${chainInfoByChainId(avalancheChainId).currency}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -227,7 +228,10 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
           ],
         ),
         blockButton: true,
-        icon: Img(src: chainInfoByChainId(avalancheChainId)!.icon, size: 20),
+        icon: Img(
+            src: chainInfoByChainId(avalancheChainId).chainIcon ??
+                Assets.images.movementLogo.path,
+            size: 20),
       );
     });
   }
@@ -275,7 +279,7 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
                 : Row(
                     children: [
                       Text(
-                        'Buy Friendtech share ${friendTechPrice.toString()} ${chainInfoByChainId(baseChainId)!.nativeCurrency.symbol}',
+                        'Buy Friendtech share ${friendTechPrice.toString()} ${chainInfoByChainId(baseChainId).currency}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -321,7 +325,8 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
         ),
         blockButton: true,
         icon: Img(
-          src: chainInfoByChainId(baseChainId)!.icon,
+          src: chainInfoByChainId(baseChainId).chainIcon ??
+              Assets.images.movementLogo.path,
           size: 20,
         ),
       );

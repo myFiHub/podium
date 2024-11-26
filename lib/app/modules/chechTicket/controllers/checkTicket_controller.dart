@@ -327,9 +327,6 @@ class CheckticketController extends GetxController {
     final ArenaCallArray = arenaTicketSellers
         .map((e) => checkIfIveBoughtTheTicketFromUser(e.userInfo))
         .toList();
-    // final chainChanged =
-    // await temporarilyChangeParticleNetwork(avalancheChainId);
-    // if (chainChanged) {
     final arenaResults = await Future.wait(ArenaCallArray);
     for (var i = 0; i < arenaResults.length; i++) {
       final seller = arenaTicketSellers[i];
@@ -351,10 +348,6 @@ class CheckticketController extends GetxController {
         buying: false,
       );
     }
-    // }
-    // await switchBackToSavedParticleNetwork();
-    // final changed = await temporarilyChangeParticleNetwork(baseChainId);
-    // if (changed) {
     final FriendTechResults = await Future.wait(FriendTechCallArray);
     for (var i = 0; i < FriendTechResults.length; i++) {
       final seller = friendTechTicketSellers[i];
@@ -375,9 +368,7 @@ class CheckticketController extends GetxController {
         checking: false,
         buying: false,
       );
-      // }
     }
-    // await switchBackToSavedParticleNetwork();
     allUsersToBuyTicketFrom.refresh();
     return checkAccess();
   }
@@ -506,7 +497,7 @@ class CheckticketController extends GetxController {
       return false;
     }
     final preferedWalletAddress = activeWallets.preferedWalletAddress;
-    if (selectedWallet == WalletNames.podium) {
+    if (selectedWallet == WalletNames.internal) {
       bought = await internal_buyFriendTechTicket(
         sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
@@ -550,7 +541,7 @@ class CheckticketController extends GetxController {
       return false;
     }
     bool bought = false;
-    if (selectedWallet == WalletNames.podium) {
+    if (selectedWallet == WalletNames.internal) {
       bought = await internal_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: avalancheChainId,

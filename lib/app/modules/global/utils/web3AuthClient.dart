@@ -50,7 +50,7 @@ Future<String?> sendTransaction({
         stError.contains("insufficient balance")) {
       final chainInfo = chainInfoByChainId(chainId);
       Toast.error(
-        title: "Insufficient ${chainInfo.nativeCurrency.symbol}",
+        title: "Insufficient ${chainInfo.currency}",
         message: "Please top up your wallet on ${chainInfo.name}",
         mainbutton: TextButton(
           onPressed: () {

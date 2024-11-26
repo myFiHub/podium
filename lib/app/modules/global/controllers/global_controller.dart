@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
@@ -28,14 +27,10 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:particle_base/model/user_info.dart' as ParticleUser;
-import 'package:particle_base/model/chain_info.dart' as ChainInfo;
-import 'package:particle_base/particle_base.dart' as ParticleBase;
 import 'package:alarm/alarm.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
@@ -72,7 +67,6 @@ class GlobalController extends GetxController {
   final connectedWalletAddress = "".obs;
   final jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
-  // final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
   final firebaseUser = Rxn<User>();
   final currentUserInfo = Rxn<UserInfoModel>();
   final activeRoute = AppPages.INITIAL.obs;
@@ -231,14 +225,6 @@ class GlobalController extends GetxController {
       storage.remove(StorageKeys.externalWalletChainId);
     }
     return success;
-  }
-
-  get particleEnvironment {
-    return Env.environment == DEV
-        ? ParticleBase.Env.dev
-        : Env.environment == STAGE
-            ? ParticleBase.Env.staging
-            : ParticleBase.Env.production;
   }
 
   Future<void> initializeWeb3Auth() async {
@@ -534,12 +520,6 @@ class GlobalController extends GetxController {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
     web3AuthAddress = '';
-    try {
-      await ParticleAuthCore.disconnect();
-    } catch (e) {
-      log.e(e);
-      isLoggingOut.value = false;
-    }
     try {
       await Web3AuthFlutter.logout();
     } catch (e) {

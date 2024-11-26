@@ -11,7 +11,6 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:particle_base/particle_base.dart';
 
 import '../controllers/home_controller.dart';
 

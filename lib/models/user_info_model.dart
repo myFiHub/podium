@@ -1,4 +1,3 @@
-import 'package:particle_base/model/user_info.dart' as ParticleUser;
 import "package:podium/models/firebase_Internal_wallet.dart";
 
 class UserInfoModel {
@@ -9,7 +8,6 @@ class UserInfoModel {
   late String localWalletAddress;
   late List<String> following;
   String? lowercasename;
-  late ParticleUser.UserInfo? localParticleUserInfo;
   late String savedParticleWalletAddress;
   late FirebaseInternalWalletInfo? savedParticleUserInfo;
   late int numberOfFollowers;
@@ -24,7 +22,6 @@ class UserInfoModel {
   static String localWalletAddressKey = 'localWalletAddress';
   static String followingKey = 'following';
   static String numberOfFollowersKey = 'numberOfFollowers';
-  static String localParticleUserInfoKey = 'localParticleUserInfo';
   static String savedParticleUserInfoKey = 'savedParticleUserInfo';
   static String lowercasenameKey = 'lowercasename';
   static String isOver18Key = 'isOver18';
@@ -42,7 +39,6 @@ class UserInfoModel {
     required this.numberOfFollowers,
     required this.savedParticleWalletAddress,
     this.lowercasename,
-    this.localParticleUserInfo,
     this.savedParticleUserInfo,
     this.isOver18 = false,
     this.loginType,
@@ -81,7 +77,6 @@ class UserInfoModel {
     localWalletAddress = json[localWalletAddressKey] ?? '';
     following = json[followingKey] ?? [];
     numberOfFollowers = json[numberOfFollowersKey] ?? 0;
-    localParticleUserInfo = json[localParticleUserInfoKey];
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
@@ -104,7 +99,6 @@ class UserInfoModel {
     }
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
-    data[localParticleUserInfoKey] = localParticleUserInfo;
     data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();
     data[isOver18Key] = isOver18;
     data[loginTypeKey] = loginType;
@@ -122,7 +116,6 @@ class UserInfoModel {
     List<String>? following,
     int? numberOfFollowers,
     String? lowercasename,
-    ParticleUser.UserInfo? localParticleUserInfo,
     String? savedParticleWalletAddress,
     FirebaseInternalWalletInfo? savedParticleUserInfo,
     bool? isOver18,
@@ -138,8 +131,6 @@ class UserInfoModel {
       following: following ?? this.following,
       numberOfFollowers: numberOfFollowers ?? this.numberOfFollowers,
       lowercasename: lowercasename ?? this.lowercasename,
-      localParticleUserInfo:
-          localParticleUserInfo ?? this.localParticleUserInfo,
       savedParticleUserInfo:
           savedParticleUserInfo ?? this.savedParticleUserInfo,
       isOver18: isOver18 ?? this.isOver18,

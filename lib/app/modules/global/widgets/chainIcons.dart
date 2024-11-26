@@ -22,7 +22,8 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
       String externalChainNetworkIcon = '';
       if (externalChain != null) {
         final externalChain = chainInfoByChainId(externalWalletChainId);
-        externalChainNetworkIcon = externalChain.icon;
+        externalChainNetworkIcon =
+            externalChain.chainIcon ?? Assets.images.movementLogo.path;
       }
       if (externalChainNetworkIcon == '') {
         externalChainNetworkIcon = movementChain.chainIcon ?? '';

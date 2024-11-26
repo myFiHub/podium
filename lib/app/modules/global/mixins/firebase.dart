@@ -7,7 +7,6 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
-import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
@@ -779,45 +778,7 @@ deleteNotification({required String notificationId}) async {
   }
 }
 
-///////////////////////
-/// Particle auth /////
-///////////////////////
-saveParticleUserInfoToFirebaseIfNeeded({
-  required ParticleUserInfo.UserInfo particleUser,
-  required String myUserId,
-}) async {
-  try {
-    final databaseRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.usersRef)
-        .child(myUserId)
-        .child(UserInfoModel.savedParticleUserInfoKey);
-
-    final snapshot = await databaseRef.get();
-    final particleUserInfo = snapshot.value as dynamic;
-    if (particleUserInfo != null) {
-      return;
-    } else {
-      final userToSave = FirebaseInternalWalletInfo(
-        uuid: particleUser.uuid,
-        wallets: particleUser.wallets
-            .map((e) {
-              return InternalWallet(
-                address: e.publicAddress,
-                chain: e.chainName,
-              );
-            })
-            .toList()
-            .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
-            .toList(),
-      );
-      await databaseRef.set(userToSave.toJson());
-    }
-  } catch (e) {
-    log.f('Error saving particle user info to firebase: $e');
-  }
-}
-
-Future<bool> saveParticleWalletInfoForUser(
+Future<bool> saveInternalWalletInfoForUser(
     {required String userId, required FirebaseInternalWalletInfo info}) async {
   try {
     final databaseRef = FirebaseDatabase.instance.ref(
@@ -849,13 +810,13 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       if (savedLogintype != loginType) {
         userRef.child(UserInfoModel.loginTypeKey).set(loginType);
       }
-      final particleWalletAddress = user.internalWalletAddress;
+      final internalWalletAddress = user.internalWalletAddress;
       final savedParticleWalletAddress =
           userSnapshot[UserInfoModel.savedParticleWalletAddressKey];
-      if (savedParticleWalletAddress != particleWalletAddress) {
+      if (savedParticleWalletAddress != internalWalletAddress) {
         userRef
             .child(UserInfoModel.savedParticleWalletAddressKey)
-            .set(particleWalletAddress);
+            .set(internalWalletAddress);
       }
       final savedLoginTypeIdentifier =
           userSnapshot[UserInfoModel.loginTypeIdentifierKey];
@@ -868,7 +829,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       final UserInfoModel? retrievedUser =
           singleUserParser(userSnapshot)?.copyWith(
         loginType: loginType,
-        savedParticleWalletAddress: particleWalletAddress,
+        savedParticleWalletAddress: internalWalletAddress,
         loginTypeIdentifier: user.loginTypeIdentifier,
       );
 
@@ -886,7 +847,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
             );
           },
         );
-        final particleInfo = FirebaseInternalWalletInfo(
+        final internalWalletInfo = FirebaseInternalWalletInfo(
           uuid: parsed[FirebaseInternalWalletInfo.uuidKey],
           wallets: walletsList
               .where(
@@ -895,7 +856,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
               .toList(),
         );
         if (retrievedUser != null) {
-          retrievedUser.savedParticleUserInfo = particleInfo;
+          retrievedUser.savedParticleUserInfo = internalWalletInfo;
         }
       }
       return retrievedUser;
@@ -910,7 +871,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
   }
 }
 
-Future<List<InternalWallet>> getParticleAuthWalletsForUser(
+Future<List<InternalWallet>> getInternalWalletsForUser(
   String userId,
 ) async {
   try {
@@ -918,7 +879,7 @@ Future<List<InternalWallet>> getParticleAuthWalletsForUser(
         .ref(FireBaseConstants.usersRef)
         .child(userId)
         .child(UserInfoModel.savedParticleUserInfoKey);
-    final savedParticleWalletAddressRef = FirebaseDatabase.instance
+    final savedInternalWalletAddressRef = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId)
         .child(UserInfoModel.savedParticleWalletAddressKey);
@@ -937,7 +898,7 @@ Future<List<InternalWallet>> getParticleAuthWalletsForUser(
       if (walletsList.isNotEmpty) {
         return walletsList;
       } else {
-        final savedWalletSnapshot = await savedParticleWalletAddressRef.get();
+        final savedWalletSnapshot = await savedInternalWalletAddressRef.get();
         final savedWalletAddress = savedWalletSnapshot.value as dynamic;
         if (savedWalletAddress != null) {
           return [

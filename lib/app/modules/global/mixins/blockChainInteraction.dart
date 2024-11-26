@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
@@ -13,13 +12,11 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/contracts/friendTech.dart';
-import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:particle_base/particle_base.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -34,8 +31,7 @@ Future<bool> ext_cheerOrBoo({
   required bool cheer,
   required String chainId,
 }) async {
-  final globalController = Get.find<GlobalController>();
-  final service = globalController.web3ModalService;
+  final service = web3ModalService;
   final transaction = Transaction(
     from: parsAddress(service.session!.address!),
     value: parseValue(amount),
@@ -218,36 +214,29 @@ Future<BigInt?> getMyShares_arena({
   if (contract == null) {
     return null;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'getMyShares';
-  final parameters = [sharesSubjectWallet];
-  const abiJson = StarsArenaSmartContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
-
+  final parameters = [parsAddress(sharesSubjectWallet)];
+  final client = web3ClientByChainId(chainId);
   try {
     final results = await Future.wait([
-      EvmService.readContract(
-        myAddress,
-        BigInt.zero,
-        contractAddress,
-        methodName,
-        parameters,
-        abiJsonString,
+      client.call(
+        contract: contract,
+        sender: parsAddress(myAddress),
+        function: contract.function(methodName),
+        params: parameters,
       ),
       if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty)
-        EvmService.readContract(
-          externalWalletAddress!,
-          BigInt.zero,
-          contractAddress,
-          methodName,
-          parameters,
-          abiJsonString,
+        client.call(
+          contract: contract,
+          sender: parsAddress(externalWalletAddress!),
+          function: contract.function(methodName),
+          params: parameters,
         ),
     ]);
     BigInt sum = BigInt.zero;
     for (var result in results) {
-      if (result != null) {
-        sum += BigInt.parse(result);
+      if (result[0] != null) {
+        sum += result[0];
       }
     }
     return sum;
@@ -279,7 +268,8 @@ Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
       ));
     }
     final List<BigInt?> results = await Future.wait(arrayToCall);
-    final isParticleActive = results[0] != null && results[0] != BigInt.zero;
+    final isInternalWalletActiveOnFriendTechActive =
+        results[0] != null && results[0] != BigInt.zero;
     bool isExternalActive = false;
     if (results.length > 1) {
       isExternalActive = results[1] != null && results[1] != BigInt.zero;
@@ -287,7 +277,7 @@ Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
 
     return UserActiveWalletOnFriendtech(
       isExternalWalletActive: isExternalActive,
-      isInternalWalletActive: isParticleActive,
+      isInternalWalletActive: isInternalWalletActiveOnFriendTechActive,
       externalWalletAddress: externalWalletAddress,
       internalWalletAddress: internalWalletAddress,
     );
@@ -313,7 +303,7 @@ Future<BigInt> internal_getUserShares_friendTech({
     final myInternalWalletAddress =
         await web3AuthWalletAddress(); //Evm.getAddress();
     final List<Future<dynamic>> arrayToCall = [];
-    // check if my particle wallet bought any of the user's addresses tickets
+    // check if my internal wallet bought any of the user's addresses tickets
     arrayToCall.add(_internal_getShares_friendthech(
       sellerAddress: internalWallet,
       chainId: chainId,
@@ -439,17 +429,8 @@ Future<BigInt?> internal_getFriendTechTicketPrice({
   if (contract == null) {
     return null;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'getBuyPriceAfterFee';
   final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
-  const abiJson = FriendTechContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
-
-  // final changed = await temporarilyChangeParticleNetwork(chainId);
-  // if (!changed) {
-  //   return null;
-  // }
-
   try {
     final client = web3ClientByChainId(chainId);
     final result = await client.call(
@@ -469,7 +450,6 @@ Future<BigInt?> internal_getFriendTechTicketPrice({
     }
   } catch (e) {
     log.e('error : $e');
-    // await switchBackToSavedParticleNetwork();
     return null;
   }
 }
@@ -842,24 +822,9 @@ Future<bool> internal_buySharesWithReferrer({
     return false;
   } catch (e) {
     log.e('error : $e ${((e as dynamic).data)}');
-    if (e.toString().toLowerCase().contains('fund')) {
-      final selectedChain = await ParticleBase.getChainInfo();
-      final selectedChainName = selectedChain.name;
-      final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
-      Toast.error(
-        title: "Insufficient $selectedChainCurrency",
-        message: "Please top up your wallet on $selectedChainName",
-        mainbutton: TextButton(
-          onPressed: () {
-            _copyToClipboard(myAddress, prefix: "Address");
-          },
-          child: Text("Copy Address"),
-        ),
-        duration: 5,
-      );
-    } else {
-      Toast.error(message: (e as dynamic).message);
-    }
+
+    Toast.error(message: (e as dynamic).message);
+
     return false;
   }
 }
@@ -922,16 +887,16 @@ String? fihubAddress(String chainId) {
 }
 
 class WalletNames {
-  static const podium = "Podium Wallet";
+  static const internal = "Podium Wallet";
   static const external = "External Wallet";
 }
 
 Future<String?> choseAWallet({required String chainId}) async {
   if (externalWalletAddress == null) {
-    return WalletNames.podium;
+    return WalletNames.internal;
   }
   if (externalWalletAddress!.isEmpty) {
-    return WalletNames.podium;
+    return WalletNames.internal;
   }
   final store = GetStorage();
   final savedWallet = store.read(StorageKeys.selectedWalletName);
@@ -948,7 +913,8 @@ Future<String?> choseAWallet({required String chainId}) async {
           Text("Choose a wallet"),
           space10,
           Img(
-            src: chainInfoByChainId(chainId)?.icon ?? movementChain.chainIcon!,
+            src: chainInfoByChainId(chainId).chainIcon ??
+                Assets.images.logo.path,
             alt: "logo",
             size: 20,
           ),
@@ -993,9 +959,9 @@ class SelectChainContent extends GetView<GlobalController> {
                 final shouldRemember = store.read("rememberWallet") ?? false;
                 if (shouldRemember) {
                   store.write(
-                      StorageKeys.selectedWalletName, WalletNames.podium);
+                      StorageKeys.selectedWalletName, WalletNames.internal);
                 }
-                Navigator.pop(Get.overlayContext!, WalletNames.podium);
+                Navigator.pop(Get.overlayContext!, WalletNames.internal);
               }),
           space10,
           Button(

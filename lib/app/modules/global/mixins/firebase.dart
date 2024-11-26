@@ -797,7 +797,7 @@ saveParticleUserInfoToFirebaseIfNeeded({
     if (particleUserInfo != null) {
       return;
     } else {
-      final userToSave = FirebaseParticleAuthUserInfo(
+      final userToSave = FirebaseInternalWalletInfo(
         uuid: particleUser.uuid,
         wallets: particleUser.wallets
             .map((e) {
@@ -818,8 +818,7 @@ saveParticleUserInfoToFirebaseIfNeeded({
 }
 
 Future<bool> saveParticleWalletInfoForUser(
-    {required String userId,
-    required FirebaseParticleAuthUserInfo info}) async {
+    {required String userId, required FirebaseInternalWalletInfo info}) async {
   try {
     final databaseRef = FirebaseDatabase.instance.ref(
       FireBaseConstants.usersRef +
@@ -850,7 +849,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       if (savedLogintype != loginType) {
         userRef.child(UserInfoModel.loginTypeKey).set(loginType);
       }
-      final particleWalletAddress = user.particleWalletAddress;
+      final particleWalletAddress = user.internalWalletAddress;
       final savedParticleWalletAddress =
           userSnapshot[UserInfoModel.savedParticleWalletAddressKey];
       if (savedParticleWalletAddress != particleWalletAddress) {
@@ -878,7 +877,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       if (savedParticleUserInfo != null) {
         final parsed = json.decode(savedParticleUserInfo as String);
         final wallets =
-            List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
+            List.from(parsed[FirebaseInternalWalletInfo.walletsKey]);
         final List<ParticleAuthWallet> walletsList = [];
         wallets.forEach(
           (element) {
@@ -887,8 +886,8 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
             );
           },
         );
-        final particleInfo = FirebaseParticleAuthUserInfo(
-          uuid: parsed[FirebaseParticleAuthUserInfo.uuidKey],
+        final particleInfo = FirebaseInternalWalletInfo(
+          uuid: parsed[FirebaseInternalWalletInfo.uuidKey],
           wallets: walletsList
               .where(
                 (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
@@ -928,8 +927,7 @@ Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
     final particleUserInfo = walletDataSnapsot.value as dynamic;
     if (particleUserInfo != null) {
       final parsed = json.decode(particleUserInfo as String);
-      final wallets =
-          List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
+      final wallets = List.from(parsed[FirebaseInternalWalletInfo.walletsKey]);
       final List<ParticleAuthWallet> walletsList = [];
       wallets.forEach((element) {
         if (element['address'] != '' && element['chain'] == 'evm_chain') {

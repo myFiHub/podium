@@ -258,20 +258,20 @@ Future<BigInt?> getMyShares_arena({
 }
 
 Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
-    {required String particleAddress,
+    {required String internalWalletAddress,
     String? externalWalletAddress,
     required String chainId}) async {
   final List<Future<BigInt?>> arrayToCall = [];
 
   try {
     arrayToCall.add(_internal_getShares_friendthech(
-      sellerAddress: particleAddress,
-      buyerAddress: particleAddress,
+      sellerAddress: internalWalletAddress,
+      buyerAddress: internalWalletAddress,
       chainId: chainId,
     ));
     if (externalWalletAddress != null &&
         externalWalletAddress.isNotEmpty &&
-        externalWalletAddress != particleAddress) {
+        externalWalletAddress != internalWalletAddress) {
       arrayToCall.add(_internal_getShares_friendthech(
         sellerAddress: externalWalletAddress,
         buyerAddress: externalWalletAddress,
@@ -287,37 +287,38 @@ Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
 
     return UserActiveWalletOnFriendtech(
       isExternalWalletActive: isExternalActive,
-      isParticleWalletActive: isParticleActive,
+      isInternalWalletActive: isParticleActive,
       externalWalletAddress: externalWalletAddress,
-      particleWalletAddress: particleAddress,
+      internalWalletAddress: internalWalletAddress,
     );
   } catch (e) {
     log.e('error : $e');
     return UserActiveWalletOnFriendtech(
       isExternalWalletActive: false,
-      isParticleWalletActive: false,
+      isInternalWalletActive: false,
       externalWalletAddress: externalWalletAddress,
-      particleWalletAddress: particleAddress,
+      internalWalletAddress: internalWalletAddress,
     );
   }
 }
 
 Future<BigInt> internal_getUserShares_friendTech({
   required String defaultWallet,
-  required String particleWallet,
+  required String internalWallet,
   required String chainId,
 }) async {
   try {
     BigInt numberOfShares = BigInt.zero;
     final myExternalWallet = externalWalletAddress;
-    final myParticleAddress = await web3AuthWalletAddress(); //Evm.getAddress();
+    final myInternalWalletAddress =
+        await web3AuthWalletAddress(); //Evm.getAddress();
     final List<Future<dynamic>> arrayToCall = [];
     // check if my particle wallet bought any of the user's addresses tickets
     arrayToCall.add(_internal_getShares_friendthech(
-      sellerAddress: particleWallet,
+      sellerAddress: internalWallet,
       chainId: chainId,
     ));
-    if (defaultWallet != particleWallet) {
+    if (defaultWallet != internalWallet) {
       arrayToCall.add(_internal_getShares_friendthech(
         sellerAddress: defaultWallet,
         chainId: chainId,
@@ -327,11 +328,11 @@ Future<BigInt> internal_getUserShares_friendTech({
     // check if external wallet bought any of the user's addresses tickets
     if (myExternalWallet != null) {
       arrayToCall.add(_internal_getShares_friendthech(
-        sellerAddress: particleWallet,
+        sellerAddress: internalWallet,
         chainId: chainId,
         buyerAddress: myExternalWallet,
       ));
-      if (myExternalWallet != myParticleAddress) {
+      if (myExternalWallet != myInternalWalletAddress) {
         arrayToCall.add(_internal_getShares_friendthech(
           sellerAddress: defaultWallet,
           chainId: chainId,
@@ -947,8 +948,7 @@ Future<String?> choseAWallet({required String chainId}) async {
           Text("Choose a wallet"),
           space10,
           Img(
-            src: particleChainInfoByChainId(chainId)?.icon ??
-                movementChain.chainIcon!,
+            src: chainInfoByChainId(chainId)?.icon ?? movementChain.chainIcon!,
             alt: "logo",
             size: 20,
           ),
@@ -1083,22 +1083,22 @@ class _RememberCheckBoxState extends State<RememberCheckBox> {
 }
 
 class UserActiveWalletOnFriendtech {
-  final bool isParticleWalletActive;
+  final bool isInternalWalletActive;
   final bool isExternalWalletActive;
   final String? externalWalletAddress;
-  final String particleWalletAddress;
-  bool get hasActiveWallet => isParticleWalletActive || isExternalWalletActive;
+  final String internalWalletAddress;
+  bool get hasActiveWallet => isInternalWalletActive || isExternalWalletActive;
   String get preferedWalletAddress {
     if (isExternalWalletActive && externalWalletAddress != null) {
       return externalWalletAddress!;
     }
-    return particleWalletAddress;
+    return internalWalletAddress;
   }
 
   UserActiveWalletOnFriendtech({
-    required this.isParticleWalletActive,
+    required this.isInternalWalletActive,
     required this.isExternalWalletActive,
     required this.externalWalletAddress,
-    required this.particleWalletAddress,
+    required this.internalWalletAddress,
   });
 }

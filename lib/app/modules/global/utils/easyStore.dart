@@ -24,8 +24,3 @@ String get externalWalletChianId {
   final GlobalController globalController = Get.find();
   return globalController.externalWalletChainId.value;
 }
-
-String get particleChianId {
-  final GlobalController globalController = Get.find();
-  return globalController.particleWalletChainId.value;
-}

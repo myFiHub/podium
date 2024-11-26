@@ -182,7 +182,7 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
             Row(
               children: [
                 Text(
-                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${particleChainInfoByChainId(avalancheChainId)!.nativeCurrency.symbol}',
+                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${chainInfoByChainId(avalancheChainId)!.nativeCurrency.symbol}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -227,8 +227,7 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
           ],
         ),
         blockButton: true,
-        icon: Img(
-            src: particleChainInfoByChainId(avalancheChainId)!.icon, size: 20),
+        icon: Img(src: chainInfoByChainId(avalancheChainId)!.icon, size: 20),
       );
     });
   }
@@ -276,7 +275,7 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
                 : Row(
                     children: [
                       Text(
-                        'Buy Friendtech share ${friendTechPrice.toString()} ${particleChainInfoByChainId(baseChainId)!.nativeCurrency.symbol}',
+                        'Buy Friendtech share ${friendTechPrice.toString()} ${chainInfoByChainId(baseChainId)!.nativeCurrency.symbol}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -322,7 +321,7 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
         ),
         blockButton: true,
         icon: Img(
-          src: particleChainInfoByChainId(baseChainId)!.icon,
+          src: chainInfoByChainId(baseChainId)!.icon,
           size: 20,
         ),
       );

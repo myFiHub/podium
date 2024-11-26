@@ -120,17 +120,17 @@ class MyProfileController extends GetxController {
     if (silent != true) {
       loadingParticleActivation.value = true;
     }
-    final particleAddress =
+    final internalWalletAddress =
         await web3AuthWalletAddress(); // await Evm.getAddress();
-    if (particleAddress == null) {
+    if (internalWalletAddress == null) {
       return false;
     }
     final activeWallets = await internal_friendTech_getActiveUserWallets(
-      particleAddress: particleAddress,
+      internalWalletAddress: internalWalletAddress,
       chainId: baseChainId,
     );
 
-    final isActivated = activeWallets.isParticleWalletActive;
+    final isActivated = activeWallets.isInternalWalletActive;
     isParticleActivatedOnFriendTech.value = isActivated;
 
     if (silent != true) {
@@ -187,8 +187,9 @@ class MyProfileController extends GetxController {
       loadingExternalWalletActivation.value = true;
     }
 
-    final particleAddress = await web3AuthWalletAddress(); // Evm.getAddress();
-    if (particleAddress == null) {
+    final internalWalletAddress =
+        await web3AuthWalletAddress(); // Evm.getAddress();
+    if (internalWalletAddress == null) {
       isExternalWalletActivatedOnFriendTech.value = false;
       if (silent != true) {
         loadingExternalWalletActivation.value = false;
@@ -204,7 +205,7 @@ class MyProfileController extends GetxController {
       return false;
     } else {
       final activeWallets = await internal_friendTech_getActiveUserWallets(
-        particleAddress: particleAddress,
+        internalWalletAddress: internalWalletAddress,
         externalWalletAddress: externalWalletAddress,
         chainId: baseChainId,
       );

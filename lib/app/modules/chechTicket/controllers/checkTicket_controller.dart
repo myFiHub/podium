@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -117,7 +118,7 @@ class CheckticketController extends GetxController {
       savedParticleWalletAddress: address,
       following: [],
       numberOfFollowers: 0,
-      savedParticleUserInfo: FirebaseParticleAuthUserInfo(
+      savedParticleUserInfo: FirebaseInternalWalletInfo(
         wallets: [
           ParticleAuthWallet(
             address: address,
@@ -140,7 +141,7 @@ class CheckticketController extends GetxController {
       savedParticleWalletAddress: user.defaultAddress,
       following: [],
       numberOfFollowers: 0,
-      savedParticleUserInfo: FirebaseParticleAuthUserInfo(
+      savedParticleUserInfo: FirebaseInternalWalletInfo(
         wallets: [
           ParticleAuthWallet(
             address: user.defaultAddress,
@@ -492,7 +493,7 @@ class CheckticketController extends GetxController {
     }
     bool bought = false;
     final activeWallets = await internal_friendTech_getActiveUserWallets(
-      particleAddress: ticketSeller.userInfo.particleWalletAddress,
+      internalWalletAddress: ticketSeller.userInfo.internalWalletAddress,
       externalWalletAddress: ticketSeller.userInfo.defaultWalletAddress,
       chainId: baseChainId,
     );
@@ -620,7 +621,7 @@ class CheckticketController extends GetxController {
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         final myShares = await internal_getUserShares_friendTech(
           defaultWallet: user.defaultWalletAddress,
-          particleWallet: user.particleWalletAddress,
+          internalWallet: user.internalWalletAddress,
           chainId: baseChainId,
         );
         if (myShares > BigInt.zero) {
@@ -645,7 +646,7 @@ class CheckticketController extends GetxController {
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         final myShares = await internal_getUserShares_friendTech(
           defaultWallet: user.defaultWalletAddress,
-          particleWallet: user.particleWalletAddress,
+          internalWallet: user.internalWalletAddress,
           chainId: baseChainId,
         );
         if (myShares > BigInt.zero) {

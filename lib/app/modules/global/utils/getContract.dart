@@ -67,7 +67,7 @@ chainNameById(String chainId) {
   return name;
 }
 
-ChainInfo.ChainInfo particleChainInfoByChainId(String chainId) {
+ChainInfo.ChainInfo chainInfoByChainId(String chainId) {
   return ChainInfo.ChainInfo.getChain(
         int.parse(chainId),
         chainNameById(chainId),

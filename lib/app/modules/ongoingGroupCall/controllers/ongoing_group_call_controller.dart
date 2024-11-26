@@ -480,7 +480,7 @@ class OngoingGroupCallController extends GetxController {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
       if (myUser.localWalletAddress == targetAddress ||
-          (myUser.particleWalletAddress == targetAddress)) {
+          (myUser.internalWalletAddress == targetAddress)) {
         receiverAddresses = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
@@ -584,9 +584,9 @@ class OngoingGroupCallController extends GetxController {
           'groupId': groupCallController.group.value!.id,
           'fromUser': myUser.id,
         });
-        final particleAddress =
+        final internalWalletAddress =
             await web3AuthWalletAddress(); //await Evm.getAddress();
-        if (particleAddress == null) {
+        if (internalWalletAddress == null) {
           log.e("podium address is null");
           return;
         }
@@ -597,7 +597,7 @@ class OngoingGroupCallController extends GetxController {
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external
               ? externalWalletAddress!
-              : particleAddress,
+              : internalWalletAddress,
           targetAddress: targetAddress,
           initiatorId: myId,
           targetId: userId,

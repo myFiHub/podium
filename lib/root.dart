@@ -36,62 +36,6 @@ class Root extends StatelessWidget {
   }
 }
 
-class ConnectedNetworks extends GetWidget<GlobalController> {
-  const ConnectedNetworks({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-        top: 0,
-        left: 0,
-        child: Obx(() {
-          controller.particleWalletChainId.value;
-          controller.externalWalletChainId.value;
-          final connectedExternalWalletAddress =
-              controller.connectedWalletAddress.value;
-          // final externalWalletIcon= ;
-          return Container(
-            constraints: BoxConstraints(maxHeight: 60),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    SizedBox(width: 4),
-                    Assets.images.particleIcon.image(
-                      width: 10,
-                      height: 10,
-                    ),
-                    space5,
-                    Icon(Icons.link_sharp),
-                    space5,
-                    ParticleWalletChainIcon(),
-                  ],
-                ),
-                if (connectedExternalWalletAddress != '')
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 2,
-                      ),
-                      Icon(
-                        Icons.wallet,
-                        size: 16,
-                      ),
-                      SizedBox(
-                        width: 2,
-                      ),
-                      Icon(Icons.link_sharp),
-                      space5,
-                      ExternalWalletChainIcon(),
-                    ],
-                  ),
-              ],
-            ),
-          );
-        }));
-  }
-}
-
 class InternetConnectionChecker extends GetView<GlobalController> {
   const InternetConnectionChecker({super.key});
 

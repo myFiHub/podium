@@ -15,7 +15,7 @@ Web3Client web3ClientByChainId(String chainId) {
   if (chainId == movementChainId) {
     return Web3Client(movementChain.rpcUrl, Client());
   }
-  final rpcUrl = particleChainInfoByChainId(chainId).rpcUrl;
+  final rpcUrl = chainInfoByChainId(chainId).rpcUrl;
   final client = Web3Client(rpcUrl, Client());
   return client;
 }
@@ -48,7 +48,7 @@ Future<String?> sendTransaction({
     final stError = e.toString();
     if (stError.contains("insufficient funds") ||
         stError.contains("insufficient balance")) {
-      final chainInfo = particleChainInfoByChainId(chainId);
+      final chainInfo = chainInfoByChainId(chainId);
       Toast.error(
         title: "Insufficient ${chainInfo.nativeCurrency.symbol}",
         message: "Please top up your wallet on ${chainInfo.name}",

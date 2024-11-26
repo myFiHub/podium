@@ -3,23 +3,23 @@ import 'dart:convert';
 
 import 'package:collection/collection.dart';
 
-class FirebaseParticleAuthUserInfo {
+class FirebaseInternalWalletInfo {
   final String uuid;
   final List<ParticleAuthWallet> wallets;
 
   static const String uuidKey = 'uuid';
   static const String walletsKey = 'wallets';
 
-  FirebaseParticleAuthUserInfo({
+  FirebaseInternalWalletInfo({
     required this.uuid,
     required this.wallets,
   });
 
-  FirebaseParticleAuthUserInfo copyWith({
+  FirebaseInternalWalletInfo copyWith({
     String? uuid,
     List<ParticleAuthWallet>? wallets,
   }) {
-    return FirebaseParticleAuthUserInfo(
+    return FirebaseInternalWalletInfo(
       uuid: uuid ?? this.uuid,
       wallets: wallets ?? this.wallets,
     );
@@ -32,8 +32,8 @@ class FirebaseParticleAuthUserInfo {
     };
   }
 
-  factory FirebaseParticleAuthUserInfo.fromMap(Map<String, dynamic> map) {
-    return FirebaseParticleAuthUserInfo(
+  factory FirebaseInternalWalletInfo.fromMap(Map<String, dynamic> map) {
+    return FirebaseInternalWalletInfo(
       uuid: map['uuid'] as String,
       wallets: List<ParticleAuthWallet>.from(
         (map['wallets'] as List<int>).map<ParticleAuthWallet>(
@@ -45,8 +45,8 @@ class FirebaseParticleAuthUserInfo {
 
   String toJson() => json.encode(toMap());
 
-  factory FirebaseParticleAuthUserInfo.fromJson(String source) =>
-      FirebaseParticleAuthUserInfo.fromMap(
+  factory FirebaseInternalWalletInfo.fromJson(String source) =>
+      FirebaseInternalWalletInfo.fromMap(
           json.decode(source) as Map<String, dynamic>);
 
   @override
@@ -54,7 +54,7 @@ class FirebaseParticleAuthUserInfo {
       'FirebaseParticleAuthUserInfo(uuid: $uuid, wallets: $wallets)';
 
   @override
-  bool operator ==(covariant FirebaseParticleAuthUserInfo other) {
+  bool operator ==(covariant FirebaseInternalWalletInfo other) {
     if (identical(this, other)) return true;
     final listEquals = const DeepCollectionEquality().equals;
 

@@ -1,12 +1,8 @@
-import 'dart:convert';
-
 import 'package:podium/contracts/chainIds.dart';
 
 class Env {
   static const initialExternalWalletChainId =
       String.fromEnvironment("initialExternalWalletChainId");
-  static const initialParticleWalletChainId =
-      String.fromEnvironment("initialParticleWalletChainId");
 
   static const starsArenaAddress_Avalanche_Mainnet =
       String.fromEnvironment("starsArenaAddress_Avalanche_Mainnet");
@@ -24,10 +20,7 @@ class Env {
   // from walletConnect
   static const projectId = String.fromEnvironment('projectId');
   // from particle auth
-  static const particleProjectId = String.fromEnvironment("particleProjectId");
   static const web3AuthClientId = String.fromEnvironment("web3AuthClientId");
-  static const particleClientKey = String.fromEnvironment("particleClientKey");
-  static const particleAppId = String.fromEnvironment("particleAppId");
   static const environment = String.fromEnvironment("environment");
   static const jitsiServerUrl = String.fromEnvironment("jitsiServerUrl");
   static const appStoreUrl = String.fromEnvironment("appStoreUrl");

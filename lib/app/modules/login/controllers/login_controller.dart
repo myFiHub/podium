@@ -140,7 +140,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
     final publicAddress = ethereumKeyPair.address.hex;
     final uid = addressToUuid(publicAddress);
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
-    final particleWalletInfo = FirebaseParticleAuthUserInfo(
+    final internalWalletInfo = FirebaseInternalWalletInfo(
       uuid: uid,
       wallets: [
         ParticleAuthWallet(
@@ -154,7 +154,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
       name: userInfo.name ?? '',
       email: userInfo.email ?? '',
       avatar: userInfo.profileImage ?? '',
-      particleWalletInfo: particleWalletInfo,
+      internalWalletInfo: internalWalletInfo,
       loginType: loginType,
       loginTypeIdentifier: userInfo.verifierId,
     );
@@ -165,7 +165,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
     required String name,
     required String email,
     required String avatar,
-    required FirebaseParticleAuthUserInfo particleWalletInfo,
+    required FirebaseInternalWalletInfo internalWalletInfo,
     required String loginType,
     String? loginTypeIdentifier,
   }) async {
@@ -182,8 +182,8 @@ class LoginController extends GetxController with ParticleAuthUtils {
       email: email,
       avatar: avatar,
       localWalletAddress: '',
-      savedParticleWalletAddress: particleWalletInfo.wallets.first.address,
-      savedParticleUserInfo: particleWalletInfo,
+      savedParticleWalletAddress: internalWalletInfo.wallets.first.address,
+      savedParticleUserInfo: internalWalletInfo,
       following: [],
       numberOfFollowers: 0,
       loginType: loginType,

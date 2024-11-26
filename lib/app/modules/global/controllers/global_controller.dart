@@ -89,24 +89,9 @@ class GlobalController extends GetxController {
       RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
   String? deepLinkRoute = null;
 
-  final particleWalletChainId = RxString(
-      (storage.read(StorageKeys.particleWalletChainId) ??
-          Env.initialParticleWalletChainId));
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
           Env.initialExternalWalletChainId));
-
-  ChainInfo.ChainInfo? particleWalletChain(String? chainId) {
-    final particleChain = ChainInfo.ChainInfo.getChain(
-      int.parse(chainId ?? particleWalletChainId.value),
-      ReownAppKitModalNetworks.getNetworkById(
-        Env.chainNamespace,
-        chainId ?? particleWalletChainId.value,
-      )!
-          .name,
-    );
-    return particleChain;
-  }
 
   ReownAppKitModalNetworkInfo? get externalWalletChain {
     final chain = ReownAppKitModalNetworks.getNetworkById(
@@ -130,7 +115,6 @@ class GlobalController extends GetxController {
 
     try {
       await Future.wait([
-        initializeParticleAuth(),
         initializeWeb3Auth(),
         FirebaseInit.init(),
       ]);
@@ -280,52 +264,6 @@ class GlobalController extends GetxController {
     );
     await Web3AuthFlutter.initialize();
     log.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
-  }
-
-  Future<void> initializeParticleAuth() async {
-    try {
-      final chainId = particleWalletChainId.value;
-      final chainName =
-          ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
-              .name;
-      final particleChain = //movementChainOnParticle;
-          particleWalletChainId == '30732'
-              ? movementChainOnParticle
-              : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
-      if (particleChain == null) {
-        log.f("${chainId} chain not found on particle");
-        return Future.error("particle chain not initialized");
-      }
-      if (Env.environment != DEV &&
-          Env.environment != STAGE &&
-          Env.environment != PROD) {
-        log.f("unhandled environment");
-        log.f("particle auth not initialized");
-        return Future.error("unhandled environment");
-      }
-
-      log.i("##########initializing ParticleAuth");
-      ParticleBase.ParticleInfo.set(
-        Env.particleProjectId,
-        Env.particleClientKey,
-      );
-
-      ParticleBase.ParticleBase.init(
-        particleChain,
-        particleEnvironment,
-      );
-      // final selectedChan =
-      //     await ParticleBase.ParticleBase.setChainInfo(particleChain);
-      // if (selectedChan) {
-      final chain = await ParticleBase.ParticleBase.getChainInfo();
-      log.i("active particle chain name: ${chain.fullname}");
-      // }
-      log.i('##########particle auth initialized');
-      return Future.value();
-    } catch (e) {
-      log.f('particle auth initialization failed');
-      return Future.error(e);
-    }
   }
 
   initializeInternetConnectionChecker() {

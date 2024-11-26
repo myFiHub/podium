@@ -223,7 +223,7 @@ class CreateGroupController extends GetxController {
           ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
               ? true
               : (await internal_friendTech_getActiveUserWallets(
-                  particleAddress: address,
+                  internalWalletAddress: address,
                   chainId: baseChainId,
                 ))
                   .hasActiveWallet;
@@ -265,7 +265,7 @@ class CreateGroupController extends GetxController {
           following: [],
           numberOfFollowers: 0,
           savedParticleWalletAddress: user.defaultAddress,
-          savedParticleUserInfo: FirebaseParticleAuthUserInfo(
+          savedParticleUserInfo: FirebaseInternalWalletInfo(
             wallets: [
               ParticleAuthWallet(
                 address: user.defaultAddress,
@@ -339,7 +339,7 @@ class CreateGroupController extends GetxController {
     loadingUserIds.add(user.id);
     try {
       final activeWallets = await internal_friendTech_getActiveUserWallets(
-        particleAddress: user.particleWalletAddress,
+        internalWalletAddress: user.internalWalletAddress,
         externalWalletAddress: user.defaultWalletAddress,
         chainId: baseChainId,
       );

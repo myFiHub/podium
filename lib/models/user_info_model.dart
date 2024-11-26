@@ -11,7 +11,7 @@ class UserInfoModel {
   String? lowercasename;
   late ParticleUser.UserInfo? localParticleUserInfo;
   late String savedParticleWalletAddress;
-  late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
+  late FirebaseInternalWalletInfo? savedParticleUserInfo;
   late int numberOfFollowers;
   bool isOver18 = false;
   String? loginType;
@@ -52,24 +52,25 @@ class UserInfoModel {
   String get defaultWalletAddress {
     final walletAddress = localWalletAddress;
     if (walletAddress.isEmpty) {
-      final firstParticleAddress = savedParticleUserInfo?.wallets.where(
+      final firstInternalWalletAddress = savedParticleUserInfo?.wallets.where(
         (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
       );
-      if (firstParticleAddress == null || firstParticleAddress.isEmpty) {
+      if (firstInternalWalletAddress == null ||
+          firstInternalWalletAddress.isEmpty) {
         return '';
       }
-      return firstParticleAddress.first.address;
+      return firstInternalWalletAddress.first.address;
     }
     return walletAddress;
   }
 
-  String get particleWalletAddress {
-    final firstParticleAddress = savedParticleUserInfo?.wallets
+  String get internalWalletAddress {
+    final firstInternalAddress = savedParticleUserInfo?.wallets
         .where(
           (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
         )
         .toList();
-    return firstParticleAddress!.first.address;
+    return firstInternalAddress!.first.address;
   }
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {
@@ -85,10 +86,10 @@ class UserInfoModel {
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
     savedParticleWalletAddress =
-        json[savedParticleWalletAddressKey] ?? particleWalletAddress;
+        json[savedParticleWalletAddressKey] ?? internalWalletAddress;
     loginTypeIdentifier = json[loginTypeIdentifierKey];
     savedParticleUserInfo =
-        json[savedParticleUserInfoKey] ?? particleWalletAddress;
+        json[savedParticleUserInfoKey] ?? internalWalletAddress;
   }
 
   Map<String, dynamic> toJson() {
@@ -123,7 +124,7 @@ class UserInfoModel {
     String? lowercasename,
     ParticleUser.UserInfo? localParticleUserInfo,
     String? savedParticleWalletAddress,
-    FirebaseParticleAuthUserInfo? savedParticleUserInfo,
+    FirebaseInternalWalletInfo? savedParticleUserInfo,
     bool? isOver18,
     String? loginType,
     String? loginTypeIdentifier,

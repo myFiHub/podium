@@ -15,7 +15,7 @@ UserInfoModel? singleUserParser(dynamic value) {
     final parsed =
         jsonDecode(value[UserInfoModel.savedParticleUserInfoKey] ?? "{}");
     final wallets =
-        List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey] ?? []);
+        List.from(parsed[FirebaseInternalWalletInfo.walletsKey] ?? []);
     final List<ParticleAuthWallet> walletsList = [];
     wallets.forEach((element) {
       if (element['address'] != '' && element['chain'] == 'evm_chain') {
@@ -29,16 +29,15 @@ UserInfoModel? singleUserParser(dynamic value) {
       id: id,
       avatar: avatar,
       isOver18: isOver18,
-      savedParticleWalletAddress:
-          parsed[FirebaseParticleAuthUserInfo.walletsKey][0]
-                  [ParticleAuthWallet.addressKey] ??
-              '',
+      savedParticleWalletAddress: parsed[FirebaseInternalWalletInfo.walletsKey]
+              [0][ParticleAuthWallet.addressKey] ??
+          '',
       localWalletAddress: value[UserInfoModel.localWalletAddressKey] ?? '',
       following: List.from(value[UserInfoModel.followingKey] ?? []),
       numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,
-      savedParticleUserInfo: FirebaseParticleAuthUserInfo(
+      savedParticleUserInfo: FirebaseInternalWalletInfo(
         wallets: walletsList,
-        uuid: parsed[FirebaseParticleAuthUserInfo.uuidKey],
+        uuid: parsed[FirebaseInternalWalletInfo.uuidKey],
       ),
       lowercasename:
           value[UserInfoModel.lowercasenameKey] ?? name.toLowerCase(),

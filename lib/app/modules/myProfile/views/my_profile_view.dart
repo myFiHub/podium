@@ -33,7 +33,7 @@ class MyProfileView extends GetView<MyProfileController> {
             UserInfo(),
             DefaultWallet(),
             space10,
-            ParticleWalletManager(),
+            InternalWallet(),
             WalletInfo(),
             WalletConnect(),
             space10,
@@ -183,8 +183,8 @@ class _DefaultWalletState extends State<DefaultWallet> {
   }
 }
 
-class ParticleWalletManager extends GetView<GlobalController> {
-  const ParticleWalletManager({super.key});
+class InternalWallet extends GetView<GlobalController> {
+  const InternalWallet({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -231,9 +231,6 @@ class ParticleWalletManager extends GetView<GlobalController> {
                     space5,
                     Icon(Icons.link, color: Colors.blue[100]),
                     space5,
-                    ParticleWalletChainIcon(
-                      size: 20,
-                    )
                   ],
                 ),
                 space10,
@@ -768,7 +765,7 @@ class _Statistics extends GetWidget<MyProfileController> {
                 ),
               ...payments.income.entries.map(
                 (e) {
-                  final chainInfo = particleChainInfoByChainId(e.key);
+                  final chainInfo = chainInfoByChainId(e.key);
                   final currency = chainInfo.nativeCurrency.symbol;
                   final chainName = chainInfo.name;
                   final chainIcon = chainInfo.icon;

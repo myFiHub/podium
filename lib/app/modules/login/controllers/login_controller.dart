@@ -74,7 +74,7 @@ class LoginController extends GetxController {
       try {
         if (loginMethod == Provider.email_passwordless) {
           final String? email = await showDialogToGetTheEmail();
-          if (email != null) {
+          if (email != null && email.isNotEmpty) {
             res = await Web3AuthFlutter.login(
               LoginParams(
                 loginProvider: loginMethod,
@@ -134,21 +134,13 @@ class LoginController extends GetxController {
     final publicAddress = ethereumKeyPair.address.hex;
     final uid = addressToUuid(publicAddress);
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
-    final internalWalletInfo = FirebaseInternalWalletInfo(
-      uuid: uid,
-      wallets: [
-        InternalWallet(
-          address: publicAddress,
-          chain: 'evm_chain',
-        ),
-      ],
-    );
+
     await _socialLogin(
       id: uid,
       name: userInfo.name ?? '',
       email: userInfo.email ?? '',
       avatar: userInfo.profileImage ?? '',
-      internalWalletInfo: internalWalletInfo,
+      internalWalletAddress: publicAddress,
       loginType: loginType,
       loginTypeIdentifier: userInfo.verifierId,
     );
@@ -159,7 +151,7 @@ class LoginController extends GetxController {
     required String name,
     required String email,
     required String avatar,
-    required FirebaseInternalWalletInfo internalWalletInfo,
+    required String internalWalletAddress,
     required String loginType,
     String? loginTypeIdentifier,
   }) async {
@@ -176,7 +168,7 @@ class LoginController extends GetxController {
       email: email,
       avatar: avatar,
       localWalletAddress: '',
-      savedInternalWalletAddress: internalWalletInfo.wallets.first.address,
+      savedInternalWalletAddress: internalWalletAddress,
       following: [],
       numberOfFollowers: 0,
       loginType: loginType,
@@ -343,5 +335,5 @@ Future<String?> showDialogToGetTheEmail() async {
       ),
     ),
   );
-  return enteredEmail;
+  return (enteredEmail ?? "").trim();
 }

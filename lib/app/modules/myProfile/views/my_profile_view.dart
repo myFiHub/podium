@@ -183,6 +183,87 @@ class _DefaultWalletState extends State<DefaultWallet> {
   }
 }
 
+class Balances extends GetView<MyProfileController> {
+  const Balances({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final balances = controller.balances.value;
+      final loading = controller.isGettingBalances.value;
+      if (loading) {
+        return Container(
+          width: Get.width - 16,
+          height: 34,
+          child: Center(
+            child: Container(
+              width: 20,
+              height: 20,
+              child: const CircularProgressIndicator(),
+            ),
+          ),
+        );
+      }
+      return Container(
+        width: Get.width - 16,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Column(
+              children: [
+                Text(
+                  'Base ETH',
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  balances.Base,
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Text(
+                  'AVAX',
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  balances.Avalanche,
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Text(
+                  'MOVE',
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  balances.Movement,
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
 class InternalWallet extends GetView<GlobalController> {
   const InternalWallet({super.key});
 
@@ -262,7 +343,8 @@ class InternalWallet extends GetView<GlobalController> {
                       space10,
                     ],
                   ),
-                )
+                ),
+                Balances(),
               ],
             ),
             // FriendTeckActivationButton()

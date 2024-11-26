@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -11,7 +9,6 @@ import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/cheerBooEvent.dart';
@@ -521,6 +518,7 @@ Future<bool> internal_buyFriendTechTicket({
 
   try {
     final transaction = Transaction.callContract(
+      value: EtherAmount.fromBigInt(EtherUnit.wei, buyPrice),
       contract: contract,
       function: contract.function(methodName),
       parameters: parameters,
@@ -729,7 +727,10 @@ Future<BigInt?> internal_getBuyPrice({
     return null;
   }
   final methodName = 'getBuyPriceAfterFee';
-  final parameters = [parsAddress(sharesSubjectWallet), BigInt.from(1)];
+  final parameters = [
+    parsAddress(sharesSubjectWallet),
+    BigInt.from(shareAmount)
+  ];
 
   try {
     final client = web3ClientByChainId(chainId);
@@ -738,15 +739,6 @@ Future<BigInt?> internal_getBuyPrice({
       function: contract.function(methodName),
       params: parameters,
     );
-
-    // final result = await EvmService.readContract(
-    //   myAddress,
-    //   BigInt.zero,
-    //   contractAddress,
-    //   methodName,
-    //   parameters,
-    //   abiJsonString,
-    // );
     if (result[0] != null) {
       return result[0];
     } else {
@@ -800,6 +792,7 @@ Future<bool> internal_buySharesWithReferrer({
   ];
   try {
     final transaction = Transaction.callContract(
+        value: EtherAmount.fromBigInt(EtherUnit.wei, buyPrice),
         contract: contract,
         function: contract.function(methodName),
         parameters: parameters);

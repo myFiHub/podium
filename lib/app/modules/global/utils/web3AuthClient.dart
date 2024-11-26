@@ -58,7 +58,7 @@ Future<String?> sendTransaction({
           },
           child: Text("Copy Address"),
         ),
-        duration: 5,
+        duration: 7,
       );
     }
     return null;

@@ -1,5 +1,3 @@
-import "package:podium/models/firebase_Internal_wallet.dart";
-
 class UserInfoModel {
   late String id;
   late String fullName;

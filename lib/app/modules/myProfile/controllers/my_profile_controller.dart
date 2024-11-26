@@ -5,11 +5,13 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3dart/web3dart.dart';
 
 class Payments {
   int numberOfCheersReceived = 0;
@@ -25,6 +27,18 @@ class Payments {
       required this.income});
 }
 
+class Balances {
+  String Base = '0.0';
+  String Avalanche = '0.0';
+  String Movement = '0.0';
+
+  Balances({
+    required this.Base,
+    required this.Avalanche,
+    required this.Movement,
+  });
+}
+
 class MyProfileController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final isInternalWalletActivatedOnFriendTech = false.obs;
@@ -32,6 +46,13 @@ class MyProfileController extends GetxController {
   final loadingInternalWalletActivation = false.obs;
   final loadingExternalWalletActivation = false.obs;
   final isGettingPayments = false.obs;
+  final isGettingBalances = false.obs;
+  final balances = Rx(Balances(
+    Base: '0.0',
+    Avalanche: '0.0',
+    Movement: '0.0',
+  ));
+
   final payments = Rx(Payments(
     income: {},
   ));
@@ -44,6 +65,7 @@ class MyProfileController extends GetxController {
       }
     });
     _getPayments();
+    _getBalances();
     super.onInit();
   }
 
@@ -55,6 +77,33 @@ class MyProfileController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _getBalances() async {
+    try {
+      isGettingBalances.value = true;
+      final baseClient = web3ClientByChainId(baseChainId);
+      final avalancheClient = web3ClientByChainId(avalancheChainId);
+      final movementClient = web3ClientByChainId(movementChainId);
+      final myaddress = await web3AuthWalletAddress();
+      final [baseBalance, avalancheBalance, movementBalance] =
+          await Future.wait([
+        baseClient.getBalance(parsAddress(myaddress!)),
+        avalancheClient.getBalance(parsAddress(myaddress)),
+        movementClient.getBalance(parsAddress(myaddress)),
+      ]);
+      balances.value = Balances(
+        Base: baseBalance.getValueInUnit(EtherUnit.ether).toStringAsFixed(4),
+        Avalanche:
+            avalancheBalance.getValueInUnit(EtherUnit.ether).toStringAsFixed(4),
+        Movement:
+            movementBalance.getValueInUnit(EtherUnit.ether).toStringAsFixed(4),
+      );
+      isGettingBalances.value = false;
+    } catch (e) {
+      log.e(e);
+      isGettingBalances.value = false;
+    }
   }
 
   _getPayments() async {

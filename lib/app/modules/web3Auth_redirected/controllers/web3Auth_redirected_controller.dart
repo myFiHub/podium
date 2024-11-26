@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:uuid/uuid.dart';
@@ -31,7 +31,7 @@ class Web3AuthRedirectedController extends GetxController {
       savedParticleUserInfo: FirebaseInternalWalletInfo(
         uuid: uid,
         wallets: [
-          ParticleAuthWallet(
+          InternalWallet(
             address: publicAddress,
             chain: 'evm_chain',
           ),

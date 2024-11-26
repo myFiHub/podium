@@ -12,7 +12,7 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
@@ -801,7 +801,7 @@ saveParticleUserInfoToFirebaseIfNeeded({
         uuid: particleUser.uuid,
         wallets: particleUser.wallets
             .map((e) {
-              return ParticleAuthWallet(
+              return InternalWallet(
                 address: e.publicAddress,
                 chain: e.chainName,
               );
@@ -878,11 +878,11 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
         final parsed = json.decode(savedParticleUserInfo as String);
         final wallets =
             List.from(parsed[FirebaseInternalWalletInfo.walletsKey]);
-        final List<ParticleAuthWallet> walletsList = [];
+        final List<InternalWallet> walletsList = [];
         wallets.forEach(
           (element) {
             walletsList.add(
-              ParticleAuthWallet.fromMap(element),
+              InternalWallet.fromMap(element),
             );
           },
         );
@@ -910,7 +910,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
   }
 }
 
-Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
+Future<List<InternalWallet>> getParticleAuthWalletsForUser(
   String userId,
 ) async {
   try {
@@ -928,10 +928,10 @@ Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
     if (particleUserInfo != null) {
       final parsed = json.decode(particleUserInfo as String);
       final wallets = List.from(parsed[FirebaseInternalWalletInfo.walletsKey]);
-      final List<ParticleAuthWallet> walletsList = [];
+      final List<InternalWallet> walletsList = [];
       wallets.forEach((element) {
         if (element['address'] != '' && element['chain'] == 'evm_chain') {
-          walletsList.add(ParticleAuthWallet.fromMap(element));
+          walletsList.add(InternalWallet.fromMap(element));
         }
       });
       if (walletsList.isNotEmpty) {
@@ -941,7 +941,7 @@ Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
         final savedWalletAddress = savedWalletSnapshot.value as dynamic;
         if (savedWalletAddress != null) {
           return [
-            ParticleAuthWallet(address: savedWalletAddress, chain: 'evm_chain')
+            InternalWallet(address: savedWalletAddress, chain: 'evm_chain')
           ];
         } else {
           return [];

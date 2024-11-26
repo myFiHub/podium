@@ -4,10 +4,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:particle_auth_core/evm.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -19,7 +17,7 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
@@ -267,7 +265,7 @@ class CreateGroupController extends GetxController {
           savedParticleWalletAddress: user.defaultAddress,
           savedParticleUserInfo: FirebaseInternalWalletInfo(
             wallets: [
-              ParticleAuthWallet(
+              InternalWallet(
                 address: user.defaultAddress,
                 chain: 'evm_chain',
               )
@@ -413,7 +411,7 @@ class CreateGroupController extends GetxController {
     log.d(ticketType);
     _deb.debounce(() async {
       try {
-        final isAddress = checkIfValueIsDirectAddress(value);
+        checkIfValueIsDirectAddress(value);
         final (users, arenaUser) = await (
           searchForUserByName(value),
           ticketType == BuyableTicketTypes.onlyArenaTicketHolders

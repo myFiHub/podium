@@ -29,8 +29,7 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/search/bindings/search_binding.dart';
 import '../modules/search/views/search_view.dart';
-import '../modules/signup/bindings/signup_binding.dart';
-import '../modules/signup/views/signup_view.dart';
+
 import '../modules/wallet/bindings/wallet_binding.dart';
 import '../modules/wallet/views/wallet_view.dart';
 
@@ -46,11 +45,6 @@ class AppPages {
       name: _Paths.HOME,
       page: () => const HomeView(),
       binding: HomeBinding(),
-    ),
-    GetPage(
-      name: _Paths.SIGNUP,
-      page: () => const SignupView(),
-      binding: SignupBinding(),
     ),
     GetPage(
       name: _Paths.LOGIN,

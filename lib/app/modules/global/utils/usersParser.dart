@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -16,10 +16,10 @@ UserInfoModel? singleUserParser(dynamic value) {
         jsonDecode(value[UserInfoModel.savedParticleUserInfoKey] ?? "{}");
     final wallets =
         List.from(parsed[FirebaseInternalWalletInfo.walletsKey] ?? []);
-    final List<ParticleAuthWallet> walletsList = [];
+    final List<InternalWallet> walletsList = [];
     wallets.forEach((element) {
       if (element['address'] != '' && element['chain'] == 'evm_chain') {
-        walletsList.add(ParticleAuthWallet.fromMap(element));
+        walletsList.add(InternalWallet.fromMap(element));
       }
     });
 
@@ -30,7 +30,7 @@ UserInfoModel? singleUserParser(dynamic value) {
       avatar: avatar,
       isOver18: isOver18,
       savedParticleWalletAddress: parsed[FirebaseInternalWalletInfo.walletsKey]
-              [0][ParticleAuthWallet.addressKey] ??
+              [0][InternalWallet.addressKey] ??
           '',
       localWalletAddress: value[UserInfoModel.localWalletAddressKey] ?? '',
       following: List.from(value[UserInfoModel.followingKey] ?? []),

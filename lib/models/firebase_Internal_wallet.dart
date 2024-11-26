@@ -5,7 +5,7 @@ import 'package:collection/collection.dart';
 
 class FirebaseInternalWalletInfo {
   final String uuid;
-  final List<ParticleAuthWallet> wallets;
+  final List<InternalWallet> wallets;
 
   static const String uuidKey = 'uuid';
   static const String walletsKey = 'wallets';
@@ -17,7 +17,7 @@ class FirebaseInternalWalletInfo {
 
   FirebaseInternalWalletInfo copyWith({
     String? uuid,
-    List<ParticleAuthWallet>? wallets,
+    List<InternalWallet>? wallets,
   }) {
     return FirebaseInternalWalletInfo(
       uuid: uuid ?? this.uuid,
@@ -35,9 +35,9 @@ class FirebaseInternalWalletInfo {
   factory FirebaseInternalWalletInfo.fromMap(Map<String, dynamic> map) {
     return FirebaseInternalWalletInfo(
       uuid: map['uuid'] as String,
-      wallets: List<ParticleAuthWallet>.from(
-        (map['wallets'] as List<int>).map<ParticleAuthWallet>(
-          (x) => ParticleAuthWallet.fromMap(x as Map<String, dynamic>),
+      wallets: List<InternalWallet>.from(
+        (map['wallets'] as List<int>).map<InternalWallet>(
+          (x) => InternalWallet.fromMap(x as Map<String, dynamic>),
         ),
       ),
     );
@@ -65,23 +65,23 @@ class FirebaseInternalWalletInfo {
   int get hashCode => uuid.hashCode ^ wallets.hashCode;
 }
 
-class ParticleAuthWallet {
+class InternalWallet {
   final String address;
   final String chain;
 
   static const String addressKey = 'address';
   static const String chainKey = 'chain';
 
-  ParticleAuthWallet({
+  InternalWallet({
     required this.address,
     required this.chain,
   });
 
-  ParticleAuthWallet copyWith({
+  InternalWallet copyWith({
     String? address,
     String? chain,
   }) {
-    return ParticleAuthWallet(
+    return InternalWallet(
       address: address ?? this.address,
       chain: chain ?? this.chain,
     );
@@ -94,8 +94,8 @@ class ParticleAuthWallet {
     };
   }
 
-  factory ParticleAuthWallet.fromMap(Map<String, dynamic> map) {
-    return ParticleAuthWallet(
+  factory InternalWallet.fromMap(Map<String, dynamic> map) {
+    return InternalWallet(
       address: map['address'] as String,
       chain: map['chain'] as String,
     );
@@ -103,14 +103,14 @@ class ParticleAuthWallet {
 
   String toJson() => json.encode(toMap());
 
-  factory ParticleAuthWallet.fromJson(String source) =>
-      ParticleAuthWallet.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory InternalWallet.fromJson(String source) =>
+      InternalWallet.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() => 'ParticleAuthWallet(address: $address, chain: $chain)';
 
   @override
-  bool operator ==(covariant ParticleAuthWallet other) {
+  bool operator ==(covariant InternalWallet other) {
     if (identical(this, other)) return true;
 
     return other.address == address && other.chain == chain;

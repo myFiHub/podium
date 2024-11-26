@@ -4,7 +4,6 @@ part of 'app_pages.dart';
 abstract class Routes {
   Routes._();
   static const HOME = _Paths.HOME;
-  static const SIGNUP = _Paths.SIGNUP;
   static const LOGIN = _Paths.LOGIN;
   static const WEB3AUTH_REDIRECTED = _Paths.WEB3AUTH_REDIRECTED;
   static const CREATE_GROUP = _Paths.CREATE_GROUP;
@@ -25,7 +24,6 @@ abstract class Routes {
 abstract class _Paths {
   _Paths._();
   static const HOME = '/home';
-  static const SIGNUP = '/signup';
   static const LOGIN = '/login';
   static const WEB3AUTH_REDIRECTED = '/web3auth';
   static const CREATE_GROUP = '/create-group';

@@ -1,5 +1,5 @@
 import 'package:particle_base/model/user_info.dart' as ParticleUser;
-import "package:podium/models/firebase_particle_user.dart";
+import "package:podium/models/firebase_Internal_wallet.dart";
 
 class UserInfoModel {
   late String id;

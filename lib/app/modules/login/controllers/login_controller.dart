@@ -7,7 +7,7 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/web3Auth_redirected/controllers/web3Auth_redirected_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -137,7 +137,7 @@ class LoginController extends GetxController {
     final internalWalletInfo = FirebaseInternalWalletInfo(
       uuid: uid,
       wallets: [
-        ParticleAuthWallet(
+        InternalWallet(
           address: publicAddress,
           chain: 'evm_chain',
         ),

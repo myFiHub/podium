@@ -130,7 +130,7 @@ class ProfileController extends GetxController {
         particleAddress: userInfo.value!.particleWalletAddress,
         chainId: baseChainId,
       ),
-      particle_getUserShares_friendTech(
+      internal_getUserShares_friendTech(
         defaultWallet: userInfo.value!.defaultWalletAddress,
         particleWallet: userInfo.value!.particleWalletAddress,
         chainId: baseChainId,
@@ -143,7 +143,7 @@ class ProfileController extends GetxController {
     isFriendTechActive.value = activeWallets.hasActiveWallet;
     if (isFriendTechActive.value) {
       final preferedAddress = activeWallets.preferedWalletAddress;
-      final price = await particle_getFriendTechTicketPrice(
+      final price = await internal_getFriendTechTicketPrice(
         sharesSubject: preferedAddress,
         chainId: baseChainId,
       );

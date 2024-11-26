@@ -329,59 +329,57 @@ class CheckticketController extends GetxController {
     final ArenaCallArray = arenaTicketSellers
         .map((e) => checkIfIveBoughtTheTicketFromUser(e.userInfo))
         .toList();
-    final chainChanged =
-        await temporarilyChangeParticleNetwork(avalancheChainId);
-    if (chainChanged) {
-      final arenaResults = await Future.wait(ArenaCallArray);
-      for (var i = 0; i < arenaResults.length; i++) {
-        final seller = arenaTicketSellers[i];
-        final userId = seller.userInfo.id;
-        final access = arenaResults[i];
-        final ticketTypeToSpeakForThisSeller =
-            allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
-        final ticketTypeToAccessForThisSeller =
-            allUsersToBuyTicketFrom.value[userId]?.accessTicketType;
-        final original = allUsersToBuyTicketFrom.value[userId];
-        allUsersToBuyTicketFrom.value[userId] = TicketSeller(
-          accessTicketType: ticketTypeToAccessForThisSeller,
-          speakTicketType: ticketTypeToSpeakForThisSeller,
-          userInfo: original!.userInfo,
-          address: original.address,
-          boughtTicketToSpeak: original.boughtTicketToSpeak || access.canSpeak,
-          boughtTicketToAccess:
-              original.boughtTicketToAccess || access.canEnter,
-          checking: false,
-          buying: false,
-        );
-      }
+    // final chainChanged =
+    // await temporarilyChangeParticleNetwork(avalancheChainId);
+    // if (chainChanged) {
+    final arenaResults = await Future.wait(ArenaCallArray);
+    for (var i = 0; i < arenaResults.length; i++) {
+      final seller = arenaTicketSellers[i];
+      final userId = seller.userInfo.id;
+      final access = arenaResults[i];
+      final ticketTypeToSpeakForThisSeller =
+          allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
+      final ticketTypeToAccessForThisSeller =
+          allUsersToBuyTicketFrom.value[userId]?.accessTicketType;
+      final original = allUsersToBuyTicketFrom.value[userId];
+      allUsersToBuyTicketFrom.value[userId] = TicketSeller(
+        accessTicketType: ticketTypeToAccessForThisSeller,
+        speakTicketType: ticketTypeToSpeakForThisSeller,
+        userInfo: original!.userInfo,
+        address: original.address,
+        boughtTicketToSpeak: original.boughtTicketToSpeak || access.canSpeak,
+        boughtTicketToAccess: original.boughtTicketToAccess || access.canEnter,
+        checking: false,
+        buying: false,
+      );
     }
-    await switchBackToSavedParticleNetwork();
-    final changed = await temporarilyChangeParticleNetwork(baseChainId);
-    if (changed) {
-      final FriendTechResults = await Future.wait(FriendTechCallArray);
-      for (var i = 0; i < FriendTechResults.length; i++) {
-        final seller = friendTechTicketSellers[i];
-        final userId = seller.userInfo.id;
-        final access = FriendTechResults[i];
-        final ticketTypeToSpeakForThisSeller =
-            allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
-        final ticketTypeToAccessForThisSeller =
-            allUsersToBuyTicketFrom.value[userId]?.accessTicketType;
-        final original = allUsersToBuyTicketFrom.value[userId];
-        allUsersToBuyTicketFrom.value[userId] = TicketSeller(
-          accessTicketType: ticketTypeToAccessForThisSeller,
-          speakTicketType: ticketTypeToSpeakForThisSeller,
-          userInfo: original!.userInfo,
-          address: original.address,
-          boughtTicketToSpeak: original.boughtTicketToSpeak || access.canSpeak,
-          boughtTicketToAccess:
-              original.boughtTicketToAccess || access.canEnter,
-          checking: false,
-          buying: false,
-        );
-      }
+    // }
+    // await switchBackToSavedParticleNetwork();
+    // final changed = await temporarilyChangeParticleNetwork(baseChainId);
+    // if (changed) {
+    final FriendTechResults = await Future.wait(FriendTechCallArray);
+    for (var i = 0; i < FriendTechResults.length; i++) {
+      final seller = friendTechTicketSellers[i];
+      final userId = seller.userInfo.id;
+      final access = FriendTechResults[i];
+      final ticketTypeToSpeakForThisSeller =
+          allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
+      final ticketTypeToAccessForThisSeller =
+          allUsersToBuyTicketFrom.value[userId]?.accessTicketType;
+      final original = allUsersToBuyTicketFrom.value[userId];
+      allUsersToBuyTicketFrom.value[userId] = TicketSeller(
+        accessTicketType: ticketTypeToAccessForThisSeller,
+        speakTicketType: ticketTypeToSpeakForThisSeller,
+        userInfo: original!.userInfo,
+        address: original.address,
+        boughtTicketToSpeak: original.boughtTicketToSpeak || access.canSpeak,
+        boughtTicketToAccess: original.boughtTicketToAccess || access.canEnter,
+        checking: false,
+        buying: false,
+      );
+      // }
     }
-    await switchBackToSavedParticleNetwork();
+    // await switchBackToSavedParticleNetwork();
     allUsersToBuyTicketFrom.refresh();
     return checkAccess();
   }
@@ -622,7 +620,7 @@ class CheckticketController extends GetxController {
         }
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        final myShares = await particle_getUserShares_friendTech(
+        final myShares = await internal_getUserShares_friendTech(
           defaultWallet: user.defaultWalletAddress,
           particleWallet: user.particleWalletAddress,
           chainId: baseChainId,
@@ -647,7 +645,7 @@ class CheckticketController extends GetxController {
         }
       } else if (group.value!.speakerType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        final myShares = await particle_getUserShares_friendTech(
+        final myShares = await internal_getUserShares_friendTech(
           defaultWallet: user.defaultWalletAddress,
           particleWallet: user.particleWalletAddress,
           chainId: baseChainId,

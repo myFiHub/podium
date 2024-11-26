@@ -150,7 +150,7 @@ class MyProfileController extends GetxController {
       return;
     }
     final activated =
-        await particle_activate_friendtechWallet(chainId: baseChainId);
+        await internal_activate_friendtechWallet(chainId: baseChainId);
     loadingParticleActivation.value = false;
     isParticleActivatedOnFriendTech.value = activated;
   }

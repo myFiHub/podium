@@ -364,7 +364,7 @@ class CreateGroupController extends GetxController {
             return null;
           }
           if (selectedWallet == WalletNames.podium) {
-            final bought = await particle_activate_friendtechWallet(
+            final bought = await internal_activate_friendtechWallet(
               chainId: baseChainId,
             );
             if (bought) {
@@ -546,7 +546,7 @@ Future<bool?> showActivatePopup() async {
             if (externalWalletAddress == null)
               const TextSpan(
                 text:
-                    '\n(your external wallet is disconnected\n we checked against your particle wallet address)',
+                    '\n(your external wallet is disconnected\n we checked against your Podium wallet address)',
                 style: const TextStyle(color: Colors.red),
               ),
           ],

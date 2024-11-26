@@ -250,29 +250,6 @@ class GlobalController extends GetxController {
     return success;
   }
 
-  Future<bool> switchParticleWalletChain(
-    String chainId, {
-    bool alsoSave = false,
-  }) async {
-    final chain = particleChainInfoByChainId(chainId);
-
-    final done = await ParticleBase.ParticleBase.setChainInfo(chain);
-    if (!done) {
-      log.e("error switching chain");
-      if (alsoSave == true) {
-        storage.remove(StorageKeys.particleWalletChainId);
-      }
-      return false;
-    }
-    if (alsoSave == true) {
-      final selectedChainId = ParticleBase.ParticleBase.getChainId();
-      particleWalletChainId.value = selectedChainId.toString();
-      storage.write(
-          StorageKeys.particleWalletChainId, selectedChainId.toString());
-    }
-    return true;
-  }
-
   get particleEnvironment {
     return Env.environment == DEV
         ? ParticleBase.Env.dev

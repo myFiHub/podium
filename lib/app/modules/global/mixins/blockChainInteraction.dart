@@ -13,7 +13,6 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -316,7 +315,7 @@ Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
   }
 }
 
-Future<BigInt> particle_getUserShares_friendTech({
+Future<BigInt> internal_getUserShares_friendTech({
   required String defaultWallet,
   required String particleWallet,
   required String chainId,
@@ -390,43 +389,51 @@ Future<BigInt?> _particle_getShares_friendthech({
   if (contract == null) {
     return null;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'sharesBalance';
-  final parameters = [sellerAddress, buyerWalletAddress];
-  const abiJson = FriendTechContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
-
+  final client = web3ClientByChainId(chainId);
   try {
     final results = await Future.wait([
-      EvmService.readContract(
-        buyerWalletAddress,
-        BigInt.zero,
-        contractAddress,
-        methodName,
-        parameters,
-        abiJsonString,
+      client.call(
+        contract: contract,
+        function: contract.function(methodName),
+        params: [parsAddress(sellerAddress), parsAddress(buyerWalletAddress)],
       ),
+      // EvmService.readContract(
+      //   buyerWalletAddress,
+      //   BigInt.zero,
+      //   contractAddress,
+      //   methodName,
+      //   parameters,
+      //   abiJsonString,
+      // ),
       if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty)
-        EvmService.readContract(
-          externalWalletAddress!,
-          BigInt.zero,
-          contractAddress,
-          methodName,
-          parameters,
-          abiJsonString,
+        client.call(
+          contract: contract,
+          function: contract.function(methodName),
+          params: [
+            parsAddress(sellerAddress),
+            parsAddress(externalWalletAddress!),
+          ],
         ),
+      // EvmService.readContract(
+      //   externalWalletAddress!,
+      //   BigInt.zero,
+      //   contractAddress,
+      //   methodName,
+      //   parameters,
+      //   abiJsonString,
+      // ),
     ]);
 
-    if (results[0] == '0x') {
+    if (results[0][0] == '0x') {
       log.f(
           'result 0: ${results[0]}, contract might not be deployed on this chain');
       return BigInt.zero;
     }
-
     BigInt sum = BigInt.zero;
     for (var result in results) {
-      if (result != null) {
-        sum += BigInt.parse(result);
+      if (result[0] != null) {
+        sum += result[0];
       }
     }
     return sum;
@@ -436,7 +443,7 @@ Future<BigInt?> _particle_getShares_friendthech({
   }
 }
 
-Future<BigInt?> particle_getFriendTechTicketPrice({
+Future<BigInt?> internal_getFriendTechTicketPrice({
   required String sharesSubject,
   int numberOfTickets = 1,
   required String chainId,
@@ -457,35 +464,36 @@ Future<BigInt?> particle_getFriendTechTicketPrice({
   const abiJson = FriendTechContract.abi;
   final abiJsonString = jsonEncode(abiJson);
 
-  final changed = await temporarilyChangeParticleNetwork(chainId);
-  if (!changed) {
-    return null;
-  }
+  // final changed = await temporarilyChangeParticleNetwork(chainId);
+  // if (!changed) {
+  //   return null;
+  // }
 
   try {
-    final result = await EvmService.readContract(
-      myAddress,
-      BigInt.zero,
-      contractAddress,
-      methodName,
-      parameters,
-      abiJsonString,
+    final client = web3ClientByChainId(chainId);
+    final result = await client.call(
+      contract: contract,
+      function: contract.function(methodName),
+      params: parameters,
     );
-    await switchBackToSavedParticleNetwork();
     try {
-      return BigInt.parse(result);
+      if (result[0] != null) {
+        return result[0];
+      } else {
+        return null;
+      }
     } catch (e) {
       log.e('error : $e');
       return null;
     }
   } catch (e) {
     log.e('error : $e');
-    await switchBackToSavedParticleNetwork();
+    // await switchBackToSavedParticleNetwork();
     return null;
   }
 }
 
-Future<bool> particle_activate_friendtechWallet(
+Future<bool> internal_activate_friendtechWallet(
     {required String chainId}) async {
   try {
     final myWalletAddress = await web3AuthWalletAddress(); //Evm.getAddress();
@@ -536,7 +544,7 @@ Future<bool> internal_buyFriendTechTicket({
   if (contract == null) {
     return false;
   }
-  final buyPrice = await particle_getFriendTechTicketPrice(
+  final buyPrice = await internal_getFriendTechTicketPrice(
     sharesSubject: sharesSubject,
     numberOfTickets: numberOfTickets,
     chainId: chainId,
@@ -590,7 +598,7 @@ Future<bool> ext_buyFirendtechTicket({
   required String chainId,
   required String targetUserId,
 }) async {
-  final buyPrice = await particle_getFriendTechTicketPrice(
+  final buyPrice = await internal_getFriendTechTicketPrice(
     sharesSubject: sharesSubject,
     numberOfTickets: numberOfTickets,
     chainId: chainId,

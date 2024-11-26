@@ -525,8 +525,6 @@ class OngoingGroupCallController extends GetxController {
         return;
       }
 
-      ///////////////////////
-      /// TODO: add for particle when it is ready (issue is resolved on their side, issue 2)
       bool success = false;
       final selectedWallet =
           //

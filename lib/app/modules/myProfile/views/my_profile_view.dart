@@ -189,7 +189,7 @@ class InternalWallet extends GetView<GlobalController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final walletsToShow = myUser.savedParticleUserInfo?.wallets
+      final walletsToShow = myUser.savedInternalWalletInfo?.wallets
           .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
           .toList();
       if (walletsToShow == null || walletsToShow.isEmpty) {

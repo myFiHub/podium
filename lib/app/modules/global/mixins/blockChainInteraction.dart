@@ -887,7 +887,7 @@ String? fihubAddress(String chainId) {
 }
 
 class WalletNames {
-  static const internal = "Podium Wallet";
+  static const internal = "Internal Wallet";
   static const external = "External Wallet";
 }
 

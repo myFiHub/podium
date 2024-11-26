@@ -8,8 +8,8 @@ class UserInfoModel {
   late String localWalletAddress;
   late List<String> following;
   String? lowercasename;
-  late String savedParticleWalletAddress;
-  late FirebaseInternalWalletInfo? savedParticleUserInfo;
+  late String savedInternalWalletAddress;
+  late FirebaseInternalWalletInfo? savedInternalWalletInfo;
   late int numberOfFollowers;
   bool isOver18 = false;
   String? loginType;
@@ -22,12 +22,12 @@ class UserInfoModel {
   static String localWalletAddressKey = 'localWalletAddress';
   static String followingKey = 'following';
   static String numberOfFollowersKey = 'numberOfFollowers';
-  static String savedParticleUserInfoKey = 'savedParticleUserInfo';
+  static String savedInternalWalletInfoKey = 'savedInternalWalletInfo';
   static String lowercasenameKey = 'lowercasename';
   static String isOver18Key = 'isOver18';
   static String loginTypeKey = 'loginType';
   static String loginTypeIdentifierKey = 'loginTypeIdentifier';
-  static String savedParticleWalletAddressKey = 'savedParticleWalletAddress';
+  static String savedInternalWalletAddressKey = 'savedInternalWalletAddress';
 
   UserInfoModel({
     required this.id,
@@ -37,9 +37,9 @@ class UserInfoModel {
     required this.localWalletAddress,
     required this.following,
     required this.numberOfFollowers,
-    required this.savedParticleWalletAddress,
+    required this.savedInternalWalletAddress,
     this.lowercasename,
-    this.savedParticleUserInfo,
+    this.savedInternalWalletInfo,
     this.isOver18 = false,
     this.loginType,
     this.loginTypeIdentifier,
@@ -48,7 +48,7 @@ class UserInfoModel {
   String get defaultWalletAddress {
     final walletAddress = localWalletAddress;
     if (walletAddress.isEmpty) {
-      final firstInternalWalletAddress = savedParticleUserInfo?.wallets.where(
+      final firstInternalWalletAddress = savedInternalWalletInfo?.wallets.where(
         (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
       );
       if (firstInternalWalletAddress == null ||
@@ -61,7 +61,7 @@ class UserInfoModel {
   }
 
   String get internalWalletAddress {
-    final firstInternalAddress = savedParticleUserInfo?.wallets
+    final firstInternalAddress = savedInternalWalletInfo?.wallets
         .where(
           (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
         )
@@ -80,11 +80,11 @@ class UserInfoModel {
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
-    savedParticleWalletAddress =
-        json[savedParticleWalletAddressKey] ?? internalWalletAddress;
+    savedInternalWalletAddress =
+        json[savedInternalWalletAddressKey] ?? internalWalletAddress;
     loginTypeIdentifier = json[loginTypeIdentifierKey];
-    savedParticleUserInfo =
-        json[savedParticleUserInfoKey] ?? internalWalletAddress;
+    savedInternalWalletInfo =
+        json[savedInternalWalletInfoKey] ?? internalWalletAddress;
   }
 
   Map<String, dynamic> toJson() {
@@ -94,8 +94,8 @@ class UserInfoModel {
     data[emailKey] = email;
     data[avatarUrlKey] = avatar;
     data[localWalletAddressKey] = localWalletAddress;
-    if (savedParticleUserInfo != null) {
-      data[savedParticleUserInfoKey] = savedParticleUserInfo!.toJson();
+    if (savedInternalWalletInfo != null) {
+      data[savedInternalWalletInfoKey] = savedInternalWalletInfo!.toJson();
     }
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
@@ -103,7 +103,7 @@ class UserInfoModel {
     data[isOver18Key] = isOver18;
     data[loginTypeKey] = loginType;
     data[loginTypeIdentifierKey] = loginTypeIdentifier;
-    data[savedParticleWalletAddressKey] = savedParticleWalletAddress;
+    data[savedInternalWalletAddressKey] = savedInternalWalletAddress;
     return data;
   }
 
@@ -116,8 +116,8 @@ class UserInfoModel {
     List<String>? following,
     int? numberOfFollowers,
     String? lowercasename,
-    String? savedParticleWalletAddress,
-    FirebaseInternalWalletInfo? savedParticleUserInfo,
+    String? savedInternalWalletAddress,
+    FirebaseInternalWalletInfo? savedInternalWalletInfo,
     bool? isOver18,
     String? loginType,
     String? loginTypeIdentifier,
@@ -131,12 +131,12 @@ class UserInfoModel {
       following: following ?? this.following,
       numberOfFollowers: numberOfFollowers ?? this.numberOfFollowers,
       lowercasename: lowercasename ?? this.lowercasename,
-      savedParticleUserInfo:
-          savedParticleUserInfo ?? this.savedParticleUserInfo,
+      savedInternalWalletInfo:
+          savedInternalWalletInfo ?? this.savedInternalWalletInfo,
       isOver18: isOver18 ?? this.isOver18,
       loginType: loginType ?? this.loginType,
-      savedParticleWalletAddress:
-          savedParticleWalletAddress ?? this.savedParticleWalletAddress,
+      savedInternalWalletAddress:
+          savedInternalWalletAddress ?? this.savedInternalWalletAddress,
       loginTypeIdentifier: loginTypeIdentifier ?? this.loginTypeIdentifier,
     );
   }

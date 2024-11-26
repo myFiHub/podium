@@ -13,7 +13,7 @@ UserInfoModel? singleUserParser(dynamic value) {
     final avatar = value[UserInfoModel.avatarUrlKey];
     final isOver18 = value[UserInfoModel.isOver18Key] ?? false;
     final parsed =
-        jsonDecode(value[UserInfoModel.savedParticleUserInfoKey] ?? "{}");
+        jsonDecode(value[UserInfoModel.savedInternalWalletInfoKey] ?? "{}");
     final wallets =
         List.from(parsed[FirebaseInternalWalletInfo.walletsKey] ?? []);
     final List<InternalWallet> walletsList = [];
@@ -29,13 +29,13 @@ UserInfoModel? singleUserParser(dynamic value) {
       id: id,
       avatar: avatar,
       isOver18: isOver18,
-      savedParticleWalletAddress: parsed[FirebaseInternalWalletInfo.walletsKey]
+      savedInternalWalletAddress: parsed[FirebaseInternalWalletInfo.walletsKey]
               [0][InternalWallet.addressKey] ??
           '',
       localWalletAddress: value[UserInfoModel.localWalletAddressKey] ?? '',
       following: List.from(value[UserInfoModel.followingKey] ?? []),
       numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,
-      savedParticleUserInfo: FirebaseInternalWalletInfo(
+      savedInternalWalletInfo: FirebaseInternalWalletInfo(
         wallets: walletsList,
         uuid: parsed[FirebaseInternalWalletInfo.uuidKey],
       ),

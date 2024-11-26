@@ -114,10 +114,10 @@ class CheckticketController extends GetxController {
       avatar: '',
       email: '',
       localWalletAddress: address,
-      savedParticleWalletAddress: address,
+      savedInternalWalletAddress: address,
       following: [],
       numberOfFollowers: 0,
-      savedParticleUserInfo: FirebaseInternalWalletInfo(
+      savedInternalWalletInfo: FirebaseInternalWalletInfo(
         wallets: [
           InternalWallet(
             address: address,
@@ -137,10 +137,10 @@ class CheckticketController extends GetxController {
       avatar: user.twitterPicture,
       email: '',
       localWalletAddress: user.defaultAddress,
-      savedParticleWalletAddress: user.defaultAddress,
+      savedInternalWalletAddress: user.defaultAddress,
       following: [],
       numberOfFollowers: 0,
-      savedParticleUserInfo: FirebaseInternalWalletInfo(
+      savedInternalWalletInfo: FirebaseInternalWalletInfo(
         wallets: [
           InternalWallet(
             address: user.defaultAddress,

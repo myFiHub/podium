@@ -169,15 +169,15 @@ class LoginController extends GetxController {
       email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
     }
 
-    // this user will be saved, only if uuid of particle auth is not registered, so empty local wallet address is fine
+    // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
     final userToCreate = UserInfoModel(
       id: userId,
       fullName: name,
       email: email,
       avatar: avatar,
       localWalletAddress: '',
-      savedParticleWalletAddress: internalWalletInfo.wallets.first.address,
-      savedParticleUserInfo: internalWalletInfo,
+      savedInternalWalletAddress: internalWalletInfo.wallets.first.address,
+      savedInternalWalletInfo: internalWalletInfo,
       following: [],
       numberOfFollowers: 0,
       loginType: loginType,
@@ -219,7 +219,6 @@ class LoginController extends GetxController {
     }
     if (savedName != null) {
       globalController.currentUserInfo.value = user;
-      // globalController.particleAuthUserInfo.value = particleUser;
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
       isLoggingIn.value = false;

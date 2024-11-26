@@ -27,8 +27,8 @@ class Web3AuthRedirectedController extends GetxController {
       email: userInfo.email ?? '',
       avatar: userInfo.profileImage ?? '',
       localWalletAddress: '',
-      savedParticleWalletAddress: publicAddress,
-      savedParticleUserInfo: FirebaseInternalWalletInfo(
+      savedInternalWalletAddress: publicAddress,
+      savedInternalWalletInfo: FirebaseInternalWalletInfo(
         uuid: uid,
         wallets: [
           InternalWallet(

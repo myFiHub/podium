@@ -784,12 +784,12 @@ Future<bool> saveInternalWalletInfoForUser(
     final databaseRef = FirebaseDatabase.instance.ref(
       FireBaseConstants.usersRef +
           userId +
-          '/${UserInfoModel.savedParticleUserInfoKey}',
+          '/${UserInfoModel.savedInternalWalletInfoKey}',
     );
     await databaseRef.set(info.toJson());
     return true;
   } catch (e) {
-    log.f('Error saving particle user info to firebase: $e');
+    log.f('Error saving internal wallet info to firebase: $e');
     return false;
   }
 }
@@ -811,11 +811,11 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
         userRef.child(UserInfoModel.loginTypeKey).set(loginType);
       }
       final internalWalletAddress = user.internalWalletAddress;
-      final savedParticleWalletAddress =
-          userSnapshot[UserInfoModel.savedParticleWalletAddressKey];
-      if (savedParticleWalletAddress != internalWalletAddress) {
+      final savedInternalWalletAddress =
+          userSnapshot[UserInfoModel.savedInternalWalletAddressKey];
+      if (savedInternalWalletAddress != internalWalletAddress) {
         userRef
-            .child(UserInfoModel.savedParticleWalletAddressKey)
+            .child(UserInfoModel.savedInternalWalletAddressKey)
             .set(internalWalletAddress);
       }
       final savedLoginTypeIdentifier =
@@ -829,14 +829,14 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       final UserInfoModel? retrievedUser =
           singleUserParser(userSnapshot)?.copyWith(
         loginType: loginType,
-        savedParticleWalletAddress: internalWalletAddress,
+        savedInternalWalletAddress: internalWalletAddress,
         loginTypeIdentifier: user.loginTypeIdentifier,
       );
 
-      final savedParticleUserInfo =
-          userSnapshot[UserInfoModel.savedParticleUserInfoKey];
-      if (savedParticleUserInfo != null) {
-        final parsed = json.decode(savedParticleUserInfo as String);
+      final savedInternalWalletInfo =
+          userSnapshot[UserInfoModel.savedInternalWalletInfoKey];
+      if (savedInternalWalletInfo != null) {
+        final parsed = json.decode(savedInternalWalletInfo as String);
         final wallets =
             List.from(parsed[FirebaseInternalWalletInfo.walletsKey]);
         final List<InternalWallet> walletsList = [];
@@ -856,7 +856,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
               .toList(),
         );
         if (retrievedUser != null) {
-          retrievedUser.savedParticleUserInfo = internalWalletInfo;
+          retrievedUser.savedInternalWalletInfo = internalWalletInfo;
         }
       }
       return retrievedUser;
@@ -875,19 +875,19 @@ Future<List<InternalWallet>> getInternalWalletsForUser(
   String userId,
 ) async {
   try {
-    final particleWalletDataRef = FirebaseDatabase.instance
+    final internalWalletDataRef = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId)
-        .child(UserInfoModel.savedParticleUserInfoKey);
+        .child(UserInfoModel.savedInternalWalletInfoKey);
     final savedInternalWalletAddressRef = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId)
-        .child(UserInfoModel.savedParticleWalletAddressKey);
+        .child(UserInfoModel.savedInternalWalletAddressKey);
 
-    final walletDataSnapsot = await particleWalletDataRef.get();
-    final particleUserInfo = walletDataSnapsot.value as dynamic;
-    if (particleUserInfo != null) {
-      final parsed = json.decode(particleUserInfo as String);
+    final walletDataSnapsot = await internalWalletDataRef.get();
+    final internalWalletInfo = walletDataSnapsot.value as dynamic;
+    if (internalWalletInfo != null) {
+      final parsed = json.decode(internalWalletInfo as String);
       final wallets = List.from(parsed[FirebaseInternalWalletInfo.walletsKey]);
       final List<InternalWallet> walletsList = [];
       wallets.forEach((element) {
@@ -912,7 +912,7 @@ Future<List<InternalWallet>> getInternalWalletsForUser(
       return [];
     }
   } catch (e) {
-    log.f('Error getting particle user info from firebase: $e');
+    log.f('Error getting internal wallet info from firebase: $e');
     return [];
   }
 }

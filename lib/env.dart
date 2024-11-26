@@ -19,7 +19,6 @@ class Env {
 
   // from walletConnect
   static const projectId = String.fromEnvironment('projectId');
-  // from particle auth
   static const web3AuthClientId = String.fromEnvironment("web3AuthClientId");
   static const environment = String.fromEnvironment("environment");
   static const jitsiServerUrl = String.fromEnvironment("jitsiServerUrl");

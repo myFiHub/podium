@@ -262,8 +262,8 @@ class CreateGroupController extends GetxController {
           localWalletAddress: user.defaultAddress,
           following: [],
           numberOfFollowers: 0,
-          savedParticleWalletAddress: user.defaultAddress,
-          savedParticleUserInfo: FirebaseInternalWalletInfo(
+          savedInternalWalletAddress: user.defaultAddress,
+          savedInternalWalletInfo: FirebaseInternalWalletInfo(
             wallets: [
               InternalWallet(
                 address: user.defaultAddress,

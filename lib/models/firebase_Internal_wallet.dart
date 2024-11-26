@@ -51,7 +51,7 @@ class FirebaseInternalWalletInfo {
 
   @override
   String toString() =>
-      'FirebaseParticleAuthUserInfo(uuid: $uuid, wallets: $wallets)';
+      'FirebaseInternalWalletInfo(uuid: $uuid, wallets: $wallets)';
 
   @override
   bool operator ==(covariant FirebaseInternalWalletInfo other) {
@@ -107,7 +107,7 @@ class InternalWallet {
       InternalWallet.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'ParticleAuthWallet(address: $address, chain: $chain)';
+  String toString() => 'InternalWallet(address: $address, chain: $chain)';
 
   @override
   bool operator ==(covariant InternalWallet other) {

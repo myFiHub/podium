@@ -11,7 +11,7 @@ import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
 import "package:http/http.dart";
 
-Web3Client _getClientByChainId(String chainId) {
+Web3Client web3ClientByChainId(String chainId) {
   if (chainId == movementChainId) {
     return Web3Client(movementChain.rpcUrl, Client());
   }
@@ -32,7 +32,7 @@ Future<String?> sendTransaction({
 }) async {
   try {
     final credentials = await _getCredentials();
-    final client = _getClientByChainId(chainId);
+    final client = web3ClientByChainId(chainId);
     final transactionSigned = await client.sendTransaction(
       credentials,
       transaction,

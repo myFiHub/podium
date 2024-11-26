@@ -125,7 +125,7 @@ class MyProfileController extends GetxController {
     if (particleAddress == null) {
       return false;
     }
-    final activeWallets = await particle_friendTech_getActiveUserWallets(
+    final activeWallets = await internal_friendTech_getActiveUserWallets(
       particleAddress: particleAddress,
       chainId: baseChainId,
     );
@@ -203,7 +203,7 @@ class MyProfileController extends GetxController {
       }
       return false;
     } else {
-      final activeWallets = await particle_friendTech_getActiveUserWallets(
+      final activeWallets = await internal_friendTech_getActiveUserWallets(
         particleAddress: particleAddress,
         externalWalletAddress: externalWalletAddress,
         chainId: baseChainId,

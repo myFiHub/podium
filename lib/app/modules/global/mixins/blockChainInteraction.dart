@@ -13,6 +13,7 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -258,7 +259,7 @@ Future<BigInt?> getMyShares_arena({
   }
 }
 
-Future<UserActiveWalletOnFriendtech> particle_friendTech_getActiveUserWallets(
+Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
     {required String particleAddress,
     String? externalWalletAddress,
     required String chainId}) async {
@@ -546,7 +547,7 @@ Future<bool> internal_buyFriendTechTicket({
   final methodName = 'buyShares';
   final parameters = [
     parsAddress(sharesSubjectWallet),
-    numberOfTickets.toString()
+    BigInt.from(numberOfTickets),
   ];
 
   try {
@@ -741,7 +742,7 @@ Future<bool> ext_buySharesWithReferrer({
   }
 }
 
-Future<BigInt?> particle_getBuyPrice({
+Future<BigInt?> internal_getBuyPrice({
   required String sharesSubject,
   num shareAmount = 1,
   required String chainId,
@@ -758,23 +759,27 @@ Future<BigInt?> particle_getBuyPrice({
   if (contract == null) {
     return null;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'getBuyPriceAfterFee';
-  final parameters = [sharesSubjectWallet, shareAmount.toString()];
-  const abiJson = StarsArenaSmartContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
+  final parameters = [parsAddress(sharesSubjectWallet), BigInt.from(1)];
 
   try {
-    final result = await EvmService.readContract(
-      myAddress,
-      BigInt.zero,
-      contractAddress,
-      methodName,
-      parameters,
-      abiJsonString,
+    final client = web3ClientByChainId(chainId);
+    final result = await client.call(
+      contract: contract,
+      function: contract.function(methodName),
+      params: parameters,
     );
-    if (result != null) {
-      return BigInt.parse(result);
+
+    // final result = await EvmService.readContract(
+    //   myAddress,
+    //   BigInt.zero,
+    //   contractAddress,
+    //   methodName,
+    //   parameters,
+    //   abiJsonString,
+    // );
+    if (result[0] != null) {
+      return result[0];
     } else {
       return null;
     }
@@ -796,7 +801,7 @@ Future<bool> internal_buySharesWithReferrer({
     Toast.error(message: "Referrer address not found");
     return false;
   }
-  final buyPrice = await particle_getBuyPrice(
+  final buyPrice = await internal_getBuyPrice(
     sharesSubject: sharesSubject,
     shareAmount: shareAmount,
     chainId: chainId,
@@ -821,7 +826,7 @@ Future<bool> internal_buySharesWithReferrer({
   final methodName = 'buySharesWithReferrer';
   final parameters = [
     parsAddress(sharesSubjectWallet),
-    shareAmount.toString(),
+    BigInt.from(shareAmount),
     parsAddress(referrer)
   ];
   try {
@@ -924,7 +929,7 @@ void _copyToClipboard(String text, {String? prefix}) async {
 }
 
 String? fihubAddress(String chainId) {
-  return Environment.Env.fihubAddress(particleChianId);
+  return Environment.Env.fihubAddress(chainId);
 }
 
 class WalletNames {

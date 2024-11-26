@@ -126,7 +126,7 @@ class ProfileController extends GetxController {
       await Future.delayed(Duration(seconds: delay));
     }
     final (activeWallets, myShares) = await (
-      particle_friendTech_getActiveUserWallets(
+      internal_friendTech_getActiveUserWallets(
         particleAddress: userInfo.value!.particleWalletAddress,
         chainId: baseChainId,
       ),
@@ -163,7 +163,7 @@ class ProfileController extends GetxController {
       await Future.delayed(Duration(seconds: delay));
     }
     final (price, arenaShares) = await (
-      particle_getBuyPrice(
+      internal_getBuyPrice(
         sharesSubject: userInfo.value!.defaultWalletAddress,
         shareAmount: 1,
         chainId: avalancheChainId,

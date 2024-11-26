@@ -495,7 +495,7 @@ class CheckticketController extends GetxController {
       return false;
     }
     bool bought = false;
-    final activeWallets = await particle_friendTech_getActiveUserWallets(
+    final activeWallets = await internal_friendTech_getActiveUserWallets(
       particleAddress: ticketSeller.userInfo.particleWalletAddress,
       externalWalletAddress: ticketSeller.userInfo.defaultWalletAddress,
       chainId: baseChainId,
@@ -557,7 +557,7 @@ class CheckticketController extends GetxController {
     if (selectedWallet == WalletNames.podium) {
       bought = await internal_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
-        chainId: externalWalletChianId,
+        chainId: avalancheChainId,
         targetUserId: ticketSeller.userInfo.id,
       );
     } else {

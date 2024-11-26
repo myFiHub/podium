@@ -9,7 +9,6 @@ class UserInfoModel {
   late List<String> following;
   String? lowercasename;
   late String savedInternalWalletAddress;
-  late FirebaseInternalWalletInfo? savedInternalWalletInfo;
   late int numberOfFollowers;
   bool isOver18 = false;
   String? loginType;
@@ -22,7 +21,6 @@ class UserInfoModel {
   static String localWalletAddressKey = 'localWalletAddress';
   static String followingKey = 'following';
   static String numberOfFollowersKey = 'numberOfFollowers';
-  static String savedInternalWalletInfoKey = 'savedInternalWalletInfo';
   static String lowercasenameKey = 'lowercasename';
   static String isOver18Key = 'isOver18';
   static String loginTypeKey = 'loginType';
@@ -39,7 +37,6 @@ class UserInfoModel {
     required this.numberOfFollowers,
     required this.savedInternalWalletAddress,
     this.lowercasename,
-    this.savedInternalWalletInfo,
     this.isOver18 = false,
     this.loginType,
     this.loginTypeIdentifier,
@@ -48,25 +45,18 @@ class UserInfoModel {
   String get defaultWalletAddress {
     final walletAddress = localWalletAddress;
     if (walletAddress.isEmpty) {
-      final firstInternalWalletAddress = savedInternalWalletInfo?.wallets.where(
-        (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
-      );
-      if (firstInternalWalletAddress == null ||
-          firstInternalWalletAddress.isEmpty) {
+      final firstInternalWalletAddress = savedInternalWalletAddress;
+      if (firstInternalWalletAddress.isEmpty) {
         return '';
       }
-      return firstInternalWalletAddress.first.address;
+      return firstInternalWalletAddress;
     }
     return walletAddress;
   }
 
   String get internalWalletAddress {
-    final firstInternalAddress = savedInternalWalletInfo?.wallets
-        .where(
-          (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
-        )
-        .toList();
-    return firstInternalAddress!.first.address;
+    final firstInternalAddress = savedInternalWalletAddress;
+    return firstInternalAddress;
   }
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {
@@ -80,11 +70,8 @@ class UserInfoModel {
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
-    savedInternalWalletAddress =
-        json[savedInternalWalletAddressKey] ?? internalWalletAddress;
+    savedInternalWalletAddress = internalWalletAddress;
     loginTypeIdentifier = json[loginTypeIdentifierKey];
-    savedInternalWalletInfo =
-        json[savedInternalWalletInfoKey] ?? internalWalletAddress;
   }
 
   Map<String, dynamic> toJson() {
@@ -94,16 +81,13 @@ class UserInfoModel {
     data[emailKey] = email;
     data[avatarUrlKey] = avatar;
     data[localWalletAddressKey] = localWalletAddress;
-    if (savedInternalWalletInfo != null) {
-      data[savedInternalWalletInfoKey] = savedInternalWalletInfo!.toJson();
-    }
+
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
     data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();
     data[isOver18Key] = isOver18;
     data[loginTypeKey] = loginType;
     data[loginTypeIdentifierKey] = loginTypeIdentifier;
-    data[savedInternalWalletAddressKey] = savedInternalWalletAddress;
     return data;
   }
 
@@ -117,7 +101,6 @@ class UserInfoModel {
     int? numberOfFollowers,
     String? lowercasename,
     String? savedInternalWalletAddress,
-    FirebaseInternalWalletInfo? savedInternalWalletInfo,
     bool? isOver18,
     String? loginType,
     String? loginTypeIdentifier,
@@ -131,8 +114,6 @@ class UserInfoModel {
       following: following ?? this.following,
       numberOfFollowers: numberOfFollowers ?? this.numberOfFollowers,
       lowercasename: lowercasename ?? this.lowercasename,
-      savedInternalWalletInfo:
-          savedInternalWalletInfo ?? this.savedInternalWalletInfo,
       isOver18: isOver18 ?? this.isOver18,
       loginType: loginType ?? this.loginType,
       savedInternalWalletAddress:

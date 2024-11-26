@@ -177,7 +177,6 @@ class LoginController extends GetxController {
       avatar: avatar,
       localWalletAddress: '',
       savedInternalWalletAddress: internalWalletInfo.wallets.first.address,
-      savedInternalWalletInfo: internalWalletInfo,
       following: [],
       numberOfFollowers: 0,
       loginType: loginType,

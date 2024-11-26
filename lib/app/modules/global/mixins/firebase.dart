@@ -515,6 +515,19 @@ Future<String> getUserLocalWalletAddress(String userId) async {
   return localWalletAddress as String;
 }
 
+Future<String> getUserInternalWalletAddress(String userId) async {
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.usersRef)
+      .child(userId)
+      .child(UserInfoModel.savedInternalWalletAddressKey);
+  final snapshot = await databaseRef.get();
+  final internalWalletAddress = snapshot.value as dynamic;
+  if (internalWalletAddress == null) {
+    return '';
+  }
+  return internalWalletAddress as String;
+}
+
 Future<List<String>> getListOfUserWalletsPresentInSession(
     String groupId) async {
   final databaseRef = FirebaseDatabase.instance
@@ -778,22 +791,6 @@ deleteNotification({required String notificationId}) async {
   }
 }
 
-Future<bool> saveInternalWalletInfoForUser(
-    {required String userId, required FirebaseInternalWalletInfo info}) async {
-  try {
-    final databaseRef = FirebaseDatabase.instance.ref(
-      FireBaseConstants.usersRef +
-          userId +
-          '/${UserInfoModel.savedInternalWalletInfoKey}',
-    );
-    await databaseRef.set(info.toJson());
-    return true;
-  } catch (e) {
-    log.f('Error saving internal wallet info to firebase: $e');
-    return false;
-  }
-}
-
 Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
   required UserInfoModel user,
 }) async {
@@ -833,32 +830,6 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
         loginTypeIdentifier: user.loginTypeIdentifier,
       );
 
-      final savedInternalWalletInfo =
-          userSnapshot[UserInfoModel.savedInternalWalletInfoKey];
-      if (savedInternalWalletInfo != null) {
-        final parsed = json.decode(savedInternalWalletInfo as String);
-        final wallets =
-            List.from(parsed[FirebaseInternalWalletInfo.walletsKey]);
-        final List<InternalWallet> walletsList = [];
-        wallets.forEach(
-          (element) {
-            walletsList.add(
-              InternalWallet.fromMap(element),
-            );
-          },
-        );
-        final internalWalletInfo = FirebaseInternalWalletInfo(
-          uuid: parsed[FirebaseInternalWalletInfo.uuidKey],
-          wallets: walletsList
-              .where(
-                (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
-              )
-              .toList(),
-        );
-        if (retrievedUser != null) {
-          retrievedUser.savedInternalWalletInfo = internalWalletInfo;
-        }
-      }
       return retrievedUser;
     } else {
       userRef.set(user.toJson());
@@ -868,52 +839,6 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
   } catch (e) {
     log.f('Error saving user logged in with X to firebase: $e');
     return null;
-  }
-}
-
-Future<List<InternalWallet>> getInternalWalletsForUser(
-  String userId,
-) async {
-  try {
-    final internalWalletDataRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.usersRef)
-        .child(userId)
-        .child(UserInfoModel.savedInternalWalletInfoKey);
-    final savedInternalWalletAddressRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.usersRef)
-        .child(userId)
-        .child(UserInfoModel.savedInternalWalletAddressKey);
-
-    final walletDataSnapsot = await internalWalletDataRef.get();
-    final internalWalletInfo = walletDataSnapsot.value as dynamic;
-    if (internalWalletInfo != null) {
-      final parsed = json.decode(internalWalletInfo as String);
-      final wallets = List.from(parsed[FirebaseInternalWalletInfo.walletsKey]);
-      final List<InternalWallet> walletsList = [];
-      wallets.forEach((element) {
-        if (element['address'] != '' && element['chain'] == 'evm_chain') {
-          walletsList.add(InternalWallet.fromMap(element));
-        }
-      });
-      if (walletsList.isNotEmpty) {
-        return walletsList;
-      } else {
-        final savedWalletSnapshot = await savedInternalWalletAddressRef.get();
-        final savedWalletAddress = savedWalletSnapshot.value as dynamic;
-        if (savedWalletAddress != null) {
-          return [
-            InternalWallet(address: savedWalletAddress, chain: 'evm_chain')
-          ];
-        } else {
-          return [];
-        }
-      }
-    } else {
-      return [];
-    }
-  } catch (e) {
-    log.f('Error getting internal wallet info from firebase: $e');
-    return [];
   }
 }
 

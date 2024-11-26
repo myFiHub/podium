@@ -189,13 +189,8 @@ class InternalWallet extends GetView<GlobalController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final walletsToShow = myUser.savedInternalWalletInfo?.wallets
-          .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
-          .toList();
-      if (walletsToShow == null || walletsToShow.isEmpty) {
-        return Container();
-      }
-
+      final walletAddress =
+          controller.currentUserInfo.value!.savedInternalWalletAddress;
       return Container(
         width: double.infinity,
         decoration: BoxDecoration(
@@ -221,7 +216,7 @@ class InternalWallet extends GetView<GlobalController> {
                     ),
                     space10,
                     Text(
-                      'Podium Wallet${walletsToShow.length > 1 ? 's' : ''}',
+                      'Podium Wallet',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -234,44 +229,40 @@ class InternalWallet extends GetView<GlobalController> {
                   ],
                 ),
                 space10,
-                ...walletsToShow
-                    .map(
-                      (wallet) => GestureDetector(
-                        onTap: () async {
-                          await Clipboard.setData(
-                            ClipboardData(
-                              text: wallet.address,
-                            ),
-                          );
-                          Toast.neutral(
-                            title: 'Copied',
-                            message: 'Wallet address copied to clipboard',
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.account_balance_wallet,
-                              color: ColorName.greyText,
-                            ),
-                            space10,
-                            Text(
-                              truncate(
-                                wallet.address,
-                                length: 12,
-                              ),
-                              style: const TextStyle(
-                                fontSize: 23,
-                                fontWeight: FontWeight.w700,
-                                color: ColorName.greyText,
-                              ),
-                            ),
-                            space10,
-                          ],
+                GestureDetector(
+                  onTap: () async {
+                    await Clipboard.setData(
+                      ClipboardData(
+                        text: walletAddress,
+                      ),
+                    );
+                    Toast.neutral(
+                      title: 'Copied',
+                      message: 'Wallet address copied to clipboard',
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet,
+                        color: ColorName.greyText,
+                      ),
+                      space10,
+                      Text(
+                        truncate(
+                          walletAddress,
+                          length: 12,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 23,
+                          fontWeight: FontWeight.w700,
+                          color: ColorName.greyText,
                         ),
                       ),
-                    )
-                    .toList()
+                      space10,
+                    ],
+                  ),
+                )
               ],
             ),
             // FriendTeckActivationButton()

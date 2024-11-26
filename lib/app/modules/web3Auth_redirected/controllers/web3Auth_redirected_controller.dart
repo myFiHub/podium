@@ -28,15 +28,6 @@ class Web3AuthRedirectedController extends GetxController {
       avatar: userInfo.profileImage ?? '',
       localWalletAddress: '',
       savedInternalWalletAddress: publicAddress,
-      savedInternalWalletInfo: FirebaseInternalWalletInfo(
-        uuid: uid,
-        wallets: [
-          InternalWallet(
-            address: publicAddress,
-            chain: 'evm_chain',
-          ),
-        ],
-      ),
       following: [],
       numberOfFollowers: 0,
       loginType: LoginType.google,

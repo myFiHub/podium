@@ -468,14 +468,12 @@ class OngoingGroupCallController extends GetxController {
     if (userLocalWalletAddress != '') {
       targetAddress = userLocalWalletAddress;
     } else {
-      final internalWallets = await getInternalWalletsForUser(userId);
-      if (internalWallets.length > 0) {
-        targetAddress = internalWallets[0].address;
-      }
+      final internalWalletAddress = await getUserInternalWalletAddress(userId);
+      targetAddress = internalWalletAddress;
     }
 
     log.d("target address is $targetAddress for user $userId");
-    if (targetAddress != null && targetAddress != '') {
+    if (targetAddress != '') {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
       if (myUser.localWalletAddress == targetAddress ||

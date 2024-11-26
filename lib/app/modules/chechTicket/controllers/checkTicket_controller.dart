@@ -117,15 +117,6 @@ class CheckticketController extends GetxController {
       savedInternalWalletAddress: address,
       following: [],
       numberOfFollowers: 0,
-      savedInternalWalletInfo: FirebaseInternalWalletInfo(
-        wallets: [
-          InternalWallet(
-            address: address,
-            chain: 'evm_chain',
-          )
-        ],
-        uuid: '',
-      ),
     );
     return fakeUser;
   }
@@ -140,15 +131,6 @@ class CheckticketController extends GetxController {
       savedInternalWalletAddress: user.defaultAddress,
       following: [],
       numberOfFollowers: 0,
-      savedInternalWalletInfo: FirebaseInternalWalletInfo(
-        wallets: [
-          InternalWallet(
-            address: user.defaultAddress,
-            chain: 'evm_chain',
-          )
-        ],
-        uuid: '',
-      ),
     );
     return fakeUser;
   }

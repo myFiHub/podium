@@ -263,15 +263,6 @@ class CreateGroupController extends GetxController {
           following: [],
           numberOfFollowers: 0,
           savedInternalWalletAddress: user.defaultAddress,
-          savedInternalWalletInfo: FirebaseInternalWalletInfo(
-            wallets: [
-              InternalWallet(
-                address: user.defaultAddress,
-                chain: 'evm_chain',
-              )
-            ],
-            uuid: '',
-          ),
         ),
         activeAddress: user.address,
       ));

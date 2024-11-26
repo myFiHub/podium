@@ -12,16 +12,6 @@ UserInfoModel? singleUserParser(dynamic value) {
     final String id = value[UserInfoModel.idKey];
     final avatar = value[UserInfoModel.avatarUrlKey];
     final isOver18 = value[UserInfoModel.isOver18Key] ?? false;
-    final parsed =
-        jsonDecode(value[UserInfoModel.savedInternalWalletInfoKey] ?? "{}");
-    final wallets =
-        List.from(parsed[FirebaseInternalWalletInfo.walletsKey] ?? []);
-    final List<InternalWallet> walletsList = [];
-    wallets.forEach((element) {
-      if (element['address'] != '' && element['chain'] == 'evm_chain') {
-        walletsList.add(InternalWallet.fromMap(element));
-      }
-    });
 
     final user = UserInfoModel(
       fullName: name,
@@ -29,16 +19,11 @@ UserInfoModel? singleUserParser(dynamic value) {
       id: id,
       avatar: avatar,
       isOver18: isOver18,
-      savedInternalWalletAddress: parsed[FirebaseInternalWalletInfo.walletsKey]
-              [0][InternalWallet.addressKey] ??
-          '',
+      savedInternalWalletAddress:
+          value[UserInfoModel.savedInternalWalletAddressKey] ?? '',
       localWalletAddress: value[UserInfoModel.localWalletAddressKey] ?? '',
       following: List.from(value[UserInfoModel.followingKey] ?? []),
       numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,
-      savedInternalWalletInfo: FirebaseInternalWalletInfo(
-        wallets: walletsList,
-        uuid: parsed[FirebaseInternalWalletInfo.uuidKey],
-      ),
       lowercasename:
           value[UserInfoModel.lowercasenameKey] ?? name.toLowerCase(),
     );

@@ -10,7 +10,6 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
-import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/contracts/friendTech.dart';
@@ -265,17 +264,7 @@ Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
   final List<Future<BigInt?>> arrayToCall = [];
 
   try {
-    final changed = await temporarilyChangeParticleNetwork(chainId);
-    if (!changed) {
-      return UserActiveWalletOnFriendtech(
-        isExternalWalletActive: false,
-        isParticleWalletActive: false,
-        externalWalletAddress: externalWalletAddress,
-        particleWalletAddress: particleAddress,
-      );
-    }
-
-    arrayToCall.add(_particle_getShares_friendthech(
+    arrayToCall.add(_internal_getShares_friendthech(
       sellerAddress: particleAddress,
       buyerAddress: particleAddress,
       chainId: chainId,
@@ -283,14 +272,13 @@ Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
     if (externalWalletAddress != null &&
         externalWalletAddress.isNotEmpty &&
         externalWalletAddress != particleAddress) {
-      arrayToCall.add(_particle_getShares_friendthech(
+      arrayToCall.add(_internal_getShares_friendthech(
         sellerAddress: externalWalletAddress,
         buyerAddress: externalWalletAddress,
         chainId: chainId,
       ));
     }
     final List<BigInt?> results = await Future.wait(arrayToCall);
-    await switchBackToSavedParticleNetwork();
     final isParticleActive = results[0] != null && results[0] != BigInt.zero;
     bool isExternalActive = false;
     if (results.length > 1) {
@@ -305,7 +293,6 @@ Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
     );
   } catch (e) {
     log.e('error : $e');
-    await switchBackToSavedParticleNetwork();
     return UserActiveWalletOnFriendtech(
       isExternalWalletActive: false,
       isParticleWalletActive: false,
@@ -320,23 +307,18 @@ Future<BigInt> internal_getUserShares_friendTech({
   required String particleWallet,
   required String chainId,
 }) async {
-  final changed = await temporarilyChangeParticleNetwork(chainId);
-  if (!changed) {
-    return BigInt.zero;
-  }
-
   try {
     BigInt numberOfShares = BigInt.zero;
     final myExternalWallet = externalWalletAddress;
     final myParticleAddress = await web3AuthWalletAddress(); //Evm.getAddress();
     final List<Future<dynamic>> arrayToCall = [];
     // check if my particle wallet bought any of the user's addresses tickets
-    arrayToCall.add(_particle_getShares_friendthech(
+    arrayToCall.add(_internal_getShares_friendthech(
       sellerAddress: particleWallet,
       chainId: chainId,
     ));
     if (defaultWallet != particleWallet) {
-      arrayToCall.add(_particle_getShares_friendthech(
+      arrayToCall.add(_internal_getShares_friendthech(
         sellerAddress: defaultWallet,
         chainId: chainId,
       ));
@@ -344,13 +326,13 @@ Future<BigInt> internal_getUserShares_friendTech({
 
     // check if external wallet bought any of the user's addresses tickets
     if (myExternalWallet != null) {
-      arrayToCall.add(_particle_getShares_friendthech(
+      arrayToCall.add(_internal_getShares_friendthech(
         sellerAddress: particleWallet,
         chainId: chainId,
         buyerAddress: myExternalWallet,
       ));
       if (myExternalWallet != myParticleAddress) {
-        arrayToCall.add(_particle_getShares_friendthech(
+        arrayToCall.add(_internal_getShares_friendthech(
           sellerAddress: defaultWallet,
           chainId: chainId,
           buyerAddress: myExternalWallet,
@@ -359,7 +341,6 @@ Future<BigInt> internal_getUserShares_friendTech({
     }
 
     final results = await Future.wait(arrayToCall);
-    await switchBackToSavedParticleNetwork();
     for (var result in results) {
       if (result != null) {
         numberOfShares += BigInt.parse(result.toString());
@@ -367,14 +348,13 @@ Future<BigInt> internal_getUserShares_friendTech({
     }
     return numberOfShares;
   } catch (e) {
-    await switchBackToSavedParticleNetwork();
     log.e('error : $e');
     Toast.error(message: "Could not get user shares");
     return BigInt.zero;
   }
 }
 
-Future<BigInt?> _particle_getShares_friendthech({
+Future<BigInt?> _internal_getShares_friendthech({
   required String sellerAddress,
   required String chainId,
   String? buyerAddress,

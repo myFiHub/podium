@@ -363,7 +363,7 @@ class CreateGroupController extends GetxController {
           if (selectedWallet == null) {
             return null;
           }
-          if (selectedWallet == WalletNames.particle) {
+          if (selectedWallet == WalletNames.podium) {
             final bought = await particle_activate_friendtechWallet(
               chainId: baseChainId,
             );

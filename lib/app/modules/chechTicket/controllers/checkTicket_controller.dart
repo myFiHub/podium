@@ -510,7 +510,7 @@ class CheckticketController extends GetxController {
       return false;
     }
     final preferedWalletAddress = activeWallets.preferedWalletAddress;
-    if (selectedWallet == WalletNames.particle) {
+    if (selectedWallet == WalletNames.podium) {
       bought = await internal_buyFriendTechTicket(
         sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
@@ -554,7 +554,7 @@ class CheckticketController extends GetxController {
       return false;
     }
     bool bought = false;
-    if (selectedWallet == WalletNames.particle) {
+    if (selectedWallet == WalletNames.podium) {
       bought = await internal_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,

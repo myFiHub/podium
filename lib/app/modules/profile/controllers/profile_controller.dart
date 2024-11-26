@@ -196,7 +196,7 @@ class ProfileController extends GetxController {
       }
       isBuyingFriendTechTicket.value = true;
       bool bought = false;
-      if (mySelectedWallet == WalletNames.particle) {
+      if (mySelectedWallet == WalletNames.podium) {
         bought = await internal_buyFriendTechTicket(
           sharesSubject: preferedAddress,
           chainId: baseChainId,
@@ -236,7 +236,7 @@ class ProfileController extends GetxController {
       }
       isBuyingArenaTicket.value = true;
       bool bought = false;
-      if (mySelectedWallet == WalletNames.particle) {
+      if (mySelectedWallet == WalletNames.podium) {
         bought = await internal_buySharesWithReferrer(
           sharesSubject: userInfo.value!.defaultWalletAddress,
           chainId: avalancheChainId,

@@ -928,16 +928,16 @@ String? fihubAddress(String chainId) {
 }
 
 class WalletNames {
-  static const particle = "Particle Wallet";
+  static const podium = "Podium Wallet";
   static const external = "External Wallet";
 }
 
 Future<String?> choseAWallet({required String chainId}) async {
   if (externalWalletAddress == null) {
-    return WalletNames.particle;
+    return WalletNames.podium;
   }
   if (externalWalletAddress!.isEmpty) {
-    return WalletNames.particle;
+    return WalletNames.podium;
   }
   final store = GetStorage();
   final savedWallet = store.read(StorageKeys.selectedWalletName);
@@ -988,11 +988,11 @@ class SelectChainContent extends GetView<GlobalController> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Button(
-              text: "Particle Wallet",
+              text: "Podium Wallet",
               type: ButtonType.outline,
               color: ColorName.primaryBlue,
               blockButton: true,
-              icon: Assets.images.particleIcon.image(
+              icon: Assets.images.logo.image(
                 width: 20,
                 height: 20,
               ),
@@ -1000,9 +1000,9 @@ class SelectChainContent extends GetView<GlobalController> {
                 final shouldRemember = store.read("rememberWallet") ?? false;
                 if (shouldRemember) {
                   store.write(
-                      StorageKeys.selectedWalletName, WalletNames.particle);
+                      StorageKeys.selectedWalletName, WalletNames.podium);
                 }
-                Navigator.pop(Get.overlayContext!, WalletNames.particle);
+                Navigator.pop(Get.overlayContext!, WalletNames.podium);
               }),
           space10,
           Button(

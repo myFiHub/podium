@@ -62,7 +62,11 @@ class LoginView extends GetView<LoginController> {
                       children: [
                         space10,
                         Button(
-                          onPressed: () {},
+                          onPressed: () {
+                            controller.socialLogin(
+                              loginMethod: Provider.email_passwordless,
+                            );
+                          },
                           text: 'LOGIN WITH EMAIL',
                           size: ButtonSize.LARGE,
                           type: ButtonType.solid,

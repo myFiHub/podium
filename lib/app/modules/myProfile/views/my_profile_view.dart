@@ -560,8 +560,9 @@ class UserInfo extends GetView<GlobalController> {
             space10,
             Text(
               myUser.fullName,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 33,
+                fontSize: 24,
                 fontWeight: FontWeight.w700,
               ),
             ),

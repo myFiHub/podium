@@ -18,6 +18,7 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
+import 'package:podium/utils/styles.dart';
 
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -74,23 +75,47 @@ class LoginController extends GetxController with ParticleAuthUtils {
         isLoggingIn.value = false;
         return;
       }
+
+      Web3AuthResponse? res;
       try {
-        final res = await Web3AuthFlutter.login(
-          LoginParams(
-            loginProvider: loginMethod,
-            mfaLevel: MFALevel.DEFAULT,
-            // extraLoginOptions: ExtraLoginOptions(
-            //   login_hint: "mhsnprvr@gmail.com",
-            // ),
-          ),
-        );
+        if (loginMethod == Provider.email_passwordless) {
+          final String? email = await showDialogToGetTheEmail();
+          if (email != null) {
+            res = await Web3AuthFlutter.login(
+              LoginParams(
+                loginProvider: loginMethod,
+                mfaLevel: MFALevel.DEFAULT,
+                extraLoginOptions: ExtraLoginOptions(
+                  login_hint: email,
+                ),
+              ),
+            );
+          } else {
+            isLoggingIn.value = false;
+            return;
+          }
+        } else {
+          res = await Web3AuthFlutter.login(
+            LoginParams(
+              loginProvider: loginMethod,
+              mfaLevel: MFALevel.DEFAULT,
+              // extraLoginOptions: ExtraLoginOptions(
+              //   login_hint: "mhsnprvr@gmail.com",
+              // ),
+            ),
+          );
+        }
+        if (res == null) {
+          isLoggingIn.value = false;
+          return;
+        }
         final privateKey = res.privKey;
         final userInfo = res.userInfo;
         if (privateKey == null || userInfo == null) {
           isLoggingIn.value = false;
           return;
         }
-        _continueSocialLoginWithUserInfoAndPrivateKey(
+        await _continueSocialLoginWithUserInfoAndPrivateKey(
           privateKey: privateKey,
           userInfo: userInfo,
           loginMethod: loginMethod,
@@ -101,6 +126,8 @@ class LoginController extends GetxController with ParticleAuthUtils {
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
         );
+      } finally {
+        isLoggingIn.value = false;
       }
     }
   }
@@ -108,7 +135,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
   _continueSocialLoginWithUserInfoAndPrivateKey(
       {required String privateKey,
       required TorusUserInfo userInfo,
-      required Provider loginMethod}) {
+      required Provider loginMethod}) async {
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
     final uid = addressToUuid(publicAddress);
@@ -122,7 +149,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
         ),
       ],
     );
-    _socialLogin(
+    await _socialLogin(
       id: uid,
       name: userInfo.name ?? '',
       email: userInfo.email ?? '',
@@ -176,7 +203,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
     }
     late String? savedName;
     // ignore: unnecessary_null_comparison
-    if (user.fullName.isEmpty || user.fullName == null) {
+    if (user.fullName.isEmpty || user.fullName == user.email) {
       savedName = await forceSaveUserFullName(user: user);
       UserInfoModel? myUser;
       try {
@@ -274,4 +301,55 @@ class LoginController extends GetxController with ParticleAuthUtils {
 
     return savedName;
   }
+}
+
+Future<String?> showDialogToGetTheEmail() async {
+  final _formKey = GlobalKey<FormBuilderState>();
+  String email = '';
+  final String? enteredEmail = await Get.bottomSheet(
+    Container(
+      height: 400,
+      color: ColorName.cardBackground,
+      child: FormBuilder(
+        key: _formKey,
+        child: Column(
+          children: [
+            space10,
+            Text(
+              'Please enter your email address',
+              style: TextStyle(
+                color: ColorName.greyText,
+              ),
+            ),
+            FormBuilderField(
+              name: 'email',
+              builder: (FormFieldState<String?> field) {
+                return Input(
+                  hintText: 'Email',
+                  onChanged: (value) => email = value,
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(
+                        errorText: 'Email is required'),
+                    FormBuilderValidators.email(errorText: 'Invalid email'),
+                  ]),
+                );
+              },
+            ),
+            Button(
+              text: 'SUBMIT',
+              blockButton: true,
+              type: ButtonType.gradient,
+              onPressed: () {
+                final re = _formKey.currentState?.saveAndValidate();
+                if (re == true) {
+                  Navigator.pop(Get.context!, email);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  return enteredEmail;
 }

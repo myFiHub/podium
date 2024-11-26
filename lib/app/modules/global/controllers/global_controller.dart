@@ -14,6 +14,7 @@ import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
@@ -618,7 +619,7 @@ class GlobalController extends GetxController {
   _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
-
+    web3AuthAddress = '';
     try {
       await ParticleAuthCore.disconnect();
     } catch (e) {

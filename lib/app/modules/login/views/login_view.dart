@@ -6,6 +6,9 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:web3auth_flutter/enums.dart';
+import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 import '../controllers/login_controller.dart';
 
@@ -60,8 +63,8 @@ class LoginView extends GetView<LoginController> {
                         space10,
                         Button(
                           onPressed: () {
-                            controller.loginWithEmail(
-                              ignoreIfNotLoggedIn: false,
+                            controller.socialLogin(
+                              loginMethod: Provider.email_passwordless,
                             );
                           },
                           text: 'LOGIN WITH EMAIL',
@@ -73,7 +76,8 @@ class LoginView extends GetView<LoginController> {
                         space10,
                         Button(
                           onPressed: () {
-                            controller.loginWithX(ignoreIfNotLoggedIn: false);
+                            controller.socialLogin(
+                                loginMethod: Provider.twitter);
                           },
                           text: 'LOGIN WITH X',
                           icon: Assets.images.xPlatform.image(
@@ -91,8 +95,8 @@ class LoginView extends GetView<LoginController> {
                         ),
                         Button(
                           onPressed: () {
-                            controller.loginWithGoogle(
-                                ignoreIfNotLoggedIn: false);
+                            controller.socialLogin(
+                                loginMethod: Provider.google);
                           },
                           text: 'LOGIN WITH GOOGLE',
                           icon: Assets.images.gIcon.image(
@@ -122,9 +126,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               child: IconButton(
                                   onPressed: () {
-                                    controller.loginWithFaceBook(
-                                      ignoreIfNotLoggedIn: false,
-                                    );
+                                    controller.socialLogin(
+                                        loginMethod: Provider.facebook);
                                   },
                                   icon: Assets.images.facebook.image(
                                     color: ColorName.white,
@@ -138,9 +141,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               child: IconButton(
                                 onPressed: () {
-                                  controller.loginWithApple(
-                                    ignoreIfNotLoggedIn: false,
-                                  );
+                                  controller.socialLogin(
+                                      loginMethod: Provider.apple);
                                 },
                                 icon: Assets.images.apple.image(
                                   color: ColorName.white,
@@ -155,9 +157,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               child: IconButton(
                                 onPressed: () {
-                                  controller.loginWithLinkedIn(
-                                    ignoreIfNotLoggedIn: false,
-                                  );
+                                  controller.socialLogin(
+                                      loginMethod: Provider.linkedin);
                                 },
                                 icon: Assets.images.linkedin.image(
                                   height: 25,
@@ -171,9 +172,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               child: IconButton(
                                 onPressed: () {
-                                  controller.loginWithGithub(
-                                    ignoreIfNotLoggedIn: false,
-                                  );
+                                  controller.socialLogin(
+                                      loginMethod: Provider.github);
                                 },
                                 icon: Assets.images.github.image(
                                   color: ColorName.white,

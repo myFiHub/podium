@@ -2,10 +2,12 @@
  xmlns:tools="http://schemas.android.com/tools"
 >
     <application
-     tools:replace="android:label"
+        tools:replace="android:fullBackupContent,android:label,android:allowBackup"
         android:label="podium"
         android:name="${applicationName}"
         android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="false"
+        android:allowBackup="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -23,11 +25,14 @@
     <category android:name="android.intent.category.DEFAULT" />
     <category android:name="android.intent.category.BROWSABLE" />
     <data android:scheme="podium" android:host="group-detail" />
+    <data android:scheme="podium" android:host="com.web3podium" android:path="/web3auth" />
+
     <data android:scheme="http" android:host="web3podium.page.link" />
     <data android:scheme="https"  />
         <data android:scheme="http" android:host="web3podium.page.link/group-detail" />
     <data android:scheme="https"  />
 </intent-filter>
+
 
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user

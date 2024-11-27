@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -12,34 +12,19 @@ UserInfoModel? singleUserParser(dynamic value) {
     final String id = value[UserInfoModel.idKey];
     final avatar = value[UserInfoModel.avatarUrlKey];
     final isOver18 = value[UserInfoModel.isOver18Key] ?? false;
-    final parsed =
-        jsonDecode(value[UserInfoModel.savedParticleUserInfoKey] ?? "{}");
-    final wallets =
-        List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey] ?? []);
-    final List<ParticleAuthWallet> walletsList = [];
-    wallets.forEach((element) {
-      if (element['address'] != '' && element['chain'] == 'evm_chain') {
-        walletsList.add(ParticleAuthWallet.fromMap(element));
-      }
-    });
-
+    final savedInternalWalletAddress =
+        value[UserInfoModel.savedInternalWalletAddressKey] ?? '';
+    final localWalletAddress = value[UserInfoModel.localWalletAddressKey] ?? '';
     final user = UserInfoModel(
       fullName: name,
       email: email,
       id: id,
       avatar: avatar,
       isOver18: isOver18,
-      savedParticleWalletAddress:
-          parsed[FirebaseParticleAuthUserInfo.walletsKey][0]
-                  [ParticleAuthWallet.addressKey] ??
-              '',
-      localWalletAddress: value[UserInfoModel.localWalletAddressKey] ?? '',
+      savedInternalWalletAddress: savedInternalWalletAddress,
+      localWalletAddress: localWalletAddress,
       following: List.from(value[UserInfoModel.followingKey] ?? []),
       numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,
-      savedParticleUserInfo: FirebaseParticleAuthUserInfo(
-        wallets: walletsList,
-        uuid: parsed[FirebaseParticleAuthUserInfo.uuidKey],
-      ),
       lowercasename:
           value[UserInfoModel.lowercasenameKey] ?? name.toLowerCase(),
     );

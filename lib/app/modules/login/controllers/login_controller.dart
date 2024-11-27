@@ -1,36 +1,35 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
-import 'package:particle_base/model/user_info.dart' as ParticleUser;
-import 'package:particle_base/model/login_info.dart' as PLoginInfo;
-
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/mixins/particleAuth.dart';
-import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
+import 'package:podium/app/modules/web3Auth_redirected/controllers/web3Auth_redirected_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/services/toast/toast.dart';
-import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
-import 'package:podium/utils/navigation/navigation.dart';
-import 'package:podium/utils/storage.dart';
+import 'package:podium/utils/styles.dart';
+
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:uuid/uuid.dart';
+import 'package:web3auth_flutter/enums.dart';
+import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/output.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
+import 'package:web3dart/web3dart.dart';
 
-class LoginController extends GetxController with ParticleAuthUtils {
+class LoginController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final isLoggingIn = false.obs;
   final $isAutoLoggingIn = false.obs;
   final email = ''.obs;
   final password = ''.obs;
+  final web3AuthLogintype = ''.obs;
   Function? afterLogin = null;
 
   @override
@@ -52,331 +51,99 @@ class LoginController extends GetxController with ParticleAuthUtils {
     super.onClose();
   }
 
-  login({String? manualEmail, String? manualPassword, bool? fromSignUp}) async {
-    isLoggingIn.value = true;
-    final enteredEmail = manualEmail == null ? email.value : manualEmail;
-    final enteredPassword =
-        manualPassword == null ? password.value : manualPassword;
-    try {
-      ParticleUser.UserInfo? particleUser;
-      if (fromSignUp == true) {
-        try {
-          final isConnected = await ParticleAuthCore.isConnected();
-          if (isConnected) {
-            // Toast.error(
-            //   message: 'Already logged in',
-            // );
-            return;
-          }
-          particleUser = await ParticleAuthCore.getUserInfo();
-          globalController.particleAuthUserInfo.value = particleUser;
-        } catch (e) {
-          log.e('Error logging in from signUp => particle auth: $e');
-          Toast.error(
-            message: 'Error logging in',
-          );
-          return;
-        }
-        Toast.success(
-          message: 'Account created successfully, logging in',
-        );
-      } else {
-        particleUser = await particleLogin(email.value);
-        if (particleUser != null) {
-          globalController.particleAuthUserInfo.value = particleUser;
-        } else {
-          Toast.error(
-            message: 'Error logging in',
-          );
-          isLoggingIn.value = false;
-          return;
-        }
-      }
-      UserCredential firebaseUserCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: enteredEmail.trim(),
-        password: enteredPassword.trim(),
-      );
-      final user = FirebaseAuth.instance.currentUser;
-      globalController.firebaseUser.value = user;
-      try {
-        final currentUserInfo =
-            await globalController.getUserInfoById(user!.uid);
-        if (currentUserInfo == null) {
-          Toast.error(
-            message: 'Error logging in',
-          );
-          return;
-        }
-        await saveParticleUserInfoToFirebaseIfNeeded(
-          particleUser: particleUser!,
-          myUserId: user.uid,
-        );
-        currentUserInfo.localParticleUserInfo = particleUser;
-        globalController.currentUserInfo.value = currentUserInfo;
-        final storage = GetStorage();
-        storage.write(StorageKeys.userEmail, enteredEmail);
-        globalController.firebaseUserCredential.value = firebaseUserCredential;
-        globalController.setLoggedIn(true);
-        LoginTypeService.setLoginType(LoginType.emailAndPassword);
-        // Navigate.toInitial();
-      } catch (e) {
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.LOGIN,
-        );
-        return;
-      }
-    } on FirebaseAuthException catch (e) {
-      // Handle errors, such as invalid email or password
-      log.e('Error signing in: ${e.code}');
-      final errorMessage = e.message == 'invalid-credential'
-          ? 'Invalid email or password'
-          : e.message;
-      Toast.error(
-        message: errorMessage ?? 'Error logging in',
-      );
-    } catch (e) {
-      log.e('Error signing in: $e');
-    } finally {
-      isLoggingIn.value = false;
-    }
-  }
-
-  loginWithEmail({
-    required bool ignoreIfNotLoggedIn,
-    String? email,
+  socialLogin({
+    required Provider loginMethod,
+    ignoreIfNotLoggedIn = false,
   }) async {
     isLoggingIn.value = true;
     try {
-      final particleUser = await particleSocialLogin(
-        type: PLoginInfo.LoginType.email,
-        email: email,
+      final userInfo = await Web3AuthFlutter.getUserInfo();
+      final privateKey = await Web3AuthFlutter.getPrivKey();
+      _continueSocialLoginWithUserInfoAndPrivateKey(
+        privateKey: privateKey,
+        userInfo: userInfo,
+        loginMethod: loginMethod,
       );
-      if (particleUser != null) {
-        await _socialLogin(
-          id: particleUser.uuid,
-          name: particleUser.name ?? '',
-          email: particleUser.email ?? '',
-          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
-          particleUser: particleUser,
-          loginType: LoginType.email,
-          loginTypeIdentifier: particleUser.email,
-        );
-      } else {
-        if (ignoreIfNotLoggedIn == false) {
-          Toast.error(
-            message: 'Error logging in',
-          );
-        }
+    } catch (e) {
+      if (ignoreIfNotLoggedIn) {
+        isLoggingIn.value = false;
         return;
       }
-    } catch (e) {
-      isLoggingIn.value = false;
-      log.e('Error logging in with Email: $e');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    } finally {
-      isLoggingIn.value = false;
+
+      Web3AuthResponse? res;
+      try {
+        if (loginMethod == Provider.email_passwordless) {
+          final String? email = await showDialogToGetTheEmail();
+          if (email != null && email.isNotEmpty) {
+            res = await Web3AuthFlutter.login(
+              LoginParams(
+                loginProvider: loginMethod,
+                mfaLevel: MFALevel.DEFAULT,
+                extraLoginOptions: ExtraLoginOptions(
+                  login_hint: email,
+                ),
+              ),
+            );
+          } else {
+            isLoggingIn.value = false;
+            return;
+          }
+        } else {
+          res = await Web3AuthFlutter.login(
+            LoginParams(
+              loginProvider: loginMethod,
+              mfaLevel: MFALevel.DEFAULT,
+              // extraLoginOptions: ExtraLoginOptions(
+              //   login_hint: "mhsnprvr@gmail.com",
+              // ),
+            ),
+          );
+        }
+        if (res == null) {
+          isLoggingIn.value = false;
+          return;
+        }
+        final privateKey = res.privKey;
+        final userInfo = res.userInfo;
+        if (privateKey == null || userInfo == null) {
+          isLoggingIn.value = false;
+          return;
+        }
+        await _continueSocialLoginWithUserInfoAndPrivateKey(
+          privateKey: privateKey,
+          userInfo: userInfo,
+          loginMethod: loginMethod,
+        );
+      } catch (e) {
+        isLoggingIn.value = false;
+        log.e(e);
+        Toast.error(
+          message: 'Error logging in, please try again, or use another method',
+        );
+      } finally {
+        isLoggingIn.value = false;
+      }
     }
   }
 
-  loginWithX({required bool ignoreIfNotLoggedIn}) async {
-    isLoggingIn.value = true;
-    try {
-      final particleUser = await particleSocialLogin(
-        type: PLoginInfo.LoginType.twitter,
-      );
-      if (particleUser != null) {
-        await _socialLogin(
-          id: particleUser.uuid,
-          name: particleUser.name!,
-          email: particleUser.thirdpartyUserInfo!.userInfo.email ?? '',
-          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
-          particleUser: particleUser,
-          loginType: LoginType.x,
-          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
-        );
-      } else {
-        if (ignoreIfNotLoggedIn == false) {
-          Toast.error(
-            message: 'Error logging in',
-          );
-        }
-        return;
-      }
-    } catch (e) {
-      isLoggingIn.value = false;
-      log.e('Error logging in with X: $e');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    } finally {}
-  }
+  _continueSocialLoginWithUserInfoAndPrivateKey(
+      {required String privateKey,
+      required TorusUserInfo userInfo,
+      required Provider loginMethod}) async {
+    final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
+    final publicAddress = ethereumKeyPair.address.hex;
+    final uid = addressToUuid(publicAddress);
+    final loginType = web3AuthProviderToLoginTypeString(loginMethod);
 
-  loginWithGoogle({required bool ignoreIfNotLoggedIn}) async {
-    isLoggingIn.value = true;
-    try {
-      final particleUser = await particleSocialLogin(
-        type: PLoginInfo.LoginType.google,
-      );
-      if (particleUser != null) {
-        await _socialLogin(
-          id: particleUser.uuid,
-          name: particleUser.name!,
-          email: particleUser.googleEmail!,
-          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
-          particleUser: particleUser,
-          loginType: LoginType.google,
-          loginTypeIdentifier: particleUser.googleEmail,
-        );
-      } else {
-        if (!ignoreIfNotLoggedIn) {
-          Toast.error(
-            message: 'Error logging in',
-          );
-        }
-        return;
-      }
-    } catch (e) {
-      isLoggingIn.value = false;
-      log.e('Error logging in with Google: $e');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    } finally {}
-  }
-
-  loginWithLinkedIn({required bool ignoreIfNotLoggedIn}) async {
-    isLoggingIn.value = true;
-    try {
-      final particleUser = await particleSocialLogin(
-        type: PLoginInfo.LoginType.linkedin,
-      );
-      if (particleUser != null) {
-        _socialLogin(
-          id: particleUser.uuid,
-          name: particleUser.name!,
-          email: particleUser.linkedinEmail ?? '',
-          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
-          particleUser: particleUser,
-          loginType: LoginType.linkedin,
-          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
-        );
-      } else {
-        Toast.error(
-          message: 'Error logging in',
-        );
-        return;
-      }
-    } catch (e) {
-      isLoggingIn.value = false;
-      log.e('Error logging in with LinkedIn: $e');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    } finally {}
-  }
-
-  loginWithFaceBook({required bool ignoreIfNotLoggedIn}) async {
-    isLoggingIn.value = true;
-    try {
-      final particleUser = await particleSocialLogin(
-        type: PLoginInfo.LoginType.facebook,
-      );
-      if (particleUser != null) {
-        _socialLogin(
-          id: particleUser.uuid,
-          name: particleUser.name!,
-          email: particleUser.facebookEmail ?? '',
-          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
-          particleUser: particleUser,
-          loginType: LoginType.facebook,
-          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
-        );
-      } else {
-        Toast.error(
-          message: 'Error logging in',
-        );
-        return;
-      }
-    } catch (e) {
-      isLoggingIn.value = false;
-      log.e('Error logging in with Facebook: $e');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    } finally {}
-  }
-
-  loginWithApple({required bool ignoreIfNotLoggedIn}) async {
-    isLoggingIn.value = true;
-    try {
-      final particleUser = await particleSocialLogin(
-        type: PLoginInfo.LoginType.apple,
-      );
-      if (particleUser != null) {
-        _socialLogin(
-          id: particleUser.uuid,
-          name: particleUser.name!,
-          email: particleUser.appleEmail ?? '',
-          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
-          particleUser: particleUser,
-          loginType: LoginType.apple,
-          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
-        );
-      } else {
-        Toast.error(
-          message: 'Error logging in',
-        );
-        return;
-      }
-    } catch (e) {
-      isLoggingIn.value = false;
-      log.e('Error logging in with Apple: $e');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    } finally {}
-  }
-
-  loginWithGithub({required bool ignoreIfNotLoggedIn}) async {
-    isLoggingIn.value = true;
-    try {
-      final particleUser = await particleSocialLogin(
-        type: PLoginInfo.LoginType.github,
-      );
-      if (particleUser != null) {
-        _socialLogin(
-          id: particleUser.uuid,
-          name: particleUser.name!,
-          email: particleUser.githubEmail ?? '',
-          avatar: particleUser.avatar ?? avatarPlaceHolder(particleUser.name),
-          particleUser: particleUser,
-          loginType: LoginType.github,
-          loginTypeIdentifier: particleUser.thirdpartyUserInfo?.userInfo.id,
-        );
-      } else {
-        Toast.error(
-          message: 'Error logging in',
-        );
-        return;
-      }
-    } catch (e) {
-      isLoggingIn.value = false;
-      log.e('Error logging in with Apple: $e');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    } finally {}
+    await _socialLogin(
+      id: uid,
+      name: userInfo.name ?? '',
+      email: userInfo.email ?? '',
+      avatar: userInfo.profileImage ?? '',
+      internalWalletAddress: publicAddress,
+      loginType: loginType,
+      loginTypeIdentifier: userInfo.verifierId,
+    );
   }
 
   _socialLogin({
@@ -384,7 +151,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
     required String name,
     required String email,
     required String avatar,
-    required ParticleUser.UserInfo particleUser,
+    required String internalWalletAddress,
     required String loginType,
     String? loginTypeIdentifier,
   }) async {
@@ -393,41 +160,21 @@ class LoginController extends GetxController with ParticleAuthUtils {
       //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
       email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
     }
-    final walletsToSave = particleUser.wallets
-        .map((e) =>
-            ParticleAuthWallet(address: e.publicAddress, chain: e.chainName))
-        .toList()
-        .where((element) => element.chain == 'evm_chain')
-        .toList();
-    final particleWalletInfo = FirebaseParticleAuthUserInfo(
-      uuid: userId,
-      wallets: walletsToSave,
-    );
-    // this user will be saved, only if uuid of particle auth is not registered, so empty local wallet address is fine
+
+    // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
     final userToCreate = UserInfoModel(
       id: userId,
       fullName: name,
       email: email,
       avatar: avatar,
       localWalletAddress: '',
-      savedParticleWalletAddress: particleWalletInfo.wallets.first.address,
-      savedParticleUserInfo: particleWalletInfo,
+      savedInternalWalletAddress: internalWalletAddress,
       following: [],
       numberOfFollowers: 0,
       loginType: loginType,
       loginTypeIdentifier: loginTypeIdentifier,
       lowercasename: name.toLowerCase(),
     );
-    try {
-      await Evm.getAddress();
-    } catch (e) {
-      Toast.error(
-        message: 'Error logging in, please try again, or use another method',
-      );
-      globalController.setLoggedIn(false);
-      isLoggingIn.value = false;
-      return;
-    }
 
     UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
       user: userToCreate,
@@ -441,7 +188,7 @@ class LoginController extends GetxController with ParticleAuthUtils {
     }
     late String? savedName;
     // ignore: unnecessary_null_comparison
-    if (user.fullName.isEmpty || user.fullName == null) {
+    if (user.fullName.isEmpty || user.fullName == user.email) {
       savedName = await forceSaveUserFullName(user: user);
       UserInfoModel? myUser;
       try {
@@ -463,7 +210,9 @@ class LoginController extends GetxController with ParticleAuthUtils {
     }
     if (savedName != null) {
       globalController.currentUserInfo.value = user;
-      globalController.particleAuthUserInfo.value = particleUser;
+      globalController.currentUserInfo.value!.savedInternalWalletAddress =
+          internalWalletAddress;
+      globalController.currentUserInfo.refresh();
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
       isLoggingIn.value = false;
@@ -539,4 +288,55 @@ class LoginController extends GetxController with ParticleAuthUtils {
 
     return savedName;
   }
+}
+
+Future<String?> showDialogToGetTheEmail() async {
+  final _formKey = GlobalKey<FormBuilderState>();
+  String email = '';
+  final String? enteredEmail = await Get.bottomSheet(
+    Container(
+      height: 400,
+      color: ColorName.cardBackground,
+      child: FormBuilder(
+        key: _formKey,
+        child: Column(
+          children: [
+            space10,
+            Text(
+              'Please enter your email address',
+              style: TextStyle(
+                color: ColorName.greyText,
+              ),
+            ),
+            FormBuilderField(
+              name: 'email',
+              builder: (FormFieldState<String?> field) {
+                return Input(
+                  hintText: 'Email',
+                  onChanged: (value) => email = value,
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(
+                        errorText: 'Email is required'),
+                    FormBuilderValidators.email(errorText: 'Invalid email'),
+                  ]),
+                );
+              },
+            ),
+            Button(
+              text: 'SUBMIT',
+              blockButton: true,
+              type: ButtonType.gradient,
+              onPressed: () {
+                final re = _formKey.currentState?.saveAndValidate();
+                if (re == true) {
+                  Navigator.pop(Get.context!, email);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  return (enteredEmail ?? "").trim();
 }

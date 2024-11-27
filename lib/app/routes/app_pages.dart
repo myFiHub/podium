@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/groupDetail/views/group_by_id_landing.dart';
+import 'package:podium/app/modules/web3Auth_redirected/bindings/web2Auth_binding.dart';
+import 'package:podium/app/modules/web3Auth_redirected/views/web3AuthRedirected_view.dart';
 
 import '../modules/allGroups/bindings/all_groups_binding.dart';
 import '../modules/allGroups/views/all_groups_view.dart';
@@ -27,8 +29,7 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/search/bindings/search_binding.dart';
 import '../modules/search/views/search_view.dart';
-import '../modules/signup/bindings/signup_binding.dart';
-import '../modules/signup/views/signup_view.dart';
+
 import '../modules/wallet/bindings/wallet_binding.dart';
 import '../modules/wallet/views/wallet_view.dart';
 
@@ -46,12 +47,12 @@ class AppPages {
       binding: HomeBinding(),
     ),
     GetPage(
-      name: _Paths.SIGNUP,
-      page: () => const SignupView(),
-      binding: SignupBinding(),
+      name: _Paths.LOGIN,
+      page: () => const LoginView(),
+      binding: LoginBinding(),
     ),
     GetPage(
-      name: _Paths.LOGIN,
+      name: _Paths.WEB3AUTH_REDIRECTED,
       page: () => const LoginView(),
       binding: LoginBinding(),
     ),

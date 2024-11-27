@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -31,7 +32,7 @@ class MyProfileView extends GetView<MyProfileController> {
             UserInfo(),
             DefaultWallet(),
             space10,
-            ParticleWalletManager(),
+            InternalWallet(),
             WalletInfo(),
             WalletConnect(),
             space10,
@@ -181,105 +182,216 @@ class _DefaultWalletState extends State<DefaultWallet> {
   }
 }
 
-class ParticleWalletManager extends GetView<GlobalController> {
-  const ParticleWalletManager({super.key});
+class Balances extends GetView<MyProfileController> {
+  const Balances({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final particleAuthUserInfo = controller.particleAuthUserInfo.value;
-      final wallets = particleAuthUserInfo?.wallets ?? [];
-      final walletsToShow = wallets
-          .where(
-              (w) => w.publicAddress.isNotEmpty && w.chainName == 'evm_chain')
-          .toList();
-      return particleAuthUserInfo == null
-          ? Container()
-          : Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: ColorName.greyText,
-                  width: 1,
+      final balances = controller.balances.value;
+      final loading = controller.isGettingBalances.value;
+      if (loading) {
+        return Container(
+          width: Get.width - 16,
+          height: 46,
+          child: Center(
+            child: Container(
+              width: 20,
+              height: 20,
+              child: const CircularProgressIndicator(),
+            ),
+          ),
+        );
+      }
+      return Container(
+        // add a top border
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: ColorName.greyText,
+              width: 1,
+            ),
+          ),
+        ),
+        padding: const EdgeInsets.only(top: 12),
+        width: Get.width - 16,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Base ETH',
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    space5,
+                    Img(
+                      src: chainIconUrlByChainId(baseChainId),
+                      size: 16,
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Text(
+                  balances.Base,
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'AVAX',
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    space5,
+                    Img(
+                      src: chainIconUrlByChainId(avalancheChainId),
+                      size: 16,
+                    ),
+                  ],
+                ),
+                Text(
+                  balances.Avalanche,
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'MOVE',
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    space5,
+                    Img(
+                      src: chainIconUrlByChainId(movementChainId),
+                      size: 16,
+                    ),
+                  ],
+                ),
+                Text(
+                  balances.Movement,
+                  style: const TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class InternalWallet extends GetView<GlobalController> {
+  const InternalWallet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final walletAddress =
+          controller.currentUserInfo.value!.savedInternalWalletAddress;
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: ColorName.greyText,
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Assets.images.logo.image(
+                      width: 30,
+                      height: 30,
+                    ),
+                    space10,
+                    Text(
+                      'Podium Wallet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.blue[100],
+                      ),
+                    ),
+                    space5,
+                    Icon(Icons.link, color: Colors.blue[100]),
+                    space5,
+                  ],
+                ),
+                space10,
+                GestureDetector(
+                  onTap: () async {
+                    await Clipboard.setData(
+                      ClipboardData(
+                        text: walletAddress,
+                      ),
+                    );
+                    Toast.neutral(
+                      title: 'Copied',
+                      message: 'Wallet address copied to clipboard',
+                    );
+                  },
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Assets.images.particleIcon.image(
-                            width: 30,
-                            height: 30,
-                          ),
-                          space10,
-                          Text(
-                            'Particle Wallet${walletsToShow.length > 1 ? 's' : ''}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.blue[100],
-                            ),
-                          ),
-                          space5,
-                          Icon(Icons.link, color: Colors.blue[100]),
-                          space5,
-                          ParticleWalletChainIcon(
-                            size: 20,
-                          )
-                        ],
+                      Icon(
+                        Icons.account_balance_wallet,
+                        color: ColorName.greyText,
                       ),
                       space10,
-                      ...walletsToShow
-                          .map(
-                            (wallet) => GestureDetector(
-                              onTap: () async {
-                                await Clipboard.setData(
-                                  ClipboardData(
-                                    text: wallet.publicAddress,
-                                  ),
-                                );
-                                Toast.neutral(
-                                  title: 'Copied',
-                                  message: 'Wallet address copied to clipboard',
-                                );
-                              },
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.account_balance_wallet,
-                                    color: ColorName.greyText,
-                                  ),
-                                  space10,
-                                  Text(
-                                    truncate(
-                                      wallet.publicAddress,
-                                      length: 12,
-                                    ),
-                                    style: const TextStyle(
-                                      fontSize: 23,
-                                      fontWeight: FontWeight.w700,
-                                      color: ColorName.greyText,
-                                    ),
-                                  ),
-                                  space10,
-                                ],
-                              ),
-                            ),
-                          )
-                          .toList()
+                      Text(
+                        truncate(
+                          walletAddress,
+                          length: 12,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 23,
+                          fontWeight: FontWeight.w700,
+                          color: ColorName.greyText,
+                        ),
+                      ),
+                      space10,
+                      Icon(
+                        Icons.copy,
+                        color: Colors.grey,
+                      )
                     ],
                   ),
-                  // FriendTeckActivationButton()
-                ],
-              ),
-            );
+                ),
+                space10,
+                Balances(),
+              ],
+            ),
+            // FriendTeckActivationButton()
+          ],
+        ),
+      );
     });
   }
 }
@@ -340,8 +452,9 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
           ),
         ),
         Obx(() {
-          final isLoading = controller.loadingParticleActivation.value;
-          final isActivated = controller.isParticleActivatedOnFriendTech.value;
+          final isLoading = controller.loadingInternalWalletActivation.value;
+          final isActivated =
+              controller.isInternalWalletActivatedOnFriendTech.value;
           return Button(
             loading: isLoading,
             size: ButtonSize.SMALL,
@@ -353,7 +466,7 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
             onPressed: (isActivated || isLoading)
                 ? null
                 : () async {
-                    await controller.activateParticle();
+                    await controller.activateInternalWallet();
                   },
             type: ButtonType.gradient,
             text: isActivated ? 'Activated' : 'Activate',
@@ -559,8 +672,9 @@ class UserInfo extends GetView<GlobalController> {
             space10,
             Text(
               myUser.fullName,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 33,
+                fontSize: 24,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -766,10 +880,10 @@ class _Statistics extends GetWidget<MyProfileController> {
                 ),
               ...payments.income.entries.map(
                 (e) {
-                  final chainInfo = particleChainInfoByChainId(e.key);
-                  final currency = chainInfo.nativeCurrency.symbol;
+                  final chainInfo = chainInfoByChainId(e.key);
+                  final currency = chainInfo.currency;
                   final chainName = chainInfo.name;
-                  final chainIcon = chainInfo.icon;
+                  final chainIcon = chainInfo.chainIcon!;
                   return Column(
                     children: [
                       Padding(

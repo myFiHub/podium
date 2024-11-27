@@ -4,21 +4,20 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:particle_auth_core/evm.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
@@ -221,8 +220,8 @@ class CreateGroupController extends GetxController {
       final isActive =
           ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
               ? true
-              : (await particle_friendTech_getActiveUserWallets(
-                  particleAddress: address,
+              : (await internal_friendTech_getActiveUserWallets(
+                  internalWalletAddress: address,
                   chainId: baseChainId,
                 ))
                   .hasActiveWallet;
@@ -263,16 +262,7 @@ class CreateGroupController extends GetxController {
           localWalletAddress: user.defaultAddress,
           following: [],
           numberOfFollowers: 0,
-          savedParticleWalletAddress: user.defaultAddress,
-          savedParticleUserInfo: FirebaseParticleAuthUserInfo(
-            wallets: [
-              ParticleAuthWallet(
-                address: user.defaultAddress,
-                chain: 'evm_chain',
-              )
-            ],
-            uuid: '',
-          ),
+          savedInternalWalletAddress: user.defaultAddress,
         ),
         activeAddress: user.address,
       ));
@@ -337,8 +327,8 @@ class CreateGroupController extends GetxController {
     }
     loadingUserIds.add(user.id);
     try {
-      final activeWallets = await particle_friendTech_getActiveUserWallets(
-        particleAddress: user.particleWalletAddress,
+      final activeWallets = await internal_friendTech_getActiveUserWallets(
+        internalWalletAddress: user.internalWalletAddress,
         externalWalletAddress: user.defaultWalletAddress,
         chainId: baseChainId,
       );
@@ -362,13 +352,13 @@ class CreateGroupController extends GetxController {
           if (selectedWallet == null) {
             return null;
           }
-          if (selectedWallet == WalletNames.particle) {
-            final bought = await particle_activate_friendtechWallet(
+          if (selectedWallet == WalletNames.internal) {
+            final bought = await internal_activate_friendtechWallet(
               chainId: baseChainId,
             );
             if (bought) {
               Toast.success(message: 'Account activated');
-              return await Evm.getAddress();
+              return await web3AuthWalletAddress(); //await Evm.getAddress();
             } else {
               return null;
             }
@@ -412,7 +402,7 @@ class CreateGroupController extends GetxController {
     log.d(ticketType);
     _deb.debounce(() async {
       try {
-        final isAddress = checkIfValueIsDirectAddress(value);
+        checkIfValueIsDirectAddress(value);
         final (users, arenaUser) = await (
           searchForUserByName(value),
           ticketType == BuyableTicketTypes.onlyArenaTicketHolders
@@ -545,7 +535,7 @@ Future<bool?> showActivatePopup() async {
             if (externalWalletAddress == null)
               const TextSpan(
                 text:
-                    '\n(your external wallet is disconnected\n we checked against your particle wallet address)',
+                    '\n(your external wallet is disconnected\n we checked against your Podium wallet address)',
                 style: const TextStyle(color: Colors.red),
               ),
           ],

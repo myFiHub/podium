@@ -8,13 +8,14 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
+import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
+import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -26,15 +27,14 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:particle_base/model/user_info.dart' as ParticleUser;
-import 'package:particle_base/model/chain_info.dart' as ChainInfo;
-import 'package:particle_base/particle_base.dart' as ParticleBase;
 import 'package:alarm/alarm.dart';
+import 'package:web3auth_flutter/enums.dart';
+import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 PairingMetadata _pairingMetadata = PairingMetadata(
   name: StringConstants.w3mPageTitleV3,
@@ -67,7 +67,6 @@ class GlobalController extends GetxController {
   final connectedWalletAddress = "".obs;
   final jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
-  final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
   final firebaseUser = Rxn<User>();
   final currentUserInfo = Rxn<UserInfoModel>();
   final activeRoute = AppPages.INITIAL.obs;
@@ -83,24 +82,9 @@ class GlobalController extends GetxController {
       RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
   String? deepLinkRoute = null;
 
-  final particleWalletChainId = RxString(
-      (storage.read(StorageKeys.particleWalletChainId) ??
-          Env.initialParticleWalletChainId));
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
           Env.initialExternalWalletChainId));
-
-  ChainInfo.ChainInfo? particleWalletChain(String? chainId) {
-    final particleChain = ChainInfo.ChainInfo.getChain(
-      int.parse(chainId ?? particleWalletChainId.value),
-      ReownAppKitModalNetworks.getNetworkById(
-        Env.chainNamespace,
-        chainId ?? particleWalletChainId.value,
-      )!
-          .name,
-    );
-    return particleChain;
-  }
 
   ReownAppKitModalNetworkInfo? get externalWalletChain {
     final chain = ReownAppKitModalNetworks.getNetworkById(
@@ -122,10 +106,14 @@ class GlobalController extends GetxController {
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
     ReownAppKitModalNetworks.addNetworks(Env.chainNamespace, [movementChain]);
 
-    await Future.wait([
-      initializeParticleAuth(),
-      FirebaseInit.init(),
-    ]);
+    try {
+      await Future.wait([
+        initializeWeb3Auth(),
+        FirebaseInit.init(),
+      ]);
+    } catch (e) {
+      log.e("error initializing app $e");
+    }
     FirebaseDatabase.instance.setPersistenceEnabled(false);
 
     // final firebaseUserDbReference =
@@ -239,81 +227,28 @@ class GlobalController extends GetxController {
     return success;
   }
 
-  Future<bool> switchParticleWalletChain(
-    String chainId, {
-    bool alsoSave = false,
-  }) async {
-    final chain = particleChainInfoByChainId(chainId);
-
-    final done = await ParticleBase.ParticleBase.setChainInfo(chain);
-    if (!done) {
-      log.e("error switching chain");
-      if (alsoSave == true) {
-        storage.remove(StorageKeys.particleWalletChainId);
-      }
-      return false;
-    }
-    if (alsoSave == true) {
-      final selectedChainId = ParticleBase.ParticleBase.getChainId();
-      particleWalletChainId.value = selectedChainId.toString();
-      storage.write(
-          StorageKeys.particleWalletChainId, selectedChainId.toString());
-    }
-    return true;
-  }
-
-  get particleEnvironment {
-    return Env.environment == DEV
-        ? ParticleBase.Env.dev
-        : Env.environment == STAGE
-            ? ParticleBase.Env.staging
-            : ParticleBase.Env.production;
-  }
-
-  Future<void> initializeParticleAuth() async {
-    try {
-      final chainId = particleWalletChainId.value;
-      final chainName =
-          ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
-              .name;
-      final particleChain = //movementChainOnParticle;
-          particleWalletChainId == '30732'
-              ? movementChainOnParticle
-              : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
-      if (particleChain == null) {
-        log.f("${chainId} chain not found on particle");
-        return Future.error("particle chain not initialized");
-      }
-      if (Env.environment != DEV &&
-          Env.environment != STAGE &&
-          Env.environment != PROD) {
-        log.f("unhandled environment");
-        log.f("particle auth not initialized");
-        return Future.error("unhandled environment");
-      }
-
-      log.i("##########initializing ParticleAuth");
-      ParticleBase.ParticleInfo.set(
-        Env.particleProjectId,
-        Env.particleClientKey,
-      );
-
-      ParticleBase.ParticleBase.init(
-        particleChain,
-        particleEnvironment,
-      );
-      // final selectedChan =
-      //     await ParticleBase.ParticleBase.setChainInfo(particleChain);
-      // if (selectedChan) {
-      final chain = await ParticleBase.ParticleBase.getChainInfo();
-      log.i("active particle chain name: ${chain.fullname}");
-      // }
-      log.i('##########particle auth initialized');
-      return Future.value();
-    } catch (e) {
-      log.f('particle auth initialization failed');
-      return Future.error(e);
-    }
+  Future<void> initializeWeb3Auth() async {
+    // Initialize the Web3AuthFlutter instance.
+    await Web3AuthFlutter.init(
+      Web3AuthOptions(
+        clientId:
+            //
+            // "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ",
+            Env.web3AuthClientId,
+        sessionTime: 60 * 60 * 24 * 7,
+        network: Network.sapphire_mainnet,
+        redirectUrl: resolveRedirectUrl(),
+        whiteLabel: WhiteLabelData(
+          appName:
+              //
+              // "Web3Auth Flutter Playground",
+              "Podium",
+          mode: ThemeModes.dark,
+        ),
+      ),
+    );
+    await Web3AuthFlutter.initialize();
+    log.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
   }
 
   initializeInternetConnectionChecker() {
@@ -542,39 +477,11 @@ class GlobalController extends GetxController {
         isAutoLoggingIn.value = false;
         return;
       }
-      if (loginType == LoginType.emailAndPassword) {
-        await _autoLoginWithEmailAndPassword();
-        return;
-      }
       final LoginController loginController = Get.put(LoginController());
-      if (loginType == LoginType.email) {
-        await loginController.loginWithEmail(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.x) {
-        await loginController.loginWithX(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.google) {
-        await loginController.loginWithGoogle(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.facebook) {
-        await loginController.loginWithFaceBook(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.linkedin) {
-        await loginController.loginWithLinkedIn(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.apple) {
-        await loginController.loginWithApple(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.github) {
-        await loginController.loginWithGithub(ignoreIfNotLoggedIn: true);
-        return;
-      }
+      await loginController.socialLogin(
+        loginMethod: loginTypeStringToWeb3AuthProvider(loginType),
+        ignoreIfNotLoggedIn: true,
+      );
     } catch (e) {
       isAutoLoggingIn.value = false;
       Navigate.to(
@@ -582,40 +489,6 @@ class GlobalController extends GetxController {
         route: Routes.LOGIN,
       );
       return;
-    }
-  }
-
-  _autoLoginWithEmailAndPassword() async {
-    final isParticleLoggedIn = await ParticleAuthCore.isConnected();
-    if (isParticleLoggedIn) {
-      final particleUserInfo = await ParticleAuthCore.getUserInfo();
-      particleAuthUserInfo.value = particleUserInfo;
-    } else {
-      log.e("particle not logged in");
-      throw Exception("particle not logged in");
-    }
-    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-    if (isLoggedIn) {
-      final user = FirebaseAuth.instance.currentUser;
-      firebaseUser.value = user;
-      final userId = user!.uid;
-      final userInfo = await getUserInfoById(userId);
-      currentUserInfo.value = userInfo;
-      if (userInfo != null && userInfo.id.isNotEmpty) {
-        final storage = GetStorage();
-        storage.write(StorageKeys.userId, userInfo.id);
-        storage.write(StorageKeys.userAvatar, userInfo.avatar);
-        storage.write(StorageKeys.userFullName, userInfo.fullName);
-        storage.write(StorageKeys.userEmail, userInfo.email);
-        loggedIn.value = true;
-        isAutoLoggingIn.value = false;
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.HOME,
-        );
-      }
-    } else {
-      isAutoLoggingIn.value = false;
     }
   }
 
@@ -646,8 +519,9 @@ class GlobalController extends GetxController {
   _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
+    web3AuthAddress = '';
     try {
-      await ParticleAuthCore.disconnect();
+      await Web3AuthFlutter.logout();
     } catch (e) {
       log.e(e);
       isLoggingOut.value = false;

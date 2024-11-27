@@ -7,6 +7,6 @@ class LoginBinding extends Binding {
   dependencies() => [
         Bind.put<LoginController>(
           LoginController(),
-        )
+        ),
       ];
 }

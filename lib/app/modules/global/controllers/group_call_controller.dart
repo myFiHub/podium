@@ -234,18 +234,11 @@ class GroupCallController extends GetxController {
         await getPermission(Permission.notification);
     log.d("notifications allowed: $hasNotificationPermission");
 
-    String? particleWalletAddress;
     final myUser = globalController.currentUserInfo.value!;
-    if (globalController.particleAuthUserInfo.value != null) {
-      final particleUser = globalController.particleAuthUserInfo.value;
-      if (particleUser != null) {
-        particleWalletAddress = particleUser.wallets?[0]?.publicAddress;
-      }
-    }
 
     if ((myUser.localWalletAddress == '' ||
             globalController.connectedWalletAddress == '') &&
-        particleWalletAddress == null) {
+        myUser.defaultWalletAddress == '') {
       Toast.warning(
         title: 'Wallet required',
         message: 'Please connect a wallet to join',

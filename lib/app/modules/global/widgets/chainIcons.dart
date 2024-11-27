@@ -2,35 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/gen/assets.gen.dart';
-
-class ParticleWalletChainIcon extends GetWidget<GlobalController> {
-  final int size;
-  const ParticleWalletChainIcon({
-    this.size = 24,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final particleChain = controller.particleWalletChain(null);
-      if (particleChain == null) {
-        return const SizedBox();
-      }
-      return Tooltip(
-        message: particleChain.name,
-        preferBelow: false,
-        child: Container(
-          height: size.toDouble(),
-          child: Image.network(
-            particleChain.icon,
-          ),
-        ),
-      );
-    });
-  }
-}
 
 class ExternalWalletChainIcon extends GetWidget<GlobalController> {
   final int size;
@@ -48,8 +21,9 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
       final externalChain = controller.externalWalletChain;
       String externalChainNetworkIcon = '';
       if (externalChain != null) {
+        final externalChain = chainInfoByChainId(externalWalletChainId);
         externalChainNetworkIcon =
-            controller.particleWalletChain(externalWalletChainId)?.icon ?? '';
+            externalChain.chainIcon ?? Assets.images.movementLogo.path;
       }
       if (externalChainNetworkIcon == '') {
         externalChainNetworkIcon = movementChain.chainIcon ?? '';
@@ -67,7 +41,7 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
                   width: size.toDouble(),
                   height: size.toDouble(),
                 )
-              : Image.network(externalChainNetworkIcon ?? ''),
+              : Image.network(externalChainNetworkIcon),
         ),
       );
     });

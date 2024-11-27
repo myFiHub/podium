@@ -7,12 +7,11 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
-import 'package:particle_base/model/user_info.dart' as ParticleUserInfo;
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/firebase_particle_user.dart';
+import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/analytics.dart';
@@ -516,6 +515,19 @@ Future<String> getUserLocalWalletAddress(String userId) async {
   return localWalletAddress as String;
 }
 
+Future<String> getUserInternalWalletAddress(String userId) async {
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.usersRef)
+      .child(userId)
+      .child(UserInfoModel.savedInternalWalletAddressKey);
+  final snapshot = await databaseRef.get();
+  final internalWalletAddress = snapshot.value as dynamic;
+  if (internalWalletAddress == null) {
+    return '';
+  }
+  return internalWalletAddress as String;
+}
+
 Future<List<String>> getListOfUserWalletsPresentInSession(
     String groupId) async {
   final databaseRef = FirebaseDatabase.instance
@@ -536,6 +548,8 @@ Future<List<String>> getListOfUserWalletsPresentInSession(
   membersList.forEach((user) {
     if (user.localWalletAddress.isNotEmpty) {
       addressList.add(user.localWalletAddress);
+    } else {
+      addressList.add(user.savedInternalWalletAddress);
     }
   });
   return addressList;
@@ -779,58 +793,20 @@ deleteNotification({required String notificationId}) async {
   }
 }
 
-///////////////////////
-/// Particle auth /////
-///////////////////////
-saveParticleUserInfoToFirebaseIfNeeded({
-  required ParticleUserInfo.UserInfo particleUser,
-  required String myUserId,
+Future<UserInfoModel?> getUserByInternalWalletAddress({
+  required String internalWalletAddress,
 }) async {
-  try {
-    final databaseRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.usersRef)
-        .child(myUserId)
-        .child(UserInfoModel.savedParticleUserInfoKey);
-
-    final snapshot = await databaseRef.get();
-    final particleUserInfo = snapshot.value as dynamic;
-    if (particleUserInfo != null) {
-      return;
-    } else {
-      final userToSave = FirebaseParticleAuthUserInfo(
-        uuid: particleUser.uuid,
-        wallets: particleUser.wallets
-            .map((e) {
-              return ParticleAuthWallet(
-                address: e.publicAddress,
-                chain: e.chainName,
-              );
-            })
-            .toList()
-            .where((w) => w.address.isNotEmpty && w.chain == 'evm_chain')
-            .toList(),
-      );
-      await databaseRef.set(userToSave.toJson());
-    }
-  } catch (e) {
-    log.f('Error saving particle user info to firebase: $e');
-  }
-}
-
-Future<bool> saveParticleWalletInfoForUser(
-    {required String userId,
-    required FirebaseParticleAuthUserInfo info}) async {
-  try {
-    final databaseRef = FirebaseDatabase.instance.ref(
-      FireBaseConstants.usersRef +
-          userId +
-          '/${UserInfoModel.savedParticleUserInfoKey}',
-    );
-    await databaseRef.set(info.toJson());
-    return true;
-  } catch (e) {
-    log.f('Error saving particle user info to firebase: $e');
-    return false;
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.usersRef)
+      .orderByChild(UserInfoModel.savedInternalWalletAddressKey)
+      .equalTo(internalWalletAddress);
+  final snapshot = await databaseRef.get();
+  final user = snapshot.value as dynamic;
+  if (user != null) {
+    final userInfo = singleUserParser(user);
+    return userInfo;
+  } else {
+    return null;
   }
 }
 
@@ -850,13 +826,13 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       if (savedLogintype != loginType) {
         userRef.child(UserInfoModel.loginTypeKey).set(loginType);
       }
-      final particleWalletAddress = user.particleWalletAddress;
-      final savedParticleWalletAddress =
-          userSnapshot[UserInfoModel.savedParticleWalletAddressKey];
-      if (savedParticleWalletAddress != particleWalletAddress) {
+      final internalWalletAddress = user.internalWalletAddress;
+      final savedInternalWalletAddress =
+          userSnapshot[UserInfoModel.savedInternalWalletAddressKey];
+      if (savedInternalWalletAddress != internalWalletAddress) {
         userRef
-            .child(UserInfoModel.savedParticleWalletAddressKey)
-            .set(particleWalletAddress);
+            .child(UserInfoModel.savedInternalWalletAddressKey)
+            .set(internalWalletAddress);
       }
       final savedLoginTypeIdentifier =
           userSnapshot[UserInfoModel.loginTypeIdentifierKey];
@@ -869,36 +845,10 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       final UserInfoModel? retrievedUser =
           singleUserParser(userSnapshot)?.copyWith(
         loginType: loginType,
-        savedParticleWalletAddress: particleWalletAddress,
+        savedInternalWalletAddress: internalWalletAddress,
         loginTypeIdentifier: user.loginTypeIdentifier,
       );
 
-      final savedParticleUserInfo =
-          userSnapshot[UserInfoModel.savedParticleUserInfoKey];
-      if (savedParticleUserInfo != null) {
-        final parsed = json.decode(savedParticleUserInfo as String);
-        final wallets =
-            List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
-        final List<ParticleAuthWallet> walletsList = [];
-        wallets.forEach(
-          (element) {
-            walletsList.add(
-              ParticleAuthWallet.fromMap(element),
-            );
-          },
-        );
-        final particleInfo = FirebaseParticleAuthUserInfo(
-          uuid: parsed[FirebaseParticleAuthUserInfo.uuidKey],
-          wallets: walletsList
-              .where(
-                (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
-              )
-              .toList(),
-        );
-        if (retrievedUser != null) {
-          retrievedUser.savedParticleUserInfo = particleInfo;
-        }
-      }
       return retrievedUser;
     } else {
       userRef.set(user.toJson());
@@ -908,53 +858,6 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
   } catch (e) {
     log.f('Error saving user logged in with X to firebase: $e');
     return null;
-  }
-}
-
-Future<List<ParticleAuthWallet>> getParticleAuthWalletsForUser(
-  String userId,
-) async {
-  try {
-    final particleWalletDataRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.usersRef)
-        .child(userId)
-        .child(UserInfoModel.savedParticleUserInfoKey);
-    final savedParticleWalletAddressRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.usersRef)
-        .child(userId)
-        .child(UserInfoModel.savedParticleWalletAddressKey);
-
-    final walletDataSnapsot = await particleWalletDataRef.get();
-    final particleUserInfo = walletDataSnapsot.value as dynamic;
-    if (particleUserInfo != null) {
-      final parsed = json.decode(particleUserInfo as String);
-      final wallets =
-          List.from(parsed[FirebaseParticleAuthUserInfo.walletsKey]);
-      final List<ParticleAuthWallet> walletsList = [];
-      wallets.forEach((element) {
-        if (element['address'] != '' && element['chain'] == 'evm_chain') {
-          walletsList.add(ParticleAuthWallet.fromMap(element));
-        }
-      });
-      if (walletsList.isNotEmpty) {
-        return walletsList;
-      } else {
-        final savedWalletSnapshot = await savedParticleWalletAddressRef.get();
-        final savedWalletAddress = savedWalletSnapshot.value as dynamic;
-        if (savedWalletAddress != null) {
-          return [
-            ParticleAuthWallet(address: savedWalletAddress, chain: 'evm_chain')
-          ];
-        } else {
-          return [];
-        }
-      }
-    } else {
-      return [];
-    }
-  } catch (e) {
-    log.f('Error getting particle user info from firebase: $e');
-    return [];
   }
 }
 

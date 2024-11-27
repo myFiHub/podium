@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -11,6 +10,7 @@ import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
 import 'package:podium/contracts/chainIds.dart';
@@ -437,44 +437,42 @@ class OngoingGroupCallController extends GetxController {
     );
   }
 
+  _removeLoadingCheerBoo({
+    required String userId,
+    required bool cheer,
+  }) {
+    loadingWalletAddressForUser.remove("$userId-${cheer ? 'cheer' : 'boo'}");
+    loadingWalletAddressForUser.refresh();
+  }
+
   cheerBoo(
       {required String userId, required bool cheer, bool? fromMeetPage}) async {
     String? targetAddress;
-    final bool canContinue = checkWalletConnected(
-      afterConnection: () {
-        cheerBoo(userId: userId, cheer: cheer);
-      },
-    );
-
-    if (!canContinue) {
-      Toast.error(
-        title: "external wallet connection required",
-        message: " please connect your wallet first",
-      );
-      return;
-    }
 
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
-    if (userLocalWalletAddress != '') {
-      targetAddress = userLocalWalletAddress;
-    } else {
-      final particleUserWallets = await getParticleAuthWalletsForUser(userId);
-      if (particleUserWallets.length > 0) {
-        targetAddress = particleUserWallets[0].address;
-      }
+    final [user] = await getUsersByIds([userId]);
+    if (user == null) {
+      log.e("user not found");
+      Toast.error(
+        title: "Error",
+        message: "User not found",
+      );
+      return;
     }
-    loadingWalletAddressForUser.remove("$userId-${cheer ? 'cheer' : 'boo'}");
-    loadingWalletAddressForUser.refresh();
+    if (user.localWalletAddress != '') {
+      targetAddress = user.localWalletAddress;
+    } else {
+      final internalWalletAddress = await getUserInternalWalletAddress(userId);
+      targetAddress = internalWalletAddress;
+    }
+
     log.d("target address is $targetAddress for user $userId");
-    if (canContinue && targetAddress != null && targetAddress != '') {
+    if (targetAddress != '') {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
-      final myParticleUser = globalController.particleAuthUserInfo.value;
       if (myUser.localWalletAddress == targetAddress ||
-          (myParticleUser != null &&
-              myParticleUser.wallets![0].publicAddress == targetAddress)) {
+          (myUser.internalWalletAddress == targetAddress)) {
         receiverAddresses = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
@@ -487,6 +485,8 @@ class OngoingGroupCallController extends GetxController {
           title: "Error",
           message: "receiver wallet not found",
         );
+
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         return;
       }
       final String? amount = fromMeetPage == true
@@ -494,6 +494,8 @@ class OngoingGroupCallController extends GetxController {
           : await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
       if (amount == null) {
         log.e("Amount not selected");
+
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         return;
       }
       late double parsedAmount;
@@ -511,14 +513,16 @@ class OngoingGroupCallController extends GetxController {
           title: "Error",
           message: "Amount is not a number",
         );
+
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         return;
       }
 
-      ///////////////////////
-      /// TODO: add for particle when it is ready (issue is resolved on their side, issue 2)
       bool success = false;
-      final selectedWallet = WalletNames.external;
-      // await choseAWallet(chainId: movementChainId);
+      final selectedWallet =
+          //
+          //  WalletNames.external;
+          await choseAWallet(chainId: movementChainId);
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           target: targetAddress,
@@ -527,8 +531,9 @@ class OngoingGroupCallController extends GetxController {
           cheer: cheer,
           chainId: externalWalletChianId,
         );
-      } else if (selectedWallet == WalletNames.particle) {
-        success = await particle_cheerOrBoo(
+      } else if (selectedWallet == WalletNames.internal) {
+        success = await internal_cheerOrBoo(
+          user: user,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount,
@@ -538,8 +543,8 @@ class OngoingGroupCallController extends GetxController {
       }
 
       if (success) {
-        log.d("Cheer successful, amount: $amount");
-        log.d("final amount of time to add $finalAmountOfTimeToAdd");
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+
         cheer
             ? addToTimer(
                 seconds: finalAmountOfTimeToAdd,
@@ -550,7 +555,6 @@ class OngoingGroupCallController extends GetxController {
                 userId: userId,
               );
 
-        log.i("${cheer ? "Cheer" : "Boo"} successful");
         Toast.success(
           title: "Success",
           message: "${cheer ? "Cheer" : "Boo"} successful",
@@ -565,13 +569,18 @@ class OngoingGroupCallController extends GetxController {
               InteractionKeys.action: eventString,
             });
         analytics.logEvent(name: 'cheerBoo', parameters: {
-          'cheer': cheer,
+          'cheer': cheer.toString(),
           'amount': amount,
           'target': userId,
           'groupId': groupCallController.group.value!.id,
           'fromUser': myUser.id,
         });
-        final particleAddress = await Evm.getAddress();
+        final internalWalletAddress =
+            await web3AuthWalletAddress(); //await Evm.getAddress();
+        if (internalWalletAddress == null) {
+          log.e("podium address is null");
+          return;
+        }
         saveNewPayment(
             event: PaymentEvent(
           amount: amount,
@@ -579,7 +588,7 @@ class OngoingGroupCallController extends GetxController {
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external
               ? externalWalletAddress!
-              : particleAddress,
+              : internalWalletAddress,
           targetAddress: targetAddress,
           initiatorId: myId,
           targetId: userId,
@@ -595,6 +604,8 @@ class OngoingGroupCallController extends GetxController {
           title: "Error",
           message: "${cheer ? "Cheer" : "Boo"} failed",
         );
+
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
       }
       ///////////////////////
     } else if (targetAddress == '' || targetAddress == null) {

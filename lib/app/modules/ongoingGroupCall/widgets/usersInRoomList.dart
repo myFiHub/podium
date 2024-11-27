@@ -131,9 +131,9 @@ class _SingleUserInRoom extends StatelessWidget {
                                   alt: name,
                                 ),
                               ),
-                              space10,
+                              space5,
                               Container(
-                                width: Get.width - 335,
+                                width: 80,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -150,7 +150,7 @@ class _SingleUserInRoom extends StatelessWidget {
                                     Text(
                                       user.name,
                                       style: const TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w700,
                                         color: ColorName.greyText,
                                         overflow: TextOverflow.ellipsis,
@@ -420,7 +420,7 @@ class RemainingTime extends GetView<OngoingGroupCallController> {
         return Text(
           '$hh:$mm:$ss left',
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w400,
             color: ColorName.greyText,
           ),

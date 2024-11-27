@@ -1,16 +1,18 @@
 import 'package:decimal/decimal.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:particle_auth_core/evm.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
+import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3dart/web3dart.dart';
 
 class Payments {
   int numberOfCheersReceived = 0;
@@ -26,13 +28,32 @@ class Payments {
       required this.income});
 }
 
+class Balances {
+  String Base = '0.0';
+  String Avalanche = '0.0';
+  String Movement = '0.0';
+
+  Balances({
+    required this.Base,
+    required this.Avalanche,
+    required this.Movement,
+  });
+}
+
 class MyProfileController extends GetxController {
   final globalController = Get.find<GlobalController>();
-  final isParticleActivatedOnFriendTech = false.obs;
+  final isInternalWalletActivatedOnFriendTech = false.obs;
   final isExternalWalletActivatedOnFriendTech = false.obs;
-  final loadingParticleActivation = false.obs;
+  final loadingInternalWalletActivation = false.obs;
   final loadingExternalWalletActivation = false.obs;
   final isGettingPayments = false.obs;
+  final isGettingBalances = false.obs;
+  final balances = Rx(Balances(
+    Base: '0.0',
+    Avalanche: '0.0',
+    Movement: '0.0',
+  ));
+
   final payments = Rx(Payments(
     income: {},
   ));
@@ -45,8 +66,7 @@ class MyProfileController extends GetxController {
       }
     });
     _getPayments();
-    // checkParticleWalletActivation();
-    // checkExternalWalletActivation();
+    _getBalances();
     super.onInit();
   }
 
@@ -58,6 +78,31 @@ class MyProfileController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _getBalances() async {
+    try {
+      isGettingBalances.value = true;
+      final baseClient = web3ClientByChainId(baseChainId);
+      final avalancheClient = web3ClientByChainId(avalancheChainId);
+      final movementClient = web3ClientByChainId(movementChainId);
+      final myaddress = await web3AuthWalletAddress();
+      final [baseBalance, avalancheBalance, movementBalance] =
+          await Future.wait([
+        baseClient.getBalance(parseAddress(myaddress!)),
+        avalancheClient.getBalance(parseAddress(myaddress)),
+        movementClient.getBalance(parseAddress(myaddress)),
+      ]);
+      balances.value = Balances(
+        Base: weiToDecimalString(wei: baseBalance),
+        Avalanche: weiToDecimalString(wei: avalancheBalance),
+        Movement: weiToDecimalString(wei: movementBalance),
+      );
+      isGettingBalances.value = false;
+    } catch (e) {
+      log.e(e);
+      isGettingBalances.value = false;
+    }
   }
 
   _getPayments() async {
@@ -115,29 +160,33 @@ class MyProfileController extends GetxController {
     }
   }
 
-  Future<bool> checkParticleWalletActivation({bool? silent}) async {
+  Future<bool> checkInternalWalletActivation({bool? silent}) async {
     if (silent != true) {
-      loadingParticleActivation.value = true;
+      loadingInternalWalletActivation.value = true;
     }
-    final particleAddress = await Evm.getAddress();
-    final activeWallets = await particle_friendTech_getActiveUserWallets(
-      particleAddress: particleAddress,
+    final internalWalletAddress =
+        await web3AuthWalletAddress(); // await Evm.getAddress();
+    if (internalWalletAddress == null) {
+      return false;
+    }
+    final activeWallets = await internal_friendTech_getActiveUserWallets(
+      internalWalletAddress: internalWalletAddress,
       chainId: baseChainId,
     );
 
-    final isActivated = activeWallets.isParticleWalletActive;
-    isParticleActivatedOnFriendTech.value = isActivated;
+    final isActivated = activeWallets.isInternalWalletActive;
+    isInternalWalletActivatedOnFriendTech.value = isActivated;
 
     if (silent != true) {
-      loadingParticleActivation.value = false;
+      loadingInternalWalletActivation.value = false;
     }
 
     return isActivated;
   }
 
-  activateParticle() async {
-    loadingParticleActivation.value = true;
-    final isAlreadyActivated = await checkParticleWalletActivation(
+  activateInternalWallet() async {
+    loadingInternalWalletActivation.value = true;
+    final isAlreadyActivated = await checkInternalWalletActivation(
       silent: true,
     );
     log.d('isAlreadyActivated: $isAlreadyActivated');
@@ -145,9 +194,9 @@ class MyProfileController extends GetxController {
       return;
     }
     final activated =
-        await particle_activate_friendtechWallet(chainId: baseChainId);
-    loadingParticleActivation.value = false;
-    isParticleActivatedOnFriendTech.value = activated;
+        await internal_activate_friendtechWallet(chainId: baseChainId);
+    loadingInternalWalletActivation.value = false;
+    isInternalWalletActivatedOnFriendTech.value = activated;
   }
 
   activateExternalWallet() async {
@@ -182,7 +231,15 @@ class MyProfileController extends GetxController {
       loadingExternalWalletActivation.value = true;
     }
 
-    final particleAddress = await Evm.getAddress();
+    final internalWalletAddress =
+        await web3AuthWalletAddress(); // Evm.getAddress();
+    if (internalWalletAddress == null) {
+      isExternalWalletActivatedOnFriendTech.value = false;
+      if (silent != true) {
+        loadingExternalWalletActivation.value = false;
+      }
+      return false;
+    }
     final externalWalletAddress = globalController.connectedWalletAddress.value;
     if (externalWalletAddress.isEmpty) {
       isExternalWalletActivatedOnFriendTech.value = false;
@@ -191,8 +248,8 @@ class MyProfileController extends GetxController {
       }
       return false;
     } else {
-      final activeWallets = await particle_friendTech_getActiveUserWallets(
-        particleAddress: particleAddress,
+      final activeWallets = await internal_friendTech_getActiveUserWallets(
+        internalWalletAddress: internalWalletAddress,
         externalWalletAddress: externalWalletAddress,
         chainId: baseChainId,
       );

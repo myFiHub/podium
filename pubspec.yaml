@@ -54,6 +54,8 @@ dependencies:
   # jitsi_meet_flutter_sdk: ^10.2.1
   jitsi_meet_flutter_sdk:
     path: ./jitsi-meet-flutter-sdk
+  web3auth_flutter: ^5.0.4
+  web3dart: ^2.7.2
 
 dependency_overrides:
   web: ^0.5.0

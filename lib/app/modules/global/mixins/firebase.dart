@@ -548,6 +548,8 @@ Future<List<String>> getListOfUserWalletsPresentInSession(
   membersList.forEach((user) {
     if (user.localWalletAddress.isNotEmpty) {
       addressList.add(user.localWalletAddress);
+    } else {
+      addressList.add(user.savedInternalWalletAddress);
     }
   });
   return addressList;
@@ -788,6 +790,23 @@ deleteNotification({required String notificationId}) async {
     );
   } catch (e) {
     log.e(e);
+  }
+}
+
+Future<UserInfoModel?> getUserByInternalWalletAddress({
+  required String internalWalletAddress,
+}) async {
+  final databaseRef = FirebaseDatabase.instance
+      .ref(FireBaseConstants.usersRef)
+      .orderByChild(UserInfoModel.savedInternalWalletAddressKey)
+      .equalTo(internalWalletAddress);
+  final snapshot = await databaseRef.get();
+  final user = snapshot.value as dynamic;
+  if (user != null) {
+    final userInfo = singleUserParser(user);
+    return userInfo;
+  } else {
+    return null;
   }
 }
 

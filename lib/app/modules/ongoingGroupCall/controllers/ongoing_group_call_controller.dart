@@ -448,25 +448,20 @@ class OngoingGroupCallController extends GetxController {
   cheerBoo(
       {required String userId, required bool cheer, bool? fromMeetPage}) async {
     String? targetAddress;
-    // final bool canContinue = checkWalletConnected(
-    //   afterConnection: () {
-    //     cheerBoo(userId: userId, cheer: cheer);
-    //   },
-    // );
-
-    // if (!canContinue) {
-    //   Toast.error(
-    //     title: "external wallet connection required",
-    //     message: " please connect your wallet first",
-    //   );
-    //   return;
-    // }
 
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
-    if (userLocalWalletAddress != '') {
-      targetAddress = userLocalWalletAddress;
+    final [user] = await getUsersByIds([userId]);
+    if (user == null) {
+      log.e("user not found");
+      Toast.error(
+        title: "Error",
+        message: "User not found",
+      );
+      return;
+    }
+    if (user.localWalletAddress != '') {
+      targetAddress = user.localWalletAddress;
     } else {
       final internalWalletAddress = await getUserInternalWalletAddress(userId);
       targetAddress = internalWalletAddress;
@@ -538,6 +533,7 @@ class OngoingGroupCallController extends GetxController {
         );
       } else if (selectedWallet == WalletNames.internal) {
         success = await internal_cheerOrBoo(
+          user: user,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount,

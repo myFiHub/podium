@@ -8,10 +8,12 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
+import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/cheerBooEvent.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -30,11 +32,11 @@ Future<bool> ext_cheerOrBoo({
 }) async {
   final service = web3ModalService;
   final transaction = Transaction(
-    from: parsAddress(service.session!.address!),
+    from: parseAddress(service.session!.address!),
     value: parseValue(amount),
   );
-  final targetWallet = parsAddress(target);
-  final receivers = receiverAddresses.map((e) => parsAddress(e)).toList();
+  final targetWallet = parseAddress(target);
+  final receivers = receiverAddresses.map((e) => parseAddress(e)).toList();
   final contract = getDeployedContract(
     contract: Contracts.cheerboo,
     chainId: chainId,
@@ -78,6 +80,7 @@ internal_cheerOrBoo({
   required num amount,
   required bool cheer,
   required String chainId,
+  required UserInfoModel user,
 }) async {
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
   if (myAddress == null) {
@@ -90,21 +93,38 @@ internal_cheerOrBoo({
   }
 
   try {
+    final value = parseValue(amount);
     final methodName = 'cheerOrBoo';
     final parameters = [
-      parsAddress(target),
-      receiverAddresses.map((e) => parsAddress(e)).toList(),
+      parseAddress(target),
+      receiverAddresses.map((e) => parseAddress(e)).toList(),
       cheer
     ];
     final transaction = Transaction.callContract(
       contract: contract,
       function: contract.function(methodName),
       parameters: parameters,
-      value: parseValue(amount),
+      value: value,
     );
+
+    late TransactionMetadata metadata;
+    if (target == myAddress) {
+      metadata = TransactionMetadata(
+        title: cheer ? 'Cheer' : 'Boo',
+        message: '${cheer ? 'Cheer' : 'Boo'} yourself',
+        amount: weiToDecimalString(wei: value, decimals: 2),
+      );
+    } else {
+      metadata = TransactionMetadata(
+        title: cheer ? 'Cheer' : 'Boo',
+        message: '${cheer ? 'Cheer' : 'Boo'} ${user.fullName}',
+        amount: weiToDecimalString(wei: value, decimals: 2),
+      );
+    }
     final signature = await sendTransaction(
       transaction: transaction,
       chainId: chainId,
+      metadata: metadata,
     );
     if (signature != null && signature.length > 10) {
       return true;
@@ -147,7 +167,7 @@ Future<BigInt?> ext_getBuyPrice({
   }
   // service.launchConnectedWallet();
   try {
-    final sharesSubjectWallet = parsAddress(sharesSubject);
+    final sharesSubjectWallet = parseAddress(sharesSubject);
     final response = await service.requestReadContract(
       deployedContract: contract,
       topic: service.session!.topic,
@@ -173,7 +193,7 @@ Future<BigInt?> ext_getMyShares({
 }) async {
   final globalController = Get.find<GlobalController>();
   final service = globalController.web3ModalService;
-  final sharesSubjectWallet = parsAddress(sharesSubject);
+  final sharesSubjectWallet = parseAddress(sharesSubject);
   final contract =
       getDeployedContract(contract: Contracts.starsArena, chainId: chainId);
   if (contract == null) {
@@ -212,20 +232,20 @@ Future<BigInt?> getMyShares_arena({
     return null;
   }
   final methodName = 'getMyShares';
-  final parameters = [parsAddress(sharesSubjectWallet)];
+  final parameters = [parseAddress(sharesSubjectWallet)];
   final client = web3ClientByChainId(chainId);
   try {
     final results = await Future.wait([
       client.call(
         contract: contract,
-        sender: parsAddress(myAddress),
+        sender: parseAddress(myAddress),
         function: contract.function(methodName),
         params: parameters,
       ),
       if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty)
         client.call(
           contract: contract,
-          sender: parsAddress(externalWalletAddress!),
+          sender: parseAddress(externalWalletAddress!),
           function: contract.function(methodName),
           params: parameters,
         ),
@@ -297,8 +317,7 @@ Future<BigInt> internal_getUserShares_friendTech({
   try {
     BigInt numberOfShares = BigInt.zero;
     final myExternalWallet = externalWalletAddress;
-    final myInternalWalletAddress =
-        await web3AuthWalletAddress(); //Evm.getAddress();
+    final myInternalWalletAddress = await web3AuthWalletAddress();
     final List<Future<dynamic>> arrayToCall = [];
     // check if my internal wallet bought any of the user's addresses tickets
     arrayToCall.add(_internal_getShares_friendthech(
@@ -364,7 +383,7 @@ Future<BigInt?> _internal_getShares_friendthech({
       client.call(
         contract: contract,
         function: contract.function(methodName),
-        params: [parsAddress(sellerAddress), parsAddress(buyerWalletAddress)],
+        params: [parseAddress(sellerAddress), parseAddress(buyerWalletAddress)],
       ),
       // EvmService.readContract(
       //   buyerWalletAddress,
@@ -379,8 +398,8 @@ Future<BigInt?> _internal_getShares_friendthech({
           contract: contract,
           function: contract.function(methodName),
           params: [
-            parsAddress(sellerAddress),
-            parsAddress(externalWalletAddress!),
+            parseAddress(sellerAddress),
+            parseAddress(externalWalletAddress!),
           ],
         ),
       // EvmService.readContract(
@@ -427,7 +446,10 @@ Future<BigInt?> internal_getFriendTechTicketPrice({
     return null;
   }
   final methodName = 'getBuyPriceAfterFee';
-  final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
+  final parameters = [
+    parseAddress(sharesSubjectWallet),
+    BigInt.from(numberOfTickets),
+  ];
   try {
     final client = web3ClientByChainId(chainId);
     final result = await client.call(
@@ -512,19 +534,30 @@ Future<bool> internal_buyFriendTechTicket({
   }
   final methodName = 'buyShares';
   final parameters = [
-    parsAddress(sharesSubjectWallet),
+    parseAddress(sharesSubjectWallet),
     BigInt.from(numberOfTickets),
   ];
 
   try {
+    final value = EtherAmount.fromBigInt(EtherUnit.wei, buyPrice);
     final transaction = Transaction.callContract(
-      value: EtherAmount.fromBigInt(EtherUnit.wei, buyPrice),
+      value: value,
       contract: contract,
       function: contract.function(methodName),
       parameters: parameters,
     );
-    final signature =
-        await sendTransaction(transaction: transaction, chainId: chainId);
+    final isValueZero = buyPrice == BigInt.zero;
+    final metadata = TransactionMetadata(
+      title: isValueZero ? "Activation" : 'Buy Ticket',
+      message:
+          isValueZero ? "Activate Wallet Address" : 'Buy FriendTech Ticket',
+      amount: weiToDecimalString(wei: value),
+    );
+    final signature = await sendTransaction(
+      transaction: transaction,
+      chainId: chainId,
+      metadata: metadata,
+    );
 
     if (signature != null && signature.length > 10) {
       if (targetUserId != myId) {
@@ -568,7 +601,7 @@ Future<bool> ext_buyFirendtechTicket({
   final globalController = Get.find<GlobalController>();
   final service = globalController.web3ModalService;
   final transaction = Transaction(
-    from: parsAddress(service.session!.address!),
+    from: parseAddress(service.session!.address!),
     value: parseValue(buyPrice.toDouble()),
   );
   final contract = getDeployedContract(
@@ -578,7 +611,7 @@ Future<bool> ext_buyFirendtechTicket({
   if (contract == null) {
     return false;
   }
-  final sharesSubjectWallet = parsAddress(sharesSubject);
+  final sharesSubjectWallet = parseAddress(sharesSubject);
   try {
     service.launchConnectedWallet();
     final response = await service.requestWriteContract(
@@ -648,7 +681,7 @@ Future<bool> ext_buySharesWithReferrer({
   final globalController = Get.find<GlobalController>();
   final service = globalController.web3ModalService;
   final transaction = Transaction(
-    from: parsAddress(service.session!.address!),
+    from: parseAddress(service.session!.address!),
     value: EtherAmount.inWei(bigIntValue),
   );
   final contract = getDeployedContract(
@@ -659,8 +692,8 @@ Future<bool> ext_buySharesWithReferrer({
     return false;
   }
 
-  final referrerWallet = parsAddress(referrer);
-  final sharesSubjectWallet = parsAddress(sharesSubject);
+  final referrerWallet = parseAddress(referrer);
+  final sharesSubjectWallet = parseAddress(sharesSubject);
   service.launchConnectedWallet();
   try {
     final response = await service.requestWriteContract(
@@ -728,7 +761,7 @@ Future<BigInt?> internal_getBuyPrice({
   }
   final methodName = 'getBuyPriceAfterFee';
   final parameters = [
-    parsAddress(sharesSubjectWallet),
+    parseAddress(sharesSubjectWallet),
     BigInt.from(shareAmount)
   ];
 
@@ -786,18 +819,28 @@ Future<bool> internal_buySharesWithReferrer({
 
   final methodName = 'buySharesWithReferrer';
   final parameters = [
-    parsAddress(sharesSubjectWallet),
+    parseAddress(sharesSubjectWallet),
     BigInt.from(shareAmount),
-    parsAddress(referrer)
+    parseAddress(referrer)
   ];
   try {
+    final value = EtherAmount.fromBigInt(EtherUnit.wei, buyPrice);
     final transaction = Transaction.callContract(
-        value: EtherAmount.fromBigInt(EtherUnit.wei, buyPrice),
-        contract: contract,
-        function: contract.function(methodName),
-        parameters: parameters);
-    final signature =
-        await sendTransaction(transaction: transaction, chainId: chainId);
+      value: value,
+      contract: contract,
+      function: contract.function(methodName),
+      parameters: parameters,
+    );
+
+    final metadata = TransactionMetadata(
+      title: 'Buy Ticket',
+      message: 'Buy Arena Ticket',
+      amount: weiToDecimalString(wei: value),
+    );
+
+    final signature = await sendTransaction(
+        transaction: transaction, chainId: chainId, metadata: metadata);
+
     if (signature != null && signature.length > 10) {
       saveNewPayment(
         event: PaymentEvent(
@@ -837,7 +880,7 @@ BigInt formatValue(num value, {required BigInt decimals}) {
   return result.getInEther;
 }
 
-EthereumAddress parsAddress(String address) {
+EthereumAddress parseAddress(String address) {
   return EthereumAddress.fromHex(address);
 }
 

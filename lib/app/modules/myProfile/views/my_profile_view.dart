@@ -4,16 +4,15 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
@@ -211,11 +210,20 @@ class Balances extends GetView<MyProfileController> {
           children: [
             Column(
               children: [
-                Text(
-                  'Base ETH',
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'Base ETH',
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    space5,
+                    Img(
+                      src: chainIconUrlByChainId(baseChainId),
+                      size: 16,
+                    ),
+                  ],
                 ),
                 Text(
                   balances.Base,
@@ -227,11 +235,20 @@ class Balances extends GetView<MyProfileController> {
             ),
             Column(
               children: [
-                Text(
-                  'AVAX',
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'AVAX',
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    space5,
+                    Img(
+                      src: chainIconUrlByChainId(avalancheChainId),
+                      size: 16,
+                    ),
+                  ],
                 ),
                 Text(
                   balances.Avalanche,
@@ -243,11 +260,20 @@ class Balances extends GetView<MyProfileController> {
             ),
             Column(
               children: [
-                Text(
-                  'MOVE',
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'MOVE',
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    space5,
+                    Img(
+                      src: chainIconUrlByChainId(movementChainId),
+                      size: 16,
+                    ),
+                  ],
                 ),
                 Text(
                   balances.Movement,

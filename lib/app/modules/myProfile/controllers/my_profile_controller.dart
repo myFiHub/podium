@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
+import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -88,16 +89,14 @@ class MyProfileController extends GetxController {
       final myaddress = await web3AuthWalletAddress();
       final [baseBalance, avalancheBalance, movementBalance] =
           await Future.wait([
-        baseClient.getBalance(parsAddress(myaddress!)),
-        avalancheClient.getBalance(parsAddress(myaddress)),
-        movementClient.getBalance(parsAddress(myaddress)),
+        baseClient.getBalance(parseAddress(myaddress!)),
+        avalancheClient.getBalance(parseAddress(myaddress)),
+        movementClient.getBalance(parseAddress(myaddress)),
       ]);
       balances.value = Balances(
-        Base: baseBalance.getValueInUnit(EtherUnit.ether).toStringAsFixed(4),
-        Avalanche:
-            avalancheBalance.getValueInUnit(EtherUnit.ether).toStringAsFixed(4),
-        Movement:
-            movementBalance.getValueInUnit(EtherUnit.ether).toStringAsFixed(4),
+        Base: weiToDecimalString(wei: baseBalance),
+        Avalanche: weiToDecimalString(wei: avalancheBalance),
+        Movement: weiToDecimalString(wei: movementBalance),
       );
       isGettingBalances.value = false;
     } catch (e) {

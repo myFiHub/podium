@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -26,11 +27,31 @@ Future<EthPrivateKey> _getCredentials() async {
   return credentials;
 }
 
+class TransactionMetadata {
+  String title;
+  String message;
+  String amount;
+
+  TransactionMetadata({
+    required this.title,
+    required this.message,
+    required this.amount,
+  });
+}
+
 Future<String?> sendTransaction({
   required Transaction transaction,
   required String chainId,
+  required TransactionMetadata metadata,
 }) async {
   try {
+    final confirmed = await _showTransactionConfirmationDialog(
+      metadata: metadata,
+      chainId: chainId,
+    );
+    if (confirmed == null || !confirmed) {
+      return null;
+    }
     final credentials = await _getCredentials();
     final client = web3ClientByChainId(chainId);
     final transactionSigned = await client.sendTransaction(
@@ -73,4 +94,34 @@ void _copyToClipboard(String text, {String? prefix}) async {
       message: text,
     ),
   );
+}
+
+_showTransactionConfirmationDialog({
+  required TransactionMetadata metadata,
+  required String chainId,
+}) async {
+  final chainInfo = chainInfoByChainId(chainId);
+  final result = await Get.defaultDialog(
+    backgroundColor: ColorName.cardBackground,
+    title: metadata.title,
+    content: Column(
+      children: [
+        Text(metadata.message),
+        Text("Amount: ${metadata.amount} ${chainInfo.currency}"),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(Get.overlayContext!, false),
+        child: Text("Cancel"),
+      ),
+      TextButton(
+        onPressed: () {
+          Navigator.pop(Get.overlayContext!, true);
+        },
+        child: Text("Confirm"),
+      ),
+    ],
+  );
+  return result;
 }

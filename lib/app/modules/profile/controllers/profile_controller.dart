@@ -109,9 +109,10 @@ class ProfileController extends GetxController {
         return;
       }
       isGettingTicketPrice.value = true;
-      // should not do these awaits together, since they are on different chains
-      await getArenaPriceAndMyShares();
-      await getFriendTechPriceAndMyShare();
+      await Future.wait<void>([
+        getFriendTechPriceAndMyShare(),
+        getArenaPriceAndMyShares(),
+      ]);
       //
     } catch (e) {
       log.e('Error getting prices: $e');

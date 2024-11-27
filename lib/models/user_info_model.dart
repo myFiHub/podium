@@ -43,11 +43,10 @@ class UserInfoModel {
   String get defaultWalletAddress {
     final walletAddress = localWalletAddress;
     if (walletAddress.isEmpty) {
-      final firstInternalWalletAddress = savedInternalWalletAddress;
-      if (firstInternalWalletAddress.isEmpty) {
+      if (savedInternalWalletAddress.isEmpty) {
         return '';
       }
-      return firstInternalWalletAddress;
+      return savedInternalWalletAddress;
     }
     return walletAddress;
   }
@@ -68,7 +67,7 @@ class UserInfoModel {
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
-    savedInternalWalletAddress = internalWalletAddress;
+    savedInternalWalletAddress = json[savedInternalWalletAddressKey];
     loginTypeIdentifier = json[loginTypeIdentifierKey];
   }
 
@@ -79,7 +78,7 @@ class UserInfoModel {
     data[emailKey] = email;
     data[avatarUrlKey] = avatar;
     data[localWalletAddressKey] = localWalletAddress;
-
+    data[savedInternalWalletAddressKey] = savedInternalWalletAddress;
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
     data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();

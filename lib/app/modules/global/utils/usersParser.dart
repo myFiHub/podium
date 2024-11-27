@@ -12,16 +12,17 @@ UserInfoModel? singleUserParser(dynamic value) {
     final String id = value[UserInfoModel.idKey];
     final avatar = value[UserInfoModel.avatarUrlKey];
     final isOver18 = value[UserInfoModel.isOver18Key] ?? false;
-
+    final savedInternalWalletAddress =
+        value[UserInfoModel.savedInternalWalletAddressKey] ?? '';
+    final localWalletAddress = value[UserInfoModel.localWalletAddressKey] ?? '';
     final user = UserInfoModel(
       fullName: name,
       email: email,
       id: id,
       avatar: avatar,
       isOver18: isOver18,
-      savedInternalWalletAddress:
-          value[UserInfoModel.savedInternalWalletAddressKey] ?? '',
-      localWalletAddress: value[UserInfoModel.localWalletAddressKey] ?? '',
+      savedInternalWalletAddress: savedInternalWalletAddress,
+      localWalletAddress: localWalletAddress,
       following: List.from(value[UserInfoModel.followingKey] ?? []),
       numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,
       lowercasename:

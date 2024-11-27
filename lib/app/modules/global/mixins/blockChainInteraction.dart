@@ -747,7 +747,6 @@ Future<BigInt?> internal_getBuyPrice({
   num shareAmount = 1,
   required String chainId,
 }) async {
-  final sharesSubjectWallet = sharesSubject;
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
   if (myAddress == null) {
     return null;
@@ -760,10 +759,7 @@ Future<BigInt?> internal_getBuyPrice({
     return null;
   }
   final methodName = 'getBuyPriceAfterFee';
-  final parameters = [
-    parseAddress(sharesSubjectWallet),
-    BigInt.from(shareAmount)
-  ];
+  final parameters = [parseAddress(sharesSubject), BigInt.from(shareAmount)];
 
   try {
     final client = web3ClientByChainId(chainId);

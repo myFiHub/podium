@@ -193,7 +193,7 @@ class Balances extends GetView<MyProfileController> {
       if (loading) {
         return Container(
           width: Get.width - 16,
-          height: 34,
+          height: 46,
           child: Center(
             child: Container(
               width: 20,
@@ -204,6 +204,16 @@ class Balances extends GetView<MyProfileController> {
         );
       }
       return Container(
+        // add a top border
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: ColorName.greyText,
+              width: 1,
+            ),
+          ),
+        ),
+        padding: const EdgeInsets.only(top: 12),
         width: Get.width - 16,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -367,9 +377,14 @@ class InternalWallet extends GetView<GlobalController> {
                         ),
                       ),
                       space10,
+                      Icon(
+                        Icons.copy,
+                        color: Colors.grey,
+                      )
                     ],
                   ),
                 ),
+                space10,
                 Balances(),
               ],
             ),

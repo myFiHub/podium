@@ -210,6 +210,9 @@ class LoginController extends GetxController {
     }
     if (savedName != null) {
       globalController.currentUserInfo.value = user;
+      globalController.currentUserInfo.value!.savedInternalWalletAddress =
+          internalWalletAddress;
+      globalController.currentUserInfo.refresh();
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
       isLoggingIn.value = false;

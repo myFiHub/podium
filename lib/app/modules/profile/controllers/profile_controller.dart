@@ -164,7 +164,7 @@ class ProfileController extends GetxController {
       await Future.delayed(Duration(seconds: delay));
     }
     final (price, arenaShares) = await (
-      internal_getBuyPrice(
+      getBuyPriceForArenaTicket(
         sharesSubject: userInfo.value!.defaultWalletAddress,
         shareAmount: 1,
         chainId: avalancheChainId,

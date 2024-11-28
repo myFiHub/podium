@@ -742,11 +742,15 @@ Future<bool> ext_buySharesWithReferrer({
   }
 }
 
-Future<BigInt?> internal_getBuyPrice({
+Future<BigInt?> getBuyPriceForArenaTicket({
   required String sharesSubject,
   num shareAmount = 1,
   required String chainId,
 }) async {
+  if (sharesSubject == null) {
+    log.e('sharesSubject is null');
+    return null;
+  }
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
   if (myAddress == null) {
     return null;
@@ -791,7 +795,7 @@ Future<bool> internal_buySharesWithReferrer({
     Toast.error(message: "Referrer address not found");
     return false;
   }
-  final buyPrice = await internal_getBuyPrice(
+  final buyPrice = await getBuyPriceForArenaTicket(
     sharesSubject: sharesSubject,
     shareAmount: shareAmount,
     chainId: chainId,

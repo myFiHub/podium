@@ -91,7 +91,7 @@ class LoginController extends GetxController {
     loadingBuyTicketId.value = user.id;
     try {
       final bought = await internal_buySharesWithReferrer(
-        sharesSubject: user.address,
+        sharesSubject: user.mainAddress,
         chainId: avalancheChainId,
       );
       if (bought) {
@@ -162,8 +162,10 @@ class LoginController extends GetxController {
     // await _checkForLoginType(web3AuthProviderToLoginTypeString(loginMethod));
 
     try {
-      final userInfo = await Web3AuthFlutter.getUserInfo();
-      final privateKey = await Web3AuthFlutter.getPrivKey();
+      final (userInfo, privateKey) = await (
+        Web3AuthFlutter.getUserInfo(),
+        Web3AuthFlutter.getPrivKey()
+      ).wait;
       _continueSocialLoginWithUserInfoAndPrivateKey(
         privateKey: privateKey,
         userInfo: userInfo,
@@ -361,25 +363,45 @@ class LoginController extends GetxController {
     bool bought = false;
     final listOfBuyableTickets = await getPodiumDefinedEntryAddresses();
     final List<StarsArenaUser> addressesToCheckForArena = [];
+    final List<Future> arenaCallArray = [];
     for (var i = 0; i < listOfBuyableTickets.length; i++) {
       final ticket = listOfBuyableTickets[i];
       if (ticket.type == BuyableTicketTypes.onlyArenaTicketHolders) {
         if (ticket.handle != null) {
-          final StarsArenaUser? user =
-              await HttpApis.getUserFromStarsArenaByHandle(
+          arenaCallArray.add(HttpApis.getUserFromStarsArenaByHandle(
             ticket.handle!,
-          );
-          if (user != null) {
-            addressesToCheckForArena.add(user);
-          }
+          ));
         }
       }
     }
+    final arenaUsers = await Future.wait(arenaCallArray);
+    for (var i = 0; i < arenaUsers.length; i++) {
+      final user = arenaUsers[i];
+      if (user != null) {
+        addressesToCheckForArena.add(user);
+      }
+    }
+    // update the price for each user
+    final List<Future> SCcallArray = [];
+    for (var i = 0; i < addressesToCheckForArena.length; i++) {
+      final user = addressesToCheckForArena[i];
+      SCcallArray.add(getBuyPriceForArenaTicket(
+        sharesSubject: user.mainAddress,
+        chainId: avalancheChainId,
+      ));
+    }
+    final prices = await Future.wait(SCcallArray);
+    for (var i = 0; i < addressesToCheckForArena.length; i++) {
+      final user = addressesToCheckForArena[i];
+      final price = prices[i].toString();
+      user.lastKeyPrice = price;
+    }
+
     starsArenaUsersToBuyEntryTicketFrom.value = addressesToCheckForArena;
     final buyResults = await Future.wait(addressesToCheckForArena.map(
       (user) async {
         return getMyShares_arena(
-          sharesSubject: user.address,
+          sharesSubject: user.mainAddress,
           chainId: avalancheChainId,
         );
       },

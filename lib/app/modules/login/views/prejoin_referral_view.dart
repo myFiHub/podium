@@ -1,9 +1,14 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/podiumDefinedEntryAddress/podiumDefinedEntryAddress.dart';
+import 'package:podium/models/referral/referral.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -21,6 +26,30 @@ class PrejoinReferralView extends GetView<LoginController> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             space10,
+            // Button(
+            //   onPressed: () async {
+            //     final databaseRef = FirebaseDatabase.instance
+            //         .ref(FireBaseConstants.podiumDefinedEntryAddresses);
+            //     await databaseRef.set([
+            //       PodiumDefinedEntryAddress(
+            //         address: '',
+            //         handle: 'jomari_p',
+            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
+            //       ).toJson(),
+            //       PodiumDefinedEntryAddress(
+            //         address: '',
+            //         handle: '0xLuis_',
+            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
+            //       ).toJson(),
+            //       PodiumDefinedEntryAddress(
+            //         address: '',
+            //         handle: 'mohsenparvar',
+            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
+            //       ).toJson(),
+            //     ]);
+            //   },
+            //   text: 'Join',
+            // ),
             space10,
             RichText(
               text: TextSpan(
@@ -31,7 +60,7 @@ class PrejoinReferralView extends GetView<LoginController> {
                     text: 'In order to use ',
                   ),
                   TextSpan(
-                    text: 'Podiumn',
+                    text: 'Podium',
                     style: TextStyle(
                         color: Colors.blue, fontWeight: FontWeight.bold),
                   ),
@@ -64,20 +93,22 @@ class _AccessUsingTicket extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final ticketHoldersList =
-          controller.starsArenaUsersToBuyEntryTicketFrom.value;
-      return ListView.builder(
-        shrinkWrap: true,
-        itemCount: ticketHoldersList.length,
-        itemBuilder: (context, index) {
-          return _ProfileCard(
-            key: ValueKey(ticketHoldersList[index].id + 'starsArenaUser'),
-            user: ticketHoldersList[index],
-          );
-        },
-      );
-    });
+    return Expanded(
+      child: Obx(() {
+        final ticketHoldersList =
+            controller.starsArenaUsersToBuyEntryTicketFrom.value;
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: ticketHoldersList.length,
+          itemBuilder: (context, index) {
+            return _ProfileCard(
+              key: ValueKey(ticketHoldersList[index].id + 'starsArenaUser'),
+              user: ticketHoldersList[index],
+            );
+          },
+        );
+      }),
+    );
   }
 }
 
@@ -89,7 +120,7 @@ class _ProfileCard extends GetView<LoginController> {
   });
   @override
   Widget build(BuildContext context) {
-    final keyPrice = user.keyPrice ?? '0';
+    final keyPrice = user.lastKeyPrice ?? '0';
     final binIntKeyPrice = BigInt.from(int.parse(keyPrice));
     final valueToShow = bigIntWeiToDouble(binIntKeyPrice).toString();
     return Container(

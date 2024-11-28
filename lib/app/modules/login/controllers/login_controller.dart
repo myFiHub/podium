@@ -299,7 +299,12 @@ class LoginController extends GetxController {
         return;
       }
     }
+    _continueWithUserToCreate();
+  }
 
+  _continueWithUserToCreate() async {
+    final userToCreate = temporaryUserInfo.value!;
+    final loginType = temporaryLoginType.value;
     UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
       user: userToCreate,
     );
@@ -334,8 +339,6 @@ class LoginController extends GetxController {
     }
     if (savedName != null) {
       globalController.currentUserInfo.value = user;
-      globalController.currentUserInfo.value!.savedInternalWalletAddress =
-          internalWalletAddress;
       globalController.currentUserInfo.refresh();
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
@@ -393,7 +396,7 @@ class LoginController extends GetxController {
   }
 
   Future<bool> _canContinueAuthentication(UserInfoModel user) async {
-    final [registeredUser] = await getUsersByIds([user.id]);
+    final registeredUser = await getUserById(user.id);
     if (registeredUser != null) {
       final refers = await getAllTheUserReferals(userId: user.id);
       if (refers.isEmpty) {

@@ -77,82 +77,84 @@ class _SingleUser extends StatelessWidget {
         usersController.openUserProfile(userId);
       },
       child: Stack(
+  children: [
+    Container(
+      decoration: BoxDecoration(
+        color: ColorName.cardBackground,
+        border: Border.all(
+          color: isItME ? Colors.green : ColorName.cardBorder,
+        ),
+        borderRadius: const BorderRadius.all(const Radius.circular(8)),
+      ),
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
+      padding: const EdgeInsets.all(10),
+      key: Key(userId),
+      child: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-                color: ColorName.cardBackground,
-                border: Border.all(
-                    color: isItME ? Colors.green : ColorName.cardBorder),
-                borderRadius: const BorderRadius.all(const Radius.circular(8))),
-            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            padding: const EdgeInsets.all(16),
-            key: Key(userId),
-            child: Stack(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: Get.width * 0.5,
-                          child: Text(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Hero(
+                        tag: userId,
+                        child: SizedBox(
+                          width: 40, // Ancho deseado
+                          height: 40, // Alto deseado
+                          child: Img(
+                            src: avatar,
+                            alt: name,
+                          ),
+                        ),
+                      ),
+                      space10,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
                             name,
                             style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                        space10,
-                        Row(
-                          children: [
-                            Hero(
-                              tag: userId,
-                              child: Img(
-                                src: avatar,
-                                alt: name,
-                              ),
+                          Text(
+                            truncate(userId, length: 10),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
+                              color: ColorName.greyText,
                             ),
-                            space10,
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  truncate(userId, length: 10),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w400,
-                                    color: ColorName.greyText,
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        )
-                      ],
-                    ),
-                    if (isItME)
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
+                          ),
+                        ],
                       )
-                    else
-                      FollowButton(
-                        userId: userId,
-                        fullWidth: false,
-                        small: true,
-                        key: Key(userId),
-                      ),
-                  ],
+                    ],
+                  )
+                ],
+              ),
+              if (isItME)
+                const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                )
+              else
+                FollowButton(
+                  userId: userId,
+                  fullWidth: false,
+                  small: true,
+                  key: Key(userId),
                 ),
-              ],
-            ),
+            ],
           ),
         ],
       ),
+    ),
+  ],
+),
     );
   }
 }
@@ -175,23 +177,20 @@ class FollowButton extends GetView<UsersController> {
       final idsImFollowing = controller.currentUserInfo.value!.following;
       final isFollowing = idsImFollowing.contains(userId);
       return Button(
-          size: small ? ButtonSize.MEDIUM : ButtonSize.LARGE,
+          size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
           onPressed: () {
             final idsImFollowing = controller.currentUserInfo.value!.following;
             final isFollowing = idsImFollowing.contains(userId);
             controller.followUnfollow(userId, !isFollowing);
           },
-          type: ButtonType.outline,
+          type: isFollowing ? ButtonType.outline : ButtonType.solid,
+          shape: ButtonShape.pills,
           blockButton: fullWidth,
-          textColor: isFollowing ? Colors.red : Colors.green,
-          borderSide: BorderSide(
+          textColor: isFollowing ? Colors.white : ColorName.cardBackground,
+          color:  Colors.white,
+          /* borderSide: BorderSide(
             color: isFollowing ? Colors.red : Colors.green,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 10,
-          ),
-          // size: ButtonSize.MEDIUM,
+          ),  */
           child: isLoading
               ? Center(
                   child: const CircularProgressIndicator(
@@ -201,12 +200,18 @@ class FollowButton extends GetView<UsersController> {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('${isFollowing ? "un" : ""}follow'),
+                    Text(
+                      '${isFollowing ? "Unfollow" : "Follow"}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12
+                      ),
+                    ),
                     if (!isFollowing)
                       const Icon(
                         Icons.add,
-                        color: Colors.green,
-                        size: 14,
+                        color: ColorName.cardBackground,
+                        size: 12,
                       ),
                   ],
                 ));

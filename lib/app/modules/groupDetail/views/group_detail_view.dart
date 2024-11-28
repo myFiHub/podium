@@ -45,10 +45,20 @@ class GroupDetailView extends GetView<GroupDetailController> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                         Text(
-                          group.name,
+                          "Joining",
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ),
+                        space14,
+                        Text(
+                          group.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            overflow: TextOverflow.visible,
                           ),
                         ),
                         if (group.subject != null && group.subject!.trim().isNotEmpty)
@@ -56,7 +66,6 @@ class GroupDetailView extends GetView<GroupDetailController> {
                             group.subject!,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[400],
                             ),
                           )
                         else
@@ -65,20 +74,21 @@ class GroupDetailView extends GetView<GroupDetailController> {
                           Text(
                             "Access Type: ${parseAccessType(group.accessType)}",
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 10,
                               color: Colors.grey[400],
                             ),
                           ),
                         Text(
                           "Speakers: ${parseSpeakerType(group.speakerType)}",
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 10,
                             color: Colors.grey[400],
                           ),
                         ),
                       ]
                     )
                   ),
+                  space10,
                   Expanded(
                     child: UserList(
                       usersList: members,

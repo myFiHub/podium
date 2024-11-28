@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/utils/styles.dart';
@@ -22,7 +23,18 @@ class NotificationsView extends GetView<NotificationsController> {
                   final notifications = controller.notifications;
                   if (notifications.isEmpty) {
                     return Center(
-                      child: Text('No notifications'),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Assets.images.bell.image(
+                            width: 64,
+                            height: 64,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text('No notifications'),
+                        ],
+                      )
                     );
                   }
                   return ListView.builder(

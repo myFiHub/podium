@@ -67,6 +67,12 @@ class $AssetsImagesGen {
   AssetGenImage get xPlatform =>
       const AssetGenImage('assets/images/x_platform.png');
 
+   AssetGenImage get bell =>
+      const AssetGenImage('assets/images/bell.png');
+
+AssetGenImage get browse =>
+      const AssetGenImage('assets/images/browse.png');
+
   /// List of all assets
   List<dynamic> get values => [
         ageRestricted,
@@ -80,6 +86,7 @@ class $AssetsImagesGen {
         logo,
         movementLogo,
         particleIcon,
+        bell,
         xPlatform
       ];
 }

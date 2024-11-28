@@ -56,8 +56,8 @@ class DropDown extends StatelessWidget {
                   child: Text(
                     item.text,
                     style: TextStyle(
-                      fontSize: 16,
-                      // fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                       color: item.enabled == false ? Colors.grey : Colors.white,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -69,15 +69,15 @@ class DropDown extends StatelessWidget {
           onChanged(value!);
         },
         buttonStyleData: ButtonStyleData(
-          height: 55,
+          height: 50,
           width: Get.width - 20,
-          padding: const EdgeInsets.only(left: 14, right: 14),
+          padding: const EdgeInsets.only(left: 10, right: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: ColorName.cardBorder,
             ),
-            color: ColorName.cardBackground,
+            color: ColorName.pageBackground,
           ),
           elevation: 0,
         ),
@@ -93,8 +93,8 @@ class DropDown extends StatelessWidget {
           maxHeight: 220,
           width: Get.width - 20,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            color: ColorName.cardBackground,
+            borderRadius: BorderRadius.circular(8),
+            color: ColorName.pageBackground,
           ),
           // offset: const Offset(-10, 0),
           scrollbarTheme: ScrollbarThemeData(

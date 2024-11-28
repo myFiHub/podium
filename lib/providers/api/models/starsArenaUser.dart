@@ -41,9 +41,6 @@ class StarsArenaUser {
     this.keyPrice,
     this.lastKeyPrice,
   });
-  get defaultAddress {
-    return address;
-  }
 
   get mainAddress {
     String? tmp = addressBeforeDynamicMigration;

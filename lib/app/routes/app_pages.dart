@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/groupDetail/views/group_by_id_landing.dart';
-import 'package:podium/app/modules/web3Auth_redirected/bindings/web2Auth_binding.dart';
-import 'package:podium/app/modules/web3Auth_redirected/views/web3AuthRedirected_view.dart';
-
+import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
 import '../modules/allGroups/bindings/all_groups_binding.dart';
 import '../modules/allGroups/views/all_groups_view.dart';
 import '../modules/chat/bindings/chat_binding.dart';
@@ -48,6 +46,16 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.LOGIN,
+      page: () => const LoginView(),
+      binding: LoginBinding(),
+    ),
+    GetPage(
+      name: _Paths.PREJOIN_REFERRAL_PAGE,
+      page: () => const PrejoinReferralView.PreJoin(),
+      binding: LoginBinding(),
+    ),
+    GetPage(
+      name: _Paths.REFERRED,
       page: () => const LoginView(),
       binding: LoginBinding(),
     ),

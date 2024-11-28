@@ -45,6 +45,7 @@ processLink(String? link) async {
     } else if (link.startsWith(Env.baseDeepLinkUrl)) {
       deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
       deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
+      deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
     } else {
       deepLinkedPage = '';
     }

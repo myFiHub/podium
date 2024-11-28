@@ -96,7 +96,8 @@ class GroupDetailController extends GetxController {
         scheduleChecks();
       }
     });
-    globalController.deepLinkRoute = null;
+    globalController.deepLinkRoute.value = '';
+
     if (shouldOpenJitsiAfterJoining) {
       startTheCall(accesses: groupAccesses.value!);
     }

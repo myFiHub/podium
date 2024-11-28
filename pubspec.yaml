@@ -15,6 +15,7 @@ dependencies:
   decimal: ^3.0.2
   share_plus: ^10.1.2
   app_links: ^6.3.2
+  shimmer: ^3.0.0
   flutter_confetti: ^0.3.4
   ably_flutter: ^1.2.36
   floating_draggable_widget: ^2.3.0

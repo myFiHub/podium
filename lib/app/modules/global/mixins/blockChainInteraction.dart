@@ -782,7 +782,7 @@ Future<BigInt?> internal_getBuyPrice({
 Future<bool> internal_buySharesWithReferrer({
   String? referrerAddress,
   required String sharesSubject,
-  required String targetUserId,
+  String? targetUserId,
   num shareAmount = 1,
   required String chainId,
 }) async {
@@ -838,17 +838,19 @@ Future<bool> internal_buySharesWithReferrer({
         transaction: transaction, chainId: chainId, metadata: metadata);
 
     if (signature != null && signature.length > 10) {
-      saveNewPayment(
-        event: PaymentEvent(
-          type: PaymentTypes.arenaTicket,
-          targetAddress: sharesSubjectWallet,
-          amount: bigIntWeiToDouble(buyPrice).toString(),
-          initiatorAddress: myAddress,
-          initiatorId: myId,
-          targetId: targetUserId,
-          chainId: chainId,
-        ),
-      );
+      if (targetUserId != null) {
+        saveNewPayment(
+          event: PaymentEvent(
+            type: PaymentTypes.arenaTicket,
+            targetAddress: sharesSubjectWallet,
+            amount: bigIntWeiToDouble(buyPrice).toString(),
+            initiatorAddress: myAddress,
+            initiatorId: myId,
+            targetId: targetUserId,
+            chainId: chainId,
+          ),
+        );
+      }
       return true;
     }
     return false;

@@ -9,6 +9,7 @@ class UserInfoModel {
   late String savedInternalWalletAddress;
   late int numberOfFollowers;
   bool isOver18 = false;
+  String referrer = '';
   String? loginType;
   String? loginTypeIdentifier;
 
@@ -24,6 +25,7 @@ class UserInfoModel {
   static String loginTypeKey = 'loginType';
   static String loginTypeIdentifierKey = 'loginTypeIdentifier';
   static String savedInternalWalletAddressKey = 'savedInternalWalletAddress';
+  static String referrerKey = 'referrer';
 
   UserInfoModel({
     required this.id,
@@ -38,6 +40,7 @@ class UserInfoModel {
     this.isOver18 = false,
     this.loginType,
     this.loginTypeIdentifier,
+    this.referrer = '',
   });
 
   String get defaultWalletAddress {
@@ -67,6 +70,7 @@ class UserInfoModel {
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
+    referrer = json[referrerKey] ?? '';
     savedInternalWalletAddress = json[savedInternalWalletAddressKey];
     loginTypeIdentifier = json[loginTypeIdentifierKey];
   }
@@ -84,6 +88,7 @@ class UserInfoModel {
     data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();
     data[isOver18Key] = isOver18;
     data[loginTypeKey] = loginType;
+    data[referrerKey] = referrer;
     data[loginTypeIdentifierKey] = loginTypeIdentifier;
     return data;
   }
@@ -101,6 +106,7 @@ class UserInfoModel {
     bool? isOver18,
     String? loginType,
     String? loginTypeIdentifier,
+    String? referrer,
   }) {
     return UserInfoModel(
       id: id ?? this.id,
@@ -116,6 +122,7 @@ class UserInfoModel {
       savedInternalWalletAddress:
           savedInternalWalletAddress ?? this.savedInternalWalletAddress,
       loginTypeIdentifier: loginTypeIdentifier ?? this.loginTypeIdentifier,
+      referrer: referrer ?? this.referrer,
     );
   }
 }

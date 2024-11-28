@@ -6,6 +6,8 @@ class FireBaseConstants {
   static final sessionsRef = 'sessions_v3/';
   static final tags = "tags_v3/";
   static final notificationsRef = 'notifications_v3/';
+  static final referalsRef = 'referals_v3/';
+  static final podiumDefinedEntryAddresses = 'podiumDefinedEntryAddresses_v3/';
   // end
   static final versionRef = 'version/';
   static final forceUpdate = 'forceUpdate/';

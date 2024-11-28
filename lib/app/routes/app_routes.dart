@@ -5,6 +5,8 @@ abstract class Routes {
   Routes._();
   static const HOME = _Paths.HOME;
   static const LOGIN = _Paths.LOGIN;
+  static const REFERRED = _Paths.REFERRED;
+  static const PREJOIN_REFERRAL_PAGE = _Paths.PREJOIN_REFERRAL_PAGE;
   static const WEB3AUTH_REDIRECTED = _Paths.WEB3AUTH_REDIRECTED;
   static const CREATE_GROUP = _Paths.CREATE_GROUP;
   static const GROUP_DETAIL = _Paths.GROUP_DETAIL;
@@ -25,6 +27,8 @@ abstract class _Paths {
   _Paths._();
   static const HOME = '/home';
   static const LOGIN = '/login';
+  static const PREJOIN_REFERRAL_PAGE = '/PREJOIN_REFERRAL_PAGE';
+  static const REFERRED = '/referral';
   static const WEB3AUTH_REDIRECTED = '/web3auth';
   static const CREATE_GROUP = '/create-group';
   static const GROUP_DETAIL = '/group-detail';

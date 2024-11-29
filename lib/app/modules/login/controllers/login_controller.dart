@@ -438,6 +438,9 @@ class LoginController extends GetxController {
   }
 
   _initializeReferrals(UserInfoModel user) async {
+    if (referrer.value != null && user.id == referrer.value!.id) {
+      return true;
+    }
     final refers = await getAllTheUserReferals(userId: user.id);
     if (refers.isEmpty) {
       await initializeUseReferalCodes(userId: user.id);

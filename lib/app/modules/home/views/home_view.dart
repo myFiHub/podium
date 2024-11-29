@@ -7,7 +7,6 @@ import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -48,6 +47,7 @@ class HomeView extends GetView<HomeController> {
           space10,
           Expanded(
             child: Container(
+              width: Get.width,
               child: GetBuilder<GlobalController>(
                   id: GlobalUpdateIds.showArchivedGroups,
                   builder: (globalController) {

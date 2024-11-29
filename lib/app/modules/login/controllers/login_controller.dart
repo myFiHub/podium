@@ -159,8 +159,13 @@ class LoginController extends GetxController {
     ignoreIfNotLoggedIn = false,
   }) async {
     isLoggingIn.value = true;
+    // in case user is backed from referral page(not auto logging in and clickes on a button in login page)
+    if (!ignoreIfNotLoggedIn) {
+      try {
+        await Web3AuthFlutter.logout();
+      } catch (e) {}
+    }
     // await _checkForLoginType(web3AuthProviderToLoginTypeString(loginMethod));
-
     try {
       final (userInfo, privateKey) = await (
         Web3AuthFlutter.getUserInfo(),
@@ -173,6 +178,7 @@ class LoginController extends GetxController {
       );
     } catch (e) {
       if (ignoreIfNotLoggedIn) {
+        globalController.isAutoLoggingIn.value = false;
         isLoggingIn.value = false;
         return;
       }
@@ -193,6 +199,8 @@ class LoginController extends GetxController {
             );
           } else {
             isLoggingIn.value = false;
+            globalController.isAutoLoggingIn.value = false;
+
             return;
           }
         } else {
@@ -208,12 +216,16 @@ class LoginController extends GetxController {
         }
         if (res == null) {
           isLoggingIn.value = false;
+          globalController.isAutoLoggingIn.value = false;
+
           return;
         }
         final privateKey = res.privKey;
         final userInfo = res.userInfo;
         if (privateKey == null || userInfo == null) {
           isLoggingIn.value = false;
+          globalController.isAutoLoggingIn.value = false;
+
           return;
         }
         await _continueSocialLoginWithUserInfoAndPrivateKey(
@@ -223,13 +235,19 @@ class LoginController extends GetxController {
         );
       } catch (e) {
         isLoggingIn.value = false;
+        globalController.isAutoLoggingIn.value = false;
+
         log.e(e);
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
         );
       } finally {
         isLoggingIn.value = false;
+        globalController.isAutoLoggingIn.value = false;
       }
+    } finally {
+      isLoggingIn.value = false;
+      globalController.isAutoLoggingIn.value = false;
     }
   }
 

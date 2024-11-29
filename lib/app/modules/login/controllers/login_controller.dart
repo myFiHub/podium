@@ -395,6 +395,7 @@ class LoginController extends GetxController {
       final user = addressesToCheckForArena[i];
       final price = prices[i].toString();
       user.lastKeyPrice = price;
+      user.keyPrice = price;
     }
 
     starsArenaUsersToBuyEntryTicketFrom.value = addressesToCheckForArena;

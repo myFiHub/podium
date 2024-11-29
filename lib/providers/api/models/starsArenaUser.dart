@@ -13,7 +13,7 @@ class StarsArenaUser {
   final String? ethereumAddress;
   final String? solanaAddress;
   final String? prevAddress;
-  final String? keyPrice;
+  String? keyPrice;
   String? lastKeyPrice;
   final bool addressConfirmed;
   final int followerCount;

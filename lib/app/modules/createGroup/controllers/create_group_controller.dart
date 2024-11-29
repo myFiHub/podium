@@ -261,7 +261,7 @@ class CreateGroupController extends GetxController {
           avatar: user.twitterPicture,
           localWalletAddress: user.mainAddress,
           following: [],
-          numberOfFollowers: 0,
+          numberOfFollowers: user.followerCount,
           savedInternalWalletAddress: user.mainAddress,
         ),
         activeAddress: user.mainAddress,

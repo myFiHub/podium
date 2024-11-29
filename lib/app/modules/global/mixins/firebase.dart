@@ -115,7 +115,7 @@ Future<bool> initializeUseReferalCodes({
       final referral = Referral(usedBy: '');
       codes[referalCode] = referral.toJson();
     }
-    await databaseRef.update(codes);
+    await databaseRef.set(codes);
     return true;
   } catch (e) {
     log.e(e);

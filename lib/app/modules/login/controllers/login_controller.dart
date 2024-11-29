@@ -360,6 +360,7 @@ class LoginController extends GetxController {
     if (savedName != null) {
       globalController.currentUserInfo.value = user;
       globalController.currentUserInfo.refresh();
+      await _initializeReferrals(userToCreate);
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
       isLoggingIn.value = false;
@@ -436,15 +437,16 @@ class LoginController extends GetxController {
     return bought;
   }
 
+  _initializeReferrals(UserInfoModel user) async {
+    final refers = await getAllTheUserReferals(userId: user.id);
+    if (refers.isEmpty) {
+      await initializeUseReferalCodes(userId: user.id);
+    }
+    return true;
+  }
+
   Future<bool> _canContinueAuthentication(UserInfoModel user) async {
     final registeredUser = await getUserById(user.id);
-    if (registeredUser != null) {
-      final refers = await getAllTheUserReferals(userId: user.id);
-      if (refers.isEmpty) {
-        await initializeUseReferalCodes(userId: user.id);
-      }
-      return true;
-    }
     if (registeredUser == null && referrer.value != null) {
       if (referrer.value == null) {
         referralError.value = 'Referrer not found';

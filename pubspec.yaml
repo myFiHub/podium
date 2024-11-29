@@ -38,7 +38,6 @@ dependencies:
   permission_handler: ^11.3.1
   app_settings: ^5.1.1
   url_launcher: ^6.3.1
-  particle_auth_core: ^2.1.20
   firebase_analytics: ^11.3.3
   pretty_dio_logger: ^1.4.0
   textfield_tags: ^3.0.1

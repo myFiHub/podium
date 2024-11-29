@@ -464,6 +464,9 @@ class LoginController extends GetxController {
         referralError.value = 'Referrer has no more referral codes';
         return false;
       } else {
+        if (referrer.value != null && user.id == referrer.value!.id) {
+          return true;
+        }
         final firstAvailableCode = allReferreReferrals.keys.firstWhere(
             (element) => allReferreReferrals[element]!.usedBy == '');
         final code = await setUsedByToReferral(

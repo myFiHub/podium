@@ -78,5 +78,30 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+
+		<!-- added for deeplink -->
+		<key>FirebaseDynamicLinksCustomDomains</key>
+			<array>
+    		<string>https://web3podium.page.link</string>
+			</array>
+
+		<key>CFBundleURLTypes</key>
+			<array>
+    		<dict>
+        	<key>CFBundleURLName</key>
+        	<string>com.web3podium</string>
+        	<key>CFBundleURLSchemes</key>
+        	<array>
+            <string>podium</string>
+        	</array>
+    		</dict>
+			</array>
+
+		<key>LSApplicationQueriesSchemes</key>
+			<array>
+    		<string>podium</string>
+		</array>
+		<!--end added for deeplink -->
+
 	</dict>
 </plist>

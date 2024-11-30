@@ -61,12 +61,6 @@ dataBinding {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
-
-
-    manifestPlaceholders["PN_PROJECT_ID"] = "2ba651e8-528b-493b-a570-ab62fe2489d6"//your project id
-    manifestPlaceholders["PN_PROJECT_CLIENT_KEY"] = "c1o3pOIT9seszfmH9DSmMb7td8TDi4UNJWZbMmw1" //your project client key
-    manifestPlaceholders["PN_APP_ID"] =  "d28e3658-4a8e-4d4a-aba1-1f7fff6d9038"//your app id
-
     }
 
 
@@ -99,13 +93,9 @@ dataBinding {
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
     // ...   
-     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.7.0'  // Adjust to the version you use
-
     implementation 'com.google.android.material:material:1.12.0'
      implementation 'org.slf4j:slf4j-api:1.7.30'
     implementation 'org.slf4j:slf4j-simple:1.7.30'
-    implementation 'com.facebook.fresco:fresco:2.5.0'  // Or the latest version
-implementation 'org.bouncycastle:bcprov-jdk15on:1.70'  // Or the latest version
 
     // ...
 }

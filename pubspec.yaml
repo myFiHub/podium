@@ -9,7 +9,11 @@ dependencies:
   get: ^5.0.0-release-candidate-9.2.1
   flutter:
     sdk: flutter
-  reown_appkit: ^1.2.0
+  reown_appkit:
+    git:
+      url: https://github.com/mhsnprvr/reown_flutter.git
+      ref: develop # branch name
+      path: packages/reown_appkit
   alarm: ^4.0.12
   intl: ^0.19.0
   decimal: ^3.1.0
@@ -59,6 +63,7 @@ dependencies:
 
 dependency_overrides:
   web: ^0.5.0
+  intl: ^0.19.0
 # dependency overrides
 
 dev_dependencies:

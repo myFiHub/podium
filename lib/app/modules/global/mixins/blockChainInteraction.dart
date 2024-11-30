@@ -31,8 +31,10 @@ Future<bool> ext_cheerOrBoo({
   required String chainId,
 }) async {
   final service = web3ModalService;
+  final namespace = ReownAppKitModalNetworks.getNamespaceForChainId(chainId);
+  final address = service.session!.getAddress(namespace)!;
   final transaction = Transaction(
-    from: parseAddress(service.session!.address!),
+    from: parseAddress(address),
     value: parseValue(amount),
   );
   final targetWallet = parseAddress(target);
@@ -600,8 +602,10 @@ Future<bool> ext_buyFirendtechTicket({
   }
   final globalController = Get.find<GlobalController>();
   final service = globalController.web3ModalService;
+  final namespace = ReownAppKitModalNetworks.getNamespaceForChainId(chainId);
+  final address = service.session!.getAddress(namespace)!;
   final transaction = Transaction(
-    from: parseAddress(service.session!.address!),
+    from: parseAddress(address),
     value: parseValue(buyPrice.toDouble()),
   );
   final contract = getDeployedContract(
@@ -680,8 +684,12 @@ Future<bool> ext_buySharesWithReferrer({
 
   final globalController = Get.find<GlobalController>();
   final service = globalController.web3ModalService;
+
+  final namespace = ReownAppKitModalNetworks.getNamespaceForChainId(chainId);
+  final address = service.session!.getAddress(namespace)!;
+
   final transaction = Transaction(
-    from: parseAddress(service.session!.address!),
+    from: parseAddress(address),
     value: EtherAmount.inWei(bigIntValue),
   );
   final contract = getDeployedContract(

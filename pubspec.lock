@@ -434,10 +434,10 @@ packages:
     dependency: "direct main"
     description:
       name: decimal
-      sha256: "4140a688f9e443e2f4de3a1162387bf25e1ac6d51e24c9da263f245210f41440"
+      sha256: da8f65df568345f2738cc8b0de74971c86d2d93ce5fc8c4ec094f6b7c5d48eb5
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.2"
+    version: "3.1.0"
   dio:
     dependency: "direct main"
     description:
@@ -490,10 +490,10 @@ packages:
     dependency: "direct main"
     description:
       name: equatable
-      sha256: c2b87cb7756efdf69892005af546c56c0b5037f54d2a88269b4f347a505e3ca2
+      sha256: "567c64b3cb4cf82397aac55f4f0cbd3ca20d77c6c03bedbc4ceaddc08904aef7"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.5"
+    version: "2.0.7"
   event:
     dependency: transitive
     description:
@@ -858,6 +858,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0-release-candidate-9.2.1"
+  get_it:
+    dependency: transitive
+    description:
+      name: get_it
+      sha256: c49895c1ecb0ee2a0ec568d39de882e2c299ba26355aa6744ab1001f98cebd15
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.0.2"
   get_storage:
     dependency: "direct main"
     description:
@@ -1056,7 +1064,7 @@ packages:
       path: jitsi-meet-flutter-sdk
       relative: true
     source: path
-    version: "10.2.1"
+    version: "10.3.0"
   js:
     dependency: transitive
     description:
@@ -1085,10 +1093,10 @@ packages:
     dependency: "direct dev"
     description:
       name: json_serializable
-      sha256: ea1432d167339ea9b5bb153f0571d0039607a873d6e04e0117af043f14a1fd4b
+      sha256: c2fcb3920cf2b6ae6845954186420fca40bc0a8abcc84903b7801f17d7050d7c
       url: "https://pub.dev"
     source: hosted
-    version: "6.8.0"
+    version: "6.9.0"
   leak_tracker:
     dependency: transitive
     description:
@@ -1205,18 +1213,18 @@ packages:
     dependency: transitive
     description:
       name: package_info_plus
-      sha256: "2c582551839386fa7ddbc7770658be7c0f87f388a4bff72066478f597c34d17f"
+      sha256: da8d9ac8c4b1df253d1a328b7bf01ae77ef132833479ab40763334db13b91cce
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.0"
+    version: "8.1.1"
   package_info_plus_platform_interface:
     dependency: transitive
     description:
       name: package_info_plus_platform_interface
-      sha256: f49918f3433a3146047372f9d4f1f847511f2acd5cd030e1f44fe5a50036b70e
+      sha256: ac1f4a4847f1ade8e6a87d1f39f5d7c67490738642e2542f559ec38c37489a66
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.0.1"
   path:
     dependency: transitive
     description:
@@ -1436,27 +1444,28 @@ packages:
   reown_appkit:
     dependency: "direct main"
     description:
-      name: reown_appkit
-      sha256: "16d5ce70bd254db2b0fd837272438f240212caf0fadff17902834cfb6644dc26"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
+      path: "packages/reown_appkit"
+      ref: develop
+      resolved-ref: "9b4afafe01a49a71705ddbb7599f574c756d9166"
+      url: "https://github.com/mhsnprvr/reown_flutter.git"
+    source: git
+    version: "1.2.0"
   reown_core:
     dependency: transitive
     description:
       name: reown_core
-      sha256: acfdd52de8a1c9c2c96007a9911cfe7750254233493b391ac90bcf629bf1f7c6
+      sha256: e21ad9ca211ecd5221f027a76f978105eaf2335edb0687ddcebda1da53417d20
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.0.4"
   reown_sign:
     dependency: transitive
     description:
       name: reown_sign
-      sha256: ee2a555c815ba300699615b499d2d67060fdf4e7ba6469e21c4501e6cd47bd02
+      sha256: ef2493a3992772d9495b9232b4ece7e7be0e0893f88d34f80aa6eda2e49b3e6e
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.0.4"
   rotated_corner_decoration:
     dependency: "direct main"
     description:

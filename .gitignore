@@ -34,7 +34,6 @@ android/app/**/*.json
 .pub/
 /build/
 
-
 # Symbolication related
 app.*.symbols
 
@@ -50,3 +49,6 @@ app.*.map.json
 /env/prod.json
 /android/app/google-service.json
 /lib/firebase_options.dart
+
+# FVM Version Cache
+.fvm/

@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
-import 'package:podium/app/modules/global/widgets/chainIcons.dart';
-import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/navbar.dart';
 
 class Root extends StatelessWidget {

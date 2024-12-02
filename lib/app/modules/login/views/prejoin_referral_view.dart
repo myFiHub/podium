@@ -65,7 +65,7 @@ class PrejoinReferralView extends GetView<LoginController> {
                     text: ', you need to be referred by an existing user ',
                   ),
                   TextSpan(
-                    text: 'or hold at least one key',
+                    text: 'or hold at least one key or ticket',
                     style: TextStyle(
                         color: Colors.red, fontStyle: FontStyle.italic),
                   ),

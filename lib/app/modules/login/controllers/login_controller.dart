@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -12,6 +13,7 @@ import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeStrin
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/web3Auth_redirected/controllers/web3Auth_redirected_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Internal_wallet.dart';
@@ -382,7 +384,29 @@ class LoginController extends GetxController {
     }
   }
 
+  Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserInfoModel user) async {
+    final loginType = user.loginType;
+    final identifier = user.loginTypeIdentifier;
+    final DatabaseReference _database = FirebaseDatabase.instance.ref();
+    final snapshot = await _database.child('users');
+    final usersWithThisIdentifier = await snapshot
+        .orderByChild(UserInfoModel.loginTypeIdentifierKey)
+        .equalTo(identifier)
+        .once();
+    final results = usersWithThisIdentifier.snapshot.value;
+    if (results == null) {
+      return false;
+    }
+    return true;
+  }
+
   Future<bool> _checkIfUserHasPodiumDefinedEntryTicket() async {
+    final userSignedUpBeforeLaunch = await _chackIfUserIsSignedUpBeforeLaunch(
+      temporaryUserInfo.value!,
+    );
+    if (userSignedUpBeforeLaunch) {
+      return true;
+    }
     bool bought = false;
     final listOfBuyableTickets = await getPodiumDefinedEntryAddresses();
     final List<StarsArenaUser> addressesToCheckForArena = [];

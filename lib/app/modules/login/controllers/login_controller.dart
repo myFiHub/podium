@@ -385,7 +385,6 @@ class LoginController extends GetxController {
   }
 
   Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserInfoModel user) async {
-    final loginType = user.loginType;
     final identifier = user.loginTypeIdentifier;
     final DatabaseReference _database = FirebaseDatabase.instance.ref();
     final snapshot = await _database.child('users');

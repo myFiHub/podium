@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -76,7 +78,8 @@ class PrejoinReferralView extends GetView<LoginController> {
               ),
             ),
             _InternalWalletAddress(),
-            space10,
+            space5,
+            _ExternalWalletConnectButton(),
             _ReferralStatus(),
             space10,
             _AccessUsingTicket(),
@@ -84,6 +87,38 @@ class PrejoinReferralView extends GetView<LoginController> {
         ),
       ),
     );
+  }
+}
+
+class _ExternalWalletConnectButton extends GetView<GlobalController> {
+  const _ExternalWalletConnectButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final externalWalletAddress = controller.connectedWalletAddress.value;
+      final externalWalletChainId = controller.externalWalletChainId.value;
+      final connected = externalWalletAddress.isNotEmpty;
+      return Button(
+        size: ButtonSize.SMALL,
+        blockButton: true,
+        type: connected ? ButtonType.outline2x : ButtonType.gradient,
+        // loading: loadingExternalWalletActivation,
+        onPressed: () {
+          if (externalWalletAddress.isNotEmpty) {
+            return;
+          }
+          controller.connectToWallet();
+        },
+        child: Text(
+          connected ? 'External Wallet Connected' : 'Connect External Wallet',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+      );
+    });
   }
 }
 
@@ -102,20 +137,19 @@ class _InternalWalletAddress extends GetView<LoginController> {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Internal Wallet Address",
+                "Your Internal Wallet Address",
                 style: TextStyle(
                   color: Colors.blueAccent,
-                  fontSize: 20,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              space5,
               if (balance.isNotEmpty)
                 Text(
                   "Balance: $balance AVAX",
@@ -124,7 +158,6 @@ class _InternalWalletAddress extends GetView<LoginController> {
                     fontSize: 12,
                   ),
                 ),
-              space5,
               GestureDetector(
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: internalWalletAddress))
@@ -141,14 +174,14 @@ class _InternalWalletAddress extends GetView<LoginController> {
                       truncate(internalWalletAddress, length: 16),
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 16,
                       ),
                     ),
-                    space10,
+                    space5,
                     Icon(
                       Icons.copy,
                       color: Colors.blueAccent,
-                      size: 20,
+                      size: 16,
                     ),
                   ],
                 ),

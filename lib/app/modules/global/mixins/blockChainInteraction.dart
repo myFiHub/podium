@@ -661,7 +661,7 @@ Future<bool> ext_buySharesWithReferrer({
   String? referrerAddress,
   required String sharesSubject,
   num shareAmount = 1,
-  required String targetUserId,
+  String? targetUserId,
   required String chainId,
 }) async {
   final referrer = referrerAddress ?? fihubAddress(chainId);
@@ -712,7 +712,7 @@ Future<bool> ext_buySharesWithReferrer({
         response is String &&
         response.startsWith("0x") &&
         response.length > 10;
-    if (success) {
+    if (success && targetUserId != null) {
       saveNewPayment(
         event: PaymentEvent(
           type: PaymentTypes.arenaTicket,

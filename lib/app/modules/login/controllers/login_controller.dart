@@ -91,15 +91,37 @@ class LoginController extends GetxController {
   }
 
   buyTicket({required StarsArenaUser user}) async {
+    final externalWalletAddress = globalController.connectedWalletAddress.value;
+
     if (loadingBuyTicketId.value.isNotEmpty) {
       return;
     }
     loadingBuyTicketId.value = user.id;
+    bool bought = false;
     try {
-      final bought = await internal_buySharesWithReferrer(
-        sharesSubject: user.mainAddress,
-        chainId: avalancheChainId,
-      );
+      if (externalWalletAddress.isNotEmpty) {
+        final selectedWallet = await choseAWallet(chainId: avalancheChainId);
+        if (selectedWallet == null) {
+          return;
+        } else {
+          if (selectedWallet == WalletNames.internal) {
+            bought = await internal_buySharesWithReferrer(
+              sharesSubject: user.mainAddress,
+              chainId: avalancheChainId,
+            );
+          } else {
+            bought = await ext_buySharesWithReferrer(
+              sharesSubject: user.mainAddress,
+              chainId: avalancheChainId,
+            );
+          }
+        }
+      } else {
+        bought = await internal_buySharesWithReferrer(
+          sharesSubject: user.mainAddress,
+          chainId: avalancheChainId,
+        );
+      }
       if (bought) {
         Toast.success(
           message: 'Ticket bought successfully',
@@ -159,6 +181,10 @@ class LoginController extends GetxController {
   //     return;
   //   }
   // }
+  _removeLogingInState() {
+    isLoggingIn.value = false;
+    globalController.isAutoLoggingIn.value = false;
+  }
 
   socialLogin({
     required Provider loginMethod,
@@ -184,8 +210,7 @@ class LoginController extends GetxController {
       );
     } catch (e) {
       if (ignoreIfNotLoggedIn) {
-        globalController.isAutoLoggingIn.value = false;
-        isLoggingIn.value = false;
+        _removeLogingInState();
         return;
       }
 
@@ -204,43 +229,46 @@ class LoginController extends GetxController {
               ),
             );
           } else {
-            isLoggingIn.value = false;
-            globalController.isAutoLoggingIn.value = false;
+            _removeLogingInState();
             return;
           }
         } else {
-          res = await Web3AuthFlutter.login(
-            LoginParams(
-              loginProvider: loginMethod,
-              mfaLevel: MFALevel.DEFAULT,
-              // extraLoginOptions: ExtraLoginOptions(
-              //   login_hint: "mhsnprvr@gmail.com",
-              // ),
-            ),
-          );
+          try {
+            res = await Web3AuthFlutter.login(
+              LoginParams(
+                loginProvider: loginMethod,
+                mfaLevel: MFALevel.DEFAULT,
+                // extraLoginOptions: ExtraLoginOptions(
+                //   login_hint: "mhsnprvr@gmail.com",
+                // ),
+              ),
+            );
+          } on UserCancelledException catch (e) {
+            log.e(e);
+            _removeLogingInState();
+          } catch (e) {
+            log.e(e);
+            Toast.error(
+              message:
+                  'Error logging in, please try again, or use another method',
+            );
+            _removeLogingInState();
+          }
         }
         if (res == null) {
-          isLoggingIn.value = false;
-          globalController.isAutoLoggingIn.value = false;
+          _removeLogingInState();
           return;
         }
-        final privateKey = res.privKey;
-        final userInfo = res.userInfo;
-        if (privateKey == null || userInfo == null) {
-          isLoggingIn.value = false;
-          globalController.isAutoLoggingIn.value = false;
+        final privateKey = res.privKey!;
+        final userInfo = res.userInfo!;
 
-          return;
-        }
         await _continueSocialLoginWithUserInfoAndPrivateKey(
           privateKey: privateKey,
           userInfo: userInfo,
           loginMethod: loginMethod,
         );
       } catch (e) {
-        isLoggingIn.value = false;
-        globalController.isAutoLoggingIn.value = false;
-
+        _removeLogingInState();
         log.e(e);
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
@@ -303,9 +331,13 @@ class LoginController extends GetxController {
 
     temporaryLoginType.value = loginType;
     temporaryUserInfo.value = userToCreate;
-
-    final canContinueAuthentication =
-        await _canContinueAuthentication(userToCreate);
+    bool canContinueAuthentication = false;
+    try {
+      canContinueAuthentication =
+          await _canContinueAuthentication(userToCreate);
+    } catch (e) {
+      _removeLogingInState();
+    }
     if (!canContinueAuthentication) {
       final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
       if (!hasTicket) {
@@ -315,13 +347,14 @@ class LoginController extends GetxController {
               .getBalance(parseAddress(internalWalletAddress));
           final balance = weiToDecimalString(wei: res);
           internalWalletBalance.value = balance;
-        } catch (e) {}
-        // globalController.setLoggedIn(false);
+        } catch (e) {
+          _removeLogingInState();
+        }
         Navigate.to(
           route: Routes.PREJOIN_REFERRAL_PAGE,
           type: NavigationTypes.toNamed,
         );
-        isLoggingIn.value = false;
+        _removeLogingInState();
         return;
       }
     }

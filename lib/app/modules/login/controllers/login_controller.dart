@@ -7,7 +7,9 @@ import 'package:podium/app/modules/createGroup/controllers/create_group_controll
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
+import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/web3Auth_redirected/controllers/web3Auth_redirected_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
@@ -43,6 +45,8 @@ class LoginController extends GetxController {
   final email = ''.obs;
   final password = ''.obs;
   final web3AuthLogintype = ''.obs;
+  final internalWalletAddress = ''.obs;
+  final internalWalletBalance = ''.obs;
   Function? afterLogin = null;
 
   String referrerId = '';
@@ -200,7 +204,6 @@ class LoginController extends GetxController {
           } else {
             isLoggingIn.value = false;
             globalController.isAutoLoggingIn.value = false;
-
             return;
           }
         } else {
@@ -217,7 +220,6 @@ class LoginController extends GetxController {
         if (res == null) {
           isLoggingIn.value = false;
           globalController.isAutoLoggingIn.value = false;
-
           return;
         }
         final privateKey = res.privKey;
@@ -241,13 +243,7 @@ class LoginController extends GetxController {
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
         );
-      } finally {
-        isLoggingIn.value = false;
-        globalController.isAutoLoggingIn.value = false;
       }
-    } finally {
-      isLoggingIn.value = false;
-      globalController.isAutoLoggingIn.value = false;
     }
   }
 
@@ -259,6 +255,7 @@ class LoginController extends GetxController {
     final publicAddress = ethereumKeyPair.address.hex;
     final uid = addressToUuid(publicAddress);
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
+    internalWalletAddress.value = publicAddress;
 
     await _socialLogin(
       id: uid,
@@ -310,6 +307,13 @@ class LoginController extends GetxController {
     if (!canContinueAuthentication) {
       final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
       if (!hasTicket) {
+        try {
+          final avalancheClient = web3ClientByChainId(avalancheChainId);
+          final res = await avalancheClient
+              .getBalance(parseAddress(internalWalletAddress));
+          final balance = weiToDecimalString(wei: res);
+          internalWalletBalance.value = balance;
+        } catch (e) {}
         // globalController.setLoggedIn(false);
         Navigate.to(
           route: Routes.PREJOIN_REFERRAL_PAGE,

@@ -1,15 +1,12 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
-import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/podiumDefinedEntryAddress/podiumDefinedEntryAddress.dart';
-import 'package:podium/models/referral/referral.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -78,6 +75,8 @@ class PrejoinReferralView extends GetView<LoginController> {
                 ],
               ),
             ),
+            _InternalWalletAddress(),
+            space10,
             _ReferralStatus(),
             space10,
             _AccessUsingTicket(),
@@ -85,6 +84,80 @@ class PrejoinReferralView extends GetView<LoginController> {
         ),
       ),
     );
+  }
+}
+
+class _InternalWalletAddress extends GetView<LoginController> {
+  const _InternalWalletAddress({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final internalWalletAddress = controller.internalWalletAddress.value;
+      final balance = controller.internalWalletBalance.value;
+      return Container(
+        width: Get.width - 20,
+        decoration: BoxDecoration(
+          color: ColorName.cardBackground,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Internal Wallet Address",
+                style: TextStyle(
+                  color: Colors.blueAccent,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              space5,
+              if (balance.isNotEmpty)
+                Text(
+                  "Balance: $balance AVAX",
+                  style: TextStyle(
+                    color: Colors.blueAccent,
+                    fontSize: 12,
+                  ),
+                ),
+              space5,
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: internalWalletAddress))
+                      .then(
+                    (_) => Toast.info(
+                      title: "Copied",
+                      message: 'Address copied to clipboard',
+                    ),
+                  );
+                },
+                child: Row(
+                  children: [
+                    Text(
+                      truncate(internalWalletAddress, length: 16),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                    space10,
+                    Icon(
+                      Icons.copy,
+                      color: Colors.blueAccent,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
   }
 }
 
@@ -270,6 +343,9 @@ class _ReferralStatus extends GetView<LoginController> {
     return Obx(() {
       final referrer = controller.referrer.value;
       final noReferrer = referrer == null;
+      if (noReferrer) {
+        return SizedBox.shrink();
+      }
       return Container(
         width: Get.width - 20,
         decoration: BoxDecoration(

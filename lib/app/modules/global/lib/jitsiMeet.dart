@@ -22,7 +22,7 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
   return JitsiMeetEventListener(
     conferenceJoined: (url) async {
       if (Platform.isIOS) {
-        jitsiMeet.enterPiP();
+        // jitsiMeet.enterPiP();
       }
       Navigate.to(
         route: Routes.ONGOING_GROUP_CALL,

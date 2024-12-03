@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
@@ -13,10 +12,8 @@ import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeStrin
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/web3Auth_redirected/controllers/web3Auth_redirected_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
@@ -24,9 +21,7 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
-
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:uuid/uuid.dart';
@@ -66,20 +61,22 @@ class LoginController extends GetxController {
   void onInit() {
     referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
     log.i('deepLinkRoute: $referrerId');
-
+    if (referrerId.isNotEmpty) {
+      initialReferral(referrerId);
+    }
     $isAutoLoggingIn.value = globalController.isAutoLoggingIn.value;
     globalController.isAutoLoggingIn.listen((v) {
       $isAutoLoggingIn.value = v;
     });
+
     super.onInit();
   }
 
   @override
   void onReady() {
-    initialReferral();
     globalController.deepLinkRoute.listen((v) {
       if (v.isNotEmpty) {
-        initialReferral();
+        initialReferral(null);
       }
     });
     super.onReady();
@@ -140,10 +137,10 @@ class LoginController extends GetxController {
     }
   }
 
-  initialReferral() async {
+  initialReferral(String? id) async {
     Future.delayed(Duration(seconds: 0), () async {
       final referrerId =
-          _extractReferrerId(globalController.deepLinkRoute.value);
+          id ?? _extractReferrerId(globalController.deepLinkRoute.value);
       if (referrerId.isNotEmpty) {
         final (referrerUser, allTheReferrals) = await (
           getUsersByIds([referrerId]),
@@ -298,6 +295,46 @@ class LoginController extends GetxController {
     );
   }
 
+  _fixUserData(UserInfoModel user) {
+    UserInfoModel userToCreate = user;
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('twitter|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('twitter|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('github|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('github|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('google|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('google|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('email|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('email|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('apple|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('apple|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('facebook|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('facebook|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('linkedin|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('linkedin|')[1];
+    }
+    return userToCreate;
+  }
+
   _socialLogin({
     required String id,
     required String name,
@@ -314,7 +351,7 @@ class LoginController extends GetxController {
     }
 
     // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
-    final userToCreate = UserInfoModel(
+    UserInfoModel userData = UserInfoModel(
       id: userId,
       fullName: name,
       email: email,
@@ -328,6 +365,7 @@ class LoginController extends GetxController {
       loginTypeIdentifier: loginTypeIdentifier,
       lowercasename: name.toLowerCase(),
     );
+    final UserInfoModel userToCreate = _fixUserData(userData);
 
     temporaryLoginType.value = loginType;
     temporaryUserInfo.value = userToCreate;
@@ -402,7 +440,7 @@ class LoginController extends GetxController {
       await _initializeReferrals(userToCreate);
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
-      isLoggingIn.value = false;
+      _removeLogingInState();
       if (afterLogin != null) {
         afterLogin!();
         afterLogin = null;
@@ -418,7 +456,7 @@ class LoginController extends GetxController {
   }
 
   Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserInfoModel user) async {
-    final identifier = user.loginTypeIdentifier;
+    String identifier = user.loginTypeIdentifier!;
     final DatabaseReference _database = FirebaseDatabase.instance.ref();
     final snapshot = await _database.child('users');
     final usersWithThisIdentifier = await snapshot

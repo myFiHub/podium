@@ -27,13 +27,17 @@ class LoginView extends GetView<LoginController> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Hero(
-                      tag: 'logo',
-                      child: Container(
-                        height: 150,
-                        child: Assets.images.logo.image(),
-                      ),
+                    Container(
+                      height: 150,
+                      child: Assets.images.logo.image(),
                     ),
+                    // Hero(
+                    //   tag: 'logo',
+                    //   child: Container(
+                    //     height: 150,
+                    //     child: Assets.images.logo.image(),
+                    //   ),
+                    // ),
                     Text(
                       'Podium',
                       style: TextStyle(

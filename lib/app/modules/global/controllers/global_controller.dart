@@ -347,11 +347,11 @@ class GlobalController extends GetxController {
       log.e("logged in, opening deep link $route");
       if (route.contains(Routes.GROUP_DETAIL)) {
         openDeepLinkGroup(route);
-      } else if (route.contains('referral')) {
-        openLoginPageWithReferral(route);
       } else {
         log.e("deep link not handled");
       }
+    } else if (route.contains('referral')) {
+      openLoginPageWithReferral(route);
     }
   }
 

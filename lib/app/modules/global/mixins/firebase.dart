@@ -769,7 +769,6 @@ Future<Map<String, FirebaseGroup>> searchForGroupByName(
 Future<Map<String, UserInfoModel>> searchForUserByName(String name) async {
   try {
     final DatabaseReference _database = FirebaseDatabase.instance.ref();
-
     Query lowercasenameQuery = _database
         .child(FireBaseConstants.usersRef)
         .orderByChild(UserInfoModel.lowercasenameKey)

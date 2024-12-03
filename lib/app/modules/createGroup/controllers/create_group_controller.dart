@@ -259,12 +259,12 @@ class CreateGroupController extends GetxController {
           fullName: user.twitterName,
           email: '',
           avatar: user.twitterPicture,
-          localWalletAddress: user.defaultAddress,
+          localWalletAddress: user.mainAddress,
           following: [],
-          numberOfFollowers: 0,
-          savedInternalWalletAddress: user.defaultAddress,
+          numberOfFollowers: user.followerCount,
+          savedInternalWalletAddress: user.mainAddress,
         ),
-        activeAddress: user.address,
+        activeAddress: user.mainAddress,
       ));
     }
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -8,6 +9,7 @@ import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/env.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/root.dart';
@@ -45,6 +47,7 @@ processLink(String? link) async {
     } else if (link.startsWith(Env.baseDeepLinkUrl)) {
       deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
       deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
+      deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
     } else {
       deepLinkedPage = '';
     }
@@ -64,6 +67,11 @@ processLink(String? link) async {
 }
 
 void main() async {
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: ColorName.systemTrayBackground, 
+    systemNavigationBarColor: ColorName.navbarBackground, // Color de la barra de navegación
+    statusBarIconBrightness: Brightness.light, // Iconos claros en la
+  ));
   await GetStorage.init();
   HttpApis.configure();
   runApp(MyApp());

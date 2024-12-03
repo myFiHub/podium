@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/referral_controller.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
@@ -30,6 +31,7 @@ class MyProfileView extends GetView<MyProfileController> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             UserInfo(),
+            ReferalSystem(),
             DefaultWallet(),
             space10,
             InternalWallet(),
@@ -46,6 +48,72 @@ class MyProfileView extends GetView<MyProfileController> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class ReferalSystem extends GetView<ReferalController> {
+  const ReferalSystem({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        space10,
+        Obx(() {
+          final allReferrals = controller.myReferals.value.values.toList();
+          final count = allReferrals.length;
+          final remaining =
+              allReferrals.where((element) => element.usedBy == '').length;
+          final numberOfAllReferals = allReferrals.length;
+          if (numberOfAllReferals == 0) {
+            return const SizedBox();
+          }
+          return Button(
+            onPressed: remaining == 0
+                ? null
+                : () {
+                    controller.referButtonClicked();
+                  },
+            blockButton: true,
+            type: ButtonType.outline,
+            child: RichText(
+                text: TextSpan(
+              children: [
+                TextSpan(
+                  text: remaining > 0 ? 'Refer a friend' : 'All referrals used',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: remaining == 0 ? Colors.grey : Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (remaining > 0)
+                  WidgetSpan(
+                    child: const Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: const Icon(
+                        Icons.person_add,
+                        size: 20,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                if (remaining > 0)
+                  WidgetSpan(
+                      child: Text(
+                    ' $remaining/$count remaining',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ))
+              ],
+            )),
+          );
+        }),
+      ],
     );
   }
 }

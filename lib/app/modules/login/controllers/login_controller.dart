@@ -1,19 +1,27 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
+import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/web3Auth_redirected/controllers/web3Auth_redirected_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/models/starsArenaUser.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
-
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:uuid/uuid.dart';
@@ -23,6 +31,10 @@ import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
 
+class LoginParametersKeys {
+  static const referrerId = 'referrerId';
+}
+
 class LoginController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final isLoggingIn = false.obs;
@@ -30,19 +42,43 @@ class LoginController extends GetxController {
   final email = ''.obs;
   final password = ''.obs;
   final web3AuthLogintype = ''.obs;
+  final internalWalletAddress = ''.obs;
+  final internalWalletBalance = ''.obs;
   Function? afterLogin = null;
+
+  String referrerId = '';
+  final referrer = Rxn<UserInfoModel>();
+  final referrerIsFul = false.obs;
+  final boughtPodiumDefinedEntryTicket = false.obs;
+  final referralError = Rxn<String>(null);
+  final starsArenaUsersToBuyEntryTicketFrom = Rx<List<StarsArenaUser>>([]);
+  final loadingBuyTicketId = ''.obs;
+  // used in referral prejoin page, to continue the process
+  final temporaryLoginType = ''.obs;
+  final temporaryUserInfo = Rxn<UserInfoModel>();
 
   @override
   void onInit() {
+    referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
+    log.i('deepLinkRoute: $referrerId');
+    if (referrerId.isNotEmpty) {
+      initialReferral(referrerId);
+    }
     $isAutoLoggingIn.value = globalController.isAutoLoggingIn.value;
     globalController.isAutoLoggingIn.listen((v) {
       $isAutoLoggingIn.value = v;
     });
+
     super.onInit();
   }
 
   @override
   void onReady() {
+    globalController.deepLinkRoute.listen((v) {
+      if (v.isNotEmpty) {
+        initialReferral(null);
+      }
+    });
     super.onReady();
   }
 
@@ -51,14 +87,119 @@ class LoginController extends GetxController {
     super.onClose();
   }
 
+  buyTicket({required StarsArenaUser user}) async {
+    final externalWalletAddress = globalController.connectedWalletAddress.value;
+
+    if (loadingBuyTicketId.value.isNotEmpty) {
+      return;
+    }
+    loadingBuyTicketId.value = user.id;
+    bool bought = false;
+    try {
+      if (externalWalletAddress.isNotEmpty) {
+        final selectedWallet = await choseAWallet(chainId: avalancheChainId);
+        if (selectedWallet == null) {
+          return;
+        } else {
+          if (selectedWallet == WalletNames.internal) {
+            bought = await internal_buySharesWithReferrer(
+              sharesSubject: user.mainAddress,
+              chainId: avalancheChainId,
+            );
+          } else {
+            bought = await ext_buySharesWithReferrer(
+              sharesSubject: user.mainAddress,
+              chainId: avalancheChainId,
+            );
+          }
+        }
+      } else {
+        bought = await internal_buySharesWithReferrer(
+          sharesSubject: user.mainAddress,
+          chainId: avalancheChainId,
+        );
+      }
+      if (bought) {
+        Toast.success(
+          message: 'Ticket bought successfully',
+        );
+        boughtPodiumDefinedEntryTicket.value = true;
+        _continueWithUserToCreate();
+      }
+    } catch (e) {
+      log.e('Error buying ticket: $e');
+      Get.closeAllSnackbars();
+      Toast.error(
+        message: 'Error buying ticket',
+      );
+    } finally {
+      loadingBuyTicketId.value = '';
+    }
+  }
+
+  initialReferral(String? id) async {
+    Future.delayed(Duration(seconds: 0), () async {
+      final referrerId =
+          id ?? _extractReferrerId(globalController.deepLinkRoute.value);
+      if (referrerId.isNotEmpty) {
+        final (referrerUser, allTheReferrals) = await (
+          getUsersByIds([referrerId]),
+          getAllTheUserReferals(userId: referrerId)
+        ).wait;
+        if (referrerUser.isNotEmpty) {
+          referrer.value = referrerUser.first;
+          globalController.deepLinkRoute.value = '';
+          if (allTheReferrals.isNotEmpty) {
+            final remainingReferrals = allTheReferrals.values
+                .where((element) => element.usedBy == '')
+                .toList();
+            referrerIsFul.value = remainingReferrals.isEmpty;
+          }
+        }
+      }
+    });
+  }
+
+  String _extractReferrerId(String route) {
+    final splited = route.split('referral/');
+    if (splited.length < 2) {
+      log.f("splited: $splited");
+      return '';
+    }
+    return splited[1];
+  }
+
+  // _checkForLoginType(String loginType) async {
+  //   final savedLoginType = GetStorage().read(StorageKeys.loginType);
+  //   if (savedLoginType != LoginType.github) {
+  //     try {
+  //       await Web3AuthFlutter.logout();
+  //     } catch (e) {}
+  //     return;
+  //   }
+  // }
+  _removeLogingInState() {
+    isLoggingIn.value = false;
+    globalController.isAutoLoggingIn.value = false;
+  }
+
   socialLogin({
     required Provider loginMethod,
     ignoreIfNotLoggedIn = false,
   }) async {
     isLoggingIn.value = true;
+    // in case user is backed from referral page(not auto logging in and clickes on a button in login page)
+    if (!ignoreIfNotLoggedIn) {
+      try {
+        await Web3AuthFlutter.logout();
+      } catch (e) {}
+    }
+    // await _checkForLoginType(web3AuthProviderToLoginTypeString(loginMethod));
     try {
-      final userInfo = await Web3AuthFlutter.getUserInfo();
-      final privateKey = await Web3AuthFlutter.getPrivKey();
+      final (userInfo, privateKey) = await (
+        Web3AuthFlutter.getUserInfo(),
+        Web3AuthFlutter.getPrivKey()
+      ).wait;
       _continueSocialLoginWithUserInfoAndPrivateKey(
         privateKey: privateKey,
         userInfo: userInfo,
@@ -66,7 +207,7 @@ class LoginController extends GetxController {
       );
     } catch (e) {
       if (ignoreIfNotLoggedIn) {
-        isLoggingIn.value = false;
+        _removeLogingInState();
         return;
       }
 
@@ -85,43 +226,50 @@ class LoginController extends GetxController {
               ),
             );
           } else {
-            isLoggingIn.value = false;
+            _removeLogingInState();
             return;
           }
         } else {
-          res = await Web3AuthFlutter.login(
-            LoginParams(
-              loginProvider: loginMethod,
-              mfaLevel: MFALevel.DEFAULT,
-              // extraLoginOptions: ExtraLoginOptions(
-              //   login_hint: "mhsnprvr@gmail.com",
-              // ),
-            ),
-          );
+          try {
+            res = await Web3AuthFlutter.login(
+              LoginParams(
+                loginProvider: loginMethod,
+                mfaLevel: MFALevel.DEFAULT,
+                // extraLoginOptions: ExtraLoginOptions(
+                //   login_hint: "mhsnprvr@gmail.com",
+                // ),
+              ),
+            );
+          } on UserCancelledException catch (e) {
+            log.e(e);
+            _removeLogingInState();
+          } catch (e) {
+            log.e(e);
+            Toast.error(
+              message:
+                  'Error logging in, please try again, or use another method',
+            );
+            _removeLogingInState();
+          }
         }
         if (res == null) {
-          isLoggingIn.value = false;
+          _removeLogingInState();
           return;
         }
-        final privateKey = res.privKey;
-        final userInfo = res.userInfo;
-        if (privateKey == null || userInfo == null) {
-          isLoggingIn.value = false;
-          return;
-        }
+        final privateKey = res.privKey!;
+        final userInfo = res.userInfo!;
+
         await _continueSocialLoginWithUserInfoAndPrivateKey(
           privateKey: privateKey,
           userInfo: userInfo,
           loginMethod: loginMethod,
         );
       } catch (e) {
-        isLoggingIn.value = false;
+        _removeLogingInState();
         log.e(e);
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
         );
-      } finally {
-        isLoggingIn.value = false;
       }
     }
   }
@@ -134,6 +282,7 @@ class LoginController extends GetxController {
     final publicAddress = ethereumKeyPair.address.hex;
     final uid = addressToUuid(publicAddress);
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
+    internalWalletAddress.value = publicAddress;
 
     await _socialLogin(
       id: uid,
@@ -144,6 +293,46 @@ class LoginController extends GetxController {
       loginType: loginType,
       loginTypeIdentifier: userInfo.verifierId,
     );
+  }
+
+  _fixUserData(UserInfoModel user) {
+    UserInfoModel userToCreate = user;
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('twitter|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('twitter|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('github|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('github|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('google|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('google|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('email|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('email|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('apple|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('apple|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('facebook|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('facebook|')[1];
+    }
+    if (userToCreate.loginTypeIdentifier != null &&
+        userToCreate.loginTypeIdentifier!.contains('linkedin|')) {
+      userToCreate.loginTypeIdentifier =
+          userToCreate.loginTypeIdentifier!.split('linkedin|')[1];
+    }
+    return userToCreate;
   }
 
   _socialLogin({
@@ -162,7 +351,7 @@ class LoginController extends GetxController {
     }
 
     // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
-    final userToCreate = UserInfoModel(
+    UserInfoModel userData = UserInfoModel(
       id: userId,
       fullName: name,
       email: email,
@@ -171,11 +360,48 @@ class LoginController extends GetxController {
       savedInternalWalletAddress: internalWalletAddress,
       following: [],
       numberOfFollowers: 0,
+      referrer: referrer.value?.id ?? '',
       loginType: loginType,
       loginTypeIdentifier: loginTypeIdentifier,
       lowercasename: name.toLowerCase(),
     );
+    final UserInfoModel userToCreate = _fixUserData(userData);
 
+    temporaryLoginType.value = loginType;
+    temporaryUserInfo.value = userToCreate;
+    bool canContinueAuthentication = false;
+    try {
+      canContinueAuthentication =
+          await _canContinueAuthentication(userToCreate);
+    } catch (e) {
+      _removeLogingInState();
+    }
+    if (!canContinueAuthentication) {
+      final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
+      if (!hasTicket) {
+        try {
+          final avalancheClient = web3ClientByChainId(avalancheChainId);
+          final res = await avalancheClient
+              .getBalance(parseAddress(internalWalletAddress));
+          final balance = weiToDecimalString(wei: res);
+          internalWalletBalance.value = balance;
+        } catch (e) {
+          _removeLogingInState();
+        }
+        Navigate.to(
+          route: Routes.PREJOIN_REFERRAL_PAGE,
+          type: NavigationTypes.toNamed,
+        );
+        _removeLogingInState();
+        return;
+      }
+    }
+    _continueWithUserToCreate();
+  }
+
+  _continueWithUserToCreate() async {
+    final userToCreate = temporaryUserInfo.value!;
+    final loginType = temporaryLoginType.value;
     UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
       user: userToCreate,
     );
@@ -210,12 +436,11 @@ class LoginController extends GetxController {
     }
     if (savedName != null) {
       globalController.currentUserInfo.value = user;
-      globalController.currentUserInfo.value!.savedInternalWalletAddress =
-          internalWalletAddress;
       globalController.currentUserInfo.refresh();
+      await _initializeReferrals(userToCreate);
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
-      isLoggingIn.value = false;
+      _removeLogingInState();
       if (afterLogin != null) {
         afterLogin!();
         afterLogin = null;
@@ -227,6 +452,136 @@ class LoginController extends GetxController {
         message: 'A name is required',
       );
       isLoggingIn.value = false;
+    }
+  }
+
+  Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserInfoModel user) async {
+    String identifier = user.loginTypeIdentifier!;
+    final DatabaseReference _database = FirebaseDatabase.instance.ref();
+    final snapshot = await _database.child('users');
+    final usersWithThisIdentifier = await snapshot
+        .orderByChild(UserInfoModel.loginTypeIdentifierKey)
+        .equalTo(identifier)
+        .once();
+    final results = usersWithThisIdentifier.snapshot.value;
+    if (results == null) {
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> _checkIfUserHasPodiumDefinedEntryTicket() async {
+    final userSignedUpBeforeLaunch = await _chackIfUserIsSignedUpBeforeLaunch(
+      temporaryUserInfo.value!,
+    );
+    if (userSignedUpBeforeLaunch) {
+      return true;
+    }
+    bool bought = false;
+    final listOfBuyableTickets = await getPodiumDefinedEntryAddresses();
+    final List<StarsArenaUser> addressesToCheckForArena = [];
+    final List<Future> arenaCallArray = [];
+    for (var i = 0; i < listOfBuyableTickets.length; i++) {
+      final ticket = listOfBuyableTickets[i];
+      if (ticket.type == BuyableTicketTypes.onlyArenaTicketHolders) {
+        if (ticket.handle != null) {
+          arenaCallArray.add(HttpApis.getUserFromStarsArenaByHandle(
+            ticket.handle!,
+          ));
+        }
+      }
+    }
+    final arenaUsers = await Future.wait(arenaCallArray);
+    for (var i = 0; i < arenaUsers.length; i++) {
+      final user = arenaUsers[i];
+      if (user != null) {
+        addressesToCheckForArena.add(user);
+      }
+    }
+    // update the price for each user
+    final List<Future> SCcallArray = [];
+    for (var i = 0; i < addressesToCheckForArena.length; i++) {
+      final user = addressesToCheckForArena[i];
+      SCcallArray.add(getBuyPriceForArenaTicket(
+        sharesSubject: user.mainAddress,
+        chainId: avalancheChainId,
+      ));
+    }
+    final prices = await Future.wait(SCcallArray);
+    for (var i = 0; i < addressesToCheckForArena.length; i++) {
+      final user = addressesToCheckForArena[i];
+      final price = prices[i].toString();
+      user.lastKeyPrice = price;
+      user.keyPrice = price;
+    }
+
+    starsArenaUsersToBuyEntryTicketFrom.value = addressesToCheckForArena;
+    final buyResults = await Future.wait(addressesToCheckForArena.map(
+      (user) async {
+        return getMyShares_arena(
+          sharesSubject: user.mainAddress,
+          chainId: avalancheChainId,
+        );
+      },
+    ));
+    for (var i = 0; i < buyResults.length; i++) {
+      final result = buyResults[i];
+      if (result != null && result > BigInt.zero) {
+        bought = true;
+        break;
+      }
+    }
+    boughtPodiumDefinedEntryTicket.value = bought;
+    return bought;
+  }
+
+  _initializeReferrals(UserInfoModel user) async {
+    if (referrer.value != null && user.id == referrer.value!.id) {
+      return true;
+    }
+    final refers = await getAllTheUserReferals(userId: user.id);
+    if (refers.isEmpty) {
+      await initializeUseReferalCodes(userId: user.id);
+    }
+    return true;
+  }
+
+  Future<bool> _canContinueAuthentication(UserInfoModel user) async {
+    final registeredUser = await getUserById(user.id);
+    if (registeredUser == null && referrer.value != null) {
+      if (referrer.value == null) {
+        referralError.value = 'Referrer not found';
+        return false;
+      }
+      final allReferreReferrals =
+          await getAllTheUserReferals(userId: referrer.value!.id);
+      final remainingReferrals = allReferreReferrals.values.where(
+        (element) => element.usedBy == '',
+      );
+      if (remainingReferrals.isEmpty) {
+        referralError.value = 'Referrer has no more referral codes';
+        return false;
+      } else {
+        if (referrer.value != null && user.id == referrer.value!.id) {
+          return true;
+        }
+        final firstAvailableCode = allReferreReferrals.keys.firstWhere(
+            (element) => allReferreReferrals[element]!.usedBy == '');
+        final code = await setUsedByToReferral(
+          userId: referrer.value!.id,
+          referralCode: firstAvailableCode,
+          usedById: user.id,
+        );
+        if (code == null) {
+          referralError.value = 'Error setting used by to referral';
+          return false;
+        } else {
+          return true;
+        }
+      }
+    } else {
+      referralError.value = 'You need a referrer to use Podium';
+      return false;
     }
   }
 

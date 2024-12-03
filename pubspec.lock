@@ -1056,7 +1056,7 @@ packages:
       path: jitsi-meet-flutter-sdk
       relative: true
     source: path
-    version: "10.2.1"
+    version: "10.3.0"
   js:
     dependency: transitive
     description:
@@ -1217,22 +1217,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  particle_auth_core:
-    dependency: "direct main"
-    description:
-      name: particle_auth_core
-      sha256: "90235f214aa68255b9e2b50ab47ad08535f60bb5e6840d44d0c2207c324c02a8"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.20"
-  particle_base:
-    dependency: transitive
-    description:
-      name: particle_base
-      sha256: ca17489e0724861cb135239fe85a8058bef602168f6a020f1e6ece82990dfce8
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.20"
   path:
     dependency: transitive
     description:
@@ -1473,14 +1457,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
-  retrofit:
-    dependency: transitive
-    description:
-      name: retrofit
-      sha256: "13a2865c0d97da580ea4e3c64d412d81f365fd5b26be2a18fca9582e021da37a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.1.0"
   rotated_corner_decoration:
     dependency: "direct main"
     description:
@@ -1594,7 +1570,7 @@ packages:
     source: hosted
     version: "2.0.0"
   shimmer:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: shimmer
       sha256: "5f88c883a22e9f9f299e5ba0e4f7e6054857224976a5d9f839d4ebdc94a14ac9"

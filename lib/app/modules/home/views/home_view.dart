@@ -7,7 +7,6 @@ import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -21,17 +20,34 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          space5,
-          Text(
-            "My Rooms",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+          space16,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              "Home",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
+          space14,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              "My rooms",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          space10,
           Expanded(
             child: Container(
+              width: Get.width,
               child: GetBuilder<GlobalController>(
                   id: GlobalUpdateIds.showArchivedGroups,
                   builder: (globalController) {
@@ -58,50 +74,46 @@ class HomeView extends GetView<HomeController> {
                           );
                         }
                         if (groups.isEmpty) {
-                          return Container(
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Hero(
-                                    tag: 'logo',
-                                    child: Container(
-                                      height: 100,
-                                      child: Assets.images.logo.image(),
-                                    ),
-                                  ),
-                                  Text(
-                                    'Welcome to Podium',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    myUser.fullName,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    'try joining some rooms',
-                                  ),
-                                  space10,
-                                  Button(
-                                      text: 'See All Rooms',
-                                      type: ButtonType.gradient,
-                                      blockButton: true,
-                                      onPressed: () async {
-                                        Navigate.to(
-                                          type: NavigationTypes.offAllNamed,
-                                          route: Routes.ALL_GROUPS,
-                                        );
-                                      })
-                                ],
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Hero(
+                                tag: 'logo',
+                                child: Container(
+                                  height: 100,
+                                  child: Assets.images.logo.image(),
+                                ),
                               ),
-                            ),
+                              Text(
+                                'Welcome to Podium',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                myUser.fullName,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                'try joining some rooms',
+                              ),
+                              space10,
+                              Button(
+                                  text: 'See All Rooms',
+                                  type: ButtonType.gradient,
+                                  blockButton: true,
+                                  onPressed: () async {
+                                    Navigate.to(
+                                      type: NavigationTypes.offAllNamed,
+                                      route: Routes.ALL_GROUPS,
+                                    );
+                                  })
+                            ],
                           );
                         }
 
@@ -110,7 +122,7 @@ class HomeView extends GetView<HomeController> {
                     );
                   }),
             ),
-          )
+          ),
         ],
       ),
     );

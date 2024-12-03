@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/lib/chainInfo.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/env.dart' as Environment;
-import 'package:particle_base/model/chain_info.dart' as ChainInfo;
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -87,7 +87,7 @@ ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
 }
 
 String chainIconUrlByChainId(String chainId) {
-  final chain = ChainInfo.ChainInfo.getChain(
+  final chain = ChainInfo.getChain(
     int.parse(chainId),
     chainNameById(chainId),
   );

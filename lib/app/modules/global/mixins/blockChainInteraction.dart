@@ -661,7 +661,7 @@ Future<bool> ext_buySharesWithReferrer({
   String? referrerAddress,
   required String sharesSubject,
   num shareAmount = 1,
-  required String targetUserId,
+  String? targetUserId,
   required String chainId,
 }) async {
   final referrer = referrerAddress ?? fihubAddress(chainId);
@@ -712,7 +712,7 @@ Future<bool> ext_buySharesWithReferrer({
         response is String &&
         response.startsWith("0x") &&
         response.length > 10;
-    if (success) {
+    if (success && targetUserId != null) {
       saveNewPayment(
         event: PaymentEvent(
           type: PaymentTypes.arenaTicket,
@@ -742,11 +742,15 @@ Future<bool> ext_buySharesWithReferrer({
   }
 }
 
-Future<BigInt?> internal_getBuyPrice({
+Future<BigInt?> getBuyPriceForArenaTicket({
   required String sharesSubject,
   num shareAmount = 1,
   required String chainId,
 }) async {
+  if (sharesSubject == null) {
+    log.e('sharesSubject is null');
+    return null;
+  }
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
   if (myAddress == null) {
     return null;
@@ -782,7 +786,7 @@ Future<BigInt?> internal_getBuyPrice({
 Future<bool> internal_buySharesWithReferrer({
   String? referrerAddress,
   required String sharesSubject,
-  required String targetUserId,
+  String? targetUserId,
   num shareAmount = 1,
   required String chainId,
 }) async {
@@ -791,7 +795,7 @@ Future<bool> internal_buySharesWithReferrer({
     Toast.error(message: "Referrer address not found");
     return false;
   }
-  final buyPrice = await internal_getBuyPrice(
+  final buyPrice = await getBuyPriceForArenaTicket(
     sharesSubject: sharesSubject,
     shareAmount: shareAmount,
     chainId: chainId,
@@ -838,17 +842,19 @@ Future<bool> internal_buySharesWithReferrer({
         transaction: transaction, chainId: chainId, metadata: metadata);
 
     if (signature != null && signature.length > 10) {
-      saveNewPayment(
-        event: PaymentEvent(
-          type: PaymentTypes.arenaTicket,
-          targetAddress: sharesSubjectWallet,
-          amount: bigIntWeiToDouble(buyPrice).toString(),
-          initiatorAddress: myAddress,
-          initiatorId: myId,
-          targetId: targetUserId,
-          chainId: chainId,
-        ),
-      );
+      if (targetUserId != null) {
+        saveNewPayment(
+          event: PaymentEvent(
+            type: PaymentTypes.arenaTicket,
+            targetAddress: sharesSubjectWallet,
+            amount: bigIntWeiToDouble(buyPrice).toString(),
+            initiatorAddress: myAddress,
+            initiatorId: myId,
+            targetId: targetUserId,
+            chainId: chainId,
+          ),
+        );
+      }
       return true;
     }
     return false;

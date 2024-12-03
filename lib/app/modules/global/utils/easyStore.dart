@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
 UserInfoModel get myUser {
@@ -9,6 +10,13 @@ UserInfoModel get myUser {
 }
 
 String get myId {
+  if (myUser == null) {
+    log.f('****************************myUser is null************************');
+    return '';
+  }
+  if (myUser!.id == '') {
+    log.f('****************************myId is empty************************');
+  }
   return myUser.id;
 }
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:podium/app/modules/global/utils/pascalWords.dart';
 import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -14,13 +15,15 @@ UserInfoModel? singleUserParser(dynamic value) {
     final isOver18 = value[UserInfoModel.isOver18Key] ?? false;
     final savedInternalWalletAddress =
         value[UserInfoModel.savedInternalWalletAddressKey] ?? '';
+    final referrer = value[UserInfoModel.referrerKey] ?? '';
     final localWalletAddress = value[UserInfoModel.localWalletAddressKey] ?? '';
     final user = UserInfoModel(
-      fullName: name,
+      fullName: getPascalWords(name),
       email: email,
       id: id,
       avatar: avatar,
       isOver18: isOver18,
+      referrer: referrer,
       savedInternalWalletAddress: savedInternalWalletAddress,
       localWalletAddress: localWalletAddress,
       following: List.from(value[UserInfoModel.followingKey] ?? []),

@@ -127,8 +127,8 @@ class CheckticketController extends GetxController {
       fullName: user.twitterName,
       avatar: user.twitterPicture,
       email: '',
-      localWalletAddress: user.defaultAddress,
-      savedInternalWalletAddress: user.defaultAddress,
+      localWalletAddress: user.mainAddress,
+      savedInternalWalletAddress: user.mainAddress,
       following: [],
       numberOfFollowers: 0,
     );

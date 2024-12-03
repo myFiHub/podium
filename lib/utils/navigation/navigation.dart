@@ -71,7 +71,7 @@ Future<bool?> canNavigate() async {
           children: <TextSpan>[
             TextSpan(text: 'By navigating to another page, you will also '),
             TextSpan(
-              text: 'LEAVE THE ROOM',
+              text: 'LEAVE THE OUTPOST',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.red,

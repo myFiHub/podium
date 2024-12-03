@@ -37,7 +37,7 @@ class HomeView extends GetView<HomeController> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
-              "My rooms",
+              "My Outposts",
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -100,11 +100,11 @@ class HomeView extends GetView<HomeController> {
                                 ),
                               ),
                               Text(
-                                'try joining some rooms',
+                                'try joining an Outpost',
                               ),
                               space10,
                               Button(
-                                  text: 'See All Rooms',
+                                  text: 'See All Outposts',
                                   type: ButtonType.gradient,
                                   blockButton: true,
                                   onPressed: () async {

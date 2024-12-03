@@ -285,7 +285,7 @@ class MembersList extends GetView<GroupCallController> {
                   onPressed: () {
                     controller.runHome();
                   },
-                  text: "Leave the Room",
+                  text: "Leave the Outpost",
                   type: ButtonType.solid,
                   color: ButtonColors.DANGER,
                 ),

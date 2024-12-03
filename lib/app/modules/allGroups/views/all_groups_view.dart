@@ -34,7 +34,7 @@ class AllGroupsView extends GetView<AllGroupsController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "All rooms",
+                        "All Outposts",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
@@ -85,13 +85,9 @@ class AllGroupsView extends GetView<AllGroupsController> {
             left: MediaQuery.of(context).size.width / 2 - 100,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius:
-                    BorderRadius.circular(8), 
+                borderRadius: BorderRadius.circular(8),
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.blue,
-                    Colors.green
-                  ], 
+                  colors: [Colors.blue, Colors.green],
                 ),
               ),
               child: Button(
@@ -102,12 +98,12 @@ class AllGroupsView extends GetView<AllGroupsController> {
                     const Icon(Icons.add, color: Colors.white, size: 16),
                     const SizedBox(width: 10),
                     const Text(
-                        "Start new outpost",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      "Start new outpost",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
+                    ),
                   ],
                 ),
                 type: ButtonType.gradient,

@@ -20,76 +20,76 @@ class SearchView extends GetView<SearchPageController> {
       body: Column(
         children: [
           Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                space16,
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Search",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                        ),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              space16,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Search",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
                       ),
-                      space10,
-                      SizedBox(
-                        height: 40,
-                        child: Stack(
-                          children: [
-                            TextField(
-                              controller: TextEditingController(
-                                  text: controller.searchValue.value),
-                              decoration: InputDecoration(
-                                hintText: "Search rooms, users or tags",
-                                hintStyle: TextStyle(fontSize: 14),
-                                prefixIcon: Icon(Icons.search),
-                                contentPadding: const EdgeInsets.all(16),
-                                filled: true,
-                                fillColor: Colors.grey[200],
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide.none,
-                                ),
+                    ),
+                    space10,
+                    SizedBox(
+                      height: 40,
+                      child: Stack(
+                        children: [
+                          TextField(
+                            controller: TextEditingController(
+                                text: controller.searchValue.value),
+                            decoration: InputDecoration(
+                              hintText: "Search Outposts, Users or Tags",
+                              hintStyle: TextStyle(fontSize: 14),
+                              prefixIcon: Icon(Icons.search),
+                              contentPadding: const EdgeInsets.all(16),
+                              filled: true,
+                              fillColor: Colors.grey[200],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
                               ),
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              onChanged: (value) {
-                                controller.searchValue.value = value;
-                              },
                             ),
-                            Positioned(
-                              right: 25,
-                              top: 20,
-                              child: Obx(() {
-                                final isSearching = controller.isSearching.value;
-                                if (isSearching) {
-                                  return Container(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          ColorName.pageBgGradientStart),
-                                    ),
-                                  );
-                                }
-                                return SizedBox();
-                              }),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
                             ),
-                          ],
-                        ),
+                            onChanged: (value) {
+                              controller.searchValue.value = value;
+                            },
+                          ),
+                          Positioned(
+                            right: 25,
+                            top: 20,
+                            child: Obx(() {
+                              final isSearching = controller.isSearching.value;
+                              if (isSearching) {
+                                return Container(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        ColorName.pageBgGradientStart),
+                                  ),
+                                );
+                              }
+                              return SizedBox();
+                            }),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                // Lista de grupos
-              ],
-            ),
+              ),
+              // Lista de grupos
+            ],
+          ),
           Container(
             height: Get.height - 205,
             child: DefaultTabController(
@@ -109,11 +109,11 @@ class SearchView extends GetView<SearchPageController> {
                             controller.searchedGroups.value?.length ?? 0;
                         if (numberOfGroupsFound == 0) {
                           return Tab(
-                            child: Text("Groups"),
+                            child: Text("Outposts"),
                           );
                         }
                         return Tab(
-                          child: Text("Groups ($numberOfGroupsFound)"),
+                          child: Text("Outposts ($numberOfGroupsFound)"),
                         );
                       }),
                       Obx(() {

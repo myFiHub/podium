@@ -520,7 +520,7 @@ class GroupsController extends GetxController with FirebaseTags {
       deleteGroup(groupId: id);
       Toast.error(
         title: "Error",
-        message: "Failed to create room",
+        message: "Failed to create the Outpost",
       );
       log.f("Error creating group: $e");
     }

@@ -135,7 +135,7 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Scheduled Room',
+                      'Scheduled Outpost',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -253,9 +253,9 @@ class _TitleBar extends GetWidget<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: Alignment.centerLeft, 
+      alignment: Alignment.centerLeft,
       child: Text(
-        "New room",
+        "New Outpost",
         style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w600,
@@ -275,7 +275,7 @@ class _RoomNameInput extends GetWidget<CreateGroupController> {
     return SizedBox(
       height: 55,
       child: Input(
-        hintText: 'Room Name',
+        hintText: 'Outpost Name',
         onChanged: (value) => controller.groupName.value = value,
         marginvertical: 0,
         paddinghorizontal: 0,
@@ -314,7 +314,7 @@ class _CreateButton extends GetWidget<CreateGroupController> {
             : () {
                 controller.create();
               },
-        text: 'Create Room',
+        text: 'Create New Outpost',
       );
     });
   }

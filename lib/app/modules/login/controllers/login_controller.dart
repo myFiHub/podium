@@ -427,7 +427,6 @@ class LoginController extends GetxController {
       globalController.currentUserInfo.refresh();
       await _initializeReferrals(
         user: userToCreate,
-        isBeforeLaunchUser: isBeforeLaunchUser,
       );
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
@@ -528,7 +527,6 @@ class LoginController extends GetxController {
 
   _initializeReferrals({
     required UserInfoModel user,
-    required bool isBeforeLaunchUser,
   }) async {
     if (referrer.value != null && user.id == referrer.value!.id) {
       return true;

@@ -169,15 +169,6 @@ class LoginController extends GetxController {
     return splited[1];
   }
 
-  // _checkForLoginType(String loginType) async {
-  //   final savedLoginType = GetStorage().read(StorageKeys.loginType);
-  //   if (savedLoginType != LoginType.github) {
-  //     try {
-  //       await Web3AuthFlutter.logout();
-  //     } catch (e) {}
-  //     return;
-  //   }
-  // }
   _removeLogingInState() {
     isLoggingIn.value = false;
     globalController.isAutoLoggingIn.value = false;
@@ -194,7 +185,6 @@ class LoginController extends GetxController {
         await Web3AuthFlutter.logout();
       } catch (e) {}
     }
-    // await _checkForLoginType(web3AuthProviderToLoginTypeString(loginMethod));
     try {
       final (userInfo, privateKey) = await (
         Web3AuthFlutter.getUserInfo(),
@@ -235,9 +225,6 @@ class LoginController extends GetxController {
               LoginParams(
                 loginProvider: loginMethod,
                 mfaLevel: MFALevel.DEFAULT,
-                // extraLoginOptions: ExtraLoginOptions(
-                //   login_hint: "mhsnprvr@gmail.com",
-                // ),
               ),
             );
           } on UserCancelledException catch (e) {
@@ -258,7 +245,6 @@ class LoginController extends GetxController {
         }
         final privateKey = res.privKey!;
         final userInfo = res.userInfo!;
-
         await _continueSocialLoginWithUserInfoAndPrivateKey(
           privateKey: privateKey,
           userInfo: userInfo,

@@ -56,6 +56,7 @@ class LoginController extends GetxController {
   // used in referral prejoin page, to continue the process
   final temporaryLoginType = ''.obs;
   final temporaryUserInfo = Rxn<UserInfoModel>();
+  bool isBeforeLaunchUser = false;
 
   @override
   void onInit() {
@@ -169,15 +170,6 @@ class LoginController extends GetxController {
     return splited[1];
   }
 
-  // _checkForLoginType(String loginType) async {
-  //   final savedLoginType = GetStorage().read(StorageKeys.loginType);
-  //   if (savedLoginType != LoginType.github) {
-  //     try {
-  //       await Web3AuthFlutter.logout();
-  //     } catch (e) {}
-  //     return;
-  //   }
-  // }
   _removeLogingInState() {
     isLoggingIn.value = false;
     globalController.isAutoLoggingIn.value = false;
@@ -194,7 +186,6 @@ class LoginController extends GetxController {
         await Web3AuthFlutter.logout();
       } catch (e) {}
     }
-    // await _checkForLoginType(web3AuthProviderToLoginTypeString(loginMethod));
     try {
       final (userInfo, privateKey) = await (
         Web3AuthFlutter.getUserInfo(),
@@ -235,9 +226,6 @@ class LoginController extends GetxController {
               LoginParams(
                 loginProvider: loginMethod,
                 mfaLevel: MFALevel.DEFAULT,
-                // extraLoginOptions: ExtraLoginOptions(
-                //   login_hint: "mhsnprvr@gmail.com",
-                // ),
               ),
             );
           } on UserCancelledException catch (e) {
@@ -258,7 +246,6 @@ class LoginController extends GetxController {
         }
         final privateKey = res.privKey!;
         final userInfo = res.userInfo!;
-
         await _continueSocialLoginWithUserInfoAndPrivateKey(
           privateKey: privateKey,
           userInfo: userInfo,
@@ -349,7 +336,8 @@ class LoginController extends GetxController {
       //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
       email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
     }
-
+    // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
+    isBeforeLaunchUser = false;
     // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
     UserInfoModel userData = UserInfoModel(
       id: userId,
@@ -437,7 +425,9 @@ class LoginController extends GetxController {
     if (savedName != null) {
       globalController.currentUserInfo.value = user;
       globalController.currentUserInfo.refresh();
-      await _initializeReferrals(userToCreate);
+      await _initializeReferrals(
+        user: userToCreate,
+      );
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
       _removeLogingInState();
@@ -471,10 +461,10 @@ class LoginController extends GetxController {
   }
 
   Future<bool> _checkIfUserHasPodiumDefinedEntryTicket() async {
-    final userSignedUpBeforeLaunch = await _chackIfUserIsSignedUpBeforeLaunch(
+    isBeforeLaunchUser = await _chackIfUserIsSignedUpBeforeLaunch(
       temporaryUserInfo.value!,
     );
-    if (userSignedUpBeforeLaunch) {
+    if (isBeforeLaunchUser) {
       return true;
     }
     bool bought = false;
@@ -535,13 +525,18 @@ class LoginController extends GetxController {
     return bought;
   }
 
-  _initializeReferrals(UserInfoModel user) async {
+  _initializeReferrals({
+    required UserInfoModel user,
+  }) async {
     if (referrer.value != null && user.id == referrer.value!.id) {
       return true;
     }
     final refers = await getAllTheUserReferals(userId: user.id);
     if (refers.isEmpty) {
-      await initializeUseReferalCodes(userId: user.id);
+      await initializeUseReferalCodes(
+        userId: user.id,
+        isBeforeLaunchUser: isBeforeLaunchUser,
+      );
     }
     return true;
   }

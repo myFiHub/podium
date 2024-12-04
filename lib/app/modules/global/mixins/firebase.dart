@@ -104,13 +104,17 @@ Future<List<PodiumDefinedEntryAddress>> getPodiumDefinedEntryAddresses() async {
 
 Future<bool> initializeUseReferalCodes({
   required String userId,
+  required bool isBeforeLaunchUser,
 }) async {
   try {
     final databaseRef =
         FirebaseDatabase.instance.ref(FireBaseConstants.referalsRef + userId);
     // generate 100 random referal codes
     final Map<String, dynamic> codes = {};
-    for (int i = 0; i < ReferalConstants.initialNumberOfReferrals; i++) {
+    final numberOfTiCkets = isBeforeLaunchUser
+        ? ReferalConstants.initialNumberOfReferralsForBeforeLaunchUsers
+        : ReferalConstants.initialNumberOfReferrals;
+    for (int i = 0; i < numberOfTiCkets; i++) {
       final referalCode = Uuid().v4().substring(0, 6);
       final referral = Referral(usedBy: '');
       codes[referalCode] = referral.toJson();
@@ -769,7 +773,6 @@ Future<Map<String, FirebaseGroup>> searchForGroupByName(
 Future<Map<String, UserInfoModel>> searchForUserByName(String name) async {
   try {
     final DatabaseReference _database = FirebaseDatabase.instance.ref();
-
     Query lowercasenameQuery = _database
         .child(FireBaseConstants.usersRef)
         .orderByChild(UserInfoModel.lowercasenameKey)

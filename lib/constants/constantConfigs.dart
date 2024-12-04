@@ -3,5 +3,6 @@ class SessionConstants {
 }
 
 class ReferalConstants {
-  static const initialNumberOfReferrals = 100;
+  static const initialNumberOfReferrals = 10;
+  static const initialNumberOfReferralsForBeforeLaunchUsers = 25;
 }

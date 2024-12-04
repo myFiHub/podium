@@ -116,7 +116,6 @@ class HomeView extends GetView<HomeController> {
                             ],
                           );
                         }
-
                         return GroupList(groupsList: groups);
                       },
                     );

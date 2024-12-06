@@ -29,7 +29,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
               return Container(
                 width: Get.width,
                 height: Get.height - 110,
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: CircularProgressIndicator()),
               );
             }
             final iAmOwner = group.creator.id == myId;
@@ -44,7 +44,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               "Joining",
                               style: TextStyle(
                                 fontSize: 24,
@@ -55,7 +55,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                             space14,
                             Text(
                               group.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 overflow: TextOverflow.visible,
@@ -65,12 +65,12 @@ class GroupDetailView extends GetView<GroupDetailController> {
                                 group.subject!.trim().isNotEmpty)
                               Text(
                                 group.subject!,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 14,
                                 ),
                               )
                             else
-                              SizedBox.shrink(), // Evita espacio residual
+                              const SizedBox.shrink(), // Evita espacio residual
                             if (iAmOwner)
                               Text(
                                 "Access Type: ${parseAccessType(group.accessType)}",
@@ -111,18 +111,18 @@ class GroupDetailView extends GetView<GroupDetailController> {
                                 currentUserId: myId,
                               ));
                             },
-                            child: Text('Invite users'),
+                            child: const Text('Invite users'),
                           ),
                         ),
                       Container(
                         width: (Get.width / 2) - 20,
-                        child: JoinTheRoomButton(),
+                        child: const JoinTheRoomButton(),
                       ),
                     ],
                   ),
                   space10,
                   space10,
-                  if (group.scheduledFor != 0) SetReminderButton(),
+                  if (group.scheduledFor != 0) const SetReminderButton(),
                 ],
               ),
             );
@@ -166,7 +166,7 @@ class SetReminderButton extends GetView<GroupDetailController> {
         return const SizedBox();
       }
       if (group.alarmId == 0) {
-        return SizedBox();
+        return const SizedBox();
       }
       return Button(
         type: ButtonType.outline,
@@ -269,14 +269,14 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
       child: Material(
         child: Container(
           color: ColorName.cardBackground,
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           height: Get.height * 0.5,
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Invite Users',
                     style: TextStyle(
                       fontSize: 24,
@@ -288,7 +288,7 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                       Get.close();
                       controller.listOfSearchedUsersToInvite.value = [];
                     },
-                    icon: Icon(Icons.close),
+                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
@@ -317,7 +317,7 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                             ListTile(
                               title: Text(
                                 user.fullName,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.grey,
                                   fontSize: 14,
                                 ),
@@ -342,7 +342,7 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                           ListTile(
                             title: Text(
                               user.fullName,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
                               ),

@@ -18,7 +18,7 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
   @override
   Widget build(BuildContext context) {
     return FloatingDraggableWidget(
-      mainScreenWidget: Scaffold(
+      mainScreenWidget: const Scaffold(
         body: GroupCall(),
       ),
       floatingWidget: Obx(() {
@@ -74,7 +74,7 @@ class GroupCall extends GetView<GroupCallController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
         GroupInfo(),
         SessionInfo(),
@@ -94,16 +94,13 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
       children: [
         Obx(
           () {
-            if (controller == null) {
-              return SizedBox();
-            }
             final isAdmin = controller.amIAdmin.value;
             final remainingTimeInMillisecond =
                 controller.remainingTimeTimer.value;
             if (remainingTimeInMillisecond == -1) {
-              return Text(
+              return const Text(
                 "loading...",
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 36,
@@ -210,10 +207,10 @@ class MembersList extends GetView<GroupCallController> {
                       labelColor: ColorName.primaryBlue,
                       unselectedLabelColor: Colors.grey,
                       tabs: [
-                        Tab(
+                        const Tab(
                           child: Text("All Members"),
                         ),
-                        Tab(
+                        const Tab(
                           child: Text("Search"),
                         ),
                         Obx(() {
@@ -239,7 +236,7 @@ class MembersList extends GetView<GroupCallController> {
                         },
                       ),
                       Container(
-                        child: SearchInRoom(),
+                        child: const SearchInRoom(),
                       ),
                       Obx(
                         () {
@@ -276,7 +273,7 @@ class MembersList extends GetView<GroupCallController> {
                         ),
                       );
                     },
-                    child: Text('Invite users'),
+                    child: const Text('Invite users'),
                   ),
                 ),
               Container(

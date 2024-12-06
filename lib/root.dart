@@ -22,7 +22,7 @@ class Root extends StatelessWidget {
                 child: child,
               ),
             ),
-            PodiumNavbar(),
+            const PodiumNavbar(),
           ],
         ),
         // InternetConnectionChecker(),
@@ -84,7 +84,9 @@ class AnimatedBgbWrapper extends GetView<GlobalController> {
           duration: const Duration(seconds: 1),
           decoration: BoxDecoration(
             gradient: RadialGradient(
-              center: loggedIn ? Alignment(0, -1) : Alignment(-0.0, -0.1),
+              center: loggedIn
+                  ? const Alignment(0, -1)
+                  : const Alignment(-0.0, -0.1),
               colors: loggedIn ? _linearColors : _cirularColors,
               radius: loggedIn ? 2.0 : 1.0,
             ),

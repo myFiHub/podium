@@ -36,7 +36,7 @@ import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
-PairingMetadata _pairingMetadata = PairingMetadata(
+PairingMetadata _pairingMetadata = const PairingMetadata(
   name: StringConstants.w3mPageTitleV3,
   description: StringConstants.w3mPageTitleV3,
   url: 'https://walletconnect.com/',
@@ -180,7 +180,7 @@ class GlobalController extends GetxController {
   }
 
   startTicker() {
-    Timer.periodic(Duration(seconds: 1), (timer) {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
       ticker.value++;
       update([GlobalUpdateIds.ticker]);
     });

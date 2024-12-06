@@ -22,7 +22,7 @@ class GroupByIdLandingScreen extends GetView<GroupDetailController> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Room not found',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -47,7 +47,7 @@ class GroupByIdLandingScreen extends GetView<GroupDetailController> {
     Get.put(GroupDetailController());
     controller.getGroupInfo(id: id!);
     return Container(
-      child: Center(
+      child: const Center(
         child: CircularProgressIndicator(),
       ),
     );

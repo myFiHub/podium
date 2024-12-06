@@ -45,7 +45,7 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         lastActiveAt: DateTime.now().millisecondsSinceEpoch,
       );
 
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 3));
       sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.enter);
       await jitsiMeet.retrieveParticipantsInfo();
 

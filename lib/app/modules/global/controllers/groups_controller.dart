@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:ably_flutter/ably_flutter.dart' as ably;
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantConfigs.dart';
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -28,8 +30,6 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-import 'package:ably_flutter/ably_flutter.dart' as ably;
-import 'package:podium/env.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
@@ -116,14 +116,14 @@ class GroupsController extends GetxController with FirebaseTags {
   void onInit() {
     super.onInit();
 
-    _timerForPresentUsers = Timer.periodic(Duration(seconds: 2), (timer) {
+    _timerForPresentUsers = Timer.periodic(const Duration(seconds: 2), (timer) {
       if (_shouldUpdatePresentUsers) {
         presentUsersInGroupsMap.value = tmpPresentUsersInGroupsMap;
         presentUsersInGroupsMap.refresh();
         _shouldUpdatePresentUsers = false;
       }
     });
-    _timerForTakingUsers = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timerForTakingUsers = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_shouldUpdateTakingUsers) {
         takingUsersInGroupsMap.value = tmpTakingUsersInGroupsMap;
         takingUsersInGroupsMap.refresh();
@@ -514,7 +514,7 @@ class GroupsController extends GetxController with FirebaseTags {
         openTheRoomAfterJoining: group.scheduledFor == 0 ||
             group.scheduledFor < DateTime.now().millisecondsSinceEpoch,
       );
-      await Future.delayed(Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 1));
       groupsController.groups.refresh();
     } catch (e) {
       deleteGroup(groupId: id);
@@ -782,8 +782,8 @@ class GroupsController extends GetxController with FirebaseTags {
     final result = await Get.dialog(
       AlertDialog(
         backgroundColor: ColorName.cardBackground,
-        title: Text("Are you over 18?"),
-        content: Text(
+        title: const Text("Are you over 18?"),
+        content: const Text(
           "This group is for adults only, are you over 18?",
         ),
         actions: [
@@ -791,7 +791,7 @@ class GroupsController extends GetxController with FirebaseTags {
             onPressed: () {
               Navigator.of(Get.overlayContext!).pop(false);
             },
-            child: Text("No"),
+            child: const Text("No"),
           ),
           TextButton(
             onPressed: () {
@@ -802,7 +802,7 @@ class GroupsController extends GetxController with FirebaseTags {
               globalController.setIsMyUserOver18(true);
               Navigator.of(Get.overlayContext!).pop(true);
             },
-            child: Text("Yes"),
+            child: const Text("Yes"),
           ),
         ],
       ),
@@ -844,7 +844,7 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
                 color: !isCurrentlyArchived ? Colors.red : Colors.green,
               ),
             ),
-            TextSpan(text: " this Room?"),
+            const TextSpan(text: " this Room?"),
           ],
         ),
       ),
@@ -853,13 +853,13 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(false);
           },
-          child: Text("No"),
+          child: const Text("No"),
         ),
         TextButton(
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(true);
           },
-          child: Text("Yes"),
+          child: const Text("Yes"),
         ),
       ],
     ),

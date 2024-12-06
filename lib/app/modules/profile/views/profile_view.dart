@@ -8,6 +8,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
+
 import '../controllers/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
@@ -23,16 +24,16 @@ class ProfileView extends GetView<ProfileController> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              UserInfo(),
+              const UserInfo(),
               FollowButton(
                 userId: controller.userInfo.value!.id,
               ),
               space10,
-              _BuyArenaTicketButton(),
+              const _BuyArenaTicketButton(),
               space10,
-              _BuyFriendTechTicket(),
+              const _BuyFriendTechTicket(),
               space10,
-              _Statistics(),
+              const _Statistics(),
             ],
           ),
         ),
@@ -68,9 +69,9 @@ class _Statistics extends GetWidget<ProfileController> {
               children: [
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       'Cheers received',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -86,9 +87,9 @@ class _Statistics extends GetWidget<ProfileController> {
                 ),
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       'Boos received',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -110,9 +111,9 @@ class _Statistics extends GetWidget<ProfileController> {
               children: [
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       'Cheers sent',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -128,9 +129,9 @@ class _Statistics extends GetWidget<ProfileController> {
                 ),
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       'Boos sent',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -154,7 +155,7 @@ class _Statistics extends GetWidget<ProfileController> {
 }
 
 class _BuyArenaTicketButton extends GetWidget<ProfileController> {
-  const _BuyArenaTicketButton({super.key});
+  const _BuyArenaTicketButton();
 
   @override
   Widget build(BuildContext context) {
@@ -190,10 +191,10 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
                   ),
                 ),
                 if (isGettingArenaPrice)
-                  SizedBox(
+                  const SizedBox(
                     width: 10,
                     height: 10,
-                    child: const CircularProgressIndicator(
+                    child: CircularProgressIndicator(
                       strokeWidth: 2,
                     ),
                   )
@@ -205,18 +206,18 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
               RichText(
                 text: TextSpan(
                   text: 'owned ',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.yellow,
                     fontSize: 14,
                   ),
                   children: [
                     TextSpan(
                       text: '$numberOfBoughtTicketsByMe',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                       ),
                     ),
-                    TextSpan(
+                    const TextSpan(
                       text: ' Arena tickets',
                       style: TextStyle(
                         color: Colors.yellow,
@@ -286,10 +287,10 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
                         ),
                       ),
                       if (isGettingFriendTechPrice)
-                        SizedBox(
+                        const SizedBox(
                           width: 10,
                           height: 10,
-                          child: const CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                             strokeWidth: 2,
                           ),
                         )
@@ -301,18 +302,18 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
               RichText(
                 text: TextSpan(
                   text: 'owned ',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.yellow,
                     fontSize: 14,
                   ),
                   children: [
                     TextSpan(
                       text: '$numberOfBoughtTicketsByMe',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                       ),
                     ),
-                    TextSpan(
+                    const TextSpan(
                       text: ' Friendtech share',
                       style: TextStyle(
                         color: Colors.yellow,

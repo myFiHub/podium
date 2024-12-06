@@ -652,7 +652,6 @@ canEnterWithoutATicket(FirebaseGroup group) {
   final amIInvited = g.invitedMembers[myId] != null;
   final link = globalController.deepLinkRoute;
   final cameHereByLink = g.accessType == FreeRoomAccessTypes.onlyLink &&
-      link != null &&
       link.isNotEmpty &&
       link.contains(g.id);
   if (g.accessType == FreeRoomAccessTypes.onlyLink) {

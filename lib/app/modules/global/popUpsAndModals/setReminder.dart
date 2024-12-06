@@ -26,12 +26,12 @@ Future<bool> createCalendarEventForScheduledGroup({
     // 30min from start
     endDate: DateTime.fromMillisecondsSinceEpoch(scheduledFor + 30 * 60 * 1000),
     iosParams: IOSParams(
-      reminder: Duration(
+      reminder: const Duration(
           hours:
               1 /* Ex. hours:1 */), // on iOS, you can set alarm notification after your event.
       url: eventUrl, // on iOS, you can set url to your event.
     ),
-    androidParams: AndroidParams(
+    androidParams: const AndroidParams(
       emailInvites: [], // on Android, you can add invite emails to your event.
     ),
   );
@@ -57,9 +57,7 @@ List<Map<String, Object>> defaultTimeList({required int endsAt}) {
 
 bool isReminderAlreadySet(int alarmId) {
   final alreadtSetAlarm = Alarm.getAlarm(alarmId);
-  if (alreadtSetAlarm != null) {
-    return true;
-  }
+  return true;
   return false;
 }
 
@@ -102,8 +100,8 @@ Future<int?> setReminder({
 
   final int? alarmMeBefore = await Get.dialog<int>(AlertDialog(
     backgroundColor: ColorName.pageBackground,
-    title: Text('Set an Alarm?'),
-    content: Text('Do you want Podium to remind you for this event?'),
+    title: const Text('Set an Alarm?'),
+    content: const Text('Do you want Podium to remind you for this event?'),
     actionsAlignment: MainAxisAlignment.center,
     actions: [
       Container(
@@ -139,7 +137,8 @@ Future<int?> setReminder({
               onPressed: () async {
                 Navigator.pop(Get.context!, -2);
               },
-              child: Text('NO REMINDER!', style: TextStyle(color: Colors.red)),
+              child: const Text('NO REMINDER!',
+                  style: TextStyle(color: Colors.red)),
             ),
           ],
         ),

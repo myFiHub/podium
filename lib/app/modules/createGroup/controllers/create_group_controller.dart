@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -156,8 +157,8 @@ class CreateGroupController extends GetxController {
       is24HourMode: true,
       theme: ThemeData.dark(),
       type: OmniDateTimePickerType.dateAndTime,
-      firstDate: DateTime.now().add(Duration(minutes: 5)),
-      lastDate: DateTime.now().add(Duration(days: 365)),
+      firstDate: DateTime.now().add(const Duration(minutes: 5)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
       minutesInterval: 5,
     );
     if (dateTime != null) {
@@ -478,7 +479,7 @@ class CreateGroupController extends GetxController {
     isCreatingNewGroup.value = true;
     final accessType = roomAccessType.value;
     final speakerType = roomSpeakerType.value;
-    final id = Uuid().v4();
+    final id = const Uuid().v4();
     String imageUrl = "";
     if (selectedFile != null) {
       imageUrl = await uploadFile(groupId: id);
@@ -824,7 +825,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                             return Column(
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.only(
+                                  padding: const EdgeInsets.only(
                                       left: 12, top: 6, bottom: 6),
                                   child: Row(
                                     mainAxisAlignment:
@@ -849,7 +850,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           ),
                                           Text(
                                             "Followers: ${numberOfFollowers}",
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 11,
                                             ),
                                           ),
@@ -961,10 +962,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                   children: [
                                     if (element.user != null &&
                                         loadingIds.contains(element.user!.id))
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 18.0),
-                                        child: const GFLoader(),
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 18.0),
+                                        child: GFLoader(),
                                       )
                                     else if (element.user != null)
                                       GFCheckbox(
@@ -984,10 +984,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                     else if ((element.address != null &&
                                         loadingAddresses
                                             .contains(element.address)))
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 18.0),
-                                        child: const GFLoader(),
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 18.0),
+                                        child: GFLoader(),
                                       )
                                     else if (element.address != null)
                                       GFCheckbox(

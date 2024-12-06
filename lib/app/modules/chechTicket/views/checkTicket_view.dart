@@ -20,7 +20,7 @@ class CheckTicketView extends GetWidget<CheckticketController> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              Header(),
+              const Header(),
               // space10,
               // TicketBuyObserver(),
               space10,
@@ -51,7 +51,7 @@ class CheckTicketView extends GetWidget<CheckticketController> {
                   },
                 ),
               ),
-              EnterButton(),
+              const EnterButton(),
             ],
           ),
         ),
@@ -110,10 +110,10 @@ class EnterButton extends GetView<CheckticketController> {
             ),
             space5,
             if (!canSpeak && canSpeakThough)
-              Text(
+              const Text(
                 'you will be able to speak if you buy 1 the ticket to Speak',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.red,
                   fontSize: 12,
                 ),
@@ -121,13 +121,13 @@ class EnterButton extends GetView<CheckticketController> {
           ],
         );
       }
-      return Button(
+      return const Button(
         onPressed: null,
         blockButton: true,
         child: Text(
             'you will be able to Enter if you buy 1 ticket required for Entering the room',
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.red,
               fontSize: 14,
             )),
@@ -289,23 +289,20 @@ class Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Row(
+      const Row(
         children: [
-          const Text('Buy Tickets to:',
-              style:
-                  const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          Text('Buy Tickets to:',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           space10,
-          const Text('Enter',
-              style:
-                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          Text('Enter',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
           space10,
           Icon(Icons.login, color: Colors.red),
           space10,
-          const Text('and Speak',
-              style:
-                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          Text('and Speak',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
           space10,
-          const Icon(Icons.mic, color: Colors.red)
+          Icon(Icons.mic, color: Colors.red)
         ],
       ),
       IconButton(
@@ -352,8 +349,8 @@ class Actions extends StatelessWidget {
 
     return Container(
       child: checking || buying
-          ? SizedBox(
-              child: const CircularProgressIndicator(), width: 20, height: 20)
+          ? const SizedBox(
+              child: CircularProgressIndicator(), width: 20, height: 20)
           : alreadyBoughtRequiredTickets
               ? const Icon(Icons.check, color: Colors.green)
               : Tooltip(

@@ -64,7 +64,7 @@ Future<bool?> canNavigate() async {
       backgroundColor: ColorName.cardBackground,
       title: const Text('Are you sure?'),
       content: RichText(
-        text: TextSpan(
+        text: const TextSpan(
           // Note: Styles for TextSpans must be explicitly defined.
           // Child text spans will inherit styles from parent
           style: TextStyle(height: 2),

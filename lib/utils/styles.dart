@@ -56,13 +56,21 @@ BorderRadiusGeometry borderRadius(BuildContext context) {
 }
 
 final defaultAppBar = AppBar(
-  iconTheme: IconThemeData(color: ColorName.primaryBlue),
+  iconTheme: const IconThemeData(color: ColorName.primaryBlue),
   backgroundColor: ColorName.pageBackground,
 );
 
 const vSpace10 = const SizedBox(height: 10);
-const space10 = const Gap(10,);
-const space14 = const Gap(14,);
-const space16 = const Gap(16,);
-const space24 = const Gap(24,);
+const space10 = const Gap(
+  10,
+);
+const space14 = const Gap(
+  14,
+);
+const space16 = const Gap(
+  16,
+);
+const space24 = const Gap(
+  24,
+);
 const space5 = const Gap(5);

@@ -104,11 +104,10 @@ class NotificationsController extends GetxController {
   }
 
   sendTestNotif() async {
-    final GlobalController globalController = Get.find<GlobalController>();
     try {
       await sendNotification(
         notification: FirebaseNotificationModel(
-            id: Uuid().v4(),
+            id: const Uuid().v4(),
             title: 'title',
             body:
                 'bsodssssdddddddddddddddddddddddddddddssssdfsdddddddddddddddddddf sdf dsf dsssssssssssssssssssssssssssssssssssssssssssy',

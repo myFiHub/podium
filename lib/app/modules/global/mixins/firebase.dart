@@ -113,7 +113,7 @@ Future<bool> initializeUseReferalCodes({
         ? ReferalConstants.initialNumberOfReferralsForBeforeLaunchUsers
         : ReferalConstants.initialNumberOfReferrals;
     for (int i = 0; i < numberOfTiCkets; i++) {
-      final referalCode = Uuid().v4().substring(0, 6);
+      final referalCode = const Uuid().v4().substring(0, 6);
       final referral = Referral(usedBy: '');
       codes[referalCode] = referral.toJson();
     }
@@ -168,7 +168,7 @@ startListeningToMyReferals(void Function(Map<String, Referral>) onData) {
 
 addRandomReferalCodeToUser({required String userId}) async {
   try {
-    final referalCode = Uuid().v4().substring(0, 6);
+    final referalCode = const Uuid().v4().substring(0, 6);
     final referral = Referral(usedBy: '');
     final databaseRef = FirebaseDatabase.instance
         .ref(FireBaseConstants.referalsRef + userId + '/${referalCode}');

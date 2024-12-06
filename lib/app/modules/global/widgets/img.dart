@@ -44,10 +44,10 @@ class Img extends StatelessWidget {
                 child: Container(
                   width: size ?? width ?? 70,
                   height: size ?? height ?? 70,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: ColorName.cardBorder,
-                    borderRadius: const BorderRadius.all(
-                      const Radius.circular(8),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(8),
                     ),
                     shape: BoxShape.rectangle,
                   ),

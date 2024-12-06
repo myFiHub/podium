@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/analytics.dart';
+import 'package:podium/utils/styles.dart';
 import 'package:pulsator/pulsator.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
-import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/utils/styles.dart';
 
 class GroupList extends StatelessWidget {
   final List<FirebaseGroup> groupsList;
@@ -80,9 +80,9 @@ class _SingleGroup extends StatelessWidget {
         children: [
           space16,
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
                 color: ColorName.cardBackground,
-                borderRadius: const BorderRadius.all(const Radius.circular(8))),
+                borderRadius: BorderRadius.all(Radius.circular(8))),
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
             padding: const EdgeInsets.all(10),
             // key: Key(group.id),
@@ -216,7 +216,7 @@ class _SingleGroup extends StatelessWidget {
                                     space5,
                                     Text(
                                       "${group.members.length} Members",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
                                         color: ColorName.greyText,
@@ -311,7 +311,7 @@ class _NumberOfActiveUsers extends GetView<GroupsController> {
       final activeInThisGroup = allActiveUsers[groupId] ?? [];
       final numberOfActiveUsers = activeInThisGroup.length;
       return numberOfActiveUsers == 0
-          ? SizedBox()
+          ? const SizedBox()
           : Container(
               width: 40,
               height: 40,
@@ -319,8 +319,8 @@ class _NumberOfActiveUsers extends GetView<GroupsController> {
                 alignment: Alignment.center,
                 children: [
                   Pulsator(
-                    style: PulseStyle(color: Colors.red),
-                    duration: Duration(seconds: 2),
+                    style: const PulseStyle(color: Colors.red),
+                    duration: const Duration(seconds: 2),
                     count: 5,
                     repeat: 0,
                     startFromScratch: false,
@@ -444,8 +444,8 @@ class SingleTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      margin: EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      margin: const EdgeInsets.only(right: 4),
       decoration: BoxDecoration(
         color: ColorName.greyText.withOpacity(0.2),
         borderRadius: BorderRadius.circular(4),

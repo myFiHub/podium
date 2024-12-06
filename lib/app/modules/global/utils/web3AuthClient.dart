@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import "package:http/http.dart";
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
@@ -9,7 +10,6 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
-import "package:http/http.dart";
 
 Web3Client web3ClientByChainId(String chainId) {
   if (chainId == movementChain.chainId) {
@@ -76,7 +76,7 @@ Future<String?> sendTransaction({
           onPressed: () {
             _copyToClipboard(myAddress, prefix: "Address");
           },
-          child: Text("Copy Address"),
+          child: const Text("Copy Address"),
         ),
         duration: 7,
       );
@@ -112,13 +112,13 @@ _showTransactionConfirmationDialog({
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(Get.overlayContext!, false),
-        child: Text("Cancel"),
+        child: const Text("Cancel"),
       ),
       TextButton(
         onPressed: () {
           Navigator.pop(Get.overlayContext!, true);
         },
-        child: Text("Confirm"),
+        child: const Text("Confirm"),
       ),
     ],
   );

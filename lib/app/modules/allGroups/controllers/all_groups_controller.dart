@@ -2,9 +2,6 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/utils/throttleAndDebounce/debounce.dart';
-
-final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class AllGroupsController extends GetxController {
   final groupsController = Get.find<GroupsController>();

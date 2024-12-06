@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -274,7 +275,7 @@ class GroupDetailController extends GetxController {
       );
       await fetchInvitedMembers(userId: userId);
       final myUser = Get.find<GlobalController>().currentUserInfo.value;
-      final notifId = Uuid().v4();
+      final notifId = const Uuid().v4();
       final subject = group.value!.subject;
       final invitationNotification = FirebaseNotificationModel(
         id: notifId,

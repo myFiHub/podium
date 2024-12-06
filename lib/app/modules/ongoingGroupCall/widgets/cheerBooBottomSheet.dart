@@ -95,7 +95,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
                 Text(
                     """each ${Env.minimumCheerBooAmount} ${ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, movementChain.chainId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} ${Env.cheerBooTimeMultiplication} seconds ${widget.isCheer ? "to" : "from"}\nthat user's time""",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: ColorName.greyText,
                       height: 2,

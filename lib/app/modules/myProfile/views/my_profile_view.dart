@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -25,7 +24,7 @@ class MyProfileView extends GetView<MyProfileController> {
   const MyProfileView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -90,10 +89,10 @@ class ReferalSystem extends GetView<ReferalController> {
                   ),
                 ),
                 if (remaining > 0)
-                  WidgetSpan(
-                    child: const Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: const Icon(
+                  const WidgetSpan(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Icon(
                         Icons.person_add,
                         size: 20,
                         color: Colors.green,
@@ -134,7 +133,7 @@ class BugsAndFeedbacks extends GetView<MyProfileController> {
           blockButton: true,
           type: ButtonType.outline,
           child: RichText(
-              text: TextSpan(
+              text: const TextSpan(
             children: [
               TextSpan(
                 text: 'Report a bug or give feedback',
@@ -146,7 +145,7 @@ class BugsAndFeedbacks extends GetView<MyProfileController> {
               ),
               WidgetSpan(
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 10),
+                  padding: EdgeInsets.only(left: 10),
                   child: Icon(
                     Icons.bug_report,
                     size: 20,
@@ -168,7 +167,7 @@ class ToggleShowArchivedGroups extends GetView<GlobalController> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(
+      title: const Text(
         'Show My Archived Rooms',
         style: TextStyle(
           fontSize: 18,
@@ -214,7 +213,7 @@ class _DefaultWalletState extends State<DefaultWallet> {
         children: [
           Row(
             children: [
-              Text(
+              const Text(
                 'Default Wallet:',
                 style: TextStyle(
                   fontSize: 12,
@@ -274,7 +273,7 @@ class Balances extends GetView<MyProfileController> {
       }
       return Container(
         // add a top border
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border(
             top: BorderSide(
               color: ColorName.greyText,
@@ -291,9 +290,9 @@ class Balances extends GetView<MyProfileController> {
               children: [
                 Row(
                   children: [
-                    Text(
+                    const Text(
                       'Base ETH',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                       ),
                     ),
@@ -316,9 +315,9 @@ class Balances extends GetView<MyProfileController> {
               children: [
                 Row(
                   children: [
-                    Text(
+                    const Text(
                       'AVAX',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                       ),
                     ),
@@ -341,9 +340,9 @@ class Balances extends GetView<MyProfileController> {
               children: [
                 Row(
                   children: [
-                    Text(
+                    const Text(
                       'MOVE',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                       ),
                     ),
@@ -429,7 +428,7 @@ class InternalWallet extends GetView<GlobalController> {
                   },
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.account_balance_wallet,
                         color: ColorName.greyText,
                       ),
@@ -446,7 +445,7 @@ class InternalWallet extends GetView<GlobalController> {
                         ),
                       ),
                       space10,
-                      Icon(
+                      const Icon(
                         Icons.copy,
                         color: Colors.grey,
                       )
@@ -454,7 +453,7 @@ class InternalWallet extends GetView<GlobalController> {
                   ),
                 ),
                 space10,
-                Balances(),
+                const Balances(),
               ],
             ),
             // FriendTeckActivationButton()
@@ -473,7 +472,7 @@ class FriendTechExternalWalletActivationButton
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
+        const Text(
           'FriendTech',
           style: TextStyle(
             fontSize: 10,
@@ -513,7 +512,7 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
+        const Text(
           'FriendTech',
           style: TextStyle(
             fontSize: 10,
@@ -585,7 +584,7 @@ class WalletInfo extends GetView<GlobalController> {
                           space5,
                           Icon(Icons.link, color: Colors.green[100]),
                           space5,
-                          ExternalWalletChainIcon(
+                          const ExternalWalletChainIcon(
                             size: 20,
                           ),
                         ],
@@ -605,7 +604,7 @@ class WalletInfo extends GetView<GlobalController> {
                           },
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.account_balance_wallet,
                                 color: ColorName.greyText,
                               ),
@@ -622,7 +621,7 @@ class WalletInfo extends GetView<GlobalController> {
                                 ),
                               ),
                               space10,
-                              Icon(
+                              const Icon(
                                 Icons.copy,
                                 color: Colors.grey,
                               )
@@ -768,13 +767,13 @@ class UserInfo extends GetView<GlobalController> {
                   child: RichText(
                     overflow: TextOverflow.ellipsis,
                     text: TextSpan(
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: ColorName.greyText,
                       ),
                       children: [
-                        TextSpan(
+                        const TextSpan(
                           text: 'ID: ',
                         ),
                         TextSpan(
@@ -793,7 +792,7 @@ class UserInfo extends GetView<GlobalController> {
                         message: 'User ID copied to clipboard',
                       );
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.copy,
                       color: Colors.grey,
                     ))
@@ -838,9 +837,9 @@ class _Statistics extends GetWidget<MyProfileController> {
                   children: [
                     Column(
                       children: [
-                        Text(
+                        const Text(
                           'Cheers received',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
@@ -856,9 +855,9 @@ class _Statistics extends GetWidget<MyProfileController> {
                     ),
                     Column(
                       children: [
-                        Text(
+                        const Text(
                           'Boos received',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
@@ -880,9 +879,9 @@ class _Statistics extends GetWidget<MyProfileController> {
                   children: [
                     Column(
                       children: [
-                        Text(
+                        const Text(
                           'Cheers sent',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
@@ -898,9 +897,9 @@ class _Statistics extends GetWidget<MyProfileController> {
                     ),
                     Column(
                       children: [
-                        Text(
+                        const Text(
                           'Boos sent',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
@@ -943,7 +942,7 @@ class _Statistics extends GetWidget<MyProfileController> {
                 ),
               ),
               if (payments.income.entries.isEmpty)
-                Text(
+                const Text(
                   'Nothing yet',
                   style: TextStyle(
                     fontSize: 16,

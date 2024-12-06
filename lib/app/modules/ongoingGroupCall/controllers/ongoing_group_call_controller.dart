@@ -265,7 +265,7 @@ class OngoingGroupCallController extends GetxController {
     _addToReactionLog(element: element);
     lastReaction.value = Reaction(targetId: targetId, reaction: action);
     update(['confetti' + targetId]);
-    Future.delayed(Duration(milliseconds: 10), () {
+    Future.delayed(const Duration(milliseconds: 10), () {
       lastReaction.value = Reaction(targetId: '', reaction: '');
     });
     // lastReaction.value = Reaction(targetId: '', reaction: '');
@@ -451,14 +451,6 @@ class OngoingGroupCallController extends GetxController {
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
     final [user] = await getUsersByIds([userId]);
-    if (user == null) {
-      log.e("user not found");
-      Toast.error(
-        title: "Error",
-        message: "User not found",
-      );
-      return;
-    }
     if (user.localWalletAddress != '') {
       targetAddress = user.localWalletAddress;
     } else {
@@ -604,7 +596,7 @@ class OngoingGroupCallController extends GetxController {
         _removeLoadingCheerBoo(userId: userId, cheer: cheer);
       }
       ///////////////////////
-    } else if (targetAddress == '' || targetAddress == null) {
+    } else if (targetAddress == '') {
       log.e("User has not connected wallet for some reason");
       Toast.error(
         title: "Error",

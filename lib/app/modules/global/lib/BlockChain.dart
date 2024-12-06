@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
+import 'package:http/http.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:http/http.dart';
 
 final movementMainNetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement',
@@ -257,8 +257,8 @@ Stream<FilterEvent> _getContractEventListener({
 
   final options = FilterOptions(
     address: contract.address,
-    fromBlock: BlockNum.genesis(),
-    toBlock: BlockNum.current(),
+    fromBlock: const BlockNum.genesis(),
+    toBlock: const BlockNum.current(),
     topics: [
       // [bytesToHex(event.signature, padToEvenLength: true, include0x: true)],
     ],

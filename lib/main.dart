@@ -1,23 +1,25 @@
 import 'dart:async';
 import 'dart:ui';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/env.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+
 import 'app/routes/app_pages.dart';
-import 'package:app_links/app_links.dart';
 
 StreamSubscription<Uri>? _linkSubscription;
 
@@ -67,14 +69,15 @@ processLink(String? link) async {
 }
 
 void main() async {
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: ColorName.systemTrayBackground, 
-    systemNavigationBarColor: ColorName.navbarBackground, // Color de la barra de navegación
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: ColorName.systemTrayBackground,
+    systemNavigationBarColor:
+        ColorName.navbarBackground, // Color de la barra de navegación
     statusBarIconBrightness: Brightness.light, // Iconos claros en la
   ));
   await GetStorage.init();
   HttpApis.configure();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 preCache(BuildContext context) {

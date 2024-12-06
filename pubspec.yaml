@@ -62,6 +62,7 @@ dependencies:
     git:
       url: https://github.com/mhsnprvr/aptos.git
       ref: developing
+  lint: ^2.3.0
 
 dependency_overrides:
   web: ^0.5.0

@@ -222,11 +222,11 @@ _shootLike(BuildContext context) {
   final RenderBox renderBox = context.findRenderObject() as RenderBox;
   final position = renderBox.localToGlobal(Offset.zero);
   List<Color> colors = [
-    Color.fromARGB(255, 255, 0, 0),
-    Color.fromARGB(255, 255, 0, 123),
-    Color.fromARGB(255, 232, 0, 0),
-    Color.fromARGB(255, 255, 108, 172),
-    Color.fromARGB(255, 255, 184, 233)
+    const Color.fromARGB(255, 255, 0, 0),
+    const Color.fromARGB(255, 255, 0, 123),
+    const Color.fromARGB(255, 232, 0, 0),
+    const Color.fromARGB(255, 255, 108, 172),
+    const Color.fromARGB(255, 255, 184, 233)
   ];
 
   final options = ConfettiOptions(
@@ -249,11 +249,11 @@ _shootDisLike(BuildContext context) {
   final RenderBox renderBox = context.findRenderObject() as RenderBox;
   final position = renderBox.localToGlobal(Offset.zero);
   List<Color> colors = [
-    Color.fromARGB(255, 255, 0, 0),
-    Color.fromARGB(255, 255, 0, 123),
-    Color.fromARGB(255, 232, 0, 0),
-    Color.fromARGB(255, 255, 108, 172),
-    Color.fromARGB(255, 255, 184, 233)
+    const Color.fromARGB(255, 255, 0, 0),
+    const Color.fromARGB(255, 255, 0, 123),
+    const Color.fromARGB(255, 232, 0, 0),
+    const Color.fromARGB(255, 255, 108, 172),
+    const Color.fromARGB(255, 255, 184, 233)
   ];
 
   final options = ConfettiOptions(
@@ -376,7 +376,7 @@ class _TalkingIndicator extends GetView<GroupsController> {
           : Container(
               width: 40,
               height: 40,
-              child: Pulsator(
+              child: const Pulsator(
                 style: PulseStyle(color: Colors.green),
                 duration: Duration(seconds: 2),
                 count: 2,
@@ -384,7 +384,7 @@ class _TalkingIndicator extends GetView<GroupsController> {
                 startFromScratch: false,
                 autoStart: true,
                 fit: PulseFit.contain,
-                child: const Icon(
+                child: Icon(
                   Icons.mic,
                   color: Colors.white,
                   size: 20,
@@ -402,9 +402,6 @@ class RemainingTime extends GetView<OngoingGroupCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller == null) {
-        return SizedBox();
-      }
       final timersMap = controller.allRemainingTimesMap.value;
       final roomCreator = controller.groupCallController.group.value!.creator;
       final userRemainingTime = timersMap[userId];
@@ -458,8 +455,8 @@ class FollowButton extends GetView<UsersController> {
             vertical: 10,
           ),
           child: isLoading
-              ? Center(
-                  child: const CircularProgressIndicator(
+              ? const Center(
+                  child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
@@ -532,7 +529,7 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
       return GFIconButton(
         icon: cheer
             ? isCheerLoading
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(),
@@ -543,7 +540,7 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
                     color: Colors.green,
                   )
             : isBooLoading
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(),

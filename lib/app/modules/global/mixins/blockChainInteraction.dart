@@ -10,6 +10,7 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
+import 'package:podium/env.dart' as Environment;
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -20,8 +21,6 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:podium/env.dart' as Environment;
-
 import 'package:reown_appkit/reown_appkit.dart';
 
 Future<bool> ext_cheerOrBoo({
@@ -761,10 +760,6 @@ Future<BigInt?> getBuyPriceForArenaTicket({
   num shareAmount = 1,
   required String chainId,
 }) async {
-  if (sharesSubject == null) {
-    log.e('sharesSubject is null');
-    return null;
-  }
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
   if (myAddress == null) {
     return null;
@@ -962,7 +957,7 @@ Future<String?> choseAWallet({required String chainId}) async {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Choose a wallet"),
+          const Text("Choose a wallet"),
           space10,
           Img(
             src: chainInfoByChainId(chainId).chainIcon ??
@@ -1036,12 +1031,12 @@ class SelectChainContent extends GetView<GlobalController> {
           if (externalWalletEnabled == false)
             Text(
               "to use External Wallet, please switch to ${targetChain.name} (${targetChainId}) on your wallet and try again",
-              style: TextStyle(color: Colors.red, fontSize: 12),
+              style: const TextStyle(color: Colors.red, fontSize: 12),
               textAlign: TextAlign.center,
             ),
           space10,
           // remember my choice
-          RememberCheckBox(),
+          const RememberCheckBox(),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1050,7 +1045,7 @@ class SelectChainContent extends GetView<GlobalController> {
                 onPressed: () {
                   Navigator.pop(Get.overlayContext!, null);
                 },
-                child: Text("Cancel"),
+                child: const Text("Cancel"),
               ),
             ],
           )
@@ -1094,7 +1089,7 @@ class _RememberCheckBoxState extends State<RememberCheckBox> {
               });
             },
           ),
-          Text("Remember my choice"),
+          const Text("Remember my choice"),
         ],
       ),
     );

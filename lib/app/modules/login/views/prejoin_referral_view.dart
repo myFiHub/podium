@@ -50,7 +50,7 @@ class PrejoinReferralView extends GetView<LoginController> {
             // ),
             space10,
             RichText(
-              text: TextSpan(
+              text: const TextSpan(
                 style:
                     TextStyle(color: Colors.white, fontSize: 18, height: 1.5),
                 children: [
@@ -76,12 +76,12 @@ class PrejoinReferralView extends GetView<LoginController> {
                 ],
               ),
             ),
-            _InternalWalletAddress(),
+            const _InternalWalletAddress(),
             space5,
-            _ExternalWalletConnectButton(),
-            _ReferralStatus(),
+            const _ExternalWalletConnectButton(),
+            const _ReferralStatus(),
             space10,
-            _AccessUsingTicket(),
+            const _AccessUsingTicket(),
           ],
         ),
       ),
@@ -111,7 +111,7 @@ class _ExternalWalletConnectButton extends GetView<GlobalController> {
         },
         child: Text(
           connected ? 'External Wallet Connected' : 'Connect External Wallet',
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
           ),
@@ -141,7 +141,7 @@ class _InternalWalletAddress extends GetView<LoginController> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 "Your Internal Wallet Address",
                 style: TextStyle(
                   color: Colors.blueAccent,
@@ -152,7 +152,7 @@ class _InternalWalletAddress extends GetView<LoginController> {
               if (balance.isNotEmpty)
                 Text(
                   "Balance: $balance AVAX",
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.blueAccent,
                     fontSize: 12,
                   ),
@@ -171,13 +171,13 @@ class _InternalWalletAddress extends GetView<LoginController> {
                   children: [
                     Text(
                       truncate(internalWalletAddress, length: 16),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                       ),
                     ),
                     space5,
-                    Icon(
+                    const Icon(
                       Icons.copy,
                       color: Colors.blueAccent,
                       size: 16,
@@ -229,8 +229,8 @@ class _ProfileCard extends GetView<LoginController> {
     final binIntKeyPrice = BigInt.from(int.parse(keyPrice));
     final valueToShow = bigIntWeiToDouble(binIntKeyPrice).toString();
     return Container(
-      padding: EdgeInsets.all(16),
-      margin: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: ColorName.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -238,7 +238,7 @@ class _ProfileCard extends GetView<LoginController> {
       width: Get.width - 20,
       child: Column(
         children: [
-          Text(
+          const Text(
             'Arena ticket',
             style: TextStyle(
               color: Colors.blueAccent,
@@ -253,13 +253,13 @@ class _ProfileCard extends GetView<LoginController> {
                 alt: user.twitterName,
                 size: 50,
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     user.twitterName,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -276,14 +276,14 @@ class _ProfileCard extends GetView<LoginController> {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           // Followers, Following, Posting
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Column(
                 children: [
-                  Text(
+                  const Text(
                     'Followers',
                     style: TextStyle(
                       color: Colors.white,
@@ -302,7 +302,7 @@ class _ProfileCard extends GetView<LoginController> {
               ),
               Column(
                 children: [
-                  Text(
+                  const Text(
                     'Address',
                     style: TextStyle(
                       color: Colors.white,
@@ -321,7 +321,7 @@ class _ProfileCard extends GetView<LoginController> {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           // Write Message Button
           SizedBox(
               width: double.infinity,
@@ -336,7 +336,7 @@ class _ProfileCard extends GetView<LoginController> {
                   child: RichText(
                       text: TextSpan(
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: 'Buy Arena Ticket for ',
                         style: TextStyle(
                           color: Colors.white,
@@ -345,12 +345,12 @@ class _ProfileCard extends GetView<LoginController> {
                       ),
                       TextSpan(
                         text: valueToShow,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.blueAccent,
                           fontSize: 16,
                         ),
                       ),
-                      TextSpan(
+                      const TextSpan(
                         text: " AVAX",
                         style: TextStyle(
                           color: Colors.white,
@@ -376,7 +376,7 @@ class _ReferralStatus extends GetView<LoginController> {
       final referrer = controller.referrer.value;
       final noReferrer = referrer == null;
       if (noReferrer) {
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
       }
       return Container(
         width: Get.width - 20,
@@ -390,7 +390,7 @@ class _ReferralStatus extends GetView<LoginController> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 "Referral Status",
                 style: TextStyle(
                   color: Colors.blueAccent,
@@ -398,9 +398,9 @@ class _ReferralStatus extends GetView<LoginController> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               if (noReferrer)
-                Text(
+                const Text(
                   "No Referrer",
                   style: TextStyle(
                     color: Colors.red,
@@ -412,8 +412,8 @@ class _ReferralStatus extends GetView<LoginController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "${referrer!.fullName} doesnt have any unused referal code ",
-                      style: TextStyle(
+                      "${referrer.fullName} doesnt have any unused referal code ",
+                      style: const TextStyle(
                         color: Colors.red,
                         fontSize: 14,
                       ),

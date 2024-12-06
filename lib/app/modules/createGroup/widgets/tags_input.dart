@@ -51,7 +51,7 @@ class _DynamicTagsState extends State<DynamicTags> {
   Widget build(BuildContext context) {
     return TextFieldTags<DynamicTagData<ButtonData>>(
       textfieldTagsController: _dynamicTagController,
-      initialTags: [],
+      initialTags: const [],
       textSeparators: const [' ', ',', '.', ';', '\n'],
       letterCase: LetterCase.normal,
       inputFieldBuilder: (context, inputFieldValues) {
@@ -153,7 +153,7 @@ class _DynamicTagsState extends State<DynamicTags> {
               suffixIcon: inputFieldValues.tags.isEmpty
                   ? null
                   : IconButton(
-                      icon: Icon(Icons.clear, color: Colors.red),
+                      icon: const Icon(Icons.clear, color: Colors.red),
                       onPressed: () {
                         _dynamicTagController.clearTags();
                         widget.onTagsChanged([]);
@@ -161,14 +161,14 @@ class _DynamicTagsState extends State<DynamicTags> {
                     ),
             ),
             onChanged: (value) {
-              final button = ButtonData(ColorName.secondaryBlue, '');
+              final button = const ButtonData(ColorName.secondaryBlue, '');
               final tagData = DynamicTagData(value, button);
               inputFieldValues.onTagChanged(tagData);
               widget.onTagsChanged(
                   inputFieldValues.tags.map((e) => e.tag).toList());
             },
             onSubmitted: (value) {
-              final button = ButtonData(ColorName.secondaryBlue, '');
+              final button = const ButtonData(ColorName.secondaryBlue, '');
               final tagData = DynamicTagData(value, button);
               inputFieldValues.onTagSubmitted(tagData);
             },

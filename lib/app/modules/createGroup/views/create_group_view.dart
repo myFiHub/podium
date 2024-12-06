@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
@@ -10,6 +9,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+
 import '../controllers/create_group_controller.dart';
 
 class CreateGroupView extends GetView<CreateGroupController> {
@@ -20,8 +20,8 @@ class CreateGroupView extends GetView<CreateGroupController> {
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.only(top: 16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
@@ -132,7 +132,7 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Scheduled Outpost',
                       style: TextStyle(
                         color: Colors.white,
@@ -167,13 +167,13 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
                   text: !selected
                       ? 'Select Date and Time'
                       : millisecondsToFormattedDateWithTime(scheduledFor),
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
                   blockButton: true,
                   type: ButtonType.outline,
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.calendar_month_outlined,
                     color: Colors.white,
                     size: 18,
@@ -236,7 +236,7 @@ class _SubjectInput extends GetWidget<CreateGroupController> {
         onChanged: (value) => controller.roomSubject.value = value,
         marginvertical: 0,
         paddinghorizontal: 0,
-        style: TextStyle(
+        style: const TextStyle(
             fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
       ),
     );
@@ -250,7 +250,7 @@ class _TitleBar extends GetWidget<CreateGroupController> {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
+    return const Align(
       alignment: Alignment.centerLeft,
       child: Text(
         "New Outpost",
@@ -277,7 +277,7 @@ class _RoomNameInput extends GetWidget<CreateGroupController> {
         onChanged: (value) => controller.groupName.value = value,
         marginvertical: 0,
         paddinghorizontal: 0,
-        style: TextStyle(
+        style: const TextStyle(
             fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
       ),
     );
@@ -331,7 +331,7 @@ class _AdultsCheckbox extends GetView<CreateGroupController> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Adults speaking',
               style: TextStyle(
                 color: Colors.white,
@@ -380,7 +380,7 @@ class _SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Allowed to Speak',
                   style: TextStyle(fontSize: 12, color: Colors.white),
                 ),
@@ -433,7 +433,7 @@ class _SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
                         selectedList.length + numberOfAddressesToAdd.length,
                   );
                 }
-                return SizedBox();
+                return const SizedBox();
               },
             ),
           ],
@@ -458,7 +458,7 @@ class _SelectRoomAccessType extends GetWidget<CreateGroupController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Allowed to Enter',
                   style: TextStyle(
                     fontSize: 12,
@@ -517,7 +517,7 @@ class _SelectRoomAccessType extends GetWidget<CreateGroupController> {
                 selectedListLength: selectedList.length + addresses.length,
               );
             }
-            return SizedBox();
+            return const SizedBox();
           }),
         ],
       );
@@ -569,7 +569,7 @@ class SelectorContent extends StatelessWidget {
               ? 'Select tickets'
               : '${selectedListLength} required ticket${selectedListLength > 1 ? 's' : ''}',
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.black,
             fontSize: 10,
           ),

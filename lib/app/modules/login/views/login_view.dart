@@ -38,14 +38,14 @@ class LoginView extends GetView<LoginController> {
                     //     child: Assets.images.logo.image(),
                     //   ),
                     // ),
-                    Text(
+                    const Text(
                       'Podium',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text('Where attention pays.',
+                    const Text('Where attention pays.',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.normal,
@@ -54,7 +54,7 @@ class LoginView extends GetView<LoginController> {
                       final isLoggingIn = controller.isLoggingIn.value ||
                           controller.globalController.isAutoLoggingIn.value;
                       if (isLoggingIn) {
-                        return Column(
+                        return const Column(
                           children: [
                             space10,
                             CircularProgressIndicator(),
@@ -94,7 +94,7 @@ class LoginView extends GetView<LoginController> {
                             color: ColorName.black,
                             blockButton: true,
                           ),
-                          SizedBox(
+                          const SizedBox(
                             height: 10,
                           ),
                           Button(
@@ -112,7 +112,7 @@ class LoginView extends GetView<LoginController> {
                             blockButton: true,
                           ),
                           space10,
-                          Text(
+                          const Text(
                             "Or login with other methods:",
                             style: TextStyle(
                               color: ColorName.greyText,
@@ -191,9 +191,9 @@ class LoginView extends GetView<LoginController> {
                       );
                     }),
                     space10,
-                    Text(
+                    const Text(
                       "Version: " + Env.VERSION,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: ColorName.greyText,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -229,7 +229,7 @@ class LoginView extends GetView<LoginController> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               'Referred by: ',
                               style: TextStyle(
                                 color: ColorName.white,
@@ -249,7 +249,7 @@ class LoginView extends GetView<LoginController> {
                               child: Text(
                                 referrer.fullName,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12.0,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -258,7 +258,7 @@ class LoginView extends GetView<LoginController> {
                           ],
                         ),
                         if (referrerIsFul)
-                          Text(
+                          const Text(
                             'but User\'s referrals are all used up',
                             textAlign: TextAlign.center,
                             style: TextStyle(

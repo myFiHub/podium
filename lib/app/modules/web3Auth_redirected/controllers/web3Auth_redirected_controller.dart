@@ -42,7 +42,7 @@ class Web3AuthRedirectedController extends GetxController {
 }
 
 addressToUuid(String address) {
-  final uuid = Uuid();
+  final uuid = const Uuid();
   final uid = uuid.v5(Namespace.url.value, address);
   return uid;
 }

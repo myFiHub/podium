@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
-
 import 'package:podium/utils/styles.dart';
 
 import '../controllers/search_controller.dart';
@@ -27,7 +25,7 @@ class SearchView extends GetView<SearchPageController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       "Search",
                       style: TextStyle(
                         fontSize: 24,
@@ -44,8 +42,8 @@ class SearchView extends GetView<SearchPageController> {
                                 text: controller.searchValue.value),
                             decoration: InputDecoration(
                               hintText: "Search Outposts, Users or Tags",
-                              hintStyle: TextStyle(fontSize: 14),
-                              prefixIcon: Icon(Icons.search),
+                              hintStyle: const TextStyle(fontSize: 14),
+                              prefixIcon: const Icon(Icons.search),
                               contentPadding: const EdgeInsets.all(16),
                               filled: true,
                               fillColor: Colors.grey[200],
@@ -54,7 +52,7 @@ class SearchView extends GetView<SearchPageController> {
                                 borderSide: BorderSide.none,
                               ),
                             ),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 18,
                               color: Colors.black,
                             ),
@@ -71,13 +69,13 @@ class SearchView extends GetView<SearchPageController> {
                                 return Container(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(
+                                  child: const CircularProgressIndicator(
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                         ColorName.pageBgGradientStart),
                                   ),
                                 );
                               }
-                              return SizedBox();
+                              return const SizedBox();
                             }),
                           ),
                         ],
@@ -105,9 +103,9 @@ class SearchView extends GetView<SearchPageController> {
                     tabs: [
                       Obx(() {
                         final numberOfGroupsFound =
-                            controller.searchedGroups.value?.length ?? 0;
+                            controller.searchedGroups.value.length ?? 0;
                         if (numberOfGroupsFound == 0) {
-                          return Tab(
+                          return const Tab(
                             child: Text("Outposts"),
                           );
                         }
@@ -117,17 +115,17 @@ class SearchView extends GetView<SearchPageController> {
                       }),
                       Obx(() {
                         final numberOfUsersFound =
-                            controller.searchedUsers.value?.length ?? 0;
+                            controller.searchedUsers.value.length ?? 0;
                         if (numberOfUsersFound == 0) {
-                          return Tab(text: "Users");
+                          return const Tab(text: "Users");
                         }
                         return Tab(text: "Users ($numberOfUsersFound)");
                       }),
                       Obx(() {
                         final numberOfTagsFound =
-                            controller.searchedTags.value?.length ?? 0;
+                            controller.searchedTags.value.length ?? 0;
                         if (numberOfTagsFound == 0) {
-                          return Tab(text: "Tags");
+                          return const Tab(text: "Tags");
                         }
                         return Tab(text: "Tags ($numberOfTagsFound)");
                       }),
@@ -139,9 +137,7 @@ class SearchView extends GetView<SearchPageController> {
                     Obx(() {
                       final searchedGroups = controller.searchedGroups.value;
                       List<FirebaseGroup> groupsList = [];
-                      if (searchedGroups != null) {
-                        groupsList = searchedGroups.values.toList();
-                      }
+                      groupsList = searchedGroups.values.toList();
                       if (groupsList.isEmpty) {
                         return Container();
                       }
@@ -152,9 +148,7 @@ class SearchView extends GetView<SearchPageController> {
                     Obx(() {
                       final usersMap = controller.searchedUsers.value;
                       List<UserInfoModel> usersList = [];
-                      if (usersMap != null) {
-                        usersList = usersMap.values.toList();
-                      }
+                      usersList = usersMap.values.toList();
                       if (usersList.isEmpty) {
                         return Container();
                       }
@@ -182,7 +176,7 @@ class SearchView extends GetView<SearchPageController> {
                             },
                             child: Container(
                               padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
                                     color: Colors.grey,
@@ -199,7 +193,7 @@ class SearchView extends GetView<SearchPageController> {
                                       margin: const EdgeInsets.only(left: 10),
                                       width: 20,
                                       height: 20,
-                                      child: CircularProgressIndicator(
+                                      child: const CircularProgressIndicator(
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
                                                 ColorName.primaryBlue),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -23,8 +22,8 @@ class HomeView extends GetView<HomeController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           space16,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               "Home",
               style: TextStyle(
@@ -34,8 +33,8 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
           space14,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               "My Outposts",
               style: TextStyle(
@@ -69,7 +68,7 @@ class HomeView extends GetView<HomeController> {
                               .toList();
                         }
                         if (isLoading) {
-                          return Center(
+                          return const Center(
                             child: CircularProgressIndicator(),
                           );
                         }
@@ -84,7 +83,7 @@ class HomeView extends GetView<HomeController> {
                                   child: Assets.images.logo.image(),
                                 ),
                               ),
-                              Text(
+                              const Text(
                                 'Welcome to Podium',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
@@ -94,12 +93,12 @@ class HomeView extends GetView<HomeController> {
                               ),
                               Text(
                                 myUser.fullName,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              Text(
+                              const Text(
                                 'try joining an Outpost',
                               ),
                               space10,

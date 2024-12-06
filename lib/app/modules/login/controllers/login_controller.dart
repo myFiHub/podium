@@ -139,7 +139,7 @@ class LoginController extends GetxController {
   }
 
   initialReferral(String? id) async {
-    Future.delayed(Duration(seconds: 0), () async {
+    Future.delayed(const Duration(seconds: 0), () async {
       final referrerId =
           id ?? _extractReferrerId(globalController.deepLinkRoute.value);
       if (referrerId.isNotEmpty) {
@@ -334,7 +334,7 @@ class LoginController extends GetxController {
     final userId = id;
     if (email.isEmpty) {
       //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
-      email = Uuid().v4().replaceAll('-', '') + '@gmail.com';
+      email = const Uuid().v4().replaceAll('-', '') + '@gmail.com';
     }
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
     isBeforeLaunchUser = false;
@@ -589,12 +589,12 @@ class LoginController extends GetxController {
         width: Get.width,
         height: 300,
         color: ColorName.cardBackground,
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: FormBuilder(
           key: _formKey,
           child: Column(
             children: [
-              Text(
+              const Text(
                 'the name you want to use in the platform',
                 style: TextStyle(
                   color: ColorName.greyText,
@@ -652,7 +652,7 @@ Future<String?> showDialogToGetTheEmail() async {
         child: Column(
           children: [
             space10,
-            Text(
+            const Text(
               'Please enter your email address',
               style: TextStyle(
                 color: ColorName.greyText,

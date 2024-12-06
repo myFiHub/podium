@@ -63,10 +63,10 @@ bool isReminderAlreadySet(int alarmId) {
   return false;
 }
 
-DateTime? getReminderTime(int alarmId) {
+Future<DateTime?> getReminderTime(int alarmId) async {
   final alreadtSetAlarm = isReminderAlreadySet(alarmId);
   if (alreadtSetAlarm) {
-    final alarm = Alarm.getAlarm(alarmId);
+    final alarm = await Alarm.getAlarm(alarmId);
     return alarm!.dateTime;
   }
   return null;

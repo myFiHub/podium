@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
@@ -43,6 +44,7 @@ class GroupDetailController extends GetxController {
   final group = Rxn<FirebaseGroup>();
   final groupAccesses = Rxn<GroupAccesses>();
   final membersList = Rx<List<UserInfoModel>>([]);
+  final reminderTime = Rx<DateTime?>(null);
   final isGettingGroupInfo = false.obs;
   final jointButtonContentProps =
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
@@ -136,7 +138,7 @@ class GroupDetailController extends GetxController {
     }
   }
 
-  scheduleChecks() {
+  scheduleChecks() async {
     final amICreator = group.value!.creator.id == myId;
     final isScheduled = group.value!.scheduledFor != 0;
     final passedScheduledTime =
@@ -154,6 +156,10 @@ class GroupDetailController extends GetxController {
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }
       } else {
+        final reminderT = await getReminderTime(group.value!.alarmId);
+        if (reminderT != null) {
+          reminderTime.value = reminderT;
+        }
         if (amICreator) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Enter room');

@@ -39,55 +39,54 @@ class GroupDetailView extends GetView<GroupDetailController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   space16,
-                    Padding(
+                  Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                        Text(
-                          "Joining",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            overflow: TextOverflow.visible,
-                          ),
-                        ),
-                        space14,
-                        Text(
-                          group.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            overflow: TextOverflow.visible,
-                          ),
-                        ),
-                        if (group.subject != null && group.subject!.trim().isNotEmpty)
-                          Text(
-                            group.subject!,
-                            style: TextStyle(
-                              fontSize: 14,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Joining",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                overflow: TextOverflow.visible,
+                              ),
                             ),
-                          )
-                        else
-                          SizedBox.shrink(), // Evita espacio residual
-                        if (iAmOwner)
-                          Text(
-                            "Access Type: ${parseAccessType(group.accessType)}",
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[400],
+                            space14,
+                            Text(
+                              group.name,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                overflow: TextOverflow.visible,
+                              ),
                             ),
-                          ),
-                        Text(
-                          "Speakers: ${parseSpeakerType(group.speakerType)}",
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                      ]
-                    )
-                  ),
+                            if (group.subject != null &&
+                                group.subject!.trim().isNotEmpty)
+                              Text(
+                                group.subject!,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                ),
+                              )
+                            else
+                              SizedBox.shrink(), // Evita espacio residual
+                            if (iAmOwner)
+                              Text(
+                                "Access Type: ${parseAccessType(group.accessType)}",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                            Text(
+                              "Speakers: ${parseSpeakerType(group.speakerType)}",
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey[400],
+                              ),
+                            ),
+                          ])),
                   space10,
                   Expanded(
                     child: UserList(
@@ -142,12 +141,11 @@ class SetReminderButton extends GetView<GroupDetailController> {
     final group = controller.group.value;
 
     return Obx(() {
+      final reminderTime = controller.reminderTime.value;
       if (group == null) {
         return Container();
       }
       controller.forceUpdateIndicator.value;
-      final reminderTime = getReminderTime(group.alarmId);
-
       int? reminderIsSetForInMinotes = null;
       if (reminderTime != null) {
         final reminder = reminderTime

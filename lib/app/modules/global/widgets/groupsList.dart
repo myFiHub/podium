@@ -78,12 +78,13 @@ class _SingleGroup extends StatelessWidget {
       },
       child: Stack(
         children: [
+          space16,
           Container(
             decoration: BoxDecoration(
                 color: ColorName.cardBackground,
                 borderRadius: const BorderRadius.all(const Radius.circular(8))),
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(10),
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
+            padding: const EdgeInsets.all(10),
             // key: Key(group.id),
             child: Stack(
               children: [
@@ -94,24 +95,24 @@ class _SingleGroup extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
-                          width: Get.width - 200,
+                          //width: Get.width - 200,
                           child: Text(
                             name,
                             style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
                         SizedBox(
-                          width: Get.width - 300,
+                          //width: Get.width - 300,
                           child: RichText(
                               overflow: TextOverflow.ellipsis,
                               text: TextSpan(
                                 children: [
                                   const TextSpan(
-                                    text: "Created by:",
+                                    text: "Created by",
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: ColorName.greyText,
@@ -119,7 +120,7 @@ class _SingleGroup extends StatelessWidget {
                                   ),
                                   TextSpan(
                                     text:
-                                        "  ${amICreator ? "You" : group.creator.fullName}",
+                                        " ${amICreator ? "You" : group.creator.fullName}",
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w500,
@@ -368,20 +369,20 @@ class _ScheduledBanner extends StatelessWidget {
           );
           final isStarted =
               group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
-          final size = 60;
+          final size = 55;
           final remainingText = remaining.contains('d,')
               ? remaining.split('d,').join('d\n').replaceAll('d', 'days')
               : remaining;
           return Positioned(
-            right: 5,
-            top: 7,
+            right: 16,
+            top: 0,
             child: IgnorePointer(
               child: Container(
                 foregroundDecoration: RotatedCornerDecoration.withColor(
                   color: isStarted ? Colors.green : Colors.red,
                   spanBaselineShift: remainingText.contains('days') ? 2 : 4,
                   badgeSize: Size(size.toDouble(), size.toDouble()),
-                  badgeCornerRadius: const Radius.circular(4),
+                  badgeCornerRadius: const Radius.circular(8),
                   badgePosition: BadgePosition.topEnd,
                   textSpan: TextSpan(
                     text: remainingText,
@@ -389,7 +390,7 @@ class _ScheduledBanner extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 9,
                       letterSpacing: 1,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w400,
                       shadows: [
                         const BoxShadow(
                             color: Colors.yellowAccent, blurRadius: 8),
@@ -418,7 +419,7 @@ class TagsWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      //width: Get.width - 200,
+      width: Get.width - 100,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(

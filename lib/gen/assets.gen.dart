@@ -67,6 +67,9 @@ class $AssetsImagesGen {
   AssetGenImage get xPlatform =>
       const AssetGenImage('assets/images/x_platform.png');
 
+  AssetGenImage get bell =>
+  const AssetGenImage('assets/images/bell.png');
+
   /// List of all assets
   List<dynamic> get values => [
         ageRestricted,

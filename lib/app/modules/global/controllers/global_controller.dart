@@ -44,13 +44,14 @@ PairingMetadata _pairingMetadata = PairingMetadata(
     'https://docs.walletconnect.com/assets/images/web3modalLogo-2cee77e07851ba0a710b56d03d4d09dd.png'
   ],
   redirect: Redirect(
-    native: 'web3modalflutter://',
+    native: 'podium://',
     universal: 'https://walletconnect.com/appkit',
+    linkMode: true,
   ),
 );
 
 final _checkOptions = [
-  InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
+  // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
   // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
   InternetCheckOption(uri: Uri.parse(movementChain.rpcUrl))
 ];
@@ -104,8 +105,10 @@ class GlobalController extends GetxController {
   void onInit() async {
     super.onInit();
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
-    // ReownAppKitModalNetworks.addNetworks(Env.chainNamespace, [movementChain]);
-
+    ReownAppKitModalNetworks.addSupportedNetworks(
+      Env.chainNamespace,
+      [movementChain],
+    );
     try {
       await Future.wait([
         initializeWeb3Auth(),
@@ -144,11 +147,13 @@ class GlobalController extends GetxController {
 
   @override
   void onReady() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
     web3ModalService = ReownAppKitModal(
       enableAnalytics: false,
       context: Get.context!,
       projectId: Env.projectId,
-      logLevel: LogLevel.error,
+      logLevel: LogLevel.all,
       metadata: _pairingMetadata,
       featuredWalletIds: {
         'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase

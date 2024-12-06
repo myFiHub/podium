@@ -169,7 +169,10 @@ class BlockChainUtils {
         });
       }
     } catch (e) {
-      log.f('Error initializing W3MService', error: e);
+      log.f(
+        'Error initializing W3MService',
+        error: e,
+      );
     }
     return _w3mService;
   }

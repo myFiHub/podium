@@ -186,7 +186,8 @@ PaymentEvent? _parseSinglePayment(dynamic value) {
       initiatorAddress: value[PaymentEvent.initiatorAddressKey],
       targetAddress: value[PaymentEvent.targetAddressKey],
       groupId: value[PaymentEvent.groupIdKey],
-      memberIds: value[PaymentEvent.memberIdsKey] as List<String>? ?? [],
+      memberIds: ((value[PaymentEvent.memberIdsKey] ?? []) as List<dynamic>)
+          .cast<String>(),
       selfCheer: value[PaymentEvent.selfCheerKey],
       initiatorId: value[PaymentEvent.initiatorIdKey],
       targetId: value[PaymentEvent.targetIdKey],

@@ -622,6 +622,10 @@ class WalletInfo extends GetView<GlobalController> {
                                 ),
                               ),
                               space10,
+                              Icon(
+                                Icons.copy,
+                                color: Colors.grey,
+                              )
                             ],
                           )),
                     ],

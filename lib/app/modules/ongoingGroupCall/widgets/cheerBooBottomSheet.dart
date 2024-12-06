@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';

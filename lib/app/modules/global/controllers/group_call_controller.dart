@@ -15,7 +15,6 @@ import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/constants/meeting.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/models/jitsi_member.dart';

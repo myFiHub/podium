@@ -1,4 +1,3 @@
-import 'package:get/get.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:textfield_tags/textfield_tags.dart';
 import 'dart:math';

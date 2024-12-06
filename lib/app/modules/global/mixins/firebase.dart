@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
@@ -13,7 +12,6 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/podiumDefinedEntryAddress/podiumDefinedEntryAddress.dart';
 import 'package:podium/models/referral/referral.dart';

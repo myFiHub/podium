@@ -2,7 +2,6 @@ import 'dart:convert';
 
 // import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:podium/utils/constants.dart';
 
 class MethodDialog extends StatefulWidget {

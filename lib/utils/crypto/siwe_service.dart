@@ -1,7 +1,4 @@
-import 'package:flutter/foundation.dart';
 // ignore: depend_on_referenced_packages
-import 'package:http/http.dart' as http;
-import 'package:reown_appkit/reown_appkit.dart';
 
 
 // class SIWESampleWebService {

@@ -1,7 +1,8 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:textfield_tags/textfield_tags.dart';
-import 'dart:math';
-import 'package:flutter/material.dart';
 
 /*
  * Dynamic Tags 
@@ -71,21 +72,21 @@ class _DynamicTagsState extends State<DynamicTags> {
                 vertical: 10.0,
               ),
               border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8)),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
                 // borderSide: BorderSide(
                 //   width: 1.0,
                 // ),
               ),
               enabledBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   width: 1.0,
                   color: ColorName.pageBackground,
                 ),
               ),
               focusedBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: ColorName.secondaryBlue,
                   width: 1.0,
                 ),
@@ -95,7 +96,7 @@ class _DynamicTagsState extends State<DynamicTags> {
                   : "Enter a tag (optional)...",
               hintStyle: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w300, 
+                fontWeight: FontWeight.w300,
               ),
               prefixIconConstraints:
                   BoxConstraints(maxWidth: _distanceToField * 0.75),
@@ -391,7 +392,7 @@ class _DynamicMultilineTagsState extends State<DynamicMultilineTags> {
         ),
         ElevatedButton(
           style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(
+            backgroundColor: WidgetStateProperty.all<Color>(
               const Color.fromARGB(255, 74, 137, 92),
             ),
           ),
@@ -678,7 +679,7 @@ class _DynamicAutoCompleteTagsState extends State<DynamicAutoCompleteTags> {
             ),
             ElevatedButton(
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(
+                backgroundColor: WidgetStateProperty.all<Color>(
                   const Color.fromARGB(255, 74, 137, 92),
                 ),
               ),

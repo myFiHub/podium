@@ -145,6 +145,7 @@ class GlobalController extends GetxController {
   @override
   void onReady() async {
     web3ModalService = ReownAppKitModal(
+      enableAnalytics: false,
       context: Get.context!,
       projectId: Env.projectId,
       logLevel: LogLevel.error,

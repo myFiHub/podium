@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/referral_controller.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
@@ -348,7 +349,7 @@ class Balances extends GetView<MyProfileController> {
                     ),
                     space5,
                     Img(
-                      src: chainIconUrlByChainId(movementChainId),
+                      src: chainIconUrlByChainId(movementChain.chainId),
                       size: 16,
                     ),
                   ],

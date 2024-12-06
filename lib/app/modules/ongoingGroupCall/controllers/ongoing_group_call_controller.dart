@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -518,7 +519,7 @@ class OngoingGroupCallController extends GetxController {
       }
 
       bool success = false;
-      final selectedWallet = await choseAWallet(chainId: movementChainId);
+      final selectedWallet = await choseAWallet(chainId: movementChain.chainId);
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           target: targetAddress,
@@ -534,7 +535,7 @@ class OngoingGroupCallController extends GetxController {
           receiverAddresses: receiverAddresses,
           amount: parsedAmount,
           cheer: cheer,
-          chainId: movementChainId,
+          chainId: movementChain.chainId,
         );
       }
 
@@ -580,7 +581,7 @@ class OngoingGroupCallController extends GetxController {
         saveNewPayment(
             event: PaymentEvent(
           amount: amount,
-          chainId: movementChainId,
+          chainId: movementChain.chainId,
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external
               ? externalWalletAddress!

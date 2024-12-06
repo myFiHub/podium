@@ -1,15 +1,14 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:http/http.dart';
 
-final movementChain = ReownAppKitModalNetworkInfo(
-  name: 'Movement Mainnet',
-  chainId: movementChainId,
+final movementMainNetChain = ReownAppKitModalNetworkInfo(
+  name: 'Movement',
+  chainId: '126',
   chainIcon:
       "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg",
   currency: 'MOVE',
@@ -25,20 +24,10 @@ final movementDevnetChain = ReownAppKitModalNetworkInfo(
   rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
   explorerUrl: 'https://explorer.devnet.imola.movementlabs.xyz',
 );
-// final movementChainOnParticle = ChainInfo(
-//   int.parse(movementChain.chainId),
-//   'Movement',
-//   'evm',
-//   movementChain.chainIcon!,
-//   movementChain.name,
-//   movementChain.chainId == '30732' ? 'Testnet' : 'Mainnet',
-//   'https://docs.movementnetwork.xyz',
-//   ChainInfoNativeCurrency('Movement', 'MOVE', 18),
-//   movementChain.rpcUrl,
-//   '',
-//   movementChain.explorerUrl,
-//   [ChainInfoFeature(Env.chainNamespace.toUpperCase())],
-// );
+final movementChain =
+//
+// movementMainNetChain;
+    movementDevnetChain;
 
 class BlockChainUtils {
   static Future<ReownAppKitModal> initializewm3Service(

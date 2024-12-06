@@ -105,7 +105,7 @@ class GlobalController extends GetxController {
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
     ReownAppKitModalNetworks.addSupportedNetworks(
       Env.chainNamespace,
-      [movementChain, movementDevnetChain],
+      [movementMainNetChain, movementDevnetChain],
     );
 
     try {

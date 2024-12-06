@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/lib/chainInfo.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
@@ -86,12 +87,15 @@ ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
 }
 
 String chainIconUrlByChainId(String chainId) {
-  final chain =
-      ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
+  // we have to use this method to get the chain icon, because the chain icon is not easily available in the ReownAppKitModalNetworkInfo
+  final chain = ChainInfo.getChain(
+    int.parse(chainId),
+    chainNameById(chainId),
+  );
   if (chain == null) {
     return movementChain.chainIcon!;
   }
-  return chain.chainIcon!;
+  return chain.icon;
 }
 
 String _friendTechAddress(String chainId) {

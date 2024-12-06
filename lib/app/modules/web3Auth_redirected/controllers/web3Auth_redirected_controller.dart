@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:uuid/uuid.dart';

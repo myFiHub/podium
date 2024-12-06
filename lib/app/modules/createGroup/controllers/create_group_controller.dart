@@ -17,7 +17,6 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';

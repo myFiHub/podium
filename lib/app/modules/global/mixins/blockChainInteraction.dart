@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
@@ -993,6 +992,7 @@ class SelectChainContent extends GetView<GlobalController> {
     return Obx(() {
       final targetChainId = chainId;
       final externalChaiId = controller.externalWalletChainId.value;
+      final targetChain = chainInfoByChainId(chainId);
       final externalWalletEnabled =
           externalChaiId.isNotEmpty && externalChaiId == targetChainId;
 
@@ -1035,7 +1035,7 @@ class SelectChainContent extends GetView<GlobalController> {
                   : null),
           if (externalWalletEnabled == false)
             Text(
-              "to use External Wallet, please switch to Avalanche chain (${targetChainId}) on your wallet and try again",
+              "to use External Wallet, please switch to ${targetChain.name} (${targetChainId}) on your wallet and try again",
               style: TextStyle(color: Colors.red, fontSize: 12),
               textAlign: TextAlign.center,
             ),

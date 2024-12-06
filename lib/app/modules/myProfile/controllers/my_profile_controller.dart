@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -12,7 +13,6 @@ import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:web3dart/web3dart.dart';
 
 class Payments {
   int numberOfCheersReceived = 0;
@@ -85,7 +85,7 @@ class MyProfileController extends GetxController {
       isGettingBalances.value = true;
       final baseClient = web3ClientByChainId(baseChainId);
       final avalancheClient = web3ClientByChainId(avalancheChainId);
-      final movementClient = web3ClientByChainId(movementChainId);
+      final movementClient = web3ClientByChainId(movementChain.chainId);
       final myaddress = await web3AuthWalletAddress();
       final [baseBalance, avalancheBalance, movementBalance] =
           await Future.wait([

@@ -87,6 +87,7 @@ ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
 }
 
 String chainIconUrlByChainId(String chainId) {
+  // we have to use this method to get the chain icon, because the chain icon is not easily available in the ReownAppKitModalNetworkInfo
   final chain = ChainInfo.getChain(
     int.parse(chainId),
     chainNameById(chainId),

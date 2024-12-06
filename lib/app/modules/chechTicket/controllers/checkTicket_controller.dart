@@ -8,7 +8,6 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/firebase_Internal_wallet.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';

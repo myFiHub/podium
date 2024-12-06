@@ -7,8 +7,6 @@ import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';

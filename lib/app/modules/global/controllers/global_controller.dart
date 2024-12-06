@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:alarm/alarm.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -18,20 +19,19 @@ import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeStrin
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:alarm/alarm.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -105,8 +105,9 @@ class GlobalController extends GetxController {
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
     ReownAppKitModalNetworks.addSupportedNetworks(
       Env.chainNamespace,
-      [movementChain],
+      [movementMainNetChain, movementDevnetChain],
     );
+
     try {
       await Future.wait([
         initializeWeb3Auth(),
@@ -285,9 +286,7 @@ class GlobalController extends GetxController {
   listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
-      if (newAddress != '' &&
-          newAddress != null &&
-          currentUserInfo.value != null) {
+      if (newAddress != '' && currentUserInfo.value != null) {
         _saveExternalWalletAddress(newAddress);
       }
     });

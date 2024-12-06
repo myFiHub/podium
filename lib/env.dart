@@ -1,3 +1,4 @@
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/contracts/chainIds.dart';
 
 class Env {
@@ -58,7 +59,7 @@ class Env {
   }
 
   static String? cheerBooAddress(String chainId) {
-    if (chainId == movementChainId) {
+    if (chainId == movementChain.chainId) {
       return cheerBooAddress_Movement_Devnet;
     } else {
       return null;

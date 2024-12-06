@@ -6,7 +6,16 @@ import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:http/http.dart';
 
-final movementChain = ReownAppKitModalNetworkInfo(
+final movementMainNetChain = ReownAppKitModalNetworkInfo(
+  name: 'Movement',
+  chainId: '126',
+  chainIcon:
+      "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg",
+  currency: 'MOVE',
+  rpcUrl: 'https://mainnet.movementnetwork.xyz/v1',
+  explorerUrl: 'https://explorer.movementnetwork.xyz/?network=mainnet',
+);
+final movementDevnetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement Testnet',
   chainId: '30732',
   chainIcon:
@@ -15,20 +24,10 @@ final movementChain = ReownAppKitModalNetworkInfo(
   rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
   explorerUrl: 'https://explorer.devnet.imola.movementlabs.xyz',
 );
-// final movementChainOnParticle = ChainInfo(
-//   int.parse(movementChain.chainId),
-//   'Movement',
-//   'evm',
-//   movementChain.chainIcon!,
-//   movementChain.name,
-//   movementChain.chainId == '30732' ? 'Testnet' : 'Mainnet',
-//   'https://docs.movementnetwork.xyz',
-//   ChainInfoNativeCurrency('Movement', 'MOVE', 18),
-//   movementChain.rpcUrl,
-//   '',
-//   movementChain.explorerUrl,
-//   [ChainInfoFeature(Env.chainNamespace.toUpperCase())],
-// );
+final movementChain =
+//
+// movementMainNetChain;
+    movementDevnetChain;
 
 class BlockChainUtils {
   static Future<ReownAppKitModal> initializewm3Service(
@@ -157,7 +156,6 @@ class BlockChainUtils {
     try {
       await _w3mService.init();
       _startListeningToCheerBoEvents();
-      // _w3mService.requestSwitchToChain(movementChain);
       final chainId = externalWalletChianId;
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {

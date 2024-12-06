@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -13,7 +12,7 @@ import 'package:web3dart/web3dart.dart';
 import "package:http/http.dart";
 
 Web3Client web3ClientByChainId(String chainId) {
-  if (chainId == movementChainId) {
+  if (chainId == movementChain.chainId) {
     return Web3Client(movementChain.rpcUrl, Client());
   }
   final rpcUrl = chainInfoByChainId(chainId).rpcUrl;

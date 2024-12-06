@@ -157,6 +157,7 @@ class BlockChainUtils {
     try {
       await _w3mService.init();
       _startListeningToCheerBoEvents();
+      // _w3mService.requestSwitchToChain(movementChain);
       final chainId = externalWalletChianId;
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {

@@ -19,7 +19,6 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';

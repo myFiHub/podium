@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
@@ -10,6 +11,7 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
+import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/cheerBooEvent.dart';
@@ -31,6 +33,19 @@ Future<bool> ext_cheerOrBoo({
   required String chainId,
 }) async {
   final service = web3ModalService;
+  if (externalWalletChianId != chainId) {
+    final chain =
+        ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
+    try {
+      if (chain == null) {
+        return false;
+      }
+      Toast.error(
+          message:
+              "Please switch to ${chain.name} chain on your wallet and try again");
+      return false;
+    } catch (e) {}
+  }
   final transaction = Transaction(
     from: parseAddress(externalWalletAddress!),
     value: parseValue(amount),

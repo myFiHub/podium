@@ -448,7 +448,6 @@ class OngoingGroupCallController extends GetxController {
   cheerBoo(
       {required String userId, required bool cheer, bool? fromMeetPage}) async {
     String? targetAddress;
-
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
     final [user] = await getUsersByIds([userId]);
@@ -519,10 +518,7 @@ class OngoingGroupCallController extends GetxController {
       }
 
       bool success = false;
-      final selectedWallet =
-          //
-          //  WalletNames.external;
-          await choseAWallet(chainId: movementChainId);
+      final selectedWallet = await choseAWallet(chainId: movementChainId);
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           target: targetAddress,

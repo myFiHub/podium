@@ -45,8 +45,6 @@ PairingMetadata _pairingMetadata = PairingMetadata(
   ],
   redirect: Redirect(
     native: 'podium://',
-    universal: 'https://walletconnect.com/appkit',
-    linkMode: true,
   ),
 );
 

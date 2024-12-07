@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:http/http.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
@@ -218,54 +218,44 @@ class BlockChainUtils {
   }
 
   static _startListeningToCheerBoEvents() {
-    ////
+    //
     // final cheerEventToListenTo = _getContractEventListener(
-    //     contract: cheerBooContract, eventName: 'Cheer');
+    //   contract: getDeployedContract(
+    //     contract: Contracts.cheerboo,
+    //     chainId: movementChain.chainId,
+    //   )!,
+    //   eventName: 'Cheer',
+    // );
     // cheerEventToListenTo.take(1).listen((event) {
     //   log.i('^^^^^^^^^^^^^^^^^^^^Cheer event: $event^^^^^^^^^^^^^^^^^^^');
     // });
-    ////
-    // final booEventToListenTo =
-    //     _getContractEventListener(contract: cheerBooContract, eventName: 'Boo');
+    // //
+    // final booEventToListenTo = _getContractEventListener(
+    //   contract: getDeployedContract(
+    //     contract: Contracts.cheerboo,
+    //     chainId: movementChain.chainId,
+    //   )!,
+    //   eventName: 'Boo',
+    // );
     // booEventToListenTo.take(1).listen((event) {
     //   log.i('^^^^^^^^^^^^^^^Boo event: $event^^^^^^^^^^^^^^^^^^^^^');
     // });
-    ////
+    //
   }
 }
 
-Stream<FilterEvent> _getContractEventListener({
+Stream<FilterEvent> _getContractEventStream({
   required DeployedContract contract,
   required String eventName,
-  chainId = Env.initialExternalWalletChainId,
 }) {
-  final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace,
-      chainId)!; // final GlobalController globalController = Get.find<GlobalController>();
-  // final web3ModalService = globalController.web3ModalService;
-  // final web3Client = web3ModalService.reconnectRelay();
-  // final web3Client = Web3Client(chain.rpcUrl, Client());
-  final client = Web3Client(
-    chain.rpcUrl,
-    Client(),
-    // socketConnector: () {
-    //   return IOWebSocketChannel.connect(chain.rpcUrl.replaceAll('https', 'ws'))
-    //       .cast<String>();
-    // },
-  );
-
-  // final _event = contract.event(eventName);
-
-  final options = FilterOptions(
-    address: contract.address,
-    fromBlock: const BlockNum.genesis(),
+  final event = contract.event(eventName);
+  final filter = FilterOptions.events(
+    contract: contract,
+    event: event,
+    fromBlock: const BlockNum.current(),
     toBlock: const BlockNum.current(),
-    topics: [
-      // [bytesToHex(event.signature, padToEvenLength: true, include0x: true)],
-    ],
   );
-  // final options = FilterOptions.events(
-  //   contract: contract,
-  //   event: event,
-  // );
-  return client.events(options);
+  final movementClient = web3ClientByChainId(movementChain.chainId);
+  Stream<FilterEvent> eventStream = movementClient.events(filter);
+  return eventStream;
 }

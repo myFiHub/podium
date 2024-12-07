@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
-import 'package:flutter/foundation.dart';
+import "package:device_preview/device_preview.dart";
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -19,7 +19,7 @@ import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import "package:device_preview/device_preview.dart";
+
 import 'app/routes/app_pages.dart';
 
 StreamSubscription<Uri>? _linkSubscription;
@@ -81,7 +81,7 @@ void main() async {
   // runApp(const MyApp());
   runApp(
     DevicePreview(
-      enabled: !kReleaseMode,
+      enabled: false, //!kReleaseMode,
       builder: (context) => const MyApp(), // Wrap your app
     ),
   );

@@ -62,16 +62,6 @@ class _SingleGroup extends StatelessWidget {
     final isScheduled = group.scheduledFor != 0;
     return GestureDetector(
       onTap: () async {
-        // final delay = 2;
-        // sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);
-        // await Future.delayed(Duration(seconds: delay));
-        // sendGroupPeresenceEvent(
-        //     groupId: group.id, eventName: eventNames.talking);
-        // await Future.delayed(Duration(seconds: delay));
-        // sendGroupPeresenceEvent(
-        //     groupId: group.id, eventName: eventNames.notTalking);
-        // await Future.delayed(Duration(seconds: delay));
-        // sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.leave);
         controller.joinGroupAndOpenGroupDetailPage(
           groupId: group.id,
         );
@@ -83,9 +73,8 @@ class _SingleGroup extends StatelessWidget {
             decoration: const BoxDecoration(
                 color: ColorName.cardBackground,
                 borderRadius: BorderRadius.all(Radius.circular(8))),
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
+            margin: const EdgeInsets.only(left: 8, right: 8, bottom: 10),
             padding: const EdgeInsets.all(10),
-            // key: Key(group.id),
             child: Stack(
               children: [
                 Row(
@@ -154,7 +143,7 @@ class _SingleGroup extends StatelessWidget {
                                       size: 14,
                                     ),
                                     SizedBox(
-                                      width: Get.width - 200,
+                                      // width: Get.width - 200,
                                       child: Text(
                                         " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
                                         style: const TextStyle(

@@ -23,10 +23,10 @@ class HomeView extends GetView<HomeController> {
         children: <Widget>[
           space16,
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: const Text(
               "Home",
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
               ),
@@ -34,10 +34,10 @@ class HomeView extends GetView<HomeController> {
           ),
           space14,
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: const Text(
               "My Outposts",
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -86,7 +86,7 @@ class HomeView extends GetView<HomeController> {
                               const Text(
                                 'Welcome to Podium',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w700,
                                 ),

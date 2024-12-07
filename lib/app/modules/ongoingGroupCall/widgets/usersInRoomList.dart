@@ -527,6 +527,7 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
       final isCheerLoading = loadingUsers.contains("$userId-cheer");
       final isBooLoading = loadingUsers.contains("$userId-boo");
       return GFIconButton(
+        padding: const EdgeInsets.only(top: 8, left: 8),
         icon: cheer
             ? isCheerLoading
                 ? const SizedBox(
@@ -587,7 +588,7 @@ class LikeDislike extends GetView<OngoingGroupCallController> {
     );
 
     return Container(
-      width: 50,
+      width: 40,
       child: Center(
         child: Obx(() {
           final timers = controller.timers.value;

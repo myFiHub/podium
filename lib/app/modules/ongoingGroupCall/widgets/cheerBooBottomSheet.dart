@@ -77,7 +77,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
                 name: 'amount',
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
             Button(
               type: ButtonType.gradient,
               onPressed: () {

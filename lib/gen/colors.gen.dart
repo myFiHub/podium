@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 class ColorName {
   ColorName._();
 
+ 
   /// Color: #000000
   static const Color black = Color(0xFF000000);
 
@@ -31,6 +32,8 @@ class ColorName {
   /// Color: #161D2C
   static const Color navbarBackground = Color(0xFF161D2C);
 
+  static const Color systemTrayBackground = Color(0xFF245A6C);
+
   /// Color: #141422
   static const Color pageBackground = Color(0xFF141422);
 
@@ -39,7 +42,7 @@ class ColorName {
 
   /// Color: #245A6C
   static const Color pageBgGradientStart = Color(0xFF245A6C);
-
+  
   /// MaterialColor:
   ///   50: #FFEAFCFD
   ///   100: #FFCCF7FA

@@ -56,20 +56,20 @@ class _DynamicTagsState extends State<DynamicTags> {
       letterCase: LetterCase.normal,
       inputFieldBuilder: (context, inputFieldValues) {
         return Container(
-          width: Get.width - 20,
-          height: 65,
+          //width: Get.width - 20,
+          height: 50,
           decoration: BoxDecoration(
             color: ColorName.pageBackground,
             borderRadius: BorderRadius.circular(10),
           ),
-          margin: const EdgeInsets.only(left: 10.0, right: 10, bottom: 12),
+          margin: const EdgeInsets.only(bottom: 12),
           child: TextField(
             controller: inputFieldValues.textEditingController,
             focusNode: inputFieldValues.focusNode,
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 10.0,
-                vertical: 22.0,
+                vertical: 10.0,
               ),
               border: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -94,6 +94,10 @@ class _DynamicTagsState extends State<DynamicTags> {
               hintText: inputFieldValues.tags.isNotEmpty
                   ? ''
                   : "Enter a tag (optional)...",
+              hintStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w300,
+              ),
               prefixIconConstraints:
                   BoxConstraints(maxWidth: _distanceToField * 0.75),
               prefixIcon: inputFieldValues.tags.isNotEmpty

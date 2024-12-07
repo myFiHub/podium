@@ -12,7 +12,7 @@ import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:particle_base/particle_base.dart';
-
+import 'package:podium/widgets/animatedButton/animatedButton.dart';
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -25,15 +25,25 @@ class HomeView extends GetView<HomeController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           space16,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              "Home",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
+          Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  "Home",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
+              Spacer(), 
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0), 
+                child: AnimatedButton(),
+              ),
+            ],
           ),
           space14,
           Padding(

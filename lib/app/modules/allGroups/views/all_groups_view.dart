@@ -33,8 +33,8 @@ class AllGroupsView extends GetView<AllGroupsController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "All rooms",
+                      const Text(
+                        "All Outposts",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
@@ -48,8 +48,8 @@ class AllGroupsView extends GetView<AllGroupsController> {
                               text: controller.searchValue.value),
                           decoration: InputDecoration(
                             hintText: "What are we looking for?",
-                            hintStyle: TextStyle(fontSize: 14),
-                            prefixIcon: Icon(Icons.search),
+                            hintStyle: const TextStyle(fontSize: 14),
+                            prefixIcon: const Icon(Icons.search),
                             contentPadding: const EdgeInsets.all(16),
                             filled: true,
                             fillColor: Colors.grey[200],
@@ -58,7 +58,7 @@ class AllGroupsView extends GetView<AllGroupsController> {
                               borderSide: BorderSide.none,
                             ),
                           ),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 18,
                             color: Colors.black,
                           ),
@@ -71,10 +71,9 @@ class AllGroupsView extends GetView<AllGroupsController> {
                     ],
                   ),
                 ),
-                // Lista de grupos
                 Expanded(
                   child: Container(
-                    child: AllGroupsList(),
+                    child: const AllGroupsList(),
                   ),
                 ),
               ],
@@ -86,12 +85,12 @@ class AllGroupsView extends GetView<AllGroupsController> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [Colors.blue, Colors.green],
                 ),
               ),
               child: Button(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

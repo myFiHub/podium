@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
@@ -20,11 +21,14 @@ class CreateGroupView extends GetView<CreateGroupController> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
-          padding: const EdgeInsets.only(top: 30),
-          child: Center(
+          padding: const EdgeInsets.only(top: 16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
+                _TitleBar(),
+                space14,
                 _SelectPicture(),
                 _RoomNameInput(),
                 space5,
@@ -34,13 +38,13 @@ class CreateGroupView extends GetView<CreateGroupController> {
                 ),
                 _TagsInput(),
                 _SelectRoomAccessType(),
-                space10,
+                space5,
                 _SelectRoomSpeakerType(),
-                space10,
+                space5,
                 _ScheduleToggle(),
-                space10,
+                space5,
                 _AdultsCheckbox(),
-                space10,
+                space16,
                 _CreateButton(),
               ],
             ),
@@ -68,12 +72,12 @@ class _SelectPicture extends GetWidget<CreateGroupController> {
             Obx(
               () {
                 final selectedFile = controller.fileLocalAddress.value;
-                return Column(
+                return Row(
                   children: [
                     selectedFile == ''
-                        ? Img(
-                            src: Constants.logoUrl,
-                            size: 100,
+                        ? Assets.images.browse.image(
+                            width: 64,
+                            height: 64,
                           )
                         : GFAvatar(
                             backgroundImage: FileImage(File(selectedFile)),
@@ -81,12 +85,24 @@ class _SelectPicture extends GetWidget<CreateGroupController> {
                             radius: 50.0,
                           ),
                     space5,
-                    Text(
-                      'Room Image',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Select image from gallery',
+                          style: TextStyle(
+                            color: Colors.grey[200],
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          'Select image from gallery',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                     space10,
                   ],
@@ -111,22 +127,36 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
       return Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Scheduled Room',
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 18,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Scheduled Room',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      'Organize and notify in advance.',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
                 Switch(
                   value: isScheduled,
                   onChanged: (value) {
                     controller.toggleScheduled();
                   },
+                  activeColor: Colors.lightGreen,
+                  activeTrackColor: Colors.grey[200],
                 ),
               ],
             ),
@@ -139,11 +169,16 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
                   text: !selected
                       ? 'Select Date and Time'
                       : millisecondsToFormattedDateWithTime(scheduledFor),
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
                   blockButton: true,
                   type: ButtonType.outline,
                   icon: Icon(
                     Icons.calendar_month_outlined,
-                    color: Colors.grey[400],
+                    color: Colors.white,
+                    size: 18,
                   ),
                   onPressed: () {
                     controller.openCalendarBottomSheet();
@@ -178,7 +213,7 @@ class _TagsInput extends GetWidget<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 70,
+      height: 60,
       child: DynamicTags(
         onTagsChanged: (values) {
           controller.setTags(values);
@@ -196,12 +231,35 @@ class _SubjectInput extends GetWidget<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 60,
+      height: 55,
       child: Input(
         initialValue: controller.roomSubject.value,
         hintText: 'Main Subject (optional)',
         onChanged: (value) => controller.roomSubject.value = value,
         marginvertical: 0,
+        paddinghorizontal: 0,
+        style: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _TitleBar extends GetWidget<CreateGroupController> {
+  const _TitleBar({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft, 
+      child: const Text(
+        "New outpost",
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -215,11 +273,14 @@ class _RoomNameInput extends GetWidget<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 60,
+      height: 55,
       child: Input(
         hintText: 'Room Name',
         onChanged: (value) => controller.groupName.value = value,
         marginvertical: 0,
+        paddinghorizontal: 0,
+        style: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
       ),
     );
   }
@@ -253,7 +314,7 @@ class _CreateButton extends GetWidget<CreateGroupController> {
             : () {
                 controller.create();
               },
-        text: 'Create Room',
+        text: 'Create Outpost',
       );
     });
   }
@@ -267,14 +328,26 @@ class _AdultsCheckbox extends GetView<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'Adults Speaking',
-          style: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 18,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Adults speaking',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              'Room content for 18+',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+              ),
+            ),
+          ],
         ),
         Obx(
           () {
@@ -282,6 +355,7 @@ class _AdultsCheckbox extends GetView<CreateGroupController> {
             return GFCheckbox(
               value: isChecked,
               activeBgColor: Colors.red,
+              size: 24,
               onChanged: (value) {
                 controller.newGroupHasAdultContent.value = value;
               },
@@ -310,11 +384,9 @@ class _SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
               children: [
                 Text(
                   'Allowed to Speak',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[400],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.white),
                 ),
+                space5,
                 DropDown(
                   items: [
                     DropDownItem(
@@ -392,9 +464,10 @@ class _SelectRoomAccessType extends GetWidget<CreateGroupController> {
                   'Allowed to Enter',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[400],
+                    color: Colors.white,
                   ),
                 ),
+                space5,
                 DropDown(
                   items: [
                     DropDownItem(
@@ -462,7 +535,7 @@ class SelectUserstoBuyTicketFrom extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 25,
+      top: 35,
       right: 30,
       child: GestureDetector(
         onTap: () {
@@ -491,11 +564,11 @@ class SelectorContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       // width: 140,
-      height: 40,
+      height: 25,
       child: Center(
         child: Text(
           selectedListLength == 0
-              ? 'Select Tickets'
+              ? 'Select tickets'
               : '${selectedListLength} required ticket${selectedListLength > 1 ? 's' : ''}',
           textAlign: TextAlign.center,
           style: TextStyle(

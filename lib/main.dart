@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
 import "package:device_preview/device_preview.dart";
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -83,8 +84,8 @@ void main() async {
     DevicePreview(
       enabled:
           //
-          false,
-      //!kReleaseMode,
+          // false,
+          !kReleaseMode,
       builder: (context) => const MyApp(),
     ),
   );

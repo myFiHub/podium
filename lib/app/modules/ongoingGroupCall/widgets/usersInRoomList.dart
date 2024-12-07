@@ -107,7 +107,9 @@ class _SingleUserInRoom extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: Get.width * 0.3,
+                            constraints: const BoxConstraints(
+                              maxWidth: 180,
+                            ),
                             child: Text(
                               isItME ? "You" : name,
                               style: TextStyle(

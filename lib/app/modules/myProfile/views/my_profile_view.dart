@@ -274,7 +274,7 @@ class Balances extends GetView<MyProfileController> {
       return Container(
         // add a top border
         decoration: const BoxDecoration(
-          border: const Border(
+          border: Border(
             top: BorderSide(
               color: ColorName.greyText,
               width: 1,
@@ -282,7 +282,7 @@ class Balances extends GetView<MyProfileController> {
           ),
         ),
         padding: const EdgeInsets.only(top: 12),
-        width: Get.width - 38,
+        width: Get.width - 24,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -317,7 +317,7 @@ class Balances extends GetView<MyProfileController> {
                   children: [
                     const Text(
                       'AVAX',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                       ),
                     ),
@@ -342,7 +342,7 @@ class Balances extends GetView<MyProfileController> {
                   children: [
                     const Text(
                       'MOVE',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                       ),
                     ),

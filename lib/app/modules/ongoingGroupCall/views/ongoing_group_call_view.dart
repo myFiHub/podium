@@ -208,7 +208,10 @@ class MembersList extends GetView<GroupCallController> {
                       unselectedLabelColor: Colors.grey,
                       tabs: [
                         const Tab(
-                          child: Text("All Members"),
+                          child: Text(
+                            "All Members",
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                         const Tab(
                           child: Text("Search"),

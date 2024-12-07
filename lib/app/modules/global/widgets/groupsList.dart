@@ -83,7 +83,10 @@ class _SingleGroup extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
+                        Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 270,
+                          ),
                           //width: Get.width - 200,
                           child: Text(
                             name,
@@ -94,7 +97,10 @@ class _SingleGroup extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SizedBox(
+                        Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 270,
+                          ),
                           //width: Get.width - 300,
                           child: RichText(
                               overflow: TextOverflow.ellipsis,
@@ -142,7 +148,10 @@ class _SingleGroup extends StatelessWidget {
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
-                                    SizedBox(
+                                    Container(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 180,
+                                      ),
                                       // width: Get.width - 200,
                                       child: Text(
                                         " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",

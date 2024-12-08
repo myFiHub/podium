@@ -58,7 +58,7 @@ class HomeView extends GetView<HomeController> {
                         final isLoading = allGroups.isEmpty;
                         List<FirebaseGroup> groups = allGroups.values
                             .where(
-                              (group) => group.members.contains(myId),
+                              (group) => group.members.keys.contains(myId),
                             )
                             .toList();
 

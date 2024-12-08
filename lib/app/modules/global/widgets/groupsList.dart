@@ -265,6 +265,17 @@ class _SingleGroup extends StatelessWidget {
                               color: ColorName.greyText,
                             ),
                           ),
+                        if (canLeaveGroup(group: group))
+                          IconButton(
+                            onPressed: () {
+                              controller.removeMyUserFromSessionAndGroup(
+                                  group: group);
+                            },
+                            icon: const Icon(
+                              Icons.exit_to_app,
+                              color: Colors.red,
+                            ),
+                          ),
                         if (canArchiveGroup(group: group))
                           IconButton(
                             onPressed: () {
@@ -550,11 +561,24 @@ canShareGroupUrl({required FirebaseGroup group}) {
     return true;
   }
   if (group.accessType == FreeRoomAccessTypes.onlyLink) {
-    if (group.members.contains(myId)) {
+    if (group.members.keys.contains(myId)) {
       return true;
     }
   }
   return false;
+}
+
+canLeaveGroup({required FirebaseGroup group}) {
+  final GlobalController globalController = Get.find();
+  if (globalController.currentUserInfo.value == null) {
+    return false;
+  }
+  final iAmCreator = group.creator.id == myId;
+  final amIMember = group.members.keys.contains(myId);
+  if (iAmCreator) {
+    return false;
+  }
+  return amIMember;
 }
 
 canArchiveGroup({required FirebaseGroup group}) {

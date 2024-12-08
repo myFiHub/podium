@@ -29,7 +29,7 @@ class FirebaseGroup {
   String? lowercasename;
   String id;
   FirebaseGroupCreator creator;
-  List<String> members;
+  Map<String, String> members;
   String? imageUrl;
   Map<String, InvitedMember> invitedMembers = {};
   String? accessType;

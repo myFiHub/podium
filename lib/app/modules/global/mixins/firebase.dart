@@ -481,6 +481,22 @@ toggleGroupArchive({required String groupId, required bool archive}) async {
   await databaseRef.set(archive);
 }
 
+removeMyUserFromGroupAndSession({required String groupId}) async {
+  final userId = myId;
+  final databaseRef = FirebaseDatabase.instance.ref(
+      FireBaseConstants.groupsRef +
+          groupId +
+          '/${FirebaseGroup.membersKey}/$userId');
+  final sessionDatabaseRef = FirebaseDatabase.instance.ref(
+      FireBaseConstants.sessionsRef +
+          groupId +
+          '/${FirebaseSession.membersKey}/$userId');
+  await Future.wait([
+    databaseRef.remove(),
+    sessionDatabaseRef.remove(),
+  ]);
+}
+
 listenToSessionMembers({
   required String groupId,
   required void Function(DatabaseEvent) onData,

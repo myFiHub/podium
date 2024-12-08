@@ -11,8 +11,12 @@ FirebaseGroup? singleGroupParser(value) {
     groupId = value[FirebaseGroup.idKey];
     final name = value[FirebaseGroup.nameKey];
     final creator = value[FirebaseGroup.creatorKey];
-    final members =
-        ((value[FirebaseGroup.membersKey]) as List<dynamic>).cast<String>();
+    final tmpMembers = value[FirebaseGroup.membersKey] ?? {};
+    final Map<String, String> members = {};
+    tmpMembers.forEach((key, value) {
+      members[key] = value;
+    });
+
     final tmp = value[FirebaseGroup.invitedMembersKey] ?? {};
     final Map<String, InvitedMember> invitedMembers = {};
     tmp.forEach((key, value) {

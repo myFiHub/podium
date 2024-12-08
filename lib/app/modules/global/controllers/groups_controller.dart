@@ -168,6 +168,25 @@ class GroupsController extends GetxController with FirebaseTags {
     _timerForTakingUsers.cancel();
   }
 
+  removeMyUserFromSessionAndGroup({required FirebaseGroup group}) async {
+    // ask if user want to leave the group
+    final canContinue = await _showModalToLeaveGroup(group: group);
+    if (canContinue == null || canContinue == false) return;
+    await removeMyUserFromGroupAndSession(groupId: group.id);
+    // remove group from groups list
+    groups.value.remove(group.id);
+    groups.refresh();
+    if (Get.isRegistered<AllGroupsController>()) {
+      final AllGroupsController allGroupsController = Get.find();
+      allGroupsController.searchedGroups.refresh();
+    }
+    if (Get.isRegistered<SearchPageController>()) {
+      final SearchPageController searchPageController = Get.find();
+      searchPageController.searchedGroups.refresh();
+      ;
+    }
+  }
+
   toggleArchive({required FirebaseGroup group}) async {
     final canContinue = await _showModalToToggleArchiveGroup(group: group);
     if (canContinue == null || canContinue == false) return;
@@ -446,7 +465,7 @@ class GroupsController extends GetxController with FirebaseTags {
       creator: creator,
       accessType: accessType,
       speakerType: speakerType,
-      members: [myUser.id],
+      members: {myUser.id: myUser.id},
       subject: subject,
       hasAdultContent: adultContent,
       isRecordable: recordable,
@@ -595,14 +614,14 @@ class GroupsController extends GetxController with FirebaseTags {
     }
 
     final iAmGroupCreator = group.creator.id == myUser.id;
-    final members = List.from([...group.members]);
-    if (!members.contains(myUser.id)) {
-      members.add(myUser.id);
+    final members = group.members;
+    if (!members.keys.contains(myUser.id)) {
       try {
         joiningGroupId.value = groupId;
         await firebaseGroupsReference
             .child(FirebaseGroup.membersKey)
-            .set(members);
+            .child(myUser.id)
+            .set(myUser.id);
         final mySession = await getUserSessionData(
           groupId: groupId,
           userId: myUser.id,
@@ -708,7 +727,7 @@ class GroupsController extends GetxController with FirebaseTags {
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
-    if (group.members.contains(myUser.id))
+    if (group.members.keys.contains(myUser.id))
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
     if (group.accessType == null ||
@@ -775,7 +794,7 @@ class GroupsController extends GetxController with FirebaseTags {
   }) async {
     final isGroupAgeRestricted = group.hasAdultContent;
     final iAmOwner = group.creator.id == myUser.id;
-    final iAmMember = group.members.contains(myUser.id);
+    final iAmMember = group.members.keys.contains(myUser.id);
     final amIOver18 = myUser.isOver18;
     if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18) {
       return true;
@@ -847,6 +866,45 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
               ),
             ),
             const TextSpan(text: " this Room?"),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(false);
+          },
+          child: const Text("No"),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(true);
+          },
+          child: const Text("Yes"),
+        ),
+      ],
+    ),
+  );
+  return result;
+}
+
+_showModalToLeaveGroup({required FirebaseGroup group}) async {
+  final result = await Get.dialog(
+    AlertDialog(
+      backgroundColor: ColorName.cardBackground,
+      title: const Text("Leave The Outpost"),
+      content: RichText(
+        text: const TextSpan(
+          text: "Are you sure you want to",
+          children: [
+            const TextSpan(
+              text: " leave",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+            const TextSpan(text: " this Outpost?"),
           ],
         ),
       ),

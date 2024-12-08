@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
@@ -44,24 +45,46 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
         }
         final isMuted = controller.amIMuted.value;
         final canITalk = groupCallController.canTalk.value;
+        final amICreator = group.creator.id == myId;
+        final isRecording = controller.isRecording.value;
+        final recordable = group.isRecordable;
         if (!canITalk) {
           return Container(
             width: 0,
             height: 0,
           );
         }
-        return FloatingActionButton(
-          backgroundColor: isMuted ? Colors.red : Colors.green,
-          onPressed: () {
-            jitsiMeet.setAudioMuted(!isMuted);
-          },
-          tooltip: 'mute',
-          child: Icon(
-            isMuted ? Icons.mic_off : Icons.mic,
-          ),
+        return Column(
+          children: [
+            FloatingActionButton(
+              backgroundColor: isMuted ? Colors.red : Colors.green,
+              onPressed: () {
+                jitsiMeet.setAudioMuted(!isMuted);
+              },
+              tooltip: 'mute',
+              child: Icon(
+                isMuted ? Icons.mic_off : Icons.mic,
+              ),
+            ),
+            if (amICreator && recordable) space10,
+            if (amICreator && recordable)
+              FloatingActionButton(
+                backgroundColor: Colors.white,
+                onPressed: () {
+                  isRecording
+                      ? controller.stopRecording()
+                      : controller.startRecording();
+                },
+                tooltip: 'Record',
+                child: Icon(
+                  isRecording ? Icons.stop : Icons.fiber_manual_record,
+                  color: Colors.red,
+                ),
+              ),
+          ],
         );
       }),
-      floatingWidgetHeight: 50,
+      floatingWidgetHeight: 125,
       floatingWidgetWidth: 50,
       dx: Get.width - 80,
       dy: 50,

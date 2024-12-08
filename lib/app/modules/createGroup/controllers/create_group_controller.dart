@@ -55,6 +55,7 @@ class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
+  final newGroupIsRecorable = false.obs;
   final roomAccessType = FreeRoomAccessTypes.public.obs;
   final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
 
@@ -495,6 +496,7 @@ class CreateGroupController extends GetxController {
         subject: subject,
         tags: tags.value,
         adultContent: newGroupHasAdultContent.value,
+        recordable: newGroupIsRecorable.value,
         requiredTicketsToAccess:
             selectedUsersToBuyTicketFrom_ToAccessRoom.value,
         requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,

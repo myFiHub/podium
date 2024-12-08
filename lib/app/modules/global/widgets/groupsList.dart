@@ -28,13 +28,11 @@ class GroupList extends StatelessWidget {
         itemCount: groupsList.length,
         itemBuilder: (context, index) {
           final group = groupsList[index];
-          final name = group.name;
           final amICreator = group.creator.id == myId;
           return _SingleGroup(
             key: Key(group.id),
             controller: controller,
             amICreator: amICreator,
-            name: name,
             group: group,
           );
         },
@@ -48,13 +46,11 @@ class _SingleGroup extends StatelessWidget {
     super.key,
     required this.controller,
     required this.amICreator,
-    required this.name,
     required this.group,
   });
 
   final GroupsController controller;
   final bool amICreator;
-  final String name;
   final FirebaseGroup group;
 
   @override
@@ -89,7 +85,7 @@ class _SingleGroup extends StatelessWidget {
                           ),
                           //width: Get.width - 200,
                           child: Text(
-                            name,
+                            group.name,
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -141,6 +137,26 @@ class _SingleGroup extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                if (group.isRecordable)
+                                  const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.circle,
+                                        color: Colors.redAccent,
+                                        size: 12,
+                                      ),
+                                      space5,
+                                      Text(
+                                        "Can be recorded by host",
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w400,
+                                          color: ColorName.greyText,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                if (group.isRecordable) space5,
                                 Row(
                                   children: [
                                     const Icon(

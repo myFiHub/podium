@@ -42,6 +42,8 @@ class CreateGroupView extends GetView<CreateGroupController> {
                 _ScheduleToggle(),
                 space5,
                 _AdultsCheckbox(),
+                space5,
+                _RecordableCheckbox(),
                 space16,
                 _CreateButton(),
               ],
@@ -54,9 +56,7 @@ class CreateGroupView extends GetView<CreateGroupController> {
 }
 
 class _SelectPicture extends GetWidget<CreateGroupController> {
-  const _SelectPicture({
-    super.key,
-  });
+  const _SelectPicture();
 
   @override
   Widget build(BuildContext context) {
@@ -356,6 +356,51 @@ class _AdultsCheckbox extends GetView<CreateGroupController> {
               size: 24,
               onChanged: (value) {
                 controller.newGroupHasAdultContent.value = value;
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _RecordableCheckbox extends GetView<CreateGroupController> {
+  const _RecordableCheckbox();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Recordable',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              'Outpost can be recorded, saved and shared',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+        Obx(
+          () {
+            final isChecked = controller.newGroupIsRecorable.value;
+            return GFCheckbox(
+              value: isChecked,
+              activeBgColor: Colors.red,
+              size: 24,
+              onChanged: (value) {
+                controller.newGroupIsRecorable.value = value;
               },
             );
           },

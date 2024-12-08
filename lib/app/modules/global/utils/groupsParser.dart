@@ -35,6 +35,7 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final isArchived = value[FirebaseGroup.archivedKey] ?? false;
     final hasAdultContent = value[FirebaseGroup.hasAdultContentKey] ?? false;
+    final isRecordable = value[FirebaseGroup.isRecordableKey] ?? false;
     final List<String> requiredAddressesToEnter =
         (value[FirebaseGroup.requiredAddressesToEnterKey] ?? []).cast<String>();
     final List<String> requiredAddressesToSpeak =
@@ -82,6 +83,7 @@ FirebaseGroup? singleGroupParser(value) {
       creatorJoined: creatorJoined,
       archived: isArchived,
       hasAdultContent: hasAdultContent,
+      isRecordable: isRecordable,
       requiredAddressesToEnter: requiredAddressesToEnter,
       requiredAddressesToSpeak: requiredAddressesToSpeak,
       tags: parsedTags,

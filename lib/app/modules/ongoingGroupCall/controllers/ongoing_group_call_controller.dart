@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -21,6 +22,7 @@ import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:share_plus/share_plus.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
 const amountToAddForLikeInSeconds = 10; // 10 seconds
@@ -83,8 +85,10 @@ class OngoingGroupCallController extends GetxController {
   final amIAdmin = false.obs;
   final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
+  final isRecording = false.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
+  int numberOfRecording = 0;
 
   final loadingWalletAddressForUser = RxList<String>([]);
 
@@ -178,6 +182,7 @@ class OngoingGroupCallController extends GetxController {
   @override
   void onClose() async {
     super.onClose();
+    stopRecording();
     presenceUpdateStream?.cancel();
     stopTheTimer();
     stopSubscriptions();
@@ -185,6 +190,43 @@ class OngoingGroupCallController extends GetxController {
     firebaseSession.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
+  }
+
+  startRecording() {
+    _setIsRecording(true);
+  }
+
+  stopRecording() {
+    _setIsRecording(false);
+  }
+
+  _setIsRecording(bool recording) async {
+    final group = groupCallController.group.value!;
+    final recordingName =
+        '${group.name}${numberOfRecording == 0 ? '' : numberOfRecording}';
+    if (recording) {
+      numberOfRecording++;
+      isRecording.value =
+          await FlutterScreenRecording.startRecordScreenAndAudio(
+        recordingName,
+        messageNotification: 'Recording in progress',
+        titleNotification: 'Podium',
+      );
+    } else {
+      if (isRecording.value) {
+        final path = await FlutterScreenRecording.stopRecordScreen;
+        Toast.success(
+          title: "Recording saved",
+          message: "Recording saved, path: ${path}",
+          duration: 5,
+        );
+        await Share.shareXFiles(
+          [XFile(path)],
+          text: 'Podium: ${recordingName}',
+        );
+      }
+    }
+    isRecording.value = recording;
   }
 
   _addToReactionLog({required ReactionLogElement element}) {

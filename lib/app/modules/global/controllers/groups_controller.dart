@@ -183,7 +183,6 @@ class GroupsController extends GetxController with FirebaseTags {
     if (Get.isRegistered<SearchPageController>()) {
       final SearchPageController searchPageController = Get.find();
       searchPageController.searchedGroups.refresh();
-      ;
     }
   }
 

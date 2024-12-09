@@ -1,14 +1,8 @@
-import 'dart:typed_data';
-
 import 'package:aptos/aptos.dart';
 import 'package:aptos/coin_client.dart';
-import 'package:aptos/models/payload.dart';
-import 'package:aptos/models/signature.dart';
-import 'package:aptos/models/transaction.dart';
-import 'package:ed25519_edwards/ed25519_edwards.dart' as ed25519;
+import 'package:aptos/models/entry_function_payload.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class AptosMovement {
   AptosMovement._internal();
@@ -51,15 +45,26 @@ class AptosMovement {
   cheerBoo({
     required List<dynamic> parameters,
   }) async {
-    final privateKey = await Web3AuthFlutter.getPrivKey();
-    final seq = await sequenceNumber;
     final contractAddress =
         "0xc898a3b0a7c3ddc9ff813eeca34981b6a42b0918057a7c18ecb9f4a6ae82eefb";
-    final maxGasAmount = '10000';
-    final gasPrice = '100';
-    final expirationTimestamp =
-        ((DateTime.now().millisecondsSinceEpoch / 1000) + 300)
-            .toString(); // Add a 5-min expiry
     // create transaction
+    final payload = EntryFunctionPayload(
+        functionId: "${contractAddress}::CheerOrBoo::cheer_or_boo",
+        typeArguments: [],
+        arguments: [
+          address, // Replace with the target address
+          [], // Replace with the list of supporter addresses
+          true, // Replace with true for cheer, false for boo
+          100, // Replace with the amount
+        ]);
+
+    final transactionRequest = await client.generateTransaction(
+      account,
+      payload,
+    );
+    final signedTransaction =
+        await client.signTransaction(account, transactionRequest);
+    final result = await client.submitSignedBCSTransaction(signedTransaction);
+    return result;
   }
 }

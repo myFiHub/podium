@@ -262,7 +262,7 @@ class EvmBalances extends GetView<MyProfileController> {
       if (loading) {
         return Container(
           width: Get.width - 16,
-          height: 46,
+          height: 48,
           child: Center(
             child: Container(
               width: 20,
@@ -284,6 +284,7 @@ class EvmBalances extends GetView<MyProfileController> {
         ),
         padding: const EdgeInsets.only(top: 12),
         width: Get.width - 24,
+        height: 48,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -449,6 +450,7 @@ class AddressAndBalanceWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: Get.width - 16,
       decoration: const BoxDecoration(
         color: ColorName.cardBorder,
         borderRadius: const BorderRadius.all(
@@ -530,7 +532,7 @@ class AptosBalance extends GetView<MyProfileController> {
       if (loading) {
         return Container(
           width: Get.width - 16,
-          height: 46,
+          height: 48,
           child: Center(
             child: Container(
               width: 20,
@@ -542,6 +544,8 @@ class AptosBalance extends GetView<MyProfileController> {
       }
       return Container(
         // add a top border
+        height: 48,
+        width: Get.width - 16,
         decoration: const BoxDecoration(
           border: const Border(
             top: const BorderSide(
@@ -551,7 +555,6 @@ class AptosBalance extends GetView<MyProfileController> {
           ),
         ),
         padding: const EdgeInsets.only(top: 12),
-        width: Get.width - 24,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -784,6 +787,7 @@ class WalletConnect extends GetView<GlobalController> {
                 : Button(
                     onPressed: () {
                       controller.connectToWallet();
+                      // AptosMovement().cheerBoo(parameters: []);
                     },
                     type: ButtonType.gradient,
                     blockButton: true,

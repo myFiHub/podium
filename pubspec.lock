@@ -127,6 +127,22 @@ packages:
       url: "https://github.com/mhsnprvr/aptos.git"
     source: git
     version: "0.0.6"
+  aptos_api_dart:
+    dependency: transitive
+    description:
+      name: aptos_api_dart
+      sha256: e4656df2505e935c24e7783e82bdbf3d7adf896be14d1f94eb3c99ab9cb3c428
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
+  aptos_sdk_dart:
+    dependency: "direct main"
+    description:
+      name: aptos_sdk_dart
+      sha256: "84d089339755e1285642d8588f752dcaae0fccba3d0914e338287324e1ce7529"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   archive:
     dependency: transitive
     description:
@@ -1346,6 +1362,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  one_of:
+    dependency: transitive
+    description:
+      name: one_of
+      sha256: "25fe0fcf181e761c6fcd604caf9d5fdf952321be17584ba81c72c06bdaa511f0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0"
+  one_of_serializer:
+    dependency: transitive
+    description:
+      name: one_of_serializer
+      sha256: "3f3dfb5c1578ba3afef1cb47fcc49e585e797af3f2b6c2cc7ed90aad0c5e7b83"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0"
   package_config:
     dependency: transitive
     description:
@@ -1490,6 +1522,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.2"
+  pinenacl:
+    dependency: transitive
+    description:
+      name: pinenacl
+      sha256: "3a5503637587d635647c93ea9a8fecf48a420cc7deebe6f1fc85c2a5637ab327"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.1"
   platform:
     dependency: transitive
     description:
@@ -1578,6 +1618,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.3"
+  quiver:
+    dependency: transitive
+    description:
+      name: quiver
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.2"
   rational:
     dependency: transitive
     description:
@@ -1690,6 +1738,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  sha3:
+    dependency: transitive
+    description:
+      name: sha3
+      sha256: efa0ad944b950965e7014ab02f407f0a62a64626259983af0e2f98cd39a73a8a
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   share_plus:
     dependency: "direct main"
     description:

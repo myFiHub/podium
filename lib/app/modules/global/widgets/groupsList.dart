@@ -147,7 +147,7 @@ class _SingleGroup extends StatelessWidget {
                                       ),
                                       space5,
                                       Text(
-                                        "Can be recorded by host",
+                                        "Recordable by Creator",
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w400,

@@ -11,7 +11,8 @@ dependencies:
     sdk: flutter
 
   reown_appkit: ^1.2.0
-  flutter_screen_recording: ^2.0.18
+  record: ^5.2.0
+  downloadsfolder: ^1.1.1
   alarm: ^4.1.1
   intl: ^0.19.0
   decimal: ^3.0.2
@@ -66,7 +67,6 @@ dependencies:
 
 dependency_overrides:
   web: ^0.5.0
-  js: ^0.7.1
 # dependency overrides
 
 dev_dependencies:

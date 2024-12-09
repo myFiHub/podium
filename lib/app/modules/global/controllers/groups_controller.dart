@@ -168,25 +168,30 @@ class GroupsController extends GetxController with FirebaseTags {
     _timerForTakingUsers.cancel();
   }
 
-  removeMyUserFromSessionAndGroup({required FirebaseGroup group}) async {
+  Future<void> removeMyUserFromSessionAndGroup(
+      {required FirebaseGroup group}) async {
     // ask if user want to leave the group
-    final canContinue = await _showModalToLeaveGroup(group: group);
-    if (canContinue == null || canContinue == false) return;
-    await removeMyUserFromGroupAndSession(groupId: group.id);
-    // remove group from groups list
-    groups.value.remove(group.id);
-    groups.refresh();
-    if (Get.isRegistered<AllGroupsController>()) {
-      final AllGroupsController allGroupsController = Get.find();
-      allGroupsController.searchedGroups.refresh();
-    }
-    if (Get.isRegistered<SearchPageController>()) {
-      final SearchPageController searchPageController = Get.find();
-      searchPageController.searchedGroups.refresh();
+    try {
+      final canContinue = await _showModalToLeaveGroup(group: group);
+      if (canContinue == null || canContinue == false) return;
+      await removeMyUserFromGroupAndSession(groupId: group.id);
+      // remove group from groups list
+      groups.value.remove(group.id);
+      groups.refresh();
+      if (Get.isRegistered<AllGroupsController>()) {
+        final AllGroupsController allGroupsController = Get.find();
+        allGroupsController.searchedGroups.refresh();
+      }
+      if (Get.isRegistered<SearchPageController>()) {
+        final SearchPageController searchPageController = Get.find();
+        searchPageController.searchedGroups.refresh();
+      }
+    } catch (e) {
+      log.e(e);
     }
   }
 
-  toggleArchive({required FirebaseGroup group}) async {
+  Future<void> toggleArchive({required FirebaseGroup group}) async {
     final canContinue = await _showModalToToggleArchiveGroup(group: group);
     if (canContinue == null || canContinue == false) return;
     final archive = !group.archived;

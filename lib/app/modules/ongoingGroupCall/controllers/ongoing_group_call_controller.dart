@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:ably_flutter/ably_flutter.dart';
+import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -22,6 +23,7 @@ import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:record/record.dart';
 import 'package:share_plus/share_plus.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
@@ -89,6 +91,7 @@ class OngoingGroupCallController extends GetxController {
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
   int numberOfRecording = 0;
+  AudioRecorder recorder = AudioRecorder();
 
   final loadingWalletAddressForUser = RxList<String>([]);
 
@@ -201,29 +204,45 @@ class OngoingGroupCallController extends GetxController {
   }
 
   _setIsRecording(bool recording) async {
+    String? path;
     final group = groupCallController.group.value!;
     final recordingName =
-        '${group.name}${numberOfRecording == 0 ? '' : numberOfRecording}';
+        'Podium Outpost record: ${group.name}${numberOfRecording == 0 ? '' : '-${numberOfRecording}'}';
+    Directory downloadDirectory = await getDownloadDirectory();
+
     if (recording) {
+      recorder = AudioRecorder();
       numberOfRecording++;
-      isRecording.value =
-          await FlutterScreenRecording.startRecordScreenAndAudio(
-        recordingName,
-        messageNotification: 'Recording in progress',
-        titleNotification: 'Podium',
-      );
+      if (await recorder.hasPermission()) {
+        // Start recording to file
+        await recorder.start(
+          const RecordConfig(),
+          path: '${downloadDirectory.path}/${recordingName}.m4a',
+        );
+        Toast.success(
+          title: "Recording started",
+          message: "Recording started",
+        );
+      } else {
+        Toast.error(
+          message: "Permission denied, please allow permission to record audio",
+        );
+      }
     } else {
       if (isRecording.value) {
-        final path = await FlutterScreenRecording.stopRecordScreen;
-        Toast.success(
-          title: "Recording saved",
-          message: "Recording saved, path: ${path}",
-          duration: 5,
-        );
-        await Share.shareXFiles(
-          [XFile(path)],
-          text: 'Podium: ${recordingName}',
-        );
+        path = await recorder.stop();
+        recorder.dispose();
+        if (path != null) {
+          Toast.success(
+            title: "Recording saved",
+            message: "Recording saved into Downloads folder",
+            duration: 5,
+          );
+          await Share.shareXFiles(
+            [XFile(path)],
+            text: 'Podium: ${recordingName}',
+          );
+        }
       }
     }
     isRecording.value = recording;
@@ -555,14 +574,16 @@ class OngoingGroupCallController extends GetxController {
       final selectedWallet = await choseAWallet(chainId: movementChain.chainId);
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
+          groupId: groupCallController.group.value!.id,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount,
           cheer: cheer,
-          chainId: externalWalletChianId,
+          chainId: movementChain.chainId,
         );
       } else if (selectedWallet == WalletNames.internal) {
         success = await internal_cheerOrBoo(
+          groupId: groupCallController.group.value!.id,
           user: user,
           target: targetAddress,
           receiverAddresses: receiverAddresses,

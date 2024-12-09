@@ -512,8 +512,8 @@ class OngoingGroupCallController extends GetxController {
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
     final [user] = await getUsersByIds([userId]);
-    if (user.localWalletAddress != '') {
-      targetAddress = user.localWalletAddress;
+    if (user.evm_externalWalletAddress != '') {
+      targetAddress = user.evm_externalWalletAddress;
     } else {
       final internalWalletAddress = await getUserInternalWalletAddress(userId);
       targetAddress = internalWalletAddress;
@@ -523,8 +523,8 @@ class OngoingGroupCallController extends GetxController {
     if (targetAddress != '') {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
-      if (myUser.localWalletAddress == targetAddress ||
-          (myUser.internalWalletAddress == targetAddress)) {
+      if (myUser.evm_externalWalletAddress == targetAddress ||
+          (myUser.evmInternalWalletAddress == targetAddress)) {
         receiverAddresses = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );

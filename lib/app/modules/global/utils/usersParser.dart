@@ -1,4 +1,3 @@
-
 import 'package:podium/app/modules/global/utils/pascalWords.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -12,9 +11,12 @@ UserInfoModel? singleUserParser(dynamic value) {
     final avatar = value[UserInfoModel.avatarUrlKey];
     final isOver18 = value[UserInfoModel.isOver18Key] ?? false;
     final savedInternalWalletAddress =
-        value[UserInfoModel.savedInternalWalletAddressKey] ?? '';
+        value[UserInfoModel.evmInternalWalletAddressKey] ?? '';
     final referrer = value[UserInfoModel.referrerKey] ?? '';
-    final localWalletAddress = value[UserInfoModel.localWalletAddressKey] ?? '';
+    final evm_externalWalletAddress =
+        value[UserInfoModel.evm_externalWalletAddressKey] ?? '';
+    final internalAptosWalletAddress =
+        value[UserInfoModel.aptosInternalWalletAddressKey] ?? '';
     final user = UserInfoModel(
       fullName: getPascalWords(name),
       email: email,
@@ -22,8 +24,9 @@ UserInfoModel? singleUserParser(dynamic value) {
       avatar: avatar,
       isOver18: isOver18,
       referrer: referrer,
-      savedInternalWalletAddress: savedInternalWalletAddress,
-      localWalletAddress: localWalletAddress,
+      evmInternalWalletAddress: savedInternalWalletAddress,
+      aptosInternalWalletAddress: internalAptosWalletAddress,
+      evm_externalWalletAddress: evm_externalWalletAddress,
       following: List.from(value[UserInfoModel.followingKey] ?? []),
       numberOfFollowers: value[UserInfoModel.numberOfFollowersKey] ?? 0,
       lowercasename:

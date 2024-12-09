@@ -375,7 +375,7 @@ class InternalWallet extends GetView<GlobalController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final walletAddress =
-          controller.currentUserInfo.value!.savedInternalWalletAddress;
+          controller.currentUserInfo.value!.evmInternalWalletAddress;
       return Container(
         width: double.infinity,
         decoration: BoxDecoration(

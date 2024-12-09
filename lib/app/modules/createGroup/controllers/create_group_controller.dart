@@ -260,10 +260,10 @@ class CreateGroupController extends GetxController {
           fullName: user.twitterName,
           email: '',
           avatar: user.twitterPicture,
-          localWalletAddress: user.mainAddress,
+          evm_externalWalletAddress: user.mainAddress,
           following: [],
           numberOfFollowers: user.followerCount,
-          savedInternalWalletAddress: user.mainAddress,
+          evmInternalWalletAddress: user.mainAddress,
         ),
         activeAddress: user.mainAddress,
       ));
@@ -329,7 +329,7 @@ class CreateGroupController extends GetxController {
     loadingUserIds.add(user.id);
     try {
       final activeWallets = await internal_friendTech_getActiveUserWallets(
-        internalWalletAddress: user.internalWalletAddress,
+        internalWalletAddress: user.evmInternalWalletAddress,
         externalWalletAddress: user.defaultWalletAddress,
         chainId: baseChainId,
       );

@@ -238,7 +238,7 @@ class GroupCallController extends GetxController {
 
     final myUser = globalController.currentUserInfo.value!;
 
-    if ((myUser.localWalletAddress == '' ||
+    if ((myUser.evm_externalWalletAddress == '' ||
             globalController.connectedWalletAddress == '') &&
         myUser.defaultWalletAddress == '') {
       Toast.warning(

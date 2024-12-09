@@ -1,3 +1,4 @@
+import 'package:aptos/aptos_account.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -268,6 +269,10 @@ class LoginController extends GetxController {
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
     final uid = addressToUuid(publicAddress);
+// aptos account
+    final aptosAccount = AptosAccount.fromPrivateKey(privateKey);
+    final aptosAddress = aptosAccount.address;
+// end aptos account
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
     internalWalletAddress.value = publicAddress;
 
@@ -276,7 +281,8 @@ class LoginController extends GetxController {
       name: userInfo.name ?? '',
       email: userInfo.email ?? '',
       avatar: userInfo.profileImage ?? '',
-      internalWalletAddress: publicAddress,
+      internalEvmWalletAddress: publicAddress,
+      internalAptosWalletAddress: aptosAddress,
       loginType: loginType,
       loginTypeIdentifier: userInfo.verifierId,
     );
@@ -327,7 +333,8 @@ class LoginController extends GetxController {
     required String name,
     required String email,
     required String avatar,
-    required String internalWalletAddress,
+    required String internalEvmWalletAddress,
+    required String internalAptosWalletAddress,
     required String loginType,
     String? loginTypeIdentifier,
   }) async {
@@ -344,8 +351,9 @@ class LoginController extends GetxController {
       fullName: name,
       email: email,
       avatar: avatar,
-      localWalletAddress: '',
-      savedInternalWalletAddress: internalWalletAddress,
+      evm_externalWalletAddress: '',
+      evmInternalWalletAddress: internalEvmWalletAddress,
+      aptosInternalWalletAddress: internalAptosWalletAddress,
       following: [],
       numberOfFollowers: 0,
       referrer: referrer.value?.id ?? '',
@@ -370,7 +378,7 @@ class LoginController extends GetxController {
         try {
           final avalancheClient = web3ClientByChainId(avalancheChainId);
           final res = await avalancheClient
-              .getBalance(parseAddress(internalWalletAddress));
+              .getBalance(parseAddress(internalEvmWalletAddress));
           final balance = weiToDecimalString(wei: res);
           internalWalletBalance.value = balance;
         } catch (e) {

@@ -280,7 +280,7 @@ class GlobalController extends GetxController {
   _saveExternalWalletAddress(String address) async {
     try {
       await saveUserWalletAddressOnFirebase(address);
-      currentUserInfo.value!.localWalletAddress = address;
+      currentUserInfo.value!.evm_externalWalletAddress = address;
       currentUserInfo.refresh();
     } catch (e) {
       log.e("error saving wallet address $e");
@@ -294,7 +294,7 @@ class GlobalController extends GetxController {
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId)
-        .child(UserInfoModel.localWalletAddressKey);
+        .child(UserInfoModel.evm_externalWalletAddressKey);
     final savedWalletAddress = await firebaseUserDbReference.get();
     if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
       return;
@@ -363,7 +363,7 @@ class GlobalController extends GetxController {
     try {
       final firebaseUserDbReference = FirebaseDatabase.instance
           .ref(FireBaseConstants.usersRef)
-          .child(myId + '/' + UserInfoModel.localWalletAddressKey);
+          .child(myId + '/' + UserInfoModel.evm_externalWalletAddressKey);
       await firebaseUserDbReference.set('');
       return true;
     } catch (e) {

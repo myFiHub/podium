@@ -529,6 +529,7 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
       final isCheerLoading = loadingUsers.contains("$userId-cheer");
       final isBooLoading = loadingUsers.contains("$userId-boo");
       return GFIconButton(
+        splashColor: Colors.transparent,
         padding: const EdgeInsets.only(top: 8, left: 8),
         icon: cheer
             ? isCheerLoading

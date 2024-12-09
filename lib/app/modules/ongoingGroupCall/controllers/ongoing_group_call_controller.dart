@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:ably_flutter/ably_flutter.dart';
+import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -21,6 +23,8 @@ import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:record/record.dart';
+import 'package:share_plus/share_plus.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
 const amountToAddForLikeInSeconds = 10; // 10 seconds
@@ -83,8 +87,11 @@ class OngoingGroupCallController extends GetxController {
   final amIAdmin = false.obs;
   final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
+  final isRecording = false.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
+  int numberOfRecording = 0;
+  AudioRecorder recorder = AudioRecorder();
 
   final loadingWalletAddressForUser = RxList<String>([]);
 
@@ -178,6 +185,7 @@ class OngoingGroupCallController extends GetxController {
   @override
   void onClose() async {
     super.onClose();
+    stopRecording();
     presenceUpdateStream?.cancel();
     stopTheTimer();
     stopSubscriptions();
@@ -185,6 +193,59 @@ class OngoingGroupCallController extends GetxController {
     firebaseSession.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
+  }
+
+  startRecording() {
+    _setIsRecording(true);
+  }
+
+  stopRecording() {
+    _setIsRecording(false);
+  }
+
+  _setIsRecording(bool recording) async {
+    String? path;
+    final group = groupCallController.group.value!;
+    final recordingName =
+        'Podium Outpost record: ${group.name}${numberOfRecording == 0 ? '' : '-${numberOfRecording}'}';
+    Directory downloadDirectory = await getDownloadDirectory();
+
+    if (recording) {
+      recorder = AudioRecorder();
+      numberOfRecording++;
+      if (await recorder.hasPermission()) {
+        // Start recording to file
+        await recorder.start(
+          const RecordConfig(),
+          path: '${downloadDirectory.path}/${recordingName}.m4a',
+        );
+        Toast.success(
+          title: "Recording started",
+          message: "Recording started",
+        );
+      } else {
+        Toast.error(
+          message: "Permission denied, please allow permission to record audio",
+        );
+      }
+    } else {
+      if (isRecording.value) {
+        path = await recorder.stop();
+        recorder.dispose();
+        if (path != null) {
+          Toast.success(
+            title: "Recording saved",
+            message: "Recording saved into Downloads folder",
+            duration: 5,
+          );
+          await Share.shareXFiles(
+            [XFile(path)],
+            text: 'Podium: ${recordingName}',
+          );
+        }
+      }
+    }
+    isRecording.value = recording;
   }
 
   _addToReactionLog({required ReactionLogElement element}) {
@@ -451,8 +512,8 @@ class OngoingGroupCallController extends GetxController {
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
     final [user] = await getUsersByIds([userId]);
-    if (user.localWalletAddress != '') {
-      targetAddress = user.localWalletAddress;
+    if (user.evm_externalWalletAddress != '') {
+      targetAddress = user.evm_externalWalletAddress;
     } else {
       final internalWalletAddress = await getUserInternalWalletAddress(userId);
       targetAddress = internalWalletAddress;
@@ -462,8 +523,8 @@ class OngoingGroupCallController extends GetxController {
     if (targetAddress != '') {
       List<String> receiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
-      if (myUser.localWalletAddress == targetAddress ||
-          (myUser.internalWalletAddress == targetAddress)) {
+      if (myUser.evm_externalWalletAddress == targetAddress ||
+          (myUser.evmInternalWalletAddress == targetAddress)) {
         receiverAddresses = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
@@ -513,14 +574,16 @@ class OngoingGroupCallController extends GetxController {
       final selectedWallet = await choseAWallet(chainId: movementChain.chainId);
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
+          groupId: groupCallController.group.value!.id,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount,
           cheer: cheer,
-          chainId: externalWalletChianId,
+          chainId: movementChain.chainId,
         );
       } else if (selectedWallet == WalletNames.internal) {
         success = await internal_cheerOrBoo(
+          groupId: groupCallController.group.value!.id,
           user: user,
           target: targetAddress,
           receiverAddresses: receiverAddresses,

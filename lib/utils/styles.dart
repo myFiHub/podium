@@ -73,4 +73,6 @@ const space16 = const Gap(
 const space24 = const Gap(
   24,
 );
-const space5 = const Gap(5);
+const space5 = const Gap(
+  5,
+);

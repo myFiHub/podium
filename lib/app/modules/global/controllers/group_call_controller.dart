@@ -70,10 +70,13 @@ class GroupCallController extends GetxController {
           groupId: activeGroup.id,
           onData: (data) async {
             if (data.snapshot.value != null) {
-              final membersListFromStream =
-                  (data.snapshot.value as List<dynamic>).cast<String>();
+              final tmpMembers = data.snapshot.value as dynamic;
+              final membersListFromStream = <String, String>{};
+              tmpMembers.forEach((key, value) {
+                membersListFromStream[key] = value;
+              });
               final previousUniqueMembers = members.value.map((e) => e.id);
-              final newUniqueMembers = membersListFromStream.map((e) => e);
+              final newUniqueMembers = membersListFromStream.keys.map((e) => e);
               if (previousUniqueMembers.length != newUniqueMembers.length) {
                 await refetchSessionMembers();
               }
@@ -235,7 +238,7 @@ class GroupCallController extends GetxController {
 
     final myUser = globalController.currentUserInfo.value!;
 
-    if ((myUser.localWalletAddress == '' ||
+    if ((myUser.evm_externalWalletAddress == '' ||
             globalController.connectedWalletAddress == '') &&
         myUser.defaultWalletAddress == '') {
       Toast.warning(

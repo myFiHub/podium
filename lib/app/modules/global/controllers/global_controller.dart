@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:alarm/alarm.dart';
+import 'package:aptos/aptos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -72,6 +73,7 @@ class GlobalController extends GetxController {
   final isAutoLoggingIn = true.obs;
   final isConnectedToInternet = true.obs;
   late ReownAppKitModal web3ModalService;
+  AptosAccount? aptosAccount;
   final loggedIn = false.obs;
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
@@ -280,7 +282,7 @@ class GlobalController extends GetxController {
   _saveExternalWalletAddress(String address) async {
     try {
       await saveUserWalletAddressOnFirebase(address);
-      currentUserInfo.value!.localWalletAddress = address;
+      currentUserInfo.value!.evm_externalWalletAddress = address;
       currentUserInfo.refresh();
     } catch (e) {
       log.e("error saving wallet address $e");
@@ -294,7 +296,7 @@ class GlobalController extends GetxController {
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId)
-        .child(UserInfoModel.localWalletAddressKey);
+        .child(UserInfoModel.evm_externalWalletAddressKey);
     final savedWalletAddress = await firebaseUserDbReference.get();
     if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
       return;
@@ -363,7 +365,7 @@ class GlobalController extends GetxController {
     try {
       final firebaseUserDbReference = FirebaseDatabase.instance
           .ref(FireBaseConstants.usersRef)
-          .child(myId + '/' + UserInfoModel.localWalletAddressKey);
+          .child(myId + '/' + UserInfoModel.evm_externalWalletAddressKey);
       await firebaseUserDbReference.set('');
       return true;
     } catch (e) {

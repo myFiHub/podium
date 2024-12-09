@@ -29,6 +29,7 @@ Future<bool> ext_cheerOrBoo({
   required num amount,
   required bool cheer,
   required String chainId,
+  required groupId,
 }) async {
   final service = web3ModalService;
   if (externalWalletChianId != chainId) {
@@ -58,7 +59,22 @@ Future<bool> ext_cheerOrBoo({
     return false;
   }
   service.launchConnectedWallet();
-
+  BigInt percentage = BigInt.from(100);
+  // it's not possible to boo, and have more than one receiver
+  if (!cheer) {
+    percentage = BigInt.from(50);
+  }
+  // this means that the user is cheering themselves
+  if (receiverAddresses.length > 1) {
+    percentage = BigInt.from(0);
+  }
+  final parameters = [
+    targetWallet,
+    receivers,
+    cheer,
+    percentage,
+    groupId,
+  ];
   try {
     final response = await service.requestWriteContract(
       topic: service.session!.topic,
@@ -66,11 +82,7 @@ Future<bool> ext_cheerOrBoo({
       deployedContract: contract,
       functionName: 'cheerOrBoo',
       transaction: transaction,
-      parameters: [
-        targetWallet,
-        receivers,
-        cheer,
-      ],
+      parameters: parameters,
     );
     if (response == "User rejected") {
       Toast.error(message: "transaction rejected");
@@ -94,6 +106,7 @@ internal_cheerOrBoo({
   required bool cheer,
   required String chainId,
   required UserInfoModel user,
+  required groupId,
 }) async {
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
   if (myAddress == null) {
@@ -106,12 +119,23 @@ internal_cheerOrBoo({
   }
 
   try {
+    BigInt percentage = BigInt.from(100);
+    // it's not possible to boo, and have more than one receiver
+    if (!cheer) {
+      percentage = BigInt.from(50);
+    }
+    // this means that the user is cheering themselves
+    if (receiverAddresses.length > 1) {
+      percentage = BigInt.from(0);
+    }
     final value = parseValue(amount);
     final methodName = 'cheerOrBoo';
     final parameters = [
       parseAddress(target),
       receiverAddresses.map((e) => parseAddress(e)).toList(),
-      cheer
+      cheer,
+      percentage,
+      groupId,
     ];
     final transaction = Transaction.callContract(
       contract: contract,
@@ -246,7 +270,7 @@ Future<BigInt?> getMyShares_arena({
   }
   final methodName = 'getMyShares';
   final parameters = [parseAddress(sharesSubjectWallet)];
-  final client = web3ClientByChainId(chainId);
+  final client = evmClientByChainId(chainId);
   try {
     final results = await Future.wait([
       client.call(
@@ -390,7 +414,7 @@ Future<BigInt?> _internal_getShares_friendthech({
     return null;
   }
   final methodName = 'sharesBalance';
-  final client = web3ClientByChainId(chainId);
+  final client = evmClientByChainId(chainId);
   try {
     final results = await Future.wait([
       client.call(
@@ -464,7 +488,7 @@ Future<BigInt?> internal_getFriendTechTicketPrice({
     BigInt.from(numberOfTickets),
   ];
   try {
-    final client = web3ClientByChainId(chainId);
+    final client = evmClientByChainId(chainId);
     final result = await client.call(
       contract: contract,
       function: contract.function(methodName),
@@ -775,7 +799,7 @@ Future<BigInt?> getBuyPriceForArenaTicket({
   final parameters = [parseAddress(sharesSubject), BigInt.from(shareAmount)];
 
   try {
-    final client = web3ClientByChainId(chainId);
+    final client = evmClientByChainId(chainId);
     final result = await client.call(
       contract: contract,
       function: contract.function(methodName),
@@ -908,6 +932,12 @@ BigInt doubleToBigIntWei(num v) {
 
 double bigIntWeiToDouble(BigInt v) {
   final BigInt weiToEthRatio = BigInt.from(10).pow(18);
+  final double vInEth = v.toDouble() / weiToEthRatio.toDouble();
+  return vInEth;
+}
+
+double bigIntCoinToMoveOnAptos(BigInt v) {
+  final BigInt weiToEthRatio = BigInt.from(10).pow(8);
   final double vInEth = v.toDouble() / weiToEthRatio.toDouble();
   return vInEth;
 }

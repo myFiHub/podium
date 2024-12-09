@@ -127,12 +127,12 @@ class ProfileController extends GetxController {
     }
     final (activeWallets, myShares) = await (
       internal_friendTech_getActiveUserWallets(
-        internalWalletAddress: userInfo.value!.internalWalletAddress,
+        internalWalletAddress: userInfo.value!.evmInternalWalletAddress,
         chainId: baseChainId,
       ),
       internal_getUserShares_friendTech(
         defaultWallet: userInfo.value!.defaultWalletAddress,
-        internalWallet: userInfo.value!.internalWalletAddress,
+        internalWallet: userInfo.value!.evmInternalWalletAddress,
         chainId: baseChainId,
       )
     ).wait;

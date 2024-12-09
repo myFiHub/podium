@@ -481,6 +481,22 @@ toggleGroupArchive({required String groupId, required bool archive}) async {
   await databaseRef.set(archive);
 }
 
+removeMyUserFromGroupAndSession({required String groupId}) async {
+  final userId = myId;
+  final databaseRef = FirebaseDatabase.instance.ref(
+      FireBaseConstants.groupsRef +
+          groupId +
+          '/${FirebaseGroup.membersKey}/$userId');
+  final sessionDatabaseRef = FirebaseDatabase.instance.ref(
+      FireBaseConstants.sessionsRef +
+          groupId +
+          '/${FirebaseSession.membersKey}/$userId');
+  await Future.wait([
+    databaseRef.remove(),
+    sessionDatabaseRef.remove(),
+  ]);
+}
+
 listenToSessionMembers({
   required String groupId,
   required void Function(DatabaseEvent) onData,
@@ -636,7 +652,7 @@ Future<String> getUserLocalWalletAddress(String userId) async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.usersRef)
       .child(userId)
-      .child(UserInfoModel.localWalletAddressKey);
+      .child(UserInfoModel.evm_externalWalletAddressKey);
   final snapshot = await databaseRef.get();
   final localWalletAddress = snapshot.value as dynamic;
   if (localWalletAddress == null) {
@@ -649,7 +665,7 @@ Future<String> getUserInternalWalletAddress(String userId) async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.usersRef)
       .child(userId)
-      .child(UserInfoModel.savedInternalWalletAddressKey);
+      .child(UserInfoModel.evmInternalWalletAddressKey);
   final snapshot = await databaseRef.get();
   final internalWalletAddress = snapshot.value as dynamic;
   if (internalWalletAddress == null) {
@@ -676,10 +692,10 @@ Future<List<String>> getListOfUserWalletsPresentInSession(
   final membersList = await getUsersByIds(membersIdList);
   final List<String> addressList = [];
   membersList.forEach((user) {
-    if (user.localWalletAddress.isNotEmpty) {
-      addressList.add(user.localWalletAddress);
+    if (user.evm_externalWalletAddress.isNotEmpty) {
+      addressList.add(user.evm_externalWalletAddress);
     } else {
-      addressList.add(user.savedInternalWalletAddress);
+      addressList.add(user.evmInternalWalletAddress);
     }
   });
   return addressList;
@@ -927,7 +943,7 @@ Future<UserInfoModel?> getUserByInternalWalletAddress({
 }) async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.usersRef)
-      .orderByChild(UserInfoModel.savedInternalWalletAddressKey)
+      .orderByChild(UserInfoModel.evmInternalWalletAddressKey)
       .equalTo(internalWalletAddress);
   final snapshot = await databaseRef.get();
   final user = snapshot.value as dynamic;
@@ -955,12 +971,12 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       if (savedLogintype != loginType) {
         userRef.child(UserInfoModel.loginTypeKey).set(loginType);
       }
-      final internalWalletAddress = user.internalWalletAddress;
+      final internalWalletAddress = user.evmInternalWalletAddress;
       final savedInternalWalletAddress =
-          userSnapshot[UserInfoModel.savedInternalWalletAddressKey];
+          userSnapshot[UserInfoModel.evmInternalWalletAddressKey];
       if (savedInternalWalletAddress != internalWalletAddress) {
         userRef
-            .child(UserInfoModel.savedInternalWalletAddressKey)
+            .child(UserInfoModel.evmInternalWalletAddressKey)
             .set(internalWalletAddress);
       }
       final savedLoginTypeIdentifier =
@@ -974,7 +990,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       final UserInfoModel? retrievedUser =
           singleUserParser(userSnapshot)?.copyWith(
         loginType: loginType,
-        savedInternalWalletAddress: internalWalletAddress,
+        evmInternalWalletAddress: internalWalletAddress,
         loginTypeIdentifier: user.loginTypeIdentifier,
       );
 

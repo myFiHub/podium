@@ -112,8 +112,8 @@ class CheckticketController extends GetxController {
       fullName: 'Direct Address',
       avatar: '',
       email: '',
-      localWalletAddress: address,
-      savedInternalWalletAddress: address,
+      evm_externalWalletAddress: address,
+      evmInternalWalletAddress: address,
       following: [],
       numberOfFollowers: 0,
     );
@@ -126,8 +126,8 @@ class CheckticketController extends GetxController {
       fullName: user.twitterName,
       avatar: user.twitterPicture,
       email: '',
-      localWalletAddress: user.mainAddress,
-      savedInternalWalletAddress: user.mainAddress,
+      evm_externalWalletAddress: user.mainAddress,
+      evmInternalWalletAddress: user.mainAddress,
       following: [],
       numberOfFollowers: 0,
     );
@@ -214,7 +214,7 @@ class CheckticketController extends GetxController {
       }
       final userInfo =
           usersForAccess.firstWhere((element) => element.id == user.userId);
-      userInfo.localWalletAddress = user.userAddress;
+      userInfo.evm_externalWalletAddress = user.userAddress;
       usersForAccess[i] = userInfo;
     }
     for (var i = 0; i < requiredTicketsToSpeak.length; i++) {
@@ -224,7 +224,7 @@ class CheckticketController extends GetxController {
       }
       final userInfo =
           usersForSpeak.firstWhere((element) => element.id == user.userId);
-      userInfo.localWalletAddress = user.userAddress;
+      userInfo.evm_externalWalletAddress = user.userAddress;
       usersForSpeak[i] = userInfo;
     }
     // fake users should be added after the real users have been added and modified
@@ -464,7 +464,7 @@ class CheckticketController extends GetxController {
     }
     bool bought = false;
     final activeWallets = await internal_friendTech_getActiveUserWallets(
-      internalWalletAddress: ticketSeller.userInfo.internalWalletAddress,
+      internalWalletAddress: ticketSeller.userInfo.evmInternalWalletAddress,
       externalWalletAddress: ticketSeller.userInfo.defaultWalletAddress,
       chainId: baseChainId,
     );
@@ -592,7 +592,7 @@ class CheckticketController extends GetxController {
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         final myShares = await internal_getUserShares_friendTech(
           defaultWallet: user.defaultWalletAddress,
-          internalWallet: user.internalWalletAddress,
+          internalWallet: user.evmInternalWalletAddress,
           chainId: baseChainId,
         );
         if (myShares > BigInt.zero) {
@@ -617,7 +617,7 @@ class CheckticketController extends GetxController {
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         final myShares = await internal_getUserShares_friendTech(
           defaultWallet: user.defaultWalletAddress,
-          internalWallet: user.internalWalletAddress,
+          internalWallet: user.evmInternalWalletAddress,
           chainId: baseChainId,
         );
         if (myShares > BigInt.zero) {

@@ -55,6 +55,7 @@ class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
+  final newGroupIsRecorable = false.obs;
   final roomAccessType = FreeRoomAccessTypes.public.obs;
   final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
 
@@ -259,10 +260,10 @@ class CreateGroupController extends GetxController {
           fullName: user.twitterName,
           email: '',
           avatar: user.twitterPicture,
-          localWalletAddress: user.mainAddress,
+          evm_externalWalletAddress: user.mainAddress,
           following: [],
           numberOfFollowers: user.followerCount,
-          savedInternalWalletAddress: user.mainAddress,
+          evmInternalWalletAddress: user.mainAddress,
         ),
         activeAddress: user.mainAddress,
       ));
@@ -328,7 +329,7 @@ class CreateGroupController extends GetxController {
     loadingUserIds.add(user.id);
     try {
       final activeWallets = await internal_friendTech_getActiveUserWallets(
-        internalWalletAddress: user.internalWalletAddress,
+        internalWalletAddress: user.evmInternalWalletAddress,
         externalWalletAddress: user.defaultWalletAddress,
         chainId: baseChainId,
       );
@@ -495,6 +496,7 @@ class CreateGroupController extends GetxController {
         subject: subject,
         tags: tags.value,
         adultContent: newGroupHasAdultContent.value,
+        recordable: newGroupIsRecorable.value,
         requiredTicketsToAccess:
             selectedUsersToBuyTicketFrom_ToAccessRoom.value,
         requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,

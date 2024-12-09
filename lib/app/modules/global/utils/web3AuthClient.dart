@@ -11,7 +11,7 @@ import 'package:podium/utils/logger.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
 
-Web3Client web3ClientByChainId(String chainId) {
+Web3Client evmClientByChainId(String chainId) {
   if (chainId == movementChain.chainId) {
     return Web3Client(movementChain.rpcUrl, Client());
   }
@@ -52,7 +52,7 @@ Future<String?> sendTransaction({
       return null;
     }
     final credentials = await _getCredentials();
-    final client = web3ClientByChainId(chainId);
+    final client = evmClientByChainId(chainId);
     final transactionSigned = await client.sendTransaction(
       credentials,
       transaction,

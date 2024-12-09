@@ -221,7 +221,7 @@ class GroupDetailController extends GetxController {
   }
 
   getMembers(FirebaseGroup group) async {
-    final memberIds = group.members;
+    final memberIds = group.members.keys.toList();
     isGettingMembers.value = true;
     final list = await getUsersByIds(memberIds);
     membersList.value = list;
@@ -249,7 +249,7 @@ class GroupDetailController extends GetxController {
         final list = users.values.toList();
         // remove the users that are already in the group
         final filteredList = list
-            .where((element) => !group.value!.members.contains(element.id))
+            .where((element) => !group.value!.members.keys.contains(element.id))
             .toList();
         // // remove the users that are already invited
         // final filteredList2 = filteredList

@@ -6,6 +6,8 @@ import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
+final movementProtoTestNetRpcUrl =
+    "https://aptos.testnet.porto.movementlabs.xyz/v1";
 final movementMainNetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement',
   chainId: '126',
@@ -28,6 +30,8 @@ final movementChain =
 //
 // movementMainNetChain;
     movementDevnetChain;
+
+final aptosRpcUrl = movementProtoTestNetRpcUrl;
 
 class BlockChainUtils {
   static Future<ReownAppKitModal> initializewm3Service(
@@ -255,7 +259,7 @@ Stream<FilterEvent> _getContractEventStream({
     fromBlock: const BlockNum.current(),
     toBlock: const BlockNum.current(),
   );
-  final movementClient = web3ClientByChainId(movementChain.chainId);
+  final movementClient = evmClientByChainId(movementChain.chainId);
   Stream<FilterEvent> eventStream = movementClient.events(filter);
   return eventStream;
 }

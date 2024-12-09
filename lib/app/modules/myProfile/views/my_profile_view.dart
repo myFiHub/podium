@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/referral_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
@@ -250,8 +251,8 @@ class _DefaultWalletState extends State<DefaultWallet> {
   }
 }
 
-class Balances extends GetView<MyProfileController> {
-  const Balances({super.key});
+class EvmBalances extends GetView<MyProfileController> {
+  const EvmBalances({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -373,131 +374,212 @@ class InternalWallet extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final walletAddress =
-          controller.currentUserInfo.value!.evmInternalWalletAddress;
-      final aptosWalletAddress =
-          controller.currentUserInfo.value!.aptosInternalWalletAddress;
-      return Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: ColorName.greyText,
-            width: 1,
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: ColorName.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Assets.images.logo.image(
+                    width: 30,
+                    height: 30,
+                  ),
+                  space10,
+                  Text(
+                    'Podium Wallet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.blue[100],
+                    ),
+                  ),
+                  space5,
+                  Icon(Icons.link, color: Colors.blue[100]),
+                  space5,
+                ],
+              ),
+              space10,
+              const EvmAddressAndBalances(),
+              space10,
+              const AptosAddressAndBalance(),
+            ],
           ),
-          borderRadius: BorderRadius.circular(6),
+          // FriendTeckActivationButton()
+        ],
+      ),
+    );
+  }
+}
+
+class AptosAddressAndBalance extends StatelessWidget {
+  const AptosAddressAndBalance({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final aptosWalletAddress = myUser.aptosInternalWalletAddress;
+    return AddressAndBalanceWidget(
+      address: aptosWalletAddress,
+      balanceWidget: const AptosBalance(),
+      addressPrefix: 'Aptos:',
+    );
+  }
+}
+
+class AddressAndBalanceWidget extends StatelessWidget {
+  const AddressAndBalanceWidget({
+    super.key,
+    required String this.address,
+    required Widget this.balanceWidget,
+    required String this.addressPrefix,
+  });
+
+  final String address;
+  final Widget balanceWidget;
+  final String addressPrefix;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: ColorName.cardBorder,
+        borderRadius: const BorderRadius.all(
+          const Radius.circular(12),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-        margin: const EdgeInsets.only(bottom: 12),
+      ),
+      child: Column(
+        children: [
+          space10,
+          GestureDetector(
+            onTap: () async {
+              await Clipboard.setData(
+                ClipboardData(
+                  text: address,
+                ),
+              );
+              Toast.neutral(
+                title: 'Copied',
+                message: 'Wallet address copied to clipboard',
+              );
+            },
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.account_balance_wallet,
+                  color: ColorName.greyText,
+                ),
+                space10,
+                Text(
+                  '${addressPrefix}${truncate(
+                    address,
+                    length: 9,
+                  )}',
+                  style: const TextStyle(
+                    fontSize: 23,
+                    fontWeight: FontWeight.w700,
+                    color: ColorName.greyText,
+                  ),
+                ),
+                space10,
+                const Icon(
+                  Icons.copy,
+                  color: Colors.grey,
+                )
+              ],
+            ),
+          ),
+          space10,
+          balanceWidget,
+          space10,
+        ],
+      ),
+    );
+  }
+}
+
+class EvmAddressAndBalances extends StatelessWidget {
+  const EvmAddressAndBalances({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final walletAddress = myUser.evmInternalWalletAddress;
+    return AddressAndBalanceWidget(
+      address: walletAddress,
+      balanceWidget: const EvmBalances(),
+      addressPrefix: 'EVM:',
+    );
+  }
+}
+
+class AptosBalance extends GetView<MyProfileController> {
+  const AptosBalance({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final balances = controller.balances.value;
+      final loading = controller.isGettingBalances.value;
+      if (loading) {
+        return Container(
+          width: Get.width - 16,
+          height: 46,
+          child: Center(
+            child: Container(
+              width: 20,
+              height: 20,
+              child: const CircularProgressIndicator(),
+            ),
+          ),
+        );
+      }
+      return Container(
+        // add a top border
+        decoration: const BoxDecoration(
+          border: const Border(
+            top: const BorderSide(
+              color: ColorName.greyText,
+              width: 1,
+            ),
+          ),
+        ),
+        padding: const EdgeInsets.only(top: 12),
+        width: Get.width - 24,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Assets.images.logo.image(
-                      width: 30,
-                      height: 30,
-                    ),
-                    space10,
-                    Text(
-                      'Podium Wallet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.blue[100],
+                    const Text(
+                      'Aptos MOVE',
+                      style: const TextStyle(
+                        fontSize: 12,
                       ),
                     ),
                     space5,
-                    Icon(Icons.link, color: Colors.blue[100]),
-                    space5,
+                    Img(
+                      src: chainIconUrlByChainId(movementChain.chainId),
+                      size: 16,
+                    ),
                   ],
                 ),
-                space10,
-                GestureDetector(
-                  onTap: () async {
-                    await Clipboard.setData(
-                      ClipboardData(
-                        text: walletAddress,
-                      ),
-                    );
-                    Toast.neutral(
-                      title: 'Copied',
-                      message: 'Wallet address copied to clipboard',
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.account_balance_wallet,
-                        color: ColorName.greyText,
-                      ),
-                      space10,
-                      Text(
-                        'Evm:${truncate(
-                          walletAddress,
-                          length: 10,
-                        )}',
-                        style: const TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w700,
-                          color: ColorName.greyText,
-                        ),
-                      ),
-                      space10,
-                      const Icon(
-                        Icons.copy,
-                        color: Colors.grey,
-                      )
-                    ],
+                Text(
+                  balances.movementAptos,
+                  style: const TextStyle(
+                    fontSize: 12,
                   ),
                 ),
-                space10,
-                GestureDetector(
-                  onTap: () async {
-                    await Clipboard.setData(
-                      ClipboardData(
-                        text: walletAddress,
-                      ),
-                    );
-                    Toast.neutral(
-                      title: 'Copied',
-                      message: 'Wallet address copied to clipboard',
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.account_balance_wallet,
-                        color: ColorName.greyText,
-                      ),
-                      space10,
-                      Text(
-                        'Aptos:${truncate(
-                          aptosWalletAddress,
-                          length: 9,
-                        )}',
-                        style: const TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w700,
-                          color: ColorName.greyText,
-                        ),
-                      ),
-                      space10,
-                      const Icon(
-                        Icons.copy,
-                        color: Colors.grey,
-                      )
-                    ],
-                  ),
-                ),
-                space10,
-                const Balances(),
               ],
             ),
-            // FriendTeckActivationButton()
           ],
         ),
       );

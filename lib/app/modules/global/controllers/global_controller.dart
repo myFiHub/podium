@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:alarm/alarm.dart';
+import 'package:aptos/aptos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -72,6 +73,7 @@ class GlobalController extends GetxController {
   final isAutoLoggingIn = true.obs;
   final isConnectedToInternet = true.obs;
   late ReownAppKitModal web3ModalService;
+  AptosAccount? aptosAccount;
   final loggedIn = false.obs;
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;

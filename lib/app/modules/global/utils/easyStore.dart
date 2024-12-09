@@ -1,3 +1,4 @@
+import 'package:aptos/aptos.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -10,11 +11,7 @@ UserInfoModel get myUser {
 }
 
 String get myId {
-  if (myUser == null) {
-    log.f('****************************myUser is null************************');
-    return '';
-  }
-  if (myUser!.id == '') {
+  if (myUser.id == '') {
     log.f('****************************myId is empty************************');
   }
   return myUser.id;
@@ -23,6 +20,11 @@ String get myId {
 ReownAppKitModal get web3ModalService {
   final globalController = Get.find<GlobalController>();
   return globalController.web3ModalService;
+}
+
+AptosAccount get aptosAccount {
+  final globalController = Get.find<GlobalController>();
+  return globalController.aptosAccount!;
 }
 
 String? get externalWalletAddress {

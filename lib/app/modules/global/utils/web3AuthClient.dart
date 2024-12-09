@@ -1,4 +1,3 @@
-import 'package:aptos/aptos.dart' as Aptos;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -19,13 +18,6 @@ Web3Client evmClientByChainId(String chainId) {
   final rpcUrl = chainInfoByChainId(chainId).rpcUrl;
   final client = Web3Client(rpcUrl, Client());
   return client;
-}
-
-aptosClient() {
-  return Aptos.AptosClient(
-    'https://aptos.testnet.porto.movementlabs.xyz/v1',
-    enableDebugLog: true,
-  );
 }
 
 Future<EthPrivateKey> _getCredentials() async {

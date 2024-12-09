@@ -271,6 +271,7 @@ class LoginController extends GetxController {
     final uid = addressToUuid(publicAddress);
 // aptos account
     final aptosAccount = AptosAccount.fromPrivateKey(privateKey);
+    globalController.aptosAccount = aptosAccount;
     final aptosAddress = aptosAccount.address;
 // end aptos account
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);

@@ -936,6 +936,12 @@ double bigIntWeiToDouble(BigInt v) {
   return vInEth;
 }
 
+double bigIntCoinToMoveOnAptos(BigInt v) {
+  final BigInt weiToEthRatio = BigInt.from(10).pow(8);
+  final double vInEth = v.toDouble() / weiToEthRatio.toDouble();
+  return vInEth;
+}
+
 String hexToAscii(String hexString) => List.generate(
       hexString.length ~/ 2,
       (i) => String.fromCharCode(

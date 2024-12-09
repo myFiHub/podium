@@ -4,6 +4,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
@@ -32,11 +33,13 @@ class Balances {
   String Base = '0.0';
   String Avalanche = '0.0';
   String Movement = '0.0';
+  String movementAptos = '0.0';
 
   Balances({
     required this.Base,
     required this.Avalanche,
     required this.Movement,
+    required this.movementAptos,
   });
 }
 
@@ -52,6 +55,7 @@ class MyProfileController extends GetxController {
     Base: '0.0',
     Avalanche: '0.0',
     Movement: '0.0',
+    movementAptos: '0.0',
   ));
 
   final payments = Rx(Payments(
@@ -87,16 +91,22 @@ class MyProfileController extends GetxController {
       final avalancheClient = evmClientByChainId(avalancheChainId);
       final movementClient = evmClientByChainId(movementChain.chainId);
       final myaddress = await web3AuthWalletAddress();
-      final [baseBalance, avalancheBalance, movementBalance] =
-          await Future.wait([
+      final (
+        baseBalance,
+        avalancheBalance,
+        movementBalance,
+        movementAptosBalance,
+      ) = await (
         baseClient.getBalance(parseAddress(myaddress!)),
         avalancheClient.getBalance(parseAddress(myaddress)),
         movementClient.getBalance(parseAddress(myaddress)),
-      ]);
+        AptosMovement.balance,
+      ).wait;
       balances.value = Balances(
         Base: weiToDecimalString(wei: baseBalance),
         Avalanche: weiToDecimalString(wei: avalancheBalance),
         Movement: weiToDecimalString(wei: movementBalance),
+        movementAptos: bigIntCoinToMoveOnAptos(movementAptosBalance).toString(),
       );
       isGettingBalances.value = false;
     } catch (e) {

@@ -6,6 +6,8 @@ import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
+final movementProtoTestNetRpcUrl =
+    "https://aptos.testnet.porto.movementlabs.xyz/v1";
 final movementMainNetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement',
   chainId: '126',
@@ -28,6 +30,8 @@ final movementChain =
 //
 // movementMainNetChain;
     movementDevnetChain;
+
+final aptosRpcUrl = movementProtoTestNetRpcUrl;
 
 class BlockChainUtils {
   static Future<ReownAppKitModal> initializewm3Service(

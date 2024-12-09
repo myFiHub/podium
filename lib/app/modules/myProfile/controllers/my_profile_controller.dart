@@ -83,9 +83,9 @@ class MyProfileController extends GetxController {
   _getBalances() async {
     try {
       isGettingBalances.value = true;
-      final baseClient = web3ClientByChainId(baseChainId);
-      final avalancheClient = web3ClientByChainId(avalancheChainId);
-      final movementClient = web3ClientByChainId(movementChain.chainId);
+      final baseClient = evmClientByChainId(baseChainId);
+      final avalancheClient = evmClientByChainId(avalancheChainId);
+      final movementClient = evmClientByChainId(movementChain.chainId);
       final myaddress = await web3AuthWalletAddress();
       final [baseBalance, avalancheBalance, movementBalance] =
           await Future.wait([

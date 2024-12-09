@@ -1,3 +1,4 @@
+import 'package:aptos/aptos.dart' as Aptos;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -11,13 +12,20 @@ import 'package:podium/utils/logger.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
 
-Web3Client web3ClientByChainId(String chainId) {
+Web3Client evmClientByChainId(String chainId) {
   if (chainId == movementChain.chainId) {
     return Web3Client(movementChain.rpcUrl, Client());
   }
   final rpcUrl = chainInfoByChainId(chainId).rpcUrl;
   final client = Web3Client(rpcUrl, Client());
   return client;
+}
+
+aptosClient() {
+  return Aptos.AptosClient(
+    'https://aptos.testnet.porto.movementlabs.xyz/v1',
+    enableDebugLog: true,
+  );
 }
 
 Future<EthPrivateKey> _getCredentials() async {
@@ -52,7 +60,7 @@ Future<String?> sendTransaction({
       return null;
     }
     final credentials = await _getCredentials();
-    final client = web3ClientByChainId(chainId);
+    final client = evmClientByChainId(chainId);
     final transactionSigned = await client.sendTransaction(
       credentials,
       transaction,

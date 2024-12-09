@@ -255,7 +255,7 @@ Stream<FilterEvent> _getContractEventStream({
     fromBlock: const BlockNum.current(),
     toBlock: const BlockNum.current(),
   );
-  final movementClient = web3ClientByChainId(movementChain.chainId);
+  final movementClient = evmClientByChainId(movementChain.chainId);
   Stream<FilterEvent> eventStream = movementClient.events(filter);
   return eventStream;
 }

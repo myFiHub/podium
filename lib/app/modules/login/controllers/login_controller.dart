@@ -376,7 +376,7 @@ class LoginController extends GetxController {
       final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
       if (!hasTicket) {
         try {
-          final avalancheClient = web3ClientByChainId(avalancheChainId);
+          final avalancheClient = evmClientByChainId(avalancheChainId);
           final res = await avalancheClient
               .getBalance(parseAddress(internalEvmWalletAddress));
           final balance = weiToDecimalString(wei: res);

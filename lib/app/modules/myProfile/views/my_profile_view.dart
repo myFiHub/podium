@@ -376,6 +376,8 @@ class InternalWallet extends GetView<GlobalController> {
     return Obx(() {
       final walletAddress =
           controller.currentUserInfo.value!.evmInternalWalletAddress;
+      final aptosWalletAddress =
+          controller.currentUserInfo.value!.aptosInternalWalletAddress;
       return Container(
         width: double.infinity,
         decoration: BoxDecoration(
@@ -434,10 +436,49 @@ class InternalWallet extends GetView<GlobalController> {
                       ),
                       space10,
                       Text(
-                        truncate(
+                        'Evm:${truncate(
                           walletAddress,
-                          length: 12,
+                          length: 10,
+                        )}',
+                        style: const TextStyle(
+                          fontSize: 23,
+                          fontWeight: FontWeight.w700,
+                          color: ColorName.greyText,
                         ),
+                      ),
+                      space10,
+                      const Icon(
+                        Icons.copy,
+                        color: Colors.grey,
+                      )
+                    ],
+                  ),
+                ),
+                space10,
+                GestureDetector(
+                  onTap: () async {
+                    await Clipboard.setData(
+                      ClipboardData(
+                        text: walletAddress,
+                      ),
+                    );
+                    Toast.neutral(
+                      title: 'Copied',
+                      message: 'Wallet address copied to clipboard',
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.account_balance_wallet,
+                        color: ColorName.greyText,
+                      ),
+                      space10,
+                      Text(
+                        'Aptos:${truncate(
+                          aptosWalletAddress,
+                          length: 9,
+                        )}',
                         style: const TextStyle(
                           fontSize: 23,
                           fontWeight: FontWeight.w700,

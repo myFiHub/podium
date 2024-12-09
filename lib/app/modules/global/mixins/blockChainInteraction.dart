@@ -270,7 +270,7 @@ Future<BigInt?> getMyShares_arena({
   }
   final methodName = 'getMyShares';
   final parameters = [parseAddress(sharesSubjectWallet)];
-  final client = web3ClientByChainId(chainId);
+  final client = evmClientByChainId(chainId);
   try {
     final results = await Future.wait([
       client.call(
@@ -414,7 +414,7 @@ Future<BigInt?> _internal_getShares_friendthech({
     return null;
   }
   final methodName = 'sharesBalance';
-  final client = web3ClientByChainId(chainId);
+  final client = evmClientByChainId(chainId);
   try {
     final results = await Future.wait([
       client.call(
@@ -488,7 +488,7 @@ Future<BigInt?> internal_getFriendTechTicketPrice({
     BigInt.from(numberOfTickets),
   ];
   try {
-    final client = web3ClientByChainId(chainId);
+    final client = evmClientByChainId(chainId);
     final result = await client.call(
       contract: contract,
       function: contract.function(methodName),
@@ -799,7 +799,7 @@ Future<BigInt?> getBuyPriceForArenaTicket({
   final parameters = [parseAddress(sharesSubject), BigInt.from(shareAmount)];
 
   try {
-    final client = web3ClientByChainId(chainId);
+    final client = evmClientByChainId(chainId);
     final result = await client.call(
       contract: contract,
       function: contract.function(methodName),

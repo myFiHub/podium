@@ -1,10 +1,13 @@
 import 'package:aptos/aptos.dart';
 import 'package:aptos/coin_client.dart';
 import 'package:aptos/models/entry_function_payload.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 class AptosMovement {
@@ -45,7 +48,7 @@ class AptosMovement {
     return CoinClient(client);
   }
 
-  static Future<bool> cheerBoo({
+  static Future<bool?> cheerBoo({
     required String target,
     required List<String> receiverAddresses,
     required num amount,
@@ -53,6 +56,32 @@ class AptosMovement {
     required groupId,
   }) async {
     try {
+      final b = await balance;
+      if (b < doubleToBigIntMoveForAptos(amount)) {
+        Toast.error(
+          title: 'Insufficient balance',
+          mainbutton: TextButton(
+            onPressed: () {
+              final addr = address;
+              Clipboard.setData(
+                ClipboardData(text: addr),
+              );
+              Toast.info(
+                title: 'Copied!',
+                message: 'Address copied to clipboard',
+              );
+            },
+            child: const Text(
+              'Copy Address',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+        );
+        return null;
+      }
       final cheerBooAddress = Env.cheerBooAptosAddress;
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
       int percentage = cheer ? 100 : 50;

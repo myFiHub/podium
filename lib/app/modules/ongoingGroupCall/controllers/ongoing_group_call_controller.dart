@@ -586,7 +586,7 @@ class OngoingGroupCallController extends GetxController {
         return;
       }
 
-      bool success = false;
+      bool? success;
       final selectedWallet = await choseAWallet(
         chainId: movementChain.chainId,
         supportsAptos: true,
@@ -596,7 +596,7 @@ class OngoingGroupCallController extends GetxController {
           groupId: groupCallController.group.value!.id,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
-          amount: parsedAmount,
+          amount: parsedAmount.abs(),
           cheer: cheer,
           chainId: movementChain.chainId,
         );
@@ -606,7 +606,7 @@ class OngoingGroupCallController extends GetxController {
           user: user,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
-          amount: parsedAmount,
+          amount: parsedAmount.abs(),
           cheer: cheer,
           chainId: movementChain.chainId,
         );
@@ -615,21 +615,23 @@ class OngoingGroupCallController extends GetxController {
           groupId: groupCallController.group.value!.id,
           target: user.aptosInternalWalletAddress,
           receiverAddresses: aptosReceiverAddresses,
-          amount: parsedAmount,
+          amount: parsedAmount.abs(),
           cheer: cheer,
         );
       }
-
+      // success null means error is handled inside called function
+      if (success == null) {
+        return;
+      }
       if (success) {
         _removeLoadingCheerBoo(userId: userId, cheer: cheer);
-
         cheer
             ? addToTimer(
-                seconds: finalAmountOfTimeToAdd,
+                seconds: finalAmountOfTimeToAdd.abs(),
                 userId: userId,
               )
             : reduceFromTimer(
-                seconds: finalAmountOfTimeToAdd,
+                seconds: finalAmountOfTimeToAdd.abs(),
                 userId: userId,
               );
 

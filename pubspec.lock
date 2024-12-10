@@ -121,9 +121,11 @@ packages:
   aptos:
     dependency: "direct main"
     description:
-      path: aptos
-      relative: true
-    source: path
+      path: "."
+      ref: developing
+      resolved-ref: "269363bfe7454505861ae9e3cdfee9d26ddd4aa6"
+      url: "https://github.com/mhsnprvr/aptos.git"
+    source: git
     version: "0.0.6"
   archive:
     dependency: transitive

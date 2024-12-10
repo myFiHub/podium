@@ -50,7 +50,6 @@ class AptosMovement {
     required List<String> receiverAddresses,
     required num amount,
     required bool cheer,
-    required String chainId,
     required groupId,
   }) async {
     try {

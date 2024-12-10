@@ -12,6 +12,7 @@ import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
@@ -571,7 +572,10 @@ class OngoingGroupCallController extends GetxController {
       }
 
       bool success = false;
-      final selectedWallet = await choseAWallet(chainId: movementChain.chainId);
+      final selectedWallet = await choseAWallet(
+        chainId: movementChain.chainId,
+        supportsAptos: true,
+      );
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           groupId: groupCallController.group.value!.id,
@@ -581,7 +585,7 @@ class OngoingGroupCallController extends GetxController {
           cheer: cheer,
           chainId: movementChain.chainId,
         );
-      } else if (selectedWallet == WalletNames.internal) {
+      } else if (selectedWallet == WalletNames.internal_EVM) {
         success = await internal_cheerOrBoo(
           groupId: groupCallController.group.value!.id,
           user: user,
@@ -590,6 +594,14 @@ class OngoingGroupCallController extends GetxController {
           amount: parsedAmount,
           cheer: cheer,
           chainId: movementChain.chainId,
+        );
+      } else if (selectedWallet == WalletNames.internal_Aptos) {
+        success = await AptosMovement().cheerBoo(
+          groupId: groupCallController.group.value!.id,
+          target: targetAddress,
+          receiverAddresses: receiverAddresses,
+          amount: parsedAmount,
+          cheer: cheer,
         );
       }
 
@@ -635,7 +647,9 @@ class OngoingGroupCallController extends GetxController {
         saveNewPayment(
             event: PaymentEvent(
           amount: amount,
-          chainId: movementChain.chainId,
+          chainId: selectedWallet == WalletNames.internal_Aptos
+              ? '127'
+              : movementChain.chainId,
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external
               ? externalWalletAddress!

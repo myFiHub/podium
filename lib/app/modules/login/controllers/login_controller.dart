@@ -103,7 +103,7 @@ class LoginController extends GetxController {
         if (selectedWallet == null) {
           return;
         } else {
-          if (selectedWallet == WalletNames.internal) {
+          if (selectedWallet == WalletNames.internal_EVM) {
             bought = await internal_buySharesWithReferrer(
               sharesSubject: user.mainAddress,
               chainId: avalancheChainId,

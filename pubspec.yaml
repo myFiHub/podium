@@ -60,10 +60,9 @@ dependencies:
   web3auth_flutter: ^5.0.4
   web3dart: ^2.7.3
   aptos:
-    path: ./aptos
-    # git:
-    #   url: https://github.com/mhsnprvr/aptos.git
-    #   ref: developing
+    git:
+      url: https://github.com/mhsnprvr/aptos.git
+      ref: developing
   ed25519_edwards: ^0.3.1
 
   lint: ^2.3.0

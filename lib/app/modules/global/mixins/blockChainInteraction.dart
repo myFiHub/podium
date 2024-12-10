@@ -970,21 +970,22 @@ String? fihubAddress(String chainId) {
 }
 
 class WalletNames {
-  static const internal = "Internal Wallet";
+  static const internal_EVM = "Internal EVM Wallet";
+  static const internal_Aptos = "Internal Aptos Wallet";
   static const external = "External Wallet";
 }
 
 Future<String?> choseAWallet(
     {required String chainId, bool? supportsAptos}) async {
-  if (externalWalletAddress == null) {
-    return WalletNames.internal;
+  if (externalWalletAddress == null && supportsAptos != true) {
+    return WalletNames.internal_EVM;
   }
-  if (externalWalletAddress!.isEmpty) {
-    return WalletNames.internal;
+  if (externalWalletAddress!.isEmpty && supportsAptos != true) {
+    return WalletNames.internal_EVM;
   }
   final store = GetStorage();
   final savedWallet = store.read(StorageKeys.selectedWalletName);
-  if (savedWallet != null) {
+  if (savedWallet != null && supportsAptos != true) {
     return savedWallet;
   }
 
@@ -1006,6 +1007,7 @@ Future<String?> choseAWallet(
       ),
       backgroundColor: ColorName.cardBackground,
       content: SelectChainContent(
+        includeAptos: supportsAptos == true,
         chainId: chainId,
       ),
     ),
@@ -1015,7 +1017,9 @@ Future<String?> choseAWallet(
 
 class SelectChainContent extends GetView<GlobalController> {
   final String chainId;
-  const SelectChainContent({super.key, required this.chainId});
+  final bool includeAptos;
+  const SelectChainContent(
+      {super.key, required this.chainId, required this.includeAptos});
 
   @override
   Widget build(BuildContext context) {
@@ -1032,7 +1036,7 @@ class SelectChainContent extends GetView<GlobalController> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Button(
-              text: "Podium Wallet",
+              text: "Podium Wallet (EVM)",
               type: ButtonType.outline,
               color: ColorName.primaryBlue,
               blockButton: true,
@@ -1044,10 +1048,25 @@ class SelectChainContent extends GetView<GlobalController> {
                 final shouldRemember = store.read("rememberWallet") ?? false;
                 if (shouldRemember) {
                   store.write(
-                      StorageKeys.selectedWalletName, WalletNames.internal);
+                      StorageKeys.selectedWalletName, WalletNames.internal_EVM);
                 }
-                Navigator.pop(Get.overlayContext!, WalletNames.internal);
+                Navigator.pop(Get.overlayContext!, WalletNames.internal_EVM);
               }),
+          space10,
+          if (includeAptos)
+            Button(
+                text: "Podium Wallet (Aptos)",
+                type: ButtonType.outline,
+                color: ColorName.primaryBlue,
+                blockButton: true,
+                icon: Assets.images.logo.image(
+                  width: 20,
+                  height: 20,
+                ),
+                onPressed: () {
+                  Navigator.pop(
+                      Get.overlayContext!, WalletNames.internal_Aptos);
+                }),
           space10,
           Button(
               text: "External Wallet",

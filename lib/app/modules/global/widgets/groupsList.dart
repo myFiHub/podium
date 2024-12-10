@@ -399,7 +399,7 @@ class _ScheduledBanner extends StatelessWidget {
               ? remaining.split('d,').join('d\n').replaceAll('d', 'days')
               : remaining;
           return Positioned(
-            right: 16,
+            right: 8,
             top: 0,
             child: IgnorePointer(
               child: Container(

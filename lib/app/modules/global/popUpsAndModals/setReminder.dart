@@ -55,17 +55,16 @@ List<Map<String, Object>> defaultTimeList({required int endsAt}) {
   return filteredTimes;
 }
 
-bool isReminderAlreadySet(int alarmId) {
-  final alreadtSetAlarm = Alarm.getAlarm(alarmId);
-  return true;
-  return false;
+Future<bool> isReminderAlreadySet(int alarmId) async {
+  final alreadySetAlarm = await Alarm.getAlarm(alarmId);
+  return alreadySetAlarm != null;
 }
 
 Future<DateTime?> getReminderTime(int alarmId) async {
-  final alreadtSetAlarm = isReminderAlreadySet(alarmId);
+  final alreadtSetAlarm = await isReminderAlreadySet(alarmId);
   if (alreadtSetAlarm) {
     final alarm = await Alarm.getAlarm(alarmId);
-    return alarm!.dateTime;
+    if (alarm != null) return alarm.dateTime;
   }
   return null;
 }
@@ -93,7 +92,7 @@ Future<int?> setReminder({
     return null;
   }
 
-  final alreadtSetAlarm = isReminderAlreadySet(alarmId);
+  final alreadtSetAlarm = await isReminderAlreadySet(alarmId);
   if (alreadtSetAlarm) {
     Alarm.stop(id);
   }

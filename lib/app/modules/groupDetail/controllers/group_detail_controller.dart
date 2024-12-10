@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -12,6 +13,8 @@ import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/customLibs/omniDatePicker/src/enums/omni_datetime_picker_type.dart';
+import 'package:podium/customLibs/omniDatePicker/src/omni_datetime_picker_dialogs.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -120,6 +123,19 @@ class GroupDetailController extends GetxController {
     forceUpdateIndicator.value = !forceUpdateIndicator.value;
   }
 
+  reselectScheduleTime() async {
+    DateTime? dateTime = await showOmniDateTimePicker(
+      context: Get.context!,
+      is24HourMode: true,
+      theme: ThemeData.dark(),
+      type: OmniDateTimePickerType.dateAndTime,
+      firstDate: DateTime.now().add(const Duration(minutes: 5)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      minutesInterval: 5,
+    );
+    log.i(dateTime);
+  }
+
   onGroupUpdate(DatabaseEvent data) {
     if (group.value == null) return;
     final newData = singleGroupParser(data.snapshot.value);
@@ -163,7 +179,7 @@ class GroupDetailController extends GetxController {
         }
         if (amICreator) {
           jointButtonContentProps.value =
-              JoinButtonProps(enabled: true, text: 'Enter room');
+              JoinButtonProps(enabled: true, text: 'Enter the Outpost');
         } else {
           final remaining = remainintTimeUntilMilSecondsFormated(
               time: group.value!.scheduledFor);

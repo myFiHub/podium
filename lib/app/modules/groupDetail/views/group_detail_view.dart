@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -36,7 +37,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
 
             return Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   space16,
                   Padding(
@@ -45,16 +46,18 @@ class GroupDetailView extends GetView<GroupDetailController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              "Joining",
+                              "Joining:",
+                              textAlign: TextAlign.left,
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 overflow: TextOverflow.visible,
                               ),
                             ),
-                            space14,
+                            space5,
                             Text(
                               group.name,
+                              textAlign: TextAlign.left,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -123,11 +126,35 @@ class GroupDetailView extends GetView<GroupDetailController> {
                   space10,
                   space10,
                   if (group.scheduledFor != 0) const SetReminderButton(),
+                  // if (group.scheduledFor != 0 && iAmOwner) ...[
+                  //   space10,
+                  //   const ChangeScheduleButton()
+                  // ],
                 ],
               ),
             );
           }),
         ],
+      ),
+    );
+  }
+}
+
+class ChangeScheduleButton extends GetView<GroupDetailController> {
+  const ChangeScheduleButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      type: ButtonType.outline,
+      color: ColorName.primaryBlue,
+      blockButton: true,
+      onPressed: () async {
+        controller.reselectScheduleTime();
+      },
+      child: const Text(
+        'Change Schedule',
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -173,13 +200,13 @@ class SetReminderButton extends GetView<GroupDetailController> {
         color: ColorName.primaryBlue,
         blockButton: true,
         onPressed: () async {
-          await setReminder(
+          final newDateInSeconds = await setReminder(
             alarmId: group.alarmId,
             scheduledFor: group.scheduledFor,
             eventName: group.name,
             timesList: defaultTimeList(endsAt: group.scheduledFor),
           );
-          controller.forceUpdate();
+          log.d('newDateInSeconds: $newDateInSeconds');
         },
         child: Text(
           text,

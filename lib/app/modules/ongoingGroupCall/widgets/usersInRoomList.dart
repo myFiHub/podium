@@ -125,12 +125,9 @@ class _SingleUserInRoom extends StatelessWidget {
                           space5,
                           Row(
                             children: [
-                              Hero(
-                                tag: user.id,
-                                child: Img(
-                                  src: avatar,
-                                  alt: name,
-                                ),
+                              Img(
+                                src: avatar,
+                                alt: name,
                               ),
                               space5,
                               Container(

@@ -109,10 +109,13 @@ class AptosMovement {
       );
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
-      final Map result =
-          await client.submitSignedBCSTransaction(signedTransaction);
+      final result = await client.submitSignedBCSTransaction(signedTransaction);
       if (result['hash'] != null) {
-        return true;
+        final transactionStatus =
+            await client.getTransactionByHash(result['hash']);
+        if (transactionStatus['success']) {
+          return true;
+        }
       }
       return false;
     } catch (e) {

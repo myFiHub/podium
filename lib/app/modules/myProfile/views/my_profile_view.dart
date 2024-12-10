@@ -858,13 +858,10 @@ class UserInfo extends GetView<GlobalController> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Hero(
-              tag: myUser.id,
-              child: Img(
-                src: avatar,
-                size: 100,
-                alt: myUser.fullName,
-              ),
+            Img(
+              src: avatar,
+              size: 100,
+              alt: myUser.fullName,
             ),
             space10,
             space10,

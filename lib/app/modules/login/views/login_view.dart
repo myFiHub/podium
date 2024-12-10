@@ -31,13 +31,6 @@ class LoginView extends GetView<LoginController> {
                       height: 150,
                       child: Assets.images.logo.image(),
                     ),
-                    // Hero(
-                    //   tag: 'logo',
-                    //   child: Container(
-                    //     height: 150,
-                    //     child: Assets.images.logo.image(),
-                    //   ),
-                    // ),
                     const Text(
                       'Podium',
                       style: TextStyle(

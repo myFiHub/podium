@@ -76,12 +76,9 @@ class HomeView extends GetView<HomeController> {
                           return Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Hero(
-                                tag: 'logo',
-                                child: Container(
-                                  height: 100,
-                                  child: Assets.images.logo.image(),
-                                ),
+                              Container(
+                                height: 100,
+                                child: Assets.images.logo.image(),
                               ),
                               const Text(
                                 'Welcome to Podium',

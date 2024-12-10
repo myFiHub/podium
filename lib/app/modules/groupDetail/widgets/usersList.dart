@@ -97,15 +97,12 @@ class _SingleUser extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Hero(
-                              tag: userId,
-                              child: SizedBox(
-                                width: 40, // Ancho deseado
-                                height: 40, // Alto deseado
-                                child: Img(
-                                  src: avatar,
-                                  alt: name,
-                                ),
+                            SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: Img(
+                                src: avatar,
+                                alt: name,
                               ),
                             ),
                             space10,

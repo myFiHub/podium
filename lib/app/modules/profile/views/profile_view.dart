@@ -353,13 +353,10 @@ class UserInfo extends GetWidget<ProfileController> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Hero(
-              tag: user.id,
-              child: Img(
-                src: avatar,
-                alt: user.fullName,
-                size: 100,
-              ),
+            Img(
+              src: avatar,
+              alt: user.fullName,
+              size: 100,
             ),
             space10,
             space10,

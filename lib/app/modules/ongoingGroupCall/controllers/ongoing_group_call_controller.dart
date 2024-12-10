@@ -512,7 +512,11 @@ class OngoingGroupCallController extends GetxController {
     String? targetAddress;
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final [user] = await getUsersByIds([userId]);
+    final user = await getUserById(userId);
+    if (user == null) {
+      log.e("user is null");
+      return;
+    }
     if (user.evm_externalWalletAddress != '') {
       targetAddress = user.evm_externalWalletAddress;
     } else {
@@ -523,12 +527,23 @@ class OngoingGroupCallController extends GetxController {
     log.d("target address is $targetAddress for user $userId");
     if (targetAddress != '') {
       List<String> receiverAddresses = [];
+      List<String> aptosReceiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
       if (myUser.evm_externalWalletAddress == targetAddress ||
           (myUser.evmInternalWalletAddress == targetAddress)) {
-        receiverAddresses = await getListOfUserWalletsPresentInSession(
+        final members = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
+        members.forEach((element) {
+          if (element != targetAddress) {
+            aptosReceiverAddresses.add(element.aptosInternalWalletAddress);
+            if (element.evm_externalWalletAddress.isNotEmpty) {
+              receiverAddresses.add(user.evm_externalWalletAddress);
+            } else {
+              receiverAddresses.add(user.evmInternalWalletAddress);
+            }
+          }
+        });
       } else {
         receiverAddresses = [targetAddress];
       }
@@ -596,10 +611,10 @@ class OngoingGroupCallController extends GetxController {
           chainId: movementChain.chainId,
         );
       } else if (selectedWallet == WalletNames.internal_Aptos) {
-        success = await AptosMovement().cheerBoo(
+        success = await AptosMovement.cheerBoo(
           groupId: groupCallController.group.value!.id,
-          target: targetAddress,
-          receiverAddresses: receiverAddresses,
+          target: user.aptosInternalWalletAddress,
+          receiverAddresses: aptosReceiverAddresses,
           amount: parsedAmount,
           cheer: cheer,
         );

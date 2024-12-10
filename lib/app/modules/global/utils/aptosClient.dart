@@ -45,7 +45,7 @@ class AptosMovement {
     return CoinClient(client);
   }
 
-  Future<bool> cheerBoo({
+  static Future<bool> cheerBoo({
     required String target,
     required List<String> receiverAddresses,
     required num amount,
@@ -80,11 +80,9 @@ class AptosMovement {
       );
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
-      final result = await client.submitSignedBCSTransaction(signedTransaction);
-      if (result.isOk) {
-        return true;
-      }
-      return false;
+      await client.submitSignedBCSTransaction(signedTransaction);
+
+      return true;
     } catch (e) {
       log.e(e);
       return false;

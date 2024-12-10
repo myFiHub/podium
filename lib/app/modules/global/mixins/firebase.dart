@@ -674,7 +674,7 @@ Future<String> getUserInternalWalletAddress(String userId) async {
   return internalWalletAddress as String;
 }
 
-Future<List<String>> getListOfUserWalletsPresentInSession(
+Future<List<UserInfoModel>> getListOfUserWalletsPresentInSession(
     String groupId) async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.sessionsRef)
@@ -690,15 +690,8 @@ Future<List<String>> getListOfUserWalletsPresentInSession(
     membersIdList.add(element);
   });
   final membersList = await getUsersByIds(membersIdList);
-  final List<String> addressList = [];
-  membersList.forEach((user) {
-    if (user.evm_externalWalletAddress.isNotEmpty) {
-      addressList.add(user.evm_externalWalletAddress);
-    } else {
-      addressList.add(user.evmInternalWalletAddress);
-    }
-  });
-  return addressList;
+
+  return membersList;
 }
 
 follow(String userId) async {

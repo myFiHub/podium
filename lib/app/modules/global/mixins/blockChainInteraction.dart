@@ -979,9 +979,10 @@ Future<String?> choseAWallet(
     {required String chainId, bool? supportsAptos}) async {
   if (externalWalletAddress == null && supportsAptos != true) {
     return WalletNames.internal_EVM;
-  }
-  if (externalWalletAddress!.isEmpty && supportsAptos != true) {
-    return WalletNames.internal_EVM;
+  } else if (externalWalletAddress != null) {
+    if (externalWalletAddress!.isEmpty && supportsAptos != true) {
+      return WalletNames.internal_EVM;
+    }
   }
   final store = GetStorage();
   final savedWallet = store.read(StorageKeys.selectedWalletName);

@@ -5,14 +5,15 @@ class StorageKeys {
   }
   StorageKeys._internal();
 
-  static final userId = 'userId';
-  static final userFullName = 'userFullName';
-  static final userEmail = 'userEmail';
-  static final userAvatar = 'userAvatar';
-  static final ignoredOrAcceptedVersion = 'ignoredOrAcceptedVersion';
-  static final ongoingCallSortType = 'ongoingCallSortType';
-  static final loginType = 'loginType';
-  static final selectedWalletName = 'selectedWalletName';
-  static final externalWalletChainId = 'externalWalletChainId';
-  static final showArchivedGroups = 'showArchivedGroups';
+  static const userId = 'userId';
+  static const userFullName = 'userFullName';
+  static const userEmail = 'userEmail';
+  static const userAvatar = 'userAvatar';
+  static const ignoredOrAcceptedVersion = 'ignoredOrAcceptedVersion';
+  static const ongoingCallSortType = 'ongoingCallSortType';
+  static const loginType = 'loginType';
+  static const rememberSelectedWallet = 'rememberWallet';
+  static const selectedWalletName = 'selectedWalletName';
+  static const externalWalletChainId = 'externalWalletChainId';
+  static const showArchivedGroups = 'showArchivedGroups';
 }

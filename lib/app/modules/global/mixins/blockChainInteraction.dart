@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -1037,7 +1038,6 @@ class SelectChainContent extends GetView<GlobalController> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Button(
-              text: "Podium Wallet (EVM)",
               type: ButtonType.outline,
               color: ColorName.primaryBlue,
               blockButton: true,
@@ -1045,8 +1045,17 @@ class SelectChainContent extends GetView<GlobalController> {
                 width: 20,
                 height: 20,
               ),
+              child: AutoSizeText(
+                "Podium Wallet (${chainNameById(chainId)})",
+                style: const TextStyle(
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+              ),
               onPressed: () {
-                final shouldRemember = store.read("rememberWallet") ?? false;
+                final shouldRemember =
+                    store.read(StorageKeys.rememberSelectedWallet) ?? false;
                 if (shouldRemember) {
                   store.write(
                       StorageKeys.selectedWalletName, WalletNames.internal_EVM);
@@ -1077,7 +1086,8 @@ class SelectChainContent extends GetView<GlobalController> {
               onPressed: externalWalletEnabled
                   ? () {
                       final shouldRemember =
-                          store.read("rememberWallet") ?? false;
+                          store.read(StorageKeys.rememberSelectedWallet) ??
+                              false;
                       if (shouldRemember) {
                         store.write(StorageKeys.selectedWalletName,
                             WalletNames.external);
@@ -1124,13 +1134,13 @@ class _RememberCheckBoxState extends State<RememberCheckBox> {
   @override
   Widget build(BuildContext context) {
     final store = GetStorage();
-    final savedValue = store.read("rememberWallet");
+    final savedValue = store.read(StorageKeys.rememberSelectedWallet);
     if (savedValue != null && savedValue is bool && savedValue != value) {
       value = savedValue;
     }
     return GestureDetector(
       onTap: () {
-        store.write("rememberWallet", !value);
+        store.write(StorageKeys.rememberSelectedWallet, !value);
         setState(() {
           value = !value;
         });
@@ -1140,7 +1150,7 @@ class _RememberCheckBoxState extends State<RememberCheckBox> {
           Checkbox(
             value: value,
             onChanged: (value) {
-              store.write("rememberWallet", value);
+              store.write(StorageKeys.rememberSelectedWallet, value);
               setState(() {
                 this.value = value!;
               });

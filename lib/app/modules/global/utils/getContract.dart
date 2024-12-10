@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/chainInfo.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -57,12 +58,12 @@ DeployedContract? getDeployedContract(
   return deployedContract;
 }
 
-chainNameById(String chainId) {
+String chainNameById(String chainId) {
   final name =
       ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)
           ?.name;
   if (name == null) {
-    return "Unknown";
+    return "Movement";
   }
   return name;
 }

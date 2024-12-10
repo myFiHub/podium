@@ -787,7 +787,6 @@ class WalletConnect extends GetView<GlobalController> {
                 : Button(
                     onPressed: () {
                       controller.connectToWallet();
-                      // AptosMovement().cheerBoo(parameters: []);
                     },
                     type: ButtonType.gradient,
                     blockButton: true,

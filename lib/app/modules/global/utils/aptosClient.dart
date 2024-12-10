@@ -4,8 +4,8 @@ import 'package:aptos/models/entry_function_payload.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class AptosMovement {
   AptosMovement._internal();
@@ -45,52 +45,50 @@ class AptosMovement {
     return CoinClient(client);
   }
 
-  cheerBoo({
-    required List<dynamic> parameters,
-    double amount = 0.01,
-    bool isCheer = true,
+  Future<bool> cheerBoo({
+    required String target,
+    required List<String> receiverAddresses,
+    required num amount,
+    required bool cheer,
+    required String chainId,
+    required groupId,
   }) async {
     try {
-      final privateKey = await Web3AuthFlutter.getPrivKey();
-      final seq = await sequenceNumber;
-
-      // expiration time is 5 min
-      final expirationTimestamp =
-          DateTime.now().millisecondsSinceEpoch ~/ 1000 + 300;
-
-      final cheerBooAddress =
-          '0xc898a3b0a7c3ddc9ff813eeca34981b6a42b0918057a7c18ecb9f4a6ae82eefb';
+      final cheerBooAddress = Env.cheerBooAptosAddress;
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
-
-      int percentage = isCheer ? 100 : 50;
-
+      int percentage = cheer ? 100 : 50;
+      if (receiverAddresses.length > 1) {
+        percentage = 0;
+      }
       final PercentageString = percentage.toString();
 
       final payload = EntryFunctionPayload(
         functionId: "${cheerBooAddress}::CheerOrBooV2::cheer_or_boo",
         typeArguments: [],
         arguments: [
-          address,
-          '0x2a5e58b78fab84f7695a0ad4c99621090e6b8d7cbfc6d97cd3f07e7e3cbbd1c7',
-          [],
-          true,
+          // address,
+          target,
+          receiverAddresses,
+          cheer,
           amountToSend,
           PercentageString,
-          'ee241bbd-ebe8-455a-afe1-1bf42ebe611c'
+          groupId,
         ],
       );
       final transactionRequest = await client.generateTransaction(
         account,
         payload,
       );
-
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
-      // final result = await client.submitTransaction(signedTransaction);
-
-      log.d(signedTransaction);
+      final result = await client.submitSignedBCSTransaction(signedTransaction);
+      if (result.isOk) {
+        return true;
+      }
+      return false;
     } catch (e) {
       log.e(e);
+      return false;
     }
   }
 }

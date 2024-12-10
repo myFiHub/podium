@@ -974,7 +974,8 @@ class WalletNames {
   static const external = "External Wallet";
 }
 
-Future<String?> choseAWallet({required String chainId}) async {
+Future<String?> choseAWallet(
+    {required String chainId, bool? supportsAptos}) async {
   if (externalWalletAddress == null) {
     return WalletNames.internal;
   }

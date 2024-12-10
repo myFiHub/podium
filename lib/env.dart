@@ -31,6 +31,9 @@ class Env {
   static const fihubAddress_Avalanche_MainNet =
       String.fromEnvironment("fihubAddress_Avalanche_MainNet");
 
+  static const cheerBooAptosAddress =
+      String.fromEnvironment("cheerBooAptosAddress");
+
   static const VERSION =
       String.fromEnvironment("VERSION", defaultValue: '1.0.8');
 

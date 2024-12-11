@@ -82,6 +82,12 @@ class AptosMovement {
         );
         return null;
       }
+      // final coinType =
+      //     "0x1::aptos_coin::AptosCoin"; // Replace with the actual coin type
+      // final registered = await _registerCoinStore(coinType);
+      // if (!registered) {
+      //   return false;
+      // }
       final cheerBooAddress = Env.cheerBooAptosAddress;
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
       int percentage = cheer ? 100 : 50;
@@ -109,12 +115,61 @@ class AptosMovement {
       );
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
+      await client.submitSignedBCSTransaction(signedTransaction);
+      // if (result['hash'] != null) {
+      //   final transactionStatus =
+      //       await client.getTransactionByHash(result['hash']);
+      //   log.d(transactionStatus);
+      //   if (transactionStatus['success']) {
+      //     return true;
+      //   }
+      // }
+      return true;
+    } catch (e) {
+      log.e(e);
+      return false;
+    }
+  }
+
+// Function to check if CoinStore is registered
+  static Future<bool> _isCoinStoreRegistered(String coinType) async {
+    try {
+      final resource = await client.getAccountResource(
+          address, "0x1::coin::CoinStore<$coinType>");
+      return resource != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
+// Function to register CoinStore
+  static Future<bool> _registerCoinStore(String coinType) async {
+    final registere = await _isCoinStoreRegistered(coinType);
+    if (registere) {
+      return true;
+    }
+    try {
+      final payload = EntryFunctionPayload(
+        functionId: "0x1::coin::register",
+        typeArguments: [coinType],
+        arguments: [],
+      );
+      final transactionRequest =
+          await client.generateTransaction(account, payload);
+      final signedTransaction =
+          await client.signTransaction(account, transactionRequest);
       final result = await client.submitSignedBCSTransaction(signedTransaction);
       if (result['hash'] != null) {
-        final transactionStatus =
-            await client.getTransactionByHash(result['hash']);
-        if (transactionStatus['success']) {
-          return true;
+        final transactionHash = result['hash'];
+        while (true) {
+          final transactionStatus =
+              await client.getTransactionByHash(transactionHash);
+          if (transactionStatus['type'] == 'user_transaction' &&
+              transactionStatus['success'] == true) {
+            return true;
+          }
+          await Future.delayed(const Duration(
+              seconds: 5)); // Wait for 5 seconds before checking again
         }
       }
       return false;

@@ -836,6 +836,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.8.0"
+  flutter_intro:
+    dependency: "direct main"
+    description:
+      name: flutter_intro
+      sha256: f8cee0d0d03d60f076c342073228a8a1f43df5e99eade30bcf895af6e045008c
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.4.0"
   flutter_localizations:
     dependency: transitive
     description: flutter

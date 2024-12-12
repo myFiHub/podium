@@ -4,7 +4,9 @@ import 'dart:math';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -24,6 +26,7 @@ import 'package:podium/providers/api/models/starsArenaUser.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 import 'package:podium/utils/truncate.dart';
@@ -53,11 +56,15 @@ class SearchedUser {
 
 class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
+  final storage = GetStorage();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
   final newGroupIsRecorable = false.obs;
   final roomAccessType = FreeRoomAccessTypes.public.obs;
   final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
+
+  BuildContext? contextForIntro;
+  Intro? intro;
 
   final selectedUsersToBuyTicketFrom_ToAccessRoom =
       <TicketSellersListMember>[].obs;
@@ -89,11 +96,42 @@ class CreateGroupController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    final alreadyViewed = storage.read(IntroStorageKeys.viewedCreateGroup);
+    if (
+        //
+        // true
+        alreadyViewed == null
+        //
+        ) {
+      // wait for the context to be ready
+      Future.delayed(const Duration(seconds: 0)).then((v) {
+        intro = Intro.of(contextForIntro!);
+        intro!.start(
+          reset: true,
+        );
+        intro!.statusNotifier.addListener(() {
+          if (intro!.statusNotifier.value.isOpen == false) {
+            introFinished(true);
+          }
+        });
+      });
+    }
   }
 
   @override
   void onClose() {
     super.onClose();
+  }
+
+  void introFinished(bool? setAsFinished) {
+    if (setAsFinished == true) {
+      storage.write(IntroStorageKeys.viewedCreateGroup, true);
+    }
+    try {
+      if (intro != null) {
+        intro!.dispose();
+      }
+    } catch (e) {}
   }
 
   pickImage() async {

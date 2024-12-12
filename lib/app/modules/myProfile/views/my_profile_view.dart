@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -25,31 +26,113 @@ class MyProfileView extends GetView<MyProfileController> {
   const MyProfileView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            UserInfo(),
-            ReferalSystem(),
-            DefaultWallet(),
-            space10,
-            InternalWallet(),
-            WalletInfo(),
-            WalletConnect(),
-            space10,
-            _Statistics(),
-            space10,
-            ToggleShowArchivedGroups(),
-            space10,
-            BugsAndFeedbacks(),
-            space10,
-            LogoutButton(),
-          ],
-        ),
-      ),
+    final ScrollController _scrollController = ScrollController();
+
+    return Intro(
+      /// Padding of the highlighted area and the widget
+      padding: EdgeInsets.zero,
+
+      /// Border radius of the highlighted area
+      borderRadius: const BorderRadius.all(Radius.circular(4)),
+
+      /// The mask color of step page
+      maskColor: const Color.fromRGBO(0, 0, 0, .7),
+
+      /// Toggle animation
+      noAnimation: false,
+
+      /// Toggle whether the mask can be closed
+      maskClosable: false,
+
+      /// Build custom button
+      buttonBuilder: (order) {
+        if (order == 4) {
+          _scrollController.animateTo(
+            220, duration: const Duration(seconds: 1), // Animation duration
+            curve: Curves.easeInOut,
+          );
+        }
+        return IntroButtonConfig(
+          text: order == 4 ? 'finish' : 'Next',
+        );
+      },
+
+      /// High-level widget
+      child: PopScope(
+          canPop: true,
+          onPopInvokedWithResult: (res, r) {
+            controller.introFinished(false);
+          },
+          child: Scaffold(
+            body: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  const ContextSaver(),
+                  const UserInfo(),
+                  IntroStepBuilder(
+                    order: 1,
+                    padding: const EdgeInsets.only(top: 16, bottom: -22),
+                    text:
+                        'this is the state of your referrals, you can tap and copy your referral link',
+                    builder: (context, key) => ReferalSystem(
+                      key: key,
+                    ),
+                  ),
+                  const DefaultWallet(),
+                  space10,
+                  IntroStepBuilder(
+                    order: 2,
+                    padding: const EdgeInsets.only(top: 16, bottom: -28),
+                    text:
+                        'this part shows your Podium wallet address and balances',
+                    builder: (context, key) => InternalWallet(
+                      key: key,
+                    ),
+                  ),
+                  const ExternalWallet(),
+                  IntroStepBuilder(
+                    order: 3,
+                    padding: const EdgeInsets.only(top: 22, bottom: -22),
+                    text:
+                        'here you can connect your external wallet like Metamask to Podium, or disconnect it, if you connect to external wallet, external wallet address will be used as default for your earnings',
+                    builder: (context, key) => WalletConnect(
+                      key: key,
+                    ),
+                  ),
+                  space10,
+                  IntroStepBuilder(
+                    order: 4,
+                    padding: const EdgeInsets.only(top: 245, bottom: -242),
+                    text: 'this part shows your earnings in different chains ',
+                    builder: (context, key) => _Statistics(
+                      key: key,
+                    ),
+                  ),
+                  space10,
+                  const ToggleShowArchivedGroups(),
+                  space10,
+                  const BugsAndFeedbacks(),
+                  space10,
+                  const LogoutButton(),
+                ],
+              ),
+            ),
+          )),
     );
+  }
+}
+
+class ContextSaver extends GetView<MyProfileController> {
+  const ContextSaver({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    controller.contextForIntro = context;
+
+    return const SizedBox.shrink();
   }
 }
 
@@ -671,8 +754,8 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
   }
 }
 
-class WalletInfo extends GetView<GlobalController> {
-  const WalletInfo({super.key});
+class ExternalWallet extends GetView<GlobalController> {
+  const ExternalWallet({super.key});
 
   @override
   Widget build(BuildContext context) {

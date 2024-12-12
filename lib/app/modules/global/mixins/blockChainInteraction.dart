@@ -978,12 +978,10 @@ class WalletNames {
 
 Future<String?> choseAWallet(
     {required String chainId, bool? supportsAptos}) async {
+  final hideExternalWalletAndRemember =
+      externalWalletAddress == null && supportsAptos == true;
   if (externalWalletAddress == null && supportsAptos != true) {
     return WalletNames.internal_EVM;
-  } else if (externalWalletAddress != null) {
-    if (externalWalletAddress!.isEmpty && supportsAptos != true) {
-      return WalletNames.internal_EVM;
-    }
   }
   final store = GetStorage();
   final savedWallet = store.read(StorageKeys.selectedWalletName);
@@ -1011,6 +1009,7 @@ Future<String?> choseAWallet(
       content: SelectChainContent(
         includeAptos: supportsAptos == true,
         chainId: chainId,
+        hideExternalWalletAndRemember: hideExternalWalletAndRemember,
       ),
     ),
   );
@@ -1020,8 +1019,13 @@ Future<String?> choseAWallet(
 class SelectChainContent extends GetView<GlobalController> {
   final String chainId;
   final bool includeAptos;
-  const SelectChainContent(
-      {super.key, required this.chainId, required this.includeAptos});
+  final bool hideExternalWalletAndRemember;
+  const SelectChainContent({
+    super.key,
+    required this.chainId,
+    required this.includeAptos,
+    required this.hideExternalWalletAndRemember,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1078,23 +1082,25 @@ class SelectChainContent extends GetView<GlobalController> {
                       Get.overlayContext!, WalletNames.internal_Aptos);
                 }),
           space10,
-          Button(
-              text: "External Wallet",
-              type: ButtonType.outline,
-              color: ColorName.primaryBlue,
-              blockButton: true,
-              onPressed: externalWalletEnabled
-                  ? () {
-                      final shouldRemember =
-                          store.read(StorageKeys.rememberSelectedWallet) ??
-                              false;
-                      if (shouldRemember) {
-                        store.write(StorageKeys.selectedWalletName,
-                            WalletNames.external);
+          if (!hideExternalWalletAndRemember)
+            Button(
+                text: "External Wallet",
+                type: ButtonType.outline,
+                color: ColorName.primaryBlue,
+                blockButton: true,
+                onPressed: externalWalletEnabled
+                    ? () {
+                        final shouldRemember =
+                            store.read(StorageKeys.rememberSelectedWallet) ??
+                                false;
+                        if (shouldRemember) {
+                          store.write(StorageKeys.selectedWalletName,
+                              WalletNames.external);
+                        }
+                        Navigator.pop(
+                            Get.overlayContext!, WalletNames.external);
                       }
-                      Navigator.pop(Get.overlayContext!, WalletNames.external);
-                    }
-                  : null),
+                    : null),
           if (externalWalletEnabled == false)
             Text(
               "to use External Wallet, please switch to ${targetChain.name} (${targetChainId}) on your wallet and try again",
@@ -1103,7 +1109,7 @@ class SelectChainContent extends GetView<GlobalController> {
             ),
           space10,
           // remember my choice
-          const RememberCheckBox(),
+          if (!hideExternalWalletAndRemember) const RememberCheckBox(),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,

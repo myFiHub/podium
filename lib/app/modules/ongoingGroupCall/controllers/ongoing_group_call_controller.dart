@@ -4,7 +4,10 @@ import 'dart:io';
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -24,6 +27,7 @@ import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:record/record.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -78,6 +82,12 @@ class ReactionLogElement {
 }
 
 class OngoingGroupCallController extends GetxController {
+  BuildContext? contextForIntro;
+  Intro? intro;
+  final shouldShowIntro = false.obs;
+  bool introStartCalled = false;
+
+  final storage = GetStorage();
   final groupCallController = Get.find<GroupCallController>();
   final globalController = Get.find<GlobalController>();
   final firebaseSession = Rxn<FirebaseSession>();
@@ -194,6 +204,50 @@ class OngoingGroupCallController extends GetxController {
     firebaseSession.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
+    if (intro != null) {
+      intro!.dispose();
+    }
+  }
+
+  startIntro() {
+    if (storage.read(IntroStorageKeys.viewedOngiongCall) == null) {
+      shouldShowIntro.value = true;
+    } else {
+      return;
+    }
+    final alreadyViewed = storage.read(IntroStorageKeys.viewedOngiongCall);
+    if (
+        //
+        // true
+        alreadyViewed == null
+        //
+        ) {
+      // wait for the context to be ready
+      Future.delayed(const Duration(seconds: 1)).then((v) {
+        intro = Intro.of(contextForIntro!);
+        intro!.refresh();
+        intro!.start(
+          reset: true,
+        );
+        intro!.statusNotifier.addListener(() {
+          log.d(intro);
+          if (intro!.status.isOpen == false) {
+            finishIntro(true);
+          }
+        });
+      });
+    }
+  }
+
+  void finishIntro(bool? saveAsDone) {
+    if (saveAsDone == true) {
+      storage.write(IntroStorageKeys.viewedOngiongCall, true);
+      shouldShowIntro.value = false;
+    }
+    if (intro != null) {
+      intro!.dispose();
+      shouldShowIntro.value = false;
+    }
   }
 
   startRecording() {

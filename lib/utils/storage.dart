@@ -17,3 +17,15 @@ class StorageKeys {
   static const externalWalletChainId = 'externalWalletChainId';
   static const showArchivedGroups = 'showArchivedGroups';
 }
+
+class IntroStorageKeys {
+  static final IntroStorageKeys _singleton = IntroStorageKeys._internal();
+  factory IntroStorageKeys() {
+    return _singleton;
+  }
+  IntroStorageKeys._internal();
+
+  static const viewedCreateGroup = 'viewedCreateGroup';
+  static const viewedMyProfile = 'viewedMyProfile';
+  static const viewedOngiongCall = 'viewedOngiongCall';
+}

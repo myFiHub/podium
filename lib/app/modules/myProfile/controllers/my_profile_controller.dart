@@ -1,5 +1,8 @@
 import 'package:decimal/decimal.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
@@ -13,6 +16,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Payments {
@@ -44,6 +48,10 @@ class Balances {
 }
 
 class MyProfileController extends GetxController {
+  BuildContext? contextForIntro;
+  Intro? intro;
+
+  final storage = GetStorage();
   final globalController = Get.find<GlobalController>();
   final isInternalWalletActivatedOnFriendTech = false.obs;
   final isExternalWalletActivatedOnFriendTech = false.obs;
@@ -77,11 +85,42 @@ class MyProfileController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    final alreadyViewed = storage.read(IntroStorageKeys.viewedMyProfile);
+    if (
+        //
+        // true
+        alreadyViewed == null
+        //
+        ) {
+      // wait for the context to be ready
+      Future.delayed(const Duration(seconds: 0)).then((v) {
+        intro = Intro.of(contextForIntro!);
+        intro!.start(
+          reset: true,
+        );
+        intro!.statusNotifier.addListener(() {
+          if (intro!.statusNotifier.value.isOpen == false) {
+            introFinished(true);
+          }
+        });
+      });
+    }
   }
 
   @override
   void onClose() {
     super.onClose();
+  }
+
+  void introFinished(bool? setAsFinished) {
+    if (setAsFinished == true) {
+      storage.write(IntroStorageKeys.viewedMyProfile, true);
+    }
+    try {
+      if (intro != null) {
+        intro!.dispose();
+      }
+    } catch (e) {}
   }
 
   _getBalances() async {

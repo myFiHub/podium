@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
+import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -28,31 +29,59 @@ import 'package:pulsator/pulsator.dart';
 class UsersInRoomList extends StatelessWidget {
   final List<FirebaseSessionMember> usersList;
   final String groupId;
-  const UsersInRoomList(
-      {super.key, required this.usersList, required this.groupId});
+  final bool shouldShowIntro;
+  const UsersInRoomList({
+    super.key,
+    required this.usersList,
+    required this.groupId,
+    required this.shouldShowIntro,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return shouldShowIntro
+        ? const IntroUser()
+        : ListView.builder(
+            itemCount: usersList.length,
+            itemBuilder: (context, index) {
+              final user = usersList[index];
+              final name = user.name;
+              String avatar = user.avatar;
+              if (avatar.isEmpty || avatar == defaultAvatar) {
+                avatar = avatarPlaceHolder(name);
+              }
+              final userId = user.id;
+              final isItME = user.id == myId;
+              return _SingleUserInRoom(
+                key: Key(user.id + 'singleUserCard'),
+                isItME: isItME,
+                userId: userId,
+                user: user,
+                name: name,
+                avatar: avatar,
+                groupId: groupId,
+              );
+            },
+          );
+  }
+}
+
+class IntroUser extends StatelessWidget {
+  const IntroUser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: usersList.length,
-      itemBuilder: (context, index) {
-        final user = usersList[index];
-        final name = user.name;
-        String avatar = user.avatar;
-        if (avatar.isEmpty || avatar == defaultAvatar) {
-          avatar = avatarPlaceHolder(name);
-        }
-        final userId = user.id;
-        final isItME = user.id == myId;
-        return _SingleUserInRoom(
-            key: Key(user.id + 'singleUserCard'),
-            isItME: isItME,
-            userId: userId,
-            user: user,
-            name: name,
-            avatar: avatar,
-            groupId: groupId);
-      },
-    );
+        itemCount: 1,
+        itemBuilder: (context, index) {
+          return const _SingleUserCard(
+            isItME: false,
+            name: 'Intro User',
+            avatar: Constants.defaultProfilePic,
+            groupId: 'intro',
+            id: 'intro',
+            isIntroUser: true,
+          );
+        });
   }
 }
 
@@ -87,104 +116,133 @@ class _SingleUserInRoom extends StatelessWidget {
         }
         usersController.openUserProfile(userId);
       },
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-                color: ColorName.cardBackground,
-                border: Border.all(color: ColorName.cardBorder),
-                borderRadius: const BorderRadius.all(const Radius.circular(8))),
-            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            padding: const EdgeInsets.all(8),
-            key: Key(user.id),
-            child: Stack(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            constraints: const BoxConstraints(
-                              maxWidth: 180,
-                            ),
-                            child: Text(
-                              isItME ? "You" : name,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                overflow: TextOverflow.ellipsis,
-                                color: isItME
-                                    ? Colors.green[200]
-                                    : ColorName.white,
-                              ),
+      child: _SingleUserCard(
+        id: user.id,
+        isItME: isItME,
+        name: name,
+        avatar: avatar,
+        groupId: groupId,
+        isIntroUser: false,
+      ),
+    );
+  }
+}
+
+class _SingleUserCard extends StatelessWidget {
+  const _SingleUserCard({
+    super.key,
+    required this.isItME,
+    required this.name,
+    required this.avatar,
+    required this.groupId,
+    required this.id,
+    required this.isIntroUser,
+  });
+  final String id;
+  final bool isItME;
+  final bool isIntroUser;
+  final String name;
+  final String avatar;
+  final String groupId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+              color: ColorName.cardBackground,
+              border: Border.all(color: ColorName.cardBorder),
+              borderRadius: const BorderRadius.all(const Radius.circular(8))),
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: const EdgeInsets.all(8),
+          key: Key(id),
+          child: Stack(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 180,
+                          ),
+                          child: Text(
+                            isItME ? "You" : name,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              overflow: TextOverflow.ellipsis,
+                              color:
+                                  isItME ? Colors.green[200] : ColorName.white,
                             ),
                           ),
-                          space5,
-                          Row(
-                            children: [
-                              Img(
-                                src: avatar,
-                                alt: name,
+                        ),
+                        space5,
+                        Row(
+                          children: [
+                            Img(
+                              src: avatar,
+                              alt: name,
+                            ),
+                            space5,
+                            Container(
+                              width: 80,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    truncate(id, length: 10),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w400,
+                                      color: ColorName.greyText,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  space5,
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: ColorName.greyText,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  RemainingTime(
+                                    userId: id,
+                                    key: Key(id),
+                                  ),
+                                ],
                               ),
-                              space5,
-                              Container(
-                                width: 80,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      truncate(userId, length: 10),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        color: ColorName.greyText,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    space5,
-                                    Text(
-                                      user.name,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: ColorName.greyText,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    RemainingTime(
-                                      userId: userId,
-                                      key: Key(user.id),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          )
-                        ],
-                      ),
+                            )
+                          ],
+                        )
+                      ],
                     ),
-                    Actions(userId: userId),
-                  ],
-                ),
-                Positioned(
-                    top: -5,
-                    right: 0,
-                    child: _TalkingIndicator(
-                      groupId: groupId,
-                      userId: userId,
-                      key: Key(user.id + 'talking'),
-                    )),
-              ],
-            ),
+                  ),
+                  Actions(userId: id, isIntroUser: isIntroUser),
+                ],
+              ),
+              Positioned(
+                  top: -5,
+                  right: 0,
+                  child: _TalkingIndicator(
+                    groupId: groupId,
+                    userId: id,
+                    key: Key(id + 'talking'),
+                  )),
+            ],
           ),
-          _ConfettiDetector(
-            userId: userId,
-          ),
-        ],
-      ),
+        ),
+        _ConfettiDetector(
+          userId: id,
+        ),
+      ],
     );
   }
 }
@@ -477,8 +535,10 @@ class FollowButton extends GetView<UsersController> {
 
 class Actions extends GetView<OngoingGroupCallController> {
   final String userId;
+  final bool isIntroUser;
   const Actions({
     required this.userId,
+    required this.isIntroUser,
     Key? key,
   }) : super(key: key);
 
@@ -493,21 +553,60 @@ class Actions extends GetView<OngoingGroupCallController> {
       child: Wrap(
         alignment: WrapAlignment.center,
         children: [
-          SizedBox(
-            height: 40,
-            child: Row(
+          if (isIntroUser)
+            IntroStepBuilder(
+              order: 3,
+              padding: const EdgeInsets.only(top: 26, bottom: -18),
+              text:
+                  'you can like/dislike the participant for free, by tapping on this button, each like/dislike will add/reduce 10 seconds to the remaining time of the participant',
+              builder: (context, key) => SizedBox(
+                key: key,
+                height: 40,
+                child: Row(
+                  children: [
+                    if (userId != myId)
+                      LikeDislike(userId: userId, isLike: true),
+                    if (userId != myId)
+                      LikeDislike(userId: userId, isLike: false),
+                  ],
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              height: 40,
+              child: Row(
+                children: [
+                  if (userId != myId) LikeDislike(userId: userId, isLike: true),
+                  if (userId != myId)
+                    LikeDislike(userId: userId, isLike: false),
+                ],
+              ),
+            ),
+          if (isIntroUser)
+            IntroStepBuilder(
+              order: 4,
+              onWidgetLoad: () {
+                Intro.of(context).refresh();
+              },
+              padding: const EdgeInsets.only(top: 26, bottom: -18),
+              text:
+                  'you can cheer/boo the participant for a fee, by tapping on this button, each cheer/boo will add/reduce remaining time of the participant, depending on the amount paid by you',
+              builder: (context, key) => Row(
+                key: key,
+                children: [
+                  if (userId != myId) CheerBoo(cheer: false, userId: userId),
+                  CheerBoo(cheer: true, userId: userId)
+                ],
+              ),
+            )
+          else
+            Row(
               children: [
-                if (userId != myId) LikeDislike(userId: userId, isLike: true),
-                if (userId != myId) LikeDislike(userId: userId, isLike: false),
+                if (userId != myId) CheerBoo(cheer: false, userId: userId),
+                CheerBoo(cheer: true, userId: userId)
               ],
             ),
-          ),
-          Row(
-            children: [
-              if (userId != myId) CheerBoo(cheer: false, userId: userId),
-              CheerBoo(cheer: true, userId: userId)
-            ],
-          ),
         ],
       ),
     );

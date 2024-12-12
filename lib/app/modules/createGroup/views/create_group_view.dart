@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
@@ -16,37 +17,108 @@ class CreateGroupView extends GetView<CreateGroupController> {
   const CreateGroupView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.only(top: 16),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                _TitleBar(),
-                space14,
-                _SelectPicture(),
-                _RoomNameInput(),
-                space5,
-                _SubjectInput(),
-                SizedBox(
-                  height: 8,
+    return Intro(
+      /// Padding of the highlighted area and the widget
+      padding: EdgeInsets.zero,
+
+      /// Border radius of the highlighted area
+      borderRadius: const BorderRadius.all(Radius.circular(4)),
+
+      /// The mask color of step page
+      maskColor: const Color.fromRGBO(0, 0, 0, .7),
+
+      /// Toggle animation
+      noAnimation: false,
+
+      /// Toggle whether the mask can be closed
+      maskClosable: false,
+
+      /// Build custom button
+      buttonBuilder: (order) {
+        return IntroButtonConfig(
+          text: order == 5 ? 'finish' : 'Next',
+        );
+      },
+
+      /// High-level widget
+      child: PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (res, r) {
+          controller.introFinished(false);
+        },
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: Container(
+              // padding: const EdgeInsets.only(top: 16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    const _TitleBar(),
+                    space14,
+                    IntroStepBuilder(
+                      order: 1,
+                      padding: const EdgeInsets.only(top: 16, bottom: -32),
+                      text:
+                          'select an image for your outpost, this will be the first thing people see',
+                      builder: (context, key) => _SelectPicture(
+                        key: key,
+                      ),
+                    ),
+                    const _RoomNameInput(),
+                    space5,
+                    IntroStepBuilder(
+                      order: 2,
+                      padding: const EdgeInsets.only(top: 24, bottom: -24),
+                      text:
+                          'enter the main subject of your outpost, to help people understand what it is about',
+                      builder: (context, key) => _SubjectInput(
+                        key: key,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    IntroStepBuilder(
+                      order: 3,
+                      padding: const EdgeInsets.only(top: 28, bottom: -32),
+                      text:
+                          'enter tags to help people find your outpost, separate tags with a comma or space',
+                      builder: (context, key) => _TagsInput(
+                        key: key,
+                      ),
+                    ),
+                    IntroStepBuilder(
+                      order: 4,
+                      padding: const EdgeInsets.only(top: 24, bottom: -24),
+                      text:
+                          'select who can enter your outpost, you can also require tickets for entry',
+                      builder: (context, key) => _SelectRoomAccessType(
+                        key: key,
+                      ),
+                    ),
+                    space5,
+                    IntroStepBuilder(
+                      order: 5,
+                      padding: const EdgeInsets.only(top: 24, bottom: -24),
+                      text:
+                          'select who can speak in your outpost, you can also require tickets for speaking',
+                      builder: (context, key) => _SelectRoomSpeakerType(
+                        key: key,
+                      ),
+                    ),
+                    space5,
+                    const _ScheduleToggle(),
+                    space5,
+                    const _AdultsCheckbox(),
+                    space5,
+                    const _RecordableCheckbox(),
+                    space16,
+                    const _CreateButton(),
+                  ],
                 ),
-                _TagsInput(),
-                _SelectRoomAccessType(),
-                space5,
-                _SelectRoomSpeakerType(),
-                space5,
-                _ScheduleToggle(),
-                space5,
-                _AdultsCheckbox(),
-                space5,
-                _RecordableCheckbox(),
-                space16,
-                _CreateButton(),
-              ],
+              ),
             ),
           ),
         ),
@@ -56,7 +128,7 @@ class CreateGroupView extends GetView<CreateGroupController> {
 }
 
 class _SelectPicture extends GetWidget<CreateGroupController> {
-  const _SelectPicture();
+  const _SelectPicture({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -250,6 +322,7 @@ class _TitleBar extends GetWidget<CreateGroupController> {
 
   @override
   Widget build(BuildContext context) {
+    controller.contextForIntro = context;
     return const Align(
       alignment: Alignment.centerLeft,
       child: Text(
@@ -384,7 +457,7 @@ class _RecordableCheckbox extends GetView<CreateGroupController> {
               ),
             ),
             Text(
-              'Outpost can be recorded, saved and shared',
+              'Outpost sessions can be recorded by you',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 10,

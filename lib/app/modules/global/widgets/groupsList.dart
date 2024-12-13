@@ -511,9 +511,9 @@ String parseSpeakerType(String? speakerType) {
   switch (speakerType) {
     case null:
       return "Everyone";
-    case FreeRoomSpeakerTypes.everyone:
+    case FreeGroupSpeakerTypes.everyone:
       return "Everyone";
-    case FreeRoomSpeakerTypes.invitees:
+    case FreeGroupSpeakerTypes.invitees:
       return "Only Invited Users";
     case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
@@ -531,11 +531,11 @@ String parseAccessType(String? accessType) {
   switch (accessType) {
     case null:
       return "Public";
-    case FreeRoomAccessTypes.public:
+    case FreeGroupAccessTypes.public:
       return "Public";
-    case FreeRoomAccessTypes.onlyLink:
+    case FreeGroupAccessTypes.onlyLink:
       return "Only By Link";
-    case FreeRoomAccessTypes.invitees:
+    case FreeGroupAccessTypes.invitees:
       return "Only Invited Users";
     case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
@@ -557,10 +557,10 @@ canShareGroupUrl({required FirebaseGroup group}) {
   if (iAmCreator) {
     return true;
   }
-  if (group.accessType == FreeRoomAccessTypes.public) {
+  if (group.accessType == FreeGroupAccessTypes.public) {
     return true;
   }
-  if (group.accessType == FreeRoomAccessTypes.onlyLink) {
+  if (group.accessType == FreeGroupAccessTypes.onlyLink) {
     if (group.members.keys.contains(myId)) {
       return true;
     }

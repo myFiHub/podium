@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
-import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -553,60 +552,23 @@ class Actions extends GetView<OngoingGroupCallController> {
       child: Wrap(
         alignment: WrapAlignment.center,
         children: [
-          if (isIntroUser)
-            IntroStepBuilder(
-              order: 3,
-              padding: const EdgeInsets.only(top: 26, bottom: -18),
-              text:
-                  'you can like/dislike the participant for free, by tapping on this button, each like/dislike will add/reduce 10 seconds to the remaining time of the participant',
-              builder: (context, key) => SizedBox(
-                key: key,
-                height: 40,
-                child: Row(
-                  children: [
-                    if (userId != myId)
-                      LikeDislike(userId: userId, isLike: true),
-                    if (userId != myId)
-                      LikeDislike(userId: userId, isLike: false),
-                  ],
-                ),
-              ),
-            )
-          else
-            SizedBox(
-              height: 40,
-              child: Row(
-                children: [
-                  if (userId != myId) LikeDislike(userId: userId, isLike: true),
-                  if (userId != myId)
-                    LikeDislike(userId: userId, isLike: false),
-                ],
-              ),
-            ),
-          if (isIntroUser)
-            IntroStepBuilder(
-              order: 4,
-              onWidgetLoad: () {
-                Intro.of(context).refresh();
-              },
-              padding: const EdgeInsets.only(top: 26, bottom: -18),
-              text:
-                  'you can cheer/boo the participant for a fee, by tapping on this button, each cheer/boo will add/reduce remaining time of the participant, depending on the amount paid by you',
-              builder: (context, key) => Row(
-                key: key,
-                children: [
-                  if (userId != myId) CheerBoo(cheer: false, userId: userId),
-                  CheerBoo(cheer: true, userId: userId)
-                ],
-              ),
-            )
-          else
-            Row(
+          SizedBox(
+            key: isIntroUser ? controller.likeDislikeKey : null,
+            height: 40,
+            child: Row(
               children: [
-                if (userId != myId) CheerBoo(cheer: false, userId: userId),
-                CheerBoo(cheer: true, userId: userId)
+                if (userId != myId) LikeDislike(userId: userId, isLike: true),
+                if (userId != myId) LikeDislike(userId: userId, isLike: false),
               ],
             ),
+          ),
+          Row(
+            key: isIntroUser ? controller.cheerBooKey : null,
+            children: [
+              if (userId != myId) CheerBoo(cheer: false, userId: userId),
+              CheerBoo(cheer: true, userId: userId)
+            ],
+          )
         ],
       ),
     );

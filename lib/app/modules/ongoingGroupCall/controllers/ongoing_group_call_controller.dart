@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -28,8 +28,10 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
+import 'package:podium/widgets/button/button.dart';
 import 'package:record/record.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
 const amountToAddForLikeInSeconds = 10; // 10 seconds
@@ -83,9 +85,13 @@ class ReactionLogElement {
 
 class OngoingGroupCallController extends GetxController {
   BuildContext? contextForIntro;
-  Intro? intro;
   final shouldShowIntro = false.obs;
   bool introStartCalled = false;
+  late TutorialCoachMark tutorialCoachMark;
+  final muteUnmuteKey = GlobalKey();
+  final timerKey = GlobalKey();
+  final likeDislikeKey = GlobalKey();
+  final cheerBooKey = GlobalKey();
 
   final storage = GetStorage();
   final groupCallController = Get.find<GroupCallController>();
@@ -204,9 +210,6 @@ class OngoingGroupCallController extends GetxController {
     firebaseSession.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
-    if (intro != null) {
-      intro!.dispose();
-    }
   }
 
   startIntro() {
@@ -218,36 +221,150 @@ class OngoingGroupCallController extends GetxController {
     final alreadyViewed = storage.read(IntroStorageKeys.viewedOngiongCall);
     if (
         //
-        // true
-        alreadyViewed == null
+        true
+        // alreadyViewed == null
         //
         ) {
       // wait for the context to be ready
       Future.delayed(const Duration(seconds: 1)).then((v) {
-        intro = Intro.of(contextForIntro!);
-        intro!.refresh();
-        intro!.start(
-          reset: true,
+        tutorialCoachMark = TutorialCoachMark(
+          targets: _createTargets(),
+          paddingFocus: 5,
+          skipWidget: Button(
+            size: ButtonSize.SMALL,
+            type: ButtonType.outline,
+            color: Colors.red,
+            onPressed: () {
+              introFinished(true);
+            },
+            child: const Text("Finish"),
+          ),
+          opacityShadow: 0.5,
+          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          onFinish: () {
+            introFinished(true);
+          },
+          onSkip: () {
+            introFinished(true);
+            return true;
+          },
         );
-        intro!.statusNotifier.addListener(() {
-          log.d(intro);
-          if (intro!.status.isOpen == false) {
-            finishIntro(true);
-          }
-        });
+        try {
+          tutorialCoachMark.show(context: contextForIntro!);
+        } catch (e) {
+          log.e(e);
+        }
       });
     }
   }
 
-  void finishIntro(bool? saveAsDone) {
-    if (saveAsDone == true) {
+  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+    targets.add(
+      _createStep(
+        targetId: muteUnmuteKey,
+        text:
+            "you can mute/unmute your microphone here, it will start/stop your talk timer",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: timerKey,
+        text:
+            "this is your remaining talk time, it will be updated when you talk",
+      ),
+    );
+
+    targets.add(
+      _createStep(
+        targetId: likeDislikeKey,
+        text:
+            " you can like/dislike other participants for free, it will add/remove time to/from their talk time",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: cheerBooKey,
+        text:
+            "you can cheer/boo other participants for a fee, it will add/remove time to/from their talk time, you can also cheer yourself, if so, fee will be distributed among other participants",
+        hasNext: false,
+      ),
+    );
+
+    return targets;
+  }
+
+  _createStep({
+    required GlobalKey targetId,
+    required String text,
+    bool hasNext = true,
+  }) {
+    return TargetFocus(
+      identify: targetId.toString(),
+      keyTarget: targetId,
+      alignSkip: Alignment.bottomRight,
+      paddingFocus: 0,
+      focusAnimationDuration: const Duration(milliseconds: 300),
+      unFocusAnimationDuration: const Duration(milliseconds: 100),
+      shape: ShapeLightFocus.RRect,
+      color: Colors.black,
+      enableOverlayTab: true,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+                if (hasNext)
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      tutorialCoachMark.next();
+                    },
+                    child: const Text(
+                      "Next",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                else
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      introFinished(true);
+                    },
+                    child: const Text(
+                      "Finish",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void introFinished(bool? setAsFinished) {
+    if (setAsFinished == true) {
       storage.write(IntroStorageKeys.viewedOngiongCall, true);
-      shouldShowIntro.value = false;
     }
-    if (intro != null) {
-      intro!.dispose();
+    try {
+      tutorialCoachMark.finish();
       shouldShowIntro.value = false;
-    }
+    } catch (e) {}
   }
 
   startRecording() {

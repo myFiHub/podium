@@ -290,7 +290,7 @@ class GroupCallController extends GetxController {
 bool canISpeakWithoutTicket({required FirebaseGroup group}) {
   final iAmTheCreator = group.creator.id == myId;
   if (iAmTheCreator) return true;
-  if (group.speakerType == FreeRoomSpeakerTypes.invitees) {
+  if (group.speakerType == FreeGroupSpeakerTypes.invitees) {
     // check if I am invited and am invited to speak
     final invitedMember = group.invitedMembers[myId];
     if (invitedMember != null && invitedMember.invitedToSpeak) return true;
@@ -298,7 +298,7 @@ bool canISpeakWithoutTicket({required FirebaseGroup group}) {
   }
 
   final iAmAllowedToSpeak = group.speakerType == null ||
-      group.speakerType == FreeRoomSpeakerTypes.everyone;
+      group.speakerType == FreeGroupSpeakerTypes.everyone;
 
   return iAmAllowedToSpeak;
 }

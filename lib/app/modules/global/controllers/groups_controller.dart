@@ -735,10 +735,10 @@ class GroupsController extends GetxController with FirebaseTags {
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
     if (group.accessType == null ||
-        group.accessType == FreeRoomAccessTypes.public)
+        group.accessType == FreeGroupAccessTypes.public)
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
-    if (group.accessType == FreeRoomAccessTypes.onlyLink) {
+    if (group.accessType == FreeGroupAccessTypes.onlyLink) {
       if (joiningByLink == true) {
         return GroupAccesses(
             canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
@@ -753,7 +753,7 @@ class GroupsController extends GetxController with FirebaseTags {
     }
 
     final invitedMembers = group.invitedMembers;
-    if (group.accessType == FreeRoomAccessTypes.invitees) {
+    if (group.accessType == FreeGroupAccessTypes.invitees) {
       if (invitedMembers[myUser.id] != null) {
         return GroupAccesses(
           canEnter: true,

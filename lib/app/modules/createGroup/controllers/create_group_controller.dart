@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:getwidget/getwidget.dart';
@@ -33,6 +33,7 @@ import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:uuid/uuid.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
@@ -60,11 +61,17 @@ class CreateGroupController extends GetxController {
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
   final newGroupIsRecorable = false.obs;
-  final roomAccessType = FreeRoomAccessTypes.public.obs;
-  final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
+  final groupAccessType = FreeGroupAccessTypes.public.obs;
+  final groupSpeakerType = FreeGroupSpeakerTypes.everyone.obs;
 
+  final intro_selectImageKey = GlobalKey();
+  final intro_groupNameKey = GlobalKey();
+  final intro_tagsKey = GlobalKey();
+  final intro_groupSubjectKey = GlobalKey();
+  final intro_groupAccessTypeKey = GlobalKey();
+  final intro_groupSpeakerTypeKey = GlobalKey();
   BuildContext? contextForIntro;
-  Intro? intro;
+  late TutorialCoachMark tutorialCoachMark;
 
   final selectedUsersToBuyTicketFrom_ToAccessRoom =
       <TicketSellersListMember>[].obs;
@@ -105,17 +112,86 @@ class CreateGroupController extends GetxController {
         ) {
       // wait for the context to be ready
       Future.delayed(const Duration(seconds: 0)).then((v) {
-        intro = Intro.of(contextForIntro!);
-        intro!.start(
-          reset: true,
-        );
-        intro!.statusNotifier.addListener(() {
-          if (intro!.statusNotifier.value.isOpen == false) {
+        tutorialCoachMark = TutorialCoachMark(
+          targets: _createTargets(),
+          paddingFocus: 5,
+          opacityShadow: 0.5,
+          skipWidget: Button(
+            size: ButtonSize.SMALL,
+            type: ButtonType.outline,
+            color: Colors.red,
+            onPressed: () {
+              introFinished(true);
+            },
+            child: const Text("Finish"),
+          ),
+          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          onFinish: () {
             introFinished(true);
-          }
-        });
+          },
+          onClickTarget: (target) {
+            print('onClickTarget: $target');
+          },
+          onClickTargetWithTapPosition: (target, tapDetails) {
+            print("target: $target");
+            print(
+                "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+          },
+          onClickOverlay: (target) {
+            print('onClickOverlay: $target');
+          },
+          onSkip: () {
+            introFinished(true);
+            return true;
+          },
+        );
+        try {
+          tutorialCoachMark.show(context: contextForIntro!);
+        } catch (e) {
+          log.e(e);
+        }
       });
     }
+  }
+
+  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+    targets.add(
+      _createStep(
+        targetId: intro_selectImageKey,
+        text:
+            "you can select an image for your Outpost, it is optional but recommended",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: intro_groupSubjectKey,
+        text:
+            "enter the main subject of your outpost, to help people understand what it is about",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: intro_tagsKey,
+        text: "you can add tags to your outpost, to help people find it",
+      ),
+    );
+
+    targets.add(
+      _createStep(
+        targetId: intro_groupAccessTypeKey,
+        text: "you can select the access type of your outpost",
+      ),
+    );
+
+    targets.add(
+      _createStep(
+        targetId: intro_groupSpeakerTypeKey,
+        text: "you can select the speaker type of your outpost",
+        hasNext: false,
+      ),
+    );
+    return targets;
   }
 
   @override
@@ -123,14 +199,75 @@ class CreateGroupController extends GetxController {
     super.onClose();
   }
 
+  _createStep({
+    required GlobalKey targetId,
+    required String text,
+    bool hasNext = true,
+  }) {
+    return TargetFocus(
+      identify: targetId.toString(),
+      keyTarget: targetId,
+      alignSkip: Alignment.bottomRight,
+      paddingFocus: 0,
+      focusAnimationDuration: const Duration(milliseconds: 300),
+      unFocusAnimationDuration: const Duration(milliseconds: 100),
+      shape: ShapeLightFocus.RRect,
+      color: Colors.black,
+      enableOverlayTab: true,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+                if (hasNext)
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      tutorialCoachMark.next();
+                    },
+                    child: const Text(
+                      "Next",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                else
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      introFinished(true);
+                    },
+                    child: const Text(
+                      "Finish",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   void introFinished(bool? setAsFinished) {
     if (setAsFinished == true) {
       storage.write(IntroStorageKeys.viewedCreateGroup, true);
     }
     try {
-      if (intro != null) {
-        intro!.dispose();
-      }
+      tutorialCoachMark.finish();
     } catch (e) {}
   }
 
@@ -179,11 +316,11 @@ class CreateGroupController extends GetxController {
   }
 
   setRoomPrivacyType(String value) {
-    roomAccessType.value = value;
+    groupAccessType.value = value;
   }
 
   setRoomSpeakingType(String value) {
-    roomSpeakerType.value = value;
+    groupSpeakerType.value = value;
   }
 
   setRoomSubject(String value) {
@@ -207,37 +344,39 @@ class CreateGroupController extends GetxController {
   }
 
   get shouldSelectTicketHolersForSpeaking {
-    return (roomSpeakerType.value ==
+    return (groupSpeakerType.value ==
                 BuyableTicketTypes.onlyFriendTechTicketHolders ||
-            roomSpeakerType.value ==
+            groupSpeakerType.value ==
                 BuyableTicketTypes.onlyArenaTicketHolders ||
-            roomSpeakerType.value ==
+            groupSpeakerType.value ==
                 BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyticketFrom_ToSpeak.isEmpty &&
         addressesToAddForSpeaking.isEmpty;
   }
 
   get shouldSelectTicketHolersForAccess {
-    return ((roomAccessType.value ==
+    return ((groupAccessType.value ==
                 BuyableTicketTypes.onlyFriendTechTicketHolders) ||
-            roomAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
-            roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders) &&
+            groupAccessType.value ==
+                BuyableTicketTypes.onlyArenaTicketHolders ||
+            groupAccessType.value ==
+                BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyTicketFrom_ToAccessRoom.isEmpty &&
         addressesToAddForEntering.isEmpty;
   }
 
   get shouldBuyTicketToSpeak {
-    return roomSpeakerType.value ==
+    return groupSpeakerType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders ||
-        roomSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
-        roomSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
+        groupSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        groupSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   get shouldBuyTicketToAccess {
-    return roomAccessType.value ==
+    return groupAccessType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders ||
-        roomAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
-        roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
+        groupAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        groupAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   toggleAddressForSelectedList({
@@ -248,8 +387,8 @@ class CreateGroupController extends GetxController {
         ? addressesToAddForSpeaking
         : addressesToAddForEntering;
     final ticketType = ticketPermissionType == TicketPermissionType.speak
-        ? roomSpeakerType.value
-        : roomAccessType.value;
+        ? groupSpeakerType.value
+        : groupAccessType.value;
     if (list.contains(address)) {
       list.remove(address);
     } else {
@@ -316,8 +455,8 @@ class CreateGroupController extends GetxController {
         ? selectedUsersToBuyticketFrom_ToSpeak
         : selectedUsersToBuyTicketFrom_ToAccessRoom;
     final ticketType = ticketPermissiontype == TicketPermissionType.speak
-        ? roomSpeakerType.value
-        : roomAccessType.value;
+        ? groupSpeakerType.value
+        : groupAccessType.value;
     if (user.defaultWalletAddress.isEmpty) {
       Toast.error(message: 'User has no wallet address');
       return;
@@ -345,12 +484,12 @@ class CreateGroupController extends GetxController {
 
   bool _shouldCheckIfUserIsActive(String ticketPermissionType) {
     if (ticketPermissionType == TicketPermissionType.access &&
-        roomAccessType.value ==
+        groupAccessType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders) {
       return true;
     }
     if (ticketPermissionType == TicketPermissionType.speak &&
-        roomSpeakerType.value ==
+        groupSpeakerType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders) {
       return true;
     }
@@ -516,8 +655,8 @@ class CreateGroupController extends GetxController {
       subject = defaultSubject;
     }
     isCreatingNewGroup.value = true;
-    final accessType = roomAccessType.value;
-    final speakerType = roomSpeakerType.value;
+    final accessType = groupAccessType.value;
+    final speakerType = groupSpeakerType.value;
     final id = const Uuid().v4();
     String imageUrl = "";
     if (selectedFile != null) {
@@ -671,8 +810,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                 final isInputBusy = controller.showLoadingOnSearchInput.value;
                 final ticketType =
                     buyTicketToGetPermisionFor == TicketPermissionType.speak
-                        ? controller.roomSpeakerType.value
-                        : controller.roomAccessType.value;
+                        ? controller.groupSpeakerType.value
+                        : controller.groupAccessType.value;
                 bool isAddress =
                     controller.checkIfValueIsDirectAddress(searchValue);
                 try {} catch (e) {}
@@ -1113,7 +1252,7 @@ class BuyableTicketTypes {
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }
 
-class FreeRoomAccessTypes {
+class FreeGroupAccessTypes {
   static const public = 'public';
   static const onlyLink = 'onlyLink';
   static const invitees = 'invitees';
@@ -1130,7 +1269,7 @@ class TicketTypes {
   static const friendTech = 'friendTech';
 }
 
-class FreeRoomSpeakerTypes {
+class FreeGroupSpeakerTypes {
   static const everyone = 'everyone';
   static const invitees = 'invitees';
 }

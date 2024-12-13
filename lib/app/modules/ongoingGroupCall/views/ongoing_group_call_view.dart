@@ -1,6 +1,5 @@
 import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -25,125 +24,92 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
       controller.introStartCalled = true;
       controller.startIntro();
     }
-    return Intro(
-      /// Padding of the highlighted area and the widget
-      padding: EdgeInsets.zero,
-
-      /// Border radius of the highlighted area
-      borderRadius: const BorderRadius.all(Radius.circular(4)),
-
-      /// The mask color of step page
-      maskColor: const Color.fromRGBO(0, 0, 0, .7),
-
-      /// Toggle animation
-      noAnimation: false,
-
-      /// Toggle whether the mask can be closed
-      maskClosable: false,
-
-      /// Build custom button
-      buttonBuilder: (order) {
-        return IntroButtonConfig(
-          text: order == 4 ? 'Finish' : 'Next',
-        );
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (res, r) {
+        controller.introFinished(false);
       },
-
-      /// High-level widget
-      child: PopScope(
-        canPop: true,
-        onPopInvokedWithResult: (res, r) {
-          controller.finishIntro(false);
-        },
-        child: FloatingDraggableWidget(
-          mainScreenWidget: Scaffold(
-            body: Obx(() {
-              final shouldShowIntro = controller.shouldShowIntro.value;
-              return GroupCall(
-                shouldShowIntro: shouldShowIntro,
-              );
-            }),
-          ),
-          floatingWidget: Obx(() {
-            final isGroupCallControllerRegistered =
-                Get.isRegistered<GroupCallController>();
-            final isControllerRegistered =
-                Get.isRegistered<OngoingGroupCallController>();
-
-            if (!isGroupCallControllerRegistered) {
-              return Container(
-                width: 0,
-                height: 0,
-              );
-            }
-            final groupCallController = Get.find<GroupCallController>();
-            final group = groupCallController.group.value;
-
-            if (group == null || !isControllerRegistered) {
-              return Container(
-                width: 0,
-                height: 0,
-              );
-            }
-            final isMuted = controller.amIMuted.value;
-            final canITalk = groupCallController.canTalk.value;
-            final amICreator = group.creator.id == myId;
-            final isRecording = controller.isRecording.value;
-            final recordable = group.isRecordable;
-            return IntroStepBuilder(
-                order: 1,
-                padding: const EdgeInsets.only(top: 26, bottom: -22),
-                text:
-                    'you can mute/unmute your microphone by clicking on this button',
-                builder: (context, key) {
-                  if (!canITalk) {
-                    return FloatingActionButton(
-                      backgroundColor: ColorName.greyText,
-                      onPressed: () {},
-                      tooltip: 'can not talk',
-                      child: const Icon(
-                        Icons.mic_off,
-                      ),
-                    );
-                  }
-                  return Column(
-                    children: [
-                      FloatingActionButton(
-                        key: key,
-                        backgroundColor: isMuted ? Colors.red : Colors.green,
-                        onPressed: () {
-                          jitsiMeet.setAudioMuted(!isMuted);
-                        },
-                        tooltip: 'mute',
-                        child: Icon(
-                          isMuted ? Icons.mic_off : Icons.mic,
-                        ),
-                      ),
-                      if (amICreator && recordable) space10,
-                      if (amICreator && recordable)
-                        FloatingActionButton(
-                          backgroundColor: Colors.white,
-                          onPressed: () {
-                            isRecording
-                                ? controller.stopRecording()
-                                : controller.startRecording();
-                          },
-                          tooltip: 'Record',
-                          child: Icon(
-                            isRecording
-                                ? Icons.stop
-                                : Icons.fiber_manual_record,
-                            color: Colors.red,
-                          ),
-                        ),
-                    ],
-                  );
-                });
+      child: FloatingDraggableWidget(
+        mainScreenWidget: Scaffold(
+          body: Obx(() {
+            final shouldShowIntro = controller.shouldShowIntro.value;
+            return GroupCall(
+              shouldShowIntro: shouldShowIntro,
+            );
           }),
-          floatingWidgetHeight: 125,
-          floatingWidgetWidth: 50,
-          dx: Get.width - 80,
-          dy: 50,
         ),
+        floatingWidget: Obx(() {
+          final isGroupCallControllerRegistered =
+              Get.isRegistered<GroupCallController>();
+          final isControllerRegistered =
+              Get.isRegistered<OngoingGroupCallController>();
+
+          if (!isGroupCallControllerRegistered) {
+            return Container(
+              width: 0,
+              height: 0,
+            );
+          }
+          final groupCallController = Get.find<GroupCallController>();
+          final group = groupCallController.group.value;
+
+          if (group == null || !isControllerRegistered) {
+            return Container(
+              width: 0,
+              height: 0,
+            );
+          }
+          final isMuted = controller.amIMuted.value;
+          final canITalk = groupCallController.canTalk.value;
+          final amICreator = group.creator.id == myId;
+          final isRecording = controller.isRecording.value;
+          final recordable = group.isRecordable;
+          if (!canITalk) {
+            return FloatingActionButton(
+              key: controller.muteUnmuteKey,
+              backgroundColor: ColorName.greyText,
+              onPressed: () {},
+              tooltip: 'can not talk',
+              child: const Icon(
+                Icons.mic_off,
+              ),
+            );
+          }
+          return Column(
+            children: [
+              FloatingActionButton(
+                key: controller.muteUnmuteKey,
+                backgroundColor: isMuted ? Colors.red : Colors.green,
+                onPressed: () {
+                  jitsiMeet.setAudioMuted(!isMuted);
+                },
+                tooltip: 'mute',
+                child: Icon(
+                  isMuted ? Icons.mic_off : Icons.mic,
+                ),
+              ),
+              if (amICreator && recordable) space10,
+              if (amICreator && recordable)
+                FloatingActionButton(
+                  backgroundColor: Colors.white,
+                  onPressed: () {
+                    isRecording
+                        ? controller.stopRecording()
+                        : controller.startRecording();
+                  },
+                  tooltip: 'Record',
+                  child: Icon(
+                    isRecording ? Icons.stop : Icons.fiber_manual_record,
+                    color: Colors.red,
+                  ),
+                ),
+            ],
+          );
+        }),
+        floatingWidgetHeight: 125,
+        floatingWidgetWidth: 50,
+        dx: Get.width - 80,
+        dy: 50,
       ),
     );
   }
@@ -216,19 +182,14 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
             final remainingTime = list.join(":");
             final isSmall = int.parse(list[0]) == 0 && int.parse(list[1]) < 2;
             return remainingTimeInMillisecond != 0
-                ? IntroStepBuilder(
-                    order: 2,
-                    padding: const EdgeInsets.only(top: 24, bottom: -28),
-                    text: 'this is your remaining time of the session',
-                    builder: (context, key) => Container(
-                      key: key,
-                      child: Text(
-                        remainingTime,
-                        style: TextStyle(
-                          color: isSmall ? Colors.red : Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 36,
-                        ),
+                ? Container(
+                    key: controller.timerKey,
+                    child: Text(
+                      remainingTime,
+                      style: TextStyle(
+                        color: isSmall ? Colors.red : Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 36,
                       ),
                     ),
                   )
@@ -364,7 +325,7 @@ class MembersList extends GetView<GroupCallController> {
             ),
           ),
           space5,
-          // const StartIntroButton(),
+          // const _StartIntroButton(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -406,17 +367,17 @@ class MembersList extends GetView<GroupCallController> {
   }
 }
 
-class StartIntroButton extends GetView<OngoingGroupCallController> {
-  const StartIntroButton({super.key});
+class _StartIntroButton extends GetView<OngoingGroupCallController> {
+  const _StartIntroButton({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Button(
         text: 'Show Intro',
         onPressed: () {
-          // controller.shouldShowIntro.value = true;
-          // controller.startIntro();
           GetStorage().remove(IntroStorageKeys.viewedOngiongCall);
+          controller.shouldShowIntro.value = true;
+          controller.startIntro();
         });
   }
 }

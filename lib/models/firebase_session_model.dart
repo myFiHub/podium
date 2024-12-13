@@ -33,8 +33,8 @@ class FirebaseSession {
     data[createdByKey] = createdBy;
     data[subjectKey] = subject ?? defaultSubject;
     data[idKey] = id;
-    data[accessTypeKey] = accessType ?? FreeRoomAccessTypes.public;
-    data[speakerTypeKey] = speakerType ?? FreeRoomSpeakerTypes.everyone;
+    data[accessTypeKey] = accessType ?? FreeGroupAccessTypes.public;
+    data[speakerTypeKey] = speakerType ?? FreeGroupSpeakerTypes.everyone;
     // ignore: unnecessary_null_comparison
     if (members != null) {
       final membersList = members.values.map((v) => v.toJson()).toList();

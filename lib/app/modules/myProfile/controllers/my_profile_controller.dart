@@ -1,6 +1,7 @@
+import 'dart:ui';
+
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_intro/flutter_intro.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -17,6 +18,8 @@ import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
+import 'package:podium/widgets/button/button.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Payments {
@@ -49,7 +52,12 @@ class Balances {
 
 class MyProfileController extends GetxController {
   BuildContext? contextForIntro;
-  Intro? intro;
+  late TutorialCoachMark tutorialCoachMark;
+  final GlobalKey referalSystemKey = GlobalKey();
+  final GlobalKey internalWalletKey = GlobalKey();
+  final GlobalKey walletConnectKey = GlobalKey();
+  final GlobalKey statisticsKey = GlobalKey();
+  final ScrollController scrollController = ScrollController();
 
   final storage = GetStorage();
   final globalController = Get.find<GlobalController>();
@@ -59,16 +67,20 @@ class MyProfileController extends GetxController {
   final loadingExternalWalletActivation = false.obs;
   final isGettingPayments = false.obs;
   final isGettingBalances = false.obs;
-  final balances = Rx(Balances(
-    Base: '0.0',
-    Avalanche: '0.0',
-    Movement: '0.0',
-    movementAptos: '0.0',
-  ));
+  final balances = Rx(
+    Balances(
+      Base: '0.0',
+      Avalanche: '0.0',
+      Movement: '0.0',
+      movementAptos: '0.0',
+    ),
+  );
 
-  final payments = Rx(Payments(
-    income: {},
-  ));
+  final payments = Rx(
+    Payments(
+      income: {},
+    ),
+  );
 
   @override
   void onInit() {
@@ -94,17 +106,105 @@ class MyProfileController extends GetxController {
         ) {
       // wait for the context to be ready
       Future.delayed(const Duration(seconds: 0)).then((v) {
-        intro = Intro.of(contextForIntro!);
-        intro!.start(
-          reset: true,
-        );
-        intro!.statusNotifier.addListener(() {
-          if (intro!.statusNotifier.value.isOpen == false) {
+        tutorialCoachMark = TutorialCoachMark(
+          targets: _createTargets(),
+          skipWidget: Button(
+            size: ButtonSize.SMALL,
+            type: ButtonType.outline,
+            color: Colors.red,
+            onPressed: () {
+              introFinished(true);
+            },
+            child: const Text("Finish"),
+          ),
+          paddingFocus: 5,
+          opacityShadow: 0.5,
+          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          onFinish: () {
             introFinished(true);
-          }
-        });
+          },
+          onClickTarget: (target) {
+            log.d(target);
+            _scrollIfNeeded();
+          },
+          onClickTargetWithTapPosition: (target, tapDetails) {
+            print("target: $target");
+            print(
+                "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+          },
+          onClickOverlay: (target) {
+            print('onClickOverlay: $target');
+            _scrollIfNeeded();
+          },
+          onSkip: () {
+            introFinished(true);
+            return true;
+          },
+        );
+        try {
+          tutorialCoachMark.show(context: contextForIntro!);
+        } catch (e) {
+          log.e(e);
+        }
       });
     }
+  }
+
+  int _currentStep = 0;
+  _scrollIfNeeded() {
+    _currentStep++;
+    if (_currentStep == 1) {
+      scrollController.animateTo(
+        200,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOut,
+      );
+    } else if (_currentStep == 2) {
+      scrollController.animateTo(
+        400,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOut,
+      );
+    } else if (_currentStep == 3) {
+      scrollController.animateTo(
+        600,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+    targets.add(
+      _createStep(
+        targetId: referalSystemKey,
+        text: "you can share your referal link to your friends",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: internalWalletKey,
+        text: "here is your Podium wallet and assets balances",
+      ),
+    );
+
+    targets.add(
+      _createStep(
+        targetId: walletConnectKey,
+        text:
+            "you can connect an External wallet like Metamask to your account, if connected, it will be used as default for your earnings",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: statisticsKey,
+        text: "this part shows your earnings in different chains ",
+        hasNext: false,
+      ),
+    );
+
+    return targets;
   }
 
   @override
@@ -112,14 +212,76 @@ class MyProfileController extends GetxController {
     super.onClose();
   }
 
+  _createStep({
+    required GlobalKey targetId,
+    required String text,
+    bool hasNext = true,
+  }) {
+    return TargetFocus(
+      identify: targetId.toString(),
+      keyTarget: targetId,
+      alignSkip: Alignment.bottomRight,
+      paddingFocus: 0,
+      focusAnimationDuration: const Duration(milliseconds: 300),
+      unFocusAnimationDuration: const Duration(milliseconds: 100),
+      shape: ShapeLightFocus.RRect,
+      color: Colors.black,
+      enableOverlayTab: true,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+                if (hasNext)
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      tutorialCoachMark.next();
+                      _scrollIfNeeded();
+                    },
+                    child: const Text(
+                      "Next",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                else
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      introFinished(true);
+                    },
+                    child: const Text(
+                      "Finish",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   void introFinished(bool? setAsFinished) {
     if (setAsFinished == true) {
       storage.write(IntroStorageKeys.viewedMyProfile, true);
     }
     try {
-      if (intro != null) {
-        intro!.dispose();
-      }
+      tutorialCoachMark.finish();
     } catch (e) {}
   }
 

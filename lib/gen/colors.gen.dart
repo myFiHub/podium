@@ -115,6 +115,9 @@ class ColorName {
   /// Color: #7781A6
   static const Color secondaryText = Color(0xFF7781A6);
 
+  /// Color: #245A6C
+  static const Color systemTrayBackground = Color(0xFF245A6C);
+
   /// Color: #FFFFFF
   static const Color white = Color(0xFFFFFFFF);
 }

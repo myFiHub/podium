@@ -33,7 +33,6 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:record/record.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
@@ -395,55 +394,60 @@ class OngoingGroupCallController extends GetxController {
       return;
     }
     Directory downloadDirectory = await getDownloadDirectory();
-    final path =
-        '${downloadDirectory.path}/${recordingName}.m4a'.replaceAll(':', '');
+    String path =
+        '${downloadDirectory.path}/${recordingName}-${DateTime.now().millisecondsSinceEpoch}.m4a'
+            .replaceAll(':', '');
+
     if (recording) {
       numberOfRecording++;
-      try {
-        // RecordMp3.instance.start(path, (error) {
-        //   log.e("error starting recording: $error");
-        // });
-        await record.start(const RecordConfig(), path: '${path}');
-        // Recorder.instance.startRecording(completeFilePath: path);
-        Toast.success(
-          title: "Recording started",
-          message: "Recording started",
-        );
-      } catch (e) {
-        numberOfRecording--;
+      if (await record.hasPermission()) {
+        try {
+          // RecordMp3.instance.start(path, (error) {
+          //   log.e("error starting recording: $error");
+          // });
+          await record.start(const RecordConfig(), path: '${path}');
+          // Recorder.instance.startRecording(completeFilePath: path);
+          Toast.success(
+            title: "Recording started",
+            message: "Recording started",
+          );
+        } catch (e) {
+          numberOfRecording--;
 
-        log.e("error starting recording: $e");
-        isRecording.value = false;
-        return;
+          log.e("error starting recording: $e");
+          isRecording.value = false;
+          return;
+        }
+      } else {
+        Toast.error(
+          title: "Error",
+          message: "Permission denied",
+        );
       }
     } else {
       if (isRecording.value) {
-        // path = await recorder.stop();
-        // recorder.dispose();
         try {
-          // Recorder.instance.stopRecording();
-          // RecordMp3.instance.stop();
-          final p = await record.stop();
-          if (p == null) {
-            log.e("error stopping recording: ");
-            Toast.error(
-              title: "Error",
-              message: "Error saving the recording",
-            );
-            numberOfRecording--;
-            isRecording.value = false;
-            return;
-          }
+          await record.stop();
+          // if (p == null) {
+          //   log.e("error stopping recording: ");
+          //   Toast.error(
+          //     title: "Error",
+          //     message: "Error saving the recording",
+          //   );
+          //   numberOfRecording--;
+          //   isRecording.value = false;
+          //   return;
+          // }
 
           Toast.success(
             title: "Recording saved",
             message: "Recording saved into Downloads folder",
             duration: 5,
           );
-          await Share.shareXFiles(
-            [XFile(path)],
-            text: 'Podium: ${recordingName}',
-          );
+          // await Share.shareXFiles(
+          //   [XFile(path)],
+          //   text: 'Podium: ${recordingName}',
+          // );
         } catch (e) {
           log.e("error stopping recording: $e");
         }

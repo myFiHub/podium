@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
 
   reown_appkit: ^1.2.0
+  # flutter_recorder: ^0.9.2
+  # record_mp3_plus: ^1.2.0
   record: ^5.2.0
   downloadsfolder: ^1.1.1
   alarm: ^4.1.1

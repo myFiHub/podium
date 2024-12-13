@@ -96,7 +96,6 @@ class _ExternalWalletConnectButton extends GetView<GlobalController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final externalWalletAddress = controller.connectedWalletAddress.value;
-      final externalWalletChainId = controller.externalWalletChainId.value;
       final connected = externalWalletAddress.isNotEmpty;
       return Button(
         size: ButtonSize.SMALL,

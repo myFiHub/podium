@@ -6,8 +6,10 @@ import 'package:ably_flutter/ably_flutter.dart';
 import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+// import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -18,6 +20,7 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
+import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
 import 'package:podium/env.dart';
@@ -108,7 +111,7 @@ class OngoingGroupCallController extends GetxController {
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
   int numberOfRecording = 0;
-  AudioRecorder recorder = AudioRecorder();
+  AudioRecorder record = AudioRecorder();
 
   final loadingWalletAddressForUser = RxList<String>([]);
 
@@ -197,6 +200,12 @@ class OngoingGroupCallController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    try {
+      // Recorder.instance.init();
+      // Recorder.instance.start();
+    } on Exception catch (e) {
+      debugPrint('init() error: $e\n');
+    }
   }
 
   @override
@@ -376,35 +385,56 @@ class OngoingGroupCallController extends GetxController {
   }
 
   _setIsRecording(bool recording) async {
-    String? path;
+    record = AudioRecorder();
     final group = groupCallController.group.value!;
     final recordingName =
-        'Podium Outpost record: ${group.name}${numberOfRecording == 0 ? '' : '-${numberOfRecording}'}';
+        'Podium Outpost record-${group.name}${numberOfRecording == 0 ? '' : '-${numberOfRecording}'}';
+    final hasPermissionForAudio = await getPermission(Permission.microphone);
+    final hasPermissionForStorage = await getPermission(Permission.storage);
+    if (!hasPermissionForAudio || !hasPermissionForStorage) {
+      return;
+    }
     Directory downloadDirectory = await getDownloadDirectory();
-
+    final path =
+        '${downloadDirectory.path}/${recordingName}.m4a'.replaceAll(':', '');
     if (recording) {
-      recorder = AudioRecorder();
       numberOfRecording++;
-      if (await recorder.hasPermission()) {
-        // Start recording to file
-        await recorder.start(
-          const RecordConfig(),
-          path: '${downloadDirectory.path}/${recordingName}.m4a',
-        );
+      try {
+        // RecordMp3.instance.start(path, (error) {
+        //   log.e("error starting recording: $error");
+        // });
+        await record.start(const RecordConfig(), path: '${path}');
+        // Recorder.instance.startRecording(completeFilePath: path);
         Toast.success(
           title: "Recording started",
           message: "Recording started",
         );
-      } else {
-        Toast.error(
-          message: "Permission denied, please allow permission to record audio",
-        );
+      } catch (e) {
+        numberOfRecording--;
+
+        log.e("error starting recording: $e");
+        isRecording.value = false;
+        return;
       }
     } else {
       if (isRecording.value) {
-        path = await recorder.stop();
-        recorder.dispose();
-        if (path != null) {
+        // path = await recorder.stop();
+        // recorder.dispose();
+        try {
+          // Recorder.instance.stopRecording();
+          // RecordMp3.instance.stop();
+          final p = await record.stop();
+          if (p == null) {
+            log.e("error stopping recording: ");
+            Toast.error(
+              title: "Error",
+              message: "Error saving the recording",
+            );
+            numberOfRecording--;
+            isRecording.value = false;
+            return;
+          }
+
           Toast.success(
             title: "Recording saved",
             message: "Recording saved into Downloads folder",
@@ -414,6 +444,8 @@ class OngoingGroupCallController extends GetxController {
             [XFile(path)],
             text: 'Podium: ${recordingName}',
           );
+        } catch (e) {
+          log.e("error stopping recording: $e");
         }
       }
     }

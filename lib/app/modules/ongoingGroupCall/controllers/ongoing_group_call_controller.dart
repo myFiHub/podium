@@ -221,8 +221,8 @@ class OngoingGroupCallController extends GetxController {
     final alreadyViewed = storage.read(IntroStorageKeys.viewedOngiongCall);
     if (
         //
-        true
-        // alreadyViewed == null
+        // true
+        alreadyViewed == null
         //
         ) {
       // wait for the context to be ready

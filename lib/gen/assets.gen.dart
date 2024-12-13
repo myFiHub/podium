@@ -32,8 +32,14 @@ class $AssetsImagesGen {
   /// File path: assets/images/apple.png
   AssetGenImage get apple => const AssetGenImage('assets/images/apple.png');
 
+  /// File path: assets/images/bell.png
+  AssetGenImage get bell => const AssetGenImage('assets/images/bell.png');
+
   /// File path: assets/images/boo.png
   AssetGenImage get boo => const AssetGenImage('assets/images/boo.png');
+
+  /// File path: assets/images/browse.png
+  AssetGenImage get browse => const AssetGenImage('assets/images/browse.png');
 
   /// File path: assets/images/cheer.png
   AssetGenImage get cheer => const AssetGenImage('assets/images/cheer.png');
@@ -47,6 +53,9 @@ class $AssetsImagesGen {
 
   /// File path: assets/images/github.png
   AssetGenImage get github => const AssetGenImage('assets/images/github.png');
+
+  /// File path: assets/images/gold_pot.svg
+  SvgGenImage get goldPot => const SvgGenImage('assets/images/gold_pot.svg');
 
   /// File path: assets/images/linkedin.png
   AssetGenImage get linkedin =>
@@ -67,26 +76,22 @@ class $AssetsImagesGen {
   AssetGenImage get xPlatform =>
       const AssetGenImage('assets/images/x_platform.png');
 
-   AssetGenImage get bell =>
-      const AssetGenImage('assets/images/bell.png');
-
-AssetGenImage get browse =>
-      const AssetGenImage('assets/images/browse.png');
-
   /// List of all assets
   List<dynamic> get values => [
         ageRestricted,
         apple,
+        bell,
         boo,
+        browse,
         cheer,
         facebook,
         gIcon,
         github,
+        goldPot,
         linkedin,
         logo,
         movementLogo,
         particleIcon,
-        bell,
         xPlatform
       ];
 }

@@ -40,11 +40,11 @@ Map<String, dynamic> _$StarsArenaUserToJson(StarsArenaUser instance) =>
       'solanaAddress': instance.solanaAddress,
       'prevAddress': instance.prevAddress,
       'keyPrice': instance.keyPrice,
+      'lastKeyPrice': instance.lastKeyPrice,
       'addressConfirmed': instance.addressConfirmed,
       'followerCount': instance.followerCount,
       'followingsCount': instance.followingsCount,
       'twitterFollowers': instance.twitterFollowers,
       'userConfirmed': instance.userConfirmed,
       'twitterConfirmed': instance.twitterConfirmed,
-      'lastKeyPrice': instance.lastKeyPrice,
     };

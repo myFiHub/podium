@@ -26,7 +26,6 @@ import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
-import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -100,7 +99,6 @@ class OngoingGroupCallController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final firebaseSession = Rxn<FirebaseSession>();
   final mySession = Rxn<FirebaseSessionMember>();
-  final jitsiMembers = Rxn<List<JitsiMember>>();
   final allRemainingTimesMap = Rx<Map<String, int>>({});
   final talkTimer = MyTalkTimer();
   final amIAdmin = false.obs;
@@ -109,12 +107,10 @@ class OngoingGroupCallController extends GetxController {
   final isRecording = false.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
-  int numberOfRecording = 0;
-  AudioRecorder record = AudioRecorder();
+  int _numberOfRecording = 0;
+  AudioRecorder _recorder = AudioRecorder();
 
   final loadingWalletAddressForUser = RxList<String>([]);
-
-  final reactionLog = Rx<List<ReactionLogElement>>([]);
 
   final lastReaction = Rx<Reaction>(
     Reaction(targetId: '', reaction: ''),
@@ -388,10 +384,10 @@ class OngoingGroupCallController extends GetxController {
   }
 
   _setIsRecording(bool recording) async {
-    record = AudioRecorder();
+    _recorder = AudioRecorder();
     final group = groupCallController.group.value!;
     final recordingName =
-        'Podium Outpost record-${group.name}${numberOfRecording == 0 ? '' : '-${numberOfRecording}'}';
+        'Podium Outpost record-${group.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
     final hasPermissionForAudio = await getPermission(Permission.microphone);
     final hasPermissionForStorage = await getPermission(Permission.storage);
     if (!hasPermissionForAudio || !hasPermissionForStorage) {
@@ -403,20 +399,24 @@ class OngoingGroupCallController extends GetxController {
             .replaceAll(':', '');
 
     if (recording) {
-      numberOfRecording++;
-      if (await record.hasPermission()) {
+      final muted = amIMuted.value;
+      if (muted) {
+        Toast.warning(
+          title: "unmute first",
+          message: "You are muted",
+        );
+        return;
+      }
+      _numberOfRecording++;
+      if (await _recorder.hasPermission()) {
         try {
-          // RecordMp3.instance.start(path, (error) {
-          //   log.e("error starting recording: $error");
-          // });
-          await record.start(const RecordConfig(), path: '${path}');
-          // Recorder.instance.startRecording(completeFilePath: path);
+          await _recorder.start(const RecordConfig(), path: '${path}');
           Toast.success(
             title: "Recording started",
             message: "Recording started",
           );
         } catch (e) {
-          numberOfRecording--;
+          _numberOfRecording--;
           Toast.error(
             title: "Error",
             message: "Error starting recording",
@@ -434,8 +434,8 @@ class OngoingGroupCallController extends GetxController {
     } else {
       if (isRecording.value) {
         try {
-          await record.stop();
-          record.dispose();
+          await _recorder.stop();
+          _recorder.dispose();
 
           Toast.success(
             title: "Recording saved",
@@ -452,15 +452,6 @@ class OngoingGroupCallController extends GetxController {
       }
     }
     isRecording.value = recording;
-  }
-
-  _addToReactionLog({required ReactionLogElement element}) {
-    // max length of reaction log is 5
-    if (reactionLog.value.length >= 5) {
-      reactionLog.value.removeAt(0);
-    }
-    reactionLog.value.add(element);
-    reactionLog.refresh();
   }
 
   stopSubscriptions() {
@@ -518,18 +509,6 @@ class OngoingGroupCallController extends GetxController {
     required String initiatorId,
     required String targetId,
   }) {
-    final initiatorUser = firebaseSession.value!.members[initiatorId];
-    final targetUser = firebaseSession.value!.members[targetId];
-
-    // final userWidgetLocation=
-    // log.d(
-    //     "action: $action, initiator: ${initiatorUser!.name}, target: ${targetUser!.name}");
-    final element = ReactionLogElement(
-      initiator: initiatorUser!,
-      target: targetUser!,
-      reaction: action,
-    );
-    _addToReactionLog(element: element);
     lastReaction.value = Reaction(targetId: targetId, reaction: action);
     update(['confetti' + targetId]);
     Future.delayed(const Duration(milliseconds: 10), () {

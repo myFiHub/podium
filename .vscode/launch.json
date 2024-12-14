@@ -8,22 +8,19 @@
       "name": "DEV",
       "request": "launch",
       "type": "dart",
-      "args": ["--verbose "]
+      "args": ["--verbose"]
     },
     {
-      "name": "podium_flutter (profile mode)",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "profile",
-      "args": [" "]
-    },
-    {
-      "name": "podium_flutter (release mode)",
+      "name": "RELEASE",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release",
-      "args": [" "]
-
-    }
+     },
+    {
+      "name": "PROFILE",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+     },
   ]
 }

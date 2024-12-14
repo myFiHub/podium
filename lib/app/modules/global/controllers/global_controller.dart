@@ -85,7 +85,7 @@ class GlobalController extends GetxController {
 
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
-          Env.initialExternalWalletChainId));
+          Env.initialExternalWalletChainId!));
 
   ReownAppKitModalNetworkInfo? get externalWalletChain {
     final chain = ReownAppKitModalNetworks.getNetworkById(
@@ -105,11 +105,14 @@ class GlobalController extends GetxController {
   void onInit() async {
     super.onInit();
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
-    ReownAppKitModalNetworks.addSupportedNetworks(
-      Env.chainNamespace,
-      [movementMainNetChain, movementDevnetChain],
-    );
-
+    try {
+      ReownAppKitModalNetworks.addSupportedNetworks(
+        Env.chainNamespace,
+        [movementMainNetChain, movementDevnetChain],
+      );
+    } catch (e) {
+      log.e("error ReownAppKitModalNetworks app $e");
+    }
     try {
       await Future.wait([
         initializeWeb3Auth(),

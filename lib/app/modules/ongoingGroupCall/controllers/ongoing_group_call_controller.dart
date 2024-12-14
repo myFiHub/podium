@@ -413,7 +413,10 @@ class OngoingGroupCallController extends GetxController {
           );
         } catch (e) {
           numberOfRecording--;
-
+          Toast.error(
+            title: "Error",
+            message: "Error starting recording",
+          );
           log.e("error starting recording: $e");
           isRecording.value = false;
           return;
@@ -428,16 +431,7 @@ class OngoingGroupCallController extends GetxController {
       if (isRecording.value) {
         try {
           await record.stop();
-          // if (p == null) {
-          //   log.e("error stopping recording: ");
-          //   Toast.error(
-          //     title: "Error",
-          //     message: "Error saving the recording",
-          //   );
-          //   numberOfRecording--;
-          //   isRecording.value = false;
-          //   return;
-          // }
+          record.dispose();
 
           Toast.success(
             title: "Recording saved",
@@ -765,7 +759,7 @@ class OngoingGroupCallController extends GetxController {
         return;
       }
       final String? amount = fromMeetPage == true
-          ? Env.minimumCheerBooAmount
+          ? Env.minimumCheerBooAmount.toString()
           : await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
       if (amount == null) {
         log.e("Amount not selected");

@@ -3,9 +3,11 @@ import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
 import "package:device_preview/device_preview.dart";
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
@@ -70,12 +72,17 @@ processLink(String? link) async {
 }
 
 void main() async {
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: ColorName.systemTrayBackground,
-    systemNavigationBarColor:
-        ColorName.navbarBackground, // Color de la barra de navegación
-    statusBarIconBrightness: Brightness.light, // Iconos claros en la
-  ));
+  await dotenv.load(
+      fileName: "env/${kReleaseMode ? 'production' : 'development'}.env");
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: ColorName.systemTrayBackground,
+      systemNavigationBarColor:
+          ColorName.navbarBackground, // Color de la barra de navegación
+      statusBarIconBrightness: Brightness.light, // Iconos claros en la
+    ),
+  );
   await GetStorage.init();
   HttpApis.configure();
   // runApp(const MyApp());

@@ -1,7 +1,7 @@
 import 'package:podium/env.dart';
 
 class ProxyContract {
-  static const address = Env.starsArenaProxyAddress_Avalanche_Mainnet;
+  static final String address = Env.starsArenaProxyAddress_Avalanche_Mainnet!;
   static const abi = [
     {
       "inputs": [

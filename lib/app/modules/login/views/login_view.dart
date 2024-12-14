@@ -184,9 +184,9 @@ class LoginView extends GetView<LoginController> {
                       );
                     }),
                     space10,
-                    const Text(
+                    Text(
                       "Version: " + Env.VERSION,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: ColorName.greyText,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,

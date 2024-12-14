@@ -61,8 +61,8 @@ class SearchView extends GetView<SearchPageController> {
                             },
                           ),
                           Positioned(
-                            right: 25,
-                            top: 20,
+                            right: 20,
+                            top: 10,
                             child: Obx(() {
                               final isSearching = controller.isSearching.value;
                               if (isSearching) {

@@ -78,6 +78,7 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
           return Column(
             children: [
               FloatingActionButton(
+                heroTag: 'muteUnmute',
                 key: controller.muteUnmuteKey,
                 backgroundColor: isMuted ? Colors.red : Colors.green,
                 onPressed: () {
@@ -91,6 +92,7 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
               if (amICreator && recordable) space10,
               if (amICreator && recordable)
                 FloatingActionButton(
+                  heroTag: 'record',
                   backgroundColor: Colors.white,
                   onPressed: () {
                     isRecording

@@ -1,41 +1,39 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/contracts/chainIds.dart';
 
 class Env {
-  static const initialExternalWalletChainId =
-      String.fromEnvironment("initialExternalWalletChainId");
+  static final initialExternalWalletChainId =
+      dotenv.env['INITIAL_EXTERNAL_WALLET_CHAIN_ID']!;
 
-  static const starsArenaAddress_Avalanche_Mainnet =
-      String.fromEnvironment("starsArenaAddress_Avalanche_Mainnet");
-  static const starsArenaProxyAddress_Avalanche_Mainnet =
-      String.fromEnvironment("starsArenaProxyAddress_Avalanche_Mainnet");
-  static const friendtechAddress_BaseChain_Mainnet =
-      String.fromEnvironment("friendtechAddress_BaseChain_Mainnet");
-  static const cheerBooAddress_Movement_Devnet =
-      String.fromEnvironment("cheerBooAddress_Movement_Devnet");
-  static const minimumCheerBooAmount =
-      String.fromEnvironment("minimumCheerBooAmount");
-  static const cheerBooTimeMultiplication =
-      String.fromEnvironment("cheerBooTimeMultiplication");
+  static final starsArenaAddress_Avalanche_Mainnet =
+      dotenv.env['STARS_ARENA_ADDRESS_AVALANCHE_MAINNET']!;
+  static final starsArenaProxyAddress_Avalanche_Mainnet =
+      dotenv.env['STARS_ARENA_PROXY_ADDRESS_AVALANCHE_MAINNET']!;
+  static final friendtechAddress_BaseChain_Mainnet =
+      dotenv.env['FRIENDTECH_ADDRESS_BASECHAIN_MAINNET']!;
+  static final cheerBooAddress_Movement_Devnet =
+      dotenv.env['CHEERBOO_ADDRESS_MOVEMENT_DEVNET']!;
+  static final minimumCheerBooAmount = dotenv.env['MINIMUM_CHEERBOO_AMOUNT']!;
+  static final cheerBooTimeMultiplication =
+      dotenv.env['CHEERBOO_TIME_MULTIPLICATION']!;
 
   // from walletConnect
-  static const projectId = String.fromEnvironment('projectId');
-  static const web3AuthClientId = String.fromEnvironment("web3AuthClientId");
-  static const environment = String.fromEnvironment("environment");
-  static const jitsiServerUrl = String.fromEnvironment("jitsiServerUrl");
-  static const appStoreUrl = String.fromEnvironment("appStoreUrl");
-  static const baseDeepLinkUrl = String.fromEnvironment("baseDeepLinkUrl");
-  static const chainNamespace = String.fromEnvironment("chainNamespace");
-  static const albyApiKey = String.fromEnvironment("alby_apiKey");
+  static final projectId = dotenv.env['PROJECT_ID']!;
+  static final web3AuthClientId = dotenv.env['WEB3_AUTH_CLIENT_ID']!;
+  static final environment = dotenv.env['ENVIRONMENT']!;
+  static final jitsiServerUrl = dotenv.env['JITSI_SERVER_URL']!;
+  static final appStoreUrl = dotenv.env['APP_STORE_URL']!;
+  static final baseDeepLinkUrl = dotenv.env['BASE_DEEP_LINK_URL']!;
+  static final chainNamespace = dotenv.env['CHAIN_NAMESPACE']!;
+  static final albyApiKey = dotenv.env['ALBY_API_KEY']!;
 
-  static const fihubAddress_Avalanche_MainNet =
-      String.fromEnvironment("fihubAddress_Avalanche_MainNet");
+  static final fihubAddress_Avalanche_MainNet =
+      dotenv.env['FIHUB_ADDRESS_AVALANCHE_MAINNET']!;
 
-  static const cheerBooAptosAddress =
-      String.fromEnvironment("cheerBooAptosAddress");
+  static final cheerBooAptosAddress = dotenv.env['CHEERBOO_APTOS_ADDRESS']!;
 
-  static const VERSION =
-      String.fromEnvironment("VERSION", defaultValue: '1.0.8');
+  static final VERSION = dotenv.env['VERSION'] ?? '1.0.8';
 
   static String? starsArenaAddress(String chainId) {
     if (chainId == avalancheChainId) {

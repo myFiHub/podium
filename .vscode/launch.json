@@ -5,22 +5,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Podium DEV",
+      "name": "DEV",
       "request": "launch",
       "type": "dart",
       "args": ["--verbose "]
-    },
-    {
-      "name": "Podium STAGE",
-      "request": "launch",
-      "type": "dart",
-      "args": [""]
-    },
-    {
-      "name": "Podium PROD",
-      "request": "launch",
-      "type": "dart",
-      "args": [" "]
     },
     {
       "name": "podium_flutter (profile mode)",
@@ -28,7 +16,6 @@
       "type": "dart",
       "flutterMode": "profile",
       "args": [" "]
-
     },
     {
       "name": "podium_flutter (release mode)",

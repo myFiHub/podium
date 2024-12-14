@@ -268,7 +268,7 @@ class OngoingGroupCallController extends GetxController {
 
   void saveIntroAsDone(bool? setAsFinished) {
     if (setAsFinished == true) {
-      storage.write(IntroStorageKeys.viewedMyProfile, true);
+      storage.write(IntroStorageKeys.viewedOngiongCall, true);
     }
   }
 

@@ -264,7 +264,7 @@ class CreateGroupController extends GetxController {
 
   void saveIntroAsDone(bool? setAsFinished) {
     if (setAsFinished == true) {
-      storage.write(IntroStorageKeys.viewedMyProfile, true);
+      storage.write(IntroStorageKeys.viewedCreateGroup, true);
     }
   }
 

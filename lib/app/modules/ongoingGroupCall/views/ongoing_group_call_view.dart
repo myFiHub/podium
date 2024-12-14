@@ -175,6 +175,7 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
             }
             if (isAdmin) {
               return Container(
+                key: controller.timerKey,
                 child: const Center(
                   child: Text('presenting as admin'),
                 ),

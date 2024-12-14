@@ -113,7 +113,7 @@ class MyProfileController extends GetxController {
             type: ButtonType.outline,
             color: Colors.red,
             onPressed: () {
-              introFinished(true);
+              saveIntroAsDone(true);
             },
             child: const Text("Finish"),
           ),
@@ -121,7 +121,7 @@ class MyProfileController extends GetxController {
           opacityShadow: 0.5,
           imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           onFinish: () {
-            introFinished(true);
+            saveIntroAsDone(true);
           },
           onClickTarget: (target) {
             log.d(target);
@@ -137,7 +137,7 @@ class MyProfileController extends GetxController {
             _scrollIfNeeded();
           },
           onSkip: () {
-            introFinished(true);
+            saveIntroAsDone(true);
             return true;
           },
         );
@@ -276,10 +276,14 @@ class MyProfileController extends GetxController {
     );
   }
 
-  void introFinished(bool? setAsFinished) {
+  void saveIntroAsDone(bool? setAsFinished) {
     if (setAsFinished == true) {
       storage.write(IntroStorageKeys.viewedMyProfile, true);
     }
+  }
+
+  void introFinished(bool? setAsFinished) {
+    saveIntroAsDone(setAsFinished);
     try {
       tutorialCoachMark.finish();
     } catch (e) {}

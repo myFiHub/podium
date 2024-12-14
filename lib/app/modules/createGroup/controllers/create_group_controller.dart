@@ -121,13 +121,13 @@ class CreateGroupController extends GetxController {
             type: ButtonType.outline,
             color: Colors.red,
             onPressed: () {
-              introFinished(true);
+              saveIntroAsDone(true);
             },
             child: const Text("Finish"),
           ),
           imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           onFinish: () {
-            introFinished(true);
+            saveIntroAsDone(true);
           },
           onClickTarget: (target) {
             print('onClickTarget: $target');
@@ -141,7 +141,7 @@ class CreateGroupController extends GetxController {
             print('onClickOverlay: $target');
           },
           onSkip: () {
-            introFinished(true);
+            saveIntroAsDone(true);
             return true;
           },
         );
@@ -262,10 +262,14 @@ class CreateGroupController extends GetxController {
     );
   }
 
-  void introFinished(bool? setAsFinished) {
+  void saveIntroAsDone(bool? setAsFinished) {
     if (setAsFinished == true) {
-      storage.write(IntroStorageKeys.viewedCreateGroup, true);
+      storage.write(IntroStorageKeys.viewedMyProfile, true);
     }
+  }
+
+  void introFinished(bool? setAsFinished) {
+    saveIntroAsDone(setAsFinished);
     try {
       tutorialCoachMark.finish();
     } catch (e) {}

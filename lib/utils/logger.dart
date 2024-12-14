@@ -1,5 +1,4 @@
 import 'package:logger/logger.dart';
-import 'package:podium/env.dart';
 
 class L {
   static final L _singleton = L._internal();
@@ -24,7 +23,7 @@ class L {
 class CustomFilter extends LogFilter {
   @override
   bool shouldLog(LogEvent event) {
-    return Env.environment == DEV;
+    return true; // Env.environment == DEV;
   }
 }
 

@@ -8,7 +8,7 @@
       "name": "Podium DEV",
       "request": "launch",
       "type": "dart",
-      "args": [" --verbose "]
+      "args": ["--verbose "]
     },
     {
       "name": "Podium STAGE",

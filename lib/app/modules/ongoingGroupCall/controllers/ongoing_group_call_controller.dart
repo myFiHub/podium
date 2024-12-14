@@ -243,17 +243,17 @@ class OngoingGroupCallController extends GetxController {
             type: ButtonType.outline,
             color: Colors.red,
             onPressed: () {
-              introFinished(true);
+              saveIntroAsDone(true);
             },
             child: const Text("Finish"),
           ),
           opacityShadow: 0.5,
           imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           onFinish: () {
-            introFinished(true);
+            saveIntroAsDone(true);
           },
           onSkip: () {
-            introFinished(true);
+            saveIntroAsDone(true);
             return true;
           },
         );
@@ -263,6 +263,12 @@ class OngoingGroupCallController extends GetxController {
           log.e(e);
         }
       });
+    }
+  }
+
+  void saveIntroAsDone(bool? setAsFinished) {
+    if (setAsFinished == true) {
+      storage.write(IntroStorageKeys.viewedMyProfile, true);
     }
   }
 
@@ -366,9 +372,7 @@ class OngoingGroupCallController extends GetxController {
   }
 
   void introFinished(bool? setAsFinished) {
-    if (setAsFinished == true) {
-      storage.write(IntroStorageKeys.viewedOngiongCall, true);
-    }
+    saveIntroAsDone(setAsFinished);
     try {
       tutorialCoachMark.finish();
       shouldShowIntro.value = false;

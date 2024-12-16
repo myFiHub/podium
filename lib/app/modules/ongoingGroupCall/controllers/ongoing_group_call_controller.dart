@@ -23,6 +23,7 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
@@ -375,6 +376,10 @@ class OngoingGroupCallController extends GetxController {
     } catch (e) {}
   }
 
+  setMutedState(bool muted) {
+    jitsiMeet.setAudioMuted(muted);
+  }
+
   startRecording() {
     _setIsRecording(true);
   }
@@ -389,8 +394,10 @@ class OngoingGroupCallController extends GetxController {
     final recordingName =
         'Podium Outpost record-${group.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
     final hasPermissionForAudio = await getPermission(Permission.microphone);
-    final hasPermissionForStorage = await getPermission(Permission.storage);
-    if (!hasPermissionForAudio || !hasPermissionForStorage) {
+    // final hasPermissionForStorage = await getPermission(Permission.storage);
+    if (!hasPermissionForAudio
+        //  || !hasPermissionForStorage
+        ) {
       return;
     }
     Directory downloadDirectory = await getDownloadDirectory();
@@ -849,7 +856,7 @@ class OngoingGroupCallController extends GetxController {
             event: PaymentEvent(
           amount: amount,
           chainId: selectedWallet == WalletNames.internal_Aptos
-              ? '127'
+              ? movementAptosChainId
               : movementChain.chainId,
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external

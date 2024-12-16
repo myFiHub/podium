@@ -19,7 +19,7 @@ class SearchView extends GetView<SearchPageController> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              space16,
+              space10,
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
@@ -32,14 +32,15 @@ class SearchView extends GetView<SearchPageController> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    space10,
+                    space5,
                     SizedBox(
                       height: 40,
                       child: Stack(
                         children: [
                           TextField(
                             controller: TextEditingController(
-                                text: controller.searchValue.value),
+                              text: controller.searchValue.value,
+                            ),
                             decoration: InputDecoration(
                               hintText: "Search Outposts, Users or Tags",
                               hintStyle: const TextStyle(fontSize: 14),

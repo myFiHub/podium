@@ -122,7 +122,7 @@ class TimePickerSpinner extends StatelessWidget {
                           return Center(
                             child: Text(
                               hour,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                               ),
                             ),
@@ -159,7 +159,7 @@ class TimePickerSpinner extends StatelessWidget {
                           return Center(
                               child: Text(
                             minute,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                             ),
                           ));

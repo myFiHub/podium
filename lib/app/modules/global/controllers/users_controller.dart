@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -63,7 +63,7 @@ class UsersController extends GetxController {
         final myUser = globalController.currentUserInfo.value;
         if (startFollowing) {
           myUser!.following.add(id);
-          final notifId = Uuid().v4();
+          final notifId = const Uuid().v4();
           sendNotification(
             notification: FirebaseNotificationModel(
                 id: notifId,

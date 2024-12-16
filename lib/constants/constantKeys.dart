@@ -1,11 +1,13 @@
 class FireBaseConstants {
-  static final usersRef = 'users/';
   static final followers = 'followers/';
   // update together, don't forget to update firebase rules
-  static final groupsRef = 'groups_v1/';
-  static final sessionsRef = 'sessions_v1/';
-  static final tags = "tags_v1/";
-  static final notificationsRef = 'notifications_v1/';
+  static final usersRef = 'users_v3/';
+  static final groupsRef = 'groups_v3/';
+  static final sessionsRef = 'sessions_v3/';
+  static final tags = "tags_v3/";
+  static final notificationsRef = 'notifications_v3/';
+  static final referalsRef = 'referals_v3/';
+  static final podiumDefinedEntryAddresses = 'podiumDefinedEntryAddresses_v3/';
   // end
   static final versionRef = 'version/';
   static final forceUpdate = 'forceUpdate/';

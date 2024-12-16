@@ -15,7 +15,6 @@ import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/constants/meeting.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
@@ -71,10 +70,13 @@ class GroupCallController extends GetxController {
           groupId: activeGroup.id,
           onData: (data) async {
             if (data.snapshot.value != null) {
-              final membersListFromStream =
-                  (data.snapshot.value as List<dynamic>).cast<String>();
+              final tmpMembers = data.snapshot.value as dynamic;
+              final membersListFromStream = <String, String>{};
+              tmpMembers.forEach((key, value) {
+                membersListFromStream[key] = value;
+              });
               final previousUniqueMembers = members.value.map((e) => e.id);
-              final newUniqueMembers = membersListFromStream.map((e) => e);
+              final newUniqueMembers = membersListFromStream.keys.map((e) => e);
               if (previousUniqueMembers.length != newUniqueMembers.length) {
                 await refetchSessionMembers();
               }
@@ -234,18 +236,11 @@ class GroupCallController extends GetxController {
         await getPermission(Permission.notification);
     log.d("notifications allowed: $hasNotificationPermission");
 
-    String? particleWalletAddress;
     final myUser = globalController.currentUserInfo.value!;
-    if (globalController.particleAuthUserInfo.value != null) {
-      final particleUser = globalController.particleAuthUserInfo.value;
-      if (particleUser != null) {
-        particleWalletAddress = particleUser.wallets?[0]?.publicAddress;
-      }
-    }
 
-    if ((myUser.localWalletAddress == '' ||
+    if ((myUser.evm_externalWalletAddress == '' ||
             globalController.connectedWalletAddress == '') &&
-        particleWalletAddress == null) {
+        myUser.defaultWalletAddress == '') {
       Toast.warning(
         title: 'Wallet required',
         message: 'Please connect a wallet to join',
@@ -295,7 +290,7 @@ class GroupCallController extends GetxController {
 bool canISpeakWithoutTicket({required FirebaseGroup group}) {
   final iAmTheCreator = group.creator.id == myId;
   if (iAmTheCreator) return true;
-  if (group.speakerType == FreeRoomSpeakerTypes.invitees) {
+  if (group.speakerType == FreeGroupSpeakerTypes.invitees) {
     // check if I am invited and am invited to speak
     final invitedMember = group.invitedMembers[myId];
     if (invitedMember != null && invitedMember.invitedToSpeak) return true;
@@ -303,7 +298,7 @@ bool canISpeakWithoutTicket({required FirebaseGroup group}) {
   }
 
   final iAmAllowedToSpeak = group.speakerType == null ||
-      group.speakerType == FreeRoomSpeakerTypes.everyone;
+      group.speakerType == FreeGroupSpeakerTypes.everyone;
 
   return iAmAllowedToSpeak;
 }

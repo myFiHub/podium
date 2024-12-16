@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:reown_appkit/reown_appkit.dart';
 
 class ChainDataWrapper {
   // static final List<ChainMetadata> chains = [

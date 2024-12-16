@@ -1,26 +1,38 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui';
 
 import 'package:ably_flutter/ably_flutter.dart';
+import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+// import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
+import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
-import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/storage.dart';
+import 'package:podium/widgets/button/button.dart';
+import 'package:record/record.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
 const amountToAddForLikeInSeconds = 10; // 10 seconds
@@ -73,22 +85,32 @@ class ReactionLogElement {
 }
 
 class OngoingGroupCallController extends GetxController {
+  BuildContext? contextForIntro;
+  final shouldShowIntro = false.obs;
+  bool introStartCalled = false;
+  late TutorialCoachMark tutorialCoachMark;
+  final muteUnmuteKey = GlobalKey();
+  final timerKey = GlobalKey();
+  final likeDislikeKey = GlobalKey();
+  final cheerBooKey = GlobalKey();
+
+  final storage = GetStorage();
   final groupCallController = Get.find<GroupCallController>();
   final globalController = Get.find<GlobalController>();
   final firebaseSession = Rxn<FirebaseSession>();
   final mySession = Rxn<FirebaseSessionMember>();
-  final jitsiMembers = Rxn<List<JitsiMember>>();
   final allRemainingTimesMap = Rx<Map<String, int>>({});
   final talkTimer = MyTalkTimer();
   final amIAdmin = false.obs;
   final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
+  final isRecording = false.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
+  int _numberOfRecording = 0;
+  AudioRecorder _recorder = AudioRecorder();
 
   final loadingWalletAddressForUser = RxList<String>([]);
-
-  final reactionLog = Rx<List<ReactionLogElement>>([]);
 
   final lastReaction = Rx<Reaction>(
     Reaction(targetId: '', reaction: ''),
@@ -173,11 +195,18 @@ class OngoingGroupCallController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    try {
+      // Recorder.instance.init();
+      // Recorder.instance.start();
+    } on Exception catch (e) {
+      debugPrint('init() error: $e\n');
+    }
   }
 
   @override
   void onClose() async {
     super.onClose();
+    stopRecording();
     presenceUpdateStream?.cancel();
     stopTheTimer();
     stopSubscriptions();
@@ -187,13 +216,242 @@ class OngoingGroupCallController extends GetxController {
     await jitsiMeet.hangUp();
   }
 
-  _addToReactionLog({required ReactionLogElement element}) {
-    // max length of reaction log is 5
-    if (reactionLog.value.length >= 5) {
-      reactionLog.value.removeAt(0);
+  startIntro() {
+    if (storage.read(IntroStorageKeys.viewedOngiongCall) == null) {
+      shouldShowIntro.value = true;
+    } else {
+      return;
     }
-    reactionLog.value.add(element);
-    reactionLog.refresh();
+    final alreadyViewed = storage.read(IntroStorageKeys.viewedOngiongCall);
+    if (
+        //
+        // true
+        alreadyViewed == null
+        //
+        ) {
+      // wait for the context to be ready
+      Future.delayed(const Duration(seconds: 1)).then((v) {
+        tutorialCoachMark = TutorialCoachMark(
+          targets: _createTargets(),
+          paddingFocus: 5,
+          skipWidget: Button(
+            size: ButtonSize.SMALL,
+            type: ButtonType.outline,
+            color: Colors.red,
+            onPressed: () {
+              saveIntroAsDone(true);
+            },
+            child: const Text("Finish"),
+          ),
+          opacityShadow: 0.5,
+          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          onFinish: () {
+            saveIntroAsDone(true);
+          },
+          onSkip: () {
+            saveIntroAsDone(true);
+            return true;
+          },
+        );
+        try {
+          tutorialCoachMark.show(context: contextForIntro!);
+        } catch (e) {
+          log.e(e);
+        }
+      });
+    }
+  }
+
+  void saveIntroAsDone(bool? setAsFinished) {
+    if (setAsFinished == true) {
+      storage.write(IntroStorageKeys.viewedOngiongCall, true);
+    }
+  }
+
+  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+    targets.add(
+      _createStep(
+        targetId: muteUnmuteKey,
+        text:
+            "you can mute/unmute your microphone here, it will start/stop your talk timer",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: timerKey,
+        text:
+            "this is your remaining talk time, it will be updated when you talk",
+      ),
+    );
+
+    targets.add(
+      _createStep(
+        targetId: likeDislikeKey,
+        text:
+            " you can like/dislike other participants for free, it will add/remove time to/from their talk time",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: cheerBooKey,
+        text:
+            "you can cheer/boo other participants for a fee, it will add/remove time to/from their talk time, you can also cheer yourself, if so, fee will be distributed among other participants",
+        hasNext: false,
+      ),
+    );
+
+    return targets;
+  }
+
+  _createStep({
+    required GlobalKey targetId,
+    required String text,
+    bool hasNext = true,
+  }) {
+    return TargetFocus(
+      identify: targetId.toString(),
+      keyTarget: targetId,
+      alignSkip: Alignment.bottomRight,
+      paddingFocus: 0,
+      focusAnimationDuration: const Duration(milliseconds: 300),
+      unFocusAnimationDuration: const Duration(milliseconds: 100),
+      shape: ShapeLightFocus.RRect,
+      color: Colors.black,
+      enableOverlayTab: true,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+                if (hasNext)
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      tutorialCoachMark.next();
+                    },
+                    child: const Text(
+                      "Next",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                else
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      introFinished(true);
+                    },
+                    child: const Text(
+                      "Finish",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void introFinished(bool? setAsFinished) {
+    saveIntroAsDone(setAsFinished);
+    try {
+      tutorialCoachMark.finish();
+      shouldShowIntro.value = false;
+    } catch (e) {}
+  }
+
+  startRecording() {
+    _setIsRecording(true);
+  }
+
+  stopRecording() {
+    _setIsRecording(false);
+  }
+
+  _setIsRecording(bool recording) async {
+    _recorder = AudioRecorder();
+    final group = groupCallController.group.value!;
+    final recordingName =
+        'Podium Outpost record-${group.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
+    final hasPermissionForAudio = await getPermission(Permission.microphone);
+    final hasPermissionForStorage = await getPermission(Permission.storage);
+    if (!hasPermissionForAudio || !hasPermissionForStorage) {
+      return;
+    }
+    Directory downloadDirectory = await getDownloadDirectory();
+    String path =
+        '${downloadDirectory.path}/${recordingName}-${DateTime.now().millisecondsSinceEpoch}.m4a'
+            .replaceAll(':', '');
+
+    if (recording) {
+      final muted = amIMuted.value;
+      if (muted) {
+        Toast.warning(
+          title: "unmute first",
+          message: "You are muted",
+        );
+        return;
+      }
+      _numberOfRecording++;
+      if (await _recorder.hasPermission()) {
+        try {
+          await _recorder.start(const RecordConfig(), path: '${path}');
+          Toast.success(
+            title: "Recording started",
+            message: "Recording started",
+          );
+        } catch (e) {
+          _numberOfRecording--;
+          Toast.error(
+            title: "Error",
+            message: "Error starting recording",
+          );
+          log.e("error starting recording: $e");
+          isRecording.value = false;
+          return;
+        }
+      } else {
+        Toast.error(
+          title: "Error",
+          message: "Permission denied",
+        );
+      }
+    } else {
+      if (isRecording.value) {
+        try {
+          await _recorder.stop();
+          _recorder.dispose();
+
+          Toast.success(
+            title: "Recording saved",
+            message: "Recording saved into Downloads folder",
+            duration: 5,
+          );
+          // await Share.shareXFiles(
+          //   [XFile(path)],
+          //   text: 'Podium: ${recordingName}',
+          // );
+        } catch (e) {
+          log.e("error stopping recording: $e");
+        }
+      }
+    }
+    isRecording.value = recording;
   }
 
   stopSubscriptions() {
@@ -251,21 +509,9 @@ class OngoingGroupCallController extends GetxController {
     required String initiatorId,
     required String targetId,
   }) {
-    final initiatorUser = firebaseSession.value!.members[initiatorId];
-    final targetUser = firebaseSession.value!.members[targetId];
-
-    // final userWidgetLocation=
-    // log.d(
-    //     "action: $action, initiator: ${initiatorUser!.name}, target: ${targetUser!.name}");
-    final element = ReactionLogElement(
-      initiator: initiatorUser!,
-      target: targetUser!,
-      reaction: action,
-    );
-    _addToReactionLog(element: element);
     lastReaction.value = Reaction(targetId: targetId, reaction: action);
     update(['confetti' + targetId]);
-    Future.delayed(Duration(milliseconds: 10), () {
+    Future.delayed(const Duration(milliseconds: 10), () {
       lastReaction.value = Reaction(targetId: '', reaction: '');
     });
     // lastReaction.value = Reaction(targetId: '', reaction: '');
@@ -437,47 +683,51 @@ class OngoingGroupCallController extends GetxController {
     );
   }
 
+  _removeLoadingCheerBoo({
+    required String userId,
+    required bool cheer,
+  }) {
+    loadingWalletAddressForUser.remove("$userId-${cheer ? 'cheer' : 'boo'}");
+    loadingWalletAddressForUser.refresh();
+  }
+
   cheerBoo(
       {required String userId, required bool cheer, bool? fromMeetPage}) async {
     String? targetAddress;
-    final bool canContinue = checkWalletConnected(
-      afterConnection: () {
-        cheerBoo(userId: userId, cheer: cheer);
-      },
-    );
-
-    if (!canContinue) {
-      Toast.error(
-        title: "external wallet connection required",
-        message: " please connect your wallet first",
-      );
-      return;
-    }
-
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final userLocalWalletAddress = await getUserLocalWalletAddress(userId);
-    if (userLocalWalletAddress != '') {
-      targetAddress = userLocalWalletAddress;
-    } else {
-      final particleUserWallets = await getParticleAuthWalletsForUser(userId);
-      if (particleUserWallets.length > 0) {
-        targetAddress = particleUserWallets[0].address;
-      }
+    final user = await getUserById(userId);
+    if (user == null) {
+      log.e("user is null");
+      return;
     }
-    loadingWalletAddressForUser.remove("$userId-${cheer ? 'cheer' : 'boo'}");
-    loadingWalletAddressForUser.refresh();
+    if (user.evm_externalWalletAddress != '') {
+      targetAddress = user.evm_externalWalletAddress;
+    } else {
+      final internalWalletAddress = await getUserInternalWalletAddress(userId);
+      targetAddress = internalWalletAddress;
+    }
+
     log.d("target address is $targetAddress for user $userId");
-    if (canContinue && targetAddress != null && targetAddress != '') {
+    if (targetAddress != '') {
       List<String> receiverAddresses = [];
+      List<String> aptosReceiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
-      final myParticleUser = globalController.particleAuthUserInfo.value;
-      if (myUser.localWalletAddress == targetAddress ||
-          (myParticleUser != null &&
-              myParticleUser.wallets![0].publicAddress == targetAddress)) {
-        receiverAddresses = await getListOfUserWalletsPresentInSession(
+      if (myUser.evm_externalWalletAddress == targetAddress ||
+          (myUser.evmInternalWalletAddress == targetAddress)) {
+        final members = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
+        members.forEach((element) {
+          if (element != targetAddress) {
+            aptosReceiverAddresses.add(element.aptosInternalWalletAddress);
+            if (element.evm_externalWalletAddress.isNotEmpty) {
+              receiverAddresses.add(user.evm_externalWalletAddress);
+            } else {
+              receiverAddresses.add(user.evmInternalWalletAddress);
+            }
+          }
+        });
       } else {
         receiverAddresses = [targetAddress];
       }
@@ -487,13 +737,17 @@ class OngoingGroupCallController extends GetxController {
           title: "Error",
           message: "receiver wallet not found",
         );
+
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         return;
       }
       final String? amount = fromMeetPage == true
-          ? Env.minimumCheerBooAmount
+          ? Env.minimumCheerBooAmount.toString()
           : await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
       if (amount == null) {
         log.e("Amount not selected");
+
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         return;
       }
       late double parsedAmount;
@@ -511,38 +765,60 @@ class OngoingGroupCallController extends GetxController {
           title: "Error",
           message: "Amount is not a number",
         );
+
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         return;
       }
 
-      ///////////////////////
-      /// TODO: add for particle when it is ready (issue is resolved on their side, issue 2)
-      bool success = false;
-      final selectedWallet =
-          WalletNames.external; //choseWallet(movementChainId);
+      bool? success;
+      final selectedWallet = await choseAWallet(
+        chainId: movementChain.chainId,
+        supportsAptos: true,
+      );
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
+          groupId: groupCallController.group.value!.id,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
-          amount: parsedAmount,
+          amount: parsedAmount.abs(),
           cheer: cheer,
-          chainId: externalWalletChianId,
+          chainId: movementChain.chainId,
+        );
+      } else if (selectedWallet == WalletNames.internal_EVM) {
+        success = await internal_cheerOrBoo(
+          groupId: groupCallController.group.value!.id,
+          user: user,
+          target: targetAddress,
+          receiverAddresses: receiverAddresses,
+          amount: parsedAmount.abs(),
+          cheer: cheer,
+          chainId: movementChain.chainId,
+        );
+      } else if (selectedWallet == WalletNames.internal_Aptos) {
+        success = await AptosMovement.cheerBoo(
+          groupId: groupCallController.group.value!.id,
+          target: user.aptosInternalWalletAddress,
+          receiverAddresses: aptosReceiverAddresses,
+          amount: parsedAmount.abs(),
+          cheer: cheer,
         );
       }
-
+      // success null means error is handled inside called function
+      if (success == null) {
+        return;
+      }
       if (success) {
-        log.d("Cheer successful, amount: $amount");
-        log.d("final amount of time to add $finalAmountOfTimeToAdd");
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         cheer
             ? addToTimer(
-                seconds: finalAmountOfTimeToAdd,
+                seconds: finalAmountOfTimeToAdd.abs(),
                 userId: userId,
               )
             : reduceFromTimer(
-                seconds: finalAmountOfTimeToAdd,
+                seconds: finalAmountOfTimeToAdd.abs(),
                 userId: userId,
               );
 
-        log.i("${cheer ? "Cheer" : "Boo"} successful");
         Toast.success(
           title: "Success",
           message: "${cheer ? "Cheer" : "Boo"} successful",
@@ -557,21 +833,28 @@ class OngoingGroupCallController extends GetxController {
               InteractionKeys.action: eventString,
             });
         analytics.logEvent(name: 'cheerBoo', parameters: {
-          'cheer': cheer,
+          'cheer': cheer.toString(),
           'amount': amount,
           'target': userId,
           'groupId': groupCallController.group.value!.id,
           'fromUser': myUser.id,
         });
-        final particleAddress = await Evm.getAddress();
+        final internalWalletAddress =
+            await web3AuthWalletAddress(); //await Evm.getAddress();
+        if (internalWalletAddress == null) {
+          log.e("podium address is null");
+          return;
+        }
         saveNewPayment(
             event: PaymentEvent(
           amount: amount,
-          chainId: movementChainId,
+          chainId: selectedWallet == WalletNames.internal_Aptos
+              ? '127'
+              : movementChain.chainId,
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external
               ? externalWalletAddress!
-              : particleAddress,
+              : internalWalletAddress,
           targetAddress: targetAddress,
           initiatorId: myId,
           targetId: userId,
@@ -587,9 +870,11 @@ class OngoingGroupCallController extends GetxController {
           title: "Error",
           message: "${cheer ? "Cheer" : "Boo"} failed",
         );
+
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
       }
       ///////////////////////
-    } else if (targetAddress == '' || targetAddress == null) {
+    } else if (targetAddress == '') {
       log.e("User has not connected wallet for some reason");
       Toast.error(
         title: "Error",

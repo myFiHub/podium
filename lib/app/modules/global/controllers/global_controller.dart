@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:alarm/alarm.dart';
+import 'package:aptos/aptos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -8,35 +10,34 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/getContract.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
+import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
+import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
-import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:particle_base/model/user_info.dart' as ParticleUser;
-import 'package:particle_base/model/chain_info.dart' as ChainInfo;
-import 'package:particle_base/particle_base.dart' as ParticleBase;
-import 'package:alarm/alarm.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:web3auth_flutter/enums.dart';
+import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
-PairingMetadata _pairingMetadata = PairingMetadata(
+PairingMetadata _pairingMetadata = const PairingMetadata(
   name: StringConstants.w3mPageTitleV3,
   description: StringConstants.w3mPageTitleV3,
   url: 'https://walletconnect.com/',
@@ -44,13 +45,12 @@ PairingMetadata _pairingMetadata = PairingMetadata(
     'https://docs.walletconnect.com/assets/images/web3modalLogo-2cee77e07851ba0a710b56d03d4d09dd.png'
   ],
   redirect: Redirect(
-    native: 'web3modalflutter://',
-    universal: 'https://walletconnect.com/appkit',
+    native: 'podium://',
   ),
 );
 
 final _checkOptions = [
-  InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
+  // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
   // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
   InternetCheckOption(uri: Uri.parse(movementChain.rpcUrl))
 ];
@@ -67,13 +67,13 @@ class GlobalController extends GetxController {
   final connectedWalletAddress = "".obs;
   final jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
-  final particleAuthUserInfo = Rxn<ParticleUser.UserInfo>();
   final firebaseUser = Rxn<User>();
   final currentUserInfo = Rxn<UserInfoModel>();
   final activeRoute = AppPages.INITIAL.obs;
   final isAutoLoggingIn = true.obs;
   final isConnectedToInternet = true.obs;
   late ReownAppKitModal web3ModalService;
+  AptosAccount? aptosAccount;
   final loggedIn = false.obs;
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
@@ -81,26 +81,11 @@ class GlobalController extends GetxController {
   final ticker = 0.obs;
   final showArchivedGroups =
       RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
-  String? deepLinkRoute = null;
+  final deepLinkRoute = ''.obs;
 
-  final particleWalletChainId = RxString(
-      (storage.read(StorageKeys.particleWalletChainId) ??
-          Env.initialParticleWalletChainId));
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
-          Env.initialExternalWalletChainId));
-
-  ChainInfo.ChainInfo? particleWalletChain(String? chainId) {
-    final particleChain = ChainInfo.ChainInfo.getChain(
-      int.parse(chainId ?? particleWalletChainId.value),
-      ReownAppKitModalNetworks.getNetworkById(
-        Env.chainNamespace,
-        chainId ?? particleWalletChainId.value,
-      )!
-          .name,
-    );
-    return particleChain;
-  }
+          Env.initialExternalWalletChainId!));
 
   ReownAppKitModalNetworkInfo? get externalWalletChain {
     final chain = ReownAppKitModalNetworks.getNetworkById(
@@ -120,12 +105,22 @@ class GlobalController extends GetxController {
   void onInit() async {
     super.onInit();
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
-    ReownAppKitModalNetworks.addNetworks(Env.chainNamespace, [movementChain]);
-
-    await Future.wait([
-      initializeParticleAuth(),
-      FirebaseInit.init(),
-    ]);
+    try {
+      ReownAppKitModalNetworks.addSupportedNetworks(
+        Env.chainNamespace,
+        [movementMainNetChain, movementDevnetChain],
+      );
+    } catch (e) {
+      log.e("error ReownAppKitModalNetworks app $e");
+    }
+    try {
+      await Future.wait([
+        initializeWeb3Auth(),
+        FirebaseInit.init(),
+      ]);
+    } catch (e) {
+      log.e("error initializing app $e");
+    }
     FirebaseDatabase.instance.setPersistenceEnabled(false);
 
     // final firebaseUserDbReference =
@@ -156,20 +151,8 @@ class GlobalController extends GetxController {
 
   @override
   void onReady() async {
-    web3ModalService = ReownAppKitModal(
-      context: Get.context!,
-      projectId: Env.projectId,
-      logLevel: LogLevel.error,
-      metadata: _pairingMetadata,
-      featuredWalletIds: {
-        'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase
-        '18450873727504ae9315a084fa7624b5297d2fe5880f0982979c17345a138277', // Kraken Wallet
-        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // Metamask
-        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369', // Rainbow
-        'c03dfee351b6fcc421b4494ea33b9d4b92a984f87aa76d1663bb28705e95034a', // Uniswap
-        '38f5d18bd8522c244bdd70cb4a68e0e718865155811c043f052fb9f1c51de662', // Bitget
-      },
-    );
+    WidgetsFlutterBinding.ensureInitialized();
+
     super.onReady();
   }
 
@@ -187,7 +170,7 @@ class GlobalController extends GetxController {
   }
 
   startTicker() {
-    Timer.periodic(Duration(seconds: 1), (timer) {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
       ticker.value++;
       update([GlobalUpdateIds.ticker]);
     });
@@ -239,82 +222,28 @@ class GlobalController extends GetxController {
     return success;
   }
 
-  Future<bool> switchParticleWalletChain(
-    String chainId, {
-    bool alsoSave = false,
-  }) async {
-    final chain = particleChainInfoByChainId(chainId);
-
-    final done = await ParticleBase.ParticleBase.setChainInfo(chain);
-    if (!done) {
-      log.e("error switching chain");
-      if (alsoSave == true) {
-        storage.remove(StorageKeys.particleWalletChainId);
-      }
-      return false;
-    }
-    if (alsoSave == true) {
-      final selectedChainId = ParticleBase.ParticleBase.getChainId();
-      particleWalletChainId.value = selectedChainId.toString();
-      storage.write(
-          StorageKeys.particleWalletChainId, selectedChainId.toString());
-    }
-    return true;
-  }
-
-  get particleEnvironment {
-    return Env.environment == DEV
-        ? ParticleBase.Env.dev
-        : Env.environment == STAGE
-            ? ParticleBase.Env.staging
-            : ParticleBase.Env.production;
-  }
-
-  Future<void> initializeParticleAuth() async {
-    try {
-      final chainId = particleWalletChainId.value;
-      final chainName =
-          ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)!
-              .name;
-      final particleChain =
-          //  movementChainOnParticle;
-          particleWalletChainId == '30732'
-              ? movementChainOnParticle
-              : ChainInfo.ChainInfo.getChain(int.parse(chainId), chainName);
-      if (particleChain == null) {
-        log.f("${chainId} chain not found on particle");
-        return Future.error("particle chain not initialized");
-      }
-      if (Env.environment != DEV &&
-          Env.environment != STAGE &&
-          Env.environment != PROD) {
-        log.f("unhandled environment");
-        log.f("particle auth not initialized");
-        return Future.error("unhandled environment");
-      }
-
-      log.i("##########initializing ParticleAuth");
-      ParticleBase.ParticleInfo.set(
-        Env.particleProjectId,
-        Env.particleClientKey,
-      );
-
-      ParticleBase.ParticleBase.init(
-        particleChain,
-        particleEnvironment,
-      );
-      // final selectedChan =
-      //     await ParticleBase.ParticleBase.setChainInfo(particleChain);
-      // if (selectedChan) {
-      //   final chain = await ParticleBase.ParticleBase.getChainInfo();
-      //   log.i("chain info: $chain");
-      // }
-      log.i('##########particle auth initialized');
-      return Future.value();
-    } catch (e) {
-      log.f('particle auth initialization failed');
-      return Future.error(e);
-    }
+  Future<void> initializeWeb3Auth() async {
+    // Initialize the Web3AuthFlutter instance.
+    await Web3AuthFlutter.init(
+      Web3AuthOptions(
+        clientId:
+            //
+            // "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ",
+            Env.web3AuthClientId,
+        sessionTime: 60 * 60 * 24 * 7,
+        network: Network.sapphire_mainnet,
+        redirectUrl: resolveRedirectUrl(),
+        whiteLabel: WhiteLabelData(
+          appName:
+              //
+              // "Web3Auth Flutter Playground",
+              "Podium",
+          mode: ThemeModes.dark,
+        ),
+      ),
+    );
+    await Web3AuthFlutter.initialize();
+    log.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
   }
 
   initializeInternetConnectionChecker() {
@@ -347,9 +276,7 @@ class GlobalController extends GetxController {
   listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
-      if (newAddress != '' &&
-          newAddress != null &&
-          currentUserInfo.value != null) {
+      if (newAddress != '' && currentUserInfo.value != null) {
         _saveExternalWalletAddress(newAddress);
       }
     });
@@ -358,7 +285,7 @@ class GlobalController extends GetxController {
   _saveExternalWalletAddress(String address) async {
     try {
       await saveUserWalletAddressOnFirebase(address);
-      currentUserInfo.value!.localWalletAddress = address;
+      currentUserInfo.value!.evm_externalWalletAddress = address;
       currentUserInfo.refresh();
     } catch (e) {
       log.e("error saving wallet address $e");
@@ -372,7 +299,7 @@ class GlobalController extends GetxController {
     final firebaseUserDbReference = FirebaseDatabase.instance
         .ref(FireBaseConstants.usersRef)
         .child(userId)
-        .child(UserInfoModel.localWalletAddressKey);
+        .child(UserInfoModel.evm_externalWalletAddressKey);
     final savedWalletAddress = await firebaseUserDbReference.get();
     if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
       return;
@@ -401,24 +328,47 @@ class GlobalController extends GetxController {
         groupId: groupId,
         joiningByLink: true,
       );
-      deepLinkRoute = null;
+      deepLinkRoute.value = '';
+
       activeRoute.value = Routes.HOME;
     }
   }
 
   setDeepLinkRoute(String route) async {
-    deepLinkRoute = route;
+    deepLinkRoute.value = route;
     if (loggedIn.value) {
       log.e("logged in, opening deep link $route");
-      openDeepLinkGroup(route);
+      if (route.contains(Routes.GROUP_DETAIL)) {
+        openDeepLinkGroup(route);
+      } else {
+        log.e("deep link not handled");
+      }
+    } else if (route.contains('referral')) {
+      openLoginPageWithReferral(route);
     }
+  }
+
+  openLoginPageWithReferral(String route) {
+    log.f("opening login page with referral");
+    final referrerId = _extractReferrerId(route);
+    if (loggedIn.value) {
+      setLoggedIn(false);
+      return;
+    }
+    Navigate.to(
+      type: NavigationTypes.offAllNamed,
+      route: Routes.LOGIN,
+      parameters: {
+        LoginParametersKeys.referrerId: referrerId,
+      },
+    );
   }
 
   Future<bool> removeUserWalletAddressOnFirebase() async {
     try {
       final firebaseUserDbReference = FirebaseDatabase.instance
           .ref(FireBaseConstants.usersRef)
-          .child(myId + '/' + UserInfoModel.localWalletAddressKey);
+          .child(myId + '/' + UserInfoModel.evm_externalWalletAddressKey);
       await firebaseUserDbReference.set('');
       return true;
     } catch (e) {
@@ -543,39 +493,11 @@ class GlobalController extends GetxController {
         isAutoLoggingIn.value = false;
         return;
       }
-      if (loginType == LoginType.emailAndPassword) {
-        await _autoLoginWithEmailAndPassword();
-        return;
-      }
       final LoginController loginController = Get.put(LoginController());
-      if (loginType == LoginType.email) {
-        await loginController.loginWithEmail(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.x) {
-        await loginController.loginWithX(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.google) {
-        await loginController.loginWithGoogle(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.facebook) {
-        await loginController.loginWithFaceBook(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.linkedin) {
-        await loginController.loginWithLinkedIn(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.apple) {
-        await loginController.loginWithApple(ignoreIfNotLoggedIn: true);
-        return;
-      }
-      if (loginType == LoginType.github) {
-        await loginController.loginWithGithub(ignoreIfNotLoggedIn: true);
-        return;
-      }
+      await loginController.socialLogin(
+        loginMethod: loginTypeStringToWeb3AuthProvider(loginType),
+        ignoreIfNotLoggedIn: true,
+      );
     } catch (e) {
       isAutoLoggingIn.value = false;
       Navigate.to(
@@ -583,40 +505,6 @@ class GlobalController extends GetxController {
         route: Routes.LOGIN,
       );
       return;
-    }
-  }
-
-  _autoLoginWithEmailAndPassword() async {
-    final isParticleLoggedIn = await ParticleAuthCore.isConnected();
-    if (isParticleLoggedIn) {
-      final particleUserInfo = await ParticleAuthCore.getUserInfo();
-      particleAuthUserInfo.value = particleUserInfo;
-    } else {
-      log.e("particle not logged in");
-      throw Exception("particle not logged in");
-    }
-    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-    if (isLoggedIn) {
-      final user = FirebaseAuth.instance.currentUser;
-      firebaseUser.value = user;
-      final userId = user!.uid;
-      final userInfo = await getUserInfoById(userId);
-      currentUserInfo.value = userInfo;
-      if (userInfo != null && userInfo.id.isNotEmpty) {
-        final storage = GetStorage();
-        storage.write(StorageKeys.userId, userInfo.id);
-        storage.write(StorageKeys.userAvatar, userInfo.avatar);
-        storage.write(StorageKeys.userFullName, userInfo.fullName);
-        storage.write(StorageKeys.userEmail, userInfo.email);
-        loggedIn.value = true;
-        isAutoLoggingIn.value = false;
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: Routes.HOME,
-        );
-      }
-    } else {
-      isAutoLoggingIn.value = false;
     }
   }
 
@@ -636,19 +524,29 @@ class GlobalController extends GetxController {
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
-      if (deepLinkRoute != null) {
-        final route = deepLinkRoute!;
-        openDeepLinkGroup(route);
+      if (deepLinkRoute.value.isNotEmpty) {
+        final route = deepLinkRoute;
+        openDeepLinkGroup(route.value);
         return;
       }
     }
   }
 
+  _extractReferrerId(String route) {
+    final splited = route.split('referral');
+    if (splited.length < 2) {
+      log.f("splited: $splited");
+      return;
+    }
+    return splited[1];
+  }
+
   _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
+    web3AuthAddress = '';
     try {
-      await ParticleAuthCore.disconnect();
+      await Web3AuthFlutter.logout();
     } catch (e) {
       log.e(e);
       isLoggingOut.value = false;
@@ -661,10 +559,19 @@ class GlobalController extends GetxController {
       isLoggingOut.value = false;
     }
     log.f('Navigating to login page');
+
+    final rerouteWithReferral =
+        deepLinkRoute.isNotEmpty && deepLinkRoute.contains('referral');
+    String referrerId = '';
+    if (rerouteWithReferral) {
+      referrerId = _extractReferrerId(deepLinkRoute.value) ?? '';
+    }
     Navigate.to(
-      type: NavigationTypes.offAllNamed,
-      route: Routes.LOGIN,
-    );
+        type: NavigationTypes.offAllNamed,
+        route: Routes.LOGIN,
+        parameters: {
+          if (referrerId.isNotEmpty) LoginParametersKeys.referrerId: referrerId,
+        });
     firebaseUserCredential.value = null;
     try {
       await FirebaseAuth.instance.signOut();
@@ -701,6 +608,7 @@ class GlobalController extends GetxController {
       context: Get.context!,
       projectId: Env.projectId,
       logLevel: LogLevel.error,
+      enableAnalytics: false,
       metadata: _pairingMetadata,
       featuredWalletIds: {
         'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase
@@ -711,7 +619,7 @@ class GlobalController extends GetxController {
         '38f5d18bd8522c244bdd70cb4a68e0e718865155811c043f052fb9f1c51de662', // Bitget
       },
     );
-
+    await web3ModalService.init();
     try {
       final service = await BlockChainUtils.initializewm3Service(
         web3ModalService,

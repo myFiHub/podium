@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/analytics.dart';
+import 'package:podium/utils/styles.dart';
 import 'package:pulsator/pulsator.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
-import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/utils/styles.dart';
 
 class GroupList extends StatelessWidget {
   final List<FirebaseGroup> groupsList;
@@ -28,13 +28,11 @@ class GroupList extends StatelessWidget {
         itemCount: groupsList.length,
         itemBuilder: (context, index) {
           final group = groupsList[index];
-          final name = group.name;
           final amICreator = group.creator.id == myId;
           return _SingleGroup(
             key: Key(group.id),
             controller: controller,
             amICreator: amICreator,
-            name: name,
             group: group,
           );
         },
@@ -48,13 +46,11 @@ class _SingleGroup extends StatelessWidget {
     super.key,
     required this.controller,
     required this.amICreator,
-    required this.name,
     required this.group,
   });
 
   final GroupsController controller;
   final bool amICreator;
-  final String name;
   final FirebaseGroup group;
 
   @override
@@ -62,30 +58,19 @@ class _SingleGroup extends StatelessWidget {
     final isScheduled = group.scheduledFor != 0;
     return GestureDetector(
       onTap: () async {
-        // final delay = 2;
-        // sendGroupPeresenceEvent(groupId: group.id, eventName: group.id);
-        // await Future.delayed(Duration(seconds: delay));
-        // sendGroupPeresenceEvent(
-        //     groupId: group.id, eventName: eventNames.talking);
-        // await Future.delayed(Duration(seconds: delay));
-        // sendGroupPeresenceEvent(
-        //     groupId: group.id, eventName: eventNames.notTalking);
-        // await Future.delayed(Duration(seconds: delay));
-        // sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.leave);
         controller.joinGroupAndOpenGroupDetailPage(
           groupId: group.id,
         );
       },
       child: Stack(
         children: [
+          space16,
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
                 color: ColorName.cardBackground,
-                border: Border.all(color: ColorName.cardBorder),
-                borderRadius: const BorderRadius.all(const Radius.circular(8))),
-            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            padding: const EdgeInsets.all(8),
-            // key: Key(group.id),
+                borderRadius: BorderRadius.all(Radius.circular(8))),
+            margin: const EdgeInsets.only(left: 8, right: 8, bottom: 10),
+            padding: const EdgeInsets.all(10),
             child: Stack(
               children: [
                 Row(
@@ -94,16 +79,49 @@ class _SingleGroup extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: Get.width - 75,
+                        Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 270,
+                          ),
+                          //width: Get.width - 200,
                           child: Text(
-                            name,
+                            group.name,
                             style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                        ),
+                        Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 270,
+                          ),
+                          //width: Get.width - 300,
+                          child: RichText(
+                              overflow: TextOverflow.ellipsis,
+                              text: TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text: "Created by",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: ColorName.greyText,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        " ${amICreator ? "You" : group.creator.fullName}",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: amICreator
+                                          ? Colors.green[200]
+                                          : Colors.blue[200],
+                                    ),
+                                  ),
+                                ],
+                              )),
                         ),
                         space10,
                         Row(
@@ -119,34 +137,26 @@ class _SingleGroup extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SizedBox(
-                                  width: Get.width - 170,
-                                  child: RichText(
-                                      overflow: TextOverflow.ellipsis,
-                                      text: TextSpan(
-                                        children: [
-                                          const TextSpan(
-                                            text: "Created by:",
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: ColorName.greyText,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text:
-                                                "  ${amICreator ? "You" : group.creator.fullName}",
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w700,
-                                              color: amICreator
-                                                  ? Colors.green[200]
-                                                  : Colors.blue[200],
-                                            ),
-                                          ),
-                                        ],
-                                      )),
-                                ),
-                                space5,
+                                if (group.isRecordable)
+                                  const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.circle,
+                                        color: Colors.redAccent,
+                                        size: 12,
+                                      ),
+                                      space5,
+                                      Text(
+                                        "Recordable by Creator",
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w400,
+                                          color: ColorName.greyText,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                if (group.isRecordable) space5,
                                 Row(
                                   children: [
                                     const Icon(
@@ -154,8 +164,11 @@ class _SingleGroup extends StatelessWidget {
                                       color: ColorName.greyText,
                                       size: 14,
                                     ),
-                                    SizedBox(
-                                      width: Get.width - 170,
+                                    Container(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 180,
+                                      ),
+                                      // width: Get.width - 200,
                                       child: Text(
                                         " ${group.subject == null ? "No Subject" : group.subject!.isEmpty ? "No Subject" : group.subject}",
                                         style: const TextStyle(
@@ -217,7 +230,7 @@ class _SingleGroup extends StatelessWidget {
                                     space5,
                                     Text(
                                       "${group.members.length} Members",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
                                         color: ColorName.greyText,
@@ -252,6 +265,17 @@ class _SingleGroup extends StatelessWidget {
                               color: ColorName.greyText,
                             ),
                           ),
+                        if (canLeaveGroup(group: group))
+                          IconButton(
+                            onPressed: () {
+                              controller.removeMyUserFromSessionAndGroup(
+                                  group: group);
+                            },
+                            icon: const Icon(
+                              Icons.exit_to_app,
+                              color: Colors.red,
+                            ),
+                          ),
                         if (canArchiveGroup(group: group))
                           IconButton(
                             onPressed: () {
@@ -274,8 +298,8 @@ class _SingleGroup extends StatelessWidget {
                 if (group.hasAdultContent)
                   Positioned(
                     child: Assets.images.ageRestricted.image(
-                      width: 30,
-                      height: 30,
+                      width: 24,
+                      height: 24,
                     ),
                     left: 0,
                     bottom: 0,
@@ -312,7 +336,7 @@ class _NumberOfActiveUsers extends GetView<GroupsController> {
       final activeInThisGroup = allActiveUsers[groupId] ?? [];
       final numberOfActiveUsers = activeInThisGroup.length;
       return numberOfActiveUsers == 0
-          ? SizedBox()
+          ? const SizedBox()
           : Container(
               width: 40,
               height: 40,
@@ -320,8 +344,8 @@ class _NumberOfActiveUsers extends GetView<GroupsController> {
                 alignment: Alignment.center,
                 children: [
                   Pulsator(
-                    style: PulseStyle(color: Colors.red),
-                    duration: Duration(seconds: 2),
+                    style: const PulseStyle(color: Colors.red),
+                    duration: const Duration(seconds: 2),
                     count: 5,
                     repeat: 0,
                     startFromScratch: false,
@@ -370,20 +394,20 @@ class _ScheduledBanner extends StatelessWidget {
           );
           final isStarted =
               group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
-          final size = 60;
+          final size = 55;
           final remainingText = remaining.contains('d,')
               ? remaining.split('d,').join('d\n').replaceAll('d', 'days')
               : remaining;
           return Positioned(
-            right: 5,
-            top: 7,
+            right: 8,
+            top: 0,
             child: IgnorePointer(
               child: Container(
                 foregroundDecoration: RotatedCornerDecoration.withColor(
                   color: isStarted ? Colors.green : Colors.red,
                   spanBaselineShift: remainingText.contains('days') ? 2 : 4,
                   badgeSize: Size(size.toDouble(), size.toDouble()),
-                  badgeCornerRadius: const Radius.circular(4),
+                  badgeCornerRadius: const Radius.circular(8),
                   badgePosition: BadgePosition.topEnd,
                   textSpan: TextSpan(
                     text: remainingText,
@@ -391,7 +415,7 @@ class _ScheduledBanner extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 9,
                       letterSpacing: 1,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w400,
                       shadows: [
                         const BoxShadow(
                             color: Colors.yellowAccent, blurRadius: 8),
@@ -420,7 +444,7 @@ class TagsWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      width: Get.width - 74,
+      width: Get.width - 100,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -445,8 +469,8 @@ class SingleTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      margin: EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      margin: const EdgeInsets.only(right: 4),
       decoration: BoxDecoration(
         color: ColorName.greyText.withOpacity(0.2),
         borderRadius: BorderRadius.circular(4),
@@ -487,9 +511,9 @@ String parseSpeakerType(String? speakerType) {
   switch (speakerType) {
     case null:
       return "Everyone";
-    case FreeRoomSpeakerTypes.everyone:
+    case FreeGroupSpeakerTypes.everyone:
       return "Everyone";
-    case FreeRoomSpeakerTypes.invitees:
+    case FreeGroupSpeakerTypes.invitees:
       return "Only Invited Users";
     case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
@@ -507,11 +531,11 @@ String parseAccessType(String? accessType) {
   switch (accessType) {
     case null:
       return "Public";
-    case FreeRoomAccessTypes.public:
+    case FreeGroupAccessTypes.public:
       return "Public";
-    case FreeRoomAccessTypes.onlyLink:
+    case FreeGroupAccessTypes.onlyLink:
       return "Only By Link";
-    case FreeRoomAccessTypes.invitees:
+    case FreeGroupAccessTypes.invitees:
       return "Only Invited Users";
     case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
@@ -533,15 +557,28 @@ canShareGroupUrl({required FirebaseGroup group}) {
   if (iAmCreator) {
     return true;
   }
-  if (group.accessType == FreeRoomAccessTypes.public) {
+  if (group.accessType == FreeGroupAccessTypes.public) {
     return true;
   }
-  if (group.accessType == FreeRoomAccessTypes.onlyLink) {
-    if (group.members.contains(myId)) {
+  if (group.accessType == FreeGroupAccessTypes.onlyLink) {
+    if (group.members.keys.contains(myId)) {
       return true;
     }
   }
   return false;
+}
+
+canLeaveGroup({required FirebaseGroup group}) {
+  final GlobalController globalController = Get.find();
+  if (globalController.currentUserInfo.value == null) {
+    return false;
+  }
+  final iAmCreator = group.creator.id == myId;
+  final amIMember = group.members.keys.contains(myId);
+  if (iAmCreator) {
+    return false;
+  }
+  return amIMember;
 }
 
 canArchiveGroup({required FirebaseGroup group}) {

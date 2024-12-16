@@ -1,48 +1,70 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
-import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/utils/constants.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+
 import '../controllers/create_group_controller.dart';
 
 class CreateGroupView extends GetView<CreateGroupController> {
   const CreateGroupView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.only(top: 30),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                _SelectPicture(),
-                _RoomNameInput(),
-                space5,
-                _SubjectInput(),
-                SizedBox(
-                  height: 8,
-                ),
-                _TagsInput(),
-                _SelectRoomAccessType(),
-                space10,
-                _SelectRoomSpeakerType(),
-                space10,
-                _ScheduleToggle(),
-                space10,
-                _AdultsCheckbox(),
-                space10,
-                _CreateButton(),
-              ],
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (res, r) {
+        controller.introFinished(false);
+      },
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Container(
+            // padding: const EdgeInsets.only(top: 16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  const _TitleBar(),
+                  space14,
+                  _SelectPicture(
+                    key: controller.intro_selectImageKey,
+                  ),
+                  _RoomNameInput(
+                    key: controller.intro_groupNameKey,
+                  ),
+                  space5,
+                  _SubjectInput(
+                    key: controller.intro_groupSubjectKey,
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  _TagsInput(
+                    key: controller.intro_tagsKey,
+                  ),
+                  _SelectGroupAccessType(
+                    key: controller.intro_groupAccessTypeKey,
+                  ),
+                  space5,
+                  _SelectGroupSpeakerType(
+                    key: controller.intro_groupSpeakerTypeKey,
+                  ),
+                  space5,
+                  const _ScheduleToggle(),
+                  space5,
+                  const _AdultsCheckbox(),
+                  space5,
+                  const _RecordableCheckbox(),
+                  space16,
+                  const _CreateButton(),
+                ],
+              ),
             ),
           ),
         ),
@@ -52,9 +74,7 @@ class CreateGroupView extends GetView<CreateGroupController> {
 }
 
 class _SelectPicture extends GetWidget<CreateGroupController> {
-  const _SelectPicture({
-    super.key,
-  });
+  const _SelectPicture({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -68,12 +88,12 @@ class _SelectPicture extends GetWidget<CreateGroupController> {
             Obx(
               () {
                 final selectedFile = controller.fileLocalAddress.value;
-                return Column(
+                return Row(
                   children: [
                     selectedFile == ''
-                        ? Img(
-                            src: Constants.logoUrl,
-                            size: 100,
+                        ? Assets.images.browse.image(
+                            width: 64,
+                            height: 64,
                           )
                         : GFAvatar(
                             backgroundImage: FileImage(File(selectedFile)),
@@ -81,12 +101,24 @@ class _SelectPicture extends GetWidget<CreateGroupController> {
                             radius: 50.0,
                           ),
                     space5,
-                    Text(
-                      'Room Image',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Select image from gallery',
+                          style: TextStyle(
+                            color: Colors.grey[200],
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          'Select image from gallery',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                     space10,
                   ],
@@ -111,22 +143,36 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
       return Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Scheduled Room',
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 18,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Scheduled Outpost',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      'Organize and notify in advance.',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
                 Switch(
                   value: isScheduled,
                   onChanged: (value) {
                     controller.toggleScheduled();
                   },
+                  activeColor: Colors.lightGreen,
+                  activeTrackColor: Colors.grey[200],
                 ),
               ],
             ),
@@ -139,11 +185,16 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
                   text: !selected
                       ? 'Select Date and Time'
                       : millisecondsToFormattedDateWithTime(scheduledFor),
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
                   blockButton: true,
                   type: ButtonType.outline,
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.calendar_month_outlined,
-                    color: Colors.grey[400],
+                    color: Colors.white,
+                    size: 18,
                   ),
                   onPressed: () {
                     controller.openCalendarBottomSheet();
@@ -178,7 +229,7 @@ class _TagsInput extends GetWidget<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 70,
+      height: 60,
       child: DynamicTags(
         onTagsChanged: (values) {
           controller.setTags(values);
@@ -196,12 +247,36 @@ class _SubjectInput extends GetWidget<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 60,
+      height: 55,
       child: Input(
         initialValue: controller.roomSubject.value,
         hintText: 'Main Subject (optional)',
         onChanged: (value) => controller.roomSubject.value = value,
         marginvertical: 0,
+        paddinghorizontal: 0,
+        style: const TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _TitleBar extends GetWidget<CreateGroupController> {
+  const _TitleBar({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    controller.contextForIntro = context;
+    return const Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        "New Outpost",
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -215,11 +290,14 @@ class _RoomNameInput extends GetWidget<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 60,
+      height: 55,
       child: Input(
-        hintText: 'Room Name',
+        hintText: 'Outpost Name',
         onChanged: (value) => controller.groupName.value = value,
         marginvertical: 0,
+        paddinghorizontal: 0,
+        style: const TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
       ),
     );
   }
@@ -253,7 +331,7 @@ class _CreateButton extends GetWidget<CreateGroupController> {
             : () {
                 controller.create();
               },
-        text: 'Create Room',
+        text: 'Create New Outpost',
       );
     });
   }
@@ -267,14 +345,26 @@ class _AdultsCheckbox extends GetView<CreateGroupController> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'Adults Speaking',
-          style: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 18,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Adults speaking',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              'Room content for 18+',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+              ),
+            ),
+          ],
         ),
         Obx(
           () {
@@ -282,6 +372,7 @@ class _AdultsCheckbox extends GetView<CreateGroupController> {
             return GFCheckbox(
               value: isChecked,
               activeBgColor: Colors.red,
+              size: 24,
               onChanged: (value) {
                 controller.newGroupHasAdultContent.value = value;
               },
@@ -293,36 +384,79 @@ class _AdultsCheckbox extends GetView<CreateGroupController> {
   }
 }
 
-class _SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
-  const _SelectRoomSpeakerType({
+class _RecordableCheckbox extends GetView<CreateGroupController> {
+  const _RecordableCheckbox();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Recordable',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              'Outpost sessions can be recorded by you',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+        Obx(
+          () {
+            final isChecked = controller.newGroupIsRecorable.value;
+            return GFCheckbox(
+              value: isChecked,
+              activeBgColor: Colors.red,
+              size: 24,
+              onChanged: (value) {
+                controller.newGroupIsRecorable.value = value;
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _SelectGroupSpeakerType extends GetWidget<CreateGroupController> {
+  const _SelectGroupSpeakerType({
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final selectedValue = controller.roomSpeakerType.value;
+      final selectedValue = controller.groupSpeakerType.value;
       return Container(
         child: Stack(
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Allowed to Speak',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[400],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.white),
                 ),
+                space5,
                 DropDown(
                   items: [
                     DropDownItem(
-                      value: FreeRoomSpeakerTypes.everyone,
+                      value: FreeGroupSpeakerTypes.everyone,
                       text: 'Everyone',
                     ),
                     DropDownItem(
-                      value: FreeRoomSpeakerTypes.invitees,
+                      value: FreeGroupSpeakerTypes.invitees,
                       text: 'Only Invited Users',
                     ),
                     DropDownItem(
@@ -363,7 +497,7 @@ class _SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
                         selectedList.length + numberOfAddressesToAdd.length,
                   );
                 }
-                return SizedBox();
+                return const SizedBox();
               },
             ),
           ],
@@ -373,40 +507,41 @@ class _SelectRoomSpeakerType extends GetWidget<CreateGroupController> {
   }
 }
 
-class _SelectRoomAccessType extends GetWidget<CreateGroupController> {
-  const _SelectRoomAccessType({
+class _SelectGroupAccessType extends GetWidget<CreateGroupController> {
+  const _SelectGroupAccessType({
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final selectedValue = controller.roomAccessType.value;
+      final selectedValue = controller.groupAccessType.value;
       return Stack(
         children: [
           Container(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Allowed to Enter',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[400],
+                    color: Colors.white,
                   ),
                 ),
+                space5,
                 DropDown(
                   items: [
                     DropDownItem(
-                      value: FreeRoomAccessTypes.public,
+                      value: FreeGroupAccessTypes.public,
                       text: 'Everyone',
                     ),
                     DropDownItem(
-                      value: FreeRoomAccessTypes.onlyLink,
+                      value: FreeGroupAccessTypes.onlyLink,
                       text: 'Users having the Link',
                     ),
                     DropDownItem(
-                      value: FreeRoomAccessTypes.invitees,
+                      value: FreeGroupAccessTypes.invitees,
                       text: 'Invited Users',
                     ),
                     DropDownItem(
@@ -446,7 +581,7 @@ class _SelectRoomAccessType extends GetWidget<CreateGroupController> {
                 selectedListLength: selectedList.length + addresses.length,
               );
             }
-            return SizedBox();
+            return const SizedBox();
           }),
         ],
       );
@@ -462,7 +597,7 @@ class SelectUserstoBuyTicketFrom extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 25,
+      top: 35,
       right: 30,
       child: GestureDetector(
         onTap: () {
@@ -491,14 +626,14 @@ class SelectorContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       // width: 140,
-      height: 40,
+      height: 25,
       child: Center(
         child: Text(
           selectedListLength == 0
-              ? 'Select Tickets'
+              ? 'Select tickets'
               : '${selectedListLength} required ticket${selectedListLength > 1 ? 's' : ''}',
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.black,
             fontSize: 10,
           ),

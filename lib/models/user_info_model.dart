@@ -1,19 +1,16 @@
-import 'package:particle_base/model/user_info.dart' as ParticleUser;
-import "package:podium/models/firebase_particle_user.dart";
-
 class UserInfoModel {
   late String id;
   late String fullName;
   late String email;
   late String avatar;
-  late String localWalletAddress;
+  late String evm_externalWalletAddress;
   late List<String> following;
   String? lowercasename;
-  late ParticleUser.UserInfo? localParticleUserInfo;
-  late String savedParticleWalletAddress;
-  late FirebaseParticleAuthUserInfo? savedParticleUserInfo;
+  late String evmInternalWalletAddress;
+  String aptosInternalWalletAddress = '';
   late int numberOfFollowers;
   bool isOver18 = false;
+  String referrer = '';
   String? loginType;
   String? loginTypeIdentifier;
 
@@ -21,55 +18,43 @@ class UserInfoModel {
   static String fullNameKey = 'fullName';
   static String emailKey = 'email';
   static String avatarUrlKey = 'avatar';
-  static String localWalletAddressKey = 'localWalletAddress';
+  static String evm_externalWalletAddressKey = 'evm_externalWalletAddress';
   static String followingKey = 'following';
   static String numberOfFollowersKey = 'numberOfFollowers';
-  static String localParticleUserInfoKey = 'localParticleUserInfo';
-  static String savedParticleUserInfoKey = 'savedParticleUserInfo';
   static String lowercasenameKey = 'lowercasename';
   static String isOver18Key = 'isOver18';
   static String loginTypeKey = 'loginType';
   static String loginTypeIdentifierKey = 'loginTypeIdentifier';
-  static String savedParticleWalletAddressKey = 'savedParticleWalletAddress';
+  static String evmInternalWalletAddressKey = 'evmInternalWalletAddress';
+  static String aptosInternalWalletAddressKey = 'aptosInternalWalletAddress';
+  static String referrerKey = 'referrer';
 
   UserInfoModel({
     required this.id,
     required this.fullName,
     required this.email,
     required this.avatar,
-    required this.localWalletAddress,
+    required this.evm_externalWalletAddress,
     required this.following,
     required this.numberOfFollowers,
-    required this.savedParticleWalletAddress,
+    required this.evmInternalWalletAddress,
+    this.aptosInternalWalletAddress = '',
     this.lowercasename,
-    this.localParticleUserInfo,
-    this.savedParticleUserInfo,
     this.isOver18 = false,
     this.loginType,
     this.loginTypeIdentifier,
+    this.referrer = '',
   });
 
   String get defaultWalletAddress {
-    final walletAddress = localWalletAddress;
+    final walletAddress = evm_externalWalletAddress;
     if (walletAddress.isEmpty) {
-      final firstParticleAddress = savedParticleUserInfo?.wallets.where(
-        (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
-      );
-      if (firstParticleAddress == null || firstParticleAddress.isEmpty) {
+      if (evmInternalWalletAddress.isEmpty) {
         return '';
       }
-      return firstParticleAddress.first.address;
+      return evmInternalWalletAddress;
     }
     return walletAddress;
-  }
-
-  String get particleWalletAddress {
-    final firstParticleAddress = savedParticleUserInfo?.wallets
-        .where(
-          (w) => w.address.isNotEmpty && w.chain == 'evm_chain',
-        )
-        .toList();
-    return firstParticleAddress!.first.address;
   }
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {
@@ -77,18 +62,16 @@ class UserInfoModel {
     fullName = json[fullNameKey];
     email = json[emailKey];
     avatar = json[avatarUrlKey];
-    localWalletAddress = json[localWalletAddressKey] ?? '';
+    evm_externalWalletAddress = json[evm_externalWalletAddressKey] ?? '';
     following = json[followingKey] ?? [];
     numberOfFollowers = json[numberOfFollowersKey] ?? 0;
-    localParticleUserInfo = json[localParticleUserInfoKey];
     lowercasename = json[lowercasenameKey] ?? fullName.toLowerCase();
     isOver18 = json[isOver18Key] ?? false;
     loginType = json[loginTypeKey];
-    savedParticleWalletAddress =
-        json[savedParticleWalletAddressKey] ?? particleWalletAddress;
+    referrer = json[referrerKey] ?? '';
+    evmInternalWalletAddress = json[evmInternalWalletAddressKey];
+    aptosInternalWalletAddress = json[aptosInternalWalletAddressKey] ?? '';
     loginTypeIdentifier = json[loginTypeIdentifierKey];
-    savedParticleUserInfo =
-        json[savedParticleUserInfoKey] ?? particleWalletAddress;
   }
 
   Map<String, dynamic> toJson() {
@@ -97,18 +80,16 @@ class UserInfoModel {
     data[fullNameKey] = fullName;
     data[emailKey] = email;
     data[avatarUrlKey] = avatar;
-    data[localWalletAddressKey] = localWalletAddress;
-    if (savedParticleUserInfo != null) {
-      data[savedParticleUserInfoKey] = savedParticleUserInfo!.toJson();
-    }
+    data[evm_externalWalletAddressKey] = evm_externalWalletAddress;
+    data[evmInternalWalletAddressKey] = evmInternalWalletAddress;
+    data[aptosInternalWalletAddressKey] = aptosInternalWalletAddress;
     data[followingKey] = following;
     data[numberOfFollowersKey] = numberOfFollowers;
-    data[localParticleUserInfoKey] = localParticleUserInfo;
     data[lowercasenameKey] = lowercasename ?? fullName.toLowerCase();
     data[isOver18Key] = isOver18;
     data[loginTypeKey] = loginType;
+    data[referrerKey] = referrer;
     data[loginTypeIdentifierKey] = loginTypeIdentifier;
-    data[savedParticleWalletAddressKey] = savedParticleWalletAddress;
     return data;
   }
 
@@ -117,35 +98,35 @@ class UserInfoModel {
     String? fullName,
     String? email,
     String? avatar,
-    String? localWalletAddress,
+    String? evm_externalWalletAddress,
     List<String>? following,
     int? numberOfFollowers,
     String? lowercasename,
-    ParticleUser.UserInfo? localParticleUserInfo,
-    String? savedParticleWalletAddress,
-    FirebaseParticleAuthUserInfo? savedParticleUserInfo,
+    String? evmInternalWalletAddress,
+    String? aptosInternalWalletAddress,
     bool? isOver18,
     String? loginType,
     String? loginTypeIdentifier,
+    String? referrer,
   }) {
     return UserInfoModel(
       id: id ?? this.id,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
       avatar: avatar ?? this.avatar,
-      localWalletAddress: localWalletAddress ?? this.localWalletAddress,
+      evm_externalWalletAddress:
+          evm_externalWalletAddress ?? this.evm_externalWalletAddress,
       following: following ?? this.following,
       numberOfFollowers: numberOfFollowers ?? this.numberOfFollowers,
       lowercasename: lowercasename ?? this.lowercasename,
-      localParticleUserInfo:
-          localParticleUserInfo ?? this.localParticleUserInfo,
-      savedParticleUserInfo:
-          savedParticleUserInfo ?? this.savedParticleUserInfo,
+      aptosInternalWalletAddress:
+          aptosInternalWalletAddress ?? this.aptosInternalWalletAddress,
       isOver18: isOver18 ?? this.isOver18,
       loginType: loginType ?? this.loginType,
-      savedParticleWalletAddress:
-          savedParticleWalletAddress ?? this.savedParticleWalletAddress,
+      evmInternalWalletAddress:
+          evmInternalWalletAddress ?? this.evmInternalWalletAddress,
       loginTypeIdentifier: loginTypeIdentifier ?? this.loginTypeIdentifier,
+      referrer: referrer ?? this.referrer,
     );
   }
 }

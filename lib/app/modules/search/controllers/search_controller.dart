@@ -126,14 +126,14 @@ class SearchPageController extends GetxController with FirebaseTags {
                         child: Text(
                           '#${tag.tagName}',
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.close),
+                        icon: const Icon(Icons.close),
                         onPressed: Get.close,
                       ),
                     ],

@@ -40,7 +40,7 @@ class HomeController extends GetxController {
 
   extractMyGroups(Map<String, FirebaseGroup> groups) {
     final groupsImInMap = groups.entries
-        .where((element) => element.value.members.contains(myId))
+        .where((element) => element.value.members.keys.contains(myId))
         .toList();
     final groupsImInMapConverted = Map<String, FirebaseGroup>.fromEntries(
       groupsImInMap,

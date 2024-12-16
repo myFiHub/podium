@@ -5,13 +5,11 @@ import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
 const navbarHeight = 60.0;
 const _routesWithoutNavbar = [
   Routes.LOGIN,
-  Routes.SIGNUP,
 ];
 
 class NavbarItem {
@@ -48,7 +46,7 @@ final List<NavbarItem> navbarItems = [
     route: Routes.NOTIFICATIONS,
     icon: Icons.notifications_outlined,
     label: 'Notifications',
-    overlay: NotificationBadge(),
+    overlay: const NotificationBadge(),
   ),
   NavbarItem(
     route: Routes.MY_PROFILE,
@@ -66,7 +64,7 @@ class PodiumNavbar extends GetView<GlobalController> {
       final loggedIn = controller.loggedIn.value;
       final activeRoute = controller.activeRoute.value;
       if (_routesWithoutNavbar.contains(activeRoute) || loggedIn == false) {
-        return SizedBox(
+        return const SizedBox(
           height: 0,
         );
       }
@@ -132,9 +130,9 @@ Widget _buildNavItem({
         AnimatedContainer(
           duration: _animationDuration,
           width: 24,
-          padding: EdgeInsets.only(bottom: 8, top: 18),
+          padding: const EdgeInsets.only(bottom: 8, top: 18),
           decoration: isActive
-              ? BoxDecoration(
+              ? const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
                       color: Colors.blue,
@@ -146,7 +144,7 @@ Widget _buildNavItem({
                     bottomLeft: Radius.circular(10),
                   ),
                 )
-              : BoxDecoration(
+              : const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
                       color: Colors.transparent,

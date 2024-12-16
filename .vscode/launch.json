@@ -5,38 +5,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Podium DEV",
+      "name": "DEV",
       "request": "launch",
       "type": "dart",
-      "args": ["--dart-define-from-file=env/dev.json"]
+      "args": ["--verbose"]
     },
     {
-      "name": "Podium STAGE",
-      "request": "launch",
-      "type": "dart",
-      "args": ["--dart-define-from-file=env/stage.json"]
-    },
-    {
-      "name": "Podium PROD",
-      "request": "launch",
-      "type": "dart",
-      "args": ["--dart-define-from-file=env/prod.json"]
-    },
-    {
-      "name": "podium_flutter (profile mode)",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "profile",
-      "args": ["--dart-define-from-file=env/dev.json"]
-
-    },
-    {
-      "name": "podium_flutter (release mode)",
+      "name": "RELEASE",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release",
-      "args": ["--dart-define-from-file=env/prod.json"]
-
-    }
+     },
+    {
+      "name": "PROFILE",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+     },
   ]
 }

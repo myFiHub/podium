@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -29,44 +30,67 @@ class GroupDetailView extends GetView<GroupDetailController> {
               return Container(
                 width: Get.width,
                 height: Get.height - 110,
-                child: Center(child: CircularProgressIndicator()),
+                child: const Center(child: CircularProgressIndicator()),
               );
             }
             final iAmOwner = group.creator.id == myId;
 
             return Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  Text(
-                    group.name,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (group.subject != null)
-                    Text(
-                      group.subject!,
-                      style: TextStyle(
-                        fontSize: 22,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  if (iAmOwner)
-                    Text(
-                      "Access Type: ${parseAccessType(group.accessType)}",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  Text(
-                    "Speakers: ${parseSpeakerType(group.speakerType)}",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[400],
-                    ),
-                  ),
+                  space16,
+                  Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Joining:",
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                overflow: TextOverflow.visible,
+                              ),
+                            ),
+                            space5,
+                            Text(
+                              group.name,
+                              textAlign: TextAlign.left,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                overflow: TextOverflow.visible,
+                              ),
+                            ),
+                            if (group.subject != null &&
+                                group.subject!.trim().isNotEmpty)
+                              Text(
+                                group.subject!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                ),
+                              )
+                            else
+                              const SizedBox.shrink(), // Evita espacio residual
+                            if (iAmOwner)
+                              Text(
+                                "Access Type: ${parseAccessType(group.accessType)}",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                            Text(
+                              "Speakers: ${parseSpeakerType(group.speakerType)}",
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey[400],
+                              ),
+                            ),
+                          ])),
+                  space10,
                   Expanded(
                     child: UserList(
                       usersList: members,
@@ -90,23 +114,47 @@ class GroupDetailView extends GetView<GroupDetailController> {
                                 currentUserId: myId,
                               ));
                             },
-                            child: Text('Invite users'),
+                            child: const Text('Invite users'),
                           ),
                         ),
                       Container(
                         width: (Get.width / 2) - 20,
-                        child: JoinTheRoomButton(),
+                        child: const JoinTheRoomButton(),
                       ),
                     ],
                   ),
                   space10,
                   space10,
-                  if (group.scheduledFor != 0) SetReminderButton(),
+                  if (group.scheduledFor != 0) const SetReminderButton(),
+                  // if (group.scheduledFor != 0 && iAmOwner) ...[
+                  //   space10,
+                  //   const ChangeScheduleButton()
+                  // ],
                 ],
               ),
             );
           }),
         ],
+      ),
+    );
+  }
+}
+
+class ChangeScheduleButton extends GetView<GroupDetailController> {
+  const ChangeScheduleButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      type: ButtonType.outline,
+      color: ColorName.primaryBlue,
+      blockButton: true,
+      onPressed: () async {
+        controller.reselectScheduleTime();
+      },
+      child: const Text(
+        'Change Schedule',
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -120,12 +168,11 @@ class SetReminderButton extends GetView<GroupDetailController> {
     final group = controller.group.value;
 
     return Obx(() {
+      final reminderTime = controller.reminderTime.value;
       if (group == null) {
         return Container();
       }
       controller.forceUpdateIndicator.value;
-      final reminderTime = getReminderTime(group.alarmId);
-
       int? reminderIsSetForInMinotes = null;
       if (reminderTime != null) {
         final reminder = reminderTime
@@ -146,20 +193,20 @@ class SetReminderButton extends GetView<GroupDetailController> {
         return const SizedBox();
       }
       if (group.alarmId == 0) {
-        return SizedBox();
+        return const SizedBox();
       }
       return Button(
         type: ButtonType.outline,
         color: ColorName.primaryBlue,
         blockButton: true,
         onPressed: () async {
-          await setReminder(
+          final newDateInSeconds = await setReminder(
             alarmId: group.alarmId,
             scheduledFor: group.scheduledFor,
             eventName: group.name,
             timesList: defaultTimeList(endsAt: group.scheduledFor),
           );
-          controller.forceUpdate();
+          log.d('newDateInSeconds: $newDateInSeconds');
         },
         child: Text(
           text,
@@ -215,8 +262,8 @@ bool canInvite({
 }) {
   final iAmCreator = currentUserId == group.creator.id;
   final isGroupPublic = group.accessType == null ||
-      group.accessType == FreeRoomAccessTypes.public;
-  final amIAMember = group.members.contains(currentUserId);
+      group.accessType == FreeGroupAccessTypes.public;
+  final amIAMember = group.members.keys.toList().contains(currentUserId);
   if (iAmCreator || isGroupPublic || amIAMember) {
     return true;
   }
@@ -229,7 +276,7 @@ bool canInviteToSpeak({
 }) {
   final iAmCreator = currentUserId == group.creator.id;
   final isGroupPublic = group.speakerType == null ||
-      group.speakerType == FreeRoomSpeakerTypes.everyone;
+      group.speakerType == FreeGroupSpeakerTypes.everyone;
   if (iAmCreator || isGroupPublic) {
     return true;
   }
@@ -249,14 +296,14 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
       child: Material(
         child: Container(
           color: ColorName.cardBackground,
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           height: Get.height * 0.5,
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Invite Users',
                     style: TextStyle(
                       fontSize: 24,
@@ -268,7 +315,7 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                       Get.close();
                       controller.listOfSearchedUsersToInvite.value = [];
                     },
-                    icon: Icon(Icons.close),
+                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
@@ -297,7 +344,7 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                             ListTile(
                               title: Text(
                                 user.fullName,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.grey,
                                   fontSize: 14,
                                 ),
@@ -322,7 +369,7 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
                           ListTile(
                             title: Text(
                               user.fullName,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
                               ),

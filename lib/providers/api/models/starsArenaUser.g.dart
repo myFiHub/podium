@@ -24,6 +24,8 @@ StarsArenaUser _$StarsArenaUserFromJson(Map<String, dynamic> json) =>
       twitterFollowers: (json['twitterFollowers'] as num).toInt(),
       userConfirmed: json['userConfirmed'] as bool,
       twitterConfirmed: json['twitterConfirmed'] as bool,
+      keyPrice: json['keyPrice'] as String?,
+      lastKeyPrice: json['lastKeyPrice'] as String?,
     );
 
 Map<String, dynamic> _$StarsArenaUserToJson(StarsArenaUser instance) =>
@@ -37,6 +39,8 @@ Map<String, dynamic> _$StarsArenaUserToJson(StarsArenaUser instance) =>
       'ethereumAddress': instance.ethereumAddress,
       'solanaAddress': instance.solanaAddress,
       'prevAddress': instance.prevAddress,
+      'keyPrice': instance.keyPrice,
+      'lastKeyPrice': instance.lastKeyPrice,
       'addressConfirmed': instance.addressConfirmed,
       'followerCount': instance.followerCount,
       'followingsCount': instance.followingsCount,

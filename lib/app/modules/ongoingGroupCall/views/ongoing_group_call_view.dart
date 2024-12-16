@@ -1,14 +1,17 @@
 import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/dateUtils.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -17,68 +20,130 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return FloatingDraggableWidget(
-      mainScreenWidget: Scaffold(
-        body: GroupCall(),
+    if (controller.introStartCalled == false) {
+      controller.introStartCalled = true;
+      controller.startIntro();
+    }
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (res, r) {
+        controller.introFinished(false);
+      },
+      child: FloatingDraggableWidget(
+        mainScreenWidget: Scaffold(
+          body: Obx(() {
+            final shouldShowIntro = controller.shouldShowIntro.value;
+            return GroupCall(
+              shouldShowIntro: shouldShowIntro,
+            );
+          }),
+        ),
+        floatingWidget: Obx(() {
+          final isGroupCallControllerRegistered =
+              Get.isRegistered<GroupCallController>();
+          final isControllerRegistered =
+              Get.isRegistered<OngoingGroupCallController>();
+
+          if (!isGroupCallControllerRegistered) {
+            return Container(
+              width: 0,
+              height: 0,
+            );
+          }
+          final groupCallController = Get.find<GroupCallController>();
+          final group = groupCallController.group.value;
+
+          if (group == null || !isControllerRegistered) {
+            return Container(
+              width: 0,
+              height: 0,
+            );
+          }
+          final isMuted = controller.amIMuted.value;
+          final canITalk = groupCallController.canTalk.value;
+          final amICreator = group.creator.id == myId;
+          final isRecording = controller.isRecording.value;
+          final recordable = group.isRecordable;
+          if (!canITalk) {
+            return FloatingActionButton(
+              key: controller.muteUnmuteKey,
+              backgroundColor: ColorName.greyText,
+              onPressed: () {},
+              tooltip: 'can not talk',
+              child: const Icon(
+                Icons.mic_off,
+              ),
+            );
+          }
+          return Column(
+            children: [
+              FloatingActionButton(
+                heroTag: 'muteUnmute',
+                key: controller.muteUnmuteKey,
+                backgroundColor: isMuted ? Colors.red : Colors.green,
+                onPressed: () {
+                  jitsiMeet.setAudioMuted(!isMuted);
+                },
+                tooltip: 'mute',
+                child: Icon(
+                  isMuted ? Icons.mic_off : Icons.mic,
+                ),
+              ),
+              if (amICreator && recordable) space10,
+              if (amICreator && recordable)
+                FloatingActionButton(
+                  heroTag: 'record',
+                  backgroundColor: Colors.white,
+                  onPressed: () {
+                    isRecording
+                        ? controller.stopRecording()
+                        : controller.startRecording();
+                  },
+                  tooltip: 'Record',
+                  child: Icon(
+                    isRecording ? Icons.stop : Icons.fiber_manual_record,
+                    color: Colors.red,
+                  ),
+                ),
+            ],
+          );
+        }),
+        floatingWidgetHeight: 125,
+        floatingWidgetWidth: 50,
+        dx: Get.width - 80,
+        dy: 50,
       ),
-      floatingWidget: Obx(() {
-        final isGroupCallControllerRegistered =
-            Get.isRegistered<GroupCallController>();
-        final isControllerRegistered =
-            Get.isRegistered<OngoingGroupCallController>();
-
-        if (!isGroupCallControllerRegistered) {
-          return Container(
-            width: 0,
-            height: 0,
-          );
-        }
-        final groupCallController = Get.find<GroupCallController>();
-        final group = groupCallController.group.value;
-
-        if (group == null || !isControllerRegistered) {
-          return Container(
-            width: 0,
-            height: 0,
-          );
-        }
-        final isMuted = controller.amIMuted.value;
-        final canITalk = groupCallController.canTalk.value;
-        if (!canITalk) {
-          return Container(
-            width: 0,
-            height: 0,
-          );
-        }
-        return FloatingActionButton(
-          backgroundColor: isMuted ? Colors.red : Colors.green,
-          onPressed: () {
-            jitsiMeet.setAudioMuted(!isMuted);
-          },
-          tooltip: 'mute',
-          child: Icon(
-            isMuted ? Icons.mic_off : Icons.mic,
-          ),
-        );
-      }),
-      floatingWidgetHeight: 50,
-      floatingWidgetWidth: 50,
-      dx: Get.width - 80,
-      dy: 50,
     );
   }
 }
 
+class ContextSaver extends GetView<OngoingGroupCallController> {
+  const ContextSaver({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    controller.contextForIntro = context;
+    return const SizedBox.shrink();
+  }
+}
+
 class GroupCall extends GetView<GroupCallController> {
-  const GroupCall({super.key});
+  final bool shouldShowIntro;
+  const GroupCall({
+    super.key,
+    required this.shouldShowIntro,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        GroupInfo(),
-        SessionInfo(),
-        MembersList(),
+        const ContextSaver(),
+        const GroupInfo(),
+        const SessionInfo(),
+        MembersList(
+          shouldShowIntro: shouldShowIntro,
+        ),
       ],
     );
   }
@@ -94,16 +159,14 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
       children: [
         Obx(
           () {
-            if (controller == null) {
-              return SizedBox();
-            }
             final isAdmin = controller.amIAdmin.value;
             final remainingTimeInMillisecond =
                 controller.remainingTimeTimer.value;
+
             if (remainingTimeInMillisecond == -1) {
-              return Text(
+              return const Text(
                 "loading...",
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 36,
@@ -112,18 +175,20 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
             }
             if (isAdmin) {
               return Container(
+                key: controller.timerKey,
                 child: const Center(
                   child: Text('presenting as admin'),
                 ),
               );
             }
             final list = formatDuration(remainingTimeInMillisecond);
-            final joined = list.join(":");
+            final remainingTime = list.join(":");
             final isSmall = int.parse(list[0]) == 0 && int.parse(list[1]) < 2;
             return remainingTimeInMillisecond != 0
                 ? Container(
+                    key: controller.timerKey,
                     child: Text(
-                      joined,
+                      remainingTime,
                       style: TextStyle(
                         color: isSmall ? Colors.red : Colors.white,
                         fontWeight: FontWeight.w700,
@@ -176,7 +241,8 @@ class GroupInfo extends GetView<GroupCallController> {
 const spaceBetween = const SizedBox(width: 10);
 
 class MembersList extends GetView<GroupCallController> {
-  const MembersList({super.key});
+  final bool shouldShowIntro;
+  const MembersList({super.key, required this.shouldShowIntro});
 
   @override
   Widget build(BuildContext context) {
@@ -210,10 +276,13 @@ class MembersList extends GetView<GroupCallController> {
                       labelColor: ColorName.primaryBlue,
                       unselectedLabelColor: Colors.grey,
                       tabs: [
-                        Tab(
-                          child: Text("All Members"),
+                        const Tab(
+                          child: Text(
+                            "All Members",
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                        Tab(
+                        const Tab(
                           child: Text("Search"),
                         ),
                         Obx(() {
@@ -233,18 +302,20 @@ class MembersList extends GetView<GroupCallController> {
                           final members = controller.sortedMembers.value;
                           //  sort the users based on the sort type, biggest to smallest
                           return UsersInRoomList(
+                            shouldShowIntro: shouldShowIntro,
                             usersList: members,
                             groupId: controller.group.value!.id,
                           );
                         },
                       ),
                       Container(
-                        child: SearchInRoom(),
+                        child: const SearchInRoom(),
                       ),
                       Obx(
                         () {
                           final members = controller.talkingMembers.value;
                           return UsersInRoomList(
+                            shouldShowIntro: false,
                             usersList: members,
                             groupId: controller.group.value!.id,
                           );
@@ -257,6 +328,7 @@ class MembersList extends GetView<GroupCallController> {
             ),
           ),
           space5,
+          // const _StartIntroButton(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -276,7 +348,7 @@ class MembersList extends GetView<GroupCallController> {
                         ),
                       );
                     },
-                    child: Text('Invite users'),
+                    child: const Text('Invite users'),
                   ),
                 ),
               Container(
@@ -285,7 +357,7 @@ class MembersList extends GetView<GroupCallController> {
                   onPressed: () {
                     controller.runHome();
                   },
-                  text: "Leave the Room",
+                  text: "Leave the Outpost",
                   type: ButtonType.solid,
                   color: ButtonColors.DANGER,
                 ),
@@ -295,6 +367,21 @@ class MembersList extends GetView<GroupCallController> {
         ],
       ),
     );
+  }
+}
+
+class _StartIntroButton extends GetView<OngoingGroupCallController> {
+  const _StartIntroButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+        text: 'Show Intro',
+        onPressed: () {
+          GetStorage().remove(IntroStorageKeys.viewedOngiongCall);
+          controller.shouldShowIntro.value = true;
+          controller.startIntro();
+        });
   }
 }
 
@@ -325,6 +412,7 @@ class SearchInRoom extends GetView<GroupCallController> {
             }).toList();
             return Expanded(
               child: UsersInRoomList(
+                shouldShowIntro: false,
                 usersList: filteredMembers,
                 groupId: controller.group.value!.id,
               ),

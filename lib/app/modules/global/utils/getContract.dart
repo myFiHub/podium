@@ -1,16 +1,12 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/lib/chainInfo.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
 import 'package:podium/env.dart' as Environment;
-import 'package:particle_base/model/chain_info.dart' as ChainInfo;
-
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -62,22 +58,57 @@ DeployedContract? getDeployedContract(
   return deployedContract;
 }
 
-chainNameById(String chainId) {
+String chainNameById(String chainId) {
   final name =
       ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)
           ?.name;
   if (name == null) {
-    return "Unknown";
+    return "Movement";
   }
   return name;
 }
 
-ChainInfo.ChainInfo particleChainInfoByChainId(String chainId) {
-  return ChainInfo.ChainInfo.getChain(
-        int.parse(chainId),
-        chainNameById(chainId),
-      ) ??
-      movementChainOnParticle;
+ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
+  if (chainId == '127') {
+    return ReownAppKitModalNetworkInfo(
+      name: 'Aptos Movement',
+      chainId: chainId,
+      extraRpcUrls: [],
+      isTestNetwork: false,
+      chainIcon: chainIconUrlByChainId(movementChain.chainId),
+      currency: 'MOVE',
+      rpcUrl: 'https://bsc-dataseed.binance.org/',
+      explorerUrl: 'https://bscscan.com/',
+    );
+  }
+  final chain =
+      ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
+  if (chain == null) {
+    return movementChain;
+  }
+  final chainToReturn = ReownAppKitModalNetworkInfo(
+    name: chain.name,
+    chainId: chainId,
+    extraRpcUrls: chain.extraRpcUrls,
+    isTestNetwork: chain.isTestNetwork,
+    chainIcon: chainIconUrlByChainId(chainId),
+    currency: chain.currency,
+    rpcUrl: chain.rpcUrl,
+    explorerUrl: chain.explorerUrl,
+  );
+  return chainToReturn;
+}
+
+String chainIconUrlByChainId(String chainId) {
+  // we have to use this method to get the chain icon, because the chain icon is not easily available in the ReownAppKitModalNetworkInfo
+  final chain = ChainInfo.getChain(
+    int.parse(chainId),
+    chainNameById(chainId),
+  );
+  if (chain == null) {
+    return movementChain.chainIcon!;
+  }
+  return chain.icon;
 }
 
 String _friendTechAddress(String chainId) {
@@ -98,7 +129,7 @@ friendTechContract(String chainId) {
 
 String _starsArenaAddress(String chainId) {
   // we should call the proxy contract for StarsArena, since StarsArena is upgradeable
-  final address = Environment.Env.starsArenaProxyAddress(particleChianId);
+  final address = Environment.Env.starsArenaProxyAddress(chainId);
   if (address == null || address.isEmpty) {
     return ZERO_ADDRESS;
   }

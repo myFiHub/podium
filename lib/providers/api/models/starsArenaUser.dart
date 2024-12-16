@@ -13,6 +13,8 @@ class StarsArenaUser {
   final String? ethereumAddress;
   final String? solanaAddress;
   final String? prevAddress;
+  String? keyPrice;
+  String? lastKeyPrice;
   final bool addressConfirmed;
   final int followerCount;
   final int followingsCount;
@@ -36,9 +38,19 @@ class StarsArenaUser {
     required this.twitterFollowers,
     required this.userConfirmed,
     required this.twitterConfirmed,
+    this.keyPrice,
+    this.lastKeyPrice,
   });
-  get defaultAddress {
-    return address;
+
+  get mainAddress {
+    String? tmp = addressBeforeDynamicMigration;
+    if (tmp == null) {
+      tmp = dynamicAddress;
+    }
+    if (tmp == null) {
+      tmp = address;
+    }
+    return tmp;
   }
 
 // json annotation compatible tojson and fromjson

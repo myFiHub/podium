@@ -1,31 +1,27 @@
-import 'dart:convert';
-
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:particle_auth_core/particle_auth_core.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
-import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
+import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/contracts/friendTech.dart';
-import 'package:podium/contracts/starsArena.dart';
+import 'package:podium/env.dart' as Environment;
+import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/cheerBooEvent.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:particle_base/particle_base.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:podium/env.dart' as Environment;
-
 import 'package:reown_appkit/reown_appkit.dart';
 
 Future<bool> ext_cheerOrBoo({
@@ -34,15 +30,28 @@ Future<bool> ext_cheerOrBoo({
   required num amount,
   required bool cheer,
   required String chainId,
+  required groupId,
 }) async {
-  final globalController = Get.find<GlobalController>();
-  final service = globalController.web3ModalService;
+  final service = web3ModalService;
+  if (externalWalletChianId != chainId) {
+    final chain =
+        ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
+    try {
+      if (chain == null) {
+        return false;
+      }
+      Toast.error(
+          message:
+              "Please switch to ${chain.name} chain on your wallet and try again");
+      return false;
+    } catch (e) {}
+  }
   final transaction = Transaction(
-    from: parsAddress(service.session!.address!),
+    from: parseAddress(externalWalletAddress!),
     value: parseValue(amount),
   );
-  final targetWallet = parsAddress(target);
-  final receivers = receiverAddresses.map((e) => parsAddress(e)).toList();
+  final targetWallet = parseAddress(target);
+  final receivers = receiverAddresses.map((e) => parseAddress(e)).toList();
   final contract = getDeployedContract(
     contract: Contracts.cheerboo,
     chainId: chainId,
@@ -51,7 +60,22 @@ Future<bool> ext_cheerOrBoo({
     return false;
   }
   service.launchConnectedWallet();
-
+  BigInt percentage = BigInt.from(100);
+  // it's not possible to boo, and have more than one receiver
+  if (!cheer) {
+    percentage = BigInt.from(50);
+  }
+  // this means that the user is cheering themselves
+  if (receiverAddresses.length > 1) {
+    percentage = BigInt.from(0);
+  }
+  final parameters = [
+    targetWallet,
+    receivers,
+    cheer,
+    percentage,
+    groupId,
+  ];
   try {
     final response = await service.requestWriteContract(
       topic: service.session!.topic,
@@ -59,11 +83,7 @@ Future<bool> ext_cheerOrBoo({
       deployedContract: contract,
       functionName: 'cheerOrBoo',
       transaction: transaction,
-      parameters: [
-        targetWallet,
-        receivers,
-        cheer,
-      ],
+      parameters: parameters,
     );
     if (response == "User rejected") {
       Toast.error(message: "transaction rejected");
@@ -78,6 +98,83 @@ Future<bool> ext_cheerOrBoo({
     log.e('error : $e');
     return false;
   }
+}
+
+internal_cheerOrBoo({
+  required String target,
+  required List<String> receiverAddresses,
+  required num amount,
+  required bool cheer,
+  required String chainId,
+  required UserInfoModel user,
+  required groupId,
+}) async {
+  final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
+  if (myAddress == null) {
+    return false;
+  }
+  final contract =
+      getDeployedContract(contract: Contracts.cheerboo, chainId: chainId);
+  if (contract == null) {
+    return null;
+  }
+
+  try {
+    BigInt percentage = BigInt.from(100);
+    // it's not possible to boo, and have more than one receiver
+    if (!cheer) {
+      percentage = BigInt.from(50);
+    }
+    // this means that the user is cheering themselves
+    if (receiverAddresses.length > 1) {
+      percentage = BigInt.from(0);
+    }
+    final value = parseValue(amount);
+    final methodName = 'cheerOrBoo';
+    final parameters = [
+      parseAddress(target),
+      receiverAddresses.map((e) => parseAddress(e)).toList(),
+      cheer,
+      percentage,
+      groupId,
+    ];
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: contract.function(methodName),
+      parameters: parameters,
+      value: value,
+    );
+
+    late TransactionMetadata metadata;
+    if (target == myAddress) {
+      metadata = TransactionMetadata(
+        title: cheer ? 'Cheer' : 'Boo',
+        message: '${cheer ? 'Cheer' : 'Boo'} yourself',
+        amount: weiToDecimalString(wei: value, decimals: 2),
+      );
+    } else {
+      metadata = TransactionMetadata(
+        title: cheer ? 'Cheer' : 'Boo',
+        message: '${cheer ? 'Cheer' : 'Boo'} ${user.fullName}',
+        amount: weiToDecimalString(wei: value, decimals: 2),
+      );
+    }
+    final signature = await sendTransaction(
+      transaction: transaction,
+      chainId: chainId,
+      metadata: metadata,
+    );
+    if (signature != null && signature.length > 10) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    log.e('error : $e');
+    if (e.toString().contains('insufficient funds')) {}
+  }
+  return false;
+
+  ///
 }
 
 ///  @param referrer: Optional parameter.
@@ -108,7 +205,7 @@ Future<BigInt?> ext_getBuyPrice({
   }
   // service.launchConnectedWallet();
   try {
-    final sharesSubjectWallet = parsAddress(sharesSubject);
+    final sharesSubjectWallet = parseAddress(sharesSubject);
     final response = await service.requestReadContract(
       deployedContract: contract,
       topic: service.session!.topic,
@@ -134,7 +231,7 @@ Future<BigInt?> ext_getMyShares({
 }) async {
   final globalController = Get.find<GlobalController>();
   final service = globalController.web3ModalService;
-  final sharesSubjectWallet = parsAddress(sharesSubject);
+  final sharesSubjectWallet = parseAddress(sharesSubject);
   final contract =
       getDeployedContract(contract: Contracts.starsArena, chainId: chainId);
   if (contract == null) {
@@ -158,47 +255,43 @@ Future<BigInt?> ext_getMyShares({
   }
 }
 
-Future<BigInt?> particle_getMyShares_arena({
+Future<BigInt?> getMyShares_arena({
   required String sharesSubject,
   required String chainId,
 }) async {
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); //await Evm.getAddress();
+  if (myAddress == null) {
+    return null;
+  }
   final contract =
       getDeployedContract(contract: Contracts.starsArena, chainId: chainId);
   if (contract == null) {
     return null;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'getMyShares';
-  final parameters = [sharesSubjectWallet];
-  const abiJson = StarsArenaSmartContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
-
+  final parameters = [parseAddress(sharesSubjectWallet)];
+  final client = evmClientByChainId(chainId);
   try {
     final results = await Future.wait([
-      EvmService.readContract(
-        myAddress,
-        BigInt.zero,
-        contractAddress,
-        methodName,
-        parameters,
-        abiJsonString,
+      client.call(
+        contract: contract,
+        sender: parseAddress(myAddress),
+        function: contract.function(methodName),
+        params: parameters,
       ),
       if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty)
-        EvmService.readContract(
-          externalWalletAddress!,
-          BigInt.zero,
-          contractAddress,
-          methodName,
-          parameters,
-          abiJsonString,
+        client.call(
+          contract: contract,
+          sender: parseAddress(externalWalletAddress!),
+          function: contract.function(methodName),
+          params: parameters,
         ),
     ]);
     BigInt sum = BigInt.zero;
     for (var result in results) {
-      if (result != null) {
-        sum += BigInt.parse(result);
+      if (result[0] != null) {
+        sum += result[0];
       }
     }
     return sum;
@@ -208,40 +301,30 @@ Future<BigInt?> particle_getMyShares_arena({
   }
 }
 
-Future<UserActiveWalletOnFriendtech> particle_friendTech_getActiveUserWallets(
-    {required String particleAddress,
+Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
+    {required String internalWalletAddress,
     String? externalWalletAddress,
     required String chainId}) async {
   final List<Future<BigInt?>> arrayToCall = [];
 
   try {
-    final changed = await temporarilyChangeParticleNetwork(chainId);
-    if (!changed) {
-      return UserActiveWalletOnFriendtech(
-        isExternalWalletActive: false,
-        isParticleWalletActive: false,
-        externalWalletAddress: externalWalletAddress,
-        particleWalletAddress: particleAddress,
-      );
-    }
-
-    arrayToCall.add(_particle_getShares_friendthech(
-      sellerAddress: particleAddress,
-      buyerAddress: particleAddress,
+    arrayToCall.add(_internal_getShares_friendthech(
+      sellerAddress: internalWalletAddress,
+      buyerAddress: internalWalletAddress,
       chainId: chainId,
     ));
     if (externalWalletAddress != null &&
         externalWalletAddress.isNotEmpty &&
-        externalWalletAddress != particleAddress) {
-      arrayToCall.add(_particle_getShares_friendthech(
+        externalWalletAddress != internalWalletAddress) {
+      arrayToCall.add(_internal_getShares_friendthech(
         sellerAddress: externalWalletAddress,
         buyerAddress: externalWalletAddress,
         chainId: chainId,
       ));
     }
     final List<BigInt?> results = await Future.wait(arrayToCall);
-    await switchBackToSavedParticleNetwork();
-    final isParticleActive = results[0] != null && results[0] != BigInt.zero;
+    final isInternalWalletActiveOnFriendTechActive =
+        results[0] != null && results[0] != BigInt.zero;
     bool isExternalActive = false;
     if (results.length > 1) {
       isExternalActive = results[1] != null && results[1] != BigInt.zero;
@@ -249,44 +332,38 @@ Future<UserActiveWalletOnFriendtech> particle_friendTech_getActiveUserWallets(
 
     return UserActiveWalletOnFriendtech(
       isExternalWalletActive: isExternalActive,
-      isParticleWalletActive: isParticleActive,
+      isInternalWalletActive: isInternalWalletActiveOnFriendTechActive,
       externalWalletAddress: externalWalletAddress,
-      particleWalletAddress: particleAddress,
+      internalWalletAddress: internalWalletAddress,
     );
   } catch (e) {
     log.e('error : $e');
-    await switchBackToSavedParticleNetwork();
     return UserActiveWalletOnFriendtech(
       isExternalWalletActive: false,
-      isParticleWalletActive: false,
+      isInternalWalletActive: false,
       externalWalletAddress: externalWalletAddress,
-      particleWalletAddress: particleAddress,
+      internalWalletAddress: internalWalletAddress,
     );
   }
 }
 
-Future<BigInt> particle_getUserShares_friendTech({
+Future<BigInt> internal_getUserShares_friendTech({
   required String defaultWallet,
-  required String particleWallet,
+  required String internalWallet,
   required String chainId,
 }) async {
-  final changed = await temporarilyChangeParticleNetwork(chainId);
-  if (!changed) {
-    return BigInt.zero;
-  }
-
   try {
     BigInt numberOfShares = BigInt.zero;
     final myExternalWallet = externalWalletAddress;
-    final myParticleAddress = await Evm.getAddress();
+    final myInternalWalletAddress = await web3AuthWalletAddress();
     final List<Future<dynamic>> arrayToCall = [];
-    // check if my particle wallet bought any of the user's addresses tickets
-    arrayToCall.add(_particle_getShares_friendthech(
-      sellerAddress: particleWallet,
+    // check if my internal wallet bought any of the user's addresses tickets
+    arrayToCall.add(_internal_getShares_friendthech(
+      sellerAddress: internalWallet,
       chainId: chainId,
     ));
-    if (defaultWallet != particleWallet) {
-      arrayToCall.add(_particle_getShares_friendthech(
+    if (defaultWallet != internalWallet) {
+      arrayToCall.add(_internal_getShares_friendthech(
         sellerAddress: defaultWallet,
         chainId: chainId,
       ));
@@ -294,13 +371,13 @@ Future<BigInt> particle_getUserShares_friendTech({
 
     // check if external wallet bought any of the user's addresses tickets
     if (myExternalWallet != null) {
-      arrayToCall.add(_particle_getShares_friendthech(
-        sellerAddress: particleWallet,
+      arrayToCall.add(_internal_getShares_friendthech(
+        sellerAddress: internalWallet,
         chainId: chainId,
         buyerAddress: myExternalWallet,
       ));
-      if (myExternalWallet != myParticleAddress) {
-        arrayToCall.add(_particle_getShares_friendthech(
+      if (myExternalWallet != myInternalWalletAddress) {
+        arrayToCall.add(_internal_getShares_friendthech(
           sellerAddress: defaultWallet,
           chainId: chainId,
           buyerAddress: myExternalWallet,
@@ -309,7 +386,6 @@ Future<BigInt> particle_getUserShares_friendTech({
     }
 
     final results = await Future.wait(arrayToCall);
-    await switchBackToSavedParticleNetwork();
     for (var result in results) {
       if (result != null) {
         numberOfShares += BigInt.parse(result.toString());
@@ -317,61 +393,72 @@ Future<BigInt> particle_getUserShares_friendTech({
     }
     return numberOfShares;
   } catch (e) {
-    await switchBackToSavedParticleNetwork();
     log.e('error : $e');
     Toast.error(message: "Could not get user shares");
     return BigInt.zero;
   }
 }
 
-Future<BigInt?> _particle_getShares_friendthech({
+Future<BigInt?> _internal_getShares_friendthech({
   required String sellerAddress,
   required String chainId,
   String? buyerAddress,
 }) async {
-  final buyerWalletAddress = buyerAddress ?? await Evm.getAddress();
+  final buyerWalletAddress =
+      buyerAddress ?? await web3AuthWalletAddress(); // Evm.getAddress();
+  if (buyerWalletAddress == null) {
+    return BigInt.zero;
+  }
   final contract =
       getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
   if (contract == null) {
     return null;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'sharesBalance';
-  final parameters = [sellerAddress, buyerWalletAddress];
-  const abiJson = FriendTechContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
-
+  final client = evmClientByChainId(chainId);
   try {
     final results = await Future.wait([
-      EvmService.readContract(
-        buyerWalletAddress,
-        BigInt.zero,
-        contractAddress,
-        methodName,
-        parameters,
-        abiJsonString,
+      client.call(
+        contract: contract,
+        function: contract.function(methodName),
+        params: [parseAddress(sellerAddress), parseAddress(buyerWalletAddress)],
       ),
+      // EvmService.readContract(
+      //   buyerWalletAddress,
+      //   BigInt.zero,
+      //   contractAddress,
+      //   methodName,
+      //   parameters,
+      //   abiJsonString,
+      // ),
       if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty)
-        EvmService.readContract(
-          externalWalletAddress!,
-          BigInt.zero,
-          contractAddress,
-          methodName,
-          parameters,
-          abiJsonString,
+        client.call(
+          contract: contract,
+          function: contract.function(methodName),
+          params: [
+            parseAddress(sellerAddress),
+            parseAddress(externalWalletAddress!),
+          ],
         ),
+      // EvmService.readContract(
+      //   externalWalletAddress!,
+      //   BigInt.zero,
+      //   contractAddress,
+      //   methodName,
+      //   parameters,
+      //   abiJsonString,
+      // ),
     ]);
 
-    if (results[0] == '0x') {
+    if (results[0][0] == '0x') {
       log.f(
           'result 0: ${results[0]}, contract might not be deployed on this chain');
       return BigInt.zero;
     }
-
     BigInt sum = BigInt.zero;
     for (var result in results) {
-      if (result != null) {
-        sum += BigInt.parse(result);
+      if (result[0] != null) {
+        sum += result[0];
       }
     }
     return sum;
@@ -381,57 +468,57 @@ Future<BigInt?> _particle_getShares_friendthech({
   }
 }
 
-Future<BigInt?> particle_getFriendTechTicketPrice({
+Future<BigInt?> internal_getFriendTechTicketPrice({
   required String sharesSubject,
   int numberOfTickets = 1,
   required String chainId,
 }) async {
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); //Evm.getAddress();
+  if (myAddress == null) {
+    return null;
+  }
   final contract =
       getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
   if (contract == null) {
     return null;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'getBuyPriceAfterFee';
-  final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
-  const abiJson = FriendTechContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
-
-  final changed = await temporarilyChangeParticleNetwork(chainId);
-  if (!changed) {
-    return null;
-  }
-
+  final parameters = [
+    parseAddress(sharesSubjectWallet),
+    BigInt.from(numberOfTickets),
+  ];
   try {
-    final result = await EvmService.readContract(
-      myAddress,
-      BigInt.zero,
-      contractAddress,
-      methodName,
-      parameters,
-      abiJsonString,
+    final client = evmClientByChainId(chainId);
+    final result = await client.call(
+      contract: contract,
+      function: contract.function(methodName),
+      params: parameters,
     );
-    await switchBackToSavedParticleNetwork();
     try {
-      return BigInt.parse(result);
+      if (result[0] != null) {
+        return result[0];
+      } else {
+        return null;
+      }
     } catch (e) {
       log.e('error : $e');
       return null;
     }
   } catch (e) {
     log.e('error : $e');
-    await switchBackToSavedParticleNetwork();
     return null;
   }
 }
 
-Future<bool> particle_activate_friendtechWallet(
+Future<bool> internal_activate_friendtechWallet(
     {required String chainId}) async {
   try {
-    final myWalletAddress = await Evm.getAddress();
-    final bought = await particle_buyFriendTechTicket(
+    final myWalletAddress = await web3AuthWalletAddress(); //Evm.getAddress();
+    if (myWalletAddress == null) {
+      return false;
+    }
+    final bought = await internal_buyFriendTechTicket(
       sharesSubject: myWalletAddress,
       chainId: chainId,
       targetUserId: myId,
@@ -459,20 +546,23 @@ Future<bool> ext_activate_friendtechWallet({
   return bought;
 }
 
-Future<bool> particle_buyFriendTechTicket({
+Future<bool> internal_buyFriendTechTicket({
   required String sharesSubject,
   int numberOfTickets = 1,
   required String chainId,
   required String targetUserId,
 }) async {
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
+  if (myAddress == null) {
+    return false;
+  }
   final contract =
       getDeployedContract(contract: Contracts.friendTech, chainId: chainId);
   if (contract == null) {
     return false;
   }
-  final buyPrice = await particle_getFriendTechTicketPrice(
+  final buyPrice = await internal_getFriendTechTicketPrice(
     sharesSubject: sharesSubject,
     numberOfTickets: numberOfTickets,
     chainId: chainId,
@@ -480,33 +570,34 @@ Future<bool> particle_buyFriendTechTicket({
   if (buyPrice == null) {
     return false;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'buyShares';
-  final parameters = [sharesSubjectWallet, numberOfTickets.toString()];
-  const abiJson = FriendTechContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
-  final changed = await temporarilyChangeParticleNetwork(chainId);
-  if (!changed) {
-    return false;
-  }
-  try {
-    final data = await EvmService.customMethod(
-      contractAddress,
-      methodName,
-      parameters,
-      abiJsonString,
-    );
-    final transaction = await EvmService.createTransaction(
-      myAddress,
-      data,
-      buyPrice,
-      contractAddress,
-      gasFeeLevel: GasFeeLevel.high,
-    );
-    final signature = await Evm.sendTransaction(transaction);
-    await switchBackToSavedParticleNetwork();
+  final parameters = [
+    parseAddress(sharesSubjectWallet),
+    BigInt.from(numberOfTickets),
+  ];
 
-    if (signature.length > 10) {
+  try {
+    final value = EtherAmount.fromBigInt(EtherUnit.wei, buyPrice);
+    final transaction = Transaction.callContract(
+      value: value,
+      contract: contract,
+      function: contract.function(methodName),
+      parameters: parameters,
+    );
+    final isValueZero = buyPrice == BigInt.zero;
+    final metadata = TransactionMetadata(
+      title: isValueZero ? "Activation" : 'Buy Ticket',
+      message:
+          isValueZero ? "Activate Wallet Address" : 'Buy FriendTech Ticket',
+      amount: weiToDecimalString(wei: value),
+    );
+    final signature = await sendTransaction(
+      transaction: transaction,
+      chainId: chainId,
+      metadata: metadata,
+    );
+
+    if (signature != null && signature.length > 10) {
       if (targetUserId != myId) {
         saveNewPayment(
           event: PaymentEvent(
@@ -526,31 +617,6 @@ Future<bool> particle_buyFriendTechTicket({
     return false;
   } catch (e) {
     log.e('error : $e');
-    if (e.toString().contains('insufficient funds')) {
-      final selectedChain = await ParticleBase.getChainInfo();
-      final selectedChainName = selectedChain.name;
-      final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
-      Toast.error(
-        title: "Insufficient $selectedChainCurrency",
-        message: "Please top up your wallet on $selectedChainName",
-        mainbutton: TextButton(
-          onPressed: () {
-            _copyToClipboard(myAddress, prefix: "Address");
-          },
-          child: Text("Copy Address"),
-        ),
-        duration: 5,
-      );
-    }
-    await switchBackToSavedParticleNetwork();
-    if (e
-        .toString()
-        .contains("Only the shares' subject can buy the first share")) {
-      Toast.error(
-        title: "Error",
-        message: "Target user is not yet registered on friendtech",
-      );
-    }
 
     return false;
   }
@@ -562,7 +628,7 @@ Future<bool> ext_buyFirendtechTicket({
   required String chainId,
   required String targetUserId,
 }) async {
-  final buyPrice = await particle_getFriendTechTicketPrice(
+  final buyPrice = await internal_getFriendTechTicketPrice(
     sharesSubject: sharesSubject,
     numberOfTickets: numberOfTickets,
     chainId: chainId,
@@ -573,7 +639,7 @@ Future<bool> ext_buyFirendtechTicket({
   final globalController = Get.find<GlobalController>();
   final service = globalController.web3ModalService;
   final transaction = Transaction(
-    from: parsAddress(service.session!.address!),
+    from: parseAddress(externalWalletAddress!),
     value: parseValue(buyPrice.toDouble()),
   );
   final contract = getDeployedContract(
@@ -583,7 +649,7 @@ Future<bool> ext_buyFirendtechTicket({
   if (contract == null) {
     return false;
   }
-  final sharesSubjectWallet = parsAddress(sharesSubject);
+  final sharesSubjectWallet = parseAddress(sharesSubject);
   try {
     service.launchConnectedWallet();
     final response = await service.requestWriteContract(
@@ -633,7 +699,7 @@ Future<bool> ext_buySharesWithReferrer({
   String? referrerAddress,
   required String sharesSubject,
   num shareAmount = 1,
-  required String targetUserId,
+  String? targetUserId,
   required String chainId,
 }) async {
   final referrer = referrerAddress ?? fihubAddress(chainId);
@@ -653,7 +719,7 @@ Future<bool> ext_buySharesWithReferrer({
   final globalController = Get.find<GlobalController>();
   final service = globalController.web3ModalService;
   final transaction = Transaction(
-    from: parsAddress(service.session!.address!),
+    from: parseAddress(externalWalletAddress!),
     value: EtherAmount.inWei(bigIntValue),
   );
   final contract = getDeployedContract(
@@ -664,8 +730,8 @@ Future<bool> ext_buySharesWithReferrer({
     return false;
   }
 
-  final referrerWallet = parsAddress(referrer);
-  final sharesSubjectWallet = parsAddress(sharesSubject);
+  final referrerWallet = parseAddress(referrer);
+  final sharesSubjectWallet = parseAddress(sharesSubject);
   service.launchConnectedWallet();
   try {
     final response = await service.requestWriteContract(
@@ -684,7 +750,7 @@ Future<bool> ext_buySharesWithReferrer({
         response is String &&
         response.startsWith("0x") &&
         response.length > 10;
-    if (success) {
+    if (success && targetUserId != null) {
       saveNewPayment(
         event: PaymentEvent(
           type: PaymentTypes.arenaTicket,
@@ -714,13 +780,15 @@ Future<bool> ext_buySharesWithReferrer({
   }
 }
 
-Future<BigInt?> particle_getBuyPrice({
+Future<BigInt?> getBuyPriceForArenaTicket({
   required String sharesSubject,
   num shareAmount = 1,
   required String chainId,
 }) async {
-  final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
+  if (myAddress == null) {
+    return null;
+  }
   final contract = getDeployedContract(
     contract: Contracts.starsArena,
     chainId: chainId,
@@ -728,23 +796,18 @@ Future<BigInt?> particle_getBuyPrice({
   if (contract == null) {
     return null;
   }
-  final contractAddress = contract.address.hex;
   final methodName = 'getBuyPriceAfterFee';
-  final parameters = [sharesSubjectWallet, shareAmount.toString()];
-  const abiJson = StarsArenaSmartContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
+  final parameters = [parseAddress(sharesSubject), BigInt.from(shareAmount)];
 
   try {
-    final result = await EvmService.readContract(
-      myAddress,
-      BigInt.zero,
-      contractAddress,
-      methodName,
-      parameters,
-      abiJsonString,
+    final client = evmClientByChainId(chainId);
+    final result = await client.call(
+      contract: contract,
+      function: contract.function(methodName),
+      params: parameters,
     );
-    if (result != null) {
-      return BigInt.parse(result);
+    if (result[0] != null) {
+      return result[0];
     } else {
       return null;
     }
@@ -754,10 +817,10 @@ Future<BigInt?> particle_getBuyPrice({
   }
 }
 
-Future<bool> particle_buySharesWithReferrer({
+Future<bool> internal_buySharesWithReferrer({
   String? referrerAddress,
   required String sharesSubject,
-  required String targetUserId,
+  String? targetUserId,
   num shareAmount = 1,
   required String chainId,
 }) async {
@@ -766,7 +829,7 @@ Future<bool> particle_buySharesWithReferrer({
     Toast.error(message: "Referrer address not found");
     return false;
   }
-  final buyPrice = await particle_getBuyPrice(
+  final buyPrice = await getBuyPriceForArenaTicket(
     sharesSubject: sharesSubject,
     shareAmount: shareAmount,
     chainId: chainId,
@@ -776,7 +839,10 @@ Future<bool> particle_buySharesWithReferrer({
   }
 
   final sharesSubjectWallet = sharesSubject;
-  final myAddress = await Evm.getAddress();
+  final myAddress = await web3AuthWalletAddress(); //Evm.getAddress();
+  if (myAddress == null) {
+    return false;
+  }
   final contract = getDeployedContract(
     contract: Contracts.starsArena,
     chainId: chainId,
@@ -786,59 +852,51 @@ Future<bool> particle_buySharesWithReferrer({
   }
 
   final methodName = 'buySharesWithReferrer';
-  final parameters = [sharesSubjectWallet, shareAmount.toString(), referrer];
-  const abiJson = StarsArenaSmartContract.abi;
-  final abiJsonString = jsonEncode(abiJson);
+  final parameters = [
+    parseAddress(sharesSubjectWallet),
+    BigInt.from(shareAmount),
+    parseAddress(referrer)
+  ];
   try {
-    final data = await EvmService.customMethod(
-      contract.address.hex,
-      methodName,
-      parameters,
-      abiJsonString,
+    final value = EtherAmount.fromBigInt(EtherUnit.wei, buyPrice);
+    final transaction = Transaction.callContract(
+      value: value,
+      contract: contract,
+      function: contract.function(methodName),
+      parameters: parameters,
     );
-    final transaction = await EvmService.createTransaction(
-      myAddress,
-      data,
-      buyPrice,
-      contract.address.hex,
-      gasFeeLevel: GasFeeLevel.high,
+
+    final metadata = TransactionMetadata(
+      title: 'Buy Ticket',
+      message: 'Buy Arena Ticket',
+      amount: weiToDecimalString(wei: value),
     );
-    final signature = await Evm.sendTransaction(transaction);
-    if (signature.length > 10) {
-      saveNewPayment(
-        event: PaymentEvent(
-          type: PaymentTypes.arenaTicket,
-          targetAddress: sharesSubjectWallet,
-          amount: bigIntWeiToDouble(buyPrice).toString(),
-          initiatorAddress: myAddress,
-          initiatorId: myId,
-          targetId: targetUserId,
-          chainId: chainId,
-        ),
-      );
+
+    final signature = await sendTransaction(
+        transaction: transaction, chainId: chainId, metadata: metadata);
+
+    if (signature != null && signature.length > 10) {
+      if (targetUserId != null) {
+        saveNewPayment(
+          event: PaymentEvent(
+            type: PaymentTypes.arenaTicket,
+            targetAddress: sharesSubjectWallet,
+            amount: bigIntWeiToDouble(buyPrice).toString(),
+            initiatorAddress: myAddress,
+            initiatorId: myId,
+            targetId: targetUserId,
+            chainId: chainId,
+          ),
+        );
+      }
       return true;
     }
     return false;
   } catch (e) {
     log.e('error : $e ${((e as dynamic).data)}');
-    if (e.toString().toLowerCase().contains('fund')) {
-      final selectedChain = await ParticleBase.getChainInfo();
-      final selectedChainName = selectedChain.name;
-      final selectedChainCurrency = selectedChain.nativeCurrency.symbol;
-      Toast.error(
-        title: "Insufficient $selectedChainCurrency",
-        message: "Please top up your wallet on $selectedChainName",
-        mainbutton: TextButton(
-          onPressed: () {
-            _copyToClipboard(myAddress, prefix: "Address");
-          },
-          child: Text("Copy Address"),
-        ),
-        duration: 5,
-      );
-    } else {
-      Toast.error(message: (e as dynamic).message);
-    }
+
+    Toast.error(message: (e as dynamic).message);
+
     return false;
   }
 }
@@ -858,7 +916,7 @@ BigInt formatValue(num value, {required BigInt decimals}) {
   return result.getInEther;
 }
 
-EthereumAddress parsAddress(String address) {
+EthereumAddress parseAddress(String address) {
   return EthereumAddress.fromHex(address);
 }
 
@@ -879,6 +937,18 @@ double bigIntWeiToDouble(BigInt v) {
   return vInEth;
 }
 
+double bigIntCoinToMoveOnAptos(BigInt v) {
+  final BigInt weiToEthRatio = BigInt.from(10).pow(8);
+  final double vInEth = v.toDouble() / weiToEthRatio.toDouble();
+  return vInEth;
+}
+
+BigInt doubleToBigIntMoveForAptos(num v) {
+  final BigInt weiToEthRatio = BigInt.from(10).pow(8);
+  final BigInt vInWei = BigInt.from(v * weiToEthRatio.toInt());
+  return vInWei;
+}
+
 String hexToAscii(String hexString) => List.generate(
       hexString.length ~/ 2,
       (i) => String.fromCharCode(
@@ -897,24 +967,25 @@ void _copyToClipboard(String text, {String? prefix}) async {
 }
 
 String? fihubAddress(String chainId) {
-  return Environment.Env.fihubAddress(particleChianId);
+  return Environment.Env.fihubAddress(chainId);
 }
 
 class WalletNames {
-  static const particle = "Particle Wallet";
+  static const internal_EVM = "Internal EVM Wallet";
+  static const internal_Aptos = "Internal Aptos Wallet";
   static const external = "External Wallet";
 }
 
-Future<String?> choseAWallet({required String chainId}) async {
-  if (externalWalletAddress == null) {
-    return WalletNames.particle;
-  }
-  if (externalWalletAddress!.isEmpty) {
-    return WalletNames.particle;
+Future<String?> choseAWallet(
+    {required String chainId, bool? supportsAptos}) async {
+  final hideExternalWalletAndRemember =
+      externalWalletAddress == null && supportsAptos == true;
+  if (externalWalletAddress == null && supportsAptos != true) {
+    return WalletNames.internal_EVM;
   }
   final store = GetStorage();
   final savedWallet = store.read(StorageKeys.selectedWalletName);
-  if (savedWallet != null) {
+  if (savedWallet != null && supportsAptos != true) {
     return savedWallet;
   }
 
@@ -924,11 +995,11 @@ Future<String?> choseAWallet({required String chainId}) async {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Choose a wallet"),
+          const Text("Choose a wallet"),
           space10,
           Img(
-            src: particleChainInfoByChainId(chainId)?.icon ??
-                movementChain.chainIcon!,
+            src: chainInfoByChainId(chainId).chainIcon ??
+                Assets.images.logo.path,
             alt: "logo",
             size: 20,
           ),
@@ -936,7 +1007,9 @@ Future<String?> choseAWallet({required String chainId}) async {
       ),
       backgroundColor: ColorName.cardBackground,
       content: SelectChainContent(
+        includeAptos: supportsAptos == true,
         chainId: chainId,
+        hideExternalWalletAndRemember: hideExternalWalletAndRemember,
       ),
     ),
   );
@@ -945,7 +1018,14 @@ Future<String?> choseAWallet({required String chainId}) async {
 
 class SelectChainContent extends GetView<GlobalController> {
   final String chainId;
-  const SelectChainContent({super.key, required this.chainId});
+  final bool includeAptos;
+  final bool hideExternalWalletAndRemember;
+  const SelectChainContent({
+    super.key,
+    required this.chainId,
+    required this.includeAptos,
+    required this.hideExternalWalletAndRemember,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -954,6 +1034,7 @@ class SelectChainContent extends GetView<GlobalController> {
     return Obx(() {
       final targetChainId = chainId;
       final externalChaiId = controller.externalWalletChainId.value;
+      final targetChain = chainInfoByChainId(chainId);
       final externalWalletEnabled =
           externalChaiId.isNotEmpty && externalChaiId == targetChainId;
 
@@ -961,48 +1042,74 @@ class SelectChainContent extends GetView<GlobalController> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Button(
-              text: "Particle Wallet",
               type: ButtonType.outline,
               color: ColorName.primaryBlue,
               blockButton: true,
-              icon: Assets.images.particleIcon.image(
+              icon: Assets.images.logo.image(
                 width: 20,
                 height: 20,
               ),
+              child: AutoSizeText(
+                "Podium Wallet (${chainNameById(chainId)})",
+                style: const TextStyle(
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+              ),
               onPressed: () {
-                final shouldRemember = store.read("rememberWallet") ?? false;
+                final shouldRemember =
+                    store.read(StorageKeys.rememberSelectedWallet) ?? false;
                 if (shouldRemember) {
                   store.write(
-                      StorageKeys.selectedWalletName, WalletNames.particle);
+                      StorageKeys.selectedWalletName, WalletNames.internal_EVM);
                 }
-                Navigator.pop(Get.overlayContext!, WalletNames.particle);
+                Navigator.pop(Get.overlayContext!, WalletNames.internal_EVM);
               }),
           space10,
-          Button(
-              text: "External Wallet",
-              type: ButtonType.outline,
-              color: ColorName.primaryBlue,
-              blockButton: true,
-              onPressed: externalWalletEnabled
-                  ? () {
-                      final shouldRemember =
-                          store.read("rememberWallet") ?? false;
-                      if (shouldRemember) {
-                        store.write(StorageKeys.selectedWalletName,
-                            WalletNames.external);
+          if (includeAptos)
+            Button(
+                text: "Podium Wallet (Aptos)",
+                type: ButtonType.outline,
+                color: ColorName.primaryBlue,
+                blockButton: true,
+                icon: Assets.images.logo.image(
+                  width: 20,
+                  height: 20,
+                ),
+                onPressed: () {
+                  Navigator.pop(
+                      Get.overlayContext!, WalletNames.internal_Aptos);
+                }),
+          space10,
+          if (!hideExternalWalletAndRemember)
+            Button(
+                text: "External Wallet",
+                type: ButtonType.outline,
+                color: ColorName.primaryBlue,
+                blockButton: true,
+                onPressed: externalWalletEnabled
+                    ? () {
+                        final shouldRemember =
+                            store.read(StorageKeys.rememberSelectedWallet) ??
+                                false;
+                        if (shouldRemember) {
+                          store.write(StorageKeys.selectedWalletName,
+                              WalletNames.external);
+                        }
+                        Navigator.pop(
+                            Get.overlayContext!, WalletNames.external);
                       }
-                      Navigator.pop(Get.overlayContext!, WalletNames.external);
-                    }
-                  : null),
+                    : null),
           if (externalWalletEnabled == false)
             Text(
-              "to use External Wallet, please switch to Avalanche chain (${targetChainId}) on your wallet and try again",
-              style: TextStyle(color: Colors.red, fontSize: 12),
+              "to use External Wallet, please switch to ${targetChain.name} (${targetChainId}) on your wallet and try again",
+              style: const TextStyle(color: Colors.red, fontSize: 12),
               textAlign: TextAlign.center,
             ),
           space10,
           // remember my choice
-          RememberCheckBox(),
+          if (!hideExternalWalletAndRemember) const RememberCheckBox(),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1011,7 +1118,7 @@ class SelectChainContent extends GetView<GlobalController> {
                 onPressed: () {
                   Navigator.pop(Get.overlayContext!, null);
                 },
-                child: Text("Cancel"),
+                child: const Text("Cancel"),
               ),
             ],
           )
@@ -1033,13 +1140,13 @@ class _RememberCheckBoxState extends State<RememberCheckBox> {
   @override
   Widget build(BuildContext context) {
     final store = GetStorage();
-    final savedValue = store.read("rememberWallet");
+    final savedValue = store.read(StorageKeys.rememberSelectedWallet);
     if (savedValue != null && savedValue is bool && savedValue != value) {
       value = savedValue;
     }
     return GestureDetector(
       onTap: () {
-        store.write("rememberWallet", !value);
+        store.write(StorageKeys.rememberSelectedWallet, !value);
         setState(() {
           value = !value;
         });
@@ -1049,13 +1156,13 @@ class _RememberCheckBoxState extends State<RememberCheckBox> {
           Checkbox(
             value: value,
             onChanged: (value) {
-              store.write("rememberWallet", value);
+              store.write(StorageKeys.rememberSelectedWallet, value);
               setState(() {
                 this.value = value!;
               });
             },
           ),
-          Text("Remember my choice"),
+          const Text("Remember my choice"),
         ],
       ),
     );
@@ -1063,22 +1170,22 @@ class _RememberCheckBoxState extends State<RememberCheckBox> {
 }
 
 class UserActiveWalletOnFriendtech {
-  final bool isParticleWalletActive;
+  final bool isInternalWalletActive;
   final bool isExternalWalletActive;
   final String? externalWalletAddress;
-  final String particleWalletAddress;
-  bool get hasActiveWallet => isParticleWalletActive || isExternalWalletActive;
+  final String internalWalletAddress;
+  bool get hasActiveWallet => isInternalWalletActive || isExternalWalletActive;
   String get preferedWalletAddress {
     if (isExternalWalletActive && externalWalletAddress != null) {
       return externalWalletAddress!;
     }
-    return particleWalletAddress;
+    return internalWalletAddress;
   }
 
   UserActiveWalletOnFriendtech({
-    required this.isParticleWalletActive,
+    required this.isInternalWalletActive,
     required this.isExternalWalletActive,
     required this.externalWalletAddress,
-    required this.particleWalletAddress,
+    required this.internalWalletAddress,
   });
 }

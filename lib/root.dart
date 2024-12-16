@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
-import 'package:podium/app/modules/global/widgets/chainIcons.dart';
-import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/navbar.dart';
 
 class Root extends StatelessWidget {
@@ -26,69 +22,13 @@ class Root extends StatelessWidget {
                 child: child,
               ),
             ),
-            PodiumNavbar(),
+            const PodiumNavbar(),
           ],
         ),
         // InternetConnectionChecker(),
         // ConnectedNetworks(),
       ],
     );
-  }
-}
-
-class ConnectedNetworks extends GetWidget<GlobalController> {
-  const ConnectedNetworks({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-        top: 0,
-        left: 0,
-        child: Obx(() {
-          controller.particleWalletChainId.value;
-          controller.externalWalletChainId.value;
-          final connectedExternalWalletAddress =
-              controller.connectedWalletAddress.value;
-          // final externalWalletIcon= ;
-          return Container(
-            constraints: BoxConstraints(maxHeight: 60),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    SizedBox(width: 4),
-                    Assets.images.particleIcon.image(
-                      width: 10,
-                      height: 10,
-                    ),
-                    space5,
-                    Icon(Icons.link_sharp),
-                    space5,
-                    ParticleWalletChainIcon(),
-                  ],
-                ),
-                if (connectedExternalWalletAddress != '')
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 2,
-                      ),
-                      Icon(
-                        Icons.wallet,
-                        size: 16,
-                      ),
-                      SizedBox(
-                        width: 2,
-                      ),
-                      Icon(Icons.link_sharp),
-                      space5,
-                      ExternalWalletChainIcon(),
-                    ],
-                  ),
-              ],
-            ),
-          );
-        }));
   }
 }
 
@@ -144,7 +84,9 @@ class AnimatedBgbWrapper extends GetView<GlobalController> {
           duration: const Duration(seconds: 1),
           decoration: BoxDecoration(
             gradient: RadialGradient(
-              center: loggedIn ? Alignment(0, -1) : Alignment(-0.0, -0.1),
+              center: loggedIn
+                  ? const Alignment(0, -1)
+                  : const Alignment(-0.0, -0.1),
               colors: loggedIn ? _linearColors : _cirularColors,
               radius: loggedIn ? 2.0 : 1.0,
             ),

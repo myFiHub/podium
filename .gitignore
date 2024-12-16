@@ -18,6 +18,7 @@ migrate_working_dir/
 release-keystore.jks
 debug-info
 env/**/*.json
+env/**/*.env
 android/app/**/*.json
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -34,7 +35,6 @@ android/app/**/*.json
 .pub/
 /build/
 
-
 # Symbolication related
 app.*.symbols
 
@@ -50,3 +50,6 @@ app.*.map.json
 /env/prod.json
 /android/app/google-service.json
 /lib/firebase_options.dart
+
+# FVM Version Cache
+.fvm/

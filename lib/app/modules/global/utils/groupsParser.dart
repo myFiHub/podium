@@ -11,8 +11,12 @@ FirebaseGroup? singleGroupParser(value) {
     groupId = value[FirebaseGroup.idKey];
     final name = value[FirebaseGroup.nameKey];
     final creator = value[FirebaseGroup.creatorKey];
-    final members =
-        ((value[FirebaseGroup.membersKey]) as List<dynamic>).cast<String>();
+    final tmpMembers = value[FirebaseGroup.membersKey] ?? {};
+    final Map<String, String> members = {};
+    tmpMembers.forEach((key, value) {
+      members[key] = value;
+    });
+
     final tmp = value[FirebaseGroup.invitedMembersKey] ?? {};
     final Map<String, InvitedMember> invitedMembers = {};
     tmp.forEach((key, value) {
@@ -23,9 +27,9 @@ FirebaseGroup? singleGroupParser(value) {
       invitedMembers[key] = invitedMember;
     });
     final accessType =
-        value[FirebaseGroup.accessTypeKey] ?? FreeRoomAccessTypes.public;
+        value[FirebaseGroup.accessTypeKey] ?? FreeGroupAccessTypes.public;
     final speakerType =
-        value[FirebaseGroup.speakerTypeKey] ?? FreeRoomSpeakerTypes.everyone;
+        value[FirebaseGroup.speakerTypeKey] ?? FreeGroupSpeakerTypes.everyone;
     final subject = value[FirebaseGroup.subjectKey] ?? defaultSubject;
     final creatorId = creator[UserInfoModel.idKey];
     final creatorName = creator[UserInfoModel.fullNameKey];
@@ -35,6 +39,7 @@ FirebaseGroup? singleGroupParser(value) {
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final isArchived = value[FirebaseGroup.archivedKey] ?? false;
     final hasAdultContent = value[FirebaseGroup.hasAdultContentKey] ?? false;
+    final isRecordable = value[FirebaseGroup.isRecordableKey] ?? false;
     final List<String> requiredAddressesToEnter =
         (value[FirebaseGroup.requiredAddressesToEnterKey] ?? []).cast<String>();
     final List<String> requiredAddressesToSpeak =
@@ -82,6 +87,7 @@ FirebaseGroup? singleGroupParser(value) {
       creatorJoined: creatorJoined,
       archived: isArchived,
       hasAdultContent: hasAdultContent,
+      isRecordable: isRecordable,
       requiredAddressesToEnter: requiredAddressesToEnter,
       requiredAddressesToSpeak: requiredAddressesToSpeak,
       tags: parsedTags,

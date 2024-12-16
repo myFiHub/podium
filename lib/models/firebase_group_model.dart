@@ -29,7 +29,7 @@ class FirebaseGroup {
   String? lowercasename;
   String id;
   FirebaseGroupCreator creator;
-  List<String> members;
+  Map<String, String> members;
   String? imageUrl;
   Map<String, InvitedMember> invitedMembers = {};
   String? accessType;
@@ -43,6 +43,7 @@ class FirebaseGroup {
   bool creatorJoined = false;
   bool archived = false;
   bool hasAdultContent = false;
+  bool isRecordable = false;
   int scheduledFor = 0;
   int alarmId = 0;
   int lastActiveAt = 0;
@@ -59,6 +60,7 @@ class FirebaseGroup {
   static String creatorJoinedKey = 'creatorJoined';
   static String archivedKey = 'archived';
   static String hasAdultContentKey = 'hasAdultContent';
+  static String isRecordableKey = 'isRecordable';
   static String ticketRequiredToAccessKey = 'ticketsRequiredToAccess';
   static String ticketsRequiredToSpeakKey = 'ticketsRequiredToSpeak';
   static String requiredAddressesToEnterKey = 'requiredAddressesToEnter';
@@ -82,6 +84,7 @@ class FirebaseGroup {
     this.creatorJoined = false,
     this.archived = false,
     this.hasAdultContent = false,
+    this.isRecordable = false,
     this.ticketsRequiredToAccess = const [],
     this.ticketsRequiredToSpeak = const [],
     this.requiredAddressesToEnter = const [],
@@ -99,14 +102,15 @@ class FirebaseGroup {
     data[idKey] = id;
     data[creatorKey] = creator.toJson();
     data[membersKey] = members;
-    data[accessTypeKey] = accessType ?? FreeRoomAccessTypes.public;
-    data[speakerTypeKey] = speakerType ?? FreeRoomSpeakerTypes.everyone;
+    data[accessTypeKey] = accessType ?? FreeGroupAccessTypes.public;
+    data[speakerTypeKey] = speakerType ?? FreeGroupSpeakerTypes.everyone;
     data[subjectKey] = subject ?? defaultSubject;
     data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     data[invitedMembersKey] = invitedMembers;
     data[creatorJoinedKey] = creatorJoined;
     data[archivedKey] = archived;
     data[hasAdultContentKey] = hasAdultContent;
+    data[isRecordableKey] = isRecordable;
     data[ticketRequiredToAccessKey] =
         ticketsRequiredToAccess.map((e) => e.toJson()).toList();
     data[ticketsRequiredToSpeakKey] =

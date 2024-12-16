@@ -19,7 +19,6 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -29,31 +28,59 @@ import 'package:pulsator/pulsator.dart';
 class UsersInRoomList extends StatelessWidget {
   final List<FirebaseSessionMember> usersList;
   final String groupId;
-  const UsersInRoomList(
-      {super.key, required this.usersList, required this.groupId});
+  final bool shouldShowIntro;
+  const UsersInRoomList({
+    super.key,
+    required this.usersList,
+    required this.groupId,
+    required this.shouldShowIntro,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return shouldShowIntro
+        ? const IntroUser()
+        : ListView.builder(
+            itemCount: usersList.length,
+            itemBuilder: (context, index) {
+              final user = usersList[index];
+              final name = user.name;
+              String avatar = user.avatar;
+              if (avatar.isEmpty || avatar == defaultAvatar) {
+                avatar = avatarPlaceHolder(name);
+              }
+              final userId = user.id;
+              final isItME = user.id == myId;
+              return _SingleUserInRoom(
+                key: Key(user.id + 'singleUserCard'),
+                isItME: isItME,
+                userId: userId,
+                user: user,
+                name: name,
+                avatar: avatar,
+                groupId: groupId,
+              );
+            },
+          );
+  }
+}
+
+class IntroUser extends StatelessWidget {
+  const IntroUser({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: usersList.length,
-      itemBuilder: (context, index) {
-        final user = usersList[index];
-        final name = user.name;
-        String avatar = user.avatar;
-        if (avatar.isEmpty || avatar == defaultAvatar) {
-          avatar = avatarPlaceHolder(name);
-        }
-        final userId = user.id;
-        final isItME = user.id == myId;
-        return _SingleUserInRoom(
-            key: Key(user.id + 'singleUserCard'),
-            isItME: isItME,
-            userId: userId,
-            user: user,
-            name: name,
-            avatar: avatar,
-            groupId: groupId);
-      },
-    );
+        itemCount: 1,
+        itemBuilder: (context, index) {
+          return const _SingleUserCard(
+            isItME: false,
+            name: 'Intro User',
+            avatar: Constants.defaultProfilePic,
+            groupId: 'intro',
+            id: 'intro',
+            isIntroUser: true,
+          );
+        });
   }
 }
 
@@ -88,105 +115,133 @@ class _SingleUserInRoom extends StatelessWidget {
         }
         usersController.openUserProfile(userId);
       },
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-                color: ColorName.cardBackground,
-                border: Border.all(color: ColorName.cardBorder),
-                borderRadius: const BorderRadius.all(const Radius.circular(8))),
-            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            padding: const EdgeInsets.all(8),
-            key: Key(user.id),
-            child: Stack(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: Get.width * 0.3,
-                            child: Text(
-                              isItME ? "You" : name,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                overflow: TextOverflow.ellipsis,
-                                color: isItME
-                                    ? Colors.green[200]
-                                    : ColorName.white,
-                              ),
+      child: _SingleUserCard(
+        id: user.id,
+        isItME: isItME,
+        name: name,
+        avatar: avatar,
+        groupId: groupId,
+        isIntroUser: false,
+      ),
+    );
+  }
+}
+
+class _SingleUserCard extends StatelessWidget {
+  const _SingleUserCard({
+    super.key,
+    required this.isItME,
+    required this.name,
+    required this.avatar,
+    required this.groupId,
+    required this.id,
+    required this.isIntroUser,
+  });
+  final String id;
+  final bool isItME;
+  final bool isIntroUser;
+  final String name;
+  final String avatar;
+  final String groupId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+              color: ColorName.cardBackground,
+              border: Border.all(color: ColorName.cardBorder),
+              borderRadius: const BorderRadius.all(const Radius.circular(8))),
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: const EdgeInsets.all(8),
+          key: Key(id),
+          child: Stack(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 180,
+                          ),
+                          child: Text(
+                            isItME ? "You" : name,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              overflow: TextOverflow.ellipsis,
+                              color:
+                                  isItME ? Colors.green[200] : ColorName.white,
                             ),
                           ),
-                          space5,
-                          Row(
-                            children: [
-                              Hero(
-                                tag: user.id,
-                                child: Img(
-                                  src: avatar,
-                                  alt: name,
-                                ),
+                        ),
+                        space5,
+                        Row(
+                          children: [
+                            Img(
+                              src: avatar,
+                              alt: name,
+                            ),
+                            space5,
+                            Container(
+                              width: 80,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    truncate(id, length: 10),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w400,
+                                      color: ColorName.greyText,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  space5,
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: ColorName.greyText,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  RemainingTime(
+                                    userId: id,
+                                    key: Key(id),
+                                  ),
+                                ],
                               ),
-                              space10,
-                              Container(
-                                width: Get.width - 335,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      truncate(userId, length: 10),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        color: ColorName.greyText,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    space5,
-                                    Text(
-                                      user.name,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: ColorName.greyText,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    RemainingTime(
-                                      userId: userId,
-                                      key: Key(user.id),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          )
-                        ],
-                      ),
+                            )
+                          ],
+                        )
+                      ],
                     ),
-                    Actions(userId: userId),
-                  ],
-                ),
-                Positioned(
-                    top: -5,
-                    right: 0,
-                    child: _TalkingIndicator(
-                      groupId: groupId,
-                      userId: userId,
-                      key: Key(user.id + 'talking'),
-                    )),
-              ],
-            ),
+                  ),
+                  Actions(userId: id, isIntroUser: isIntroUser),
+                ],
+              ),
+              Positioned(
+                  top: -5,
+                  right: 0,
+                  child: _TalkingIndicator(
+                    groupId: groupId,
+                    userId: id,
+                    key: Key(id + 'talking'),
+                  )),
+            ],
           ),
-          _ConfettiDetector(
-            userId: userId,
-          ),
-        ],
-      ),
+        ),
+        _ConfettiDetector(
+          userId: id,
+        ),
+      ],
     );
   }
 }
@@ -223,11 +278,11 @@ _shootLike(BuildContext context) {
   final RenderBox renderBox = context.findRenderObject() as RenderBox;
   final position = renderBox.localToGlobal(Offset.zero);
   List<Color> colors = [
-    Color.fromARGB(255, 255, 0, 0),
-    Color.fromARGB(255, 255, 0, 123),
-    Color.fromARGB(255, 232, 0, 0),
-    Color.fromARGB(255, 255, 108, 172),
-    Color.fromARGB(255, 255, 184, 233)
+    const Color.fromARGB(255, 255, 0, 0),
+    const Color.fromARGB(255, 255, 0, 123),
+    const Color.fromARGB(255, 232, 0, 0),
+    const Color.fromARGB(255, 255, 108, 172),
+    const Color.fromARGB(255, 255, 184, 233)
   ];
 
   final options = ConfettiOptions(
@@ -250,11 +305,11 @@ _shootDisLike(BuildContext context) {
   final RenderBox renderBox = context.findRenderObject() as RenderBox;
   final position = renderBox.localToGlobal(Offset.zero);
   List<Color> colors = [
-    Color.fromARGB(255, 255, 0, 0),
-    Color.fromARGB(255, 255, 0, 123),
-    Color.fromARGB(255, 232, 0, 0),
-    Color.fromARGB(255, 255, 108, 172),
-    Color.fromARGB(255, 255, 184, 233)
+    const Color.fromARGB(255, 255, 0, 0),
+    const Color.fromARGB(255, 255, 0, 123),
+    const Color.fromARGB(255, 232, 0, 0),
+    const Color.fromARGB(255, 255, 108, 172),
+    const Color.fromARGB(255, 255, 184, 233)
   ];
 
   final options = ConfettiOptions(
@@ -377,7 +432,7 @@ class _TalkingIndicator extends GetView<GroupsController> {
           : Container(
               width: 40,
               height: 40,
-              child: Pulsator(
+              child: const Pulsator(
                 style: PulseStyle(color: Colors.green),
                 duration: Duration(seconds: 2),
                 count: 2,
@@ -385,7 +440,7 @@ class _TalkingIndicator extends GetView<GroupsController> {
                 startFromScratch: false,
                 autoStart: true,
                 fit: PulseFit.contain,
-                child: const Icon(
+                child: Icon(
                   Icons.mic,
                   color: Colors.white,
                   size: 20,
@@ -403,9 +458,6 @@ class RemainingTime extends GetView<OngoingGroupCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller == null) {
-        return SizedBox();
-      }
       final timersMap = controller.allRemainingTimesMap.value;
       final roomCreator = controller.groupCallController.group.value!.creator;
       final userRemainingTime = timersMap[userId];
@@ -420,7 +472,7 @@ class RemainingTime extends GetView<OngoingGroupCallController> {
         return Text(
           '$hh:$mm:$ss left',
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w400,
             color: ColorName.greyText,
           ),
@@ -459,8 +511,8 @@ class FollowButton extends GetView<UsersController> {
             vertical: 10,
           ),
           child: isLoading
-              ? Center(
-                  child: const CircularProgressIndicator(
+              ? const Center(
+                  child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
@@ -482,8 +534,10 @@ class FollowButton extends GetView<UsersController> {
 
 class Actions extends GetView<OngoingGroupCallController> {
   final String userId;
+  final bool isIntroUser;
   const Actions({
     required this.userId,
+    required this.isIntroUser,
     Key? key,
   }) : super(key: key);
 
@@ -499,6 +553,7 @@ class Actions extends GetView<OngoingGroupCallController> {
         alignment: WrapAlignment.center,
         children: [
           SizedBox(
+            key: isIntroUser ? controller.likeDislikeKey : null,
             height: 40,
             child: Row(
               children: [
@@ -508,11 +563,12 @@ class Actions extends GetView<OngoingGroupCallController> {
             ),
           ),
           Row(
+            key: isIntroUser ? controller.cheerBooKey : null,
             children: [
               if (userId != myId) CheerBoo(cheer: false, userId: userId),
               CheerBoo(cheer: true, userId: userId)
             ],
-          ),
+          )
         ],
       ),
     );
@@ -531,9 +587,11 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
       final isCheerLoading = loadingUsers.contains("$userId-cheer");
       final isBooLoading = loadingUsers.contains("$userId-boo");
       return GFIconButton(
+        splashColor: Colors.transparent,
+        padding: const EdgeInsets.only(top: 8, left: 8),
         icon: cheer
             ? isCheerLoading
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(),
@@ -544,7 +602,7 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
                     color: Colors.green,
                   )
             : isBooLoading
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(),
@@ -591,7 +649,7 @@ class LikeDislike extends GetView<OngoingGroupCallController> {
     );
 
     return Container(
-      width: 50,
+      width: 40,
       child: Center(
         child: Obx(() {
           final timers = controller.timers.value;

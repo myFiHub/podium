@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -80,12 +78,14 @@ class _SingleUser extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-                color: ColorName.cardBackground,
-                border: Border.all(
-                    color: isItME ? Colors.green : ColorName.cardBorder),
-                borderRadius: const BorderRadius.all(const Radius.circular(8))),
-            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            padding: const EdgeInsets.all(16),
+              color: ColorName.cardBackground,
+              border: Border.all(
+                color: isItME ? Colors.green : ColorName.cardBorder,
+              ),
+              borderRadius: const BorderRadius.all(const Radius.circular(8)),
+            ),
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
+            padding: const EdgeInsets.all(10),
             key: Key(userId),
             child: Stack(
               children: [
@@ -95,22 +95,11 @@ class _SingleUser extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: Get.width * 0.5,
-                          child: Text(
-                            name,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        space10,
                         Row(
                           children: [
-                            Hero(
-                              tag: userId,
+                            SizedBox(
+                              width: 40,
+                              height: 40,
                               child: Img(
                                 src: avatar,
                                 alt: name,
@@ -120,6 +109,19 @@ class _SingleUser extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Container(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 176,
+                                  ),
+                                  child: Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
                                 Text(
                                   truncate(userId, length: 10),
                                   style: const TextStyle(
@@ -175,38 +177,39 @@ class FollowButton extends GetView<UsersController> {
       final idsImFollowing = controller.currentUserInfo.value!.following;
       final isFollowing = idsImFollowing.contains(userId);
       return Button(
-          size: small ? ButtonSize.MEDIUM : ButtonSize.LARGE,
+          size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
           onPressed: () {
             final idsImFollowing = controller.currentUserInfo.value!.following;
             final isFollowing = idsImFollowing.contains(userId);
             controller.followUnfollow(userId, !isFollowing);
           },
-          type: ButtonType.outline,
+          type: isFollowing ? ButtonType.outline : ButtonType.solid,
+          shape: ButtonShape.pills,
           blockButton: fullWidth,
-          textColor: isFollowing ? Colors.red : Colors.green,
-          borderSide: BorderSide(
+          textColor: isFollowing ? Colors.white : ColorName.cardBackground,
+          color: Colors.white,
+          /* borderSide: BorderSide(
             color: isFollowing ? Colors.red : Colors.green,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 10,
-          ),
-          // size: ButtonSize.MEDIUM,
+          ),  */
           child: isLoading
-              ? Center(
-                  child: const CircularProgressIndicator(
+              ? const Center(
+                  child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('${isFollowing ? "un" : ""}follow'),
+                    Text(
+                      '${isFollowing ? "Unfollow" : "Follow"}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w500, fontSize: 12),
+                    ),
                     if (!isFollowing)
                       const Icon(
                         Icons.add,
-                        color: Colors.green,
-                        size: 14,
+                        color: ColorName.cardBackground,
+                        size: 12,
                       ),
                   ],
                 ));

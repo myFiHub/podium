@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
@@ -109,9 +108,10 @@ class ProfileController extends GetxController {
         return;
       }
       isGettingTicketPrice.value = true;
-      // should not do these awaits together, since they are on different chains
-      await getArenaPriceAndMyShares();
-      await getFriendTechPriceAndMyShare();
+      await Future.wait<void>([
+        getFriendTechPriceAndMyShare(),
+        getArenaPriceAndMyShares(),
+      ]);
       //
     } catch (e) {
       log.e('Error getting prices: $e');
@@ -126,13 +126,13 @@ class ProfileController extends GetxController {
       await Future.delayed(Duration(seconds: delay));
     }
     final (activeWallets, myShares) = await (
-      particle_friendTech_getActiveUserWallets(
-        particleAddress: userInfo.value!.particleWalletAddress,
+      internal_friendTech_getActiveUserWallets(
+        internalWalletAddress: userInfo.value!.evmInternalWalletAddress,
         chainId: baseChainId,
       ),
-      particle_getUserShares_friendTech(
+      internal_getUserShares_friendTech(
         defaultWallet: userInfo.value!.defaultWalletAddress,
-        particleWallet: userInfo.value!.particleWalletAddress,
+        internalWallet: userInfo.value!.evmInternalWalletAddress,
         chainId: baseChainId,
       )
     ).wait;
@@ -143,7 +143,7 @@ class ProfileController extends GetxController {
     isFriendTechActive.value = activeWallets.hasActiveWallet;
     if (isFriendTechActive.value) {
       final preferedAddress = activeWallets.preferedWalletAddress;
-      final price = await particle_getFriendTechTicketPrice(
+      final price = await internal_getFriendTechTicketPrice(
         sharesSubject: preferedAddress,
         chainId: baseChainId,
       );
@@ -163,12 +163,12 @@ class ProfileController extends GetxController {
       await Future.delayed(Duration(seconds: delay));
     }
     final (price, arenaShares) = await (
-      particle_getBuyPrice(
+      getBuyPriceForArenaTicket(
         sharesSubject: userInfo.value!.defaultWalletAddress,
         shareAmount: 1,
         chainId: avalancheChainId,
       ),
-      particle_getMyShares_arena(
+      getMyShares_arena(
         sharesSubject: userInfo.value!.defaultWalletAddress,
         chainId: avalancheChainId,
       )
@@ -196,8 +196,8 @@ class ProfileController extends GetxController {
       }
       isBuyingFriendTechTicket.value = true;
       bool bought = false;
-      if (mySelectedWallet == WalletNames.particle) {
-        bought = await particle_buyFriendTechTicket(
+      if (mySelectedWallet == WalletNames.internal_EVM) {
+        bought = await internal_buyFriendTechTicket(
           sharesSubject: preferedAddress,
           chainId: baseChainId,
           targetUserId: userInfo.value!.id,
@@ -236,8 +236,8 @@ class ProfileController extends GetxController {
       }
       isBuyingArenaTicket.value = true;
       bool bought = false;
-      if (mySelectedWallet == WalletNames.particle) {
-        bought = await particle_buySharesWithReferrer(
+      if (mySelectedWallet == WalletNames.internal_EVM) {
+        bought = await internal_buySharesWithReferrer(
           sharesSubject: userInfo.value!.defaultWalletAddress,
           chainId: avalancheChainId,
           targetUserId: userInfo.value!.id,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:ably_flutter/ably_flutter.dart' as ably;
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantConfigs.dart';
 import 'package:podium/constants/constantKeys.dart';
+import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -28,8 +30,6 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-import 'package:ably_flutter/ably_flutter.dart' as ably;
-import 'package:podium/env.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
@@ -116,14 +116,14 @@ class GroupsController extends GetxController with FirebaseTags {
   void onInit() {
     super.onInit();
 
-    _timerForPresentUsers = Timer.periodic(Duration(seconds: 2), (timer) {
+    _timerForPresentUsers = Timer.periodic(const Duration(seconds: 2), (timer) {
       if (_shouldUpdatePresentUsers) {
         presentUsersInGroupsMap.value = tmpPresentUsersInGroupsMap;
         presentUsersInGroupsMap.refresh();
         _shouldUpdatePresentUsers = false;
       }
     });
-    _timerForTakingUsers = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timerForTakingUsers = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_shouldUpdateTakingUsers) {
         takingUsersInGroupsMap.value = tmpTakingUsersInGroupsMap;
         takingUsersInGroupsMap.refresh();
@@ -168,7 +168,30 @@ class GroupsController extends GetxController with FirebaseTags {
     _timerForTakingUsers.cancel();
   }
 
-  toggleArchive({required FirebaseGroup group}) async {
+  Future<void> removeMyUserFromSessionAndGroup(
+      {required FirebaseGroup group}) async {
+    // ask if user want to leave the group
+    try {
+      final canContinue = await _showModalToLeaveGroup(group: group);
+      if (canContinue == null || canContinue == false) return;
+      await removeMyUserFromGroupAndSession(groupId: group.id);
+      // remove group from groups list
+      groups.value.remove(group.id);
+      groups.refresh();
+      if (Get.isRegistered<AllGroupsController>()) {
+        final AllGroupsController allGroupsController = Get.find();
+        allGroupsController.searchedGroups.refresh();
+      }
+      if (Get.isRegistered<SearchPageController>()) {
+        final SearchPageController searchPageController = Get.find();
+        searchPageController.searchedGroups.refresh();
+      }
+    } catch (e) {
+      log.e(e);
+    }
+  }
+
+  Future<void> toggleArchive({required FirebaseGroup group}) async {
     final canContinue = await _showModalToToggleArchiveGroup(group: group);
     if (canContinue == null || canContinue == false) return;
     final archive = !group.archived;
@@ -417,6 +440,7 @@ class GroupsController extends GetxController with FirebaseTags {
     required String accessType,
     required String speakerType,
     required String subject,
+    required bool recordable,
     required bool adultContent,
     required List<TicketSellersListMember> requiredTicketsToAccess,
     required List<TicketSellersListMember> requiredTicketsToSpeak,
@@ -445,9 +469,10 @@ class GroupsController extends GetxController with FirebaseTags {
       creator: creator,
       accessType: accessType,
       speakerType: speakerType,
-      members: [myUser.id],
+      members: {myUser.id: myUser.id},
       subject: subject,
       hasAdultContent: adultContent,
+      isRecordable: recordable,
       lowercasename: name.toLowerCase(),
       tags: tags.map((e) => e).toList(),
       alarmId: alarmId,
@@ -514,13 +539,13 @@ class GroupsController extends GetxController with FirebaseTags {
         openTheRoomAfterJoining: group.scheduledFor == 0 ||
             group.scheduledFor < DateTime.now().millisecondsSinceEpoch,
       );
-      await Future.delayed(Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 1));
       groupsController.groups.refresh();
     } catch (e) {
       deleteGroup(groupId: id);
       Toast.error(
         title: "Error",
-        message: "Failed to create room",
+        message: "Failed to create the Outpost",
       );
       log.f("Error creating group: $e");
     }
@@ -593,14 +618,14 @@ class GroupsController extends GetxController with FirebaseTags {
     }
 
     final iAmGroupCreator = group.creator.id == myUser.id;
-    final members = List.from([...group.members]);
-    if (!members.contains(myUser.id)) {
-      members.add(myUser.id);
+    final members = group.members;
+    if (!members.keys.contains(myUser.id)) {
       try {
         joiningGroupId.value = groupId;
         await firebaseGroupsReference
             .child(FirebaseGroup.membersKey)
-            .set(members);
+            .child(myUser.id)
+            .set(myUser.id);
         final mySession = await getUserSessionData(
           groupId: groupId,
           userId: myUser.id,
@@ -706,14 +731,14 @@ class GroupsController extends GetxController with FirebaseTags {
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
-    if (group.members.contains(myUser.id))
+    if (group.members.keys.contains(myUser.id))
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
     if (group.accessType == null ||
-        group.accessType == FreeRoomAccessTypes.public)
+        group.accessType == FreeGroupAccessTypes.public)
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
-    if (group.accessType == FreeRoomAccessTypes.onlyLink) {
+    if (group.accessType == FreeGroupAccessTypes.onlyLink) {
       if (joiningByLink == true) {
         return GroupAccesses(
             canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
@@ -728,7 +753,7 @@ class GroupsController extends GetxController with FirebaseTags {
     }
 
     final invitedMembers = group.invitedMembers;
-    if (group.accessType == FreeRoomAccessTypes.invitees) {
+    if (group.accessType == FreeGroupAccessTypes.invitees) {
       if (invitedMembers[myUser.id] != null) {
         return GroupAccesses(
           canEnter: true,
@@ -773,7 +798,7 @@ class GroupsController extends GetxController with FirebaseTags {
   }) async {
     final isGroupAgeRestricted = group.hasAdultContent;
     final iAmOwner = group.creator.id == myUser.id;
-    final iAmMember = group.members.contains(myUser.id);
+    final iAmMember = group.members.keys.contains(myUser.id);
     final amIOver18 = myUser.isOver18;
     if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18) {
       return true;
@@ -782,8 +807,8 @@ class GroupsController extends GetxController with FirebaseTags {
     final result = await Get.dialog(
       AlertDialog(
         backgroundColor: ColorName.cardBackground,
-        title: Text("Are you over 18?"),
-        content: Text(
+        title: const Text("Are you over 18?"),
+        content: const Text(
           "This group is for adults only, are you over 18?",
         ),
         actions: [
@@ -791,7 +816,7 @@ class GroupsController extends GetxController with FirebaseTags {
             onPressed: () {
               Navigator.of(Get.overlayContext!).pop(false);
             },
-            child: Text("No"),
+            child: const Text("No"),
           ),
           TextButton(
             onPressed: () {
@@ -802,7 +827,7 @@ class GroupsController extends GetxController with FirebaseTags {
               globalController.setIsMyUserOver18(true);
               Navigator.of(Get.overlayContext!).pop(true);
             },
-            child: Text("Yes"),
+            child: const Text("Yes"),
           ),
         ],
       ),
@@ -844,7 +869,7 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
                 color: !isCurrentlyArchived ? Colors.red : Colors.green,
               ),
             ),
-            TextSpan(text: " this Room?"),
+            const TextSpan(text: " this Room?"),
           ],
         ),
       ),
@@ -853,13 +878,52 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(false);
           },
-          child: Text("No"),
+          child: const Text("No"),
         ),
         TextButton(
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(true);
           },
-          child: Text("Yes"),
+          child: const Text("Yes"),
+        ),
+      ],
+    ),
+  );
+  return result;
+}
+
+_showModalToLeaveGroup({required FirebaseGroup group}) async {
+  final result = await Get.dialog(
+    AlertDialog(
+      backgroundColor: ColorName.cardBackground,
+      title: const Text("Leave The Outpost"),
+      content: RichText(
+        text: const TextSpan(
+          text: "Are you sure you want to",
+          children: [
+            const TextSpan(
+              text: " leave",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+            const TextSpan(text: " this Outpost?"),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(false);
+          },
+          child: const Text("No"),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(Get.overlayContext!).pop(true);
+          },
+          child: const Text("Yes"),
         ),
       ],
     ),

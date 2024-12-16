@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -7,10 +6,8 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/switchParticleChain.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
@@ -115,19 +112,10 @@ class CheckticketController extends GetxController {
       fullName: 'Direct Address',
       avatar: '',
       email: '',
-      localWalletAddress: address,
-      savedParticleWalletAddress: address,
+      evm_externalWalletAddress: address,
+      evmInternalWalletAddress: address,
       following: [],
       numberOfFollowers: 0,
-      savedParticleUserInfo: FirebaseParticleAuthUserInfo(
-        wallets: [
-          ParticleAuthWallet(
-            address: address,
-            chain: 'evm_chain',
-          )
-        ],
-        uuid: '',
-      ),
     );
     return fakeUser;
   }
@@ -138,19 +126,10 @@ class CheckticketController extends GetxController {
       fullName: user.twitterName,
       avatar: user.twitterPicture,
       email: '',
-      localWalletAddress: user.defaultAddress,
-      savedParticleWalletAddress: user.defaultAddress,
+      evm_externalWalletAddress: user.mainAddress,
+      evmInternalWalletAddress: user.mainAddress,
       following: [],
       numberOfFollowers: 0,
-      savedParticleUserInfo: FirebaseParticleAuthUserInfo(
-        wallets: [
-          ParticleAuthWallet(
-            address: user.defaultAddress,
-            chain: 'evm_chain',
-          )
-        ],
-        uuid: '',
-      ),
     );
     return fakeUser;
   }
@@ -235,7 +214,7 @@ class CheckticketController extends GetxController {
       }
       final userInfo =
           usersForAccess.firstWhere((element) => element.id == user.userId);
-      userInfo.localWalletAddress = user.userAddress;
+      userInfo.evm_externalWalletAddress = user.userAddress;
       usersForAccess[i] = userInfo;
     }
     for (var i = 0; i < requiredTicketsToSpeak.length; i++) {
@@ -245,7 +224,7 @@ class CheckticketController extends GetxController {
       }
       final userInfo =
           usersForSpeak.firstWhere((element) => element.id == user.userId);
-      userInfo.localWalletAddress = user.userAddress;
+      userInfo.evm_externalWalletAddress = user.userAddress;
       usersForSpeak[i] = userInfo;
     }
     // fake users should be added after the real users have been added and modified
@@ -329,59 +308,48 @@ class CheckticketController extends GetxController {
     final ArenaCallArray = arenaTicketSellers
         .map((e) => checkIfIveBoughtTheTicketFromUser(e.userInfo))
         .toList();
-    final chainChanged =
-        await temporarilyChangeParticleNetwork(avalancheChainId);
-    if (chainChanged) {
-      final arenaResults = await Future.wait(ArenaCallArray);
-      for (var i = 0; i < arenaResults.length; i++) {
-        final seller = arenaTicketSellers[i];
-        final userId = seller.userInfo.id;
-        final access = arenaResults[i];
-        final ticketTypeToSpeakForThisSeller =
-            allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
-        final ticketTypeToAccessForThisSeller =
-            allUsersToBuyTicketFrom.value[userId]?.accessTicketType;
-        final original = allUsersToBuyTicketFrom.value[userId];
-        allUsersToBuyTicketFrom.value[userId] = TicketSeller(
-          accessTicketType: ticketTypeToAccessForThisSeller,
-          speakTicketType: ticketTypeToSpeakForThisSeller,
-          userInfo: original!.userInfo,
-          address: original.address,
-          boughtTicketToSpeak: original.boughtTicketToSpeak || access.canSpeak,
-          boughtTicketToAccess:
-              original.boughtTicketToAccess || access.canEnter,
-          checking: false,
-          buying: false,
-        );
-      }
+    final arenaResults = await Future.wait(ArenaCallArray);
+    for (var i = 0; i < arenaResults.length; i++) {
+      final seller = arenaTicketSellers[i];
+      final userId = seller.userInfo.id;
+      final access = arenaResults[i];
+      final ticketTypeToSpeakForThisSeller =
+          allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
+      final ticketTypeToAccessForThisSeller =
+          allUsersToBuyTicketFrom.value[userId]?.accessTicketType;
+      final original = allUsersToBuyTicketFrom.value[userId];
+      allUsersToBuyTicketFrom.value[userId] = TicketSeller(
+        accessTicketType: ticketTypeToAccessForThisSeller,
+        speakTicketType: ticketTypeToSpeakForThisSeller,
+        userInfo: original!.userInfo,
+        address: original.address,
+        boughtTicketToSpeak: original.boughtTicketToSpeak || access.canSpeak,
+        boughtTicketToAccess: original.boughtTicketToAccess || access.canEnter,
+        checking: false,
+        buying: false,
+      );
     }
-    await switchBackToSavedParticleNetwork();
-    final changed = await temporarilyChangeParticleNetwork(baseChainId);
-    if (changed) {
-      final FriendTechResults = await Future.wait(FriendTechCallArray);
-      for (var i = 0; i < FriendTechResults.length; i++) {
-        final seller = friendTechTicketSellers[i];
-        final userId = seller.userInfo.id;
-        final access = FriendTechResults[i];
-        final ticketTypeToSpeakForThisSeller =
-            allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
-        final ticketTypeToAccessForThisSeller =
-            allUsersToBuyTicketFrom.value[userId]?.accessTicketType;
-        final original = allUsersToBuyTicketFrom.value[userId];
-        allUsersToBuyTicketFrom.value[userId] = TicketSeller(
-          accessTicketType: ticketTypeToAccessForThisSeller,
-          speakTicketType: ticketTypeToSpeakForThisSeller,
-          userInfo: original!.userInfo,
-          address: original.address,
-          boughtTicketToSpeak: original.boughtTicketToSpeak || access.canSpeak,
-          boughtTicketToAccess:
-              original.boughtTicketToAccess || access.canEnter,
-          checking: false,
-          buying: false,
-        );
-      }
+    final FriendTechResults = await Future.wait(FriendTechCallArray);
+    for (var i = 0; i < FriendTechResults.length; i++) {
+      final seller = friendTechTicketSellers[i];
+      final userId = seller.userInfo.id;
+      final access = FriendTechResults[i];
+      final ticketTypeToSpeakForThisSeller =
+          allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
+      final ticketTypeToAccessForThisSeller =
+          allUsersToBuyTicketFrom.value[userId]?.accessTicketType;
+      final original = allUsersToBuyTicketFrom.value[userId];
+      allUsersToBuyTicketFrom.value[userId] = TicketSeller(
+        accessTicketType: ticketTypeToAccessForThisSeller,
+        speakTicketType: ticketTypeToSpeakForThisSeller,
+        userInfo: original!.userInfo,
+        address: original.address,
+        boughtTicketToSpeak: original.boughtTicketToSpeak || access.canSpeak,
+        boughtTicketToAccess: original.boughtTicketToAccess || access.canEnter,
+        checking: false,
+        buying: false,
+      );
     }
-    await switchBackToSavedParticleNetwork();
     allUsersToBuyTicketFrom.refresh();
     return checkAccess();
   }
@@ -495,8 +463,8 @@ class CheckticketController extends GetxController {
       return false;
     }
     bool bought = false;
-    final activeWallets = await particle_friendTech_getActiveUserWallets(
-      particleAddress: ticketSeller.userInfo.particleWalletAddress,
+    final activeWallets = await internal_friendTech_getActiveUserWallets(
+      internalWalletAddress: ticketSeller.userInfo.evmInternalWalletAddress,
       externalWalletAddress: ticketSeller.userInfo.defaultWalletAddress,
       chainId: baseChainId,
     );
@@ -510,8 +478,8 @@ class CheckticketController extends GetxController {
       return false;
     }
     final preferedWalletAddress = activeWallets.preferedWalletAddress;
-    if (selectedWallet == WalletNames.particle) {
-      bought = await particle_buyFriendTechTicket(
+    if (selectedWallet == WalletNames.internal_EVM) {
+      bought = await internal_buyFriendTechTicket(
         sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
         chainId: baseChainId,
@@ -554,10 +522,10 @@ class CheckticketController extends GetxController {
       return false;
     }
     bool bought = false;
-    if (selectedWallet == WalletNames.particle) {
-      bought = await particle_buySharesWithReferrer(
+    if (selectedWallet == WalletNames.internal_EVM) {
+      bought = await internal_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
-        chainId: externalWalletChianId,
+        chainId: avalancheChainId,
         targetUserId: ticketSeller.userInfo.id,
       );
     } else {
@@ -613,18 +581,18 @@ class CheckticketController extends GetxController {
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
       if (group.value!.accessType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
-        final myShares = await particle_getMyShares_arena(
+        final myShares = await getMyShares_arena(
           sharesSubject: user.defaultWalletAddress,
-          chainId: particleChianId,
+          chainId: avalancheChainId,
         );
         if (myShares != null && myShares > BigInt.zero) {
           access.canEnter = true;
         }
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        final myShares = await particle_getUserShares_friendTech(
+        final myShares = await internal_getUserShares_friendTech(
           defaultWallet: user.defaultWalletAddress,
-          particleWallet: user.particleWalletAddress,
+          internalWallet: user.evmInternalWalletAddress,
           chainId: baseChainId,
         );
         if (myShares > BigInt.zero) {
@@ -638,18 +606,18 @@ class CheckticketController extends GetxController {
     if (allUsersToBuyTicketFrom.value[userId]?.speakTicketType != null) {
       if (group.value!.speakerType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
-        final myShares = await particle_getMyShares_arena(
+        final myShares = await getMyShares_arena(
           sharesSubject: user.defaultWalletAddress,
-          chainId: particleChianId,
+          chainId: avalancheChainId,
         );
         if (myShares != null && myShares > BigInt.zero) {
           access.canSpeak = true;
         }
       } else if (group.value!.speakerType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        final myShares = await particle_getUserShares_friendTech(
+        final myShares = await internal_getUserShares_friendTech(
           defaultWallet: user.defaultWalletAddress,
-          particleWallet: user.particleWalletAddress,
+          internalWallet: user.evmInternalWalletAddress,
           chainId: baseChainId,
         );
         if (myShares > BigInt.zero) {
@@ -683,17 +651,16 @@ canEnterWithoutATicket(FirebaseGroup group) {
   final g = group;
   final amIInvited = g.invitedMembers[myId] != null;
   final link = globalController.deepLinkRoute;
-  final cameHereByLink = g.accessType == FreeRoomAccessTypes.onlyLink &&
-      link != null &&
+  final cameHereByLink = g.accessType == FreeGroupAccessTypes.onlyLink &&
       link.isNotEmpty &&
       link.contains(g.id);
-  if (g.accessType == FreeRoomAccessTypes.onlyLink) {
+  if (g.accessType == FreeGroupAccessTypes.onlyLink) {
     return cameHereByLink;
   }
-  if (g.accessType == FreeRoomAccessTypes.invitees) {
+  if (g.accessType == FreeGroupAccessTypes.invitees) {
     return amIInvited;
   }
-  if (g.accessType == FreeRoomAccessTypes.public) {
+  if (g.accessType == FreeGroupAccessTypes.public) {
     return true;
   }
   return false;

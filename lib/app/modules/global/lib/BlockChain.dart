@@ -1,13 +1,23 @@
 import 'package:get/get.dart';
-import 'package:particle_base/model/chain_info.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:http/http.dart';
 
-final movementChain = ReownAppKitModalNetworkInfo(
+final movementProtoTestNetRpcUrl =
+    "https://aptos.testnet.porto.movementlabs.xyz/v1";
+final movementMainNetChain = ReownAppKitModalNetworkInfo(
+  name: 'Movement',
+  chainId: '126',
+  chainIcon:
+      "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg",
+  currency: 'MOVE',
+  rpcUrl: 'https://mainnet.movementnetwork.xyz/v1',
+  explorerUrl: 'https://explorer.movementnetwork.xyz/?network=mainnet',
+);
+final movementDevnetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement Testnet',
   chainId: '30732',
   chainIcon:
@@ -16,20 +26,12 @@ final movementChain = ReownAppKitModalNetworkInfo(
   rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
   explorerUrl: 'https://explorer.devnet.imola.movementlabs.xyz',
 );
-final movementChainOnParticle = ChainInfo(
-  int.parse(movementChain.chainId),
-  'Movement',
-  'evm',
-  movementChain.chainIcon!,
-  movementChain.name,
-  movementChain.chainId == '30732' ? 'Testnet' : 'Mainnet',
-  'https://docs.movementnetwork.xyz',
-  ChainInfoNativeCurrency('Movement', 'MOVE', 18),
-  movementChain.rpcUrl,
-  '',
-  movementChain.explorerUrl,
-  [ChainInfoFeature(Env.chainNamespace.toUpperCase())],
-);
+final movementChain =
+//
+// movementMainNetChain;
+    movementDevnetChain;
+
+final aptosRpcUrl = movementProtoTestNetRpcUrl;
 
 class BlockChainUtils {
   static Future<ReownAppKitModal> initializewm3Service(
@@ -170,7 +172,10 @@ class BlockChainUtils {
         });
       }
     } catch (e) {
-      log.f('Error initializing W3MService', error: e);
+      log.f(
+        'Error initializing W3MService',
+        error: e,
+      );
     }
     return _w3mService;
   }
@@ -217,54 +222,44 @@ class BlockChainUtils {
   }
 
   static _startListeningToCheerBoEvents() {
-    ////
+    //
     // final cheerEventToListenTo = _getContractEventListener(
-    //     contract: cheerBooContract, eventName: 'Cheer');
+    //   contract: getDeployedContract(
+    //     contract: Contracts.cheerboo,
+    //     chainId: movementChain.chainId,
+    //   )!,
+    //   eventName: 'Cheer',
+    // );
     // cheerEventToListenTo.take(1).listen((event) {
     //   log.i('^^^^^^^^^^^^^^^^^^^^Cheer event: $event^^^^^^^^^^^^^^^^^^^');
     // });
-    ////
-    // final booEventToListenTo =
-    //     _getContractEventListener(contract: cheerBooContract, eventName: 'Boo');
+    // //
+    // final booEventToListenTo = _getContractEventListener(
+    //   contract: getDeployedContract(
+    //     contract: Contracts.cheerboo,
+    //     chainId: movementChain.chainId,
+    //   )!,
+    //   eventName: 'Boo',
+    // );
     // booEventToListenTo.take(1).listen((event) {
     //   log.i('^^^^^^^^^^^^^^^Boo event: $event^^^^^^^^^^^^^^^^^^^^^');
     // });
-    ////
+    //
   }
 }
 
-Stream<FilterEvent> _getContractEventListener({
+Stream<FilterEvent> _getContractEventStream({
   required DeployedContract contract,
   required String eventName,
-  chainId = Env.initialExternalWalletChainId,
 }) {
-  final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace,
-      chainId)!; // final GlobalController globalController = Get.find<GlobalController>();
-  // final web3ModalService = globalController.web3ModalService;
-  // final web3Client = web3ModalService.reconnectRelay();
-  // final web3Client = Web3Client(chain.rpcUrl, Client());
-  final client = Web3Client(
-    chain.rpcUrl,
-    Client(),
-    // socketConnector: () {
-    //   return IOWebSocketChannel.connect(chain.rpcUrl.replaceAll('https', 'ws'))
-    //       .cast<String>();
-    // },
+  final event = contract.event(eventName);
+  final filter = FilterOptions.events(
+    contract: contract,
+    event: event,
+    fromBlock: const BlockNum.current(),
+    toBlock: const BlockNum.current(),
   );
-
-  // final _event = contract.event(eventName);
-
-  final options = FilterOptions(
-    address: contract.address,
-    fromBlock: BlockNum.genesis(),
-    toBlock: BlockNum.current(),
-    topics: [
-      // [bytesToHex(event.signature, padToEvenLength: true, include0x: true)],
-    ],
-  );
-  // final options = FilterOptions.events(
-  //   contract: contract,
-  //   event: event,
-  // );
-  return client.events(options);
+  final movementClient = evmClientByChainId(movementChain.chainId);
+  Stream<FilterEvent> eventStream = movementClient.events(filter);
+  return eventStream;
 }

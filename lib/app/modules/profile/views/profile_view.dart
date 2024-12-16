@@ -4,9 +4,11 @@ import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
+
 import '../controllers/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
@@ -22,16 +24,16 @@ class ProfileView extends GetView<ProfileController> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              UserInfo(),
+              const UserInfo(),
               FollowButton(
                 userId: controller.userInfo.value!.id,
               ),
               space10,
-              _BuyArenaTicketButton(),
+              const _BuyArenaTicketButton(),
               space10,
-              _BuyFriendTechTicket(),
+              const _BuyFriendTechTicket(),
               space10,
-              _Statistics(),
+              const _Statistics(),
             ],
           ),
         ),
@@ -67,9 +69,9 @@ class _Statistics extends GetWidget<ProfileController> {
               children: [
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       'Cheers received',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -85,9 +87,9 @@ class _Statistics extends GetWidget<ProfileController> {
                 ),
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       'Boos received',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -109,9 +111,9 @@ class _Statistics extends GetWidget<ProfileController> {
               children: [
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       'Cheers sent',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -127,9 +129,9 @@ class _Statistics extends GetWidget<ProfileController> {
                 ),
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       'Boos sent',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -153,7 +155,7 @@ class _Statistics extends GetWidget<ProfileController> {
 }
 
 class _BuyArenaTicketButton extends GetWidget<ProfileController> {
-  const _BuyArenaTicketButton({super.key});
+  const _BuyArenaTicketButton();
 
   @override
   Widget build(BuildContext context) {
@@ -182,17 +184,17 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
             Row(
               children: [
                 Text(
-                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${particleChainInfoByChainId(avalancheChainId)!.nativeCurrency.symbol}',
+                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${chainInfoByChainId(avalancheChainId).currency}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 if (isGettingArenaPrice)
-                  SizedBox(
+                  const SizedBox(
                     width: 10,
                     height: 10,
-                    child: const CircularProgressIndicator(
+                    child: CircularProgressIndicator(
                       strokeWidth: 2,
                     ),
                   )
@@ -204,18 +206,18 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
               RichText(
                 text: TextSpan(
                   text: 'owned ',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.yellow,
                     fontSize: 14,
                   ),
                   children: [
                     TextSpan(
                       text: '$numberOfBoughtTicketsByMe',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                       ),
                     ),
-                    TextSpan(
+                    const TextSpan(
                       text: ' Arena tickets',
                       style: TextStyle(
                         color: Colors.yellow,
@@ -228,7 +230,9 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
         ),
         blockButton: true,
         icon: Img(
-            src: particleChainInfoByChainId(avalancheChainId)!.icon, size: 20),
+            src: chainInfoByChainId(avalancheChainId).chainIcon ??
+                Assets.images.movementLogo.path,
+            size: 20),
       );
     });
   }
@@ -276,17 +280,17 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
                 : Row(
                     children: [
                       Text(
-                        'Buy Friendtech share ${friendTechPrice.toString()} ${particleChainInfoByChainId(baseChainId)!.nativeCurrency.symbol}',
+                        'Buy Friendtech share ${friendTechPrice.toString()} ${chainInfoByChainId(baseChainId).currency}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       if (isGettingFriendTechPrice)
-                        SizedBox(
+                        const SizedBox(
                           width: 10,
                           height: 10,
-                          child: const CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                             strokeWidth: 2,
                           ),
                         )
@@ -298,18 +302,18 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
               RichText(
                 text: TextSpan(
                   text: 'owned ',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.yellow,
                     fontSize: 14,
                   ),
                   children: [
                     TextSpan(
                       text: '$numberOfBoughtTicketsByMe',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                       ),
                     ),
-                    TextSpan(
+                    const TextSpan(
                       text: ' Friendtech share',
                       style: TextStyle(
                         color: Colors.yellow,
@@ -322,7 +326,8 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
         ),
         blockButton: true,
         icon: Img(
-          src: particleChainInfoByChainId(baseChainId)!.icon,
+          src: chainInfoByChainId(baseChainId).chainIcon ??
+              Assets.images.movementLogo.path,
           size: 20,
         ),
       );
@@ -348,13 +353,10 @@ class UserInfo extends GetWidget<ProfileController> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Hero(
-              tag: user.id,
-              child: Img(
-                src: avatar,
-                alt: user.fullName,
-                size: 100,
-              ),
+            Img(
+              src: avatar,
+              alt: user.fullName,
+              size: 100,
             ),
             space10,
             space10,

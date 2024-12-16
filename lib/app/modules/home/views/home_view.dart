@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -20,17 +19,34 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          space5,
-          Text(
-            "My Rooms",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+          space16,
+          const Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: const Text(
+              "Home",
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
+          space14,
+          const Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: const Text(
+              "My Outposts",
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          space10,
           Expanded(
             child: Container(
+              width: Get.width,
               child: GetBuilder<GlobalController>(
                   id: GlobalUpdateIds.showArchivedGroups,
                   builder: (globalController) {
@@ -42,7 +58,7 @@ class HomeView extends GetView<HomeController> {
                         final isLoading = allGroups.isEmpty;
                         List<FirebaseGroup> groups = allGroups.values
                             .where(
-                              (group) => group.members.contains(myId),
+                              (group) => group.members.keys.contains(myId),
                             )
                             .toList();
 
@@ -52,64 +68,56 @@ class HomeView extends GetView<HomeController> {
                               .toList();
                         }
                         if (isLoading) {
-                          return Center(
+                          return const Center(
                             child: CircularProgressIndicator(),
                           );
                         }
                         if (groups.isEmpty) {
-                          return Container(
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Hero(
-                                    tag: 'logo',
-                                    child: Container(
-                                      height: 100,
-                                      child: Assets.images.logo.image(),
-                                    ),
-                                  ),
-                                  Text(
-                                    'Welcome to Podium',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    myUser.fullName,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    'try joining some rooms',
-                                  ),
-                                  space10,
-                                  Button(
-                                      text: 'See All Rooms',
-                                      type: ButtonType.gradient,
-                                      blockButton: true,
-                                      onPressed: () {
-                                        Navigate.to(
-                                          type: NavigationTypes.offAllNamed,
-                                          route: Routes.ALL_GROUPS,
-                                        );
-                                      })
-                                ],
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                height: 100,
+                                child: Assets.images.logo.image(),
                               ),
-                            ),
+                              const Text(
+                                'Welcome to Podium',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                myUser.fullName,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const Text(
+                                'try joining an Outpost',
+                              ),
+                              space10,
+                              Button(
+                                  text: 'See All Outposts',
+                                  type: ButtonType.gradient,
+                                  blockButton: true,
+                                  onPressed: () async {
+                                    Navigate.to(
+                                      type: NavigationTypes.offAllNamed,
+                                      route: Routes.ALL_GROUPS,
+                                    );
+                                  })
+                            ],
                           );
                         }
-
                         return GroupList(groupsList: groups);
                       },
                     );
                   }),
             ),
-          )
+          ),
         ],
       ),
     );

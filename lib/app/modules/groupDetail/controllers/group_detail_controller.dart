@@ -1,15 +1,20 @@
 import 'dart:convert';
+
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/customLibs/omniDatePicker/src/enums/omni_datetime_picker_type.dart';
+import 'package:podium/customLibs/omniDatePicker/src/omni_datetime_picker_dialogs.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -43,6 +48,7 @@ class GroupDetailController extends GetxController {
   final group = Rxn<FirebaseGroup>();
   final groupAccesses = Rxn<GroupAccesses>();
   final membersList = Rx<List<UserInfoModel>>([]);
+  final reminderTime = Rx<DateTime?>(null);
   final isGettingGroupInfo = false.obs;
   final jointButtonContentProps =
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
@@ -96,7 +102,8 @@ class GroupDetailController extends GetxController {
         scheduleChecks();
       }
     });
-    globalController.deepLinkRoute = null;
+    globalController.deepLinkRoute.value = '';
+
     if (shouldOpenJitsiAfterJoining) {
       startTheCall(accesses: groupAccesses.value!);
     }
@@ -114,6 +121,19 @@ class GroupDetailController extends GetxController {
 
   void forceUpdate() {
     forceUpdateIndicator.value = !forceUpdateIndicator.value;
+  }
+
+  reselectScheduleTime() async {
+    DateTime? dateTime = await showOmniDateTimePicker(
+      context: Get.context!,
+      is24HourMode: true,
+      theme: ThemeData.dark(),
+      type: OmniDateTimePickerType.dateAndTime,
+      firstDate: DateTime.now().add(const Duration(minutes: 5)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      minutesInterval: 5,
+    );
+    log.i(dateTime);
   }
 
   onGroupUpdate(DatabaseEvent data) {
@@ -135,7 +155,7 @@ class GroupDetailController extends GetxController {
     }
   }
 
-  scheduleChecks() {
+  scheduleChecks() async {
     final amICreator = group.value!.creator.id == myId;
     final isScheduled = group.value!.scheduledFor != 0;
     final passedScheduledTime =
@@ -153,9 +173,13 @@ class GroupDetailController extends GetxController {
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }
       } else {
+        final reminderT = await getReminderTime(group.value!.alarmId);
+        if (reminderT != null) {
+          reminderTime.value = reminderT;
+        }
         if (amICreator) {
           jointButtonContentProps.value =
-              JoinButtonProps(enabled: true, text: 'Enter room');
+              JoinButtonProps(enabled: true, text: 'Enter the Outpost');
         } else {
           final remaining = remainintTimeUntilMilSecondsFormated(
               time: group.value!.scheduledFor);
@@ -213,7 +237,7 @@ class GroupDetailController extends GetxController {
   }
 
   getMembers(FirebaseGroup group) async {
-    final memberIds = group.members;
+    final memberIds = group.members.keys.toList();
     isGettingMembers.value = true;
     final list = await getUsersByIds(memberIds);
     membersList.value = list;
@@ -241,7 +265,7 @@ class GroupDetailController extends GetxController {
         final list = users.values.toList();
         // remove the users that are already in the group
         final filteredList = list
-            .where((element) => !group.value!.members.contains(element.id))
+            .where((element) => !group.value!.members.keys.contains(element.id))
             .toList();
         // // remove the users that are already invited
         // final filteredList2 = filteredList
@@ -267,12 +291,12 @@ class GroupDetailController extends GetxController {
       );
       await fetchInvitedMembers(userId: userId);
       final myUser = Get.find<GlobalController>().currentUserInfo.value;
-      final notifId = Uuid().v4();
+      final notifId = const Uuid().v4();
       final subject = group.value!.subject;
       final invitationNotification = FirebaseNotificationModel(
         id: notifId,
         title:
-            "${myUser!.fullName} invited you to ${inviteToSpeak ? 'speak' : 'listen'} in room: ${group.value!.name}",
+            "${myUser!.fullName} invited you to ${inviteToSpeak ? 'speak' : 'listen'} in Outpost: ${group.value!.name}",
         body:
             "${subject != null && subject.isNotEmpty ? "talking about: " + subject : 'No subject'}",
         type: NotificationTypes.inviteToJoinGroup.toString(),

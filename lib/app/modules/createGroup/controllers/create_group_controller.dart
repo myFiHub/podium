@@ -1,36 +1,39 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
+
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:particle_auth_core/evm.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_particle_user.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:uuid/uuid.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
@@ -54,10 +57,21 @@ class SearchedUser {
 
 class CreateGroupController extends GetxController {
   final groupsController = Get.find<GroupsController>();
+  final storage = GetStorage();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
-  final roomAccessType = FreeRoomAccessTypes.public.obs;
-  final roomSpeakerType = FreeRoomSpeakerTypes.everyone.obs;
+  final newGroupIsRecorable = false.obs;
+  final groupAccessType = FreeGroupAccessTypes.public.obs;
+  final groupSpeakerType = FreeGroupSpeakerTypes.everyone.obs;
+
+  final intro_selectImageKey = GlobalKey();
+  final intro_groupNameKey = GlobalKey();
+  final intro_tagsKey = GlobalKey();
+  final intro_groupSubjectKey = GlobalKey();
+  final intro_groupAccessTypeKey = GlobalKey();
+  final intro_groupSpeakerTypeKey = GlobalKey();
+  BuildContext? contextForIntro;
+  late TutorialCoachMark tutorialCoachMark;
 
   final selectedUsersToBuyTicketFrom_ToAccessRoom =
       <TicketSellersListMember>[].obs;
@@ -89,11 +103,176 @@ class CreateGroupController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    final alreadyViewed = storage.read(IntroStorageKeys.viewedCreateGroup);
+    if (
+        //
+        // true
+        alreadyViewed == null
+        //
+        ) {
+      // wait for the context to be ready
+      Future.delayed(const Duration(seconds: 0)).then((v) {
+        tutorialCoachMark = TutorialCoachMark(
+          targets: _createTargets(),
+          paddingFocus: 5,
+          opacityShadow: 0.5,
+          skipWidget: Button(
+            size: ButtonSize.SMALL,
+            type: ButtonType.outline,
+            color: Colors.red,
+            onPressed: () {
+              saveIntroAsDone(true);
+            },
+            child: const Text("Finish"),
+          ),
+          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          onFinish: () {
+            saveIntroAsDone(true);
+          },
+          onClickTarget: (target) {
+            print('onClickTarget: $target');
+          },
+          onClickTargetWithTapPosition: (target, tapDetails) {
+            print("target: $target");
+            print(
+                "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+          },
+          onClickOverlay: (target) {
+            print('onClickOverlay: $target');
+          },
+          onSkip: () {
+            saveIntroAsDone(true);
+            return true;
+          },
+        );
+        try {
+          tutorialCoachMark.show(context: contextForIntro!);
+        } catch (e) {
+          log.e(e);
+        }
+      });
+    }
+  }
+
+  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+    targets.add(
+      _createStep(
+        targetId: intro_selectImageKey,
+        text:
+            "you can select an image for your Outpost, it is optional but recommended",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: intro_groupSubjectKey,
+        text:
+            "enter the main subject of your outpost, to help people understand what it is about",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: intro_tagsKey,
+        text: "you can add tags to your outpost, to help people find it",
+      ),
+    );
+
+    targets.add(
+      _createStep(
+        targetId: intro_groupAccessTypeKey,
+        text: "you can select the access type of your outpost",
+      ),
+    );
+
+    targets.add(
+      _createStep(
+        targetId: intro_groupSpeakerTypeKey,
+        text: "you can select the speaker type of your outpost",
+        hasNext: false,
+      ),
+    );
+    return targets;
   }
 
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _createStep({
+    required GlobalKey targetId,
+    required String text,
+    bool hasNext = true,
+  }) {
+    return TargetFocus(
+      identify: targetId.toString(),
+      keyTarget: targetId,
+      alignSkip: Alignment.bottomRight,
+      paddingFocus: 0,
+      focusAnimationDuration: const Duration(milliseconds: 300),
+      unFocusAnimationDuration: const Duration(milliseconds: 100),
+      shape: ShapeLightFocus.RRect,
+      color: Colors.black,
+      enableOverlayTab: true,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+                if (hasNext)
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      tutorialCoachMark.next();
+                    },
+                    child: const Text(
+                      "Next",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                else
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      introFinished(true);
+                    },
+                    child: const Text(
+                      "Finish",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void saveIntroAsDone(bool? setAsFinished) {
+    if (setAsFinished == true) {
+      storage.write(IntroStorageKeys.viewedCreateGroup, true);
+    }
+  }
+
+  void introFinished(bool? setAsFinished) {
+    saveIntroAsDone(setAsFinished);
+    try {
+      tutorialCoachMark.finish();
+    } catch (e) {}
   }
 
   pickImage() async {
@@ -141,11 +320,11 @@ class CreateGroupController extends GetxController {
   }
 
   setRoomPrivacyType(String value) {
-    roomAccessType.value = value;
+    groupAccessType.value = value;
   }
 
   setRoomSpeakingType(String value) {
-    roomSpeakerType.value = value;
+    groupSpeakerType.value = value;
   }
 
   setRoomSubject(String value) {
@@ -158,8 +337,8 @@ class CreateGroupController extends GetxController {
       is24HourMode: true,
       theme: ThemeData.dark(),
       type: OmniDateTimePickerType.dateAndTime,
-      firstDate: DateTime.now().add(Duration(minutes: 5)),
-      lastDate: DateTime.now().add(Duration(days: 365)),
+      firstDate: DateTime.now().add(const Duration(minutes: 5)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
       minutesInterval: 5,
     );
     if (dateTime != null) {
@@ -169,37 +348,39 @@ class CreateGroupController extends GetxController {
   }
 
   get shouldSelectTicketHolersForSpeaking {
-    return (roomSpeakerType.value ==
+    return (groupSpeakerType.value ==
                 BuyableTicketTypes.onlyFriendTechTicketHolders ||
-            roomSpeakerType.value ==
+            groupSpeakerType.value ==
                 BuyableTicketTypes.onlyArenaTicketHolders ||
-            roomSpeakerType.value ==
+            groupSpeakerType.value ==
                 BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyticketFrom_ToSpeak.isEmpty &&
         addressesToAddForSpeaking.isEmpty;
   }
 
   get shouldSelectTicketHolersForAccess {
-    return ((roomAccessType.value ==
+    return ((groupAccessType.value ==
                 BuyableTicketTypes.onlyFriendTechTicketHolders) ||
-            roomAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
-            roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders) &&
+            groupAccessType.value ==
+                BuyableTicketTypes.onlyArenaTicketHolders ||
+            groupAccessType.value ==
+                BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyTicketFrom_ToAccessRoom.isEmpty &&
         addressesToAddForEntering.isEmpty;
   }
 
   get shouldBuyTicketToSpeak {
-    return roomSpeakerType.value ==
+    return groupSpeakerType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders ||
-        roomSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
-        roomSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
+        groupSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        groupSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   get shouldBuyTicketToAccess {
-    return roomAccessType.value ==
+    return groupAccessType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders ||
-        roomAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
-        roomAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
+        groupAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        groupAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   toggleAddressForSelectedList({
@@ -210,8 +391,8 @@ class CreateGroupController extends GetxController {
         ? addressesToAddForSpeaking
         : addressesToAddForEntering;
     final ticketType = ticketPermissionType == TicketPermissionType.speak
-        ? roomSpeakerType.value
-        : roomAccessType.value;
+        ? groupSpeakerType.value
+        : groupAccessType.value;
     if (list.contains(address)) {
       list.remove(address);
     } else {
@@ -221,8 +402,8 @@ class CreateGroupController extends GetxController {
       final isActive =
           ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
               ? true
-              : (await particle_friendTech_getActiveUserWallets(
-                  particleAddress: address,
+              : (await internal_friendTech_getActiveUserWallets(
+                  internalWalletAddress: address,
                   chainId: baseChainId,
                 ))
                   .hasActiveWallet;
@@ -260,21 +441,12 @@ class CreateGroupController extends GetxController {
           fullName: user.twitterName,
           email: '',
           avatar: user.twitterPicture,
-          localWalletAddress: user.defaultAddress,
+          evm_externalWalletAddress: user.mainAddress,
           following: [],
-          numberOfFollowers: 0,
-          savedParticleWalletAddress: user.defaultAddress,
-          savedParticleUserInfo: FirebaseParticleAuthUserInfo(
-            wallets: [
-              ParticleAuthWallet(
-                address: user.defaultAddress,
-                chain: 'evm_chain',
-              )
-            ],
-            uuid: '',
-          ),
+          numberOfFollowers: user.followerCount,
+          evmInternalWalletAddress: user.mainAddress,
         ),
-        activeAddress: user.address,
+        activeAddress: user.mainAddress,
       ));
     }
   }
@@ -287,8 +459,8 @@ class CreateGroupController extends GetxController {
         ? selectedUsersToBuyticketFrom_ToSpeak
         : selectedUsersToBuyTicketFrom_ToAccessRoom;
     final ticketType = ticketPermissiontype == TicketPermissionType.speak
-        ? roomSpeakerType.value
-        : roomAccessType.value;
+        ? groupSpeakerType.value
+        : groupAccessType.value;
     if (user.defaultWalletAddress.isEmpty) {
       Toast.error(message: 'User has no wallet address');
       return;
@@ -316,12 +488,12 @@ class CreateGroupController extends GetxController {
 
   bool _shouldCheckIfUserIsActive(String ticketPermissionType) {
     if (ticketPermissionType == TicketPermissionType.access &&
-        roomAccessType.value ==
+        groupAccessType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders) {
       return true;
     }
     if (ticketPermissionType == TicketPermissionType.speak &&
-        roomSpeakerType.value ==
+        groupSpeakerType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders) {
       return true;
     }
@@ -337,8 +509,8 @@ class CreateGroupController extends GetxController {
     }
     loadingUserIds.add(user.id);
     try {
-      final activeWallets = await particle_friendTech_getActiveUserWallets(
-        particleAddress: user.particleWalletAddress,
+      final activeWallets = await internal_friendTech_getActiveUserWallets(
+        internalWalletAddress: user.evmInternalWalletAddress,
         externalWalletAddress: user.defaultWalletAddress,
         chainId: baseChainId,
       );
@@ -362,13 +534,13 @@ class CreateGroupController extends GetxController {
           if (selectedWallet == null) {
             return null;
           }
-          if (selectedWallet == WalletNames.particle) {
-            final bought = await particle_activate_friendtechWallet(
+          if (selectedWallet == WalletNames.internal_EVM) {
+            final bought = await internal_activate_friendtechWallet(
               chainId: baseChainId,
             );
             if (bought) {
               Toast.success(message: 'Account activated');
-              return await Evm.getAddress();
+              return await web3AuthWalletAddress(); //await Evm.getAddress();
             } else {
               return null;
             }
@@ -412,7 +584,7 @@ class CreateGroupController extends GetxController {
     log.d(ticketType);
     _deb.debounce(() async {
       try {
-        final isAddress = checkIfValueIsDirectAddress(value);
+        checkIfValueIsDirectAddress(value);
         final (users, arenaUser) = await (
           searchForUserByName(value),
           ticketType == BuyableTicketTypes.onlyArenaTicketHolders
@@ -487,9 +659,9 @@ class CreateGroupController extends GetxController {
       subject = defaultSubject;
     }
     isCreatingNewGroup.value = true;
-    final accessType = roomAccessType.value;
-    final speakerType = roomSpeakerType.value;
-    final id = Uuid().v4();
+    final accessType = groupAccessType.value;
+    final speakerType = groupSpeakerType.value;
+    final id = const Uuid().v4();
     String imageUrl = "";
     if (selectedFile != null) {
       imageUrl = await uploadFile(groupId: id);
@@ -505,6 +677,7 @@ class CreateGroupController extends GetxController {
         subject: subject,
         tags: tags.value,
         adultContent: newGroupHasAdultContent.value,
+        recordable: newGroupIsRecorable.value,
         requiredTicketsToAccess:
             selectedUsersToBuyTicketFrom_ToAccessRoom.value,
         requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
@@ -545,7 +718,7 @@ Future<bool?> showActivatePopup() async {
             if (externalWalletAddress == null)
               const TextSpan(
                 text:
-                    '\n(your external wallet is disconnected\n we checked against your particle wallet address)',
+                    '\n(your external wallet is disconnected\n we checked against your Podium wallet address)',
                 style: const TextStyle(color: Colors.red),
               ),
           ],
@@ -641,8 +814,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                 final isInputBusy = controller.showLoadingOnSearchInput.value;
                 final ticketType =
                     buyTicketToGetPermisionFor == TicketPermissionType.speak
-                        ? controller.roomSpeakerType.value
-                        : controller.roomAccessType.value;
+                        ? controller.groupSpeakerType.value
+                        : controller.groupAccessType.value;
                 bool isAddress =
                     controller.checkIfValueIsDirectAddress(searchValue);
                 try {} catch (e) {}
@@ -835,7 +1008,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                             return Column(
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.only(
+                                  padding: const EdgeInsets.only(
                                       left: 12, top: 6, bottom: 6),
                                   child: Row(
                                     mainAxisAlignment:
@@ -860,7 +1033,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           ),
                                           Text(
                                             "Followers: ${numberOfFollowers}",
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 11,
                                             ),
                                           ),
@@ -972,10 +1145,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                   children: [
                                     if (element.user != null &&
                                         loadingIds.contains(element.user!.id))
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 18.0),
-                                        child: const GFLoader(),
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 18.0),
+                                        child: GFLoader(),
                                       )
                                     else if (element.user != null)
                                       GFCheckbox(
@@ -995,10 +1167,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                     else if ((element.address != null &&
                                         loadingAddresses
                                             .contains(element.address)))
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 18.0),
-                                        child: const GFLoader(),
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 18.0),
+                                        child: GFLoader(),
                                       )
                                     else if (element.address != null)
                                       GFCheckbox(
@@ -1085,7 +1256,7 @@ class BuyableTicketTypes {
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }
 
-class FreeRoomAccessTypes {
+class FreeGroupAccessTypes {
   static const public = 'public';
   static const onlyLink = 'onlyLink';
   static const invitees = 'invitees';
@@ -1102,7 +1273,7 @@ class TicketTypes {
   static const friendTech = 'friendTech';
 }
 
-class FreeRoomSpeakerTypes {
+class FreeGroupSpeakerTypes {
   static const everyone = 'everyone';
   static const invitees = 'invitees';
 }

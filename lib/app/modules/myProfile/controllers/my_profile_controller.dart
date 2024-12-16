@@ -1,15 +1,25 @@
+import 'dart:ui';
+
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:particle_auth_core/evm.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
+import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
+import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/storage.dart';
+import 'package:podium/widgets/button/button.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Payments {
@@ -26,16 +36,51 @@ class Payments {
       required this.income});
 }
 
+class Balances {
+  String Base = '0.0';
+  String Avalanche = '0.0';
+  String Movement = '0.0';
+  String movementAptos = '0.0';
+
+  Balances({
+    required this.Base,
+    required this.Avalanche,
+    required this.Movement,
+    required this.movementAptos,
+  });
+}
+
 class MyProfileController extends GetxController {
+  BuildContext? contextForIntro;
+  late TutorialCoachMark tutorialCoachMark;
+  final GlobalKey referalSystemKey = GlobalKey();
+  final GlobalKey internalWalletKey = GlobalKey();
+  final GlobalKey walletConnectKey = GlobalKey();
+  final GlobalKey statisticsKey = GlobalKey();
+  final ScrollController scrollController = ScrollController();
+
+  final storage = GetStorage();
   final globalController = Get.find<GlobalController>();
-  final isParticleActivatedOnFriendTech = false.obs;
+  final isInternalWalletActivatedOnFriendTech = false.obs;
   final isExternalWalletActivatedOnFriendTech = false.obs;
-  final loadingParticleActivation = false.obs;
+  final loadingInternalWalletActivation = false.obs;
   final loadingExternalWalletActivation = false.obs;
   final isGettingPayments = false.obs;
-  final payments = Rx(Payments(
-    income: {},
-  ));
+  final isGettingBalances = false.obs;
+  final balances = Rx(
+    Balances(
+      Base: '0.0',
+      Avalanche: '0.0',
+      Movement: '0.0',
+      movementAptos: '0.0',
+    ),
+  );
+
+  final payments = Rx(
+    Payments(
+      income: {},
+    ),
+  );
 
   @override
   void onInit() {
@@ -45,19 +90,234 @@ class MyProfileController extends GetxController {
       }
     });
     _getPayments();
-    // checkParticleWalletActivation();
-    // checkExternalWalletActivation();
+    _getBalances();
     super.onInit();
   }
 
   @override
   void onReady() {
     super.onReady();
+    final alreadyViewed = storage.read(IntroStorageKeys.viewedMyProfile);
+    if (
+        //
+        // true
+        alreadyViewed == null
+        //
+        ) {
+      // wait for the context to be ready
+      Future.delayed(const Duration(seconds: 0)).then((v) {
+        tutorialCoachMark = TutorialCoachMark(
+          targets: _createTargets(),
+          skipWidget: Button(
+            size: ButtonSize.SMALL,
+            type: ButtonType.outline,
+            color: Colors.red,
+            onPressed: () {
+              saveIntroAsDone(true);
+            },
+            child: const Text("Finish"),
+          ),
+          paddingFocus: 5,
+          opacityShadow: 0.5,
+          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          onFinish: () {
+            saveIntroAsDone(true);
+          },
+          onClickTarget: (target) {
+            log.d(target);
+            _scrollIfNeeded();
+          },
+          onClickTargetWithTapPosition: (target, tapDetails) {
+            print("target: $target");
+            print(
+                "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+          },
+          onClickOverlay: (target) {
+            print('onClickOverlay: $target');
+            _scrollIfNeeded();
+          },
+          onSkip: () {
+            saveIntroAsDone(true);
+            return true;
+          },
+        );
+        try {
+          tutorialCoachMark.show(context: contextForIntro!);
+        } catch (e) {
+          log.e(e);
+        }
+      });
+    }
+  }
+
+  int _currentStep = 0;
+  _scrollIfNeeded() {
+    _currentStep++;
+    if (_currentStep == 1) {
+      scrollController.animateTo(
+        200,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOut,
+      );
+    } else if (_currentStep == 2) {
+      scrollController.animateTo(
+        400,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOut,
+      );
+    } else if (_currentStep == 3) {
+      scrollController.animateTo(
+        600,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+    targets.add(
+      _createStep(
+        targetId: referalSystemKey,
+        text: "you can share your referal link to your friends",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: internalWalletKey,
+        text: "here is your Podium wallet and assets balances",
+      ),
+    );
+
+    targets.add(
+      _createStep(
+        targetId: walletConnectKey,
+        text:
+            "you can connect an External wallet like Metamask to your account, if connected, it will be used as default for your earnings",
+      ),
+    );
+    targets.add(
+      _createStep(
+        targetId: statisticsKey,
+        text: "this part shows your earnings in different chains ",
+        hasNext: false,
+      ),
+    );
+
+    return targets;
   }
 
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _createStep({
+    required GlobalKey targetId,
+    required String text,
+    bool hasNext = true,
+  }) {
+    return TargetFocus(
+      identify: targetId.toString(),
+      keyTarget: targetId,
+      alignSkip: Alignment.bottomRight,
+      paddingFocus: 0,
+      focusAnimationDuration: const Duration(milliseconds: 300),
+      unFocusAnimationDuration: const Duration(milliseconds: 100),
+      shape: ShapeLightFocus.RRect,
+      color: Colors.black,
+      enableOverlayTab: true,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+                if (hasNext)
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      tutorialCoachMark.next();
+                      _scrollIfNeeded();
+                    },
+                    child: const Text(
+                      "Next",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                else
+                  Button(
+                    size: ButtonSize.SMALL,
+                    type: ButtonType.outline,
+                    color: Colors.white,
+                    onPressed: () {
+                      introFinished(true);
+                    },
+                    child: const Text(
+                      "Finish",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void saveIntroAsDone(bool? setAsFinished) {
+    if (setAsFinished == true) {
+      storage.write(IntroStorageKeys.viewedMyProfile, true);
+    }
+  }
+
+  void introFinished(bool? setAsFinished) {
+    saveIntroAsDone(setAsFinished);
+    try {
+      tutorialCoachMark.finish();
+    } catch (e) {}
+  }
+
+  _getBalances() async {
+    try {
+      isGettingBalances.value = true;
+      final baseClient = evmClientByChainId(baseChainId);
+      final avalancheClient = evmClientByChainId(avalancheChainId);
+      final movementClient = evmClientByChainId(movementChain.chainId);
+      final myaddress = await web3AuthWalletAddress();
+      final (
+        baseBalance,
+        avalancheBalance,
+        movementBalance,
+        movementAptosBalance,
+      ) = await (
+        baseClient.getBalance(parseAddress(myaddress!)),
+        avalancheClient.getBalance(parseAddress(myaddress)),
+        movementClient.getBalance(parseAddress(myaddress)),
+        AptosMovement.balance,
+      ).wait;
+      balances.value = Balances(
+        Base: weiToDecimalString(wei: baseBalance),
+        Avalanche: weiToDecimalString(wei: avalancheBalance),
+        Movement: weiToDecimalString(wei: movementBalance),
+        movementAptos: bigIntCoinToMoveOnAptos(movementAptosBalance).toString(),
+      );
+      isGettingBalances.value = false;
+    } catch (e) {
+      log.e(e);
+      isGettingBalances.value = false;
+    }
   }
 
   _getPayments() async {
@@ -115,29 +375,33 @@ class MyProfileController extends GetxController {
     }
   }
 
-  Future<bool> checkParticleWalletActivation({bool? silent}) async {
+  Future<bool> checkInternalWalletActivation({bool? silent}) async {
     if (silent != true) {
-      loadingParticleActivation.value = true;
+      loadingInternalWalletActivation.value = true;
     }
-    final particleAddress = await Evm.getAddress();
-    final activeWallets = await particle_friendTech_getActiveUserWallets(
-      particleAddress: particleAddress,
+    final internalWalletAddress =
+        await web3AuthWalletAddress(); // await Evm.getAddress();
+    if (internalWalletAddress == null) {
+      return false;
+    }
+    final activeWallets = await internal_friendTech_getActiveUserWallets(
+      internalWalletAddress: internalWalletAddress,
       chainId: baseChainId,
     );
 
-    final isActivated = activeWallets.isParticleWalletActive;
-    isParticleActivatedOnFriendTech.value = isActivated;
+    final isActivated = activeWallets.isInternalWalletActive;
+    isInternalWalletActivatedOnFriendTech.value = isActivated;
 
     if (silent != true) {
-      loadingParticleActivation.value = false;
+      loadingInternalWalletActivation.value = false;
     }
 
     return isActivated;
   }
 
-  activateParticle() async {
-    loadingParticleActivation.value = true;
-    final isAlreadyActivated = await checkParticleWalletActivation(
+  activateInternalWallet() async {
+    loadingInternalWalletActivation.value = true;
+    final isAlreadyActivated = await checkInternalWalletActivation(
       silent: true,
     );
     log.d('isAlreadyActivated: $isAlreadyActivated');
@@ -145,9 +409,9 @@ class MyProfileController extends GetxController {
       return;
     }
     final activated =
-        await particle_activate_friendtechWallet(chainId: baseChainId);
-    loadingParticleActivation.value = false;
-    isParticleActivatedOnFriendTech.value = activated;
+        await internal_activate_friendtechWallet(chainId: baseChainId);
+    loadingInternalWalletActivation.value = false;
+    isInternalWalletActivatedOnFriendTech.value = activated;
   }
 
   activateExternalWallet() async {
@@ -182,7 +446,15 @@ class MyProfileController extends GetxController {
       loadingExternalWalletActivation.value = true;
     }
 
-    final particleAddress = await Evm.getAddress();
+    final internalWalletAddress =
+        await web3AuthWalletAddress(); // Evm.getAddress();
+    if (internalWalletAddress == null) {
+      isExternalWalletActivatedOnFriendTech.value = false;
+      if (silent != true) {
+        loadingExternalWalletActivation.value = false;
+      }
+      return false;
+    }
     final externalWalletAddress = globalController.connectedWalletAddress.value;
     if (externalWalletAddress.isEmpty) {
       isExternalWalletActivatedOnFriendTech.value = false;
@@ -191,8 +463,8 @@ class MyProfileController extends GetxController {
       }
       return false;
     } else {
-      final activeWallets = await particle_friendTech_getActiveUserWallets(
-        particleAddress: particleAddress,
+      final activeWallets = await internal_friendTech_getActiveUserWallets(
+        internalWalletAddress: internalWalletAddress,
         externalWalletAddress: externalWalletAddress,
         chainId: baseChainId,
       );

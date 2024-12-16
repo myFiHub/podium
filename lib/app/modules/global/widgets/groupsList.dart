@@ -19,12 +19,18 @@ import 'package:share_plus/share_plus.dart';
 
 class GroupList extends StatelessWidget {
   final List<FirebaseGroup> groupsList;
-  const GroupList({super.key, required this.groupsList});
+  final ScrollController? scrollController;
+  const GroupList({
+    super.key,
+    required this.groupsList,
+    this.scrollController,
+  });
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<GroupsController>();
     return Scrollbar(
       child: ListView.builder(
+        controller: scrollController,
         itemCount: groupsList.length,
         itemBuilder: (context, index) {
           final group = groupsList[index];

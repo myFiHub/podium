@@ -394,10 +394,7 @@ class OngoingGroupCallController extends GetxController {
     final recordingName =
         'Podium Outpost record-${group.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
     final hasPermissionForAudio = await getPermission(Permission.microphone);
-    // final hasPermissionForStorage = await getPermission(Permission.storage);
-    if (!hasPermissionForAudio
-        //  || !hasPermissionForStorage
-        ) {
+    if (!hasPermissionForAudio) {
       return;
     }
     Directory downloadDirectory = await getDownloadDirectory();
@@ -406,14 +403,6 @@ class OngoingGroupCallController extends GetxController {
             .replaceAll(':', '');
 
     if (recording) {
-      final muted = amIMuted.value;
-      if (muted) {
-        Toast.warning(
-          title: "unmute first",
-          message: "You are muted",
-        );
-        return;
-      }
       _numberOfRecording++;
       if (await _recorder.hasPermission()) {
         try {

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
-import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
@@ -82,7 +81,7 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
                 key: controller.muteUnmuteKey,
                 backgroundColor: isMuted ? Colors.red : Colors.green,
                 onPressed: () {
-                  jitsiMeet.setAudioMuted(!isMuted);
+                  controller.setMutedState(!isMuted);
                 },
                 tooltip: 'mute',
                 child: Icon(

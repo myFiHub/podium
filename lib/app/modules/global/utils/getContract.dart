@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/chainInfo.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
@@ -69,7 +70,7 @@ String chainNameById(String chainId) {
 }
 
 ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
-  if (chainId == '127') {
+  if (chainId == movementAptosChainId) {
     return ReownAppKitModalNetworkInfo(
       name: 'Aptos Movement',
       chainId: chainId,

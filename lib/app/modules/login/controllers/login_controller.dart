@@ -89,7 +89,7 @@ class LoginController extends GetxController {
     super.onClose();
   }
 
-  buyTicket({required StarsArenaUser user}) async {
+  Future<void> buyTicket({required StarsArenaUser user}) async {
     final externalWalletAddress = globalController.connectedWalletAddress.value;
 
     if (loadingBuyTicketId.value.isNotEmpty) {
@@ -139,7 +139,7 @@ class LoginController extends GetxController {
     }
   }
 
-  initialReferral(String? id) async {
+  Future<void> initialReferral(String? id) async {
     Future.delayed(const Duration(seconds: 0), () async {
       final referrerId =
           id ?? _extractReferrerId(globalController.deepLinkRoute.value);
@@ -171,12 +171,12 @@ class LoginController extends GetxController {
     return splited[1];
   }
 
-  _removeLogingInState() {
+  void _removeLogingInState() {
     isLoggingIn.value = false;
     globalController.isAutoLoggingIn.value = false;
   }
 
-  socialLogin({
+  Future<void> socialLogin({
     required Provider loginMethod,
     ignoreIfNotLoggedIn = false,
   }) async {
@@ -262,7 +262,7 @@ class LoginController extends GetxController {
     }
   }
 
-  _continueSocialLoginWithUserInfoAndPrivateKey(
+  Future<void> _continueSocialLoginWithUserInfoAndPrivateKey(
       {required String privateKey,
       required TorusUserInfo userInfo,
       required Provider loginMethod}) async {
@@ -289,7 +289,7 @@ class LoginController extends GetxController {
     );
   }
 
-  _fixUserData(UserInfoModel user) {
+  UserInfoModel _fixUserData(UserInfoModel user) {
     UserInfoModel userToCreate = user;
     if (userToCreate.loginTypeIdentifier != null &&
         userToCreate.loginTypeIdentifier!.contains('twitter|')) {
@@ -329,7 +329,7 @@ class LoginController extends GetxController {
     return userToCreate;
   }
 
-  _socialLogin({
+  Future<void> _socialLogin({
     required String id,
     required String name,
     required String email,
@@ -534,7 +534,7 @@ class LoginController extends GetxController {
     return bought;
   }
 
-  _initializeReferrals({
+  Future<bool> _initializeReferrals({
     required UserInfoModel user,
   }) async {
     if (referrer.value != null && user.id == referrer.value!.id) {

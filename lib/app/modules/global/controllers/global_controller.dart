@@ -85,7 +85,7 @@ class GlobalController extends GetxController {
 
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
-          Env.initialExternalWalletChainId!));
+          Env.initialExternalWalletChainId));
 
   ReownAppKitModalNetworkInfo? get externalWalletChain {
     final chain = ReownAppKitModalNetworks.getNetworkById(
@@ -161,7 +161,7 @@ class GlobalController extends GetxController {
     super.onClose();
   }
 
-  initializeApp() async {
+  Future<void> initializeApp() async {
     checkLogin();
     initializeW3MService();
     listenToWalletAddressChange();
@@ -169,14 +169,14 @@ class GlobalController extends GetxController {
     initializedOnce.value = true;
   }
 
-  startTicker() {
+  void startTicker() {
     Timer.periodic(const Duration(seconds: 1), (timer) {
       ticker.value++;
       update([GlobalUpdateIds.ticker]);
     });
   }
 
-  toggleShowArchivedGroups() {
+  Future<void> toggleShowArchivedGroups() async {
     showArchivedGroups.value = !showArchivedGroups.value;
     storage.write(StorageKeys.showArchivedGroups, showArchivedGroups.value);
     update([GlobalUpdateIds.showArchivedGroups]);
@@ -246,7 +246,7 @@ class GlobalController extends GetxController {
     log.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
   }
 
-  initializeInternetConnectionChecker() {
+  Future<void> initializeInternetConnectionChecker() async {
     connectionCheckerInstance.onStatusChange
         .listen((InternetStatus status) async {
       switch (status) {
@@ -273,7 +273,7 @@ class GlobalController extends GetxController {
     });
   }
 
-  listenToWalletAddressChange() async {
+  Future<void> listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
       if (newAddress != '' && currentUserInfo.value != null) {
@@ -282,7 +282,7 @@ class GlobalController extends GetxController {
     });
   }
 
-  _saveExternalWalletAddress(String address) async {
+  Future<void> _saveExternalWalletAddress(String address) async {
     try {
       await saveUserWalletAddressOnFirebase(address);
       currentUserInfo.value!.evm_externalWalletAddress = address;
@@ -310,7 +310,7 @@ class GlobalController extends GetxController {
     return;
   }
 
-  openDeepLinkGroup(String route) async {
+  Future<void> openDeepLinkGroup(String route) async {
     if (route.contains(Routes.GROUP_DETAIL)) {
       Navigate.to(
         type: NavigationTypes.offAllNamed,
@@ -334,7 +334,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  setDeepLinkRoute(String route) async {
+  Future<void> setDeepLinkRoute(String route) async {
     deepLinkRoute.value = route;
     if (loggedIn.value) {
       log.e("logged in, opening deep link $route");
@@ -348,7 +348,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  openLoginPageWithReferral(String route) {
+  Future<void> openLoginPageWithReferral(String route) async {
     log.f("opening login page with referral");
     final referrerId = _extractReferrerId(route);
     if (loggedIn.value) {
@@ -359,7 +359,7 @@ class GlobalController extends GetxController {
       type: NavigationTypes.offAllNamed,
       route: Routes.LOGIN,
       parameters: {
-        LoginParametersKeys.referrerId: referrerId,
+        LoginParametersKeys.referrerId: referrerId ?? '',
       },
     );
   }
@@ -508,7 +508,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  setLoggedIn(bool value) {
+  void setLoggedIn(bool value) {
     loggedIn.value = value;
     if (value == false) {
       log.f("logging out");
@@ -532,16 +532,16 @@ class GlobalController extends GetxController {
     }
   }
 
-  _extractReferrerId(String route) {
+  String? _extractReferrerId(String route) {
     final splited = route.split('referral');
     if (splited.length < 2) {
       log.f("splited: $splited");
-      return;
+      return null;
     }
     return splited[1];
   }
 
-  _logout() async {
+  Future<void> _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
     web3AuthAddress = '';
@@ -582,7 +582,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  setIsMyUserOver18(bool value) {
+  void setIsMyUserOver18(bool value) {
     currentUserInfo.value!.isOver18 = value;
     currentUserInfo.refresh();
   }
@@ -634,7 +634,7 @@ class GlobalController extends GetxController {
     return null;
   }
 
-  connectToWallet({void Function()? afterConnection}) async {
+  Future<void> connectToWallet({void Function()? afterConnection}) async {
     try {
       // web3ModalService.disconnect();
       await web3ModalService.init();
@@ -662,7 +662,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  disconnect() async {
+  Future<void> disconnect() async {
     final removed = await removeUserWalletAddressOnFirebase();
     if (removed) {
       try {

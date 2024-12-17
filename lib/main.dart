@@ -74,7 +74,10 @@ processLink(String? link) async {
 void main() async {
   await dotenv.load(
       fileName: "env/${kReleaseMode ? 'production' : 'development'}.env");
-
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.portraitUp,
+  ]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: ColorName.systemTrayBackground,

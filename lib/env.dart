@@ -33,7 +33,7 @@ class Env {
 
   static final cheerBooAptosAddress = dotenv.env['CHEERBOO_APTOS_ADDRESS']!;
 
-  static final VERSION = dotenv.env['VERSION'] ?? '1.0.8';
+  static final VERSION = dotenv.env['VERSION'] ?? '1.1.0';
 
   static String? starsArenaAddress(String chainId) {
     if (chainId == avalancheChainId) {

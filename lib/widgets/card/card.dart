@@ -118,7 +118,7 @@ class Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final CardTheme cardTheme = CardTheme.of(context);
+    final CardThemeData cardTheme = CardTheme.of(context);
 
     final Widget cardChild = Padding(
       padding: padding,

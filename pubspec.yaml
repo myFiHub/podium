@@ -80,7 +80,7 @@ dependency_overrides:
 dev_dependencies:
   device_preview: ^1.2.0
   flutter_native_splash: ^2.4.3
-  build_runner: ^2.4.13
+  build_runner: ^2.4.14
   flutter_gen_runner: ^5.8.0
   icons_launcher: ^3.0.0
   json_serializable: ^6.9.0

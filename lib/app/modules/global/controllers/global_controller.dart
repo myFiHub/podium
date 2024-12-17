@@ -151,8 +151,6 @@ class GlobalController extends GetxController {
 
   @override
   void onReady() async {
-    WidgetsFlutterBinding.ensureInitialized();
-
     super.onReady();
   }
 

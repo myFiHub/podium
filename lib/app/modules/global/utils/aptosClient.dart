@@ -142,12 +142,12 @@ class AptosMovement {
     }
   }
 
-  static Future<BigInt?> getTicketPriceForPodiumPass({
+  static Future<double?> getTicketPriceForPodiumPass({
     required String sellerAddress,
     int numberOfTickets = 1,
   }) async {
     try {
-      final price = await client.view(
+      final response = await client.view(
         "${podiumProtocolAddress}::$_podiumProtocolName::calculate_buy_price_with_fees",
         [],
         [
@@ -156,7 +156,10 @@ class AptosMovement {
           {"vec": []}
         ],
       );
-      return price;
+      final pString = response[0];
+      final bigIntPrice = BigInt.from(pString);
+      final parsedAmount = bigIntCoinToMoveOnAptos(bigIntPrice);
+      return parsedAmount;
     } catch (e) {
       log.e(e);
       return null;

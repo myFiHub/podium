@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -22,14 +21,6 @@ class HomeView extends GetView<HomeController> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Button(
-            text: 'get price',
-            onPressed: () {
-              AptosMovement.getTicketPriceForPodiumPass(
-                sellerAddress: myUser.aptosInternalWalletAddress,
-              );
-            },
-          ),
           space16,
           const Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),

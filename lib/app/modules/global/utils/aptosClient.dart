@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -22,6 +23,17 @@ class AptosMovement {
     );
   }
 
+  static const _podiumProtocolName = 'PodiumProtocol';
+  static const _cheerBooName = 'CheerOrBoo';
+
+  static get podiumProtocolAddress {
+    return Env.podiumProtocolAddress(movementAptosChainId);
+  }
+
+  static get cheerBooAddress {
+    return Env.cheerBooAddress(movementAptosChainId);
+  }
+
   static AptosAccount get account {
     return aptosAccount;
   }
@@ -36,8 +48,13 @@ class AptosMovement {
     return account.address;
   }
 
-  static Future<BigInt> get balance async {
+  static Future<bool> get isMyAccountActive async {
     final exists = await client.accountExist(address);
+    return exists;
+  }
+
+  static Future<BigInt> get balance async {
+    final exists = await isMyAccountActive;
     if (!exists) {
       return BigInt.zero;
     }
@@ -82,13 +99,7 @@ class AptosMovement {
         );
         return null;
       }
-      // final coinType =
-      //     "0x1::aptos_coin::AptosCoin"; // Replace with the actual coin type
-      // final registered = await _registerCoinStore(coinType);
-      // if (!registered) {
-      //   return false;
-      // }
-      final cheerBooAddress = Env.cheerBooAptosAddress;
+
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
       int percentage = cheer ? 100 : 50;
       if (receiverAddresses.length > 1) {
@@ -97,7 +108,7 @@ class AptosMovement {
       final PercentageString = percentage.toString();
 
       final payload = EntryFunctionPayload(
-        functionId: "${cheerBooAddress}::CheerOrBoo::cheer_or_boo",
+        functionId: "${cheerBooAddress}::$_cheerBooName::cheer_or_boo",
         typeArguments: [],
         arguments: [
           // address,
@@ -131,51 +142,37 @@ class AptosMovement {
     }
   }
 
-// Function to check if CoinStore is registered
-  static Future<bool> _isCoinStoreRegistered(String coinType) async {
+  static Future<BigInt?> getTicketPriceForPodiumPass({
+    required String sellerAddress,
+    int numberOfTickets = 1,
+  }) async {
     try {
-      final resource = await client.getAccountResource(
-          address, "0x1::coin::CoinStore<$coinType>");
-      return resource != null;
+      final price = await client.view(
+        "${podiumProtocolAddress}::$_podiumProtocolName::calculate_buy_price_with_fees",
+        [],
+        [sellerAddress, numberOfTickets.toString()],
+      );
+      return price;
     } catch (e) {
-      return false;
+      log.e(e);
+      return null;
     }
   }
 
-// Function to register CoinStore
-  static Future<bool> _registerCoinStore(String coinType) async {
-    final registere = await _isCoinStoreRegistered(coinType);
-    if (registere) {
-      return true;
-    }
+  static Future<BigInt?> getTicketSellPriceForPodiumPass({
+    required String sellerAddress,
+    int numberOfTickets = 1,
+  }) async {
     try {
-      final payload = EntryFunctionPayload(
-        functionId: "0x1::coin::register",
-        typeArguments: [coinType],
-        arguments: [],
+      final price = await client.view(
+        "${podiumProtocolAddress}::$_podiumProtocolName::calculate_sell_price_with_fees",
+        [],
+        [sellerAddress, numberOfTickets.toString()],
       );
-      final transactionRequest =
-          await client.generateTransaction(account, payload);
-      final signedTransaction =
-          await client.signTransaction(account, transactionRequest);
-      final result = await client.submitSignedBCSTransaction(signedTransaction);
-      if (result['hash'] != null) {
-        final transactionHash = result['hash'];
-        while (true) {
-          final transactionStatus =
-              await client.getTransactionByHash(transactionHash);
-          if (transactionStatus['type'] == 'user_transaction' &&
-              transactionStatus['success'] == true) {
-            return true;
-          }
-          await Future.delayed(const Duration(
-              seconds: 5)); // Wait for 5 seconds before checking again
-        }
-      }
-      return false;
+      return price;
     } catch (e) {
       log.e(e);
-      return false;
+      return null;
     }
   }
 }

@@ -648,7 +648,7 @@ Future setIsUserPresentInSession({
   await databaseRef.set(isPresent);
 }
 
-Future<String> getUserLocalWalletAddress(String userId) async {
+Future<String> getUserExternalEVMWalletAddress(String userId) async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.usersRef)
       .child(userId)
@@ -694,7 +694,7 @@ Future<List<UserInfoModel>> getListOfUserWalletsPresentInSession(
   return membersList;
 }
 
-follow(String userId) async {
+Future<void> follow(String userId) async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.usersRef)
       .child(myId)
@@ -716,7 +716,7 @@ follow(String userId) async {
   }
 }
 
-unfollow(String userId) async {
+Future<void> unfollow(String userId) async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.usersRef)
       .child(myId)

@@ -11,7 +11,6 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
-import 'package:podium/app/modules/web3Auth_redirected/controllers/web3Auth_redirected_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -34,6 +33,11 @@ import 'package:web3dart/web3dart.dart';
 
 class LoginParametersKeys {
   static const referrerId = 'referrerId';
+}
+addressToUuid(String address) {
+  final uuid = const Uuid();
+  final uid = uuid.v5(Namespace.url.value, address);
+  return uid;
 }
 
 class LoginController extends GetxController {

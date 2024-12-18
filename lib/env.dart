@@ -31,6 +31,9 @@ class Env {
   static final fihubAddress_Avalanche_MainNet =
       dotenv.env['FIHUB_ADDRESS_AVALANCHE_MAINNET']!;
 
+  static final podiumProtocolAptosAddress =
+      dotenv.env['PODIUM_PROTOCOL_APTOS_ADDRESS']!;
+
   static final cheerBooAptosAddress = dotenv.env['CHEERBOO_APTOS_ADDRESS']!;
 
   static final VERSION = dotenv.env['VERSION'] ?? '1.1.0';
@@ -62,6 +65,16 @@ class Env {
   static String? cheerBooAddress(String chainId) {
     if (chainId == movementChain.chainId) {
       return cheerBooAddress_Movement_Devnet;
+    } else if (chainId == movementAptosChainId) {
+      return cheerBooAptosAddress;
+    } else {
+      return null;
+    }
+  }
+
+  static String? podiumProtocolAddress(String chainId) {
+    if (chainId == movementAptosChainId) {
+      return podiumProtocolAptosAddress;
     } else {
       return null;
     }

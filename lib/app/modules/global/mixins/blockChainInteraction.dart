@@ -1,6 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -955,16 +954,6 @@ String hexToAscii(String hexString) => List.generate(
         int.parse(hexString.substring(i * 2, (i * 2) + 2), radix: 16),
       ),
     ).join();
-
-void _copyToClipboard(String text, {String? prefix}) async {
-  await Get.closeCurrentSnackbar();
-  Clipboard.setData(ClipboardData(text: text)).then(
-    (_) => Toast.info(
-      title: "${prefix} Copied",
-      message: text,
-    ),
-  );
-}
 
 String? fihubAddress(String chainId) {
   return Environment.Env.fihubAddress(chainId);

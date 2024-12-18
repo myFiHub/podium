@@ -97,7 +97,7 @@ class AptosMovement {
       final PercentageString = percentage.toString();
 
       final payload = EntryFunctionPayload(
-        functionId: "${cheerBooAddress}::CheerOrBooV2::cheer_or_boo",
+        functionId: "${cheerBooAddress}::CheerOrBoo::cheer_or_boo",
         typeArguments: [],
         arguments: [
           // address,

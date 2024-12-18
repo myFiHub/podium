@@ -150,7 +150,11 @@ class AptosMovement {
       final price = await client.view(
         "${podiumProtocolAddress}::$_podiumProtocolName::calculate_buy_price_with_fees",
         [],
-        [sellerAddress, numberOfTickets.toString()],
+        [
+          sellerAddress,
+          numberOfTickets.toString(),
+          {"vec": []}
+        ],
       );
       return price;
     } catch (e) {

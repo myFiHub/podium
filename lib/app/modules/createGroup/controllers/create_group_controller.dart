@@ -470,13 +470,16 @@ class CreateGroupController extends GetxController {
     if (usersMap.contains(user.id)) {
       list.removeWhere((e) => e.user.id == user.id);
     } else {
-      final activeAddress =
+      String? activeAddress =
           ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
               ? user.defaultWalletAddress
               : await checkIfUserCanBeAddedToList(
                   user: user,
                   ticketPermissionType: ticketPermissiontype,
                 );
+      if (ticketType == BuyableTicketTypes.onlyPodiumPassHolders) {
+        activeAddress = user.aptosInternalWalletAddress;
+      }
       if (activeAddress != null) {
         list.add(TicketSellersListMember(
           user: user,

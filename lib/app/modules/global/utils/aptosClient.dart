@@ -1,6 +1,8 @@
 import 'package:aptos/aptos.dart';
 import 'package:aptos/coin_client.dart';
 import 'package:aptos/models/entry_function_payload.dart';
+// import 'package:aptos_sdk_dart/aptos_sdk_dart.dart' as AptosSdkDart;
+// import 'package:built_value/json_object.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
@@ -10,6 +12,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+// import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class AptosMovement {
   AptosMovement._internal();
@@ -166,7 +169,7 @@ class AptosMovement {
     }
   }
 
-  static Future<BigInt?> getMySharesOnPodiumPass({
+  static Future<BigInt?> getMyBalanceOnPodiumPass({
     required String sellerAddress,
   }) async {
     try {
@@ -174,11 +177,11 @@ class AptosMovement {
         "${podiumProtocolAddress}::$_podiumProtocolName::get_balance",
         [],
         [
-          sellerAddress,
           myUser.aptosInternalWalletAddress,
+          sellerAddress,
         ],
       );
-      return BigInt.from(respone[0]);
+      return BigInt.from(int.parse(respone[0]));
     } catch (e) {
       log.e(e);
       return null;
@@ -190,21 +193,69 @@ class AptosMovement {
     int numberOfTickets = 1,
   }) async {
     try {
-      final price = await getTicketSellPriceForPodiumPass(
-        sellerAddress: sellerAddress,
-        numberOfTickets: numberOfTickets,
-      );
-      if (price == null) {
-        return false;
-      }
+//////////////////////////////////
+      ///
+      // final privateKey = await Web3AuthFlutter.getPrivKey() as dynamic;
+      // AptosSdkDart.AptosClientHelper aptosClientHelper =
+      //     AptosSdkDart.AptosClientHelper(
+      //   AptosSdkDart.AptosApiDart(
+      //     basePathOverride: aptosRpcUrl,
+      //   ),
+      // );
+
+      // AptosSdkDart.AptosAccount account =
+      //     AptosSdkDart.AptosAccount.fromPrivateKeyHexString(privateKey);
+
+      // // Build an entry function payload that transfers coin.
+      // AptosSdkDart.TransactionPayloadBuilder transactionPayloadBuilder =
+      //     AptosSdkDart.AptosClientHelper.buildPayload(
+      //         "$podiumProtocolAddress::$_podiumProtocolName::buy_pass", [], [
+      //   StringJsonObject(sellerAddress),
+      //   StringJsonObject(numberOfTickets.toString()),
+      // ]);
+
+      // // Build a transasction request. This includes a call to determine the
+      // // current sequence number so we can build that transasction.
+      // AptosSdkDart.SubmitTransactionRequestBuilder
+      //     submitTransactionRequestBuilder = await aptosClientHelper
+      //         .generateTransaction(account.address, transactionPayloadBuilder);
+
+      // // Convert the transaction into the appropriate format and then sign it.
+      // submitTransactionRequestBuilder = await aptosClientHelper
+      //     .encodeSubmission(account, submitTransactionRequestBuilder);
+
+      // // Finally submit the transaction.
+      // AptosSdkDart.PendingTransaction pendingTransaction =
+      //     await AptosSdkDart.unwrapClientCall(aptosClientHelper.client
+      //         .getTransactionsApi()
+      //         .submitTransaction(
+      //             submitTransactionRequest:
+      //                 submitTransactionRequestBuilder.build()));
+
+      // // Wait for the transaction to be committed.
+      // AptosSdkDart.PendingTransactionResult pendingTransactionResult =
+      //     await aptosClientHelper.waitForTransaction(pendingTransaction.hash);
+      // log.d(pendingTransactionResult);
+      // if (pendingTransactionResult.committed) {
+      //   return true;
+      // }
+      // return false;
+//////////////////////////////
+
+      // final price = await getTicketSellPriceForPodiumPass(
+      //   sellerAddress: sellerAddress,
+      //   numberOfTickets: numberOfTickets,
+      // );
+      // if (price == null) {
+      //   return false;
+      // }
       final payload = EntryFunctionPayload(
         functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
         typeArguments: [],
         arguments: [
           sellerAddress,
           numberOfTickets.toString(),
-          // referrer, empty
-          {"vec": []}
+          myUser.aptosInternalWalletAddress
         ],
       );
       final transactionRequest = await client.generateTransaction(
@@ -215,8 +266,8 @@ class AptosMovement {
           await client.signTransaction(account, transactionRequest);
       await client.submitSignedBCSTransaction(signedTransaction);
       return true;
-    } catch (e) {
-      log.e(e);
+    } catch (e, stackTrace) {
+      log.e(e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -226,12 +277,13 @@ class AptosMovement {
     int numberOfTickets = 1,
   }) async {
     try {
-      final price = await client.view(
+      final response = await client.view(
         "${podiumProtocolAddress}::$_podiumProtocolName::calculate_sell_price_with_fees",
         [],
         [sellerAddress, numberOfTickets.toString()],
       );
-      return price;
+      final price = response[0];
+      return BigInt.from(int.parse(price));
     } catch (e) {
       log.e(e);
       return null;

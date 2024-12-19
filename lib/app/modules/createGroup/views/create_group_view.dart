@@ -470,7 +470,6 @@ class _SelectGroupSpeakerType extends GetWidget<CreateGroupController> {
                     DropDownItem(
                       value: BuyableTicketTypes.onlyPodiumPassHolders,
                       text: 'Podium Pass Holders',
-                      enabled: false,
                     ),
                   ],
                   selectedValue: selectedValue,
@@ -556,7 +555,6 @@ class _SelectGroupAccessType extends GetWidget<CreateGroupController> {
                     DropDownItem(
                       value: BuyableTicketTypes.onlyPodiumPassHolders,
                       text: 'Podium Pass Holders',
-                      enabled: false,
                     ),
                   ],
                   selectedValue: selectedValue,

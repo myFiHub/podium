@@ -166,6 +166,61 @@ class AptosMovement {
     }
   }
 
+  static Future<BigInt?> getMySharesOnPodiumPass({
+    required String sellerAddress,
+  }) async {
+    try {
+      final respone = await client.view(
+        "${podiumProtocolAddress}::$_podiumProtocolName::get_balance",
+        [],
+        [
+          sellerAddress,
+          myUser.aptosInternalWalletAddress,
+        ],
+      );
+      return BigInt.from(respone[0]);
+    } catch (e) {
+      log.e(e);
+      return null;
+    }
+  }
+
+  static Future<bool> buyTicketFromTicketSellerOnPodiumPass({
+    required String sellerAddress,
+    int numberOfTickets = 1,
+  }) async {
+    try {
+      final price = await getTicketSellPriceForPodiumPass(
+        sellerAddress: sellerAddress,
+        numberOfTickets: numberOfTickets,
+      );
+      if (price == null) {
+        return false;
+      }
+      final payload = EntryFunctionPayload(
+        functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
+        typeArguments: [],
+        arguments: [
+          sellerAddress,
+          numberOfTickets.toString(),
+          // referrer, empty
+          {"vec": []}
+        ],
+      );
+      final transactionRequest = await client.generateTransaction(
+        account,
+        payload,
+      );
+      final signedTransaction =
+          await client.signTransaction(account, transactionRequest);
+      await client.submitSignedBCSTransaction(signedTransaction);
+      return true;
+    } catch (e) {
+      log.e(e);
+      return false;
+    }
+  }
+
   static Future<BigInt?> getTicketSellPriceForPodiumPass({
     required String sellerAddress,
     int numberOfTickets = 1,

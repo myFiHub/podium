@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/controllers/group_call_controller.dart
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -383,6 +384,7 @@ class CheckticketController extends GetxController {
       final unsupportedAccessTicket = (groupAccessType !=
               BuyableTicketTypes.onlyArenaTicketHolders &&
           groupAccessType != BuyableTicketTypes.onlyFriendTechTicketHolders &&
+          groupAccessType != BuyableTicketTypes.onlyPodiumPassHolders &&
           isAccessBuyableByTicket);
       final unsupportedSpeakTicket = (groupSpeakerType !=
               BuyableTicketTypes.onlyArenaTicketHolders &&
@@ -416,6 +418,12 @@ class CheckticketController extends GetxController {
           // End buy access tickets first
           // then buy speak tickets
         } else if (ticketSeller.speakTicketType ==
+                BuyableTicketTypes.onlyPodiumPassHolders &&
+            ticketSeller.shouldBuySpeakTicket) {
+          await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+            sellerAddress: ticketSeller.address,
+          );
+        } else if (ticketSeller.speakTicketType ==
                 BuyableTicketTypes.onlyArenaTicketHolders &&
             ticketSeller.shouldBuySpeakTicket) {
           await buyTicketFromTicketSellerOnArena(ticketSeller: ticketSeller);
@@ -445,6 +453,11 @@ class CheckticketController extends GetxController {
         );
       }
     } catch (e) {
+      log.e(e);
+      Toast.error(
+        title: "Error",
+        message: e.toString(),
+      );
     } finally {
       allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
       allUsersToBuyTicketFrom.refresh();
@@ -598,6 +611,14 @@ class CheckticketController extends GetxController {
         if (myShares > BigInt.zero) {
           access.canEnter = true;
         }
+      } else if (group.value!.accessType ==
+          BuyableTicketTypes.onlyPodiumPassHolders) {
+        final myShares = await AptosMovement.getMySharesOnPodiumPass(
+          sellerAddress: user.defaultWalletAddress,
+        );
+        if (myShares != null && myShares > BigInt.zero) {
+          access.canEnter = true;
+        }
       } else {
         log.f('FIXME: add support for other ticket types ');
       }
@@ -621,6 +642,14 @@ class CheckticketController extends GetxController {
           chainId: baseChainId,
         );
         if (myShares > BigInt.zero) {
+          access.canSpeak = true;
+        }
+      } else if (group.value!.speakerType ==
+          BuyableTicketTypes.onlyPodiumPassHolders) {
+        final myShares = await AptosMovement.getMySharesOnPodiumPass(
+          sellerAddress: user.defaultWalletAddress,
+        );
+        if (myShares != null && myShares > BigInt.zero) {
           access.canSpeak = true;
         }
       } else {

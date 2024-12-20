@@ -267,6 +267,7 @@ class OngoingGroupCallController extends GetxController {
     if (setAsFinished == true) {
       storage.write(IntroStorageKeys.viewedOngiongCall, true);
     }
+    shouldShowIntro.value = false;
   }
 
   List<TargetFocus> _createTargets() {

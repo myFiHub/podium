@@ -425,6 +425,7 @@ class CheckticketController extends GetxController {
       final unsupportedSpeakTicket = (groupSpeakerType !=
               BuyableTicketTypes.onlyArenaTicketHolders &&
           groupSpeakerType != BuyableTicketTypes.onlyFriendTechTicketHolders &&
+          groupSpeakerType != BuyableTicketTypes.onlyPodiumPassHolders &&
           isSpeakBuyableByTicket);
 
       if (unsupportedAccessTicket || unsupportedSpeakTicket) {
@@ -455,7 +456,8 @@ class CheckticketController extends GetxController {
                 BuyableTicketTypes.onlyPodiumPassHolders &&
             ticketSeller.shouldBuyAccessTicket) {
           await buyTicketFromTicketSellerOnPodiumPass(
-              ticketSeller: ticketSeller);
+            ticketSeller: ticketSeller,
+          );
           // End buy access tickets first
           // then buy speak tickets
         } else if (ticketSeller.speakTicketType ==
@@ -510,8 +512,20 @@ class CheckticketController extends GetxController {
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
     bool bought = false;
+    String referrer = '';
+
+    final myReferrer = myUser.referrer;
+    if (myReferrer.isNotEmpty) {
+      final referrerInfo = await getUserById(myReferrer);
+      if (referrerInfo != null) {
+        referrer = referrerInfo.aptosInternalWalletAddress;
+      }
+    }
+
     bought = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
       sellerAddress: ticketSeller.address,
+      sellerName: ticketSeller.userInfo.fullName,
+      referrer: referrer,
     );
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
 
@@ -542,6 +556,7 @@ class CheckticketController extends GetxController {
       return false;
     }
     bool bought = false;
+
     final activeWallets = await internal_friendTech_getActiveUserWallets(
       internalWalletAddress: ticketSeller.userInfo.evmInternalWalletAddress,
       externalWalletAddress: ticketSeller.userInfo.defaultWalletAddress,
@@ -601,17 +616,27 @@ class CheckticketController extends GetxController {
       return false;
     }
     bool bought = false;
+    String referrer = '';
+    final myReferrer = myUser.referrer;
+    if (myReferrer.isNotEmpty) {
+      final referrerInfo = await getUserById(myReferrer);
+      if (referrerInfo != null) {
+        referrer = referrerInfo.defaultWalletAddress;
+      }
+    }
     if (selectedWallet == WalletNames.internal_EVM) {
       bought = await internal_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: avalancheChainId,
         targetUserId: ticketSeller.userInfo.id,
+        referrerAddress: referrer,
       );
     } else {
       bought = await ext_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,
         targetUserId: ticketSeller.userInfo.id,
+        referrerAddress: referrer,
       );
       log.d('bought: $bought');
     }

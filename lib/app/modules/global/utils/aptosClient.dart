@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:aptos/aptos.dart';
 import 'package:aptos/coin_client.dart';
 import 'package:aptos/models/entry_function_payload.dart';
@@ -8,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -188,74 +191,83 @@ class AptosMovement {
     }
   }
 
+  Future<void> listenToEvents({
+    required String address,
+    required String eventHandle,
+    required String fieldName,
+  }) async {
+    Timer.periodic(const Duration(seconds: 5), (timer) async {
+      try {
+        // Replace with the actual method to fetch events
+        final events = await client.getEventsByEventHandle(
+          address,
+          eventHandle,
+          fieldName,
+          limit: 10, // Adjust the limit as needed
+        );
+
+        log.d(events);
+      } catch (e) {
+        print('Error fetching events: $e');
+      }
+    });
+  }
+
   static Future<bool> buyTicketFromTicketSellerOnPodiumPass({
     required String sellerAddress,
+    required String sellerName,
+    String referrer = '',
     int numberOfTickets = 1,
   }) async {
     try {
-//////////////////////////////////
-      ///
-      // final privateKey = await Web3AuthFlutter.getPrivKey() as dynamic;
-      // AptosSdkDart.AptosClientHelper aptosClientHelper =
-      //     AptosSdkDart.AptosClientHelper(
-      //   AptosSdkDart.AptosApiDart(
-      //     basePathOverride: aptosRpcUrl,
-      //   ),
-      // );
+      final referrerAddress =
+          referrer == '' ? Env.fihubAddress_Aptos : referrer;
 
-      // AptosSdkDart.AptosAccount account =
-      //     AptosSdkDart.AptosAccount.fromPrivateKeyHexString(privateKey);
+      final price = await getTicketSellPriceForPodiumPass(
+        sellerAddress: sellerAddress,
+        numberOfTickets: numberOfTickets,
+      );
+      if (price == null) {
+        return false;
+      }
+      final parsedPrice = bigIntCoinToMoveOnAptos(price);
+      final confirmed = await showConfirmPopup(
+        title: 'Buy Podium Pass',
+        richMessage: RichText(
+          text: TextSpan(
+            style: const TextStyle(height: 1.5),
+            children: [
+              const TextSpan(text: 'buy '),
+              TextSpan(
+                  text: numberOfTickets.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              TextSpan(
+                  text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} from '),
+              TextSpan(
+                  text: sellerName,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const TextSpan(text: ' for '),
+              TextSpan(
+                  text: parsedPrice.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const TextSpan(text: ' MOVE?'),
+            ],
+          ),
+        ),
+        cancelText: 'Cancel',
+        confirmText: 'Confirm',
+      );
 
-      // // Build an entry function payload that transfers coin.
-      // AptosSdkDart.TransactionPayloadBuilder transactionPayloadBuilder =
-      //     AptosSdkDart.AptosClientHelper.buildPayload(
-      //         "$podiumProtocolAddress::$_podiumProtocolName::buy_pass", [], [
-      //   StringJsonObject(sellerAddress),
-      //   StringJsonObject(numberOfTickets.toString()),
-      // ]);
-
-      // // Build a transasction request. This includes a call to determine the
-      // // current sequence number so we can build that transasction.
-      // AptosSdkDart.SubmitTransactionRequestBuilder
-      //     submitTransactionRequestBuilder = await aptosClientHelper
-      //         .generateTransaction(account.address, transactionPayloadBuilder);
-
-      // // Convert the transaction into the appropriate format and then sign it.
-      // submitTransactionRequestBuilder = await aptosClientHelper
-      //     .encodeSubmission(account, submitTransactionRequestBuilder);
-
-      // // Finally submit the transaction.
-      // AptosSdkDart.PendingTransaction pendingTransaction =
-      //     await AptosSdkDart.unwrapClientCall(aptosClientHelper.client
-      //         .getTransactionsApi()
-      //         .submitTransaction(
-      //             submitTransactionRequest:
-      //                 submitTransactionRequestBuilder.build()));
-
-      // // Wait for the transaction to be committed.
-      // AptosSdkDart.PendingTransactionResult pendingTransactionResult =
-      //     await aptosClientHelper.waitForTransaction(pendingTransaction.hash);
-      // log.d(pendingTransactionResult);
-      // if (pendingTransactionResult.committed) {
-      //   return true;
-      // }
-      // return false;
-//////////////////////////////
-
-      // final price = await getTicketSellPriceForPodiumPass(
-      //   sellerAddress: sellerAddress,
-      //   numberOfTickets: numberOfTickets,
-      // );
-      // if (price == null) {
-      //   return false;
-      // }
+      if (!confirmed) {
+        return false;
+      }
       final payload = EntryFunctionPayload(
         functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
         typeArguments: [],
         arguments: [
           sellerAddress,
           numberOfTickets.toString(),
-          myUser.aptosInternalWalletAddress
+          referrerAddress,
         ],
       );
       final transactionRequest = await client.generateTransaction(

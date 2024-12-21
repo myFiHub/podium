@@ -25,23 +25,7 @@ class HomeView extends GetView<HomeController> {
           //   text: 'test',
           //   onPressed: () async {
           //     final myAddress = myUser.evmInternalWalletAddress;
-
-          //     // Convert address to bytes
-          //     final uint8ListAddress = hexToBytes(myAddress);
-
-          //     // Get private key
-          //     final myPrivateKey = await Web3AuthFlutter.getPrivKey();
-          //     final privateKey = EthPrivateKey.fromHex(myPrivateKey);
-
-          //     // Sign the address bytes
-          //     final signature = await privateKey
-          //         .signToUint8List(uint8ListAddress, chainId: null);
-
-          //     // Convert signature to hex
-          //     String signatureHex = bytesToHex(signature, include0x: true);
-
-          //     log.i(myAddress);
-          //     log.i(signatureHex);
+          //     await signMessage(myAddress);
           //   },
           // ),
           space16,

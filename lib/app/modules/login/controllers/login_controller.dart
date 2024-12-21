@@ -34,6 +34,7 @@ import 'package:web3dart/web3dart.dart';
 class LoginParametersKeys {
   static const referrerId = 'referrerId';
 }
+
 addressToUuid(String address) {
   final uuid = const Uuid();
   final uid = uuid.v5(Namespace.url.value, address);

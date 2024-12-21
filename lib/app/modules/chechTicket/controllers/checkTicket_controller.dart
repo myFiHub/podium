@@ -210,9 +210,12 @@ class CheckticketController extends GetxController {
     // that was the address that was SAVED in ticketsRequiredToAccess or ticketsRequiredToSpeak
     for (var i = 0; i < requiredTicketsToAccess.length; i++) {
       final user = requiredTicketsToAccess[i];
-      if (user.userId.contains(arenaUserIdPrefix)) {
+      if (user.userId.contains(arenaUserIdPrefix) ||
+          // if the group is podium pass holders, we don't need to set the wallet address
+          group.value!.accessType == BuyableTicketTypes.onlyPodiumPassHolders) {
         continue;
       }
+
       final userInfo =
           usersForAccess.firstWhere((element) => element.id == user.userId);
       userInfo.evm_externalWalletAddress = user.userAddress;
@@ -220,7 +223,10 @@ class CheckticketController extends GetxController {
     }
     for (var i = 0; i < requiredTicketsToSpeak.length; i++) {
       final user = requiredTicketsToSpeak[i];
-      if (user.userId.contains(arenaUserIdPrefix)) {
+      if (user.userId.contains(arenaUserIdPrefix) ||
+          // if the group is podium pass holders, we don't need to set the wallet address
+          group.value!.speakerType ==
+              BuyableTicketTypes.onlyPodiumPassHolders) {
         continue;
       }
       final userInfo =
@@ -629,14 +635,14 @@ class CheckticketController extends GetxController {
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: avalancheChainId,
         targetUserId: ticketSeller.userInfo.id,
-        referrerAddress: referrer,
+        referrerAddress: referrer.isEmpty ? null : referrer,
       );
     } else {
       bought = await ext_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,
         targetUserId: ticketSeller.userInfo.id,
-        referrerAddress: referrer,
+        referrerAddress: referrer.isEmpty ? null : referrer,
       );
       log.d('bought: $bought');
     }

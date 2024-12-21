@@ -70,7 +70,7 @@ String chainNameById(String chainId) {
 }
 
 ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
-  if (chainId == movementAptosChainId || chainId == '127') {
+  if (chainId == movementAptosChainId) {
     return ReownAppKitModalNetworkInfo(
       name: 'Aptos Movement',
       chainId: chainId,

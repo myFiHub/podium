@@ -8,11 +8,11 @@ class FireBaseConstants {
   static final notificationsRef = 'notifications_v3/';
   static final referalsRef = 'referals_v3/';
   static final podiumDefinedEntryAddresses = 'podiumDefinedEntryAddresses_v3/';
+  static final paymentEvents = "paymentEvents_v3/";
   // end
   static final versionRef = 'version/';
   static final forceUpdate = 'forceUpdate/';
   static final versionCheckRef = 'versionCheck/';
   static final jitsiServerAddressRef = "va/";
-  static final paymentEvents = "paymentEvents/";
   static final detectPresenceTime = "detectPresenceTime/";
 }

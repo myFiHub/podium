@@ -123,7 +123,7 @@ packages:
     description:
       path: "."
       ref: developing
-      resolved-ref: "269363bfe7454505861ae9e3cdfee9d26ddd4aa6"
+      resolved-ref: "395577547753ec24faa254618bd4730e2a0ced15"
       url: "https://github.com/mhsnprvr/aptos.git"
     source: git
     version: "0.0.6"

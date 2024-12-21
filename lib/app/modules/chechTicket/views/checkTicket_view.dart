@@ -254,10 +254,13 @@ class SingleTicketHolder extends StatelessWidget {
                         size: 30,
                       ),
                     if (userInfo.avatar.isNotEmpty) space10,
-                    Text(userInfo.fullName,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 170),
+                      child: Text(userInfo.fullName,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
                   ],
                 ),
                 space10,

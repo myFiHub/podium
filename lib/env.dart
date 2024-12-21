@@ -31,6 +31,8 @@ class Env {
   static final fihubAddress_Avalanche_MainNet =
       dotenv.env['FIHUB_ADDRESS_AVALANCHE_MAINNET']!;
 
+  static final fihubAddress_Aptos = dotenv.env['FIHUB_ADDRESS_APTOS']!;
+
   static final podiumProtocolAptosAddress =
       dotenv.env['PODIUM_PROTOCOL_APTOS_ADDRESS']!;
 

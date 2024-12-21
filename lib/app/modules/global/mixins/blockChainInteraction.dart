@@ -823,7 +823,11 @@ Future<bool> internal_buySharesWithReferrer({
   num shareAmount = 1,
   required String chainId,
 }) async {
-  final referrer = referrerAddress ?? fihubAddress(chainId);
+  String? referrer = referrerAddress;
+  if (referrer == null || referrer.isEmpty) {
+    referrer = fihubAddress(chainId);
+  }
+
   if (referrer == null) {
     Toast.error(message: "Referrer address not found");
     return false;

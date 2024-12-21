@@ -460,17 +460,16 @@ class _SelectGroupSpeakerType extends GetWidget<CreateGroupController> {
                       text: 'Only Invited Users',
                     ),
                     DropDownItem(
+                      value: BuyableTicketTypes.onlyPodiumPassHolders,
+                      text: 'Podium Pass Holders',
+                    ),
+                    DropDownItem(
                       value: BuyableTicketTypes.onlyArenaTicketHolders,
                       text: 'Arena Ticket Holders',
                     ),
                     DropDownItem(
                       value: BuyableTicketTypes.onlyFriendTechTicketHolders,
                       text: 'FriendTech Key Holders',
-                    ),
-                    DropDownItem(
-                      value: BuyableTicketTypes.onlyPodiumPassHolders,
-                      text: 'Podium Pass Holders',
-                      enabled: false,
                     ),
                   ],
                   selectedValue: selectedValue,
@@ -545,6 +544,10 @@ class _SelectGroupAccessType extends GetWidget<CreateGroupController> {
                       text: 'Invited Users',
                     ),
                     DropDownItem(
+                      value: BuyableTicketTypes.onlyPodiumPassHolders,
+                      text: 'Podium Pass Holders',
+                    ),
+                    DropDownItem(
                       value: BuyableTicketTypes.onlyArenaTicketHolders,
                       text: 'Arena Ticket Holders',
                       // enabled: false,
@@ -552,11 +555,6 @@ class _SelectGroupAccessType extends GetWidget<CreateGroupController> {
                     DropDownItem(
                       value: BuyableTicketTypes.onlyFriendTechTicketHolders,
                       text: 'FriendTech Key Holders',
-                    ),
-                    DropDownItem(
-                      value: BuyableTicketTypes.onlyPodiumPassHolders,
-                      text: 'Podium Pass Holders',
-                      enabled: false,
                     ),
                   ],
                   selectedValue: selectedValue,

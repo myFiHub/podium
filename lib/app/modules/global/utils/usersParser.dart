@@ -10,7 +10,7 @@ UserInfoModel? singleUserParser(dynamic value) {
     final String id = value[UserInfoModel.idKey];
     final avatar = value[UserInfoModel.avatarUrlKey];
     final isOver18 = value[UserInfoModel.isOver18Key] ?? false;
-    final savedInternalWalletAddress =
+    final evmInternalWalletAddress =
         value[UserInfoModel.evmInternalWalletAddressKey] ?? '';
     final referrer = value[UserInfoModel.referrerKey] ?? '';
     final evm_externalWalletAddress =
@@ -24,7 +24,7 @@ UserInfoModel? singleUserParser(dynamic value) {
       avatar: avatar,
       isOver18: isOver18,
       referrer: referrer,
-      evmInternalWalletAddress: savedInternalWalletAddress,
+      evmInternalWalletAddress: evmInternalWalletAddress,
       aptosInternalWalletAddress: internalAptosWalletAddress,
       evm_externalWalletAddress: evm_externalWalletAddress,
       following: List.from(value[UserInfoModel.followingKey] ?? []),

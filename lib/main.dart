@@ -21,6 +21,7 @@ import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 import 'app/routes/app_pages.dart';
 
@@ -172,6 +173,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       globalController.appLifecycleState.value = state;
     }
     log.i('State changed: $state');
+    if (state == AppLifecycleState.resumed) {
+      Web3AuthFlutter.setCustomTabsClosed();
+    }
   }
 
   Future<AppExitResponse> _handleExitRequest() async {

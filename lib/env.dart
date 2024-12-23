@@ -91,6 +91,5 @@ class Env {
   }
 }
 
-const DEV = 'dev';
-const PROD = 'prod';
-const STAGE = 'stage';
+const DEVELOPMENT = 'development';
+const PRODUCTION = 'production';

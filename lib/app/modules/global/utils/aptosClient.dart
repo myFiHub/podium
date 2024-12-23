@@ -25,7 +25,7 @@ class AptosMovement {
   static AptosClient get client {
     return AptosClient(
       aptosRpcUrl,
-      enableDebugLog: true,
+      enableDebugLog: Env.environment == DEVELOPMENT,
     );
   }
 

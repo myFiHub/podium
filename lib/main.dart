@@ -74,7 +74,7 @@ processLink(String? link) async {
 
 void main() async {
   await dotenv.load(
-      fileName: "env/${kReleaseMode ? 'production' : 'development'}.env");
+      fileName: "env/${kReleaseMode ? PRODUCTION : DEVELOPMENT}.env");
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,
     DeviceOrientation.portraitUp,

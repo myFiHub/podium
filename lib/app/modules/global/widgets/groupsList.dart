@@ -374,7 +374,7 @@ class _NumberOfActiveUsers extends GetView<GroupsController> {
 }
 
 generateGroupShareUrl({required String groupId}) {
-  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium";
+  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium&ibi=com.web3podium";
 }
 
 class _ScheduledBanner extends StatelessWidget {

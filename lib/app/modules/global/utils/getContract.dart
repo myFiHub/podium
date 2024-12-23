@@ -45,12 +45,12 @@ DeployedContract? getDeployedContract(
       }
     default:
       {
-        log.e("Invalid contract");
+        l.e("Invalid contract");
         deployedContract = null;
       }
   }
   if (deployedContract == null) {
-    log.e("Contract not deployed");
+    l.e("Contract not deployed");
     Toast.error(
       message: "Contract is not deployed on ${chainNameById(chainId)}",
     );

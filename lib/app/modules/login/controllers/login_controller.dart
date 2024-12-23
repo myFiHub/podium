@@ -67,7 +67,7 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
-    log.i('deepLinkRoute: $referrerId');
+    l.i('deepLinkRoute: $referrerId');
     if (referrerId.isNotEmpty) {
       initialReferral(referrerId);
     }
@@ -134,7 +134,7 @@ class LoginController extends GetxController {
         _continueWithUserToCreate();
       }
     } catch (e) {
-      log.e('Error buying ticket: $e');
+      l.e('Error buying ticket: $e');
       Get.closeAllSnackbars();
       Toast.error(
         message: 'Error buying ticket',
@@ -170,7 +170,7 @@ class LoginController extends GetxController {
   String _extractReferrerId(String route) {
     final splited = route.split('referral/');
     if (splited.length < 2) {
-      log.f("splited: $splited");
+      l.f("splited: $splited");
       return '';
     }
     return splited[1];
@@ -235,10 +235,10 @@ class LoginController extends GetxController {
               ),
             );
           } on UserCancelledException catch (e) {
-            log.e(e);
+            l.e(e);
             _removeLogingInState();
           } catch (e) {
-            log.e(e);
+            l.e(e);
             Toast.error(
               message:
                   'Error logging in, please try again, or use another method',
@@ -259,7 +259,7 @@ class LoginController extends GetxController {
         );
       } catch (e) {
         _removeLogingInState();
-        log.e(e);
+        l.e(e);
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
         );

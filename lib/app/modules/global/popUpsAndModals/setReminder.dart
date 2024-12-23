@@ -145,7 +145,7 @@ Future<int?> setReminder({
     ],
   ));
   if (alarmMeBefore == null || alarmMeBefore < 0) {
-    log.d(' local alarm not set');
+    l.d(' local alarm not set');
   } else {
     final alarmSettings = AlarmSettings(
       id: id,

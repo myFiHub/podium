@@ -143,7 +143,7 @@ class AptosMovement {
       // }
       return true;
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return false;
     }
   }
@@ -167,7 +167,7 @@ class AptosMovement {
       final parsedAmount = bigIntCoinToMoveOnAptos(bigIntPrice);
       return parsedAmount;
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return null;
     }
   }
@@ -186,7 +186,7 @@ class AptosMovement {
       );
       return BigInt.from(int.parse(respone[0]));
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return null;
     }
   }
@@ -206,7 +206,7 @@ class AptosMovement {
           limit: 10, // Adjust the limit as needed
         );
 
-        log.d(events);
+        l.d(events);
       } catch (e) {
         print('Error fetching events: $e');
       }
@@ -279,7 +279,7 @@ class AptosMovement {
       await client.submitSignedBCSTransaction(signedTransaction);
       return true;
     } catch (e, stackTrace) {
-      log.e(e, stackTrace: stackTrace);
+      l.e(e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -297,7 +297,7 @@ class AptosMovement {
       final price = response[0];
       return BigInt.from(int.parse(price));
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return null;
     }
   }

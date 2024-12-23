@@ -64,19 +64,17 @@ class BlockChainUtils {
         final GlobalController globalController = Get.find<GlobalController>();
         await globalController.switchExternalWalletChain(chainId);
       }
-      log.d(
-          'Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${_w3mService.session?.chainId}');
-      log.i('[initializewm3Service] _onModalConnect ${event?.toString()}');
+      l.d('Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${_w3mService.session?.chainId}');
+      l.i('[initializewm3Service] _onModalConnect ${event?.toString()}');
     }
 
     // ignore: unused_element
     void _onModalUpdate(ModalConnect? event) {
-      log.i('[initializewm3Service] _onModalUpdate ${event?.toString()}');
+      l.i('[initializewm3Service] _onModalUpdate ${event?.toString()}');
     }
 
     void _onModalNetworkChange(ModalNetworkChange? event) async {
-      log.i(
-          '[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
+      l.i('[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
       if (event != null) {
         GlobalController globalController = Get.find<GlobalController>();
 
@@ -90,11 +88,11 @@ class BlockChainUtils {
     }
 
     void _onModalDisconnect(ModalDisconnect? event) {
-      log.i('[initializewm3Service] _onModalDisconnect ${event?.toString()}');
+      l.i('[initializewm3Service] _onModalDisconnect ${event?.toString()}');
     }
 
     void _onModalError(ModalError? event) {
-      log.i('[initializewm3Service] _onModalError ${event?.toString()}');
+      l.i('[initializewm3Service] _onModalError ${event?.toString()}');
       // When user connected to Coinbase Wallet but Coinbase Wallet does not have a session anymore
       // (for instance if user disconnected the dapp directly within Coinbase Wallet)
       // Then Coinbase Wallet won't emit any event
@@ -104,15 +102,15 @@ class BlockChainUtils {
     }
 
     void _onSessionExpired(SessionExpire? event) {
-      log.i('[initializewm3Service] _onSessionExpired ${event?.toString()}');
+      l.i('[initializewm3Service] _onSessionExpired ${event?.toString()}');
     }
 
     void _onSessionUpdate(SessionUpdate? event) {
-      log.i('[initializewm3Service] _onSessionUpdate ${event?.toString()}');
+      l.i('[initializewm3Service] _onSessionUpdate ${event?.toString()}');
     }
 
     void _onSessionEvent(SessionEvent? event) {
-      log.i('[initializewm3Service] _onSessionEvent ${event?.toString()}');
+      l.i('[initializewm3Service] _onSessionEvent ${event?.toString()}');
       String? eventChainId = event?.chainId;
       if (eventChainId != null && eventChainId.isNotEmpty) {
         if (eventChainId.contains(':')) {
@@ -127,15 +125,15 @@ class BlockChainUtils {
     void _onRelayClientConnect(EventArgs? event) {
       // final BuildContext context = Get.context!;
       // showTextToast(text: 'Relay connected', context: context);
-      log.i('Relay connected');
+      l.i('Relay connected');
     }
 
     void _onRelayClientError(EventArgs? event) {
-      log.i('[initializewm3Service] _onRelayClientError ${event?.toString()}');
+      l.i('[initializewm3Service] _onRelayClientError ${event?.toString()}');
     }
 
     void _onRelayClientDisconnect(EventArgs? event) {
-      log.i('Relay disconnected: ${event?.toString()}');
+      l.i('Relay disconnected: ${event?.toString()}');
     }
 
     _w3mService.onModalConnect.subscribe(_onModalConnect);
@@ -172,7 +170,7 @@ class BlockChainUtils {
         });
       }
     } catch (e) {
-      log.f(
+      l.f(
         'Error initializing W3MService',
         error: e,
       );
@@ -231,7 +229,7 @@ class BlockChainUtils {
     //   eventName: 'Cheer',
     // );
     // cheerEventToListenTo.take(1).listen((event) {
-    //   log.i('^^^^^^^^^^^^^^^^^^^^Cheer event: $event^^^^^^^^^^^^^^^^^^^');
+    //   l.i('^^^^^^^^^^^^^^^^^^^^Cheer event: $event^^^^^^^^^^^^^^^^^^^');
     // });
     // //
     // final booEventToListenTo = _getContractEventListener(
@@ -242,7 +240,7 @@ class BlockChainUtils {
     //   eventName: 'Boo',
     // );
     // booEventToListenTo.take(1).listen((event) {
-    //   log.i('^^^^^^^^^^^^^^^Boo event: $event^^^^^^^^^^^^^^^^^^^^^');
+    //   l.i('^^^^^^^^^^^^^^^Boo event: $event^^^^^^^^^^^^^^^^^^^^^');
     // });
     //
   }

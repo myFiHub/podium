@@ -104,7 +104,7 @@ class CheckticketController extends GetxController {
   @override
   void onClose() {
     super.onClose();
-    log.f('CheckticketController closed');
+    l.f('CheckticketController closed');
   }
 
   _fakeUserModel(String address) {
@@ -435,7 +435,7 @@ class CheckticketController extends GetxController {
           isSpeakBuyableByTicket);
 
       if (unsupportedAccessTicket || unsupportedSpeakTicket) {
-        log.f('FIXME: add support for other ticket types');
+        l.f('FIXME: add support for other ticket types');
 
         Toast.warning(
           title: "Update Required",
@@ -483,7 +483,7 @@ class CheckticketController extends GetxController {
               ticketSeller: ticketSeller);
           // End buy speak tickets
         } else {
-          log.f('FIXME: add support for other ticket types');
+          l.f('FIXME: add support for other ticket types');
 
           Toast.warning(
             title: "Update Required",
@@ -501,7 +501,7 @@ class CheckticketController extends GetxController {
         );
       }
     } catch (e) {
-      log.e(e);
+      l.e(e);
       Toast.error(
         title: "Error",
         message: e.toString(),
@@ -644,7 +644,7 @@ class CheckticketController extends GetxController {
         targetUserId: ticketSeller.userInfo.id,
         referrerAddress: referrer.isEmpty ? null : referrer,
       );
-      log.d('bought: $bought');
+      l.d('bought: $bought');
     }
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
     if (ticketSeller.accessTicketType ==
@@ -717,7 +717,7 @@ class CheckticketController extends GetxController {
           access.canEnter = true;
         }
       } else {
-        log.f('FIXME: add support for other ticket types ');
+        l.f('FIXME: add support for other ticket types ');
       }
     }
 
@@ -750,7 +750,7 @@ class CheckticketController extends GetxController {
           access.canSpeak = true;
         }
       } else {
-        log.f('FIXME: add support for other ticket types');
+        l.f('FIXME: add support for other ticket types');
       }
     }
 

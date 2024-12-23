@@ -28,4 +28,4 @@ class CustomFilter extends LogFilter {
   }
 }
 
-final log = L.log;
+final l = L.log;

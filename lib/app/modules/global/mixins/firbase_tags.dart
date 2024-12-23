@@ -43,7 +43,7 @@ mixin FirebaseTags {
         return parsedTags;
       }
     } catch (e) {
-      log.e('Error searching for tags: $e');
+      l.e('Error searching for tags: $e');
       return {};
     }
   }

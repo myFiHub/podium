@@ -148,7 +148,7 @@ class CreateGroupController extends GetxController {
         try {
           tutorialCoachMark.show(context: contextForIntro!);
         } catch (e) {
-          log.e(e);
+          l.e(e);
         }
       });
     }
@@ -282,7 +282,7 @@ class CreateGroupController extends GetxController {
           .path); // Use this to store the image in the database or cloud storage
       fileLocalAddress.value = pickedFile.path;
     } else {
-      log.e('No image selected.');
+      l.e('No image selected.');
     }
   }
 
@@ -561,7 +561,7 @@ class CreateGroupController extends GetxController {
         }
       }
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return null;
     } finally {
       loadingUserIds.remove(user.id);
@@ -584,7 +584,7 @@ class CreateGroupController extends GetxController {
     }
     // loadingAddresses.add(value);
     showLoadingOnSearchInput.value = true;
-    log.d(ticketType);
+    l.d(ticketType);
     _deb.debounce(() async {
       try {
         checkIfValueIsDirectAddress(value);

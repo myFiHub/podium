@@ -34,8 +34,8 @@ UserInfoModel? singleUserParser(dynamic value) {
     );
     return user;
   } catch (e) {
-    log.e(value[UserInfoModel.idKey] + ' is causing problem');
-    log.e(e);
+    l.e(value[UserInfoModel.idKey] + ' is causing problem');
+    l.e(e);
     return null;
   }
 }

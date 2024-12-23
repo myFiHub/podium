@@ -81,7 +81,7 @@ sendGroupPeresenceEvent(
       return;
     }
   } catch (e) {
-    log.f(e);
+    l.f(e);
     analytics.logEvent(name: "send_group_presence_event_failed");
   }
 }
@@ -136,10 +136,10 @@ class GroupsController extends GetxController with FirebaseTags {
         .listen((ably.ConnectionStateChange stateChange) async {
       switch (stateChange.current) {
         case ably.ConnectionState.connected:
-          log.d('Connected to Ably!');
+          l.d('Connected to Ably!');
           break;
         case ably.ConnectionState.failed:
-          log.d('The connection to Ably failed.');
+          l.d('The connection to Ably failed.');
           // Failed connection
           break;
         default:
@@ -187,7 +187,7 @@ class GroupsController extends GetxController with FirebaseTags {
         searchPageController.searchedGroups.refresh();
       }
     } catch (e) {
-      log.e(e);
+      l.e(e);
     }
   }
 
@@ -235,7 +235,7 @@ class GroupsController extends GetxController with FirebaseTags {
         try {
           await _parseAndSetGroups(data);
         } catch (e) {
-          log.e(e);
+          l.e(e);
         } finally {
           gettingAllGroups.value = false;
         }
@@ -282,7 +282,7 @@ class GroupsController extends GetxController with FirebaseTags {
     if (dpt == 0) {
       return;
     }
-    log.d("Detect presence time: $dpt");
+    l.d("Detect presence time: $dpt");
 
     final groupsThatWereActiveRecently = groupsMap.entries.where((element) {
       final group = element.value;
@@ -291,8 +291,7 @@ class GroupsController extends GetxController with FirebaseTags {
       final diff = now - lastActiveAt;
       final isActive = diff < (1 * dpt);
       if (isActive) {
-        log.d(
-            "Group ${group.name} was active at ${DateTime.fromMillisecondsSinceEpoch(lastActiveAt)}");
+        l.d("Group ${group.name} was active at ${DateTime.fromMillisecondsSinceEpoch(lastActiveAt)}");
       }
       return isActive;
     }).toList();
@@ -373,18 +372,18 @@ class GroupsController extends GetxController with FirebaseTags {
             tmpTakingUsersInGroupsMap[groupId] ?? [];
         currentListForThisGroup.add(message.clientId!);
         tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
-        log.d("Talking users: $currentListForThisGroup");
+        l.d("Talking users: $currentListForThisGroup");
         _shouldUpdateTakingUsers = true;
       } else if (message.data == eventNames.notTalking) {
         final currentListForThisGroup =
             tmpTakingUsersInGroupsMap[groupId] ?? [];
         currentListForThisGroup.remove(message.clientId!);
         tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
-        log.d("Talking users: $currentListForThisGroup");
+        l.d("Talking users: $currentListForThisGroup");
         _shouldUpdateTakingUsers = true;
       }
     } else {
-      log.d("Interaction: ${message.data}");
+      l.d("Interaction: ${message.data}");
     }
   }
 
@@ -422,7 +421,7 @@ class GroupsController extends GetxController with FirebaseTags {
             try {
               await _parseAndSetGroups(data);
             } catch (e) {
-              log.e(e);
+              l.e(e);
             } finally {
               gettingAllGroups.value = false;
             }
@@ -547,7 +546,7 @@ class GroupsController extends GetxController with FirebaseTags {
         title: "Error",
         message: "Failed to create the Outpost",
       );
-      log.f("Error creating group: $e");
+      l.f("Error creating group: $e");
     }
   }
 
@@ -565,7 +564,7 @@ class GroupsController extends GetxController with FirebaseTags {
         title: "Error",
         message: "Failed to delete room",
       );
-      log.f("Error deleting group: $e");
+      l.f("Error deleting group: $e");
     }
   }
 
@@ -602,7 +601,7 @@ class GroupsController extends GetxController with FirebaseTags {
       group: group,
       joiningByLink: joiningByLink,
     );
-    log.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
+    l.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
     if (accesses.canEnter == false) {
       joiningGroupId.value = '';
       return;
@@ -662,7 +661,7 @@ class GroupsController extends GetxController with FirebaseTags {
           title: "Error",
           message: "Failed to join the room",
         );
-        log.f("Error joining group: $e");
+        l.f("Error joining group: $e");
       } finally {
         joiningGroupId.value = '';
       }
@@ -784,8 +783,7 @@ class GroupsController extends GetxController with FirebaseTags {
       );
     } else {
       final result = await Get.dialog<GroupAccesses?>(CheckTicketView());
-      log.d(
-          "Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
+      l.d("Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
       Get.delete<CheckticketController>();
       joiningGroupId.value = '';
       return result;

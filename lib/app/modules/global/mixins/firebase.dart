@@ -47,7 +47,7 @@ Future<List<UserInfoModel>> getUsersByIds(List<String> userIds) async {
     }
     return usersList;
   } catch (e) {
-    log.f('Error getting users by ids: $e');
+    l.f('Error getting users by ids: $e');
     return [];
   }
 }
@@ -120,7 +120,7 @@ Future<bool> initializeUseReferalCodes({
     await databaseRef.set(codes);
     return true;
   } catch (e) {
-    log.e(e);
+    l.e(e);
     return false;
   }
 }
@@ -147,7 +147,7 @@ Future<String?> setUsedByToReferral({
       return null;
     }
   } catch (e) {
-    log.e(e);
+    l.e(e);
     return null;
   }
 }
@@ -174,7 +174,7 @@ addRandomReferalCodeToUser({required String userId}) async {
         .ref(FireBaseConstants.referalsRef + userId + '/${referalCode}');
     await databaseRef.set(referral.toJson());
   } catch (e) {
-    log.e(e);
+    l.e(e);
   }
 }
 
@@ -195,7 +195,7 @@ PaymentEvent? _parseSinglePayment(dynamic value) {
     );
     return payment;
   } catch (e) {
-    log.e(e);
+    l.e(e);
     return null;
   }
 }
@@ -215,7 +215,7 @@ Future<List<PaymentEvent>> getReceivedPayments({required String userId}) async {
       if (payment != null) {
         paymentsList.add(payment);
       } else {
-        log.e('Error parsing payment,id: $key');
+        l.e('Error parsing payment,id: $key');
       }
     });
     return paymentsList;
@@ -239,7 +239,7 @@ Future<List<PaymentEvent>> getInitiatedPayments(
       if (payment != null) {
         paymentsList.add(payment);
       } else {
-        log.e('Error parsing payment,id: $key');
+        l.e('Error parsing payment,id: $key');
       }
     });
     return paymentsList;
@@ -286,7 +286,7 @@ Future<String?> saveNameForUserById(
 
     return name;
   } catch (e) {
-    log.f('Error saving name for user by id: $e');
+    l.f('Error saving name for user by id: $e');
     return null;
   }
 }
@@ -328,7 +328,7 @@ Future<FirebaseSession?> getSessionData({required String groupId}) async {
     );
     return firebaseSession;
   } else {
-    log.i('session not found');
+    l.i('session not found');
     return null;
   }
 }
@@ -423,7 +423,7 @@ Future<bool> setCreatorJoinedToTrue({required String groupId}) async {
     await databaseRef.set(true);
     return true;
   } catch (e) {
-    log.e(e);
+    l.e(e);
     return false;
   }
 }
@@ -447,7 +447,7 @@ StreamSubscription<DatabaseEvent>? startListeningToSessionMembers({
         });
         onData(membersMap);
       } else {
-        log.i('session not found');
+        l.i('session not found');
         return null;
       }
     });
@@ -470,7 +470,7 @@ Future<bool> inviteUserToJoinGroup({
     });
     return true;
   } catch (e) {
-    log.e(e);
+    l.e(e);
     return false;
   }
 }
@@ -558,7 +558,7 @@ Future<Map<String, InvitedMember>> getInvitedMembers({
     });
     return invitedMembersMap;
   } else {
-    log.i('no invited members found');
+    l.i('no invited members found');
     return {};
   }
 }
@@ -576,7 +576,7 @@ Future<FirebaseSessionMember?> getUserSessionData(
     final firebaseSessionMember = FirebaseSessionMember.fromJson(session);
     return firebaseSessionMember;
   } else {
-    log.i('session not found');
+    l.i('session not found');
     return null;
   }
 }
@@ -596,7 +596,7 @@ Future<int?> getUserRemainingTalkTime({
   if (remainingTime != null) {
     return remainingTime;
   } else {
-    log.i('session not found');
+    l.i('session not found');
     return null;
   }
 }
@@ -616,7 +616,7 @@ StreamSubscription<DatabaseEvent>? startListeningToMyRemainingTalkingTime({
       if (remainingTime != null) {
         onData(remainingTime);
       } else {
-        log.i('session not found');
+        l.i('session not found');
         return null;
       }
     });
@@ -632,7 +632,7 @@ Future<void> updateRemainingTimeOnFirebase({
           .sessionsRef +
       groupId +
       '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.remainingTalkTimeKey}');
-  log.d("updating remaining time to $newValue in firebase");
+  l.d("updating remaining time to $newValue in firebase");
   await databaseRef.set(newValue);
 }
 
@@ -768,7 +768,7 @@ Future<Map<String, FirebaseGroup>> searchForGroupByName(
       try {
         return groupsParser(snapshot.value);
       } catch (e) {
-        log.e(e);
+        l.e(e);
         return {};
       }
     }
@@ -802,7 +802,7 @@ Future<Map<String, UserInfoModel>> searchForUserByName(String name) async {
     }
     return {};
   } catch (e) {
-    log.e(e);
+    l.e(e);
     return {};
   }
 }
@@ -815,7 +815,7 @@ sendNotification({required FirebaseNotificationModel notification}) async {
       notification.toJson(),
     );
   } catch (e) {
-    log.e(e);
+    l.e(e);
   }
 }
 
@@ -853,7 +853,7 @@ Future<List<FirebaseNotificationModel>> getMyNotifications() async {
       return [];
     }
   } catch (e) {
-    log.e(e);
+    l.e(e);
     return [];
   }
 }
@@ -894,7 +894,7 @@ StreamSubscription<DatabaseEvent>? startListeningToMyNotifications(
     });
     return subscription;
   } catch (e) {
-    log.e(e);
+    l.e(e);
     return null;
   }
 }
@@ -911,7 +911,7 @@ markNotificationAsRead({required String notificationId}) async {
       },
     );
   } catch (e) {
-    log.e(e);
+    l.e(e);
   }
 }
 
@@ -927,7 +927,7 @@ deleteNotification({required String notificationId}) async {
       },
     );
   } catch (e) {
-    log.e(e);
+    l.e(e);
   }
 }
 
@@ -994,7 +994,7 @@ Future<UserInfoModel?> saveUserLoggedInWithSocialIfNeeded({
       return user;
     }
   } catch (e) {
-    log.f('Error saving user logged in with X to firebase: $e');
+    l.f('Error saving user logged in with X to firebase: $e');
     return null;
   }
 }
@@ -1004,7 +1004,7 @@ Future<bool> saveNewPayment({required PaymentEvent event}) {
       FirebaseDatabase.instance.ref(FireBaseConstants.paymentEvents);
   final newEventRef = databaseRef.push();
   return newEventRef.set(event.toJson()).then((value) => true).catchError((e) {
-    log.e(e);
+    l.e(e);
     return false;
   });
 }

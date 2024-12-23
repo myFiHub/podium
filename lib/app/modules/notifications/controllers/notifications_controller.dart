@@ -63,7 +63,7 @@ class NotificationsController extends GetxController {
       final notifs = await getMyNotifications();
       notifications.assignAll(notifs);
     } catch (e) {
-      log.e(e);
+      l.e(e);
     }
   }
 
@@ -71,7 +71,7 @@ class NotificationsController extends GetxController {
     try {
       deleteNotification(notificationId: notif.id);
     } catch (e) {
-      log.e(e);
+      l.e(e);
     }
   }
 
@@ -87,7 +87,7 @@ class NotificationsController extends GetxController {
     try {
       await deleteNotification(notificationId: notif.id);
     } catch (e) {
-      log.e(e);
+      l.e(e);
     }
   }
 
@@ -99,7 +99,7 @@ class NotificationsController extends GetxController {
     try {
       await deleteNotification(notificationId: notif.id);
     } catch (e) {
-      log.e(e);
+      l.e(e);
     }
   }
 
@@ -117,7 +117,7 @@ class NotificationsController extends GetxController {
             isRead: false),
       );
     } catch (e) {
-      log.e(e);
+      l.e(e);
     }
   }
 }

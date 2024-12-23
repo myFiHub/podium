@@ -34,19 +34,19 @@ Future<void> initDeepLinks() async {
 
   // Handle links
   final initialLink = await _appLinks.getInitialLink();
-  log.f('initial link: $initialLink');
+  l.f('initial link: $initialLink');
   if (initialLink != null) {
     processLink(initialLink.toString());
   }
   _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-    log.f('deep link: $uri');
+    l.f('deep link: $uri');
     processLink(uri.toString());
   });
 }
 
 processLink(String? link) async {
   if (link != null) {
-    log.f('deep link: $link');
+    l.f('deep link: $link');
     late String deepLinkedPage;
     if (link.startsWith('podium://')) {
       deepLinkedPage = link.replaceAll('podium://', '/');
@@ -125,7 +125,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     initDeepLinks();
 
-    log.i(SchedulerBinding.instance.lifecycleState);
+    l.i(SchedulerBinding.instance.lifecycleState);
 
     _listener = AppLifecycleListener(
       onShow: () => _pushState('show'),
@@ -159,11 +159,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void _handleDetached() async {
     jitsiMeet.hangUp();
     jitsiMethodChannel.invokeMethod<String>('hangUp');
-    log.f('Detached');
+    l.f('Detached');
   }
 
   void _pushState(String state) {
-    log.i('States: $state');
+    l.i('States: $state');
   }
 
   void _handleStateChange(AppLifecycleState state) {
@@ -172,7 +172,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final globalController = Get.find<GlobalController>();
       globalController.appLifecycleState.value = state;
     }
-    log.i('State changed: $state');
+    l.i('State changed: $state');
     if (state == AppLifecycleState.resumed) {
       Web3AuthFlutter.setCustomTabsClosed();
     }

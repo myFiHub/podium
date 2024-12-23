@@ -124,7 +124,7 @@ class MyProfileController extends GetxController {
             saveIntroAsDone(true);
           },
           onClickTarget: (target) {
-            log.d(target);
+            l.d(target);
             _scrollIfNeeded();
           },
           onClickTargetWithTapPosition: (target, tapDetails) {
@@ -144,7 +144,7 @@ class MyProfileController extends GetxController {
         try {
           tutorialCoachMark.show(context: contextForIntro!);
         } catch (e) {
-          log.e(e);
+          l.e(e);
         }
       });
     }
@@ -315,7 +315,7 @@ class MyProfileController extends GetxController {
       );
       isGettingBalances.value = false;
     } catch (e) {
-      log.e(e);
+      l.e(e);
       isGettingBalances.value = false;
     }
   }
@@ -371,7 +371,7 @@ class MyProfileController extends GetxController {
       payments.value = _payments;
       payments.refresh();
     } catch (e) {
-      log.e(e);
+      l.e(e);
     }
   }
 
@@ -404,7 +404,7 @@ class MyProfileController extends GetxController {
     final isAlreadyActivated = await checkInternalWalletActivation(
       silent: true,
     );
-    log.d('isAlreadyActivated: $isAlreadyActivated');
+    l.d('isAlreadyActivated: $isAlreadyActivated');
     if (isAlreadyActivated) {
       return;
     }

@@ -206,7 +206,7 @@ class SetReminderButton extends GetView<GroupDetailController> {
             eventName: group.name,
             timesList: defaultTimeList(endsAt: group.scheduledFor),
           );
-          log.d('newDateInSeconds: $newDateInSeconds');
+          l.d('newDateInSeconds: $newDateInSeconds');
         },
         child: Text(
           text,

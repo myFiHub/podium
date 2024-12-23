@@ -72,7 +72,7 @@ class GroupDetailController extends GetxController {
       GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining
     ];
     if (params.any((element) => Get.parameters[element] == null)) {
-      log.e('Missing parameters');
+      l.e('Missing parameters');
       return;
     }
     stringedGroupInfo = Get.parameters[GroupDetailsParametersKeys.groupInfo]!;
@@ -133,7 +133,7 @@ class GroupDetailController extends GetxController {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       minutesInterval: 5,
     );
-    log.i(dateTime);
+    l.i(dateTime);
   }
 
   onGroupUpdate(DatabaseEvent data) {
@@ -309,7 +309,7 @@ class GroupDetailController extends GetxController {
         notification: invitationNotification,
       );
     } catch (e) {
-      log.e(e);
+      l.e(e);
     }
   }
 }

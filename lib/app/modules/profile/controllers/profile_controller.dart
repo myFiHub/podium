@@ -114,7 +114,7 @@ class ProfileController extends GetxController {
       ]);
       //
     } catch (e) {
-      log.e('Error getting prices: $e');
+      l.e('Error getting prices: $e');
     } finally {
       isGettingTicketPrice.value = false;
     }

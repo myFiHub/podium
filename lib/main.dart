@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
@@ -44,6 +45,33 @@ Future<void> initDeepLinks() async {
   });
 }
 
+_extractLinkForAndroid(String link) {
+  String deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
+  deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
+  deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
+  return deepLinkedPage;
+}
+
+_extractLinkForIOS(String link) {
+  late String deepLinkedPage;
+  Uri uri = Uri.parse(link);
+  String? originalLink = uri.queryParameters['link'];
+
+  if (originalLink != null) {
+    Uri innerUri = Uri.parse(originalLink);
+    String path = innerUri.path;
+    Map<String, String> params = innerUri.queryParameters;
+
+    if (params.containsKey('id')) {
+      deepLinkedPage = '$path/${params['id']}';
+    }
+    if (params.containsKey('referrerId')) {
+      deepLinkedPage = '$path/${params['referrerId']}';
+    }
+  }
+  return deepLinkedPage;
+}
+
 processLink(String? link) async {
   if (link != null) {
     l.f('deep link: $link');
@@ -51,9 +79,11 @@ processLink(String? link) async {
     if (link.startsWith('podium://')) {
       deepLinkedPage = link.replaceAll('podium://', '/');
     } else if (link.startsWith(Env.baseDeepLinkUrl)) {
-      deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
-      deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
-      deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
+      if (Platform.isAndroid) {
+        deepLinkedPage = _extractLinkForAndroid(link);
+      } else if (Platform.isIOS) {
+        deepLinkedPage = _extractLinkForIOS(link);
+      }
     } else {
       deepLinkedPage = '';
     }

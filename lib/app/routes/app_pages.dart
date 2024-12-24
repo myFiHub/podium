@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/groupDetail/views/group_by_id_landing.dart';
 import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
+
 import '../modules/allGroups/bindings/all_groups_binding.dart';
 import '../modules/allGroups/views/all_groups_view.dart';
 import '../modules/chat/bindings/chat_binding.dart';
@@ -27,7 +28,6 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/search/bindings/search_binding.dart';
 import '../modules/search/views/search_view.dart';
-
 import '../modules/wallet/bindings/wallet_binding.dart';
 import '../modules/wallet/views/wallet_view.dart';
 
@@ -61,6 +61,11 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.WEB3AUTH_REDIRECTED,
+      page: () => const LoginView(),
+      binding: LoginBinding(),
+    ),
+    GetPage(
+      name: _Paths.WEB3AUTH_REDIRECTED_AUTH,
       page: () => const LoginView(),
       binding: LoginBinding(),
     ),

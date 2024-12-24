@@ -7,7 +7,7 @@ import 'package:podium/app/modules/global/controllers/group_call_controller.dart
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInRoomList.dart';
+import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInGroupList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/storage.dart';
@@ -300,7 +300,7 @@ class MembersList extends GetView<GroupCallController> {
                         () {
                           final members = controller.sortedMembers.value;
                           //  sort the users based on the sort type, biggest to smallest
-                          return UsersInRoomList(
+                          return UsersInGroupList(
                             shouldShowIntro: shouldShowIntro,
                             usersList: members,
                             groupId: controller.group.value!.id,
@@ -313,7 +313,7 @@ class MembersList extends GetView<GroupCallController> {
                       Obx(
                         () {
                           final members = controller.talkingMembers.value;
-                          return UsersInRoomList(
+                          return UsersInGroupList(
                             shouldShowIntro: false,
                             usersList: members,
                             groupId: controller.group.value!.id,
@@ -410,7 +410,7 @@ class SearchInRoom extends GetView<GroupCallController> {
                   .contains(searchedValue.toLowerCase());
             }).toList();
             return Expanded(
-              child: UsersInRoomList(
+              child: UsersInGroupList(
                 shouldShowIntro: false,
                 usersList: filteredMembers,
                 groupId: controller.group.value!.id,

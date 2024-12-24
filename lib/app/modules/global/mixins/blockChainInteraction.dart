@@ -142,6 +142,8 @@ internal_cheerOrBoo({
       function: contract.function(methodName),
       parameters: parameters,
       value: value,
+      gasPrice: EtherAmount.inWei(BigInt.from(20000000000)), // 20 Gwei
+      maxGas: 100000, //
     );
 
     late TransactionMetadata metadata;
@@ -581,6 +583,8 @@ Future<bool> internal_buyFriendTechTicket({
       contract: contract,
       function: contract.function(methodName),
       parameters: parameters,
+      gasPrice: EtherAmount.inWei(BigInt.from(20000000000)), // 20 Gwei
+      maxGas: 100000, //
     );
     final isValueZero = buyPrice == BigInt.zero;
     final metadata = TransactionMetadata(
@@ -860,12 +864,15 @@ Future<bool> internal_buySharesWithReferrer({
     parseAddress(referrer)
   ];
   try {
-    final value = EtherAmount.fromBigInt(EtherUnit.wei, buyPrice);
+    final value =
+        EtherAmount.fromBigInt(EtherUnit.wei, buyPrice + BigInt.from(1));
     final transaction = Transaction.callContract(
       value: value,
       contract: contract,
       function: contract.function(methodName),
       parameters: parameters,
+      gasPrice: EtherAmount.inWei(BigInt.from(20000000000)), // 20 Gwei
+      maxGas: 100000, //
     );
 
     final metadata = TransactionMetadata(
@@ -875,7 +882,10 @@ Future<bool> internal_buySharesWithReferrer({
     );
 
     final signature = await sendTransaction(
-        transaction: transaction, chainId: chainId, metadata: metadata);
+      transaction: transaction,
+      chainId: chainId,
+      metadata: metadata,
+    );
 
     if (signature != null && signature.length > 10) {
       if (targetUserId != null) {

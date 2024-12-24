@@ -261,8 +261,7 @@ bool canInvite({
   required String currentUserId,
 }) {
   final iAmCreator = currentUserId == group.creator.id;
-  final isGroupPublic = group.accessType == null ||
-      group.accessType == FreeGroupAccessTypes.public;
+  final isGroupPublic = group.accessType == FreeGroupAccessTypes.public;
   final amIAMember = group.members.keys.toList().contains(currentUserId);
   if (iAmCreator || isGroupPublic || amIAMember) {
     return true;
@@ -275,8 +274,7 @@ bool canInviteToSpeak({
   required String currentUserId,
 }) {
   final iAmCreator = currentUserId == group.creator.id;
-  final isGroupPublic = group.speakerType == null ||
-      group.speakerType == FreeGroupSpeakerTypes.everyone;
+  final isGroupPublic = group.speakerType == FreeGroupSpeakerTypes.everyone;
   if (iAmCreator || isGroupPublic) {
     return true;
   }

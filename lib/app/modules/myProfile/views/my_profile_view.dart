@@ -171,10 +171,10 @@ class BugsAndFeedbacks extends GetView<MyProfileController> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              WidgetSpan(
-                child: Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Icon(
+              const WidgetSpan(
+                child: const Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: const Icon(
                     Icons.bug_report,
                     size: 20,
                     color: Colors.red,
@@ -197,7 +197,7 @@ class ToggleShowArchivedGroups extends GetView<GlobalController> {
     return ListTile(
       title: const Text(
         'Show My Archived Rooms',
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 18,
           color: Colors.white,
           fontWeight: FontWeight.w700,

@@ -10,12 +10,12 @@ class AllGroupsController extends GetxController {
 
   @override
   void onInit() {
+    super.onInit();
     searchedGroups.value =
         getGroupsVisibleToMe(groupsController.groups.value, myId);
     groupsController.groups.listen((event) {
       search(searchValue.value);
     });
-    super.onInit();
   }
 
   @override

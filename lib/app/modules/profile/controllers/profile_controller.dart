@@ -55,10 +55,10 @@ class ProfileController extends GetxController {
 
   @override
   void onInit() {
+    super.onInit();
     final stringedUserInfo = Get.parameters[UserProfileParamsKeys.userInfo]!;
     userInfo.value = singleUserParser(jsonDecode(stringedUserInfo));
     Future.wait<void>([getPrices(), _getPayments()]);
-    super.onInit();
   }
 
   @override

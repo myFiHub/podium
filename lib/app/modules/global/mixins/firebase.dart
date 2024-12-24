@@ -428,6 +428,26 @@ Future<bool> setCreatorJoinedToTrue({required String groupId}) async {
   }
 }
 
+Future<Map<String, FirebaseSessionMember>> getSessionMembers(
+    {required String sessionId}) async {
+  final databaseRef = FirebaseDatabase.instance.ref(
+      FireBaseConstants.sessionsRef +
+          sessionId +
+          '/${FirebaseSession.membersKey}');
+  final snapshot = await databaseRef.once();
+  final members = snapshot.snapshot.value as dynamic;
+  if (members != null) {
+    final Map<String, FirebaseSessionMember> membersMap = {};
+    members.keys.toList().forEach((element) {
+      final member = FirebaseSessionMember.fromJson(members[element]);
+      membersMap[element] = member;
+    });
+    return membersMap;
+  } else {
+    return {};
+  }
+}
+
 StreamSubscription<DatabaseEvent>? startListeningToSessionMembers({
   required String sessionId,
   required void Function(Map<String, FirebaseSessionMember>) onData,

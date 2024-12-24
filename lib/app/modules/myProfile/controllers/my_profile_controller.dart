@@ -84,6 +84,7 @@ class MyProfileController extends GetxController {
 
   @override
   void onInit() {
+    super.onInit();
     globalController.externalWalletChainId.listen((address) {
       if (address.isNotEmpty && externalWalletChianId == baseChainId) {
         checkExternalWalletActivation();
@@ -91,11 +92,10 @@ class MyProfileController extends GetxController {
     });
     _getPayments();
     _getBalances();
-    super.onInit();
   }
 
   @override
-  void onReady() {
+  void onReady() async {
     super.onReady();
     final alreadyViewed = storage.read(IntroStorageKeys.viewedMyProfile);
     if (
@@ -105,69 +105,69 @@ class MyProfileController extends GetxController {
         //
         ) {
       // wait for the context to be ready
-      Future.delayed(const Duration(seconds: 0)).then((v) {
-        tutorialCoachMark = TutorialCoachMark(
-          targets: _createTargets(),
-          skipWidget: Button(
-            size: ButtonSize.SMALL,
-            type: ButtonType.outline,
-            color: Colors.red,
-            onPressed: () {
-              saveIntroAsDone(true);
-            },
-            child: const Text("Finish"),
-          ),
-          paddingFocus: 5,
-          opacityShadow: 0.5,
-          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          onFinish: () {
+      await Future.delayed(const Duration(seconds: 0));
+      tutorialCoachMark = TutorialCoachMark(
+        targets: _createTargets(),
+        skipWidget: Button(
+          size: ButtonSize.SMALL,
+          type: ButtonType.outline,
+          color: Colors.red,
+          onPressed: () {
             saveIntroAsDone(true);
           },
-          onClickTarget: (target) {
-            l.d(target);
-            _scrollIfNeeded();
-          },
-          onClickTargetWithTapPosition: (target, tapDetails) {
-            print("target: $target");
-            print(
-                "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
-          },
-          onClickOverlay: (target) {
-            print('onClickOverlay: $target');
-            _scrollIfNeeded();
-          },
-          onSkip: () {
-            saveIntroAsDone(true);
-            return true;
-          },
-        );
-        try {
-          tutorialCoachMark.show(context: contextForIntro!);
-        } catch (e) {
-          l.e(e);
-        }
-      });
+          child: const Text("Finish"),
+        ),
+        paddingFocus: 5,
+        opacityShadow: 0.5,
+        imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        onFinish: () {
+          saveIntroAsDone(true);
+        },
+        onClickTarget: (target) {
+          l.d(target);
+          _scrollIfNeeded();
+        },
+        onClickTargetWithTapPosition: (target, tapDetails) {
+          print("target: $target");
+          print(
+              "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+        },
+        onClickOverlay: (target) {
+          print('onClickOverlay: $target');
+          _scrollIfNeeded();
+        },
+        onSkip: () {
+          saveIntroAsDone(true);
+          return true;
+        },
+      );
+      try {
+        await Future.delayed(const Duration(milliseconds: 500));
+        tutorialCoachMark.show(context: contextForIntro!);
+      } catch (e) {
+        l.e(e);
+      }
     }
   }
 
   int _currentStep = 0;
-  _scrollIfNeeded() {
+  _scrollIfNeeded() async {
     _currentStep++;
     if (_currentStep == 1) {
-      scrollController.animateTo(
+      await scrollController.animateTo(
         200,
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeInOut,
       );
     } else if (_currentStep == 2) {
-      scrollController.animateTo(
+      await scrollController.animateTo(
         400,
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeInOut,
       );
     } else if (_currentStep == 3) {
-      scrollController.animateTo(
-        600,
+      await scrollController.animateTo(
+        500,
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeInOut,
       );
@@ -246,9 +246,9 @@ class MyProfileController extends GetxController {
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
                     color: Colors.white,
-                    onPressed: () {
+                    onPressed: () async {
+                      await _scrollIfNeeded();
                       tutorialCoachMark.next();
-                      _scrollIfNeeded();
                     },
                     child: const Text(
                       "Next",

@@ -126,7 +126,6 @@ class OngoingGroupCallController extends GetxController {
   void onInit() async {
     super.onInit();
     final ongoingGroupCallGroup = groupCallController.group.value!;
-
     final channel = realtimeInstance.channels.get(ongoingGroupCallGroup.id);
     presenceUpdateStream = channel.presence
         .subscribe(action: PresenceAction.update)
@@ -167,41 +166,24 @@ class OngoingGroupCallController extends GetxController {
     sessionMembersSubscription = startListeningToSessionMembers(
       sessionId: ongoingGroupCallGroup.id,
       onData: (sessionMembers) {
-        final Map<String, int> remainingTimeMap = {};
-        final membersList = sessionMembers.values.toList();
-        // sort based on last talking time to show the most recent talker first
-        membersList
-            .sort((a, b) => b.startedToTalkAt.compareTo(a.startedToTalkAt));
-        // final talkingIdsList = membersList
-        //     .where((element) => element.isTalking)
-        //     .map((e) => e.id)
-        //     .toList();
-        // if (talkingIdsList.length != talkingIds.value.length) {
-        //   talkingIds.value = talkingIdsList;
-        //   final GroupCallController groupCallController =
-        //       Get.find<GroupCallController>();
-        //   groupCallController.updateTalkingMembers(
-        //     ids: talkingIdsList,
-        //   );
-        // }
-        sessionMembers.forEach((key, value) {
-          remainingTimeMap[key] = value.remainingTalkTime;
-        });
-        allRemainingTimesMap.value.addAll(remainingTimeMap);
-        allRemainingTimesMap.refresh();
+        _parseReceivedSessionMembers(sessionMembers);
       },
     );
   }
 
   @override
-  void onReady() {
+  void onReady() async {
     super.onReady();
-    try {
-      // Recorder.instance.init();
-      // Recorder.instance.start();
-    } on Exception catch (e) {
-      debugPrint('init() error: $e\n');
-    }
+    // try {
+    //   await Future.delayed(const Duration(seconds: 30));
+    //   final ongoingGroupCallGroup = groupCallController.group.value!;
+    //   final sessionMembers = await getSessionMembers(
+    //     sessionId: ongoingGroupCallGroup.id,
+    //   );
+    //   _parseReceivedSessionMembers(sessionMembers);
+    // } on Exception catch (e) {
+    //   debugPrint('init() error: $e\n');
+    // }
   }
 
   @override
@@ -215,6 +197,32 @@ class OngoingGroupCallController extends GetxController {
     firebaseSession.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
+  }
+
+  _parseReceivedSessionMembers(
+    Map<String, FirebaseSessionMember> sessionMembers,
+  ) {
+    final Map<String, int> remainingTimeMap = {};
+    final membersList = sessionMembers.values.toList();
+    // sort based on last talking time to show the most recent talker first
+    membersList.sort((a, b) => b.startedToTalkAt.compareTo(a.startedToTalkAt));
+    // final talkingIdsList = membersList
+    //     .where((element) => element.isTalking)
+    //     .map((e) => e.id)
+    //     .toList();
+    // if (talkingIdsList.length != talkingIds.value.length) {
+    //   talkingIds.value = talkingIdsList;
+    //   final GroupCallController groupCallController =
+    //       Get.find<GroupCallController>();
+    //   groupCallController.updateTalkingMembers(
+    //     ids: talkingIdsList,
+    //   );
+    // }
+    sessionMembers.forEach((key, value) {
+      remainingTimeMap[key] = value.remainingTalkTime;
+    });
+    allRemainingTimesMap.value.addAll(remainingTimeMap);
+    allRemainingTimesMap.refresh();
   }
 
   startIntro() {

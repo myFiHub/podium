@@ -286,7 +286,7 @@ class CreateGroupController extends GetxController {
     }
   }
 
-  Future<String> uploadFile({required groupId}) async {
+  Future<String?> uploadFile({required groupId}) async {
     final storageRef = FirebaseStorage.instance
         .ref()
         .child('${FireBaseConstants.groupsRef}$groupId');
@@ -298,7 +298,7 @@ class CreateGroupController extends GetxController {
     final fileSize = selectedFile!.lengthSync();
     if (fileSize > 2 * 1024 * 1024) {
       Toast.error(message: 'Image size must be less than 2MB');
-      return "";
+      return null;
     }
     // Upload the image to Firebase Storage
     final uploadTask = storageRef.putFile(selectedFile!);
@@ -667,7 +667,11 @@ class CreateGroupController extends GetxController {
     final id = const Uuid().v4();
     String imageUrl = "";
     if (selectedFile != null) {
-      imageUrl = await uploadFile(groupId: id);
+      final res = await uploadFile(groupId: id);
+      if (res == null) {
+        return;
+      }
+      imageUrl = res;
     }
 
     try {

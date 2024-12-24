@@ -587,7 +587,7 @@ class GroupsController extends GetxController with FirebaseTags {
     if (group == null) {
       Toast.error(
         title: "Error",
-        message: "Failed to join the room, room not found",
+        message: "Failed to join the Outpost, Outpost not found",
       );
       Navigate.to(
         type: NavigationTypes.offAllNamed,
@@ -659,7 +659,7 @@ class GroupsController extends GetxController with FirebaseTags {
       } catch (e) {
         Toast.error(
           title: "Error",
-          message: "Failed to join the room",
+          message: "Failed to join the Outpost, Outpost not found",
         );
         l.f("Error joining group: $e");
       } finally {

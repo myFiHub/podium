@@ -32,7 +32,7 @@ class FirebaseGroup {
   Map<String, String> members;
   String? imageUrl;
   Map<String, InvitedMember> invitedMembers = {};
-  String? accessType;
+  String accessType;
   String? speakerType;
   String? subject;
   List<UserTicket> ticketsRequiredToAccess = [];
@@ -76,7 +76,7 @@ class FirebaseGroup {
     required this.id,
     required this.creator,
     required this.members,
-    this.accessType,
+    required this.accessType,
     this.speakerType,
     this.lowercasename,
     this.subject,

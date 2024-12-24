@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "288230711604",
+    "firebase_url": "https://podium-b809c-default-rtdb.firebaseio.com",
+    "project_id": "podium-b809c",
+    "storage_bucket": "podium-b809c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:288230711604:android:83be6cafd14f9fb9fe4561",
+        "android_client_info": {
+          "package_name": "com.web3podium"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxdfGJY5MgU1hKVAiIiyb88H6eDOiciME"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

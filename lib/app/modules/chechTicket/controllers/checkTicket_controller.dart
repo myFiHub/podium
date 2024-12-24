@@ -406,10 +406,11 @@ class CheckticketController extends GetxController {
         canSpeakWithoutATicket;
 
     final canEnter = allUsersToBuyTicketFrom.value.entries.any(
-      (element) =>
-          element.value.boughtTicketToAccess == true &&
-          element.value.accessTicketType != null,
-    );
+          (element) =>
+              element.value.boughtTicketToAccess == true &&
+              element.value.accessTicketType != null,
+        ) ||
+        canEnterWithoutTicket;
     final accessResult = GroupAccesses(
       canEnter: isAccessBuyableByTicket ? canEnter : canEnterWithoutTicket,
       canSpeak: isSpeakBuyableByTicket ? canSpeak : canSpeakWithoutATicket,
@@ -529,7 +530,7 @@ class CheckticketController extends GetxController {
     }
 
     bought = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
-      sellerAddress: ticketSeller.address,
+      sellerAddress: ticketSeller.userInfo.aptosInternalWalletAddress,
       sellerName: ticketSeller.userInfo.fullName,
       referrer: referrer,
     );

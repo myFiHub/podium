@@ -276,7 +276,9 @@ class AptosMovement {
       );
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
-      await client.submitSignedBCSTransaction(signedTransaction);
+      final res = await client.submitSignedBCSTransaction(signedTransaction);
+      l.d(res);
+
       return true;
     } catch (e, stackTrace) {
       l.e(e, stackTrace: stackTrace);

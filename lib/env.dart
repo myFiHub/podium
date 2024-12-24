@@ -39,7 +39,8 @@ class Env {
   static final cheerBooAptosAddress = dotenv.env['CHEERBOO_APTOS_ADDRESS']!;
 
   static final VERSION =
-      String.fromEnvironment('VERSION', defaultValue: '1.1.2');
+      // ignore: prefer_const_constructors
+      String.fromEnvironment('VERSION', defaultValue: '1.1.1');
   // read from --dart-define=VERSION=$version
 
   static String? starsArenaAddress(String chainId) {

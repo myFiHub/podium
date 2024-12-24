@@ -708,8 +708,9 @@ class GroupsController extends GetxController with FirebaseTags {
     final myUser = globalController.currentUserInfo.value!;
     final iAmGroupCreator = group.creator.id == myUser.id;
     if (iAmGroupCreator) return GroupAccesses(canEnter: true, canSpeak: true);
+
     if (accessIsBuyableByTicket(group) || speakIsBuyableByTicket(group)) {
-      final results = await checkTicket(group: group);
+      final GroupAccesses? results = await checkTicket(group: group);
       if (results?.canEnter == false) {
         Toast.error(
           title: "Error",

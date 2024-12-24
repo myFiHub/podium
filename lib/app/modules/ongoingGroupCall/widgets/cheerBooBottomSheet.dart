@@ -86,7 +86,8 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
                 builder: (FormFieldState<String?> field) {
                   return Input(
                     keyboardAppearance: Brightness.dark,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     hintText: 'Amount (min: ${Env.minimumCheerBooAmount})',
                     validator: FormBuilderValidators.compose([
                       FormBuilderValidators.required(),

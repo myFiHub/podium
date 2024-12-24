@@ -213,7 +213,7 @@ class AptosMovement {
     });
   }
 
-  static Future<bool> buyTicketFromTicketSellerOnPodiumPass({
+  static Future<bool?> buyTicketFromTicketSellerOnPodiumPass({
     required String sellerAddress,
     required String sellerName,
     String referrer = '',
@@ -259,7 +259,7 @@ class AptosMovement {
       );
 
       if (!confirmed) {
-        return false;
+        return null;
       }
       final payload = EntryFunctionPayload(
         functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
@@ -301,6 +301,62 @@ class AptosMovement {
     } catch (e) {
       l.e(e);
       return null;
+    }
+  }
+
+  static Future<bool?> sellTicketOnPodiumPass({
+    required String sellerAddress,
+    required int numberOfTickets,
+  }) async {
+    try {
+      final price = await getTicketSellPriceForPodiumPass(
+        sellerAddress: sellerAddress,
+        numberOfTickets: numberOfTickets,
+      );
+      if (price == null) {
+        return null;
+      }
+      final parsedPrice = bigIntCoinToMoveOnAptos(price);
+      final confirmed = await showConfirmPopup(
+        title: 'Sell Podium Pass',
+        richMessage: RichText(
+          text: TextSpan(
+            children: [
+              const TextSpan(text: 'sell '),
+              TextSpan(
+                  text: numberOfTickets.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              TextSpan(
+                  text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} for '),
+              TextSpan(
+                  text: parsedPrice.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const TextSpan(text: ' MOVE?'),
+            ],
+          ),
+        ),
+        cancelText: 'Cancel',
+        confirmText: 'Confirm',
+      );
+      if (!confirmed) {
+        return null;
+      }
+      final payload = EntryFunctionPayload(
+        functionId: "${podiumProtocolAddress}::$_podiumProtocolName::sell_pass",
+        typeArguments: [],
+        arguments: [sellerAddress, numberOfTickets.toString()],
+      );
+      final transactionRequest = await client.generateTransaction(
+        account,
+        payload,
+      );
+      final signedTransaction =
+          await client.signTransaction(account, transactionRequest);
+      await client.submitSignedBCSTransaction(signedTransaction);
+      return true;
+    } catch (e) {
+      l.e(e);
+      return false;
     }
   }
 }

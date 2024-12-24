@@ -587,7 +587,7 @@ class GroupsController extends GetxController with FirebaseTags {
     if (group == null) {
       Toast.error(
         title: "Error",
-        message: "Failed to join the room, room not found",
+        message: "Failed to join the Outpost, Outpost not found",
       );
       Navigate.to(
         type: NavigationTypes.offAllNamed,
@@ -659,7 +659,7 @@ class GroupsController extends GetxController with FirebaseTags {
       } catch (e) {
         Toast.error(
           title: "Error",
-          message: "Failed to join the room",
+          message: "Failed to join the Outpost, Outpost not found",
         );
         l.f("Error joining group: $e");
       } finally {
@@ -714,7 +714,7 @@ class GroupsController extends GetxController with FirebaseTags {
       if (results?.canEnter == false) {
         Toast.error(
           title: "Error",
-          message: "You need a ticket to join this room",
+          message: "You need a ticket to join this Outpost",
         );
         return GroupAccesses(canEnter: false, canSpeak: false);
       } else {
@@ -727,7 +727,7 @@ class GroupsController extends GetxController with FirebaseTags {
     if (group.archived) {
       Toast.error(
         title: "Error",
-        message: "This room is archived",
+        message: "This Outpost is archived",
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
@@ -762,7 +762,7 @@ class GroupsController extends GetxController with FirebaseTags {
       } else {
         Toast.error(
           title: "Error",
-          message: "You need an invite to join this room",
+          message: "You need an invite to join this Outpost",
         );
         return GroupAccesses(canEnter: false, canSpeak: false);
       }
@@ -856,7 +856,7 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
   final result = await Get.dialog(
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
-      title: Text("${isCurrentlyArchived ? "Un" : ""}Archive Room"),
+      title: Text("${isCurrentlyArchived ? "Un" : ""}Archive Outpost"),
       content: RichText(
         text: TextSpan(
           text: "Are you sure you want to ",
@@ -868,7 +868,7 @@ _showModalToToggleArchiveGroup({required FirebaseGroup group}) async {
                 color: !isCurrentlyArchived ? Colors.red : Colors.green,
               ),
             ),
-            const TextSpan(text: " this Room?"),
+            const TextSpan(text: " this Outpost?"),
           ],
         ),
       ),

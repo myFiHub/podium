@@ -25,11 +25,11 @@ import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:pulsator/pulsator.dart';
 
-class UsersInRoomList extends StatelessWidget {
+class UsersInGroupList extends StatelessWidget {
   final List<FirebaseSessionMember> usersList;
   final String groupId;
   final bool shouldShowIntro;
-  const UsersInRoomList({
+  const UsersInGroupList({
     super.key,
     required this.usersList,
     required this.groupId,

@@ -518,7 +518,7 @@ class CheckticketController extends GetxController {
   }) async {
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
-    bool bought = false;
+    bool? bought = false;
     String referrer = '';
 
     final myReferrer = myUser.referrer;
@@ -534,6 +534,9 @@ class CheckticketController extends GetxController {
       sellerName: ticketSeller.userInfo.fullName,
       referrer: referrer,
     );
+    if (bought == null) {
+      return false;
+    }
     allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
 
     if (ticketSeller.speakTicketType ==
@@ -546,7 +549,6 @@ class CheckticketController extends GetxController {
       allUsersToBuyTicketFrom
           .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
     }
-
     allUsersToBuyTicketFrom.refresh();
     return bought;
   }

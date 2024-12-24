@@ -321,7 +321,7 @@ class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
               ),
               space10,
               Input(
-                hintText: 'Enter the Name',
+                hintText: 'Enter User\'s Name',
                 onChanged: (value) {
                   controller.searchUsers(value);
                 },

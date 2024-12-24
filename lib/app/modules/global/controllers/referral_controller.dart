@@ -17,6 +17,7 @@ class ReferalController extends GetxController {
 
   @override
   void onInit() {
+    super.onInit();
     globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
         myReferalsStream = startListeningToMyReferals((referals) {
@@ -27,7 +28,6 @@ class ReferalController extends GetxController {
         myReferalsStream?.cancel();
       }
     });
-    super.onInit();
   }
 
   @override

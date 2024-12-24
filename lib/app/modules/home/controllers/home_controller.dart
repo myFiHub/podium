@@ -13,6 +13,7 @@ class HomeController extends GetxController {
 
   @override
   void onInit() async {
+    super.onInit();
     allGroups.value = groupsController.groups.value;
     showArchived.value = globalController.showArchivedGroups.value;
     if (allGroups.value.isNotEmpty) {
@@ -24,8 +25,6 @@ class HomeController extends GetxController {
     globalController.showArchivedGroups.listen((value) {
       showArchived.value = value;
     });
-
-    super.onInit();
   }
 
   @override

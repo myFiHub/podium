@@ -66,6 +66,7 @@ class LoginController extends GetxController {
 
   @override
   void onInit() {
+    super.onInit();
     referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
     l.i('deepLinkRoute: $referrerId');
     if (referrerId.isNotEmpty) {
@@ -75,8 +76,6 @@ class LoginController extends GetxController {
     globalController.isAutoLoggingIn.listen((v) {
       $isAutoLoggingIn.value = v;
     });
-
-    super.onInit();
   }
 
   @override

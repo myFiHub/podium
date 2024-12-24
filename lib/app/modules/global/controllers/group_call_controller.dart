@@ -48,9 +48,9 @@ class GroupCallController extends GetxController {
 
   @override
   void onInit() {
+    super.onInit();
     sortType.value = storage.read(StorageKeys.ongoingCallSortType) ??
         SortTypes.recentlyTalked;
-    super.onInit();
     groupsController.takingUsersInGroupsMap.listen((takingUsersInGroupsMap) {
       if (group.value != null) {
         final groupId = group.value!.id;

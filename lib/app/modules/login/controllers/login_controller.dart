@@ -11,7 +11,6 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
-import 'package:podium/app/modules/web3Auth_redirected/controllers/web3Auth_redirected_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -34,6 +33,12 @@ import 'package:web3dart/web3dart.dart';
 
 class LoginParametersKeys {
   static const referrerId = 'referrerId';
+}
+
+addressToUuid(String address) {
+  final uuid = const Uuid();
+  final uid = uuid.v5(Namespace.url.value, address);
+  return uid;
 }
 
 class LoginController extends GetxController {
@@ -62,7 +67,7 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
-    log.i('deepLinkRoute: $referrerId');
+    l.i('deepLinkRoute: $referrerId');
     if (referrerId.isNotEmpty) {
       initialReferral(referrerId);
     }
@@ -89,7 +94,7 @@ class LoginController extends GetxController {
     super.onClose();
   }
 
-  buyTicket({required StarsArenaUser user}) async {
+  Future<void> buyTicket({required StarsArenaUser user}) async {
     final externalWalletAddress = globalController.connectedWalletAddress.value;
 
     if (loadingBuyTicketId.value.isNotEmpty) {
@@ -129,7 +134,7 @@ class LoginController extends GetxController {
         _continueWithUserToCreate();
       }
     } catch (e) {
-      log.e('Error buying ticket: $e');
+      l.e('Error buying ticket: $e');
       Get.closeAllSnackbars();
       Toast.error(
         message: 'Error buying ticket',
@@ -139,7 +144,7 @@ class LoginController extends GetxController {
     }
   }
 
-  initialReferral(String? id) async {
+  Future<void> initialReferral(String? id) async {
     Future.delayed(const Duration(seconds: 0), () async {
       final referrerId =
           id ?? _extractReferrerId(globalController.deepLinkRoute.value);
@@ -165,18 +170,18 @@ class LoginController extends GetxController {
   String _extractReferrerId(String route) {
     final splited = route.split('referral/');
     if (splited.length < 2) {
-      log.f("splited: $splited");
+      l.f("splited: $splited");
       return '';
     }
     return splited[1];
   }
 
-  _removeLogingInState() {
+  void _removeLogingInState() {
     isLoggingIn.value = false;
     globalController.isAutoLoggingIn.value = false;
   }
 
-  socialLogin({
+  Future<void> socialLogin({
     required Provider loginMethod,
     ignoreIfNotLoggedIn = false,
   }) async {
@@ -230,10 +235,10 @@ class LoginController extends GetxController {
               ),
             );
           } on UserCancelledException catch (e) {
-            log.e(e);
+            l.e(e);
             _removeLogingInState();
           } catch (e) {
-            log.e(e);
+            l.e(e);
             Toast.error(
               message:
                   'Error logging in, please try again, or use another method',
@@ -254,7 +259,7 @@ class LoginController extends GetxController {
         );
       } catch (e) {
         _removeLogingInState();
-        log.e(e);
+        l.e(e);
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
         );
@@ -262,7 +267,7 @@ class LoginController extends GetxController {
     }
   }
 
-  _continueSocialLoginWithUserInfoAndPrivateKey(
+  Future<void> _continueSocialLoginWithUserInfoAndPrivateKey(
       {required String privateKey,
       required TorusUserInfo userInfo,
       required Provider loginMethod}) async {
@@ -289,7 +294,7 @@ class LoginController extends GetxController {
     );
   }
 
-  _fixUserData(UserInfoModel user) {
+  UserInfoModel _fixUserData(UserInfoModel user) {
     UserInfoModel userToCreate = user;
     if (userToCreate.loginTypeIdentifier != null &&
         userToCreate.loginTypeIdentifier!.contains('twitter|')) {
@@ -329,7 +334,7 @@ class LoginController extends GetxController {
     return userToCreate;
   }
 
-  _socialLogin({
+  Future<void> _socialLogin({
     required String id,
     required String name,
     required String email,
@@ -374,7 +379,8 @@ class LoginController extends GetxController {
       _removeLogingInState();
     }
     if (!canContinueAuthentication) {
-      final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
+      final hasTicket =
+          true; // await _checkIfUserHasPodiumDefinedEntryTicket();
       if (!hasTicket) {
         try {
           final avalancheClient = evmClientByChainId(avalancheChainId);
@@ -534,7 +540,7 @@ class LoginController extends GetxController {
     return bought;
   }
 
-  _initializeReferrals({
+  Future<bool> _initializeReferrals({
     required UserInfoModel user,
   }) async {
     if (referrer.value != null && user.id == referrer.value!.id) {

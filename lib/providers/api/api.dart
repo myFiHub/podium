@@ -1,4 +1,3 @@
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:podium/providers/api/models/starsArenaUser.dart';
@@ -44,7 +43,7 @@ class HttpApis {
         return null;
       }
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return null;
     }
   }
@@ -64,7 +63,7 @@ class HttpApis {
         return null;
       }
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return null;
     }
   }

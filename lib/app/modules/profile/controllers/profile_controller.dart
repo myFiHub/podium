@@ -5,10 +5,10 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
-
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -37,14 +37,19 @@ class ProfileController extends GetxController {
   final isGettingTicketPrice = false.obs;
   final isBuyingArenaTicket = false.obs;
   final isBuyingFriendTechTicket = false.obs;
+  final isBuyingPodiumPass = false.obs;
   final isFriendTechActive = false.obs;
   final friendTechPrice = 0.0.obs;
   final arenaTicketPrice = 0.0.obs;
+  final podiumPassPrice = 0.0.obs;
+  final podiumPassSellPrice = 0.0.obs;
   final activeFriendTechWallets = Rxn<UserActiveWalletOnFriendtech>();
   final loadingArenaPrice = false.obs;
   final loadingFriendTechPrice = false.obs;
+  final loadingPodiumPassPrice = false.obs;
   final mySharesOfFriendTechFromThisUser = 0.obs;
   final mySharesOfArenaFromThisUser = 0.obs;
+  final mySharesOfPodiumPassFromThisUser = 0.obs;
   final isGettingPayments = false.obs;
   final payments = Rx(Payments());
 
@@ -111,10 +116,11 @@ class ProfileController extends GetxController {
       await Future.wait<void>([
         getFriendTechPriceAndMyShare(),
         getArenaPriceAndMyShares(),
+        getPodiumPassPriceAndMyShares(),
       ]);
       //
     } catch (e) {
-      log.e('Error getting prices: $e');
+      l.e('Error getting prices: $e');
     } finally {
       isGettingTicketPrice.value = false;
     }
@@ -184,6 +190,106 @@ class ProfileController extends GetxController {
       arenaTicketPrice.value = priceInEth.toDouble();
     }
     loadingArenaPrice.value = false;
+  }
+
+  getPodiumPassPriceAndMyShares({int delay = 0}) async {
+    loadingPodiumPassPrice.value = true;
+    if (delay > 0) {
+      await Future.delayed(Duration(seconds: delay));
+    }
+    final (price, sellPrice, podiumPassShares) = await (
+      AptosMovement.getTicketSellPriceForPodiumPass(
+        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        numberOfTickets: 1,
+      ),
+      AptosMovement.getTicketSellPriceForPodiumPass(
+        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        numberOfTickets: 1,
+      ),
+      AptosMovement.getMyBalanceOnPodiumPass(
+        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+      )
+    ).wait;
+    if (podiumPassShares != null) {
+      if (podiumPassShares.toInt() > 0) {
+        mySharesOfPodiumPassFromThisUser.value = podiumPassShares.toInt();
+      }
+    }
+    loadingPodiumPassPrice.value = false;
+    if (price != null && price != BigInt.zero) {
+      //  price in aptos
+      podiumPassPrice.value = bigIntCoinToMoveOnAptos(price);
+    }
+    if (sellPrice != null && sellPrice != BigInt.zero) {
+      //  price in aptos
+      podiumPassSellPrice.value = bigIntCoinToMoveOnAptos(sellPrice);
+    }
+  }
+
+  buyOrSellPodiumPass() async {
+    isBuyingPodiumPass.value = true;
+    final myShares = mySharesOfPodiumPassFromThisUser.value;
+    if (myShares > 0) {
+      _sellPodiumPass();
+    } else {
+      _buyPodiumPass();
+    }
+  }
+
+  _sellPodiumPass() async {
+    try {
+      final sold = await AptosMovement.sellTicketOnPodiumPass(
+        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        numberOfTickets: 1,
+      );
+      if (sold == null) {
+        return;
+      }
+      if (sold == true) {
+        Toast.success(title: 'Success', message: 'Podium pass sold');
+        mySharesOfPodiumPassFromThisUser.value--;
+      }
+    } catch (e) {
+      l.e(e);
+    } finally {
+      isBuyingPodiumPass.value = false;
+      getPodiumPassPriceAndMyShares(delay: 5);
+    }
+  }
+
+  _buyPodiumPass() async {
+    try {
+      final price = await AptosMovement.getTicketSellPriceForPodiumPass(
+        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        numberOfTickets: 1,
+      );
+      if (price == null) {
+        Toast.error(title: 'Error', message: 'Error getting podium pass price');
+        return;
+      }
+      final priceInMove = bigIntCoinToMoveOnAptos(price);
+      podiumPassPrice.value = priceInMove;
+
+      final success = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        sellerName: userInfo.value!.fullName,
+        numberOfTickets: 1,
+      );
+      if (success == null) {
+        return;
+      }
+      if (success == true) {
+        Toast.success(title: 'Success', message: 'Podium pass bought');
+        mySharesOfPodiumPassFromThisUser.value++;
+        getPodiumPassPriceAndMyShares(delay: 5);
+      } else {
+        Toast.error(title: 'Error', message: 'Error buying podium pass');
+      }
+    } catch (e) {
+      l.e(e);
+    } finally {
+      isBuyingPodiumPass.value = false;
+    }
   }
 
   buyFriendTechTicket() async {

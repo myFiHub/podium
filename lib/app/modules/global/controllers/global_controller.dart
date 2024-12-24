@@ -85,7 +85,7 @@ class GlobalController extends GetxController {
 
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
-          Env.initialExternalWalletChainId!));
+          Env.initialExternalWalletChainId));
 
   ReownAppKitModalNetworkInfo? get externalWalletChain {
     final chain = ReownAppKitModalNetworks.getNetworkById(
@@ -111,7 +111,7 @@ class GlobalController extends GetxController {
         [movementMainNetChain, movementDevnetChain],
       );
     } catch (e) {
-      log.e("error ReownAppKitModalNetworks app $e");
+      l.e("error ReownAppKitModalNetworks app $e");
     }
     try {
       await Future.wait([
@@ -119,7 +119,7 @@ class GlobalController extends GetxController {
         FirebaseInit.init(),
       ]);
     } catch (e) {
-      log.e("error initializing app $e");
+      l.e("error initializing app $e");
     }
     FirebaseDatabase.instance.setPersistenceEnabled(false);
 
@@ -129,7 +129,7 @@ class GlobalController extends GetxController {
     //   final data = event.snapshot.value as dynamic;
     //   if (data != null) {
     //     final numberOfUsers = data.length;
-    //     log.f("number of users: $numberOfUsers");
+    //     l.f("number of users: $numberOfUsers");
     //   }
     // });
 
@@ -137,22 +137,19 @@ class GlobalController extends GetxController {
     isFirebaseInitialized.value = true;
     final res = await analytics.getSessionId();
 
-    log.d('analytics session id: $res');
+    l.d('analytics session id: $res');
     bool result = await connectionCheckerInstance.hasInternetAccess;
-    log.d("has internet access: $result");
+    l.d("has internet access: $result");
     if (result) {
       initializeApp();
     } else {
-      log.e(
-          "one of the main apis can't be reached: ${_checkOptions.map((e) => e.uri)}");
+      l.e("one of the main apis can't be reached: ${_checkOptions.map((e) => e.uri)}");
     }
     initializeInternetConnectionChecker();
   }
 
   @override
   void onReady() async {
-    WidgetsFlutterBinding.ensureInitialized();
-
     super.onReady();
   }
 
@@ -161,7 +158,7 @@ class GlobalController extends GetxController {
     super.onClose();
   }
 
-  initializeApp() async {
+  Future<void> initializeApp() async {
     checkLogin();
     initializeW3MService();
     listenToWalletAddressChange();
@@ -169,14 +166,14 @@ class GlobalController extends GetxController {
     initializedOnce.value = true;
   }
 
-  startTicker() {
+  void startTicker() {
     Timer.periodic(const Duration(seconds: 1), (timer) {
       ticker.value++;
       update([GlobalUpdateIds.ticker]);
     });
   }
 
-  toggleShowArchivedGroups() {
+  Future<void> toggleShowArchivedGroups() async {
     showArchivedGroups.value = !showArchivedGroups.value;
     storage.write(StorageKeys.showArchivedGroups, showArchivedGroups.value);
     update([GlobalUpdateIds.showArchivedGroups]);
@@ -189,7 +186,7 @@ class GlobalController extends GetxController {
       chainId,
     );
     if (chain == null) {
-      log.e("chain not found");
+      l.e("chain not found");
       success = false;
     }
     try {
@@ -205,12 +202,12 @@ class GlobalController extends GetxController {
         if (selectedChainId != null && selectedChainId.isNotEmpty) {
           success = true;
         } else {
-          log.e("error switching chain");
+          l.e("error switching chain");
           success = false;
         }
       }
     } catch (e) {
-      log.e("error switching chain $e");
+      l.e("error switching chain $e");
       success = false;
     }
     if (success) {
@@ -242,17 +239,21 @@ class GlobalController extends GetxController {
         ),
       ),
     );
-    await Web3AuthFlutter.initialize();
-    log.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
+    try {
+      await Web3AuthFlutter.initialize();
+    } catch (e) {
+      l.e("error initializing Web3AuthFlutter $e");
+    }
+    l.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
   }
 
-  initializeInternetConnectionChecker() {
+  Future<void> initializeInternetConnectionChecker() async {
     connectionCheckerInstance.onStatusChange
         .listen((InternetStatus status) async {
       switch (status) {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
-          log.i("Internet connected");
+          l.i("Internet connected");
           final (versionResolved, serverAddress) = await (
             checkVersion(),
             getJitsiServerAddress(),
@@ -266,14 +267,14 @@ class GlobalController extends GetxController {
 
           break;
         case InternetStatus.disconnected:
-          log.f("Internet disconnected");
+          l.f("Internet disconnected");
           isConnectedToInternet.value = false;
           break;
       }
     });
   }
 
-  listenToWalletAddressChange() async {
+  Future<void> listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
       if (newAddress != '' && currentUserInfo.value != null) {
@@ -282,13 +283,13 @@ class GlobalController extends GetxController {
     });
   }
 
-  _saveExternalWalletAddress(String address) async {
+  Future<void> _saveExternalWalletAddress(String address) async {
     try {
       await saveUserWalletAddressOnFirebase(address);
       currentUserInfo.value!.evm_externalWalletAddress = address;
       currentUserInfo.refresh();
     } catch (e) {
-      log.e("error saving wallet address $e");
+      l.e("error saving wallet address $e");
       Toast.error(message: "Error saving wallet address, try again");
     }
   }
@@ -306,11 +307,11 @@ class GlobalController extends GetxController {
     }
 
     await firebaseUserDbReference.set(walletAddress);
-    log.d("new wallet address SAVED $walletAddress");
+    l.d("new wallet address SAVED $walletAddress");
     return;
   }
 
-  openDeepLinkGroup(String route) async {
+  Future<void> openDeepLinkGroup(String route) async {
     if (route.contains(Routes.GROUP_DETAIL)) {
       Navigate.to(
         type: NavigationTypes.offAllNamed,
@@ -318,7 +319,7 @@ class GlobalController extends GetxController {
       );
       final splited = route.split(Routes.GROUP_DETAIL);
       if (splited.length < 2) {
-        log.f("splited: $splited");
+        l.f("splited: $splited");
         return;
       }
       final groupId = splited[1];
@@ -334,22 +335,22 @@ class GlobalController extends GetxController {
     }
   }
 
-  setDeepLinkRoute(String route) async {
+  Future<void> setDeepLinkRoute(String route) async {
     deepLinkRoute.value = route;
     if (loggedIn.value) {
-      log.e("logged in, opening deep link $route");
+      l.e("logged in, opening deep link $route");
       if (route.contains(Routes.GROUP_DETAIL)) {
         openDeepLinkGroup(route);
       } else {
-        log.e("deep link not handled");
+        l.e("deep link not handled");
       }
     } else if (route.contains('referral')) {
       openLoginPageWithReferral(route);
     }
   }
 
-  openLoginPageWithReferral(String route) {
-    log.f("opening login page with referral");
+  Future<void> openLoginPageWithReferral(String route) async {
+    l.f("opening login page with referral");
     final referrerId = _extractReferrerId(route);
     if (loggedIn.value) {
       setLoggedIn(false);
@@ -359,7 +360,7 @@ class GlobalController extends GetxController {
       type: NavigationTypes.offAllNamed,
       route: Routes.LOGIN,
       parameters: {
-        LoginParametersKeys.referrerId: referrerId,
+        LoginParametersKeys.referrerId: referrerId ?? '',
       },
     );
   }
@@ -372,7 +373,7 @@ class GlobalController extends GetxController {
       await firebaseUserDbReference.set('');
       return true;
     } catch (e) {
-      log.e("error removing wallet address $e");
+      l.e("error removing wallet address $e");
       return false;
     }
   }
@@ -390,7 +391,7 @@ class GlobalController extends GetxController {
       final data = event.value as dynamic;
       final serverAddress = data as String?;
       if (serverAddress == null) {
-        log.e('server address not found');
+        l.e('server address not found');
         return completer.complete(null);
       }
       completer.complete(serverAddress);
@@ -423,14 +424,14 @@ class GlobalController extends GetxController {
     }
     final shouldCheckVersion = shouldCheckVersionEvent.value as dynamic;
     if (shouldCheckVersion == false) {
-      log.d('version check disabled');
+      l.d('version check disabled');
       return true;
     }
     // listen to version changes
     final data = versionEvent.value as dynamic;
     final version = data as String?;
     if (version == null) {
-      log.e('version not found');
+      l.e('version not found');
       return (true);
     }
     final currentVersion = Env.VERSION.split('+')[0];
@@ -440,7 +441,7 @@ class GlobalController extends GetxController {
     if (version != currentVersion &&
         ignoredOrAcceptedVersion != version &&
         isRemoteVersionGreater) {
-      log.e('New version available');
+      l.e('New version available');
       Get.dialog(
         barrierDismissible: false,
         AlertDialog(
@@ -480,7 +481,7 @@ class GlobalController extends GetxController {
       );
       return true;
     } else {
-      log.d('version is up to date');
+      l.d('version is up to date');
       return true;
     }
   }
@@ -508,10 +509,10 @@ class GlobalController extends GetxController {
     }
   }
 
-  setLoggedIn(bool value) {
+  void setLoggedIn(bool value) {
     loggedIn.value = value;
     if (value == false) {
-      log.f("logging out");
+      l.f("logging out");
       _logout();
       analytics.logEvent(
         name: 'logout',
@@ -532,33 +533,33 @@ class GlobalController extends GetxController {
     }
   }
 
-  _extractReferrerId(String route) {
+  String? _extractReferrerId(String route) {
     final splited = route.split('referral');
     if (splited.length < 2) {
-      log.f("splited: $splited");
-      return;
+      l.f("splited: $splited");
+      return null;
     }
     return splited[1];
   }
 
-  _logout() async {
+  Future<void> _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
     web3AuthAddress = '';
     try {
       await Web3AuthFlutter.logout();
     } catch (e) {
-      log.e(e);
+      l.e(e);
       isLoggingOut.value = false;
     }
     cleanStorage();
     try {
       await web3ModalService.disconnect();
     } catch (e) {
-      log.e("error disconnecting wallet $e");
+      l.e("error disconnecting wallet $e");
       isLoggingOut.value = false;
     }
-    log.f('Navigating to login page');
+    l.f('Navigating to login page');
 
     final rerouteWithReferral =
         deepLinkRoute.isNotEmpty && deepLinkRoute.contains('referral');
@@ -577,12 +578,12 @@ class GlobalController extends GetxController {
       await FirebaseAuth.instance.signOut();
       isLoggingOut.value = false;
     } catch (e) {
-      log.e("error signing out from firebase $e");
+      l.e("error signing out from firebase $e");
       isLoggingOut.value = false;
     }
   }
 
-  setIsMyUserOver18(bool value) {
+  void setIsMyUserOver18(bool value) {
     currentUserInfo.value!.isOver18 = value;
     currentUserInfo.refresh();
   }
@@ -628,13 +629,13 @@ class GlobalController extends GetxController {
       );
       return service;
     } catch (e) {
-      log.f("error starting w3m service");
+      l.f("error starting w3m service");
     }
 
     return null;
   }
 
-  connectToWallet({void Function()? afterConnection}) async {
+  Future<void> connectToWallet({void Function()? afterConnection}) async {
     try {
       // web3ModalService.disconnect();
       await web3ModalService.init();
@@ -655,20 +656,20 @@ class GlobalController extends GetxController {
         parameters: {'error': e.toString()},
       );
       if (e is ReownAppKitModalException) {
-        log.e(e.message);
+        l.e(e.message);
       } else {
-        log.e(e);
+        l.e(e);
       }
     }
   }
 
-  disconnect() async {
+  Future<void> disconnect() async {
     final removed = await removeUserWalletAddressOnFirebase();
     if (removed) {
       try {
         web3ModalService.disconnect();
       } catch (e) {
-        log.e(e);
+        l.e(e);
       }
       storage.remove(StorageKeys.externalWalletChainId);
       storage.remove(StorageKeys.selectedWalletName);

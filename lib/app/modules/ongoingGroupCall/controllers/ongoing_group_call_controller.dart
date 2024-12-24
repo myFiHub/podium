@@ -257,7 +257,7 @@ class OngoingGroupCallController extends GetxController {
         try {
           tutorialCoachMark.show(context: contextForIntro!);
         } catch (e) {
-          log.e(e);
+          l.e(e);
         }
       });
     }
@@ -267,6 +267,7 @@ class OngoingGroupCallController extends GetxController {
     if (setAsFinished == true) {
       storage.write(IntroStorageKeys.viewedOngiongCall, true);
     }
+    shouldShowIntro.value = false;
   }
 
   List<TargetFocus> _createTargets() {
@@ -394,10 +395,7 @@ class OngoingGroupCallController extends GetxController {
     final recordingName =
         'Podium Outpost record-${group.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
     final hasPermissionForAudio = await getPermission(Permission.microphone);
-    // final hasPermissionForStorage = await getPermission(Permission.storage);
-    if (!hasPermissionForAudio
-        //  || !hasPermissionForStorage
-        ) {
+    if (!hasPermissionForAudio) {
       return;
     }
     Directory downloadDirectory = await getDownloadDirectory();
@@ -406,14 +404,6 @@ class OngoingGroupCallController extends GetxController {
             .replaceAll(':', '');
 
     if (recording) {
-      final muted = amIMuted.value;
-      if (muted) {
-        Toast.warning(
-          title: "unmute first",
-          message: "You are muted",
-        );
-        return;
-      }
       _numberOfRecording++;
       if (await _recorder.hasPermission()) {
         try {
@@ -428,7 +418,7 @@ class OngoingGroupCallController extends GetxController {
             title: "Error",
             message: "Error starting recording",
           );
-          log.e("error starting recording: $e");
+          l.e("error starting recording: $e");
           isRecording.value = false;
           return;
         }
@@ -454,7 +444,7 @@ class OngoingGroupCallController extends GetxController {
           //   text: 'Podium: ${recordingName}',
           // );
         } catch (e) {
-          log.e("error stopping recording: $e");
+          l.e("error stopping recording: $e");
         }
       }
     }
@@ -467,7 +457,7 @@ class OngoingGroupCallController extends GetxController {
   }
 
   onRemainingTimeUpdate(int? remainingTime) {
-    log.d("remaining time is $remainingTime");
+    l.d("remaining time is $remainingTime");
     remainingTimeTimer.value = remainingTime ?? 0;
     timer?.cancel();
     startTheTimer();
@@ -476,7 +466,7 @@ class OngoingGroupCallController extends GetxController {
   startTheTimer() {
     final latestSession = mySession.value;
     if (latestSession == null) {
-      log.f("latest session is null");
+      l.f("latest session is null");
       return;
     } else {
       // remaining talk time is in milliSeconds
@@ -568,14 +558,14 @@ class OngoingGroupCallController extends GetxController {
     if (creatorId == userId) {
       return;
     }
-    log.d("adding ${seconds} seconds to ${userId}");
+    l.d("adding ${seconds} seconds to ${userId}");
     final milliseconds = seconds * 1000;
     final remainingTalkTimeForUser = await getUserRemainingTalkTime(
       groupId: groupCallController.group.value!.id,
       userId: userId,
     );
     if (remainingTalkTimeForUser == null) {
-      log.f("remaining talk time for user is null");
+      l.f("remaining talk time for user is null");
       return;
     } else {
       final v = remainingTalkTimeForUser + milliseconds;
@@ -600,7 +590,7 @@ class OngoingGroupCallController extends GetxController {
     final remainingTalkTimeForUser = await getUserRemainingTalkTime(
         groupId: groupCallController.group.value!.id, userId: userId);
     if (remainingTalkTimeForUser == null) {
-      log.f("remaining talk time for user is null");
+      l.f("remaining talk time for user is null");
       return;
     }
     final v = remainingTalkTimeForUser - milliseconds;
@@ -616,7 +606,7 @@ class OngoingGroupCallController extends GetxController {
       {required int v, required String userId}) {
     final latestSession = mySession.value;
     if (latestSession == null) {
-      log.f("latest session is null");
+      l.f("latest session is null");
       return Future.value();
     } else {
       return updateRemainingTimeOnFirebase(
@@ -705,7 +695,7 @@ class OngoingGroupCallController extends GetxController {
     loadingWalletAddressForUser.refresh();
     final user = await getUserById(userId);
     if (user == null) {
-      log.e("user is null");
+      l.e("user is null");
       return;
     }
     if (user.evm_externalWalletAddress != '') {
@@ -715,7 +705,7 @@ class OngoingGroupCallController extends GetxController {
       targetAddress = internalWalletAddress;
     }
 
-    log.d("target address is $targetAddress for user $userId");
+    l.d("target address is $targetAddress for user $userId");
     if (targetAddress != '') {
       List<String> receiverAddresses = [];
       List<String> aptosReceiverAddresses = [];
@@ -739,7 +729,7 @@ class OngoingGroupCallController extends GetxController {
         receiverAddresses = [targetAddress];
       }
       if (receiverAddresses.length == 0) {
-        log.e("No wallets found in session");
+        l.e("No wallets found in session");
         Toast.error(
           title: "Error",
           message: "receiver wallet not found",
@@ -752,7 +742,7 @@ class OngoingGroupCallController extends GetxController {
           ? Env.minimumCheerBooAmount.toString()
           : await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
       if (amount == null) {
-        log.e("Amount not selected");
+        l.e("Amount not selected");
 
         _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         return;
@@ -767,7 +757,7 @@ class OngoingGroupCallController extends GetxController {
         final parsedMultiplier = double.parse(Env.cheerBooTimeMultiplication);
         finalAmountOfTimeToAdd = (divided * parsedMultiplier).toInt();
       } catch (e) {
-        log.e("something went wrong parsing amount");
+        l.e("something went wrong parsing amount");
         Toast.error(
           title: "Error",
           message: "Amount is not a number",
@@ -849,7 +839,7 @@ class OngoingGroupCallController extends GetxController {
         final internalWalletAddress =
             await web3AuthWalletAddress(); //await Evm.getAddress();
         if (internalWalletAddress == null) {
-          log.e("podium address is null");
+          l.e("podium address is null");
           return;
         }
         saveNewPayment(
@@ -872,7 +862,7 @@ class OngoingGroupCallController extends GetxController {
               : null,
         ));
       } else {
-        log.e("${cheer ? "Cheer" : "Boo"} failed");
+        l.e("${cheer ? "Cheer" : "Boo"} failed");
         Toast.error(
           title: "Error",
           message: "${cheer ? "Cheer" : "Boo"} failed",
@@ -882,7 +872,7 @@ class OngoingGroupCallController extends GetxController {
       }
       ///////////////////////
     } else if (targetAddress == '') {
-      log.e("User has not connected wallet for some reason");
+      l.e("User has not connected wallet for some reason");
       Toast.error(
         title: "Error",
         message: "User has not connected wallet for some reason",

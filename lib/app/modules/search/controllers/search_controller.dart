@@ -103,7 +103,7 @@ class SearchPageController extends GetxController with FirebaseTags {
     final foundGroups =
         await Future.wait(groupIds.map((e) => getGroupInfoById(e)));
     if (foundGroups.isEmpty) {
-      log.e('No groups found for tag: ${tag.tagName}');
+      l.e('No groups found for tag: ${tag.tagName}');
       return;
     } else {
       final parsedGroups = foundGroups

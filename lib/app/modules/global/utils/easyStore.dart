@@ -12,7 +12,7 @@ UserInfoModel get myUser {
 
 String get myId {
   if (myUser.id == '') {
-    log.f('****************************myId is empty************************');
+    l.f('****************************myId is empty************************');
   }
   return myUser.id;
 }

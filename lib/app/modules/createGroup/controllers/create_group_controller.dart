@@ -148,7 +148,7 @@ class CreateGroupController extends GetxController {
         try {
           tutorialCoachMark.show(context: contextForIntro!);
         } catch (e) {
-          log.e(e);
+          l.e(e);
         }
       });
     }
@@ -282,11 +282,11 @@ class CreateGroupController extends GetxController {
           .path); // Use this to store the image in the database or cloud storage
       fileLocalAddress.value = pickedFile.path;
     } else {
-      log.e('No image selected.');
+      l.e('No image selected.');
     }
   }
 
-  Future<String> uploadFile({required groupId}) async {
+  Future<String?> uploadFile({required groupId}) async {
     final storageRef = FirebaseStorage.instance
         .ref()
         .child('${FireBaseConstants.groupsRef}$groupId');
@@ -298,7 +298,7 @@ class CreateGroupController extends GetxController {
     final fileSize = selectedFile!.lengthSync();
     if (fileSize > 2 * 1024 * 1024) {
       Toast.error(message: 'Image size must be less than 2MB');
-      return "";
+      return null;
     }
     // Upload the image to Firebase Storage
     final uploadTask = storageRef.putFile(selectedFile!);
@@ -470,13 +470,16 @@ class CreateGroupController extends GetxController {
     if (usersMap.contains(user.id)) {
       list.removeWhere((e) => e.user.id == user.id);
     } else {
-      final activeAddress =
+      String? activeAddress =
           ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
               ? user.defaultWalletAddress
               : await checkIfUserCanBeAddedToList(
                   user: user,
                   ticketPermissionType: ticketPermissiontype,
                 );
+      if (ticketType == BuyableTicketTypes.onlyPodiumPassHolders) {
+        activeAddress = user.aptosInternalWalletAddress;
+      }
       if (activeAddress != null) {
         list.add(TicketSellersListMember(
           user: user,
@@ -558,7 +561,7 @@ class CreateGroupController extends GetxController {
         }
       }
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return null;
     } finally {
       loadingUserIds.remove(user.id);
@@ -581,7 +584,7 @@ class CreateGroupController extends GetxController {
     }
     // loadingAddresses.add(value);
     showLoadingOnSearchInput.value = true;
-    log.d(ticketType);
+    l.d(ticketType);
     _deb.debounce(() async {
       try {
         checkIfValueIsDirectAddress(value);
@@ -664,7 +667,11 @@ class CreateGroupController extends GetxController {
     final id = const Uuid().v4();
     String imageUrl = "";
     if (selectedFile != null) {
-      imageUrl = await uploadFile(groupId: id);
+      final res = await uploadFile(groupId: id);
+      if (res == null) {
+        return;
+      }
+      imageUrl = res;
     }
 
     try {

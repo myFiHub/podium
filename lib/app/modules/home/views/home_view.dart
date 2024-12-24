@@ -21,6 +21,13 @@ class HomeView extends GetView<HomeController> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          // Button(
+          //   text: 'test',
+          //   onPressed: () async {
+          //     final myAddress = myUser.evmInternalWalletAddress;
+          //     await signMessage(myAddress);
+          //   },
+          // ),
           space16,
           const Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),

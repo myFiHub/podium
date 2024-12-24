@@ -10,9 +10,9 @@ class FirebaseInit {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      log.i('~~~~~~~~~~~~~firebase initialized~~~~~~~~~~~~~');
+      l.i('~~~~~~~~~~~~~firebase initialized~~~~~~~~~~~~~');
     } catch (e) {
-      log.f("@@@@@@@@@@@@@@@@ firebase initialization error");
+      l.f("@@@@@@@@@@@@@@@@ firebase initialization error");
     }
   }
 }

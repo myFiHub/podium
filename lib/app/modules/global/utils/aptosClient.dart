@@ -1,14 +1,21 @@
+import 'dart:async';
+
 import 'package:aptos/aptos.dart';
 import 'package:aptos/coin_client.dart';
 import 'package:aptos/models/entry_function_payload.dart';
+// import 'package:aptos_sdk_dart/aptos_sdk_dart.dart' as AptosSdkDart;
+// import 'package:built_value/json_object.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
+import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+// import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class AptosMovement {
   AptosMovement._internal();
@@ -18,8 +25,19 @@ class AptosMovement {
   static AptosClient get client {
     return AptosClient(
       aptosRpcUrl,
-      enableDebugLog: true,
+      enableDebugLog: Env.environment == DEVELOPMENT,
     );
+  }
+
+  static const _podiumProtocolName = 'PodiumProtocol';
+  static const _cheerBooName = 'CheerOrBoo';
+
+  static get podiumProtocolAddress {
+    return Env.podiumProtocolAddress(movementAptosChainId);
+  }
+
+  static get cheerBooAddress {
+    return Env.cheerBooAddress(movementAptosChainId);
   }
 
   static AptosAccount get account {
@@ -36,8 +54,13 @@ class AptosMovement {
     return account.address;
   }
 
-  static Future<BigInt> get balance async {
+  static Future<bool> get isMyAccountActive async {
     final exists = await client.accountExist(address);
+    return exists;
+  }
+
+  static Future<BigInt> get balance async {
+    final exists = await isMyAccountActive;
     if (!exists) {
       return BigInt.zero;
     }
@@ -82,13 +105,7 @@ class AptosMovement {
         );
         return null;
       }
-      // final coinType =
-      //     "0x1::aptos_coin::AptosCoin"; // Replace with the actual coin type
-      // final registered = await _registerCoinStore(coinType);
-      // if (!registered) {
-      //   return false;
-      // }
-      final cheerBooAddress = Env.cheerBooAptosAddress;
+
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
       int percentage = cheer ? 100 : 50;
       if (receiverAddresses.length > 1) {
@@ -97,7 +114,7 @@ class AptosMovement {
       final PercentageString = percentage.toString();
 
       final payload = EntryFunctionPayload(
-        functionId: "${cheerBooAddress}::CheerOrBooV2::cheer_or_boo",
+        functionId: "${cheerBooAddress}::$_cheerBooName::cheer_or_boo",
         typeArguments: [],
         arguments: [
           // address,
@@ -126,55 +143,219 @@ class AptosMovement {
       // }
       return true;
     } catch (e) {
-      log.e(e);
+      l.e(e);
       return false;
     }
   }
 
-// Function to check if CoinStore is registered
-  static Future<bool> _isCoinStoreRegistered(String coinType) async {
+  static Future<double?> getTicketPriceForPodiumPass({
+    required String sellerAddress,
+    int numberOfTickets = 1,
+  }) async {
     try {
-      final resource = await client.getAccountResource(
-          address, "0x1::coin::CoinStore<$coinType>");
-      return resource != null;
-    } catch (e) {
-      return false;
-    }
-  }
-
-// Function to register CoinStore
-  static Future<bool> _registerCoinStore(String coinType) async {
-    final registere = await _isCoinStoreRegistered(coinType);
-    if (registere) {
-      return true;
-    }
-    try {
-      final payload = EntryFunctionPayload(
-        functionId: "0x1::coin::register",
-        typeArguments: [coinType],
-        arguments: [],
+      final response = await client.view(
+        "${podiumProtocolAddress}::$_podiumProtocolName::calculate_buy_price_with_fees",
+        [],
+        [
+          sellerAddress,
+          numberOfTickets.toString(),
+          {"vec": []}
+        ],
       );
-      final transactionRequest =
-          await client.generateTransaction(account, payload);
+      final pString = response[0];
+      final bigIntPrice = BigInt.from(pString);
+      final parsedAmount = bigIntCoinToMoveOnAptos(bigIntPrice);
+      return parsedAmount;
+    } catch (e) {
+      l.e(e);
+      return null;
+    }
+  }
+
+  static Future<BigInt?> getMyBalanceOnPodiumPass({
+    required String sellerAddress,
+  }) async {
+    try {
+      final respone = await client.view(
+        "${podiumProtocolAddress}::$_podiumProtocolName::get_balance",
+        [],
+        [
+          myUser.aptosInternalWalletAddress,
+          sellerAddress,
+        ],
+      );
+      return BigInt.from(int.parse(respone[0]));
+    } catch (e) {
+      l.e(e);
+      return null;
+    }
+  }
+
+  Future<void> listenToEvents({
+    required String address,
+    required String eventHandle,
+    required String fieldName,
+  }) async {
+    Timer.periodic(const Duration(seconds: 5), (timer) async {
+      try {
+        // Replace with the actual method to fetch events
+        final events = await client.getEventsByEventHandle(
+          address,
+          eventHandle,
+          fieldName,
+          limit: 10, // Adjust the limit as needed
+        );
+
+        l.d(events);
+      } catch (e) {
+        print('Error fetching events: $e');
+      }
+    });
+  }
+
+  static Future<bool?> buyTicketFromTicketSellerOnPodiumPass({
+    required String sellerAddress,
+    required String sellerName,
+    String referrer = '',
+    int numberOfTickets = 1,
+  }) async {
+    try {
+      final referrerAddress =
+          referrer == '' ? Env.fihubAddress_Aptos : referrer;
+
+      final price = await getTicketSellPriceForPodiumPass(
+        sellerAddress: sellerAddress,
+        numberOfTickets: numberOfTickets,
+      );
+      if (price == null) {
+        return false;
+      }
+      final parsedPrice = bigIntCoinToMoveOnAptos(price);
+      final confirmed = await showConfirmPopup(
+        title: 'Buy Podium Pass',
+        richMessage: RichText(
+          text: TextSpan(
+            style: const TextStyle(height: 1.5),
+            children: [
+              const TextSpan(text: 'buy '),
+              TextSpan(
+                  text: numberOfTickets.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              TextSpan(
+                  text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} from '),
+              TextSpan(
+                  text: sellerName,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const TextSpan(text: ' for '),
+              TextSpan(
+                  text: parsedPrice.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const TextSpan(text: ' MOVE?'),
+            ],
+          ),
+        ),
+        cancelText: 'Cancel',
+        confirmText: 'Confirm',
+      );
+
+      if (!confirmed) {
+        return null;
+      }
+      final payload = EntryFunctionPayload(
+        functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
+        typeArguments: [],
+        arguments: [
+          sellerAddress,
+          numberOfTickets.toString(),
+          referrerAddress,
+        ],
+      );
+      final transactionRequest = await client.generateTransaction(
+        account,
+        payload,
+      );
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
-      final result = await client.submitSignedBCSTransaction(signedTransaction);
-      if (result['hash'] != null) {
-        final transactionHash = result['hash'];
-        while (true) {
-          final transactionStatus =
-              await client.getTransactionByHash(transactionHash);
-          if (transactionStatus['type'] == 'user_transaction' &&
-              transactionStatus['success'] == true) {
-            return true;
-          }
-          await Future.delayed(const Duration(
-              seconds: 5)); // Wait for 5 seconds before checking again
-        }
-      }
+      final res = await client.submitSignedBCSTransaction(signedTransaction);
+      l.d(res);
+
+      return true;
+    } catch (e, stackTrace) {
+      l.e(e, stackTrace: stackTrace);
       return false;
+    }
+  }
+
+  static Future<BigInt?> getTicketSellPriceForPodiumPass({
+    required String sellerAddress,
+    int numberOfTickets = 1,
+  }) async {
+    try {
+      final response = await client.view(
+        "${podiumProtocolAddress}::$_podiumProtocolName::calculate_sell_price_with_fees",
+        [],
+        [sellerAddress, numberOfTickets.toString()],
+      );
+      final price = response[0];
+      return BigInt.from(int.parse(price));
     } catch (e) {
-      log.e(e);
+      l.e(e);
+      return null;
+    }
+  }
+
+  static Future<bool?> sellTicketOnPodiumPass({
+    required String sellerAddress,
+    required int numberOfTickets,
+  }) async {
+    try {
+      final price = await getTicketSellPriceForPodiumPass(
+        sellerAddress: sellerAddress,
+        numberOfTickets: numberOfTickets,
+      );
+      if (price == null) {
+        return null;
+      }
+      final parsedPrice = bigIntCoinToMoveOnAptos(price);
+      final confirmed = await showConfirmPopup(
+        title: 'Sell Podium Pass',
+        richMessage: RichText(
+          text: TextSpan(
+            children: [
+              const TextSpan(text: 'sell '),
+              TextSpan(
+                  text: numberOfTickets.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              TextSpan(
+                  text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} for '),
+              TextSpan(
+                  text: parsedPrice.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const TextSpan(text: ' MOVE?'),
+            ],
+          ),
+        ),
+        cancelText: 'Cancel',
+        confirmText: 'Confirm',
+      );
+      if (!confirmed) {
+        return null;
+      }
+      final payload = EntryFunctionPayload(
+        functionId: "${podiumProtocolAddress}::$_podiumProtocolName::sell_pass",
+        typeArguments: [],
+        arguments: [sellerAddress, numberOfTickets.toString()],
+      );
+      final transactionRequest = await client.generateTransaction(
+        account,
+        payload,
+      );
+      final signedTransaction =
+          await client.signTransaction(account, transactionRequest);
+      await client.submitSignedBCSTransaction(signedTransaction);
+      return true;
+    } catch (e) {
+      l.e(e);
       return false;
     }
   }

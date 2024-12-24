@@ -19,12 +19,18 @@ import 'package:share_plus/share_plus.dart';
 
 class GroupList extends StatelessWidget {
   final List<FirebaseGroup> groupsList;
-  const GroupList({super.key, required this.groupsList});
+  final ScrollController? scrollController;
+  const GroupList({
+    super.key,
+    required this.groupsList,
+    this.scrollController,
+  });
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<GroupsController>();
     return Scrollbar(
       child: ListView.builder(
+        controller: scrollController,
         itemCount: groupsList.length,
         itemBuilder: (context, index) {
           final group = groupsList[index];
@@ -367,8 +373,8 @@ class _NumberOfActiveUsers extends GetView<GroupsController> {
   }
 }
 
-generateGroupShareUrl({required String groupId}) {
-  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium";
+String generateGroupShareUrl({required String groupId}) {
+  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${groupId}&apn=com.web3podium&ibi=com.web3podium";
 }
 
 class _ScheduledBanner extends StatelessWidget {

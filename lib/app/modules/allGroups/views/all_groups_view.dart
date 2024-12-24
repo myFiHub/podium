@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hidable/hidable.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -9,6 +10,8 @@ import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 
 import '../controllers/all_groups_controller.dart';
+
+final _scrollController = ScrollController();
 
 class AllGroupsView extends GetView<AllGroupsController> {
   const AllGroupsView({Key? key}) : super(key: key);
@@ -72,7 +75,9 @@ class AllGroupsView extends GetView<AllGroupsController> {
                 // Lista de grupos
                 Expanded(
                   child: Container(
-                    child: const AllGroupsList(),
+                    child: AllGroupsList(
+                      scrollController: _scrollController,
+                    ),
                   ),
                 ),
               ],
@@ -81,37 +86,41 @@ class AllGroupsView extends GetView<AllGroupsController> {
           Positioned(
             bottom: 10,
             left: MediaQuery.of(context).size.width / 2 - 100,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                gradient: const LinearGradient(
-                  colors: [Colors.blue, Colors.green],
+            child: Hidable(
+              controller: _scrollController,
+              enableOpacityAnimation: true,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: const LinearGradient(
+                    colors: [Colors.blue, Colors.green],
+                  ),
                 ),
-              ),
-              child: Button(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add, color: Colors.white, size: 16),
-                    SizedBox(width: 10),
-                    Text(
-                      "Start new outpost",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                child: Button(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add, color: Colors.white, size: 16),
+                      SizedBox(width: 10),
+                      Text(
+                        "Start new outpost",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  type: ButtonType.gradient,
+                  onPressed: () {
+                    Navigate.to(
+                      type: NavigationTypes.toNamed,
+                      route: Routes.CREATE_GROUP,
+                    );
+                  },
                 ),
-                type: ButtonType.gradient,
-                onPressed: () {
-                  Navigate.to(
-                    type: NavigationTypes.toNamed,
-                    route: Routes.CREATE_GROUP,
-                  );
-                },
               ),
             ),
           ),
@@ -122,7 +131,11 @@ class AllGroupsView extends GetView<AllGroupsController> {
 }
 
 class AllGroupsList extends GetWidget<AllGroupsController> {
-  const AllGroupsList({super.key});
+  final ScrollController scrollController;
+  const AllGroupsList({
+    super.key,
+    required this.scrollController,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +157,7 @@ class AllGroupsList extends GetWidget<AllGroupsController> {
                   groupsList.where((group) => group.archived != true).toList();
             }
             return GroupList(
+              scrollController: scrollController,
               groupsList: groupsList,
             );
           });

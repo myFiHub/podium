@@ -31,9 +31,17 @@ class Env {
   static final fihubAddress_Avalanche_MainNet =
       dotenv.env['FIHUB_ADDRESS_AVALANCHE_MAINNET']!;
 
+  static final fihubAddress_Aptos = dotenv.env['FIHUB_ADDRESS_APTOS']!;
+
+  static final podiumProtocolAptosAddress =
+      dotenv.env['PODIUM_PROTOCOL_APTOS_ADDRESS']!;
+
   static final cheerBooAptosAddress = dotenv.env['CHEERBOO_APTOS_ADDRESS']!;
 
-  static final VERSION = dotenv.env['VERSION'] ?? '1.0.8';
+  static final VERSION =
+      // ignore: prefer_const_constructors
+      String.fromEnvironment('VERSION', defaultValue: '1.1.1');
+  // read from --dart-define=VERSION=$version
 
   static String? starsArenaAddress(String chainId) {
     if (chainId == avalancheChainId) {
@@ -62,6 +70,16 @@ class Env {
   static String? cheerBooAddress(String chainId) {
     if (chainId == movementChain.chainId) {
       return cheerBooAddress_Movement_Devnet;
+    } else if (chainId == movementAptosChainId) {
+      return cheerBooAptosAddress;
+    } else {
+      return null;
+    }
+  }
+
+  static String? podiumProtocolAddress(String chainId) {
+    if (chainId == movementAptosChainId) {
+      return podiumProtocolAptosAddress;
     } else {
       return null;
     }
@@ -76,6 +94,5 @@ class Env {
   }
 }
 
-const DEV = 'dev';
-const PROD = 'prod';
-const STAGE = 'stage';
+const DEVELOPMENT = 'development';
+const PRODUCTION = 'production';

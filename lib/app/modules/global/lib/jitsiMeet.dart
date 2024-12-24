@@ -49,16 +49,16 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.enter);
       await jitsiMeet.retrieveParticipantsInfo();
 
-      log.d("conferenceJoined: url: $url");
+      l.d("conferenceJoined: url: $url");
     },
     participantJoined: (email, name, role, participantId) {
-      log.d(
+      l.d(
         "participantJoined: email: $email, name: $name, role: $role, "
         "participantId: $participantId",
       );
     },
     participantLeft: (p) {
-      log.d("participantLeft: $p");
+      l.d("participantLeft: $p");
     },
     audioMutedChanged: (muted) {
       if (Get.isRegistered<OngoingGroupCallController>()) {
@@ -68,10 +68,10 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       }
     },
     videoMutedChanged: (muted) {
-      log.d("videoMutedChanged: $muted");
+      l.d("videoMutedChanged: $muted");
     },
     conferenceTerminated: (url, error) {
-      log.f("conferenceTerminated: url: $url, error: $error");
+      l.f("conferenceTerminated: url: $url, error: $error");
     },
     participantsInfoRetrieved: (participantsInfo) {
       try {
@@ -82,7 +82,7 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         // groupCallController.jitsiMembers.value = members;
         // ongoingGroupCallController.jitsiMembers.value = members;
       } catch (e) {
-        log.e("participantsInfoRetrieved: $e");
+        l.e("participantsInfoRetrieved: $e");
       }
     },
     readyToClose: () {

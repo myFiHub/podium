@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
@@ -21,6 +22,7 @@ import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:reown_appkit/reown_appkit.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 import 'app/routes/app_pages.dart';
 
@@ -33,26 +35,55 @@ Future<void> initDeepLinks() async {
 
   // Handle links
   final initialLink = await _appLinks.getInitialLink();
-  log.f('initial link: $initialLink');
+  l.f('initial link: $initialLink');
   if (initialLink != null) {
     processLink(initialLink.toString());
   }
   _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-    log.f('deep link: $uri');
+    l.f('deep link: $uri');
     processLink(uri.toString());
   });
 }
 
+_extractLinkForAndroid(String link) {
+  String deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
+  deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
+  deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
+  return deepLinkedPage;
+}
+
+_extractLinkForIOS(String link) {
+  late String deepLinkedPage;
+  Uri uri = Uri.parse(link);
+  String? originalLink = uri.queryParameters['link'];
+
+  if (originalLink != null) {
+    Uri innerUri = Uri.parse(originalLink);
+    String path = innerUri.path;
+    Map<String, String> params = innerUri.queryParameters;
+
+    if (params.containsKey('id')) {
+      deepLinkedPage = '$path/${params['id']}';
+    }
+    if (params.containsKey('referrerId')) {
+      deepLinkedPage = '$path/${params['referrerId']}';
+    }
+  }
+  return deepLinkedPage;
+}
+
 processLink(String? link) async {
   if (link != null) {
-    log.f('deep link: $link');
+    l.f('deep link: $link');
     late String deepLinkedPage;
     if (link.startsWith('podium://')) {
       deepLinkedPage = link.replaceAll('podium://', '/');
     } else if (link.startsWith(Env.baseDeepLinkUrl)) {
-      deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
-      deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
-      deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
+      if (Platform.isAndroid) {
+        deepLinkedPage = _extractLinkForAndroid(link);
+      } else if (Platform.isIOS) {
+        deepLinkedPage = _extractLinkForIOS(link);
+      }
     } else {
       deepLinkedPage = '';
     }
@@ -73,8 +104,11 @@ processLink(String? link) async {
 
 void main() async {
   await dotenv.load(
-      fileName: "env/${kReleaseMode ? 'production' : 'development'}.env");
-
+      fileName: "env/${kReleaseMode ? PRODUCTION : DEVELOPMENT}.env");
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.portraitUp,
+  ]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: ColorName.systemTrayBackground,
@@ -121,7 +155,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     initDeepLinks();
 
-    log.i(SchedulerBinding.instance.lifecycleState);
+    l.i(SchedulerBinding.instance.lifecycleState);
 
     _listener = AppLifecycleListener(
       onShow: () => _pushState('show'),
@@ -155,11 +189,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void _handleDetached() async {
     jitsiMeet.hangUp();
     jitsiMethodChannel.invokeMethod<String>('hangUp');
-    log.f('Detached');
+    l.f('Detached');
   }
 
   void _pushState(String state) {
-    log.i('States: $state');
+    l.i('States: $state');
   }
 
   void _handleStateChange(AppLifecycleState state) {
@@ -168,7 +202,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final globalController = Get.find<GlobalController>();
       globalController.appLifecycleState.value = state;
     }
-    log.i('State changed: $state');
+    l.i('State changed: $state');
+    if (state == AppLifecycleState.resumed) {
+      Web3AuthFlutter.setCustomTabsClosed();
+    }
   }
 
   Future<AppExitResponse> _handleExitRequest() async {

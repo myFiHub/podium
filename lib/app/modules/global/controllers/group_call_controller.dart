@@ -160,8 +160,8 @@ class GroupCallController extends GetxController {
           );
           membersList.add(member);
         } catch (e) {
-          log.e(e.toString());
-          log.e('error in parsing member: $key');
+          l.e(e.toString());
+          l.e('error in parsing member: $key');
         }
       });
     }
@@ -234,7 +234,7 @@ class GroupCallController extends GetxController {
     }
     final hasNotificationPermission =
         await getPermission(Permission.notification);
-    log.d("notifications allowed: $hasNotificationPermission");
+    l.d("notifications allowed: $hasNotificationPermission");
 
     final myUser = globalController.currentUserInfo.value!;
 
@@ -274,7 +274,7 @@ class GroupCallController extends GetxController {
         },
       );
     } catch (e) {
-      log.f(e.toString());
+      l.f(e.toString());
     }
   }
 

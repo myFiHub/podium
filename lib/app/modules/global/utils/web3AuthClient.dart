@@ -60,7 +60,7 @@ Future<String?> sendTransaction({
     );
     return transactionSigned;
   } catch (e) {
-    log.e(e);
+    l.e(e);
     final myAddress = await web3AuthWalletAddress();
     if (myAddress == null) {
       return null;

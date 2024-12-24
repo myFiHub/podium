@@ -1,6 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -95,7 +94,7 @@ Future<bool> ext_cheerOrBoo({
       return (response as String).startsWith('0x') && response.length > 10;
     }
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return false;
   }
 }
@@ -169,7 +168,7 @@ internal_cheerOrBoo({
     }
     return false;
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     if (e.toString().contains('insufficient funds')) {}
   }
   return false;
@@ -216,11 +215,11 @@ Future<BigInt?> ext_getBuyPrice({
         BigInt.from(shareAmount),
       ],
     );
-    log.d('response: $response');
+    l.d('response: $response');
     final res = response[0] as BigInt;
     return res;
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return null;
   }
 }
@@ -250,7 +249,7 @@ Future<BigInt?> ext_getMyShares({
     final res = response[0] as BigInt;
     return res;
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return null;
   }
 }
@@ -296,7 +295,7 @@ Future<BigInt?> getMyShares_arena({
     }
     return sum;
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return null;
   }
 }
@@ -337,7 +336,7 @@ Future<UserActiveWalletOnFriendtech> internal_friendTech_getActiveUserWallets(
       internalWalletAddress: internalWalletAddress,
     );
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return UserActiveWalletOnFriendtech(
       isExternalWalletActive: false,
       isInternalWalletActive: false,
@@ -393,7 +392,7 @@ Future<BigInt> internal_getUserShares_friendTech({
     }
     return numberOfShares;
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     Toast.error(message: "Could not get user shares");
     return BigInt.zero;
   }
@@ -451,8 +450,7 @@ Future<BigInt?> _internal_getShares_friendthech({
     ]);
 
     if (results[0][0] == '0x') {
-      log.f(
-          'result 0: ${results[0]}, contract might not be deployed on this chain');
+      l.f('result 0: ${results[0]}, contract might not be deployed on this chain');
       return BigInt.zero;
     }
     BigInt sum = BigInt.zero;
@@ -463,7 +461,7 @@ Future<BigInt?> _internal_getShares_friendthech({
     }
     return sum;
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return null;
   }
 }
@@ -502,11 +500,11 @@ Future<BigInt?> internal_getFriendTechTicketPrice({
         return null;
       }
     } catch (e) {
-      log.e('error : $e');
+      l.e('error : $e');
       return null;
     }
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return null;
   }
 }
@@ -616,7 +614,7 @@ Future<bool> internal_buyFriendTechTicket({
     }
     return false;
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
 
     return false;
   }
@@ -689,7 +687,7 @@ Future<bool> ext_buyFirendtechTicket({
       return false;
     }
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
 
     return false;
   }
@@ -775,7 +773,7 @@ Future<bool> ext_buySharesWithReferrer({
     }
     return false;
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return false;
   }
 }
@@ -812,7 +810,7 @@ Future<BigInt?> getBuyPriceForArenaTicket({
       return null;
     }
   } catch (e) {
-    log.e('error : $e');
+    l.e('error : $e');
     return null;
   }
 }
@@ -824,7 +822,11 @@ Future<bool> internal_buySharesWithReferrer({
   num shareAmount = 1,
   required String chainId,
 }) async {
-  final referrer = referrerAddress ?? fihubAddress(chainId);
+  String? referrer = referrerAddress;
+  if (referrer == null || referrer.isEmpty) {
+    referrer = fihubAddress(chainId);
+  }
+
   if (referrer == null) {
     Toast.error(message: "Referrer address not found");
     return false;
@@ -893,7 +895,7 @@ Future<bool> internal_buySharesWithReferrer({
     }
     return false;
   } catch (e) {
-    log.e('error : $e ${((e as dynamic).data)}');
+    l.e('error : $e ${((e as dynamic).data)}');
 
     Toast.error(message: (e as dynamic).message);
 
@@ -955,16 +957,6 @@ String hexToAscii(String hexString) => List.generate(
         int.parse(hexString.substring(i * 2, (i * 2) + 2), radix: 16),
       ),
     ).join();
-
-void _copyToClipboard(String text, {String? prefix}) async {
-  await Get.closeCurrentSnackbar();
-  Clipboard.setData(ClipboardData(text: text)).then(
-    (_) => Toast.info(
-      title: "${prefix} Copied",
-      message: text,
-    ),
-  );
-}
 
 String? fihubAddress(String chainId) {
   return Environment.Env.fihubAddress(chainId);

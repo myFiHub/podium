@@ -29,15 +29,105 @@ class ProfileView extends GetView<ProfileController> {
                 userId: controller.userInfo.value!.id,
               ),
               space10,
+              const _BuyOrSellPodiumPass(),
+              space10,
               const _BuyArenaTicketButton(),
               space10,
               const _BuyFriendTechTicket(),
               space10,
               const _Statistics(),
+              space10,
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
+  const _BuyOrSellPodiumPass({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        final user = controller.userInfo.value;
+        final isGettingPrice = controller.isGettingTicketPrice.value;
+        final isBuyingPodiumPass = controller.isBuyingPodiumPass.value;
+        final podiumPassPrice = controller.podiumPassPrice.value;
+        final isGettingPodiumPassPrice =
+            controller.loadingPodiumPassPrice.value;
+        final numberOfBoughtTicketsByMe =
+            controller.mySharesOfPodiumPassFromThisUser.value;
+        if (user == null) {
+          return Container();
+        }
+        return Button(
+          loading: isGettingPrice || isBuyingPodiumPass,
+          onPressed: (isGettingPrice || isBuyingPodiumPass)
+              ? null
+              : () {
+                  controller.buyOrSellPodiumPass();
+                },
+          type: ButtonType.gradient,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    '${numberOfBoughtTicketsByMe > 0 ? 'Sell' : 'Buy'} Podium Pass ${podiumPassPrice.toString()} ${chainInfoByChainId(movementAptosChainId).currency}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (isGettingPodiumPassPrice)
+                    const SizedBox(
+                      width: 10,
+                      height: 10,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 10, height: 10),
+                ],
+              ),
+              if (numberOfBoughtTicketsByMe > 0)
+                RichText(
+                  text: TextSpan(
+                    text: 'You own ',
+                    style: const TextStyle(
+                      color: Colors.yellow,
+                      fontSize: 14,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '$numberOfBoughtTicketsByMe',
+                        style: const TextStyle(
+                          color: Colors.red,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: ' Podium Pass',
+                        style: TextStyle(
+                          color: Colors.yellow,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          blockButton: true,
+          icon: Img(
+              src: chainInfoByChainId(movementAptosChainId).chainIcon ??
+                  Assets.images.movementLogo.path,
+              size: 20),
+        );
+      },
     );
   }
 }

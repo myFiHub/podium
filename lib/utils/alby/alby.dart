@@ -35,28 +35,28 @@ void createAblyRealtimeInstance() async {
     realtimeInstance.connection
         .on(ably.ConnectionEvent.closed)
         .listen((ably.ConnectionStateChange stateChange) async {
-      log.d('New state is: ${stateChange.current}');
+      l.d('New state is: ${stateChange.current}');
       switch (stateChange.current) {
         case ably.ConnectionState.closing:
-          log.i('Alby closing.');
+          l.i('Alby closing.');
           break;
         case ably.ConnectionState.suspended:
-          log.f('Alby Suspended');
+          l.f('Alby Suspended');
           break;
         case ably.ConnectionState.disconnected:
-          log.f('Alby disconnected');
+          l.f('Alby disconnected');
           break;
         case ably.ConnectionState.connecting:
-          log.i('Alby connecting');
+          l.i('Alby connecting');
           break;
         case ably.ConnectionState.initialized:
-          log.i('Alby initialized');
+          l.i('Alby initialized');
           break;
         case ably.ConnectionState.connected:
-          log.i('Connected to Ably!');
+          l.i('Connected to Ably!');
           break;
         case ably.ConnectionState.closed:
-          log.f('Alby connection closed');
+          l.f('Alby connection closed');
           break;
         case ably.ConnectionState.failed:
           break;

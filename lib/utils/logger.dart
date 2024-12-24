@@ -24,8 +24,8 @@ class L {
 class CustomFilter extends LogFilter {
   @override
   bool shouldLog(LogEvent event) {
-    return Env.environment == DEV;
+    return Env.environment == DEVELOPMENT;
   }
 }
 
-final log = L.log;
+final l = L.log;

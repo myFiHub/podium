@@ -98,7 +98,7 @@ FirebaseGroup? singleGroupParser(value) {
     );
     return group;
   } catch (e) {
-    log.e('Error parsing group: id:${groupId} $e',
+    l.e('Error parsing group: id:${groupId} $e',
         stackTrace: StackTrace.current);
 
     return null;

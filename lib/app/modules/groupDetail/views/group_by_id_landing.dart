@@ -14,7 +14,7 @@ class GroupByIdLandingScreen extends GetView<GroupDetailController> {
   Widget build(BuildContext context) {
     id ??= Get.parameters['id'];
     if (id == null || id!.isEmpty) {
-      log.e('GroupByIdLandingScreen: id is null or empty');
+      l.e('GroupByIdLandingScreen: id is null or empty');
       return Scaffold(
         body: Container(
           child: Center(

@@ -217,11 +217,11 @@ class ProfileController extends GetxController {
     }
     loadingPodiumPassPrice.value = false;
     if (price != null && price != BigInt.zero) {
-      //  price in aptos
+      //  price in aptos move
       podiumPassPrice.value = price;
     }
     if (sellPrice != null && sellPrice != BigInt.zero) {
-      //  price in aptos
+      //  price in aptos move
       podiumPassSellPrice.value = bigIntCoinToMoveOnAptos(sellPrice);
     }
   }

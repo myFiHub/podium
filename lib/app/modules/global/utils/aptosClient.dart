@@ -223,14 +223,14 @@ class AptosMovement {
       final referrerAddress =
           referrer == '' ? Env.fihubAddress_Aptos : referrer;
 
-      final price = await getTicketSellPriceForPodiumPass(
+      final price = await getTicketPriceForPodiumPass(
         sellerAddress: sellerAddress,
         numberOfTickets: numberOfTickets,
       );
       if (price == null) {
         return false;
       }
-      final parsedPrice = bigIntCoinToMoveOnAptos(price);
+      final parsedPrice = price;
       final confirmed = await showConfirmPopup(
         title: 'Buy Podium Pass',
         richMessage: RichText(

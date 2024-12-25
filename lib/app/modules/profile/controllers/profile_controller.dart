@@ -260,7 +260,7 @@ class ProfileController extends GetxController {
 
   _buyPodiumPass() async {
     try {
-      final price = await AptosMovement.getTicketSellPriceForPodiumPass(
+      final price = await AptosMovement.getTicketPriceForPodiumPass(
         sellerAddress: userInfo.value!.aptosInternalWalletAddress,
         numberOfTickets: 1,
       );
@@ -268,9 +268,7 @@ class ProfileController extends GetxController {
         Toast.error(title: 'Error', message: 'Error getting podium pass price');
         return;
       }
-      final priceInMove = bigIntCoinToMoveOnAptos(price);
-      podiumPassPrice.value = priceInMove;
-
+      podiumPassPrice.value = price;
       final success = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
         sellerAddress: userInfo.value!.aptosInternalWalletAddress,
         sellerName: userInfo.value!.fullName,

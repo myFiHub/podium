@@ -163,7 +163,7 @@ class AptosMovement {
         ],
       );
       final pString = response[0];
-      final bigIntPrice = BigInt.from(pString);
+      final bigIntPrice = BigInt.from(int.parse(pString));
       final parsedAmount = bigIntCoinToMoveOnAptos(bigIntPrice);
       return parsedAmount;
     } catch (e) {

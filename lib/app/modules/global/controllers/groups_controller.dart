@@ -734,8 +734,7 @@ class GroupsController extends GetxController with FirebaseTags {
     if (group.members.keys.contains(myUser.id))
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
-    if (group.accessType == null ||
-        group.accessType == FreeGroupAccessTypes.public)
+    if (group.accessType == FreeGroupAccessTypes.public)
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
     if (group.accessType == FreeGroupAccessTypes.onlyLink) {
@@ -933,8 +932,12 @@ _showModalToLeaveGroup({required FirebaseGroup group}) async {
 class GroupAccesses {
   bool canEnter;
   bool canSpeak;
+  String? accessPriceFullString;
+  String? speakPriceFullString;
   GroupAccesses({
     required this.canEnter,
     required this.canSpeak,
+    this.accessPriceFullString,
+    this.speakPriceFullString,
   });
 }

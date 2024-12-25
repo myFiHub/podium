@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/chechTicket/controllers/checkTicket_controller.dart';
+import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -229,7 +230,15 @@ class SingleTicketHolder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userInfo = ticketSeller.userInfo;
-    final address = ticketSeller.address;
+    String address = ticketSeller.address;
+    if (ticketSeller.accessTicketType ==
+            BuyableTicketTypes.onlyPodiumPassHolders ||
+        ticketSeller.speakTicketType ==
+            BuyableTicketTypes.onlyPodiumPassHolders) {
+      address = ticketSeller.userInfo.aptosInternalWalletAddress;
+    }
+    final accessPriceFullString = ticketSeller.accessPriceFullString;
+    final speakPriceFullString = ticketSeller.speakPriceFullString;
     return Container(
       key: ValueKey(ticketSeller.userInfo.id),
       margin: const EdgeInsets.only(bottom: 10),
@@ -271,6 +280,16 @@ class SingleTicketHolder extends StatelessWidget {
                     ),
                     style: const TextStyle(
                         fontSize: 16, color: ColorName.greyText)),
+                if (accessPriceFullString != null)
+                  Text(
+                    accessPriceFullString + ' (access)',
+                    style: const TextStyle(fontSize: 10, color: Colors.yellow),
+                  ),
+                if (speakPriceFullString != null)
+                  Text(
+                    speakPriceFullString + ' (speak)',
+                    style: const TextStyle(fontSize: 10, color: Colors.yellow),
+                  ),
               ],
             ),
           ),

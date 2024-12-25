@@ -230,7 +230,8 @@ class ProfileController extends GetxController {
     isBuyingPodiumPass.value = true;
     final myShares = mySharesOfPodiumPassFromThisUser.value;
     if (myShares > 0) {
-      _sellPodiumPass();
+      // _sellPodiumPass();
+      _buyPodiumPass();
     } else {
       _buyPodiumPass();
     }

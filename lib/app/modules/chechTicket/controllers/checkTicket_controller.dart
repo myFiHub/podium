@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
@@ -24,6 +25,8 @@ class TicketSeller {
   bool checking;
   String? speakTicketType;
   String? accessTicketType;
+  String? accessPriceFullString;
+  String? speakPriceFullString;
 
   final String address;
 
@@ -56,6 +59,8 @@ class TicketSeller {
     required this.buying,
     this.speakTicketType,
     this.accessTicketType,
+    this.accessPriceFullString,
+    this.speakPriceFullString,
   });
   copyWith({
     UserInfoModel? userInfo,
@@ -66,6 +71,8 @@ class TicketSeller {
     String? speakTicketType,
     String? accessTicketType,
     String? address,
+    String? accessPriceFullString,
+    String? speakPriceFullString,
   }) {
     return TicketSeller(
       userInfo: userInfo ?? this.userInfo,
@@ -76,6 +83,9 @@ class TicketSeller {
       speakTicketType: speakTicketType ?? this.speakTicketType,
       accessTicketType: accessTicketType ?? this.accessTicketType,
       address: address ?? this.address,
+      accessPriceFullString:
+          accessPriceFullString ?? this.accessPriceFullString,
+      speakPriceFullString: speakPriceFullString ?? this.speakPriceFullString,
     );
   }
 }
@@ -353,6 +363,8 @@ class CheckticketController extends GetxController {
         boughtTicketToAccess: original.boughtTicketToAccess || access.canEnter,
         checking: false,
         buying: false,
+        accessPriceFullString: access.accessPriceFullString,
+        speakPriceFullString: access.speakPriceFullString,
       );
     }
 
@@ -374,6 +386,8 @@ class CheckticketController extends GetxController {
         boughtTicketToAccess: original.boughtTicketToAccess || access.canEnter,
         checking: false,
         buying: false,
+        accessPriceFullString: access.accessPriceFullString,
+        speakPriceFullString: access.speakPriceFullString,
       );
     }
 
@@ -391,6 +405,8 @@ class CheckticketController extends GetxController {
         boughtTicketToAccess: original.boughtTicketToAccess || access.canEnter,
         checking: false,
         buying: false,
+        accessPriceFullString: access.accessPriceFullString,
+        speakPriceFullString: access.speakPriceFullString,
       );
     }
     allUsersToBuyTicketFrom.refresh();
@@ -694,30 +710,60 @@ class CheckticketController extends GetxController {
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
       if (group.value!.accessType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
-        final myShares = await getMyShares_arena(
-          sharesSubject: user.defaultWalletAddress,
-          chainId: avalancheChainId,
-        );
+        final (myShares, price) = await (
+          getMyShares_arena(
+            sharesSubject: user.defaultWalletAddress,
+            chainId: avalancheChainId,
+          ),
+          getBuyPriceForArenaTicket(
+            sharesSubject: user.defaultWalletAddress,
+            chainId: avalancheChainId,
+          )
+        ).wait;
         if (myShares != null && myShares > BigInt.zero) {
           access.canEnter = true;
+        } else {
+          final priceDouble = bigIntWeiToDouble(price ?? BigInt.zero);
+          final priceStringFull = priceDouble.toString() +
+              ' ${chainInfoByChainId(avalancheChainId).currency}';
+          access.accessPriceFullString = priceStringFull;
         }
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        final myShares = await internal_getUserShares_friendTech(
-          defaultWallet: user.defaultWalletAddress,
-          internalWallet: user.evmInternalWalletAddress,
-          chainId: baseChainId,
-        );
+        final (myShares, price) = await (
+          internal_getUserShares_friendTech(
+            defaultWallet: user.defaultWalletAddress,
+            internalWallet: user.evmInternalWalletAddress,
+            chainId: baseChainId,
+          ),
+          internal_getFriendTechTicketPrice(
+              sharesSubject: user.defaultWalletAddress, chainId: baseChainId)
+        ).wait;
         if (myShares > BigInt.zero) {
           access.canEnter = true;
+        } else {
+          final priceDouble = bigIntWeiToDouble(price ?? BigInt.zero);
+          final priceStringFull = priceDouble.toString() +
+              ' ${chainInfoByChainId(baseChainId).currency}';
+          access.accessPriceFullString = priceStringFull;
         }
       } else if (group.value!.accessType ==
           BuyableTicketTypes.onlyPodiumPassHolders) {
-        final myShares = await AptosMovement.getMyBalanceOnPodiumPass(
-          sellerAddress: user.aptosInternalWalletAddress,
-        );
+        final (myShares, price) = await (
+          AptosMovement.getMyBalanceOnPodiumPass(
+            sellerAddress: user.aptosInternalWalletAddress,
+          ),
+          AptosMovement.getTicketPriceForPodiumPass(
+            sellerAddress: user.aptosInternalWalletAddress,
+          )
+        ).wait;
         if (myShares != null && myShares > BigInt.zero) {
           access.canEnter = true;
+        } else {
+          final p = price ?? BigInt.zero;
+          final priceStringFull = p.toString() +
+              ' ${chainInfoByChainId(movementAptosChainId).currency}';
+          access.accessPriceFullString = priceStringFull;
         }
       } else {
         l.f('FIXME: add support for other ticket types ');
@@ -727,30 +773,60 @@ class CheckticketController extends GetxController {
     if (allUsersToBuyTicketFrom.value[userId]?.speakTicketType != null) {
       if (group.value!.speakerType ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
-        final myShares = await getMyShares_arena(
-          sharesSubject: user.defaultWalletAddress,
-          chainId: avalancheChainId,
-        );
+        final (myShares, price) = await (
+          getMyShares_arena(
+            sharesSubject: user.defaultWalletAddress,
+            chainId: avalancheChainId,
+          ),
+          getBuyPriceForArenaTicket(
+            sharesSubject: user.defaultWalletAddress,
+            chainId: avalancheChainId,
+          )
+        ).wait;
         if (myShares != null && myShares > BigInt.zero) {
           access.canSpeak = true;
+        } else {
+          final priceDouble = bigIntWeiToDouble(price ?? BigInt.zero);
+          final priceStringFull = priceDouble.toString() +
+              ' ${chainInfoByChainId(avalancheChainId).currency}';
+          access.speakPriceFullString = priceStringFull;
         }
       } else if (group.value!.speakerType ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
-        final myShares = await internal_getUserShares_friendTech(
-          defaultWallet: user.defaultWalletAddress,
-          internalWallet: user.evmInternalWalletAddress,
-          chainId: baseChainId,
-        );
+        final (myShares, price) = await (
+          internal_getUserShares_friendTech(
+            defaultWallet: user.defaultWalletAddress,
+            internalWallet: user.evmInternalWalletAddress,
+            chainId: baseChainId,
+          ),
+          internal_getFriendTechTicketPrice(
+              sharesSubject: user.defaultWalletAddress, chainId: baseChainId)
+        ).wait;
         if (myShares > BigInt.zero) {
           access.canSpeak = true;
+        } else {
+          final priceDouble = bigIntWeiToDouble(price ?? BigInt.zero);
+          final priceStringFull = priceDouble.toString() +
+              ' ${chainInfoByChainId(baseChainId).currency}';
+          access.speakPriceFullString = priceStringFull;
         }
       } else if (group.value!.speakerType ==
           BuyableTicketTypes.onlyPodiumPassHolders) {
-        final myShares = await AptosMovement.getMyBalanceOnPodiumPass(
-          sellerAddress: user.aptosInternalWalletAddress,
-        );
+        final (myShares, price) = await (
+          AptosMovement.getMyBalanceOnPodiumPass(
+            sellerAddress: user.aptosInternalWalletAddress,
+          ),
+          AptosMovement.getTicketPriceForPodiumPass(
+            sellerAddress: user.aptosInternalWalletAddress,
+          )
+        ).wait;
         if (myShares != null && myShares > BigInt.zero) {
           access.canSpeak = true;
+        } else {
+          final p = price ?? BigInt.zero;
+          final priceStringFull = p.toString() +
+              ' ${chainInfoByChainId(movementAptosChainId).currency}';
+          access.speakPriceFullString = priceStringFull;
         }
       } else {
         l.f('FIXME: add support for other ticket types');

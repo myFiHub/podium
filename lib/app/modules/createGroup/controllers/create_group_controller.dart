@@ -101,7 +101,7 @@ class CreateGroupController extends GetxController {
   }
 
   @override
-  void onReady() {
+  void onReady() async {
     super.onReady();
     final alreadyViewed = storage.read(IntroStorageKeys.viewedCreateGroup);
     if (
@@ -111,46 +111,46 @@ class CreateGroupController extends GetxController {
         //
         ) {
       // wait for the context to be ready
-      Future.delayed(const Duration(seconds: 0)).then((v) {
-        tutorialCoachMark = TutorialCoachMark(
-          targets: _createTargets(),
-          paddingFocus: 5,
-          opacityShadow: 0.5,
-          skipWidget: Button(
-            size: ButtonSize.SMALL,
-            type: ButtonType.outline,
-            color: Colors.red,
-            onPressed: () {
-              saveIntroAsDone(true);
-            },
-            child: const Text("Finish"),
-          ),
-          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          onFinish: () {
+      await Future.delayed(const Duration(seconds: 0));
+      tutorialCoachMark = TutorialCoachMark(
+        targets: _createTargets(),
+        paddingFocus: 5,
+        opacityShadow: 0.5,
+        skipWidget: Button(
+          size: ButtonSize.SMALL,
+          type: ButtonType.outline,
+          color: Colors.red,
+          onPressed: () {
             saveIntroAsDone(true);
           },
-          onClickTarget: (target) {
-            print('onClickTarget: $target');
-          },
-          onClickTargetWithTapPosition: (target, tapDetails) {
-            print("target: $target");
-            print(
-                "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
-          },
-          onClickOverlay: (target) {
-            print('onClickOverlay: $target');
-          },
-          onSkip: () {
-            saveIntroAsDone(true);
-            return true;
-          },
-        );
-        try {
-          tutorialCoachMark.show(context: contextForIntro!);
-        } catch (e) {
-          l.e(e);
-        }
-      });
+          child: const Text("Finish"),
+        ),
+        imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        onFinish: () {
+          saveIntroAsDone(true);
+        },
+        onClickTarget: (target) {
+          print('onClickTarget: $target');
+        },
+        onClickTargetWithTapPosition: (target, tapDetails) {
+          print("target: $target");
+          print(
+              "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+        },
+        onClickOverlay: (target) {
+          print('onClickOverlay: $target');
+        },
+        onSkip: () {
+          saveIntroAsDone(true);
+          return true;
+        },
+      );
+      try {
+        await Future.delayed(const Duration(seconds: 1));
+        tutorialCoachMark.show(context: contextForIntro!);
+      } catch (e) {
+        l.e(e);
+      }
     }
   }
 
@@ -278,8 +278,17 @@ class CreateGroupController extends GetxController {
   pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      selectedFile = File(pickedFile
+      final f = File(pickedFile
           .path); // Use this to store the image in the database or cloud storage
+
+      // check if file is less than 2mb
+      final fileSize = f.lengthSync();
+      if (fileSize > 2 * 1024 * 1024) {
+        Toast.error(message: 'Image size must be less than 2MB');
+        selectedFile = null;
+        return;
+      }
+      selectedFile = f;
       fileLocalAddress.value = pickedFile.path;
     } else {
       l.e('No image selected.');
@@ -669,6 +678,7 @@ class CreateGroupController extends GetxController {
     if (selectedFile != null) {
       final res = await uploadFile(groupId: id);
       if (res == null) {
+        isCreatingNewGroup.value = false;
         return;
       }
       imageUrl = res;

@@ -77,7 +77,7 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
               Row(
                 children: [
                   Text(
-                    '${numberOfBoughtTicketsByMe > 0 ? 'Sell' : 'Buy'} Podium Pass ${podiumPassPrice.toString()} ${chainInfoByChainId(movementAptosChainId).currency}',
+                    'Buy Podium Pass ${podiumPassPrice.toString()} ${chainInfoByChainId(movementAptosChainId).currency}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

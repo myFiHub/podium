@@ -198,7 +198,7 @@ class ProfileController extends GetxController {
       await Future.delayed(Duration(seconds: delay));
     }
     final (price, sellPrice, podiumPassShares) = await (
-      AptosMovement.getTicketSellPriceForPodiumPass(
+      AptosMovement.getTicketPriceForPodiumPass(
         sellerAddress: userInfo.value!.aptosInternalWalletAddress,
         numberOfTickets: 1,
       ),
@@ -218,7 +218,7 @@ class ProfileController extends GetxController {
     loadingPodiumPassPrice.value = false;
     if (price != null && price != BigInt.zero) {
       //  price in aptos
-      podiumPassPrice.value = bigIntCoinToMoveOnAptos(price);
+      podiumPassPrice.value = price;
     }
     if (sellPrice != null && sellPrice != BigInt.zero) {
       //  price in aptos

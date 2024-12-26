@@ -37,7 +37,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
 
             return Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   space16,
                   Padding(

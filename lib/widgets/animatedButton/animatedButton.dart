@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/navigation/navigation.dart';
+import 'package:shimmer/shimmer.dart';
 
 class AnimatedButton extends StatefulWidget {
   @override
@@ -39,37 +40,40 @@ class _AnimatedButtonState extends State<AnimatedButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigate.to(
-          type: NavigationTypes.toNamed,
-          route: Routes.CREATE_GROUP,
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          gradient: const LinearGradient(
-            colors: [ColorName.systemTrayBackground, ColorName.pageBgGradientStart],
-          ),
+  return GestureDetector(
+    onTap: () {
+      Navigate.to(
+        type: NavigationTypes.toNamed,
+        route: Routes.CREATE_GROUP,
+      );
+    },
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        gradient: const LinearGradient(
+          colors: [ColorName.systemTrayBackground, ColorName.pageBgGradientStart],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRect(
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Transform.translate(
-                        offset: Offset(_controller.value * 100, 0),
-                        child: _showText
-                            ? const Row(
-                                children: [
-                                  Text(
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRect(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Transform.translate(
+                      offset: Offset(_controller.value * 100, 0),
+                      child: _showText
+                          ? Row(
+                              children: [
+                                Shimmer.fromColors(
+                                  baseColor: Colors.white,
+                                  highlightColor: Colors.blueAccent,
+                                  child: const Text(
                                     "Start new outpost",
                                     style: TextStyle(
                                       color: Colors.white,
@@ -77,21 +81,26 @@ class _AnimatedButtonState extends State<AnimatedButton>
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  SizedBox(width: 8),
-                                ],
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
-                  );
-                },
-              ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                );
+              },
             ),
-            // Ícono que siempre permanece visible
-            const Icon(Icons.add, color: Colors.white, size: 16),
-          ],
-        ),
+          ),
+          Shimmer.fromColors(
+            baseColor: Colors.white,
+            highlightColor: Colors.blueAccent,
+            child: const Icon(Icons.add, color: Colors.white, size: 16),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

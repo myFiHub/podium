@@ -40,59 +40,62 @@ class GroupDetailView extends GetView<GroupDetailController> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   space16,
-                  Padding(
+
+                  SizedBox(
+                    width: Get.width,
+                    child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: Get.width,
-                              child: const Text(
-                                "Joining:",
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  overflow: TextOverflow.visible,
-                                ),
-                              ),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Joining:",
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              overflow: TextOverflow.visible,
                             ),
-                            space5,
+                          ),
+                          space5,
+                          Text(
+                            group.name,
+                            textAlign: TextAlign.left,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                          if (group.subject != null &&
+                              group.subject!.trim().isNotEmpty)
                             Text(
-                              group.name,
-                              textAlign: TextAlign.left,
+                              group.subject!,
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                overflow: TextOverflow.visible,
+                                fontSize: 14,
                               ),
-                            ),
-                            if (group.subject != null &&
-                                group.subject!.trim().isNotEmpty)
-                              Text(
-                                group.subject!,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                ),
-                              )
-                            else
-                              const SizedBox.shrink(), // Evita espacio residual
-                            if (iAmOwner)
-                              Text(
-                                "Access Type: ${parseAccessType(group.accessType)}",
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey[400],
-                                ),
-                              ),
+                            )
+                          else
+                            const SizedBox.shrink(), // Evita espacio residual
+                          if (iAmOwner)
                             Text(
-                              "Speakers: ${parseSpeakerType(group.speakerType)}",
+                              "Access Type: ${parseAccessType(group.accessType)}",
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Colors.grey[400],
                               ),
                             ),
-                          ])),
+                          Text(
+                            "Speakers: ${parseSpeakerType(group.speakerType)}",
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   space10,
                   Expanded(
                     child: UserList(

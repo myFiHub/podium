@@ -30,7 +30,7 @@ class AllGroupsView extends GetView<AllGroupsController> {
               children: [
                 space16,
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -98,12 +98,12 @@ class AllGroupsView extends GetView<AllGroupsController> {
                 ),
                 child: Button(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.add, color: Colors.white, size: 16),
-                      SizedBox(width: 10),
+                      SizedBox(width: 8),
                       Text(
                         "Start new outpost",
                         style: TextStyle(

@@ -76,6 +76,10 @@ class $AssetsImagesGen {
   AssetGenImage get xPlatform =>
       const AssetGenImage('assets/images/x_platform.png');
 
+/// File path: assets/images/explore.png
+  AssetGenImage get explore =>
+      const AssetGenImage('assets/images/explore.png');
+
   /// List of all assets
   List<dynamic> get values => [
         ageRestricted,

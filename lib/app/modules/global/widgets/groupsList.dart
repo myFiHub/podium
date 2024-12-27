@@ -75,7 +75,7 @@ class _SingleGroup extends StatelessWidget {
             decoration: const BoxDecoration(
                 color: ColorName.cardBackground,
                 borderRadius: BorderRadius.all(Radius.circular(8))),
-            margin: const EdgeInsets.only(left: 8, right: 8, bottom: 10),
+            margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
             padding: const EdgeInsets.all(10),
             child: Stack(
               children: [

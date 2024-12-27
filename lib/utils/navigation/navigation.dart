@@ -18,7 +18,7 @@ final List<String> _validRoutesForNavigation =
     List.from(navbarItems.map((e) => e.route));
 
 class Navigate {
-  static to(
+  static Future to(
       {required NavigationTypes type,
       required String route,
       dynamic id,

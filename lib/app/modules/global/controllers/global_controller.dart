@@ -509,7 +509,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  void setLoggedIn(bool value) {
+  void setLoggedIn(bool value) async {
     loggedIn.value = value;
     if (value == false) {
       l.f("logging out");
@@ -521,7 +521,7 @@ class GlobalController extends GetxController {
         },
       );
     } else {
-      Navigate.to(
+      await Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
@@ -530,6 +530,7 @@ class GlobalController extends GetxController {
         openDeepLinkGroup(route.value);
         return;
       }
+      isAutoLoggingIn.value = false;
     }
   }
 

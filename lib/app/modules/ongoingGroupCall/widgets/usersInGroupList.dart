@@ -370,7 +370,7 @@ _shootBoo(BuildContext context) {
   final options = ConfettiOptions(
       spread: 30,
       ticks: 120,
-      gravity: 0.5,
+      gravity: 0.4,
       decay: 0.97,
       y: (position.dy / Get.height) + (30 / Get.height),
       x: (position.dx / Get.width) + 0.1,

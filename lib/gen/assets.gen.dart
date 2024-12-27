@@ -12,6 +12,19 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart' as _svg;
 import 'package:vector_graphics/vector_graphics.dart' as _vg;
 
+class $EnvGen {
+  const $EnvGen();
+
+  /// File path: env/development.env
+  String get development => 'env/development.env';
+
+  /// File path: env/production.env
+  String get production => 'env/production.env';
+
+  /// List of all assets
+  List<String> get values => [development, production];
+}
+
 class $AssetsAudioGen {
   const $AssetsAudioGen();
 
@@ -43,6 +56,12 @@ class $AssetsImagesGen {
 
   /// File path: assets/images/cheer.png
   AssetGenImage get cheer => const AssetGenImage('assets/images/cheer.png');
+
+  /// File path: assets/images/email.png
+  AssetGenImage get email => const AssetGenImage('assets/images/email.png');
+
+  /// File path: assets/images/explore.png
+  AssetGenImage get explore => const AssetGenImage('assets/images/explore.png');
 
   /// File path: assets/images/facebook.png
   AssetGenImage get facebook =>
@@ -76,10 +95,6 @@ class $AssetsImagesGen {
   AssetGenImage get xPlatform =>
       const AssetGenImage('assets/images/x_platform.png');
 
-/// File path: assets/images/explore.png
-  AssetGenImage get explore =>
-      const AssetGenImage('assets/images/explore.png');
-
   /// List of all assets
   List<dynamic> get values => [
         ageRestricted,
@@ -88,6 +103,8 @@ class $AssetsImagesGen {
         boo,
         browse,
         cheer,
+        email,
+        explore,
         facebook,
         gIcon,
         github,
@@ -105,6 +122,7 @@ class Assets {
 
   static const $AssetsAudioGen audio = $AssetsAudioGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
+  static const $EnvGen env = $EnvGen();
 }
 
 class AssetGenImage {

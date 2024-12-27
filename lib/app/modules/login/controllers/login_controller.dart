@@ -175,7 +175,7 @@ class LoginController extends GetxController {
     return splited[1];
   }
 
-  void _removeLogingInState() {
+  void removeLogingInState() {
     isLoggingIn.value = false;
     globalController.isAutoLoggingIn.value = false;
   }
@@ -203,7 +203,7 @@ class LoginController extends GetxController {
       );
     } catch (e) {
       if (ignoreIfNotLoggedIn) {
-        _removeLogingInState();
+        removeLogingInState();
         return;
       }
 
@@ -222,7 +222,7 @@ class LoginController extends GetxController {
               ),
             );
           } else {
-            _removeLogingInState();
+            removeLogingInState();
             return;
           }
         } else {
@@ -235,18 +235,18 @@ class LoginController extends GetxController {
             );
           } on UserCancelledException catch (e) {
             l.e(e);
-            _removeLogingInState();
+            removeLogingInState();
           } catch (e) {
             l.e(e);
             Toast.error(
               message:
                   'Error logging in, please try again, or use another method',
             );
-            _removeLogingInState();
+            removeLogingInState();
           }
         }
         if (res == null) {
-          _removeLogingInState();
+          removeLogingInState();
           return;
         }
         final privateKey = res.privKey!;
@@ -257,7 +257,7 @@ class LoginController extends GetxController {
           loginMethod: loginMethod,
         );
       } catch (e) {
-        _removeLogingInState();
+        removeLogingInState();
         l.e(e);
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
@@ -375,7 +375,7 @@ class LoginController extends GetxController {
       canContinueAuthentication =
           await _canContinueAuthentication(userToCreate);
     } catch (e) {
-      _removeLogingInState();
+      removeLogingInState();
     }
     if (!canContinueAuthentication) {
       final hasTicket =
@@ -388,13 +388,13 @@ class LoginController extends GetxController {
           final balance = weiToDecimalString(wei: res);
           internalWalletBalance.value = balance;
         } catch (e) {
-          _removeLogingInState();
+          removeLogingInState();
         }
         Navigate.to(
           route: Routes.PREJOIN_REFERRAL_PAGE,
           type: NavigationTypes.toNamed,
         );
-        _removeLogingInState();
+        removeLogingInState();
         return;
       }
     }
@@ -444,7 +444,8 @@ class LoginController extends GetxController {
       );
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
-      _removeLogingInState();
+      // newx line is commented because loginController is cleared from memory (offAllNamed in global controller)
+      // removeLogingInState();
       if (afterLogin != null) {
         afterLogin!();
         afterLogin = null;

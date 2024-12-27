@@ -51,9 +51,14 @@ class _AnimatedButtonState extends State<AnimatedButton>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        gradient: const LinearGradient(
-          colors: [ColorName.systemTrayBackground, ColorName.pageBgGradientStart],
-        ),
+         gradient: const LinearGradient(
+    colors: [
+      ColorName.primaryBlue,
+      ColorName.secondaryBlue,
+    ],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

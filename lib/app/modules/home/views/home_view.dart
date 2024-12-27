@@ -3,13 +3,13 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/modules/home/widgets/addOutpostButton.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/animatedButton/animatedButton.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../controllers/home_controller.dart';
@@ -35,9 +35,9 @@ class HomeView extends GetView<HomeController> {
             children: [
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: Text(
+                child: const Text(
                   "Home",
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                   ),
@@ -46,7 +46,7 @@ class HomeView extends GetView<HomeController> {
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: AnimatedButton(),
+                child: AddOutpostButton(),
               ),
             ],
           ),

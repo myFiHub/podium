@@ -26,12 +26,13 @@ class CreateGroupView extends GetView<CreateGroupController> {
           child: Container(
             // padding: const EdgeInsets.only(top: 16),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
+                  space16,
                   const _TitleBar(),
-                  space14,
+                  //space10,
                   _SelectPicture(
                     key: controller.intro_selectImageKey,
                   ),

@@ -5,10 +5,12 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/animatedButton/animatedButton.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../controllers/home_controller.dart';
 
@@ -29,22 +31,31 @@ class HomeView extends GetView<HomeController> {
           //   },
           // ),
           space16,
-          const Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: const Text(
-              "Home",
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
+          Row(
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.0),
+                child: Text(
+                  "Home",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: AnimatedButton(),
+              ),
+            ],
           ),
           space14,
           const Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
             child: const Text(
               "My Outposts",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -80,43 +91,53 @@ class HomeView extends GetView<HomeController> {
                           );
                         }
                         if (groups.isEmpty) {
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                height: 100,
-                                child: Assets.images.logo.image(),
-                              ),
-                              const Text(
-                                'Welcome to Podium',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  height: 200,
+                                  child: Assets.images.explore.image(),
                                 ),
-                              ),
-                              Text(
-                                myUser.fullName,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
+                                Text(
+                                  "Hi ${myUser.fullName},",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
-                              const Text(
-                                'try joining an Outpost',
-                              ),
-                              space10,
-                              Button(
-                                  text: 'See All Outposts',
-                                  type: ButtonType.gradient,
-                                  blockButton: true,
-                                  onPressed: () async {
+                                const Text(
+                                  "You haven't participated yet. Try joining an outpost and enjoy! ✨",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14.0,
+                                  ),
+                                ),
+                                space10,
+                                GestureDetector(
+                                  onTap: () {
                                     Navigate.to(
                                       type: NavigationTypes.offAllNamed,
                                       route: Routes.ALL_GROUPS,
                                     );
-                                  })
-                            ],
+                                  },
+                                  child: Shimmer.fromColors(
+                                    baseColor: Colors.white,
+                                    highlightColor: ColorName.primaryBlue,
+                                    child: const Text(
+                                      "Explore outposts >",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         }
                         return GroupList(groupsList: groups);

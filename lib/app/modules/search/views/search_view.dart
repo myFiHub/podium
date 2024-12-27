@@ -45,7 +45,7 @@ class SearchView extends GetView<SearchPageController> {
                               hintText: "Search Outposts, Users or Tags",
                               hintStyle: const TextStyle(fontSize: 14),
                               prefixIcon: const Icon(Icons.search),
-                              contentPadding: const EdgeInsets.all(16),
+                              contentPadding: const EdgeInsets.all(10),
                               filled: true,
                               fillColor: Colors.grey[200],
                               border: OutlineInputBorder(
@@ -54,7 +54,7 @@ class SearchView extends GetView<SearchPageController> {
                               ),
                             ),
                             style: const TextStyle(
-                              fontSize: 18,
+                              fontSize: 14,
                               color: Colors.black,
                             ),
                             onChanged: (value) {

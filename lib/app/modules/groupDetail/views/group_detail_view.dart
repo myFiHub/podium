@@ -37,7 +37,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
 
             return Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   space16,
                   Padding(
@@ -45,13 +45,16 @@ class GroupDetailView extends GetView<GroupDetailController> {
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              "Joining:",
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                overflow: TextOverflow.visible,
+                            SizedBox(
+                              width: Get.width,
+                              child: const Text(
+                                "Joining:",
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  overflow: TextOverflow.visible,
+                                ),
                               ),
                             ),
                             space5,

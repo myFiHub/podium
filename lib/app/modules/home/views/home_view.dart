@@ -5,13 +5,13 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/animatedButton/animatedButton.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:podium/gen/colors.gen.dart';
+
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -92,8 +92,8 @@ class HomeView extends GetView<HomeController> {
                         }
                         if (groups.isEmpty) {
                           return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0), 
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

@@ -280,16 +280,17 @@ class SingleTicketHolder extends StatelessWidget {
                     ),
                     style: const TextStyle(
                         fontSize: 16, color: ColorName.greyText)),
-                if (accessPriceFullString != null)
-                  Text(
-                    accessPriceFullString + ' (access)',
-                    style: const TextStyle(fontSize: 10, color: Colors.yellow),
-                  ),
-                if (speakPriceFullString != null)
-                  Text(
-                    speakPriceFullString + ' (speak)',
-                    style: const TextStyle(fontSize: 10, color: Colors.yellow),
-                  ),
+                  if (accessPriceFullString != null && !ticketSeller.boughtTicketToAccess)
+                    Text(
+                      accessPriceFullString + ' (access)',
+                      style: const TextStyle(fontSize: 10, color: Colors.yellow),
+                    ),
+                  if (speakPriceFullString != null &&
+                      !ticketSeller.boughtTicketToSpeak)
+                    Text(
+                      speakPriceFullString + ' (speak)',
+                      style: const TextStyle(fontSize: 10, color: Colors.yellow),
+                    ),
               ],
             ),
           ),

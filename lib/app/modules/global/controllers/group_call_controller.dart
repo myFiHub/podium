@@ -13,7 +13,6 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/constants/meeting.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_session_model.dart';
@@ -62,23 +61,56 @@ class GroupCallController extends GetxController {
       }
     });
 
-    group.listen((activeGroup) {
+    group.listen((activeGroup) async {
       members.value = [];
       if (activeGroup != null) {
         membersListener?.cancel();
-        membersListener = listenToGroupMembers(
+        membersListener = listenToSessionMembers(
           groupId: activeGroup.id,
           onData: (data) async {
             if (data.snapshot.value != null) {
               final tmpMembers = data.snapshot.value as dynamic;
-              final membersListFromStream = <String, String>{};
+              final List<String> memberIdsListFromStream = [];
               tmpMembers.forEach((key, value) {
-                membersListFromStream[key] = value;
+                memberIdsListFromStream.add(key);
               });
               final previousUniqueMembers = members.value.map((e) => e.id);
-              final newUniqueMembers = membersListFromStream.keys.map((e) => e);
+              final newUniqueMembers = memberIdsListFromStream;
               if (previousUniqueMembers.length != newUniqueMembers.length) {
-                await refetchSessionMembers();
+                final membersList = <FirebaseSessionMember>[];
+
+                tmpMembers.forEach((key, value) {
+                  try {
+                    final member = FirebaseSessionMember(
+                      id: key,
+                      name: value[FirebaseSessionMember.nameKey] ?? '',
+                      avatar: value[FirebaseSessionMember.avatarKey],
+                      isMuted: value[FirebaseSessionMember.isMutedKey],
+                      initialTalkTime:
+                          value[FirebaseSessionMember.initialTalkTimeKey],
+                      present: value[FirebaseSessionMember.presentKey],
+                      remainingTalkTime:
+                          value[FirebaseSessionMember.remainingTalkTimeKey],
+                      isTalking:
+                          value[FirebaseSessionMember.isTalkingKey] ?? false,
+                      startedToTalkAt:
+                          value[FirebaseSessionMember.startedToTalkAtKey] ?? 0,
+                      timeJoined:
+                          value[FirebaseSessionMember.timeJoinedKey] ?? 0,
+                    );
+                    membersList.add(member);
+                  } catch (e) {
+                    l.e(e.toString());
+                    l.e('error in parsing member: $key');
+                  }
+                });
+
+                members.value = membersList;
+// sort the members based on selected sort type
+                final sorted = sortMembers(
+                  members: membersList,
+                );
+                sortedMembers.value = sorted;
               }
             }
           },
@@ -129,48 +161,6 @@ class GroupCallController extends GetxController {
     // log.d("talking members: ${talkingMembersList.map((e) => e.id).toList()}");
     // final sortedIds = sorted.map((e) => e.id).toList();
     // log.d("sorted members: $sortedIds");
-    sortedMembers.value = sorted;
-  }
-
-  refetchSessionMembers() async {
-    if (group.value == null) return;
-    final databaseRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.sessionsRef)
-        .child(group.value!.id)
-        .child(FirebaseSession.membersKey);
-    final snapshot = await databaseRef.get();
-    final snapshotMembers = snapshot.value as dynamic;
-    final membersList = <FirebaseSessionMember>[];
-    if (snapshotMembers != null) {
-      snapshotMembers.forEach((key, value) {
-        try {
-          final member = FirebaseSessionMember(
-            id: key,
-            name: value[FirebaseSessionMember.nameKey] ?? '',
-            avatar: value[FirebaseSessionMember.avatarKey],
-            isMuted: value[FirebaseSessionMember.isMutedKey],
-            initialTalkTime: value[FirebaseSessionMember.initialTalkTimeKey],
-            present: value[FirebaseSessionMember.presentKey],
-            remainingTalkTime:
-                value[FirebaseSessionMember.remainingTalkTimeKey],
-            isTalking: value[FirebaseSessionMember.isTalkingKey] ?? false,
-            startedToTalkAt:
-                value[FirebaseSessionMember.startedToTalkAtKey] ?? 0,
-            timeJoined: value[FirebaseSessionMember.timeJoinedKey] ?? 0,
-          );
-          membersList.add(member);
-        } catch (e) {
-          l.e(e.toString());
-          l.e('error in parsing member: $key');
-        }
-      });
-    }
-
-    members.value = membersList;
-// sort the members based on selected sort type
-    final sorted = sortMembers(
-      members: membersList,
-    );
     sortedMembers.value = sorted;
   }
 

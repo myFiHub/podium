@@ -289,7 +289,7 @@ class GroupsController extends GetxController with FirebaseTags {
       final lastActiveAt = group.lastActiveAt;
       final now = DateTime.now().millisecondsSinceEpoch;
       final diff = now - lastActiveAt;
-      final isActive = diff < (1 * dpt);
+      final isActive = diff < (1 * dpt) && group.archived != true;
       if (isActive) {
         l.d("Group ${group.name} was active at ${DateTime.fromMillisecondsSinceEpoch(lastActiveAt)}");
       }

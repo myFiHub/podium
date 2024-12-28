@@ -71,20 +71,22 @@ class GroupCallController extends GetxController {
         final currentPresentMembers =
             groupsController.presentUsersInGroupsMap.value[activeGroup.id];
         if (currentPresentMembers != null) {
-          _updateByPresentMembers(
+          await _updateByPresentMembers(
             groupId: activeGroup.id,
             presentMembers: currentPresentMembers,
           );
         }
-        groupsController.presentUsersInGroupsMap.listen((data) async {
-          final presentMembers = data[activeGroup.id];
-          if (presentMembers != null) {
-            _updateByPresentMembers(
-              groupId: activeGroup.id,
-              presentMembers: presentMembers,
-            );
-          }
-        });
+        groupsController.presentUsersInGroupsMap.listen(
+          (data) async {
+            final presentMembers = data[activeGroup.id];
+            if (presentMembers != null) {
+              await _updateByPresentMembers(
+                groupId: activeGroup.id,
+                presentMembers: presentMembers,
+              );
+            }
+          },
+        );
       }
     });
   }
@@ -107,7 +109,7 @@ class GroupCallController extends GetxController {
     super.dispose();
   }
 
-  _updateByPresentMembers(
+  Future<void> _updateByPresentMembers(
       {required String groupId, required List<String> presentMembers}) async {
     if (presentMembers.length != members.value.length) {
       final remoteMembers = await getSessionMembers(

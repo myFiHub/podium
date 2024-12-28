@@ -105,7 +105,7 @@ class AllGroupsView extends GetView<AllGroupsController> {
                       Icon(Icons.add, color: Colors.white, size: 16),
                       SizedBox(width: 8),
                       Text(
-                        "Start new outpost",
+                        "Start new Outpost",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,

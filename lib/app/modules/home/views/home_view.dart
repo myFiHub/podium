@@ -127,7 +127,7 @@ class HomeView extends GetView<HomeController> {
                                     baseColor: Colors.white,
                                     highlightColor: ColorName.primaryBlue,
                                     child: const Text(
-                                      "Explore outposts >",
+                                      "Explore Outposts >",
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 16.0,

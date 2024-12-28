@@ -68,47 +68,23 @@ class GroupCallController extends GetxController {
     group.listen((activeGroup) async {
       members.value = [];
       if (activeGroup != null) {
-        membersListener?.cancel();
-        final allChannels = groupsController.groupChannels.value;
-        final channel = allChannels[activeGroup.id];
-        if (channel != null) {
-          // end get and set the current members, start listeners
-          final presenceStream =
-              channel.presence.subscribe(action: ably.PresenceAction.enter);
-          presenceStream.listen((presence) {
-            l.d("presence: ${presence.clientId}");
-            addMemberToListIfItDoesntAlreadyExist(id: presence.clientId!);
-          });
-          final leaveStream =
-              channel.presence.subscribe(action: ably.PresenceAction.leave);
-          leaveStream.listen((data) {
-            l.d("leave: ${data.clientId}");
-            removeMemberFromListIfItExists(id: data.clientId!);
-          });
-          await Future.delayed(const Duration(seconds: 2));
-          // get and set the current members
-          final List<ably.PresenceMessage> allThePresentIds =
-              await channel.presence.get();
-          final ids = allThePresentIds.map((e) => e.clientId!).toList();
-          final members =
-              await gestSessionMembersByIds(groupId: activeGroup.id, ids: ids);
-          final List<FirebaseSessionMember> tmp = [];
-          members.forEach((member) {
-            tmp.add(FirebaseSessionMember(
-                id: member.id,
-                name: member.name,
-                avatar: member.avatar,
-                remainingTalkTime: member.remainingTalkTime,
-                initialTalkTime: member.initialTalkTime,
-                isMuted: member.isMuted,
-                present: member.present,
-                isTalking: member.isTalking,
-                startedToTalkAt: member.startedToTalkAt,
-                timeJoined: member.timeJoined));
-          });
-          final sorted = sortMembers(members: tmp);
-          sortedMembers.value = sorted;
+        final currentPresentMembers =
+            groupsController.presentUsersInGroupsMap.value[activeGroup.id];
+        if (currentPresentMembers != null) {
+          _updateByPresentMembers(
+            groupId: activeGroup.id,
+            presentMembers: currentPresentMembers,
+          );
         }
+        groupsController.presentUsersInGroupsMap.listen((data) async {
+          final presentMembers = data[activeGroup.id];
+          if (presentMembers != null) {
+            _updateByPresentMembers(
+              groupId: activeGroup.id,
+              presentMembers: presentMembers,
+            );
+          }
+        });
       }
     });
   }
@@ -131,6 +107,34 @@ class GroupCallController extends GetxController {
     super.dispose();
   }
 
+  _updateByPresentMembers(
+      {required String groupId, required List<String> presentMembers}) async {
+    if (presentMembers.length != members.value.length) {
+      final remoteMembers = await getSessionMembers(
+        sessionId: groupId,
+      );
+      final List<FirebaseSessionMember> tmp = [];
+      final membersList = remoteMembers.values.toList();
+      membersList.forEach((member) {
+        if (presentMembers.contains(member.id)) {
+          tmp.add(FirebaseSessionMember(
+            id: member.id,
+            name: member.name,
+            avatar: member.avatar,
+            remainingTalkTime: member.remainingTalkTime,
+            initialTalkTime: member.initialTalkTime,
+            isMuted: member.isMuted,
+            present: member.present,
+            isTalking: member.isTalking,
+            startedToTalkAt: member.startedToTalkAt,
+            timeJoined: member.timeJoined,
+          ));
+        }
+      });
+      final sorted = sortMembers(members: tmp);
+      sortedMembers.value = sorted;
+    }
+  }
   ///////////////////////////////////////////////////////////////
 
   addMemberToListIfItDoesntAlreadyExist({required String id}) async {

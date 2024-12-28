@@ -723,13 +723,17 @@ class OngoingGroupCallController extends GetxController {
         final members = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
+        final liveMemberIds =
+            groupCallController.sortedMembers.value.map((e) => e.id).toList();
         members.forEach((element) {
-          if (element != targetAddress) {
-            aptosReceiverAddresses.add(element.aptosInternalWalletAddress);
-            if (element.evm_externalWalletAddress.isNotEmpty) {
-              receiverAddresses.add(user.evm_externalWalletAddress);
-            } else {
-              receiverAddresses.add(user.evmInternalWalletAddress);
+          if (liveMemberIds.contains(element.id)) {
+            if (element != targetAddress) {
+              aptosReceiverAddresses.add(element.aptosInternalWalletAddress);
+              if (element.evm_externalWalletAddress.isNotEmpty) {
+                receiverAddresses.add(user.evm_externalWalletAddress);
+              } else {
+                receiverAddresses.add(user.evmInternalWalletAddress);
+              }
             }
           }
         });
@@ -737,10 +741,10 @@ class OngoingGroupCallController extends GetxController {
         receiverAddresses = [targetAddress];
       }
       if (receiverAddresses.length == 0) {
-        l.e("No wallets found in session");
+        l.e("No Users found in session");
         Toast.error(
           title: "Error",
-          message: "receiver wallet not found",
+          message: "No Users found in session",
         );
 
         _removeLoadingCheerBoo(userId: userId, cheer: cheer);

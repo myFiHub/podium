@@ -72,6 +72,20 @@ class GroupCallController extends GetxController {
         final allChannels = groupsController.groupChannels.value;
         final channel = allChannels[activeGroup.id];
         if (channel != null) {
+          // end get and set the current members, start listeners
+          final presenceStream =
+              channel.presence.subscribe(action: ably.PresenceAction.enter);
+          presenceStream.listen((presence) {
+            l.d("presence: ${presence.clientId}");
+            addMemberToListIfItDoesntAlreadyExist(id: presence.clientId!);
+          });
+          final leaveStream =
+              channel.presence.subscribe(action: ably.PresenceAction.leave);
+          leaveStream.listen((data) {
+            l.d("leave: ${data.clientId}");
+            removeMemberFromListIfItExists(id: data.clientId!);
+          });
+          await Future.delayed(const Duration(seconds: 2));
           // get and set the current members
           final List<ably.PresenceMessage> allThePresentIds =
               await channel.presence.get();
@@ -92,20 +106,8 @@ class GroupCallController extends GetxController {
                 startedToTalkAt: member.startedToTalkAt,
                 timeJoined: member.timeJoined));
           });
-          sortedMembers.value = tmp;
-          // end get and set the current members, start listeners
-          final presenceStream =
-              channel.presence.subscribe(action: ably.PresenceAction.enter);
-          presenceStream.listen((presence) {
-            l.d("presence: ${presence.clientId}");
-            addMemberToListIfItDoesntAlreadyExist(id: presence.clientId!);
-          });
-          final leaveStream =
-              channel.presence.subscribe(action: ably.PresenceAction.leave);
-          leaveStream.listen((data) {
-            l.d("leave: ${data.clientId}");
-            removeMemberFromListIfItExists(id: data.clientId!);
-          });
+          final sorted = sortMembers(members: tmp);
+          sortedMembers.value = sorted;
         }
       }
     });

@@ -405,32 +405,40 @@ class _ScheduledBanner extends StatelessWidget {
               ? remaining.split('d,').join('d\n').replaceAll('d', 'days')
               : remaining;
           return Positioned(
-            right: 8,
+            right: 10,
             top: 0,
-            child: IgnorePointer(
-              child: Container(
-                foregroundDecoration: RotatedCornerDecoration.withColor(
-                  color: isStarted ? Colors.green : Colors.red,
-                  spanBaselineShift: remainingText.contains('days') ? 2 : 4,
-                  badgeSize: Size(size.toDouble(), size.toDouble()),
-                  badgeCornerRadius: const Radius.circular(8),
-                  badgePosition: BadgePosition.topEnd,
-                  textSpan: TextSpan(
-                    text: remainingText,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      letterSpacing: 1,
-                      fontWeight: FontWeight.w400,
-                      shadows: [
-                        const BoxShadow(
-                            color: Colors.yellowAccent, blurRadius: 8),
-                      ],
+            child: Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topRight: const Radius.circular(8),
+                ),
+              ),
+              child: IgnorePointer(
+                child: Container(
+                  foregroundDecoration: RotatedCornerDecoration.withColor(
+                    color: isStarted ? Colors.green : Colors.red,
+                    spanBaselineShift: remainingText.contains('days') ? 2 : 4,
+                    badgeSize: Size(size.toDouble(), size.toDouble()),
+                    badgeCornerRadius: const Radius.circular(0),
+                    badgePosition: BadgePosition.topEnd,
+                    textSpan: TextSpan(
+                      text: remainingText,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        letterSpacing: 1,
+                        fontWeight: FontWeight.w400,
+                        shadows: [
+                          const BoxShadow(
+                              color: Colors.yellowAccent, blurRadius: 8),
+                        ],
+                      ),
                     ),
                   ),
+                  height: size.toDouble(),
+                  width: size.toDouble(),
                 ),
-                height: size.toDouble(),
-                width: size.toDouble(),
               ),
             ),
           );

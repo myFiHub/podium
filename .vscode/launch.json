@@ -8,13 +8,13 @@
       "name": "DEV",
       "request": "launch",
       "type": "dart",
-      "args": [""]
+      "args": ["--no-enable-impeller"]
     },
     {
       "name": "DEV-VERBOSE",
       "request": "launch",
       "type": "dart",
-      "args": ["--verbose"]
+      "args": ["--verbose --no-enable-impeller"]
     },
     {
       "name": "RELEASE",

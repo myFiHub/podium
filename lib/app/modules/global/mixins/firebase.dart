@@ -569,12 +569,16 @@ Future<Map<String, InvitedMember>> getInvitedMembers({
 
     final Map<String, InvitedMember> invitedMembersMap = {};
     invitedMembers.keys.toList().forEach((element) {
-      final invitedMember = InvitedMember(
-        id: element,
-        invitedToSpeak: invitedMembers[element]
-            [InvitedMember.invitedToSpeakKey],
-      );
-      invitedMembersMap[element] = invitedMember;
+      try {
+        final invitedMember = InvitedMember(
+          id: element,
+          invitedToSpeak: invitedMembers[element]
+              [InvitedMember.invitedToSpeakKey],
+        );
+        invitedMembersMap[element] = invitedMember;
+      } catch (e) {
+        l.e(e);
+      }
     });
     return invitedMembersMap;
   } else {

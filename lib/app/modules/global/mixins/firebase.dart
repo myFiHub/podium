@@ -528,6 +528,40 @@ listenToSessionMembers({
   return databaseRef.onValue.listen(onData);
 }
 
+Future<FirebaseSessionMember?> getSessionMember({
+  required String groupId,
+  required String userId,
+}) async {
+  final databaseRef = FirebaseDatabase.instance.ref(
+      FireBaseConstants.sessionsRef +
+          groupId +
+          '/${FirebaseSession.membersKey}/$userId');
+  final snapshot = await databaseRef.get();
+  if (snapshot.value != null) {
+    return FirebaseSessionMember.fromJson(snapshot.value);
+  } else {
+    return null;
+  }
+}
+
+Future<List<FirebaseSessionMember>> gestSessionMembersByIds(
+    {required String groupId, required List<String> ids}) async {
+  final databaseRef = FirebaseDatabase.instance.ref(
+      FireBaseConstants.sessionsRef +
+          groupId +
+          '/${FirebaseSession.membersKey}');
+  final snapshot = await databaseRef.get();
+  final members = snapshot.value as dynamic;
+  final List<FirebaseSessionMember> membersList = [];
+  ids.forEach((id) {
+    final member = members[id];
+    if (member != null) {
+      membersList.add(FirebaseSessionMember.fromJson(member));
+    }
+  });
+  return membersList;
+}
+
 StreamSubscription<DatabaseEvent> listenToGroupMembers({
   required String groupId,
   required void Function(DatabaseEvent) onData,
@@ -570,12 +604,12 @@ Future<Map<String, InvitedMember>> getInvitedMembers({
     final Map<String, InvitedMember> invitedMembersMap = {};
     invitedMembers.keys.toList().forEach((element) {
       try {
-        final invitedMember = InvitedMember(
-          id: element,
-          invitedToSpeak: invitedMembers[element]
-              [InvitedMember.invitedToSpeakKey],
-        );
-        invitedMembersMap[element] = invitedMember;
+      final invitedMember = InvitedMember(
+        id: element,
+        invitedToSpeak: invitedMembers[element]
+            [InvitedMember.invitedToSpeakKey],
+      );
+      invitedMembersMap[element] = invitedMember;
       } catch (e) {
         l.e(e);
       }

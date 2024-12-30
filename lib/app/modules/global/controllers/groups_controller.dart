@@ -168,6 +168,10 @@ class GroupsController extends GetxController with FirebaseTags {
     _timerForTakingUsers.cancel();
   }
 
+  getPresentUsersInGroup(String groupId) {
+    return tmpPresentUsersInGroupsMap[groupId] ?? [];
+  }
+
   Future<void> removeMyUserFromSessionAndGroup(
       {required FirebaseGroup group}) async {
     // ask if user want to leave the group
@@ -402,10 +406,6 @@ class GroupsController extends GetxController with FirebaseTags {
 
       _shouldUpdateTakingUsers = true;
     }
-  }
-
-  List<String> getPresentUsersInGroup(String groupId) {
-    return tmpPresentUsersInGroupsMap[groupId] ?? [];
   }
 
   getRealtimeGroups(bool loggedIn) {

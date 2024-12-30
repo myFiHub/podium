@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ably_flutter/ably_flutter.dart' as ably;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -45,6 +46,9 @@ class GroupCallController extends GetxController {
   final keysMap = Rx<Map<String, GlobalKey>>({});
   StreamSubscription<DatabaseEvent>? membersListener;
 
+  // presence channel
+  ably.RealtimeChannel? presenceChannel = null;
+
   @override
   void onInit() {
     super.onInit();
@@ -64,54 +68,22 @@ class GroupCallController extends GetxController {
     group.listen((activeGroup) async {
       members.value = [];
       if (activeGroup != null) {
-        membersListener?.cancel();
-        membersListener = listenToSessionMembers(
-          groupId: activeGroup.id,
-          onData: (data) async {
-            if (data.snapshot.value != null) {
-              final tmpMembers = data.snapshot.value as dynamic;
-              final List<String> memberIdsListFromStream = [];
-              tmpMembers.forEach((key, value) {
-                memberIdsListFromStream.add(key);
-              });
-              final previousUniqueMembers = members.value.map((e) => e.id);
-              final newUniqueMembers = memberIdsListFromStream;
-              if (previousUniqueMembers.length != newUniqueMembers.length) {
-                final membersList = <FirebaseSessionMember>[];
-
-                tmpMembers.forEach((key, value) {
-                  try {
-                    final member = FirebaseSessionMember(
-                      id: key,
-                      name: value[FirebaseSessionMember.nameKey] ?? '',
-                      avatar: value[FirebaseSessionMember.avatarKey],
-                      isMuted: value[FirebaseSessionMember.isMutedKey],
-                      initialTalkTime:
-                          value[FirebaseSessionMember.initialTalkTimeKey],
-                      present: value[FirebaseSessionMember.presentKey],
-                      remainingTalkTime:
-                          value[FirebaseSessionMember.remainingTalkTimeKey],
-                      isTalking:
-                          value[FirebaseSessionMember.isTalkingKey] ?? false,
-                      startedToTalkAt:
-                          value[FirebaseSessionMember.startedToTalkAtKey] ?? 0,
-                      timeJoined:
-                          value[FirebaseSessionMember.timeJoinedKey] ?? 0,
-                    );
-                    membersList.add(member);
-                  } catch (e) {
-                    l.e(e.toString());
-                    l.e('error in parsing member: $key');
-                  }
-                });
-
-                members.value = membersList;
-// sort the members based on selected sort type
-                final sorted = sortMembers(
-                  members: membersList,
-                );
-                sortedMembers.value = sorted;
-              }
+        final currentPresentMembers =
+            groupsController.presentUsersInGroupsMap.value[activeGroup.id];
+        if (currentPresentMembers != null) {
+          await _updateByPresentMembers(
+            groupId: activeGroup.id,
+            presentMembers: currentPresentMembers,
+          );
+        }
+        groupsController.presentUsersInGroupsMap.listen(
+          (data) async {
+            final presentMembers = data[activeGroup.id];
+            if (presentMembers != null) {
+              await _updateByPresentMembers(
+                groupId: activeGroup.id,
+                presentMembers: presentMembers,
+              );
             }
           },
         );
@@ -137,7 +109,66 @@ class GroupCallController extends GetxController {
     super.dispose();
   }
 
+  Future<void> _updateByPresentMembers(
+      {required String groupId, required List<String> presentMembers}) async {
+    if (presentMembers.length != members.value.length) {
+      final remoteMembers = await getSessionMembers(
+        sessionId: groupId,
+      );
+      final List<FirebaseSessionMember> tmp = [];
+      final membersList = remoteMembers.values.toList();
+      membersList.forEach((member) {
+        if (presentMembers.contains(member.id)) {
+          tmp.add(FirebaseSessionMember(
+            id: member.id,
+            name: member.name,
+            avatar: member.avatar,
+            remainingTalkTime: member.remainingTalkTime,
+            initialTalkTime: member.initialTalkTime,
+            isMuted: member.isMuted,
+            present: member.present,
+            isTalking: member.isTalking,
+            startedToTalkAt: member.startedToTalkAt,
+            timeJoined: member.timeJoined,
+          ));
+        }
+      });
+      final sorted = sortMembers(members: tmp);
+      sortedMembers.value = sorted;
+    }
+  }
   ///////////////////////////////////////////////////////////////
+
+  addMemberToListIfItDoesntAlreadyExist({required String id}) async {
+    final newMember =
+        await getSessionMember(groupId: group.value!.id, userId: id);
+    if (newMember != null) {
+      final member = FirebaseSessionMember(
+        id: newMember.id,
+        name: newMember.name,
+        avatar: newMember.avatar,
+        remainingTalkTime: newMember.remainingTalkTime,
+        initialTalkTime: newMember.initialTalkTime,
+        isMuted: newMember.isMuted,
+        present: newMember.present,
+        isTalking: newMember.isTalking,
+        startedToTalkAt: newMember.startedToTalkAt,
+        timeJoined: newMember.timeJoined,
+      );
+      //  add if it doesnt already exist and sort
+      if (!members.value.any((element) => element.id == newMember.id)) {
+        members.value.add(member);
+        final sorted = sortMembers(members: members.value);
+        sortedMembers.value = sorted;
+      }
+    }
+  }
+
+  removeMemberFromListIfItExists({required String id}) {
+    members.value.removeWhere((element) => element.id == id);
+    final sorted = sortMembers(members: members.value);
+    sortedMembers.value = sorted;
+  }
 
   setSortedMembers({required List<FirebaseSessionMember> members}) {
     final sorted = sortMembers(members: members);

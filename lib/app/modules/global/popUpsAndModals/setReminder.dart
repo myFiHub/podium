@@ -35,8 +35,11 @@ Future<bool> createCalendarEventForScheduledGroup({
       emailInvites: [], // on Android, you can add invite emails to your event.
     ),
   );
-  final added = await Add2Calendar.addEvent2Cal(event);
-  return added;
+  if (Platform.isAndroid) {
+    return await Add2Calendar.addEvent2Cal(event);
+  }
+  Add2Calendar.addEvent2Cal(event);
+  return true;
 }
 
 List<Map<String, Object>> defaultTimeList({required int endsAt}) {

@@ -34,6 +34,8 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:record/record.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
 const amountToAddForLikeInSeconds = 10; // 10 seconds
@@ -397,8 +399,14 @@ class OngoingGroupCallController extends GetxController {
     _setIsRecording(false);
   }
 
+  Future<void> recordFile(
+      AudioRecorder recorder, RecordConfig config, String path) async {
+    await recorder.start(config, path: path);
+  }
+
   _setIsRecording(bool recording) async {
     _recorder = AudioRecorder();
+
     final group = groupCallController.group.value!;
     final recordingName =
         'Podium Outpost record-${group.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
@@ -415,7 +423,11 @@ class OngoingGroupCallController extends GetxController {
       _numberOfRecording++;
       if (await _recorder.hasPermission()) {
         try {
-          await _recorder.start(const RecordConfig(), path: '${path}');
+          const encoder = AudioEncoder.aacLc;
+
+          const config = RecordConfig(encoder: encoder, numChannels: 1);
+          await recordFile(_recorder, config, path);
+          // await _recorder.start(const RecordConfig(), path: '${path}');
           Toast.success(
             title: "Recording started",
             message: "Recording started",
@@ -439,7 +451,8 @@ class OngoingGroupCallController extends GetxController {
     } else {
       if (isRecording.value) {
         try {
-          await _recorder.stop();
+          final path = await _recorder.stop();
+          l.d("path is $path");
           _recorder.dispose();
 
           Toast.success(

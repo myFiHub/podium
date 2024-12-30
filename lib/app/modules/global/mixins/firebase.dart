@@ -597,6 +597,9 @@ Future<FirebaseSessionMember?> getUserSessionData(
   final snapshot = await databaseRef.get();
   final session = snapshot.value as dynamic;
   if (session != null) {
+    if (session[userId] != null) {
+      return FirebaseSessionMember.fromJson(session[userId]);
+    }
     final firebaseSessionMember = FirebaseSessionMember.fromJson(session);
     return firebaseSessionMember;
   } else {

@@ -198,7 +198,7 @@ class GroupsController extends GetxController with FirebaseTags {
     await toggleGroupArchive(groupId: group.id, archive: archive);
     Toast.success(
       title: "Success",
-      message: "Room ${archive ? "archived" : "is available again"}",
+      message: "Outpost ${archive ? "archived" : "is available again"}",
     );
     final remoteGroup = await getGroupInfoById(group.id);
     if (remoteGroup != null) {
@@ -646,10 +646,24 @@ class GroupsController extends GetxController with FirebaseTags {
                 : SessionConstants.initialTakTime,
             present: false,
           );
-          await firebaseSessionsReference
-              .child(FirebaseSession.membersKey)
-              .child(myUser.id)
-              .set(newFirebaseSessionMember.toJson());
+          try {
+            final jsoned = newFirebaseSessionMember.toJson();
+            await firebaseSessionsReference
+                .child(FirebaseSession.membersKey)
+                .child(myUser.id)
+                .set(jsoned);
+          } catch (e) {
+            // remove user from db
+            await firebaseSessionsReference
+                .child(FirebaseSession.membersKey)
+                .child(myUser.id)
+                .remove();
+            Toast.error(
+              title: "Error",
+              message: "Failed to join the Outpost, try again or report a bug",
+            );
+            return;
+          }
         }
         _openGroup(
           group: group,
@@ -659,7 +673,8 @@ class GroupsController extends GetxController with FirebaseTags {
       } catch (e) {
         Toast.error(
           title: "Error",
-          message: "Failed to join the Outpost, Outpost not found",
+          message:
+              "Failed to join the Outpost,please try again or report a bug",
         );
         l.f("Error joining group: $e");
       } finally {
@@ -744,9 +759,8 @@ class GroupsController extends GetxController with FirebaseTags {
       } else {
         Toast.error(
           title: "Error",
-          message: "This is a private room, you need an invite link to join",
+          message: "This is a private Outpost, you need an invite link to join",
         );
-
         return GroupAccesses(canEnter: false, canSpeak: false);
       }
     }

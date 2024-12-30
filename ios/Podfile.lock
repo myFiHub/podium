@@ -141,8 +141,6 @@ PODS:
     - Flutter
   - flutter_native_splash (2.4.3):
     - Flutter
-  - Giphy (2.2.12):
-    - libwebp
   - GoogleAppMeasurement (11.4.0):
     - GoogleAppMeasurement/AdIdSupport (= 11.4.0)
     - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
@@ -198,25 +196,8 @@ PODS:
     - Flutter
   - jitsi_meet_flutter_sdk (10.3.0):
     - Flutter
-    - JitsiMeetSDK (= 10.3.0)
-  - JitsiMeetSDK (10.3.0):
-    - Giphy (= 2.2.12)
-    - JitsiWebRTC (~> 124.0)
-  - JitsiWebRTC (124.0.1)
   - KeychainSwift (20.0.0)
   - leveldb-library (1.22.6)
-  - libwebp (1.3.2):
-    - libwebp/demux (= 1.3.2)
-    - libwebp/mux (= 1.3.2)
-    - libwebp/sharpyuv (= 1.3.2)
-    - libwebp/webp (= 1.3.2)
-  - libwebp/demux (1.3.2):
-    - libwebp/webp
-  - libwebp/mux (1.3.2):
-    - libwebp/demux
-  - libwebp/sharpyuv (1.3.2)
-  - libwebp/webp (1.3.2):
-    - libwebp/sharpyuv
   - msgpack (0.4.0)
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
@@ -315,16 +296,12 @@ SPEC REPOS:
     - FirebaseMessaging
     - FirebaseSharedSwift
     - FirebaseStorage
-    - Giphy
     - GoogleAppMeasurement
     - GoogleDataTransport
     - GoogleUtilities
     - GTMSessionFetcher
-    - JitsiMeetSDK
-    - JitsiWebRTC
     - KeychainSwift
     - leveldb-library
-    - libwebp
     - msgpack
     - nanopb
     - PromisesObjC
@@ -445,18 +422,14 @@ SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_fgbg: d3da78df78454b1808f0829a5da9cd17dfe16444
   flutter_native_splash: 576fbd69b830a63594ae678396fa17e43abbc5f8
-  Giphy: 83628960ed04e1c3428ff1b4fb2b027f65e82f50
   GoogleAppMeasurement: 987769c4ca6b968f2479fbcc9fe3ce34af454b8e
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
   GTMSessionFetcher: 923b710231ad3d6f3f0495ac1ced35421e07d9a6
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
-  jitsi_meet_flutter_sdk: b0a19056a202d0832d6be51a3ef160ad8cbd74ed
-  JitsiMeetSDK: 439fc3e45870c5ebf7b371fa038719bf70ef76d9
-  JitsiWebRTC: d0ae5fd6a81e771bfd82c2ee6c6bb542ebd65ee8
+  jitsi_meet_flutter_sdk: fddce7036a8893f5cef6dbda0323b72aaad151dc
   KeychainSwift: 0ce6a4d13f7228054d1a71bb1b500448fb2ab837
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
-  libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
   msgpack: c85f6251873059738472ae136951cec5f30f3251
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499

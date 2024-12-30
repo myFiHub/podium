@@ -34,8 +34,6 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:record/record.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
 const amountToAddForLikeInSeconds = 10; // 10 seconds

@@ -29,6 +29,7 @@ class GroupList extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<GroupsController>();
     return Scrollbar(
+      controller: scrollController,
       child: ListView.builder(
         controller: scrollController,
         itemCount: groupsList.length,

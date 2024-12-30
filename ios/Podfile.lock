@@ -8,7 +8,6 @@ PODS:
   - AblyDeltaCodec (1.3.3)
   - add_2_calendar (0.0.1):
     - Flutter
-  - Alamofire (5.9.1)
   - alarm (0.0.1):
     - Flutter
   - app_links (0.0.2):
@@ -17,14 +16,6 @@ PODS:
     - Flutter
   - appcheck (1.0.3):
     - Flutter
-  - AuthCoreAdapter (2.0.3):
-    - ConnectCommon
-    - ParticleAuthCore
-  - AWSCore (2.34.2)
-  - AWSKMS (2.34.2):
-    - AWSCore (= 2.34.2)
-  - Base58.swift (1.0.2):
-    - BigInt
   - BigInt (5.2.0)
   - coinbase_wallet_sdk (0.0.1):
     - CoinbaseWalletSDK/CrossPlatform (= 1.0.4)
@@ -32,16 +23,9 @@ PODS:
   - CoinbaseWalletSDK/Client (1.0.4)
   - CoinbaseWalletSDK/CrossPlatform (1.0.4):
     - CoinbaseWalletSDK/Client
-  - ConnectCommon (2.0.3):
-    - BigInt (~> 5.2.0)
-    - ParticleNetworkBase
-    - RxAlamofire (~> 6.1.1)
-    - secp256k1.swift (~> 0.1)
-    - TweetNacl
   - connectivity_plus (0.0.1):
     - Flutter
     - FlutterMacOS
-  - CryptoSwift (1.8.4)
   - curvelib.swift (1.0.1)
   - downloadsfolder (0.0.1):
     - Flutter
@@ -157,6 +141,8 @@ PODS:
     - Flutter
   - flutter_native_splash (2.4.3):
     - Flutter
+  - Giphy (2.2.12):
+    - libwebp
   - GoogleAppMeasurement (11.4.0):
     - GoogleAppMeasurement/AdIdSupport (= 11.4.0)
     - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
@@ -212,6 +198,11 @@ PODS:
     - Flutter
   - jitsi_meet_flutter_sdk (10.3.0):
     - Flutter
+    - JitsiMeetSDK (= 10.3.0)
+  - JitsiMeetSDK (10.3.0):
+    - Giphy (= 2.2.12)
+    - JitsiWebRTC (~> 124.0)
+  - JitsiWebRTC (124.0.1)
   - KeychainSwift (20.0.0)
   - leveldb-library (1.22.6)
   - libwebp (1.3.2):
@@ -234,32 +225,6 @@ PODS:
   - nanopb/encode (3.30910.0)
   - package_info_plus (0.4.5):
     - Flutter
-  - ParticleAuthCore (2.0.3):
-    - AWSKMS (~> 2.34.2)
-    - ParticleMPCCore
-    - ParticleNetworkBase
-    - SDWebImage (~> 5.19.0)
-    - SDWebImageWebPCoder
-    - SkeletonView
-    - SnapKit (~> 5.7.1)
-    - SwiftMessages
-    - Then
-  - ParticleMPCCore (2.0.3):
-    - Base58.swift
-    - CryptoSwift (~> 1.8.1)
-    - Thresh
-  - ParticleNetworkBase (2.0.3):
-    - Alamofire (~> 5.9.0)
-    - Base58.swift
-    - BigInt (~> 5.2.0)
-    - CryptoSwift (~> 1.8.1)
-    - ParticleNetworkChains
-    - RxAlamofire (~> 6.1.1)
-    - RxCocoa (= 6.6.0)
-    - RxSwift (= 6.6.0)
-    - SwiftyJSON (~> 5.0.1)
-    - SwiftyUserDefaults (~> 5.3.0)
-  - ParticleNetworkChains (2.0.3)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -269,45 +234,19 @@ PODS:
   - RecaptchaInterop (100.0.0)
   - record_darwin (1.0.0):
     - Flutter
-  - RxAlamofire (6.1.1):
-    - RxAlamofire/Core (= 6.1.1)
-  - RxAlamofire/Core (6.1.1):
-    - Alamofire (~> 5.4)
-    - RxSwift (~> 6.0)
-  - RxCocoa (6.6.0):
-    - RxRelay (= 6.6.0)
-    - RxSwift (= 6.6.0)
-  - RxRelay (6.6.0):
-    - RxSwift (= 6.6.0)
-  - RxSwift (6.6.0)
-  - SDWebImage (5.19.7):
-    - SDWebImage/Core (= 5.19.7)
-  - SDWebImage/Core (5.19.7)
-  - SDWebImageWebPCoder (0.14.6):
-    - libwebp (~> 1.0)
-    - SDWebImage/Core (~> 5.17)
-  - secp256k1.swift (0.1.4)
   - share_plus (0.0.1):
     - Flutter
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
   - SkeletonView (1.30.4)
-  - SnapKit (5.7.1)
   - sqflite (0.0.3):
     - Flutter
     - FlutterMacOS
-  - SwiftMessages (10.0.1):
-    - SwiftMessages/App (= 10.0.1)
-  - SwiftMessages/App (10.0.1)
-  - SwiftyJSON (5.0.2)
   - SwiftyUserDefaults (5.3.0)
-  - Then (3.0.0)
-  - Thresh (2.0.3)
   - TorusSessionManager (4.0.2):
     - curvelib.swift (~> 1.0.1)
     - KeychainSwift (~> 20.0.0)
-  - TweetNacl (1.0.2)
   - url_launcher_ios (0.0.1):
     - Flutter
   - Web3Auth (9.0.0):
@@ -329,9 +268,7 @@ DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
   - app_settings (from `.symlinks/plugins/app_settings/ios`)
   - appcheck (from `.symlinks/plugins/appcheck/ios`)
-  - AuthCoreAdapter (= 2.0.3)
   - coinbase_wallet_sdk (from `.symlinks/plugins/coinbase_wallet_sdk/ios`)
-  - ConnectCommon (= 2.0.3)
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/darwin`)
   - downloadsfolder (from `.symlinks/plugins/downloadsfolder/ios`)
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
@@ -346,10 +283,6 @@ DEPENDENCIES:
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - jitsi_meet_flutter_sdk (from `.symlinks/plugins/jitsi_meet_flutter_sdk/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
-  - ParticleAuthCore (= 2.0.3)
-  - ParticleMPCCore (= 2.0.3)
-  - ParticleNetworkBase (= 2.0.3)
-  - ParticleNetworkChains (= 2.0.3)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - record_darwin (from `.symlinks/plugins/record_darwin/ios`)
@@ -358,7 +291,6 @@ DEPENDENCIES:
   - SkeletonView (from `https://github.com/SunZhiC/SkeletonView.git`, branch `main`)
   - sqflite (from `.symlinks/plugins/sqflite/darwin`)
   - SwiftyUserDefaults (from `https://github.com/SunZhiC/SwiftyUserDefaults.git`, branch `master`)
-  - Thresh (= 2.0.3)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - web3auth_flutter (from `.symlinks/plugins/web3auth_flutter/ios`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
@@ -367,15 +299,8 @@ SPEC REPOS:
   trunk:
     - Ably
     - AblyDeltaCodec
-    - Alamofire
-    - AuthCoreAdapter
-    - AWSCore
-    - AWSKMS
-    - Base58.swift
     - BigInt
     - CoinbaseWalletSDK
-    - ConnectCommon
-    - CryptoSwift
     - curvelib.swift
     - Firebase
     - FirebaseAnalytics
@@ -390,35 +315,21 @@ SPEC REPOS:
     - FirebaseMessaging
     - FirebaseSharedSwift
     - FirebaseStorage
+    - Giphy
     - GoogleAppMeasurement
     - GoogleDataTransport
     - GoogleUtilities
     - GTMSessionFetcher
+    - JitsiMeetSDK
+    - JitsiWebRTC
     - KeychainSwift
     - leveldb-library
     - libwebp
     - msgpack
     - nanopb
-    - ParticleAuthCore
-    - ParticleMPCCore
-    - ParticleNetworkBase
-    - ParticleNetworkChains
     - PromisesObjC
     - RecaptchaInterop
-    - RxAlamofire
-    - RxCocoa
-    - RxRelay
-    - RxSwift
-    - SDWebImage
-    - SDWebImageWebPCoder
-    - secp256k1.swift
-    - SnapKit
-    - SwiftMessages
-    - SwiftyJSON
-    - Then
-    - Thresh
     - TorusSessionManager
-    - TweetNacl
     - Web3Auth
 
 EXTERNAL SOURCES:
@@ -502,21 +413,14 @@ SPEC CHECKSUMS:
   ably_flutter: aea30999084744d6c28b47a7c2fbac95bba4563f
   AblyDeltaCodec: add5d06a756b3581b12aab5b5500a320b8c55bea
   add_2_calendar: e626377f607d055070093cbd56abd1fafa1a02a5
-  Alamofire: f36a35757af4587d8e4f4bfa223ad10be2422b8c
   alarm: 839eba06f468218db1b9f1736e32322db958e857
   app_links: 3da4c36b46cac3bf24eb897f1a6ce80bda109874
   app_settings: 3507c575c2b18a462c99948f61d5de21d4420999
   appcheck: f3c430f928f9c69ccd8b5d4df04766ac0e57c9aa
-  AuthCoreAdapter: 476feb7b077be7ec8c198e9462f6d1bb3fea92cf
-  AWSCore: 13649d9063a6807ec37bde35c8f2da329d63d4e2
-  AWSKMS: 311bb0cb71967273de5f4657875b9f2484ec13c2
-  Base58.swift: e0e16655f9db843b8cd367593ed6f7d90d136b7f
   BigInt: f668a80089607f521586bbe29513d708491ef2f7
   coinbase_wallet_sdk: c893738400ef78bd20e7f4195cbb38266f7d15e8
   CoinbaseWalletSDK: ea1f37512bbc69ebe07416e3b29bf840f5cc3152
-  ConnectCommon: 80364f67ca6c0eb4c954b875d9161e432a0cd9dd
   connectivity_plus: 2256d3e20624a7749ed21653aafe291a46446fee
-  CryptoSwift: e64e11850ede528a02a0f3e768cec8e9d92ecb90
   curvelib.swift: d0746ae82bee34016c06da3567a97e493b3c979f
   downloadsfolder: 7d5c7b5d23e3c4dded522ff2a2ef14a56846378a
   Firebase: cf1b19f21410b029b6786a54e9764a0cacad3c99
@@ -541,51 +445,37 @@ SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_fgbg: d3da78df78454b1808f0829a5da9cd17dfe16444
   flutter_native_splash: 576fbd69b830a63594ae678396fa17e43abbc5f8
+  Giphy: 83628960ed04e1c3428ff1b4fb2b027f65e82f50
   GoogleAppMeasurement: 987769c4ca6b968f2479fbcc9fe3ce34af454b8e
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
   GTMSessionFetcher: 923b710231ad3d6f3f0495ac1ced35421e07d9a6
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
-  jitsi_meet_flutter_sdk: fddce7036a8893f5cef6dbda0323b72aaad151dc
+  jitsi_meet_flutter_sdk: b0a19056a202d0832d6be51a3ef160ad8cbd74ed
+  JitsiMeetSDK: 439fc3e45870c5ebf7b371fa038719bf70ef76d9
+  JitsiWebRTC: d0ae5fd6a81e771bfd82c2ee6c6bb542ebd65ee8
   KeychainSwift: 0ce6a4d13f7228054d1a71bb1b500448fb2ab837
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
   msgpack: c85f6251873059738472ae136951cec5f30f3251
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
-  ParticleAuthCore: 2b42f8c30686c04dbadac92198f7eba9e99c1252
-  ParticleMPCCore: 056e8094477f999f843f016459b6845389e2932b
-  ParticleNetworkBase: 774ff74ab785602809147be5398791f64308786d
-  ParticleNetworkChains: 98daf734005d70cd0ecf8c2515b7e9d0b26aef00
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
   record_darwin: fb1f375f1d9603714f55b8708a903bbb91ffdb0a
-  RxAlamofire: beb75a1c452d0de225651db4903f5d29d034a620
-  RxCocoa: 44a80de90e25b739b5aeaae3c8c371a32e3343cc
-  RxRelay: 45eaa5db8ee4fb50e5ebd57deec0159e97fa51e6
-  RxSwift: a4b44f7d24599f674deebd1818eab82e58410632
-  SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
-  SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
-  secp256k1.swift: a7e7a214f6db6ce5db32cc6b2b45e5c4dd633634
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   SkeletonView: 735bba714f75a451d998bf6f4aef5bfe9d1c803e
-  SnapKit: d612e99e678a2d3b95bf60b0705ed0a35c03484a
   sqflite: c35dad70033b8862124f8337cc994a809fcd9fa3
-  SwiftMessages: 759b4a0bf5c3a116a0d7e8a34b098ba83c458625
-  SwiftyJSON: f5b1bf1cd8dd53cd25887ac0eabcfd92301c6a5a
   SwiftyUserDefaults: dd5dce66fb01565a82c3618b835f0546987eb683
-  Then: 844265ae87834bbe1147d91d5d41a404da2ec27d
-  Thresh: b74bb67a2d15eb1e9d1c26e469a8bbbf4a6128d0
   TorusSessionManager: 05a1a8f3265d0949a1a342c4ba2c52882445b614
-  TweetNacl: 3abf4d1d2082b0114e7a67410e300892448951e6
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
   Web3Auth: 086b5152a43df347ceff196c0ce67f6330838884
   web3auth_flutter: 116f2ab45c531c86128359e80616b0ef34dc6ff2
   webview_flutter_wkwebview: 44d4dee7d7056d5ad185d25b38404436d56c547c
 
-PODFILE CHECKSUM: 3ae1e9c8ed7da084546b46143c7e3171ff97aab4
+PODFILE CHECKSUM: 24a763c853f4cde9df5a36860e7d2ac585e4eb84
 
 COCOAPODS: 1.16.2

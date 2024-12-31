@@ -277,7 +277,7 @@ class MembersList extends GetView<GroupCallController> {
                       tabs: [
                         const Tab(
                           child: Text(
-                            "All Members",
+                            "Live",
                             textAlign: TextAlign.center,
                           ),
                         ),

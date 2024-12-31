@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/referralsParser.dart';
@@ -317,8 +318,13 @@ Future<FirebaseSession?> getSessionData({required String groupId}) async {
     final members = jsonedMembersMap.keys.toList();
     final Map<String, FirebaseSessionMember> membersToAdd = {};
     for (String member in members) {
-      membersToAdd[member] =
-          FirebaseSessionMember.fromJson(jsonedMembersMap[member]);
+      try {
+        final fromJson =
+            FirebaseSessionMember.fromJson(jsonedMembersMap[member]);
+        membersToAdd[member] = fromJson;
+      } catch (e) {
+        l.e("getSessionData: parsing member: $member from session :${session[FirebaseSession.idKey]}");
+      }
     }
     final firebaseSession = FirebaseSession(
       id: session[FirebaseSession.idKey],
@@ -439,8 +445,12 @@ Future<Map<String, FirebaseSessionMember>> getSessionMembers(
   if (members != null) {
     final Map<String, FirebaseSessionMember> membersMap = {};
     members.keys.toList().forEach((element) {
-      final member = FirebaseSessionMember.fromJson(members[element]);
-      membersMap[element] = member;
+      try {
+        final member = FirebaseSessionMember.fromJson(members[element]);
+        membersMap[element] = member;
+      } catch (e) {
+        l.e("error parsing member: ${element} from session :${sessionId}");
+      }
     });
     return membersMap;
   } else {
@@ -462,8 +472,12 @@ StreamSubscription<DatabaseEvent>? startListeningToSessionMembers({
       if (members != null) {
         final Map<String, FirebaseSessionMember> membersMap = {};
         members.keys.toList().forEach((element) {
-          final member = FirebaseSessionMember.fromJson(members[element]);
-          membersMap[element] = member;
+          try {
+            final member = FirebaseSessionMember.fromJson(members[element]);
+            membersMap[element] = member;
+          } catch (e) {
+            l.e("startListeningToSessionMembers:error parsing member: ${element} from session :${sessionId}");
+          }
         });
         onData(membersMap);
       } else {
@@ -604,12 +618,12 @@ Future<Map<String, InvitedMember>> getInvitedMembers({
     final Map<String, InvitedMember> invitedMembersMap = {};
     invitedMembers.keys.toList().forEach((element) {
       try {
-      final invitedMember = InvitedMember(
-        id: element,
-        invitedToSpeak: invitedMembers[element]
-            [InvitedMember.invitedToSpeakKey],
-      );
-      invitedMembersMap[element] = invitedMember;
+        final invitedMember = InvitedMember(
+          id: element,
+          invitedToSpeak:
+              invitedMembers[element][InvitedMember.invitedToSpeakKey] ?? false,
+        );
+        invitedMembersMap[element] = invitedMember;
       } catch (e) {
         l.e(e);
       }
@@ -631,11 +645,20 @@ Future<FirebaseSessionMember?> getUserSessionData(
   final snapshot = await databaseRef.get();
   final session = snapshot.value as dynamic;
   if (session != null) {
-    if (session[userId] != null) {
-      return FirebaseSessionMember.fromJson(session[userId]);
+    try {
+      if (session[userId] != null) {
+        return FirebaseSessionMember.fromJson(session[userId]);
+      }
+      final firebaseSessionMember = FirebaseSessionMember.fromJson(session);
+      return firebaseSessionMember;
+    } catch (e) {
+      l.e("getUserSessionData:error parsing member: $userId from session :${session[FirebaseSession.idKey]}");
+      if (userId == myId) {
+        databaseRef.remove();
+        jitsiMeet.hangUp();
+      }
+      return null;
     }
-    final firebaseSessionMember = FirebaseSessionMember.fromJson(session);
-    return firebaseSessionMember;
   } else {
     l.i('session not found');
     return null;

@@ -106,25 +106,8 @@ FirebaseGroup? singleGroupParser(value) {
 }
 
 Future<Map<String, FirebaseGroup>> groupsParser(data) async {
-  // Map<String, FirebaseGroup> groupsMap = {};
-  // data.forEach((key, value) {
-  //   final group = singleGroupParser(value);
-  //   if (group != null &&
-  //       (group.archived == false || group.creator.id == myId)) {
-  //     groupsMap[group.id] = group;
-  //   }
-  // });
-  // return groupsMap;
-
-  final groupsMap = await compute(_computeGroups, [data, myId]);
-  return groupsMap;
-}
-
-Map<String, FirebaseGroup> _computeGroups(List<dynamic> args) {
-  final groups = args[0];
-  final myId = args[1];
   Map<String, FirebaseGroup> groupsMap = {};
-  groups.forEach((key, value) {
+  data.forEach((key, value) {
     final group = singleGroupParser(value);
     if (group != null &&
         (group.archived == false || group.creator.id == myId)) {

@@ -380,7 +380,18 @@ class GlobalController extends GetxController {
 
   cleanStorage() {
     final storage = GetStorage();
+    final sawProfileIntro =
+        storage.read<bool?>(IntroStorageKeys.viewedMyProfile);
+    final sawCreateGroupIntro =
+        storage.read<bool?>(IntroStorageKeys.viewedCreateGroup);
+    final sawOngoingCallIntro =
+        storage.read<bool?>(IntroStorageKeys.viewedOngiongCall);
+
     storage.erase();
+
+    storage.write(IntroStorageKeys.viewedMyProfile, sawProfileIntro);
+    storage.write(IntroStorageKeys.viewedCreateGroup, sawCreateGroupIntro);
+    storage.write(IntroStorageKeys.viewedOngiongCall, sawOngoingCallIntro);
   }
 
   Future<String?> getJitsiServerAddress() {
@@ -553,6 +564,7 @@ class GlobalController extends GetxController {
       l.e(e);
       isLoggingOut.value = false;
     }
+
     cleanStorage();
     try {
       await web3ModalService.disconnect();

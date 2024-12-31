@@ -513,18 +513,7 @@ class GroupsController extends GetxController with FirebaseTags {
         speakerType: group.speakerType,
         subject: group.subject,
         members: {
-          myUser.id: FirebaseSessionMember(
-            avatar: myUser.avatar,
-            id: myUser.id,
-            isTalking: false,
-            startedToTalkAt: 0,
-            name: myUser.fullName,
-            initialTalkTime: double.maxFinite.toInt(),
-            isMuted: true,
-            remainingTalkTime: double.maxFinite.toInt(),
-            timeJoined: DateTime.now().millisecondsSinceEpoch,
-            present: false,
-          )
+          myUser.id: createInitialSessionMember(user: myUser, group: group)!
         },
       );
       final jsoned = newFirebaseSession.toJson();
@@ -616,7 +605,6 @@ class GroupsController extends GetxController with FirebaseTags {
       return;
     }
 
-    final iAmGroupCreator = group.creator.id == myUser.id;
     final members = group.members;
     if (!members.keys.contains(myUser.id)) {
       try {
@@ -630,22 +618,8 @@ class GroupsController extends GetxController with FirebaseTags {
           userId: myUser.id,
         );
         if (mySession == null) {
-          final newFirebaseSessionMember = FirebaseSessionMember(
-            avatar: myUser.avatar,
-            id: myUser.id,
-            name: myUser.fullName,
-            isTalking: false,
-            startedToTalkAt: 0,
-            timeJoined: DateTime.now().millisecondsSinceEpoch,
-            initialTalkTime: iAmGroupCreator
-                ? double.maxFinite.toInt()
-                : SessionConstants.initialTakTime,
-            isMuted: true,
-            remainingTalkTime: iAmGroupCreator
-                ? double.maxFinite.toInt()
-                : SessionConstants.initialTakTime,
-            present: false,
-          );
+          final newFirebaseSessionMember =
+              createInitialSessionMember(user: myUser, group: group)!;
           try {
             final jsoned = newFirebaseSessionMember.toJson();
             await firebaseSessionsReference
@@ -687,6 +661,33 @@ class GroupsController extends GetxController with FirebaseTags {
         openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
         accesses: accesses,
       );
+    }
+  }
+
+  FirebaseSessionMember? createInitialSessionMember(
+      {required UserInfoModel user, required FirebaseGroup group}) {
+    try {
+      final iAmGroupCreator = group.creator.id == user.id;
+      final member = FirebaseSessionMember(
+        avatar: myUser.avatar,
+        id: myUser.id,
+        name: myUser.fullName,
+        isTalking: false,
+        startedToTalkAt: 0,
+        timeJoined: DateTime.now().millisecondsSinceEpoch,
+        initialTalkTime: iAmGroupCreator
+            ? double.maxFinite.toInt()
+            : SessionConstants.initialTakTime,
+        isMuted: true,
+        remainingTalkTime: iAmGroupCreator
+            ? double.maxFinite.toInt()
+            : SessionConstants.initialTakTime,
+        present: false,
+      );
+      return member;
+    } catch (e) {
+      l.e(e);
+      return null;
     }
   }
 

@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/referralsParser.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantConfigs.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/cheerBooEvent.dart';
@@ -17,8 +19,10 @@ import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/podiumDefinedEntryAddress/podiumDefinedEntryAddress.dart';
 import 'package:podium/models/referral/referral.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 import 'package:uuid/uuid.dart';
 
@@ -281,8 +285,8 @@ Future<String?> saveNameForUserById(
             userId +
             '/${UserInfoModel.lowercasenameKey}');
     await Future.wait([
-      databaseRef.set(name),
-      lowerCaseNameRef.set(lowerCasedName),
+      databaseRef.set(name.trim()),
+      lowerCaseNameRef.set(lowerCasedName.trim()),
     ]);
 
     return name;
@@ -636,7 +640,7 @@ Future<Map<String, InvitedMember>> getInvitedMembers({
 }
 
 Future<FirebaseSessionMember?> getUserSessionData(
-    {required String groupId, required String userId}) async {
+    {required String groupId, required String userId, retry = true}) async {
   final databaseRef = FirebaseDatabase.instance
       .ref(FireBaseConstants.sessionsRef)
       .child(groupId)
@@ -652,11 +656,56 @@ Future<FirebaseSessionMember?> getUserSessionData(
       final firebaseSessionMember = FirebaseSessionMember.fromJson(session);
       return firebaseSessionMember;
     } catch (e) {
-      l.e("getUserSessionData:error parsing member: $userId from session :${session[FirebaseSession.idKey]}");
-      if (userId == myId) {
-        databaseRef.remove();
-        jitsiMeet.hangUp();
+      l.e("getUserSessionData:error parsing member: $userId from session :${session[FirebaseSession.idKey]}, trying to save new one");
+      if (retry == false) {
+        if (userId == myId) {
+          Toast.error(
+            title: "Something went wrong",
+            message: "Please try again",
+          );
+          jitsiMeet.hangUp();
+          Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
+        }
+        return null;
       }
+      try {
+        final user = await getUserById(userId);
+        if (user == null) {
+          return null;
+        }
+        final group = await getGroupInfoById(groupId);
+        if (group == null) {
+          return null;
+        }
+        final initialMember = Get.find<GroupsController>()
+            .createInitialSessionMember(user: user, group: group);
+        if (initialMember == null) {
+          return null;
+        }
+        final firebaseSessionsReference = FirebaseDatabase.instance
+            .ref(FireBaseConstants.sessionsRef + groupId);
+        final jsoned = initialMember.toJson();
+        await firebaseSessionsReference
+            .child(FirebaseSession.membersKey)
+            .child(myUser.id)
+            .set(jsoned);
+        final savedMember = await getUserSessionData(
+          groupId: groupId,
+          userId: userId,
+          retry: false,
+        );
+        return savedMember;
+      } catch (e) {
+        if (userId == myId) {
+          Toast.error(
+            title: "Something went wrong",
+            message: "Please try again",
+          );
+          jitsiMeet.hangUp();
+          Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
+        }
+      }
+
       return null;
     }
   } else {

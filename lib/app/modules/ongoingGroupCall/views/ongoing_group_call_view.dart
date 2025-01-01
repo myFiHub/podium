@@ -19,6 +19,9 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    final groupCallController = Get.find<GroupCallController>();
+    final canITalk = groupCallController.canTalk.value;
+
     if (controller.introStartCalled == false) {
       controller.introStartCalled = true;
       controller.startIntro();
@@ -59,7 +62,6 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
             );
           }
           final isMuted = controller.amIMuted.value;
-          final canITalk = groupCallController.canTalk.value;
           final amICreator = group.creator.id == myId;
           final isRecording = controller.isRecording.value;
           final recordable = group.isRecordable;
@@ -69,8 +71,12 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
               backgroundColor: ColorName.greyText,
               onPressed: () {},
               tooltip: 'can not talk',
-              child: const Icon(
-                Icons.mic_off,
+              child: const SizedBox(
+                height: 70,
+                width: 70,
+                child: Icon(
+                  Icons.mic_off,
+                ),
               ),
             );
           }
@@ -107,7 +113,7 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
             ],
           );
         }),
-        floatingWidgetHeight: 125,
+        floatingWidgetHeight: canITalk ? 125 : 50,
         floatingWidgetWidth: 50,
         dx: Get.width - 80,
         dy: 50,

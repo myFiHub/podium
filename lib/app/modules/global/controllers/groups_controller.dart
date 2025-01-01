@@ -669,9 +669,9 @@ class GroupsController extends GetxController with FirebaseTags {
     try {
       final iAmGroupCreator = group.creator.id == user.id;
       final member = FirebaseSessionMember(
-        avatar: myUser.avatar,
-        id: myUser.id,
-        name: myUser.fullName,
+        avatar: user.avatar,
+        id: user.id,
+        name: user.fullName,
         isTalking: false,
         startedToTalkAt: 0,
         timeJoined: DateTime.now().millisecondsSinceEpoch,

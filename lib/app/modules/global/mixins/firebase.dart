@@ -687,7 +687,7 @@ Future<FirebaseSessionMember?> getUserSessionData(
         final jsoned = initialMember.toJson();
         await firebaseSessionsReference
             .child(FirebaseSession.membersKey)
-            .child(myUser.id)
+            .child(userId)
             .set(jsoned);
         final savedMember = await getUserSessionData(
           groupId: groupId,

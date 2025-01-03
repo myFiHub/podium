@@ -277,11 +277,26 @@ class AptosMovement {
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
-      l.d(res);
-
+      final hash = res['hash'];
+      await client.waitForTransaction(hash, checkSuccess: true);
       return true;
     } catch (e, stackTrace) {
       l.e(e, stackTrace: stackTrace);
+      final isCopyableError = e.toString().contains('Waiting for transaction');
+      Toast.error(
+        title: 'Error',
+        message: isCopyableError
+            ? e.toString()
+            : 'Error Submiting Transaction, please try again later',
+        mainbutton: !isCopyableError
+            ? null
+            : TextButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: e.toString()));
+                },
+                child: const Text('Copy Error'),
+              ),
+      );
       return false;
     }
   }

@@ -788,6 +788,7 @@ class GroupsController extends GetxController with FirebaseTags {
   Future<GroupAccesses?> checkTicket({required FirebaseGroup group}) async {
     joiningGroupId.value = group.id;
     final checkTicketController = Get.put(CheckticketController());
+    checkTicketController.allUsersToBuyTicketFrom.value = {};
     checkTicketController.group.value = group;
     final accesses = await checkTicketController.checkTickets();
     if (accesses.canEnter == true && accesses.canSpeak == true) {

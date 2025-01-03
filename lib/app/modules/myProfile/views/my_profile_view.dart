@@ -20,6 +20,8 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
   const MyProfileView({Key? key}) : super(key: key);
@@ -286,19 +288,7 @@ class EvmBalances extends GetView<MyProfileController> {
     return Obx(() {
       final balances = controller.balances.value;
       final loading = controller.isGettingBalances.value;
-      if (loading) {
-        return Container(
-          width: Get.width - 16,
-          height: 48,
-          child: Center(
-            child: Container(
-              width: 20,
-              height: 20,
-              child: const CircularProgressIndicator(),
-            ),
-          ),
-        );
-      }
+
       return Container(
         // add a top border
         decoration: const BoxDecoration(
@@ -332,12 +322,21 @@ class EvmBalances extends GetView<MyProfileController> {
                     ),
                   ],
                 ),
-                Text(
-                  balances.Base,
-                  style: const TextStyle(
-                    fontSize: 12,
+                Skeletonizer(
+                  enabled: loading,
+                  child: Container(
+                    width: 100,
+                    height: 18,
+                    child: Text(
+                      loading ? '000000' : balances.Base,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                ),
+                )
               ],
             ),
             Column(
@@ -357,10 +356,19 @@ class EvmBalances extends GetView<MyProfileController> {
                     ),
                   ],
                 ),
-                Text(
-                  balances.Avalanche,
-                  style: const TextStyle(
-                    fontSize: 12,
+                Skeletonizer(
+                  enabled: loading,
+                  child: SizedBox(
+                    width: 100,
+                    height: 18,
+                    child: Text(
+                      loading ? '000000' : balances.Avalanche,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -382,10 +390,19 @@ class EvmBalances extends GetView<MyProfileController> {
                     ),
                   ],
                 ),
-                Text(
-                  balances.Movement,
-                  style: const TextStyle(
-                    fontSize: 12,
+                Skeletonizer(
+                  enabled: loading,
+                  child: SizedBox(
+                    width: 100,
+                    height: 18,
+                    child: Text(
+                      loading ? '000000' : balances.Movement,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -556,19 +573,7 @@ class AptosBalance extends GetView<MyProfileController> {
     return Obx(() {
       final balances = controller.balances.value;
       final loading = controller.isGettingBalances.value;
-      if (loading) {
-        return Container(
-          width: Get.width - 16,
-          height: 48,
-          child: Center(
-            child: Container(
-              width: 20,
-              height: 20,
-              child: const CircularProgressIndicator(),
-            ),
-          ),
-        );
-      }
+
       return Container(
         // add a top border
         height: 48,
@@ -602,10 +607,19 @@ class AptosBalance extends GetView<MyProfileController> {
                     ),
                   ],
                 ),
-                Text(
-                  balances.movementAptos,
-                  style: const TextStyle(
-                    fontSize: 12,
+                Skeletonizer(
+                  enabled: loading,
+                  child: SizedBox(
+                    width: 100,
+                    height: 18,
+                    child: Text(
+                      loading ? '000000' : balances.movementAptos,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ],

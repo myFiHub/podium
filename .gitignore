@@ -37,7 +37,7 @@ android/app/**/*.json
 .pub-cache/
 .pub/
 /build/
-
+/ios/GoogleService-Info.plist
 # Symbolication related
 app.*.symbols
 

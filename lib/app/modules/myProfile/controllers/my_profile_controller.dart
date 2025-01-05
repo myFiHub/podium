@@ -294,7 +294,7 @@ class MyProfileController extends GetxController {
       isGettingBalances.value = true;
       final baseClient = evmClientByChainId(baseChainId);
       final avalancheClient = evmClientByChainId(avalancheChainId);
-      final movementClient = evmClientByChainId(movementChain.chainId);
+      final movementClient = evmClientByChainId(movementEVMChain.chainId);
       final myaddress = await web3AuthWalletAddress();
       final (
         baseBalance,

@@ -70,22 +70,10 @@ String chainNameById(String chainId) {
 }
 
 ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
-  if (chainId == movementAptosChainId || chainId == '127') {
-    return ReownAppKitModalNetworkInfo(
-      name: 'Aptos Movement',
-      chainId: chainId,
-      extraRpcUrls: [],
-      isTestNetwork: false,
-      chainIcon: chainIconUrlByChainId(movementChain.chainId),
-      currency: 'MOVE',
-      rpcUrl: 'https://bsc-dataseed.binance.org/',
-      explorerUrl: 'https://bscscan.com/',
-    );
-  }
   final chain =
       ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
   if (chain == null) {
-    return movementChain;
+    return movementEVMChain;
   }
   final chainToReturn = ReownAppKitModalNetworkInfo(
     name: chain.name,
@@ -107,7 +95,7 @@ String chainIconUrlByChainId(String chainId) {
     chainNameById(chainId),
   );
   if (chain == null) {
-    return movementChain.chainIcon!;
+    return movementEVMChain.chainIcon!;
   }
   return chain.icon;
 }

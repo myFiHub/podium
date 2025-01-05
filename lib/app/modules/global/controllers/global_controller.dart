@@ -52,7 +52,8 @@ PairingMetadata _pairingMetadata = const PairingMetadata(
 final _checkOptions = [
   // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
   // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
-  InternetCheckOption(uri: Uri.parse('https://8.8.8.8'))
+  // InternetCheckOption(uri: Uri.parse('https://8.8.8.8'))
+  InternetCheckOption(uri: Uri.parse(Env.jitsiServerUrl)),
 ];
 
 class GlobalUpdateIds {

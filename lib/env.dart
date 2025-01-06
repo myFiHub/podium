@@ -65,7 +65,7 @@ class Env {
   }
 
   static String? cheerBooAddress(String chainId) {
-    if (chainId == movementChain.chainId) {
+    if (chainId == movementEVMChain.chainId) {
       return cheerBooAddress_Movement_Devnet;
     } else if (chainId == movementAptosChainId) {
       return cheerBooAptosAddress;

@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
@@ -19,6 +20,7 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -39,13 +41,13 @@ class Payments {
 class Balances {
   String Base = '0.0';
   String Avalanche = '0.0';
-  String Movement = '0.0';
+  // String Movement = '0.0';
   String movementAptos = '0.0';
 
   Balances({
     required this.Base,
     required this.Avalanche,
-    required this.Movement,
+    // required this.Movement,
     required this.movementAptos,
   });
 }
@@ -71,7 +73,7 @@ class MyProfileController extends GetxController {
     Balances(
       Base: '0.0',
       Avalanche: '0.0',
-      Movement: '0.0',
+      // Movement: '0.0',
       movementAptos: '0.0',
     ),
   );
@@ -294,23 +296,37 @@ class MyProfileController extends GetxController {
       isGettingBalances.value = true;
       final baseClient = evmClientByChainId(baseChainId);
       final avalancheClient = evmClientByChainId(avalancheChainId);
-      final movementClient = evmClientByChainId(movementChain.chainId);
+      // final movementClient = evmClientByChainId(movementEVMChain.chainId);
       final myaddress = await web3AuthWalletAddress();
-      final (
-        baseBalance,
-        avalancheBalance,
-        movementBalance,
-        movementAptosBalance,
-      ) = await (
-        baseClient.getBalance(parseAddress(myaddress!)),
-        avalancheClient.getBalance(parseAddress(myaddress)),
-        movementClient.getBalance(parseAddress(myaddress)),
-        AptosMovement.balance,
-      ).wait;
+      final callMap = {
+        'base': baseClient.getBalance(parseAddress(myaddress!)),
+        'avalanche': avalancheClient.getBalance(parseAddress(myaddress)),
+        // 'movement': movementClient.getBalance(parseAddress(myaddress)),
+        'movementAptos': AptosMovement.balance,
+      };
+      final results = await allSettled(callMap);
+      final baseBalance =
+          results['base']!['status'] == AllSettledStatus.fulfilled
+              ? results['base']!['value']
+              : EtherAmount.zero();
+
+      final avalancheBalance =
+          results['avalanche']!['status'] == AllSettledStatus.fulfilled
+              ? results['avalanche']!['value']
+              : EtherAmount.zero();
+      // final movementBalance =
+      //     results['movement']!['status'] == AllSettledStatus.fulfilled
+      //         ? results['movement']!['value']
+      //         : EtherAmount.zero();
+      final movementAptosBalance =
+          results['movementAptos']!['status'] == AllSettledStatus.fulfilled
+              ? results['movementAptos']!['value']
+              : BigInt.zero;
+
       balances.value = Balances(
         Base: weiToDecimalString(wei: baseBalance),
         Avalanche: weiToDecimalString(wei: avalancheBalance),
-        Movement: weiToDecimalString(wei: movementBalance),
+        // Movement: weiToDecimalString(wei: movementBalance),
         movementAptos: bigIntCoinToMoveOnAptos(movementAptosBalance).toString(),
       );
       isGettingBalances.value = false;

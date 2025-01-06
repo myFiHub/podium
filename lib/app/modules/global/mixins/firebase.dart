@@ -724,8 +724,8 @@ Future<int?> getUserRemainingTalkTime({
       .child(FirebaseSession.membersKey)
       .child(userId)
       .child(FirebaseSessionMember.remainingTalkTimeKey);
-  final snapshot = await databaseRef.get();
-  final remainingTime = snapshot.value as int?;
+  final snapshot = await databaseRef.once();
+  final remainingTime = snapshot.snapshot.value as int?;
   if (remainingTime != null) {
     return remainingTime;
   } else {

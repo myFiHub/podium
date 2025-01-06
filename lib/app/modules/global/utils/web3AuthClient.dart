@@ -12,8 +12,8 @@ import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
 
 Web3Client evmClientByChainId(String chainId) {
-  if (chainId == movementChain.chainId) {
-    return Web3Client(movementChain.rpcUrl, Client());
+  if (chainId == movementEVMChain.chainId) {
+    return Web3Client(movementEVMChain.rpcUrl, Client());
   }
   final rpcUrl = chainInfoByChainId(chainId).rpcUrl;
   final client = Web3Client(rpcUrl, Client());

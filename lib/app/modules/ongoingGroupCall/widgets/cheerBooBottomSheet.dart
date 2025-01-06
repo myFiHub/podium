@@ -125,7 +125,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
               children: [
                 Text(
                     // """each ${Env.minimumCheerBooAmount} ${ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, movementChain.chainId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} ${Env.cheerBooTimeMultiplication} seconds ${widget.isCheer ? "to" : "from"}\nthat user's time""",
-                    """each 0.1 ${ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, movementChain.chainId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} 1 min ${widget.isCheer ? "to" : "from"}\nthat user's time""",
+                    """each 0.1 ${ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, movementEVMChain.chainId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} 1 min ${widget.isCheer ? "to" : "from"}\nthat user's time""",
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 16,

@@ -20,7 +20,6 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
@@ -322,21 +321,10 @@ class EvmBalances extends GetView<MyProfileController> {
                     ),
                   ],
                 ),
-                Skeletonizer(
+                _PriceSkeleton(
                   enabled: loading,
-                  child: Container(
-                    width: 100,
-                    height: 18,
-                    child: Text(
-                      loading ? '000000' : balances.Base,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                )
+                  price: balances.Base,
+                ),
               ],
             ),
             Column(
@@ -356,57 +344,35 @@ class EvmBalances extends GetView<MyProfileController> {
                     ),
                   ],
                 ),
-                Skeletonizer(
+                _PriceSkeleton(
                   enabled: loading,
-                  child: SizedBox(
-                    width: 100,
-                    height: 18,
-                    child: Text(
-                      loading ? '000000' : balances.Avalanche,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                  price: balances.Avalanche,
                 ),
               ],
             ),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'MOVE',
-                      style: TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                    space5,
-                    Img(
-                      src: chainIconUrlByChainId(movementChain.chainId),
-                      size: 16,
-                    ),
-                  ],
-                ),
-                Skeletonizer(
-                  enabled: loading,
-                  child: SizedBox(
-                    width: 100,
-                    height: 18,
-                    child: Text(
-                      loading ? '000000' : balances.Movement,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // Column(
+            //   children: [
+            //     Row(
+            //       children: [
+            //         const Text(
+            //           'MOVE',
+            //           style: TextStyle(
+            //             fontSize: 12,
+            //           ),
+            //         ),
+            //         space5,
+            //         Img(
+            //           src: chainIconUrlByChainId(movementEVMChain.chainId),
+            //           size: 16,
+            //         ),
+            //       ],
+            //     ),
+            //     _PriceSkeleton(
+            //       enabled: loading,
+            //       price: balances.Movement,
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       );
@@ -602,25 +568,14 @@ class AptosBalance extends GetView<MyProfileController> {
                     ),
                     space5,
                     Img(
-                      src: chainIconUrlByChainId(movementChain.chainId),
+                      src: chainIconUrlByChainId(movementEVMChain.chainId),
                       size: 16,
                     ),
                   ],
                 ),
-                Skeletonizer(
+                _PriceSkeleton(
                   enabled: loading,
-                  child: SizedBox(
-                    width: 100,
-                    height: 18,
-                    child: Text(
-                      loading ? '000000' : balances.movementAptos,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                  price: balances.movementAptos,
                 ),
               ],
             ),
@@ -1178,5 +1133,35 @@ class _Statistics extends GetWidget<MyProfileController> {
         ],
       );
     });
+  }
+}
+
+class _PriceSkeleton extends StatelessWidget {
+  const _PriceSkeleton({
+    required this.price,
+    required this.enabled,
+  });
+
+  final String price;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeletonizer(
+      enabled: enabled,
+      effect: ShimmerEffect(
+        baseColor: Colors.grey[900]!.withAlpha(70),
+        highlightColor: Colors.grey[700]!.withAlpha(50),
+        duration: const Duration(milliseconds: 500),
+      ),
+      child: Text(
+        enabled ? '000000' : price,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
   }
 }

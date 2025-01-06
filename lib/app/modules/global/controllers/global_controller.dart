@@ -52,7 +52,8 @@ PairingMetadata _pairingMetadata = const PairingMetadata(
 final _checkOptions = [
   // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
   // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
-  InternetCheckOption(uri: Uri.parse(movementChain.rpcUrl))
+  // InternetCheckOption(uri: Uri.parse('https://8.8.8.8'))
+  InternetCheckOption(uri: Uri.parse(Env.jitsiServerUrl)),
 ];
 
 class GlobalUpdateIds {
@@ -108,7 +109,12 @@ class GlobalController extends GetxController {
     try {
       ReownAppKitModalNetworks.addSupportedNetworks(
         Env.chainNamespace,
-        [movementMainNetChain, movementDevnetChain],
+        [
+          movementEVMMainNetChain,
+          movementEVMDevnetChain,
+          movementAptosProtoTestNetChain,
+          movementAptosBardokChain
+        ],
       );
     } catch (e) {
       l.e("error ReownAppKitModalNetworks app $e");

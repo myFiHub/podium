@@ -791,10 +791,11 @@ class OngoingGroupCallController extends GetxController {
       }
 
       bool? success;
-      final selectedWallet = await choseAWallet(
-        chainId: movementChain.chainId,
-        supportsAptos: true,
-      );
+      final selectedWallet = WalletNames.internal_Aptos;
+      // await choseAWallet(
+      //   chainId: movementEVMChain.chainId,
+      //   supportsAptos: true,
+      // );
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           groupId: groupCallController.group.value!.id,
@@ -802,7 +803,7 @@ class OngoingGroupCallController extends GetxController {
           receiverAddresses: receiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
-          chainId: movementChain.chainId,
+          chainId: movementEVMChain.chainId,
         );
       } else if (selectedWallet == WalletNames.internal_EVM) {
         success = await internal_cheerOrBoo(
@@ -812,7 +813,7 @@ class OngoingGroupCallController extends GetxController {
           receiverAddresses: receiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
-          chainId: movementChain.chainId,
+          chainId: movementEVMChain.chainId,
         );
       } else if (selectedWallet == WalletNames.internal_Aptos) {
         success = await AptosMovement.cheerBoo(
@@ -870,7 +871,7 @@ class OngoingGroupCallController extends GetxController {
           amount: amount,
           chainId: selectedWallet == WalletNames.internal_Aptos
               ? movementAptosChainId
-              : movementChain.chainId,
+              : movementEVMChain.chainId,
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external
               ? externalWalletAddress!

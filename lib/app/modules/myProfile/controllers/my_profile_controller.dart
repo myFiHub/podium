@@ -298,13 +298,13 @@ class MyProfileController extends GetxController {
       final avalancheClient = evmClientByChainId(avalancheChainId);
       final movementClient = evmClientByChainId(movementEVMChain.chainId);
       final myaddress = await web3AuthWalletAddress();
-
-      final results = await allSettled({
+      final callMap = {
         'base': baseClient.getBalance(parseAddress(myaddress!)),
         'avalanche': avalancheClient.getBalance(parseAddress(myaddress)),
         'movement': movementClient.getBalance(parseAddress(myaddress)),
         'movementAptos': AptosMovement.balance,
-      });
+      };
+      final results = await allSettled(callMap);
       final baseBalance =
           results['base']!['status'] == AllSettledStatus.fulfilled
               ? results['base']!['value']

@@ -20,7 +20,6 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
@@ -351,29 +350,29 @@ class EvmBalances extends GetView<MyProfileController> {
                 ),
               ],
             ),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'MOVE',
-                      style: TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                    space5,
-                    Img(
-                      src: chainIconUrlByChainId(movementEVMChain.chainId),
-                      size: 16,
-                    ),
-                  ],
-                ),
-                _PriceSkeleton(
-                  enabled: loading,
-                  price: balances.Movement,
-                ),
-              ],
-            ),
+            // Column(
+            //   children: [
+            //     Row(
+            //       children: [
+            //         const Text(
+            //           'MOVE',
+            //           style: TextStyle(
+            //             fontSize: 12,
+            //           ),
+            //         ),
+            //         space5,
+            //         Img(
+            //           src: chainIconUrlByChainId(movementEVMChain.chainId),
+            //           size: 16,
+            //         ),
+            //       ],
+            //     ),
+            //     _PriceSkeleton(
+            //       enabled: loading,
+            //       price: balances.Movement,
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       );

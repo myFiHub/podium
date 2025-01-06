@@ -791,10 +791,11 @@ class OngoingGroupCallController extends GetxController {
       }
 
       bool? success;
-      final selectedWallet = await choseAWallet(
-        chainId: movementEVMChain.chainId,
-        supportsAptos: true,
-      );
+      final selectedWallet = WalletNames.internal_Aptos;
+      // await choseAWallet(
+      //   chainId: movementEVMChain.chainId,
+      //   supportsAptos: true,
+      // );
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           groupId: groupCallController.group.value!.id,

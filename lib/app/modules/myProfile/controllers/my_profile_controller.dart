@@ -41,13 +41,13 @@ class Payments {
 class Balances {
   String Base = '0.0';
   String Avalanche = '0.0';
-  String Movement = '0.0';
+  // String Movement = '0.0';
   String movementAptos = '0.0';
 
   Balances({
     required this.Base,
     required this.Avalanche,
-    required this.Movement,
+    // required this.Movement,
     required this.movementAptos,
   });
 }
@@ -73,7 +73,7 @@ class MyProfileController extends GetxController {
     Balances(
       Base: '0.0',
       Avalanche: '0.0',
-      Movement: '0.0',
+      // Movement: '0.0',
       movementAptos: '0.0',
     ),
   );
@@ -296,12 +296,12 @@ class MyProfileController extends GetxController {
       isGettingBalances.value = true;
       final baseClient = evmClientByChainId(baseChainId);
       final avalancheClient = evmClientByChainId(avalancheChainId);
-      final movementClient = evmClientByChainId(movementEVMChain.chainId);
+      // final movementClient = evmClientByChainId(movementEVMChain.chainId);
       final myaddress = await web3AuthWalletAddress();
       final callMap = {
         'base': baseClient.getBalance(parseAddress(myaddress!)),
         'avalanche': avalancheClient.getBalance(parseAddress(myaddress)),
-        'movement': movementClient.getBalance(parseAddress(myaddress)),
+        // 'movement': movementClient.getBalance(parseAddress(myaddress)),
         'movementAptos': AptosMovement.balance,
       };
       final results = await allSettled(callMap);
@@ -314,10 +314,10 @@ class MyProfileController extends GetxController {
           results['avalanche']!['status'] == AllSettledStatus.fulfilled
               ? results['avalanche']!['value']
               : EtherAmount.zero();
-      final movementBalance =
-          results['movement']!['status'] == AllSettledStatus.fulfilled
-              ? results['movement']!['value']
-              : EtherAmount.zero();
+      // final movementBalance =
+      //     results['movement']!['status'] == AllSettledStatus.fulfilled
+      //         ? results['movement']!['value']
+      //         : EtherAmount.zero();
       final movementAptosBalance =
           results['movementAptos']!['status'] == AllSettledStatus.fulfilled
               ? results['movementAptos']!['value']
@@ -326,7 +326,7 @@ class MyProfileController extends GetxController {
       balances.value = Balances(
         Base: weiToDecimalString(wei: baseBalance),
         Avalanche: weiToDecimalString(wei: avalancheBalance),
-        Movement: weiToDecimalString(wei: movementBalance),
+        // Movement: weiToDecimalString(wei: movementBalance),
         movementAptos: bigIntCoinToMoveOnAptos(movementAptosBalance).toString(),
       );
       isGettingBalances.value = false;

@@ -24,7 +24,8 @@ class AptosMovement {
 
   static AptosClient get client {
     return AptosClient(
-      movementAptosBardokChain.rpcUrl,
+      // movementAptosBardokChain.rpcUrl,
+      movementAptosProtoTestNetChain.rpcUrl,
       enableDebugLog: Env.environment == DEVELOPMENT,
     );
   }

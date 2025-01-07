@@ -7,8 +7,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/allGroups/controllers/all_groups_controller.dart';
-import 'package:podium/app/modules/chechTicket/controllers/checkTicket_controller.dart';
-import 'package:podium/app/modules/chechTicket/views/checkTicket_view.dart';
+import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
+import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -448,6 +448,7 @@ class GroupsController extends GetxController with FirebaseTags {
     required List<String> tags,
     required int scheduledFor,
     required int alarmId,
+    String? lumaEventId,
     String? imageUrl,
   }) async {
     final firebaseGroupsReference =
@@ -463,6 +464,7 @@ class GroupsController extends GetxController with FirebaseTags {
     );
     final group = FirebaseGroup(
       id: id,
+      lumaEventId: lumaEventId,
       imageUrl: imageUrl,
       name: name,
       creator: creator,
@@ -788,7 +790,6 @@ class GroupsController extends GetxController with FirebaseTags {
   Future<GroupAccesses?> checkTicket({required FirebaseGroup group}) async {
     joiningGroupId.value = group.id;
     final checkTicketController = Get.put(CheckticketController());
-    checkTicketController.allUsersToBuyTicketFrom.value = {};
     checkTicketController.group.value = group;
     final accesses = await checkTicketController.checkTickets();
     if (accesses.canEnter == true && accesses.canSpeak == true) {

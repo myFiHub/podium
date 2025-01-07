@@ -28,6 +28,8 @@ class Env {
   static final chainNamespace = dotenv.env['CHAIN_NAMESPACE']!;
   static final albyApiKey = dotenv.env['ALBY_API_KEY']!;
 
+  static final lumaApiKey = dotenv.env['LUMA_API_KEY']!;
+
   static final fihubAddress_Avalanche_MainNet =
       dotenv.env['FIHUB_ADDRESS_AVALANCHE_MAINNET']!;
 

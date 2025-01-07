@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'starsArenaUser.g.dart';
+part 'user.g.dart';
 
 @JsonSerializable()
 class StarsArenaUser {

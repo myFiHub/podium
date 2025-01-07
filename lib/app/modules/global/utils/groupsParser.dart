@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
@@ -8,6 +7,7 @@ import 'package:podium/utils/logger.dart';
 FirebaseGroup? singleGroupParser(value) {
   String groupId = '';
   try {
+    final lumaEventId = value[FirebaseGroup.lumaEventIdKey];
     groupId = value[FirebaseGroup.idKey];
     final name = value[FirebaseGroup.nameKey];
     final creator = value[FirebaseGroup.creatorKey];
@@ -75,6 +75,7 @@ FirebaseGroup? singleGroupParser(value) {
     );
     final group = FirebaseGroup(
       id: groupId,
+      lumaEventId: lumaEventId,
       name: name,
       imageUrl: imageUrl,
       creator: creatorUser,

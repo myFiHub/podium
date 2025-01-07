@@ -16,7 +16,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/providers/api/models/arena/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
@@ -490,7 +490,7 @@ class LoginController extends GetxController {
       final ticket = listOfBuyableTickets[i];
       if (ticket.type == BuyableTicketTypes.onlyArenaTicketHolders) {
         if (ticket.handle != null) {
-          arenaCallArray.add(HttpApis.getUserFromStarsArenaByHandle(
+          arenaCallArray.add(HttpApis.arenaApi.getUserFromStarsArenaByHandle(
             ticket.handle!,
           ));
         }

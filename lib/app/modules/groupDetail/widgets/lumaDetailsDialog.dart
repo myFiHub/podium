@@ -9,12 +9,18 @@ import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shimmer/shimmer.dart';
 
-class LumaDetailsDialog extends StatelessWidget {
+class LumaDetailsDialog extends GetView<GroupDetailController> {
   const LumaDetailsDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final mycurrentIsoTime = DateTime.now().toIso8601String();
+    final eventStartAt = controller.lumaEventDetails.value?.event.start_at;
+    final isStarted = DateTime.parse(mycurrentIsoTime)
+        .isAfter(DateTime.parse(eventStartAt ?? ''));
     return SafeArea(
       child: Material(
         child: Container(
@@ -24,7 +30,6 @@ class LumaDetailsDialog extends StatelessWidget {
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Luma Details',
@@ -33,6 +38,22 @@ class LumaDetailsDialog extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  if (isStarted) ...[
+                    space10,
+                    Shimmer.fromColors(
+                      baseColor: Colors.white,
+                      highlightColor: Colors.green,
+                      child: const Text(
+                        "Started",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
                   IconButton(
                     onPressed: () {
                       Get.close();
@@ -71,8 +92,10 @@ class _Info extends GetView<GroupDetailController> {
       child: Obx(() {
         final event = controller.lumaEventDetails.value;
         final group = controller.group.value;
-        final guests = controller.lumaEventGuests.value;
-        final hosts = controller.lumaHosts.value;
+        final mycurrentIsoTime = DateTime.now().toIso8601String();
+        final eventStartAt = controller.lumaEventDetails.value?.event.start_at;
+        final isStarted = DateTime.parse(mycurrentIsoTime)
+            .isAfter(DateTime.parse(eventStartAt ?? ''));
         return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,25 +158,27 @@ class _Info extends GetView<GroupDetailController> {
                 ),
               ],
             ),
-            space10,
-            Row(
-              children: [
-                const Text(
-                  'Start Time:',
-                  style: TextStyle(
-                    fontSize: 12,
+            if (!isStarted) ...[
+              space10,
+              Row(
+                children: [
+                  const Text(
+                    'Start Time:',
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-                space10,
-                Text(
-                  _isoStringToDate(event?.event.start_at ?? ''),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  space10,
+                  Text(
+                    _isoStringToDate(event?.event.start_at ?? ''),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ]
           ],
         );
       }),
@@ -329,18 +354,47 @@ class _GuestItem extends StatelessWidget {
   }
 }
 
-class _DoneButton extends StatelessWidget {
+class _DoneButton extends GetView<GroupDetailController> {
   const _DoneButton({super.key});
   @override
   Widget build(BuildContext context) {
-    return Button(
-      type: ButtonType.outline,
-      size: ButtonSize.LARGE,
-      blockButton: true,
-      text: 'Close',
-      onPressed: () {
-        Get.close();
-      },
+    final eventLink = controller.lumaEventDetails.value?.event.url;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        SizedBox(
+          width: Get.width / 2 - 25,
+          child: Button(
+            type: ButtonType.outline,
+            size: ButtonSize.LARGE,
+            color: ColorName.primaryBlue,
+            textStyle: const TextStyle(
+              fontSize: 12,
+              color: ColorName.primaryBlue,
+            ),
+            text: 'Share Luma Link',
+            onPressed: () {
+              Share.share(
+                eventLink ?? '',
+              );
+            },
+          ),
+        ),
+        space10,
+        SizedBox(
+          width: Get.width / 2 - 25,
+          child: Button(
+            type: ButtonType.outline,
+            size: ButtonSize.LARGE,
+            textColor: Colors.red,
+            color: Colors.red,
+            text: 'Close',
+            onPressed: () {
+              Get.close();
+            },
+          ),
+        ),
+      ],
     );
   }
 }

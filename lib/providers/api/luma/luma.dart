@@ -80,7 +80,7 @@ class LumaApi {
     }
   }
 
-  Future<List<GuestDataModel>> getGuests({required String eventId}) async {
+  Future<List<GuestModel>> getGuests({required String eventId}) async {
     final response = await dio.get(
       _lumaBaseUrl + '/public/v1/event/get-guests?event_api_id=$eventId',
       options: lumaApiOptions,
@@ -88,8 +88,11 @@ class LumaApi {
     if (response.statusCode == 200) {
       final jsonBody = response.data;
       final array = jsonBody['entries'] as List<dynamic>;
-      final quests = array.map((e) => GuestDataModel.fromJson(e)).toList();
-      return quests;
+      final guests = array.map((e) {
+        final guest = GuestModel.fromJson(e);
+        return guest;
+      }).toList();
+      return guests;
     } else {
       return [];
     }

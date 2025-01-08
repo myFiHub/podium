@@ -4,7 +4,9 @@ import 'package:podium/app/modules/createGroup/controllers/create_group_controll
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/modules/groupDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/utils/logger.dart';
@@ -40,7 +42,6 @@ class GroupDetailView extends GetView<GroupDetailController> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   space16,
-
                   SizedBox(
                     width: Get.width,
                     child: Padding(
@@ -48,14 +49,21 @@ class GroupDetailView extends GetView<GroupDetailController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Joining:",
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              overflow: TextOverflow.visible,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Joining:",
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  overflow: TextOverflow.visible,
+                                ),
+                              ),
+                              if (group.lumaEventId != null)
+                                const _LumaIconButton()
+                            ],
                           ),
                           space5,
                           Text(
@@ -143,6 +151,33 @@ class GroupDetailView extends GetView<GroupDetailController> {
         ],
       ),
     );
+  }
+}
+
+class _LumaIconButton extends GetView<GroupDetailController> {
+  const _LumaIconButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isGettingLumaEventDetails =
+          controller.isGettingLumaEventDetails.value;
+      final isGettingLumaEventGuests =
+          controller.isGettingLumaEventGuests.value;
+      return IconButton(
+        onPressed: () {
+          if (isGettingLumaEventDetails || isGettingLumaEventGuests) return;
+          openLumaDetailsDialog();
+        },
+        icon: isGettingLumaEventDetails || isGettingLumaEventGuests
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(),
+              )
+            : Assets.images.lumaPng.image(width: 24, height: 24),
+      );
+    });
   }
 }
 

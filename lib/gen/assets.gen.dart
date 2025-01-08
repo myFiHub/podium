@@ -83,6 +83,12 @@ class $AssetsImagesGen {
   /// File path: assets/images/logo.png
   AssetGenImage get logo => const AssetGenImage('assets/images/logo.png');
 
+  /// File path: assets/images/luma.svg
+  SvgGenImage get luma => const SvgGenImage('assets/images/luma.svg');
+
+  /// File path: assets/images/lumaPng.png
+  AssetGenImage get lumaPng => const AssetGenImage('assets/images/lumaPng.png');
+
   /// File path: assets/images/movement_logo.svg
   SvgGenImage get movementLogo =>
       const SvgGenImage('assets/images/movement_logo.svg');
@@ -111,6 +117,8 @@ class $AssetsImagesGen {
         goldPot,
         linkedin,
         logo,
+        luma,
+        lumaPng,
         movementLogo,
         particleIcon,
         xPlatform

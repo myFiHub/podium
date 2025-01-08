@@ -16,6 +16,7 @@ import 'package:podium/utils/styles.dart';
 import 'package:pulsator/pulsator.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:podium/gen/assets.gen.dart';
 
 class GroupList extends StatelessWidget {
   final List<FirebaseGroup> groupsList;
@@ -245,6 +246,27 @@ class _SingleGroup extends StatelessWidget {
                                     ),
                                   ],
                                 ),
+                                if (group.lumaEventId != null) ...[
+                                  space5,
+                                  Row(
+                                    children: [
+                                      //  local image
+                                      Assets.images.lumaPng.image(
+                                        width: 14,
+                                        height: 14,
+                                      ),
+                                      space5,
+                                      const Text(
+                                        "Available on Luma",
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w400,
+                                          color: ColorName.greyText,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ]
                               ],
                             )
                           ],

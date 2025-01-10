@@ -16,7 +16,6 @@ import 'package:podium/utils/styles.dart';
 import 'package:pulsator/pulsator.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:podium/gen/assets.gen.dart';
 
 class GroupList extends StatelessWidget {
   final List<FirebaseGroup> groupsList;

@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:aptos/aptos_account.dart';
+import 'package:convert/convert.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -11,12 +14,14 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
+import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/models/arena/user.dart';
+import 'package:podium/providers/api/arena/models/user.dart';
+import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
@@ -30,6 +35,7 @@ import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
+import 'package:web3dart/crypto.dart' show Sign;
 
 class LoginParametersKeys {
   static const referrerId = 'referrerId';
@@ -251,6 +257,7 @@ class LoginController extends GetxController {
         }
         final privateKey = res.privKey!;
         final userInfo = res.userInfo!;
+
         await _continueSocialLoginWithUserInfoAndPrivateKey(
           privateKey: privateKey,
           userInfo: userInfo,
@@ -272,6 +279,12 @@ class LoginController extends GetxController {
       required Provider loginMethod}) async {
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
+    final signature = signMessage(privateKey, publicAddress);
+    if (signature == null) {
+      l.e('Signature is not valid');
+      return;
+    }
+
     final uid = addressToUuid(publicAddress);
 // aptos account
     final aptosAccount = AptosAccount.fromPrivateKey(privateKey);
@@ -280,6 +293,19 @@ class LoginController extends GetxController {
 // end aptos account
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
     internalWalletAddress.value = publicAddress;
+
+    // final loginRes = await HttpApis.podium.login(
+    //   request: LoginRequest(signature: signature, username: publicAddress),
+    //   aptosAddress: aptosAddress,
+    //   email: userInfo.email,
+    //   name: userInfo.name,
+    //   image: userInfo.profileImage,
+    // );
+    // if (loginRes == null) {
+    //   Toast.error(
+    //     message: 'Login failed',
+    //   );
+    // }
 
     await _socialLogin(
       id: uid,

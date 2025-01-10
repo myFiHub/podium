@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:podium/providers/api/models/arena/user.dart';
+import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/utils/logger.dart';
 
 class ArenaApi {

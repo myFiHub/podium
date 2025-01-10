@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/models/luma/addGuest.dart';
-import 'package:podium/providers/api/models/luma/addHost.dart';
-import 'package:podium/providers/api/models/luma/createEvent.dart';
-import 'package:podium/providers/api/models/luma/eventModel.dart';
-import 'package:podium/providers/api/models/luma/guest.dart';
+import 'package:podium/providers/api/luma/models/addGuest.dart';
+import 'package:podium/providers/api/luma/models/addHost.dart';
+import 'package:podium/providers/api/luma/models/createEvent.dart';
+import 'package:podium/providers/api/luma/models/eventModel.dart';
+import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 

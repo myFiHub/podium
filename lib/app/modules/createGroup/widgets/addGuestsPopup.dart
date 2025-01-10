@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/providers/api/models/luma/addGuest.dart';
+import 'package:podium/providers/api/luma/models/addGuest.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';

@@ -207,6 +207,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
+  buffer:
+    dependency: transitive
+    description:
+      name: buffer
+      sha256: "389da2ec2c16283c8787e0adaede82b1842102f8c8aae2f49003a766c5c6b3d1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.3"
   build:
     dependency: transitive
     description:
@@ -519,14 +527,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.9"
-  dropdown_search:
-    dependency: transitive
-    description:
-      name: dropdown_search
-      sha256: "55106e8290acaa97ed15bea1fdad82c3cf0c248dd410e651f5a8ac6870f783ab"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.6"
   ed25519_edwards:
     dependency: "direct main"
     description:
@@ -559,6 +559,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.7"
+  eth_sig_util:
+    dependency: "direct main"
+    description:
+      name: eth_sig_util
+      sha256: "20fdc5ce3864e70e5ade1c1cd03cce4ef01018db00adab107303f9055d26b01a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.9"
   event:
     dependency: transitive
     description:
@@ -865,14 +873,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.3"
-  flutter_native_timezone_updated_gradle:
-    dependency: transitive
-    description:
-      name: flutter_native_timezone_updated_gradle
-      sha256: ed5f04e348b86be0564db848ad29cd7ad0d53c7949ce1ff56b3dd35fd09df0e5
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.3"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -1967,22 +1967,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.4"
-  timezone:
-    dependency: transitive
-    description:
-      name: timezone
-      sha256: "2236ec079a174ce07434e89fcd3fcda430025eb7692244139a9cf54fdcf1fc7d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.9.4"
-  timezone_dropdown_plus:
-    dependency: "direct main"
-    description:
-      name: timezone_dropdown_plus
-      sha256: f0727b8d25ff219e4c2ba5e9d5df49db915db53462e24bddb9a761db7e3f5c31
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.2"
   timing:
     dependency: transitive
     description:

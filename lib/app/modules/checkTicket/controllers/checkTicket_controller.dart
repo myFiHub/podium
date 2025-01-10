@@ -12,7 +12,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/models/arena/user.dart';
+import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';

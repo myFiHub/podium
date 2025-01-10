@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:podium/providers/api/arena/arena.dart';
 import 'package:podium/providers/api/luma/luma.dart';
+import 'package:podium/providers/api/podium/podium.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 const defaultHeaders = {
@@ -14,13 +15,11 @@ final Dio dio = Dio();
 class HttpApis {
   static final HttpApis _instance = HttpApis._internal();
   factory HttpApis() => _instance;
-  HttpApis._internal() {
-    lumaApi = LumaApi(dio);
-    arenaApi = ArenaApi(dio);
-  }
+  HttpApis._internal() {}
 
   static LumaApi lumaApi = LumaApi(dio);
   static ArenaApi arenaApi = ArenaApi(dio);
+  static PodiumApi podium = PodiumApi(dio);
 
   static configure() {
     dio.interceptors.add(

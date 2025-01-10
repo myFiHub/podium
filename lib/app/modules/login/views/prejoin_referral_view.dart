@@ -6,7 +6,7 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';

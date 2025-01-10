@@ -13,16 +13,21 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
+import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/providers/api/arena/models/user.dart';
+import 'package:podium/providers/api/luma/models/addGuest.dart';
+import 'package:podium/providers/api/luma/models/addHost.dart';
+import 'package:podium/providers/api/luma/models/createEvent.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
@@ -60,6 +65,12 @@ class CreateGroupController extends GetxController {
   final storage = GetStorage();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
+  // luma related
+  final addToLuma = false.obs;
+  final lumaGuests = RxList<AddGuestModel>([]);
+  final lumaHosts = RxList<AddHostModel>([]);
+
+  // luma related end
   final newGroupIsRecorable = false.obs;
   final groupAccessType = FreeGroupAccessTypes.public.obs;
   final groupSpeakerType = FreeGroupSpeakerTypes.everyone.obs;
@@ -151,6 +162,44 @@ class CreateGroupController extends GetxController {
       } catch (e) {
         l.e(e);
       }
+    }
+  }
+
+  addHost(String email, String name) {
+    // add if not already in the list
+    if (!lumaHosts.any((e) => e.email == email)) {
+      lumaHosts.add(AddHostModel(
+        email: email,
+        name: name,
+      ));
+    }
+    // update if it exists
+    else {
+      lumaHosts.firstWhere((e) => e.email == email).name = name;
+    }
+  }
+
+  addGuest(String email, String name) {
+    // add if not already in the list
+    if (!lumaGuests.any((e) => e.email == email)) {
+      lumaGuests.add(AddGuestModel(
+        email: email,
+        name: name,
+      ));
+    }
+  }
+
+  removeGuest(String email) {
+    // remove the guest from the list if it exists
+    if (lumaGuests.any((e) => e.email == email)) {
+      lumaGuests.removeWhere((e) => e.email == email);
+    }
+  }
+
+  removeHost(String email) {
+    // remove the host from the list if it exists
+    if (lumaHosts.any((e) => e.email == email)) {
+      lumaHosts.removeWhere((e) => e.email == email);
     }
   }
 
@@ -600,7 +649,7 @@ class CreateGroupController extends GetxController {
         final (users, arenaUser) = await (
           searchForUserByName(value),
           ticketType == BuyableTicketTypes.onlyArenaTicketHolders
-              ? HttpApis.getUserFromStarsArenaByHandle(value)
+              ? HttpApis.arenaApi.getUserFromStarsArenaByHandle(value)
               : Future.value(null)
         ).wait;
         final podiumUsers = users.values
@@ -636,6 +685,12 @@ class CreateGroupController extends GetxController {
     return false;
   }
 
+  get _shouldCreateLumaEvent =>
+      addToLuma.value &&
+      isScheduled.value &&
+      scheduledFor != 0 &&
+      lumaHosts.value.isNotEmpty &&
+      lumaGuests.value.isNotEmpty;
   create() async {
     if (groupName.value.isEmpty) {
       Toast.error(message: 'room name cannot be empty');
@@ -683,12 +738,19 @@ class CreateGroupController extends GetxController {
       }
       imageUrl = res;
     }
+    final lumaEventId = await _createLumaEvent(groupId: id);
+    if (_shouldCreateLumaEvent && lumaEventId == null) {
+      Toast.error(message: 'Failed to create Luma Event');
+      return;
+    }
 
     try {
+      l.d(lumaEventId);
       await groupsController.createGroup(
         id: id,
         imageUrl: imageUrl,
         name: groupName.value,
+        lumaEventId: lumaEventId,
         accessType: accessType,
         speakerType: speakerType,
         subject: subject,
@@ -718,6 +780,55 @@ class CreateGroupController extends GetxController {
         buyTicketToGetPermisionFor: buyTicketToGetPermisionFor,
       ),
     );
+  }
+
+  Future<String?> _createLumaEvent({
+    required String groupId,
+  }) async {
+    try {
+      if (_shouldCreateLumaEvent) {
+        final isoDate = DateTime.fromMillisecondsSinceEpoch(scheduledFor.value)
+            .toIso8601String();
+        final oneHourAfter = DateTime.fromMillisecondsSinceEpoch(
+                scheduledFor.value + 60 * 60 * 1000)
+            .toIso8601String();
+        final lumaEvent = Luma_CreateEvent(
+          name: groupName.value,
+          start_at: isoDate,
+          end_at: oneHourAfter,
+          meeting_url: generateGroupShareUrl(groupId: groupId),
+        );
+        final createdEvent =
+            await HttpApis.lumaApi.createEvent(event: lumaEvent);
+        if (createdEvent != null) {
+          final eventId = createdEvent.event.api_id;
+          final Map<String, Future<bool?>> addHostsCallMap = {};
+          for (var host in lumaHosts.value) {
+            addHostsCallMap[host.email] = HttpApis.lumaApi.addHost(
+              host: AddHostModel(
+                event_api_id: eventId,
+                email: host.email,
+                name: host.name,
+              ),
+            );
+          }
+          // since we are adding hosts and guests in parallel, we need to wait for all of them to finish,
+          // ignoring the failed ones, since we always can add them later
+          await allSettled(addHostsCallMap);
+          final GuestsAdded = await HttpApis.lumaApi.addGuests(
+            eventId: eventId,
+            guests: lumaGuests.value,
+          );
+          if (GuestsAdded == true) {
+            Toast.success(message: 'Luma Event Created');
+            return eventId;
+          }
+        }
+      }
+    } catch (e) {
+      l.e(e);
+    }
+    return null;
   }
 }
 

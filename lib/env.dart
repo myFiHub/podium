@@ -28,6 +28,8 @@ class Env {
   static final chainNamespace = dotenv.env['CHAIN_NAMESPACE']!;
   static final albyApiKey = dotenv.env['ALBY_API_KEY']!;
 
+  static final lumaApiKey = dotenv.env['LUMA_API_KEY']!;
+
   static final fihubAddress_Avalanche_MainNet =
       dotenv.env['FIHUB_ADDRESS_AVALANCHE_MAINNET']!;
 
@@ -38,7 +40,9 @@ class Env {
 
   static final cheerBooAptosAddress = dotenv.env['CHEERBOO_APTOS_ADDRESS']!;
 
-  static final VERSION = dotenv.env['VERSION'] ?? '1.1.3';
+  static final VERSION = dotenv.env['VERSION'] ?? '1.1.4';
+
+  static final podimBackendBaseUrl = dotenv.env['PODIM_BACKEND_BASE_URL']!;
 
   static String? starsArenaAddress(String chainId) {
     if (chainId == avalancheChainId) {

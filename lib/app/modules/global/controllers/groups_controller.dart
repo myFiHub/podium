@@ -7,8 +7,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/allGroups/controllers/all_groups_controller.dart';
-import 'package:podium/app/modules/chechTicket/controllers/checkTicket_controller.dart';
-import 'package:podium/app/modules/chechTicket/views/checkTicket_view.dart';
+import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
+import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
@@ -26,6 +26,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -448,6 +449,7 @@ class GroupsController extends GetxController with FirebaseTags {
     required List<String> tags,
     required int scheduledFor,
     required int alarmId,
+    String? lumaEventId,
     String? imageUrl,
   }) async {
     final firebaseGroupsReference =
@@ -463,6 +465,7 @@ class GroupsController extends GetxController with FirebaseTags {
     );
     final group = FirebaseGroup(
       id: id,
+      lumaEventId: lumaEventId,
       imageUrl: imageUrl,
       name: name,
       creator: creator,
@@ -719,23 +722,57 @@ class GroupsController extends GetxController with FirebaseTags {
     );
   }
 
+  Future<GroupAccesses?> _checkLumaAccess(
+      {required FirebaseGroup group}) async {
+    try {
+      if (group.lumaEventId != null && group.lumaEventId!.isNotEmpty) {
+        final myLoginType = myUser.loginType;
+        if (myLoginType != null) {
+          if (myLoginType.contains('google') || myLoginType.contains('email')) {
+            final myEmail = myUser.email;
+            final (guests, event) = await (
+              HttpApis.lumaApi.getGuests(eventId: group.lumaEventId!),
+              HttpApis.lumaApi.getEvent(eventId: group.lumaEventId!)
+            ).wait;
+            final guestsList = guests.map((e) => e.guest).toList();
+            final hostsList = event?.hosts ?? [];
+            final guestEmails = guestsList.map((e) => e.user_email).toList();
+            final hostsEmails = hostsList.map((e) => e.email).toList();
+            final isGuest = guestEmails.contains(myEmail);
+            final isHost = hostsEmails.contains(myEmail);
+            if (isGuest || isHost) {
+              return GroupAccesses(canEnter: true, canSpeak: true);
+            }
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      l.e(e);
+      return null;
+    }
+  }
+
   Future<GroupAccesses> getGroupAccesses(
       {required FirebaseGroup group, bool? joiningByLink}) async {
     final myUser = globalController.currentUserInfo.value!;
     final iAmGroupCreator = group.creator.id == myUser.id;
     if (iAmGroupCreator) return GroupAccesses(canEnter: true, canSpeak: true);
-
+    final lumaAccessResponse = await _checkLumaAccess(group: group);
+    if (lumaAccessResponse != null) {
+      return lumaAccessResponse;
+    }
     if (accessIsBuyableByTicket(group) || speakIsBuyableByTicket(group)) {
-      final GroupAccesses? results = await checkTicket(group: group);
-      if (results?.canEnter == false) {
+      final GroupAccesses? accesses = await checkTicket(group: group);
+      if (accesses?.canEnter == false) {
         Toast.error(
           title: "Error",
           message: "You need a ticket to join this Outpost",
         );
         return GroupAccesses(canEnter: false, canSpeak: false);
       } else {
-        return results != null
-            ? results
+        return accesses != null
+            ? accesses
             : GroupAccesses(canEnter: false, canSpeak: false);
       }
     }
@@ -788,7 +825,6 @@ class GroupsController extends GetxController with FirebaseTags {
   Future<GroupAccesses?> checkTicket({required FirebaseGroup group}) async {
     joiningGroupId.value = group.id;
     final checkTicketController = Get.put(CheckticketController());
-    checkTicketController.allUsersToBuyTicketFrom.value = {};
     checkTicketController.group.value = group;
     final accesses = await checkTicketController.checkTickets();
     if (accesses.canEnter == true && accesses.canSpeak == true) {

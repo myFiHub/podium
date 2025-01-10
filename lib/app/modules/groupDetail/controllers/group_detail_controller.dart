@@ -18,6 +18,9 @@ import 'package:podium/customLibs/omniDatePicker/src/omni_datetime_picker_dialog
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/luma/models/eventModel.dart';
+import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -62,6 +65,15 @@ class GroupDetailController extends GetxController {
   late String speakAccess;
   late bool shouldOpenJitsiAfterJoining;
 
+  //luma event
+  final lumaEventDetails = Rxn<Luma_EventModel?>(null);
+  final isGettingLumaEventDetails = false.obs;
+  final isGettingLumaEventGuests = false.obs;
+  final lumaEventGuests = Rx<List<GuestDataModel>>([]);
+  final lumaHosts = Rx<List<Luma_HostModel>>([]);
+
+  // end of luma event
+
   @override
   void onInit() async {
     super.onInit();
@@ -83,6 +95,7 @@ class GroupDetailController extends GetxController {
         'true';
 
     final groupInfo = singleGroupParser(jsonDecode(stringedGroupInfo));
+
     groupAccesses.value = GroupAccesses(
       canEnter: enterAccess == 'true',
       canSpeak: speakAccess == 'true',
@@ -94,6 +107,7 @@ class GroupDetailController extends GetxController {
       getMembers(groupInfo);
       fetchInvitedMembers();
       scheduleChecks();
+      _getLumaData();
       startListeningToGroup(groupInfo.id, onGroupUpdate);
     }
 
@@ -117,6 +131,35 @@ class GroupDetailController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _getLumaData() async {
+    if (group.value == null) return;
+    if (group.value!.lumaEventId == null) return;
+    try {
+      isGettingLumaEventDetails.value = true;
+      isGettingLumaEventGuests.value = true;
+      final (event, guestsResponse) = await (
+        HttpApis.lumaApi.getEvent(eventId: group.value!.lumaEventId!),
+        HttpApis.lumaApi.getGuests(eventId: group.value!.lumaEventId!),
+      ).wait;
+      final guests = guestsResponse.map((e) => e.guest).toList();
+      final hosts = event?.hosts ?? [];
+      // filter the guests that exist in host list
+      final filteredGuests = guests
+          .where(
+              (guest) => hosts.any((host) => host.api_id != guest.user_api_id))
+          .toList();
+      lumaEventDetails.value = event;
+      lumaEventGuests.value = filteredGuests;
+      lumaHosts.value = hosts;
+    } catch (e) {
+      Toast.error(message: 'Failed to get Luma event details');
+      l.e(e);
+    } finally {
+      isGettingLumaEventDetails.value = false;
+      isGettingLumaEventGuests.value = false;
+    }
   }
 
   void forceUpdate() {

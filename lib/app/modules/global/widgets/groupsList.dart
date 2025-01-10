@@ -245,6 +245,27 @@ class _SingleGroup extends StatelessWidget {
                                     ),
                                   ],
                                 ),
+                                if (group.lumaEventId != null) ...[
+                                  space5,
+                                  Row(
+                                    children: [
+                                      //  local image
+                                      Assets.images.lumaPng.image(
+                                        width: 14,
+                                        height: 14,
+                                      ),
+                                      space5,
+                                      const Text(
+                                        "Available on Luma",
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w400,
+                                          color: ColorName.greyText,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ]
                               ],
                             )
                           ],

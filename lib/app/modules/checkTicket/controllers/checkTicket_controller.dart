@@ -12,7 +12,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/models/starsArenaUser.dart';
+import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
@@ -168,6 +168,7 @@ class CheckticketController extends GetxController {
   }
 
   Future<GroupAccesses> checkTickets() async {
+    allUsersToBuyTicketFrom.value = {};
     loadingUsers.value = true;
     final requiredTicketsToAccess = group.value!.ticketsRequiredToAccess;
     final requiredTicketsToSpeak = group.value!.ticketsRequiredToSpeak;
@@ -198,10 +199,10 @@ class CheckticketController extends GetxController {
         .map((e) => e.replaceAll(arenaUserIdPrefix, ''))
         .toList();
 
-    final directArenaUsersForAccess = await Future.wait(
-        directArenaAccessIds.map((e) => HttpApis.getUserFromStarsArenaById(e)));
-    final directArenaUsersForSpeak = await Future.wait(
-        directArenaSpeakIds.map((e) => HttpApis.getUserFromStarsArenaById(e)));
+    final directArenaUsersForAccess = await Future.wait(directArenaAccessIds
+        .map((e) => HttpApis.arenaApi.getUserFromStarsArenaById(e)));
+    final directArenaUsersForSpeak = await Future.wait(directArenaSpeakIds
+        .map((e) => HttpApis.arenaApi.getUserFromStarsArenaById(e)));
     directArenaUsersForAccess.forEach((res) {
       if (res != null) {
         usersForAccess.add(userModelFromStarsArenaUserInfo(user: res));

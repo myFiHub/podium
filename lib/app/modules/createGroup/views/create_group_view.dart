@@ -3,12 +3,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:podium/app/modules/createGroup/widgets/addGuestsPopup.dart';
+import 'package:podium/app/modules/createGroup/widgets/addHostsPopup.dart';
 import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/luma/models/addGuest.dart';
+import 'package:podium/providers/api/luma/models/addHost.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../controllers/create_group_controller.dart';
 
@@ -58,6 +64,8 @@ class CreateGroupView extends GetView<CreateGroupController> {
                   ),
                   space5,
                   const _ScheduleToggle(),
+                  space5,
+                  const _AddLumaEventCheckboxAndButtons(),
                   space5,
                   const _AdultsCheckbox(),
                   space5,
@@ -141,67 +149,76 @@ class _ScheduleToggle extends GetView<CreateGroupController> {
     return Obx(() {
       final isScheduled = controller.isScheduled.value;
       final scheduledFor = controller.scheduledFor.value;
-      return Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Scheduled Outpost',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      'Organize and notify in advance.',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-                Switch(
-                  value: isScheduled,
-                  onChanged: (value) {
-                    controller.toggleScheduled();
-                  },
-                  activeColor: Colors.lightGreen,
-                  activeTrackColor: Colors.grey[200],
-                ),
-              ],
-            ),
+      return Container(
+        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isScheduled ? Colors.grey[700]! : Colors.transparent,
           ),
-          space10,
-          if (isScheduled)
-            Builder(builder: (context) {
-              final selected = scheduledFor != 0;
-              return Button(
-                  text: !selected
-                      ? 'Select Date and Time'
-                      : millisecondsToFormattedDateWithTime(scheduledFor),
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Scheduled Outpost',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Organize and notify in advance.',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
                   ),
-                  blockButton: true,
-                  type: ButtonType.outline,
-                  icon: const Icon(
-                    Icons.calendar_month_outlined,
-                    color: Colors.white,
-                    size: 18,
+                  Switch(
+                    value: isScheduled,
+                    onChanged: (value) {
+                      controller.toggleScheduled();
+                    },
+                    activeColor: Colors.lightGreen,
+                    activeTrackColor: Colors.grey[200],
                   ),
-                  onPressed: () {
-                    controller.openCalendarBottomSheet();
-                  });
-            }),
-        ],
+                ],
+              ),
+            ),
+            space10,
+            if (isScheduled)
+              Builder(builder: (context) {
+                final selected = scheduledFor != 0;
+                return Button(
+                    text: !selected
+                        ? 'Select Date and Time'
+                        : millisecondsToFormattedDateWithTime(scheduledFor),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    blockButton: true,
+                    type: ButtonType.outline,
+                    icon: const Icon(
+                      Icons.calendar_month_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    onPressed: () {
+                      controller.openCalendarBottomSheet();
+                    });
+              }),
+          ],
+        ),
       );
     });
   }
@@ -321,7 +338,9 @@ class _CreateButton extends GetWidget<CreateGroupController> {
       final scheduledFor = controller.scheduledFor.value;
       final hasThingsToDo = shouldSelectTicketHolersForAccess ||
           shouldSelectTicketHolersForSpeaking ||
-          (isScheduled && scheduledFor == 0);
+          (isScheduled && scheduledFor == 0) ||
+          (controller.addToLuma.value &&
+              (controller.lumaGuests.isEmpty || controller.lumaHosts.isEmpty));
 
       return Button(
         loading: loading,
@@ -335,6 +354,127 @@ class _CreateButton extends GetWidget<CreateGroupController> {
         text: 'Create New Outpost',
       );
     });
+  }
+}
+
+class _AddLumaEventCheckboxAndButtons extends GetView<CreateGroupController> {
+  const _AddLumaEventCheckboxAndButtons({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        final addToLumaEnabled = controller.addToLuma.value;
+        final isScheduled = controller.isScheduled.value;
+        final scheduledFor = controller.scheduledFor.value;
+        final hosts = controller.lumaHosts.value;
+        final guests = controller.lumaGuests.value;
+        if (!isScheduled || scheduledFor == 0) {
+          return const SizedBox.shrink();
+        }
+        return Container(
+          padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: addToLumaEnabled ? Colors.grey[700]! : Colors.transparent,
+            ),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Shimmer.fromColors(
+                        baseColor: Colors.white,
+                        highlightColor: ColorName.primaryBlue,
+                        child: const Text(
+                          "Add Outpost event to Luma",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  GFCheckbox(
+                    value: addToLumaEnabled,
+                    activeBgColor: ColorName.primaryBlue,
+                    size: 24,
+                    onChanged: (value) {
+                      controller.addToLuma.value = value;
+                    },
+                  )
+                ],
+              ),
+              if (addToLumaEnabled)
+                Row(
+                  children: [
+                    SizedBox(
+                      width: (Get.width / 2) - 26,
+                      child: _AddLumaEventHostsButton(
+                        hosts: hosts,
+                      ),
+                    ),
+                    space10,
+                    SizedBox(
+                      width: (Get.width / 2) - 26,
+                      child: _AddLumaEventGuestsButton(
+                        guests: guests,
+                      ),
+                    ),
+                  ],
+                )
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AddLumaEventHostsButton extends GetView<CreateGroupController> {
+  final List<AddHostModel> hosts;
+  const _AddLumaEventHostsButton({
+    super.key,
+    required this.hosts,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      type: hosts.length == 0 ? ButtonType.gradient : ButtonType.outline,
+      onPressed: () {
+        openAddHostsDialog();
+      },
+      text: hosts.length == 0 ? 'Add Hosts' : '${hosts.length} hosts',
+    );
+  }
+}
+
+class _AddLumaEventGuestsButton extends GetView<CreateGroupController> {
+  final List<AddGuestModel> guests;
+  const _AddLumaEventGuestsButton({
+    super.key,
+    required this.guests,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      type: guests.length == 0 ? ButtonType.gradient : ButtonType.outline,
+      onPressed: () {
+        openAddGuestsDialog();
+      },
+      text: guests.length == 0 ? 'Add Guests' : '${guests.length} guests',
+    );
   }
 }
 

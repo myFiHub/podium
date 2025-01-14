@@ -7,11 +7,11 @@ import 'package:aptos/models/entry_function_payload.dart';
 // import 'package:built_value/json_object.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -23,6 +23,9 @@ class AptosMovement {
   factory AptosMovement() => _instance;
 
   static AptosClient get client {
+    final globalController = Get.find<GlobalController>();
+    final movementAptosProtoTestNetChain =
+        globalController.movementAptosNetwork;
     return AptosClient(
       // movementAptosBardokChain.rpcUrl,
       movementAptosProtoTestNetChain.rpcUrl,
@@ -34,11 +37,11 @@ class AptosMovement {
   static const _cheerBooName = 'CheerOrBoo';
 
   static get podiumProtocolAddress {
-    return Env.podiumProtocolAddress(movementAptosChainId);
+    return movementAptosPodiumProtocolAddress;
   }
 
   static get cheerBooAddress {
-    return Env.cheerBooAddress(movementAptosChainId);
+    return movementAptosCheerBooAddress;
   }
 
   static AptosAccount get account {
@@ -133,18 +136,13 @@ class AptosMovement {
       );
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
-      await client.submitSignedBCSTransaction(signedTransaction);
-      // if (result['hash'] != null) {
-      //   final transactionStatus =
-      //       await client.getTransactionByHash(result['hash']);
-      //   log.d(transactionStatus);
-      //   if (transactionStatus['success']) {
-      //     return true;
-      //   }
-      // }
+      final res = await client.submitSignedBCSTransaction(signedTransaction);
+      final hash = res['hash'];
+      await client.waitForTransaction(hash, checkSuccess: true);
       return true;
     } catch (e) {
       l.e(e);
+      Toast.error(message: 'Error submitting transaction');
       return false;
     }
   }
@@ -368,10 +366,13 @@ class AptosMovement {
       );
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
-      await client.submitSignedBCSTransaction(signedTransaction);
+      final res = await client.submitSignedBCSTransaction(signedTransaction);
+      final hash = res['hash'];
+      await client.waitForTransaction(hash, checkSuccess: true);
       return true;
     } catch (e) {
       l.e(e);
+      Toast.error(message: 'Error submitting transaction');
       return false;
     }
   }

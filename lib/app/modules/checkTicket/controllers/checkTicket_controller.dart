@@ -763,7 +763,7 @@ class CheckticketController extends GetxController {
         } else {
           final p = price ?? BigInt.zero;
           final priceStringFull = p.toString() +
-              ' ${chainInfoByChainId(movementAptosChainId).currency}';
+              ' ${chainInfoByChainId(movementAptosNetwork.chainId).currency}';
           access.accessPriceFullString = priceStringFull;
         }
       } else {
@@ -826,7 +826,7 @@ class CheckticketController extends GetxController {
         } else {
           final p = price ?? BigInt.zero;
           final priceStringFull = p.toString() +
-              ' ${chainInfoByChainId(movementAptosChainId).currency}';
+              ' ${chainInfoByChainId(movementAptosNetwork.chainId).currency}';
           access.speakPriceFullString = priceStringFull;
         }
       } else {

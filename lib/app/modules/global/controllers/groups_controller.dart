@@ -263,7 +263,6 @@ class GroupsController extends GetxController with FirebaseTags {
         });
       final sortedMap = Map<String, FirebaseGroup>.fromEntries(sorted);
       groups.value = sortedMap;
-
       initializeChannels();
     }
   }

@@ -147,10 +147,8 @@ DeployedContract _getContract(
 }
 
 String _cheerBooAddress(String chainId) {
-  final address = Environment.Env.cheerBooAddress(externalWalletChianId);
-  if (address == null || address.isEmpty) {
-    return ZERO_ADDRESS;
-  }
+  final address = movementAptosCheerBooAddress;
+
   return address;
 }
 

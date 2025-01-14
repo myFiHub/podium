@@ -404,8 +404,7 @@ class LoginController extends GetxController {
       removeLogingInState();
     }
     if (!canContinueAuthentication) {
-      final hasTicket =
-          true; // await _checkIfUserHasPodiumDefinedEntryTicket();
+      final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
       if (!hasTicket) {
         try {
           final avalancheClient = evmClientByChainId(avalancheChainId);

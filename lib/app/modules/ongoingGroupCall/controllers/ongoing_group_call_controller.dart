@@ -866,11 +866,12 @@ class OngoingGroupCallController extends GetxController {
           l.e("podium address is null");
           return;
         }
+        final movemntAptosNetwork = globalController.movementAptosNetwork;
         saveNewPayment(
             event: PaymentEvent(
           amount: amount,
           chainId: selectedWallet == WalletNames.internal_Aptos
-              ? movementAptosChainId
+              ? movemntAptosNetwork.chainId
               : movementEVMChain.chainId,
           type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
           initiatorAddress: selectedWallet == WalletNames.external

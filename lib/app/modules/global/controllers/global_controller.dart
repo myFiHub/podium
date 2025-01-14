@@ -24,6 +24,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/metadata/movementAptos.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
@@ -82,6 +83,10 @@ class GlobalController extends GetxController {
   final ticker = 0.obs;
   final showArchivedGroups =
       RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
+  late ReownAppKitModalNetworkInfo movementAptosNetwork;
+  late String movementAptosPodiumProtocolAddress;
+  late String movementAptosCheerBooAddress;
+
   final deepLinkRoute = ''.obs;
 
   final externalWalletChainId = RxString(
@@ -106,19 +111,7 @@ class GlobalController extends GetxController {
   void onInit() async {
     super.onInit();
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
-    try {
-      ReownAppKitModalNetworks.addSupportedNetworks(
-        Env.chainNamespace,
-        [
-          movementEVMMainNetChain,
-          movementEVMDevnetChain,
-          movementAptosProtoTestNetChain,
-          movementAptosBardokChain
-        ],
-      );
-    } catch (e) {
-      l.e("error ReownAppKitModalNetworks app $e");
-    }
+
     try {
       await Future.wait([
         initializeWeb3Auth(),
@@ -128,6 +121,7 @@ class GlobalController extends GetxController {
       l.e("error initializing app $e");
     }
     FirebaseDatabase.instance.setPersistenceEnabled(false);
+    await _addCustomNetworks();
 
     // final firebaseUserDbReference =
     //     FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
@@ -162,6 +156,53 @@ class GlobalController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  _addCustomNetworks() async {
+    final movementAptosMetadataRef =
+        FirebaseDatabase.instance.ref(FireBaseConstants.movementAptosMetadata);
+    final movementAptosMetadata = await movementAptosMetadataRef.get();
+    if (movementAptosMetadata.value != null) {
+      final response = MovementAptosMetadata.fromJson(
+        Map<String, dynamic>.from(movementAptosMetadata.value as Map),
+      );
+      movementAptosNetwork = ReownAppKitModalNetworkInfo(
+        name: response.name,
+        chainId: response.chainId,
+        chainIcon: movementIcon,
+        currency: 'MOVE',
+        rpcUrl: response.rpcUrl,
+        explorerUrl: 'https://explorer.movementlabs.xyz',
+      );
+      movementAptosPodiumProtocolAddress = response.podiumProtocolAddress;
+      movementAptosCheerBooAddress = response.cheerBooAddress;
+      l.d("movement aptos metadata: ${response.toJson()}");
+    } else {
+      l.e("movement aptos metadata not found");
+      Toast.error(message: "Movement Aptos metadata not found");
+      movementAptosNetwork = ReownAppKitModalNetworkInfo(
+        name: 'Movement Aptos Testnet',
+        chainId: '177',
+        chainIcon: movementIcon,
+        currency: 'MOVE',
+        rpcUrl: 'https://aptos.testnet.porto.movementlabs.xyz/v1',
+        explorerUrl: 'https://explorer.movementlabs.xyz',
+      );
+    }
+
+    try {
+      ReownAppKitModalNetworks.addSupportedNetworks(
+        Env.chainNamespace,
+        [
+          movementEVMMainNetChain,
+          movementEVMDevnetChain,
+          movementAptosNetwork,
+          movementAptosBardokChain
+        ],
+      );
+    } catch (e) {
+      l.e("error ReownAppKitModalNetworks app $e");
+    }
   }
 
   Future<void> initializeApp() async {

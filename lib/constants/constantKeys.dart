@@ -10,6 +10,7 @@ class FireBaseConstants {
   static final podiumDefinedEntryAddresses = 'podiumDefinedEntryAddresses_v3/';
   static final paymentEvents = "paymentEvents_v3/";
   // end
+  static final movementAptosMetadata = "movementAptosMetadata/";
   static final versionRef = 'version/';
   static final forceUpdate = 'forceUpdate/';
   static final versionCheckRef = 'versionCheck/';

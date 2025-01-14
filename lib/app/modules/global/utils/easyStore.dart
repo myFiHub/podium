@@ -40,3 +40,18 @@ String get externalWalletChianId {
   final GlobalController globalController = Get.find();
   return globalController.externalWalletChainId.value;
 }
+
+ReownAppKitModalNetworkInfo get movementAptosNetwork {
+  final GlobalController globalController = Get.find();
+  return globalController.movementAptosNetwork;
+}
+
+String get movementAptosPodiumProtocolAddress {
+  final GlobalController globalController = Get.find();
+  return globalController.movementAptosPodiumProtocolAddress;
+}
+
+String get movementAptosCheerBooAddress {
+  final GlobalController globalController = Get.find();
+  return globalController.movementAptosCheerBooAddress;
+}

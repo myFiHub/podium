@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
@@ -77,7 +78,7 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
               Row(
                 children: [
                   Text(
-                    'Buy Podium Pass ${podiumPassPrice.toString()} ${chainInfoByChainId(movementAptosChainId).currency}',
+                    'Buy Podium Pass ${podiumPassPrice.toString()} ${chainInfoByChainId(movementAptosNetwork.chainId).currency}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -123,7 +124,7 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
           ),
           blockButton: true,
           icon: Img(
-              src: chainInfoByChainId(movementAptosChainId).chainIcon ??
+              src: chainInfoByChainId(movementAptosNetwork.chainId).chainIcon ??
                   Assets.images.movementLogo.path,
               size: 20),
         );

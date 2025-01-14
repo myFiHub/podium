@@ -25,8 +25,8 @@ import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -252,7 +252,7 @@ class GroupsController extends GetxController with FirebaseTags {
     final Map<String, FirebaseGroup> groupsMap = await groupsParser(data);
     if (globalController.currentUserInfo.value != null) {
       final myUser = globalController.currentUserInfo.value!;
-      final myId = myUser.id;
+      final myId = myUser.uuid;
       final unsorted = getGroupsVisibleToMe(groupsMap, myId);
       // sort groups by last active time
       final sorted = unsorted.entries.toList()
@@ -458,10 +458,10 @@ class GroupsController extends GetxController with FirebaseTags {
         FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + id);
     final myUser = globalController.currentUserInfo.value!;
     final creator = FirebaseGroupCreator(
-      id: myUser.id,
-      fullName: myUser.fullName,
-      email: myUser.email,
-      avatar: myUser.avatar,
+      id: myUser.uuid,
+      fullName: myUser.name ?? '',
+      email: myUser.email ?? '',
+      avatar: myUser.image ?? '',
     );
     final group = FirebaseGroup(
       id: id,
@@ -471,7 +471,7 @@ class GroupsController extends GetxController with FirebaseTags {
       creator: creator,
       accessType: accessType,
       speakerType: speakerType,
-      members: {myUser.id: myUser.id},
+      members: {myUser.uuid: myUser.uuid},
       subject: subject,
       hasAdultContent: adultContent,
       isRecordable: recordable,
@@ -510,13 +510,13 @@ class GroupsController extends GetxController with FirebaseTags {
       groups.value[id] = group;
       final newFirebaseSession = FirebaseSession(
         name: name,
-        createdBy: myUser.id,
+        createdBy: myUser.uuid,
         id: id,
         accessType: group.accessType,
         speakerType: group.speakerType,
         subject: group.subject,
         members: {
-          myUser.id: createInitialSessionMember(user: myUser, group: group)!
+          myUser.uuid: createInitialSessionMember(user: myUser, group: group)!
         },
       );
       final jsoned = newFirebaseSession.toJson();
@@ -609,16 +609,16 @@ class GroupsController extends GetxController with FirebaseTags {
     }
 
     final members = group.members;
-    if (!members.keys.contains(myUser.id)) {
+    if (!members.keys.contains(myUser.uuid)) {
       try {
         joiningGroupId.value = groupId;
         await firebaseGroupsReference
             .child(FirebaseGroup.membersKey)
-            .child(myUser.id)
-            .set(myUser.id);
+            .child(myUser.uuid)
+            .set(myUser.uuid);
         final mySession = await getUserSessionData(
           groupId: groupId,
-          userId: myUser.id,
+          userId: myUser.uuid,
         );
         if (mySession == null) {
           final newFirebaseSessionMember =
@@ -627,13 +627,13 @@ class GroupsController extends GetxController with FirebaseTags {
             final jsoned = newFirebaseSessionMember.toJson();
             await firebaseSessionsReference
                 .child(FirebaseSession.membersKey)
-                .child(myUser.id)
+                .child(myUser.uuid)
                 .set(jsoned);
           } catch (e) {
             // remove user from db
             await firebaseSessionsReference
                 .child(FirebaseSession.membersKey)
-                .child(myUser.id)
+                .child(myUser.uuid)
                 .remove();
             Toast.error(
               title: "Error",
@@ -668,13 +668,13 @@ class GroupsController extends GetxController with FirebaseTags {
   }
 
   FirebaseSessionMember? createInitialSessionMember(
-      {required UserInfoModel user, required FirebaseGroup group}) {
+      {required UserModel user, required FirebaseGroup group}) {
     try {
-      final iAmGroupCreator = group.creator.id == user.id;
+      final iAmGroupCreator = group.creator.id == user.uuid;
       final member = FirebaseSessionMember(
-        avatar: user.avatar,
-        id: user.id,
-        name: user.fullName,
+        avatar: user.image ?? '',
+        id: user.uuid,
+        name: user.name ?? '',
         isTalking: false,
         startedToTalkAt: 0,
         timeJoined: DateTime.now().millisecondsSinceEpoch,
@@ -756,7 +756,7 @@ class GroupsController extends GetxController with FirebaseTags {
   Future<GroupAccesses> getGroupAccesses(
       {required FirebaseGroup group, bool? joiningByLink}) async {
     final myUser = globalController.currentUserInfo.value!;
-    final iAmGroupCreator = group.creator.id == myUser.id;
+    final iAmGroupCreator = group.creator.id == myUser.uuid;
     if (iAmGroupCreator) return GroupAccesses(canEnter: true, canSpeak: true);
     final lumaAccessResponse = await _checkLumaAccess(group: group);
     if (lumaAccessResponse != null) {
@@ -784,7 +784,7 @@ class GroupsController extends GetxController with FirebaseTags {
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
-    if (group.members.keys.contains(myUser.id))
+    if (group.members.keys.contains(myUser.uuid))
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
     if (group.accessType == FreeGroupAccessTypes.public)
@@ -805,7 +805,7 @@ class GroupsController extends GetxController with FirebaseTags {
 
     final invitedMembers = group.invitedMembers;
     if (group.accessType == FreeGroupAccessTypes.invitees) {
-      if (invitedMembers[myUser.id] != null) {
+      if (invitedMembers[myUser.uuid] != null) {
         return GroupAccesses(
           canEnter: true,
           canSpeak: canISpeakWithoutTicket(group: group),
@@ -844,12 +844,12 @@ class GroupsController extends GetxController with FirebaseTags {
 
   Future<bool> _showAreYouOver18Dialog({
     required FirebaseGroup group,
-    required UserInfoModel myUser,
+    required UserModel myUser,
   }) async {
     final isGroupAgeRestricted = group.hasAdultContent;
-    final iAmOwner = group.creator.id == myUser.id;
-    final iAmMember = group.members.keys.contains(myUser.id);
-    final amIOver18 = myUser.isOver18;
+    final iAmOwner = group.creator.id == myUser.uuid;
+    final iAmMember = group.members.keys.contains(myUser.uuid);
+    final amIOver18 = myUser.is_over_18 ?? false;
     if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18) {
       return true;
     }
@@ -871,8 +871,8 @@ class GroupsController extends GetxController with FirebaseTags {
           TextButton(
             onPressed: () {
               final over18Ref = FirebaseDatabase.instance
-                  .ref(FireBaseConstants.usersRef + myUser.id)
-                  .child(UserInfoModel.isOver18Key);
+                  .ref(FireBaseConstants.usersRef + myUser.uuid)
+                  .child('is_over_18');
               over18Ref.set(true);
               globalController.setIsMyUserOver18(true);
               Navigator.of(Get.overlayContext!).pop(true);

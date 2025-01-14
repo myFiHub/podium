@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:aptos/aptos_account.dart';
-import 'package:convert/convert.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -10,7 +8,6 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
@@ -22,6 +19,7 @@ import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
@@ -35,7 +33,6 @@ import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
-import 'package:web3dart/crypto.dart' show Sign;
 
 class LoginParametersKeys {
   static const referrerId = 'referrerId';
@@ -59,7 +56,7 @@ class LoginController extends GetxController {
   Function? afterLogin = null;
 
   String referrerId = '';
-  final referrer = Rxn<UserInfoModel>();
+  final referrer = Rxn<UserModel>();
   final referrerIsFul = false.obs;
   final boughtPodiumDefinedEntryTicket = false.obs;
   final referralError = Rxn<String>(null);
@@ -67,7 +64,7 @@ class LoginController extends GetxController {
   final loadingBuyTicketId = ''.obs;
   // used in referral prejoin page, to continue the process
   final temporaryLoginType = ''.obs;
-  final temporaryUserInfo = Rxn<UserInfoModel>();
+  final temporaryUserInfo = Rxn<UserModel>();
   bool isBeforeLaunchUser = false;
 
   @override
@@ -136,7 +133,9 @@ class LoginController extends GetxController {
           message: 'Ticket bought successfully',
         );
         boughtPodiumDefinedEntryTicket.value = true;
-        _continueWithUserToCreate();
+        _continueWithUserToCreate(
+          temporaryUserInfo.value!,
+        );
       }
     } catch (e) {
       l.e('Error buying ticket: $e');
@@ -154,20 +153,21 @@ class LoginController extends GetxController {
       final referrerId =
           id ?? _extractReferrerId(globalController.deepLinkRoute.value);
       if (referrerId.isNotEmpty) {
-        final (referrerUser, allTheReferrals) = await (
-          getUsersByIds([referrerId]),
-          getAllTheUserReferals(userId: referrerId)
-        ).wait;
-        if (referrerUser.isNotEmpty) {
-          referrer.value = referrerUser.first;
-          globalController.deepLinkRoute.value = '';
-          if (allTheReferrals.isNotEmpty) {
-            final remainingReferrals = allTheReferrals.values
-                .where((element) => element.usedBy == '')
-                .toList();
-            referrerIsFul.value = remainingReferrals.isEmpty;
-          }
-        }
+        l.f('!!!!!!!!!!!!!!!!!!!!!!!! referrerId: $referrerId');
+        // final (referrerUser, allTheReferrals) = await (
+        //   HttpApis.podium.getUserData(referrerId),
+        //   HttpApis.podium.getAllTheUserReferals(userId: referrerId)
+        // ).wait;
+        // if (referrerUser.isNotEmpty) {
+        //   referrer.value = referrerUser.first;
+        //   globalController.deepLinkRoute.value = '';
+        //   if (allTheReferrals.isNotEmpty) {
+        //     final remainingReferrals = allTheReferrals.values
+        //         .where((element) => element.usedBy == '')
+        //         .toList();
+        //     referrerIsFul.value = remainingReferrals.isEmpty;
+        //   }
+        // }
       }
     });
   }
@@ -279,127 +279,50 @@ class LoginController extends GetxController {
       required Provider loginMethod}) async {
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
-    final signature = signMessage(privateKey, publicAddress);
-    if (signature == null) {
-      l.e('Signature is not valid');
-      return;
-    }
-
-    final uid = addressToUuid(publicAddress);
-// aptos account
+    // aptos account
     final aptosAccount = AptosAccount.fromPrivateKey(privateKey);
     globalController.aptosAccount = aptosAccount;
     final aptosAddress = aptosAccount.address;
 // end aptos account
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
     internalWalletAddress.value = publicAddress;
+    final signature = signMessage(privateKey, publicAddress);
+    if (signature == null) {
+      l.e('Signature is not valid');
+      return;
+    }
 
-    // final loginRes = await HttpApis.podium.login(
-    //   request: LoginRequest(signature: signature, username: publicAddress),
-    //   aptosAddress: aptosAddress,
-    //   email: userInfo.email,
-    //   name: userInfo.name,
-    //   image: userInfo.profileImage,
-    // );
-    // if (loginRes == null) {
-    //   Toast.error(
-    //     message: 'Login failed',
-    //   );
-    // }
-
-    await _socialLogin(
-      id: uid,
-      name: userInfo.name ?? '',
-      email: userInfo.email ?? '',
-      avatar: userInfo.profileImage ?? '',
-      internalEvmWalletAddress: publicAddress,
-      internalAptosWalletAddress: aptosAddress,
+    final loginResult = await HttpApis.podium.login(
+      request: LoginRequest(
+        signature: signature,
+        username: publicAddress,
+      ),
+      aptosAddress: aptosAddress,
+      email: userInfo.email == null || userInfo.email!.isEmpty
+          ? const Uuid().v4().replaceAll('-', '') + '@gmail.com'
+          : userInfo.email!,
+      name: userInfo.name,
+      image: userInfo.profileImage,
       loginType: loginType,
-      loginTypeIdentifier: userInfo.verifierId,
+      loginTypeIdentifier: _fixLoginTypeIdentifier(userInfo.verifierId),
+      refererUserUuid: referrer.value?.uuid ?? '',
     );
-  }
+    if (loginResult == null) {
+      Toast.error(
+        message: 'Login failed',
+      );
+      removeLogingInState();
+      return;
+    }
 
-  UserInfoModel _fixUserData(UserInfoModel user) {
-    UserInfoModel userToCreate = user;
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('twitter|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('twitter|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('github|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('github|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('google|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('google|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('email|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('email|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('apple|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('apple|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('facebook|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('facebook|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('linkedin|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('linkedin|')[1];
-    }
-    return userToCreate;
-  }
-
-  Future<void> _socialLogin({
-    required String id,
-    required String name,
-    required String email,
-    required String avatar,
-    required String internalEvmWalletAddress,
-    required String internalAptosWalletAddress,
-    required String loginType,
-    String? loginTypeIdentifier,
-  }) async {
-    final userId = id;
-    if (email.isEmpty) {
-      //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
-      email = const Uuid().v4().replaceAll('-', '') + '@gmail.com';
-    }
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
     isBeforeLaunchUser = false;
-    // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
-    UserInfoModel userData = UserInfoModel(
-      id: userId,
-      fullName: name,
-      email: email,
-      avatar: avatar,
-      evm_externalWalletAddress: '',
-      evmInternalWalletAddress: internalEvmWalletAddress,
-      aptosInternalWalletAddress: internalAptosWalletAddress,
-      following: [],
-      numberOfFollowers: 0,
-      referrer: referrer.value?.id ?? '',
-      loginType: loginType,
-      loginTypeIdentifier: loginTypeIdentifier,
-      lowercasename: name.toLowerCase(),
-    );
-    final UserInfoModel userToCreate = _fixUserData(userData);
 
     temporaryLoginType.value = loginType;
-    temporaryUserInfo.value = userToCreate;
+    temporaryUserInfo.value = loginResult;
     bool canContinueAuthentication = false;
     try {
-      canContinueAuthentication =
-          await _canContinueAuthentication(userToCreate);
+      canContinueAuthentication = await _canContinueAuthentication(loginResult);
     } catch (e) {
       removeLogingInState();
     }
@@ -409,8 +332,8 @@ class LoginController extends GetxController {
       if (!hasTicket) {
         try {
           final avalancheClient = evmClientByChainId(avalancheChainId);
-          final res = await avalancheClient
-              .getBalance(parseAddress(internalEvmWalletAddress));
+          final res =
+              await avalancheClient.getBalance(parseAddress(publicAddress));
           final balance = weiToDecimalString(wei: res);
           internalWalletBalance.value = balance;
         } catch (e) {
@@ -424,34 +347,41 @@ class LoginController extends GetxController {
         return;
       }
     }
-    _continueWithUserToCreate();
+    _continueWithUserToCreate(loginResult);
   }
 
-  _continueWithUserToCreate() async {
+  String? _fixLoginTypeIdentifier(String? loginTypeIdentifier) {
+    if (loginTypeIdentifier == null) return null;
+
+    final providers = [
+      LoginType.x,
+      'twitter',
+      LoginType.github,
+      LoginType.google,
+      LoginType.email,
+      LoginType.apple,
+      LoginType.facebook,
+      LoginType.linkedin,
+    ];
+
+    for (final provider in providers) {
+      final delimiter = '$provider|';
+      if (loginTypeIdentifier.contains(delimiter)) {
+        return loginTypeIdentifier.split(delimiter)[1];
+      }
+    }
+
+    return loginTypeIdentifier;
+  }
+
+  _continueWithUserToCreate(UserModel user) async {
     final userToCreate = temporaryUserInfo.value!;
     final loginType = temporaryLoginType.value;
-    UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
-      user: userToCreate,
-    );
-
-    if (user == null) {
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    }
     late String? savedName;
-    // ignore: unnecessary_null_comparison
-    if (user.fullName.isEmpty || user.fullName == user.email) {
-      savedName = await forceSaveUserFullName(user: user);
-      UserInfoModel? myUser;
-      try {
-        myUser = (await getUsersByIds([user.id])).first;
-      } catch (e) {
-        myUser = null;
-      }
-      user = myUser;
-      if (user == null) {
+    if ((user.name ?? '').isEmpty || user.name == user.email) {
+      UserModel? myUser = await forceSaveUserFullName(user: user);
+
+      if (myUser == null) {
         Toast.error(
           message: 'Error logging in',
         );
@@ -460,14 +390,12 @@ class LoginController extends GetxController {
         return;
       }
     } else {
-      savedName = user.fullName;
+      savedName = user.name;
     }
     if (savedName != null) {
       globalController.currentUserInfo.value = user;
       globalController.currentUserInfo.refresh();
-      await _initializeReferrals(
-        user: userToCreate,
-      );
+
       LoginTypeService.setLoginType(loginType);
       globalController.setLoggedIn(true);
       // newx line is commented because loginController is cleared from memory (offAllNamed in global controller)
@@ -486,18 +414,18 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserInfoModel user) async {
-    String identifier = user.loginTypeIdentifier!;
-    final DatabaseReference _database = FirebaseDatabase.instance.ref();
-    final snapshot = await _database.child('users');
-    final usersWithThisIdentifier = await snapshot
-        .orderByChild(UserInfoModel.loginTypeIdentifierKey)
-        .equalTo(identifier)
-        .once();
-    final results = usersWithThisIdentifier.snapshot.value;
-    if (results == null) {
-      return false;
-    }
+  Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserModel user) async {
+    // String identifier = user.login_type_identifier!;
+    // final DatabaseReference _database = FirebaseDatabase.instance.ref();
+    // final snapshot = await _database.child('users');
+    // final usersWithThisIdentifier = await snapshot
+    //     .orderByChild(UserInfoModel.loginTypeIdentifierKey)
+    //     .equalTo(identifier)
+    //     .once();
+    // final results = usersWithThisIdentifier.snapshot.value;
+    // if (results == null) {
+    //   return false;
+    // }
     return true;
   }
 
@@ -509,7 +437,7 @@ class LoginController extends GetxController {
       return true;
     }
     bool bought = false;
-    final listOfBuyableTickets = await getPodiumDefinedEntryAddresses();
+    final listOfBuyableTickets = []; //await getPodiumDefinedEntryAddresses();
     final List<StarsArenaUser> addressesToCheckForArena = [];
     final List<Future> arenaCallArray = [];
     for (var i = 0; i < listOfBuyableTickets.length; i++) {
@@ -566,119 +494,105 @@ class LoginController extends GetxController {
     return bought;
   }
 
-  Future<bool> _initializeReferrals({
-    required UserInfoModel user,
-  }) async {
-    if (referrer.value != null && user.id == referrer.value!.id) {
-      return true;
-    }
-    final refers = await getAllTheUserReferals(userId: user.id);
-    if (refers.isEmpty) {
-      await initializeUseReferalCodes(
-        userId: user.id,
-        isBeforeLaunchUser: isBeforeLaunchUser,
-      );
-    }
+  Future<bool> _canContinueAuthentication(UserModel user) async {
+    l.f('!!!!!!!!!!!!!!!!!!!!!!!! user: ${user.uuid}');
     return true;
+    // final registeredUser = await HttpApis.podium.getUserData(user.uuid);
+    // if (registeredUser == null && referrer.value != null) {
+    //   if (referrer.value == null) {
+    //     referralError.value = 'Referrer not found';
+    //     return false;
+    //   }
+    // final allReferreReferrals = await HttpApis.podium
+    //     .getAllTheUserReferals(userId: referrer.value!.uuid);
+    // final remainingReferrals = allReferreReferrals.values.where(
+    //   (element) => element.usedBy == '',
+    // );
+    // if (remainingReferrals.isEmpty) {
+    //   referralError.value = 'Referrer has no more referral codes';
+    //   return false;
+    // } else {
+    //   if (referrer.value != null && user.uuid == referrer.value!.uuid) {
+    //     return true;
+    //   }
+    //   final firstAvailableCode = allReferreReferrals.keys.firstWhere(
+    //       (element) => allReferreReferrals[element]!.usedBy == '');
+    // final code = await setUsedByToReferral(
+    //   userId: referrer.value!.uuid,
+    //   referralCode: firstAvailableCode,
+    //   usedById: user.uuid,
+    // );
+    // if (code == null) {
+    //   referralError.value = 'Error setting used by to referral';
+    //   return false;
+    // } else {
+    //   return true;
+    // }
   }
+  // } else {
+  //   referralError.value = 'You need a referrer to use Podium';
+  //   return false;
+  // }
+}
 
-  Future<bool> _canContinueAuthentication(UserInfoModel user) async {
-    final registeredUser = await getUserById(user.id);
-    if (registeredUser == null && referrer.value != null) {
-      if (referrer.value == null) {
-        referralError.value = 'Referrer not found';
-        return false;
-      }
-      final allReferreReferrals =
-          await getAllTheUserReferals(userId: referrer.value!.id);
-      final remainingReferrals = allReferreReferrals.values.where(
-        (element) => element.usedBy == '',
-      );
-      if (remainingReferrals.isEmpty) {
-        referralError.value = 'Referrer has no more referral codes';
-        return false;
-      } else {
-        if (referrer.value != null && user.id == referrer.value!.id) {
-          return true;
-        }
-        final firstAvailableCode = allReferreReferrals.keys.firstWhere(
-            (element) => allReferreReferrals[element]!.usedBy == '');
-        final code = await setUsedByToReferral(
-          userId: referrer.value!.id,
-          referralCode: firstAvailableCode,
-          usedById: user.id,
-        );
-        if (code == null) {
-          referralError.value = 'Error setting used by to referral';
-          return false;
-        } else {
-          return true;
-        }
-      }
-    } else {
-      referralError.value = 'You need a referrer to use Podium';
-      return false;
-    }
-  }
-
-  Future<String?> forceSaveUserFullName({required UserInfoModel user}) async {
-    final _formKey = GlobalKey<FormBuilderState>();
-    String fullName = '';
-    final name = await Get.bottomSheet(
-      isDismissible: false,
-      Container(
-        width: Get.width,
-        height: 300,
-        color: ColorName.cardBackground,
-        padding: const EdgeInsets.all(12),
-        child: FormBuilder(
-          key: _formKey,
-          child: Column(
-            children: [
-              const Text(
-                'the name you want to use in the platform',
-                style: TextStyle(
-                  color: ColorName.greyText,
-                ),
+Future<UserModel?> forceSaveUserFullName({required UserModel user}) async {
+  final _formKey = GlobalKey<FormBuilderState>();
+  String fullName = '';
+  final name = await Get.bottomSheet(
+    isDismissible: false,
+    Container(
+      width: Get.width,
+      height: 300,
+      color: ColorName.cardBackground,
+      padding: const EdgeInsets.all(12),
+      child: FormBuilder(
+        key: _formKey,
+        child: Column(
+          children: [
+            const Text(
+              'the name you want to use in the platform',
+              style: TextStyle(
+                color: ColorName.greyText,
               ),
-              FormBuilderField(
-                builder: (FormFieldState<String?> field) {
-                  return Input(
-                    hintText: 'Full Name',
-                    onChanged: (value) => fullName = value,
-                    validator: FormBuilderValidators.compose([
-                      FormBuilderValidators.required(
-                          errorText: 'Name is required'),
-                      FormBuilderValidators.minLength(3,
-                          errorText: 'Name too short'),
-                    ]),
-                  );
-                },
-                name: 'fullName',
-              ),
-              Button(
-                text: 'SUBMIT',
-                blockButton: true,
-                type: ButtonType.gradient,
-                onPressed: () {
-                  final re = _formKey.currentState?.saveAndValidate();
-                  if (re == true) {
-                    Navigator.pop(Get.context!, fullName);
-                  }
-                },
-              ),
-            ],
-          ),
+            ),
+            FormBuilderField(
+              builder: (FormFieldState<String?> field) {
+                return Input(
+                  hintText: 'Full Name',
+                  onChanged: (value) => fullName = value,
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(
+                        errorText: 'Name is required'),
+                    FormBuilderValidators.minLength(3,
+                        errorText: 'Name too short'),
+                  ]),
+                );
+              },
+              name: 'fullName',
+            ),
+            Button(
+              text: 'SUBMIT',
+              blockButton: true,
+              type: ButtonType.gradient,
+              onPressed: () {
+                final re = _formKey.currentState?.saveAndValidate();
+                if (re == true) {
+                  Navigator.pop(Get.context!, fullName);
+                }
+              },
+            ),
+          ],
         ),
       ),
-    );
-    final savedName = await saveNameForUserById(
-      userId: user.id,
-      name: name,
-    );
+    ),
+  );
+  final myUser = await HttpApis.podium.updateMyUserData(
+    {
+      'name': name,
+    },
+  );
 
-    return savedName;
-  }
+  return myUser;
 }
 
 Future<String?> showDialogToGetTheEmail() async {

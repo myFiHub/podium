@@ -15,7 +15,7 @@ import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/cheerBooEvent.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -105,7 +105,7 @@ internal_cheerOrBoo({
   required num amount,
   required bool cheer,
   required String chainId,
-  required UserInfoModel user,
+  required UserModel user,
   required groupId,
 }) async {
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
@@ -154,7 +154,7 @@ internal_cheerOrBoo({
     } else {
       metadata = TransactionMetadata(
         title: cheer ? 'Cheer' : 'Boo',
-        message: '${cheer ? 'Cheer' : 'Boo'} ${user.fullName}',
+        message: '${cheer ? 'Cheer' : 'Boo'} ${user.name ?? ''}',
         amount: weiToDecimalString(wei: value, decimals: 2),
       );
     }

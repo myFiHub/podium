@@ -1,7 +1,7 @@
 import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
 
 FirebaseGroup? singleGroupParser(value) {
@@ -31,10 +31,10 @@ FirebaseGroup? singleGroupParser(value) {
     final speakerType =
         value[FirebaseGroup.speakerTypeKey] ?? FreeGroupSpeakerTypes.everyone;
     final subject = value[FirebaseGroup.subjectKey] ?? defaultSubject;
-    final creatorId = creator[UserInfoModel.idKey];
-    final creatorName = creator[UserInfoModel.fullNameKey];
-    final creatorEmail = creator[UserInfoModel.emailKey];
-    final creatorAvatar = creator[UserInfoModel.avatarUrlKey];
+    final creatorId = creator['uuid'];
+    final creatorName = creator['name'];
+    final creatorEmail = creator['email'];
+    final creatorAvatar = creator['image'];
     final imageUrl = value[FirebaseGroup.imageUrlKey] ?? name;
     final creatorJoined = value[FirebaseGroup.creatorJoinedKey] ?? false;
     final isArchived = value[FirebaseGroup.archivedKey] ?? false;

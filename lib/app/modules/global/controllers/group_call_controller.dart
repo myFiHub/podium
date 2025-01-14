@@ -259,9 +259,9 @@ class GroupCallController extends GetxController {
 
     final myUser = globalController.currentUserInfo.value!;
 
-    if ((myUser.evm_externalWalletAddress == '' ||
+    if ((myUser.external_wallet_address == '' ||
             globalController.connectedWalletAddress == '') &&
-        myUser.defaultWalletAddress == '') {
+        myUser.external_wallet_address == '') {
       Toast.warning(
         title: 'Wallet required',
         message: 'Please connect a wallet to join',
@@ -291,7 +291,7 @@ class GroupCallController extends GetxController {
         parameters: {
           'group_id': groupToJoin.id,
           'group_name': groupToJoin.name,
-          'user_id': myUser.id,
+          'user_id': myUser.uuid,
         },
       );
     } catch (e) {

@@ -181,7 +181,7 @@ class AptosMovement {
         "${podiumProtocolAddress}::$_podiumProtocolName::get_balance",
         [],
         [
-          myUser.aptosInternalWalletAddress,
+          myUser.external_wallet_address,
           sellerAddress,
         ],
       );

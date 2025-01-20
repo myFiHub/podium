@@ -14,7 +14,7 @@ import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class SearchPageController extends GetxController with FirebaseTags {
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final searchValue = ''.obs;
   final searchedGroups = Rx<Map<String, FirebaseGroup>>({});

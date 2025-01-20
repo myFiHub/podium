@@ -15,7 +15,6 @@ import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';

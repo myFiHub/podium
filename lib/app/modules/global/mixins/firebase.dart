@@ -14,11 +14,9 @@ import 'package:podium/constants/constantConfigs.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
-import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/podiumDefinedEntryAddress/podiumDefinedEntryAddress.dart';
 import 'package:podium/models/referral/referral.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -677,7 +675,7 @@ Future<FirebaseSessionMember?> getUserSessionData(
         if (group == null) {
           return null;
         }
-        final initialMember = Get.find<GroupsController>()
+        final initialMember = Get.find<OutpostsController>()
             .createInitialSessionMember(user: user, group: group);
         if (initialMember == null) {
           return null;

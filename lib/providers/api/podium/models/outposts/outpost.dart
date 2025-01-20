@@ -8,8 +8,10 @@ class OutpostModel {
   final String uuid;
   final String created_at;
   final bool creator_joined;
+  final String? luma_event_id;
   final String creator_user_name;
   final String creator_user_uuid;
+  final String creator_user_image;
   final String enter_type;
   final bool has_adult_content;
   final String image;
@@ -17,7 +19,7 @@ class OutpostModel {
   final bool is_archived;
   final bool is_recordable;
   final int last_active_at;
-  final List<_MemberModel> members;
+  final List<OutpostMember> members;
   final int members_count;
   final String name;
   final int scheduled_for;
@@ -34,6 +36,7 @@ class OutpostModel {
     required this.creator_joined,
     required this.creator_user_name,
     required this.creator_user_uuid,
+    required this.creator_user_image,
     required this.enter_type,
     required this.has_adult_content,
     required this.image,
@@ -50,6 +53,7 @@ class OutpostModel {
     required this.tags,
     required this.tickets_to_enter,
     required this.tickets_to_speak,
+    this.luma_event_id,
   });
 
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>
@@ -58,20 +62,23 @@ class OutpostModel {
 }
 
 @JsonSerializable()
-class _MemberModel {
+class OutpostMember {
   final String address;
   final String can_speak;
   final String uuid;
-
-  _MemberModel({
+  final String aptos_address;
+  final String? external_wallet_address;
+  OutpostMember({
     required this.address,
     required this.can_speak,
     required this.uuid,
+    required this.aptos_address,
+    this.external_wallet_address,
   });
 
-  factory _MemberModel.fromJson(Map<String, dynamic> json) =>
-      _$MemberModelFromJson(json);
-  Map<String, dynamic> toJson() => _$MemberModelToJson(this);
+  factory OutpostMember.fromJson(Map<String, dynamic> json) =>
+      _$OutpostMemberFromJson(json);
+  Map<String, dynamic> toJson() => _$OutpostMemberToJson(this);
 }
 
 @JsonSerializable()

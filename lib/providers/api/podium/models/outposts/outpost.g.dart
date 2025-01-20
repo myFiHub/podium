@@ -13,6 +13,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       creator_joined: json['creator_joined'] as bool,
       creator_user_name: json['creator_user_name'] as String,
       creator_user_uuid: json['creator_user_uuid'] as String,
+      creator_user_image: json['creator_user_image'] as String,
       enter_type: json['enter_type'] as String,
       has_adult_content: json['has_adult_content'] as bool,
       image: json['image'] as String,
@@ -23,7 +24,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       is_recordable: json['is_recordable'] as bool,
       last_active_at: (json['last_active_at'] as num).toInt(),
       members: (json['members'] as List<dynamic>)
-          .map((e) => _MemberModel.fromJson(e as Map<String, dynamic>))
+          .map((e) => OutpostMember.fromJson(e as Map<String, dynamic>))
           .toList(),
       members_count: (json['members_count'] as num).toInt(),
       name: json['name'] as String,
@@ -37,6 +38,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       tickets_to_speak: (json['tickets_to_speak'] as List<dynamic>)
           .map((e) => _TicketToSpeakModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      luma_event_id: json['luma_event_id'] as String?,
     );
 
 Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
@@ -45,8 +47,10 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'uuid': instance.uuid,
       'created_at': instance.created_at,
       'creator_joined': instance.creator_joined,
+      'luma_event_id': instance.luma_event_id,
       'creator_user_name': instance.creator_user_name,
       'creator_user_uuid': instance.creator_user_uuid,
+      'creator_user_image': instance.creator_user_image,
       'enter_type': instance.enter_type,
       'has_adult_content': instance.has_adult_content,
       'image': instance.image,
@@ -65,17 +69,22 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'tickets_to_speak': instance.tickets_to_speak,
     };
 
-_MemberModel _$MemberModelFromJson(Map<String, dynamic> json) => _MemberModel(
+OutpostMember _$OutpostMemberFromJson(Map<String, dynamic> json) =>
+    OutpostMember(
       address: json['address'] as String,
       can_speak: json['can_speak'] as String,
       uuid: json['uuid'] as String,
+      aptos_address: json['aptos_address'] as String,
+      external_wallet_address: json['external_wallet_address'] as String?,
     );
 
-Map<String, dynamic> _$MemberModelToJson(_MemberModel instance) =>
+Map<String, dynamic> _$OutpostMemberToJson(OutpostMember instance) =>
     <String, dynamic>{
       'address': instance.address,
       'can_speak': instance.can_speak,
       'uuid': instance.uuid,
+      'aptos_address': instance.aptos_address,
+      'external_wallet_address': instance.external_wallet_address,
     };
 
 _TicketToEnterModel _$TicketToEnterModelFromJson(Map<String, dynamic> json) =>

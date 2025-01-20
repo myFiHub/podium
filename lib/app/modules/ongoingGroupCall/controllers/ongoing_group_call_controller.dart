@@ -27,6 +27,8 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -148,19 +150,19 @@ class OngoingGroupCallController extends GetxController {
     });
 
     final myUser = globalController.currentUserInfo.value!;
-    if (myUser.id == ongoingGroupCallGroup.creator.id) {
+    if (myUser.uuid == ongoingGroupCallGroup.creator.uuid) {
       amIAdmin.value = true;
     }
     mySession.value = await getUserSessionData(
       groupId: ongoingGroupCallGroup.id,
-      userId: myUser.id,
+      userId: myUser.uuid,
     );
     firebaseSession.value = await getSessionData(
       groupId: ongoingGroupCallGroup.id,
     );
     mySessionSubscription = startListeningToMyRemainingTalkingTime(
       groupId: ongoingGroupCallGroup.id,
-      userId: myUser.id,
+      userId: myUser.uuid,
       onData: onRemainingTimeUpdate,
     );
     sessionMembersSubscription = startListeningToSessionMembers(
@@ -535,7 +537,7 @@ class OngoingGroupCallController extends GetxController {
   }
 
   updateMyLastTalkingTime() async {
-    final myUserId = globalController.currentUserInfo.value?.id;
+    final myUserId = globalController.currentUserInfo.value?.uuid;
     final group = groupCallController.group.value;
     if (group == null) {
       return;
@@ -663,7 +665,7 @@ class OngoingGroupCallController extends GetxController {
       parameters: {
         'targetUser': userId,
         'groupId': groupCallController.group.value!.id,
-        'fromUser': myUser.id,
+        'fromUser': myUser.uuid,
       },
     );
   }
@@ -694,7 +696,7 @@ class OngoingGroupCallController extends GetxController {
       parameters: {
         'targetUser': userId,
         'groupId': groupCallController.group.value!.id,
-        'fromUser': myUser.id,
+        'fromUser': myUser.uuid,
       },
     );
   }
@@ -712,13 +714,13 @@ class OngoingGroupCallController extends GetxController {
     String? targetAddress;
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final user = await getUserById(userId);
+    final user = await HttpApis.podium.getUserData(userId);
     if (user == null) {
       l.e("user is null");
       return;
     }
-    if (user.evm_externalWalletAddress != '') {
-      targetAddress = user.evm_externalWalletAddress;
+    if ((user.external_wallet_address ?? '').isNotEmpty) {
+      targetAddress = user.external_wallet_address;
     } else {
       final internalWalletAddress = await getUserInternalWalletAddress(userId);
       targetAddress = internalWalletAddress;
@@ -729,27 +731,28 @@ class OngoingGroupCallController extends GetxController {
       List<String> receiverAddresses = [];
       List<String> aptosReceiverAddresses = [];
       final myUser = globalController.currentUserInfo.value!;
-      if (myUser.evm_externalWalletAddress == targetAddress ||
-          (myUser.evmInternalWalletAddress == targetAddress)) {
-        final members = await getListOfUserWalletsPresentInSession(
-          firebaseSession.value!.id,
-        );
+      if (myUser.external_wallet_address == targetAddress ||
+          (myUser.address == targetAddress)) {
+        final List<OutpostMember> members =
+            []; //await getListOfUserWalletsPresentInSession(
+        // firebaseSession.value!.id,
+        //  );
         final liveMemberIds =
             groupCallController.sortedMembers.value.map((e) => e.id).toList();
         members.forEach((element) {
-          if (liveMemberIds.contains(element.id)) {
+          if (liveMemberIds.contains(element)) {
             if (element != targetAddress) {
-              aptosReceiverAddresses.add(element.aptosInternalWalletAddress);
-              if (element.evm_externalWalletAddress.isNotEmpty) {
-                receiverAddresses.add(user.evm_externalWalletAddress);
+              aptosReceiverAddresses.add(element.aptos_address);
+              if ((element.external_wallet_address ?? '').isNotEmpty) {
+                receiverAddresses.add(element.external_wallet_address!);
               } else {
-                receiverAddresses.add(user.evmInternalWalletAddress);
+                receiverAddresses.add(element.address);
               }
             }
           }
         });
       } else {
-        receiverAddresses = [targetAddress];
+        receiverAddresses = [targetAddress!];
       }
       if (receiverAddresses.length == 0) {
         l.e("No Users found in session");
@@ -799,7 +802,7 @@ class OngoingGroupCallController extends GetxController {
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           groupId: groupCallController.group.value!.id,
-          target: targetAddress,
+          target: targetAddress!,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
@@ -809,7 +812,7 @@ class OngoingGroupCallController extends GetxController {
         success = await internal_cheerOrBoo(
           groupId: groupCallController.group.value!.id,
           user: user,
-          target: targetAddress,
+          target: targetAddress!,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
@@ -818,7 +821,7 @@ class OngoingGroupCallController extends GetxController {
       } else if (selectedWallet == WalletNames.internal_Aptos) {
         success = await AptosMovement.cheerBoo(
           groupId: groupCallController.group.value!.id,
-          target: user.aptosInternalWalletAddress,
+          target: user.aptos_address!,
           receiverAddresses: aptosReceiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
@@ -858,7 +861,7 @@ class OngoingGroupCallController extends GetxController {
           'amount': amount,
           'target': userId,
           'groupId': groupCallController.group.value!.id,
-          'fromUser': myUser.id,
+          'fromUser': myUser.uuid,
         });
         final internalWalletAddress =
             await web3AuthWalletAddress(); //await Evm.getAddress();
@@ -876,7 +879,7 @@ class OngoingGroupCallController extends GetxController {
           initiatorAddress: selectedWallet == WalletNames.external
               ? externalWalletAddress!
               : internalWalletAddress,
-          targetAddress: targetAddress,
+          targetAddress: targetAddress!,
           initiatorId: myId,
           targetId: userId,
           groupId: groupCallController.group.value!.id,

@@ -7,7 +7,7 @@ import 'package:podium/app/modules/home/widgets/addOutpostButton.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:shimmer/shimmer.dart';
@@ -74,15 +74,17 @@ class HomeView extends GetView<HomeController> {
                             globalController.showArchivedGroups.value;
                         final allGroups = controller.allGroups.value;
                         final isLoading = allGroups.isEmpty;
-                        List<FirebaseGroup> groups = allGroups.values
+                        List<OutpostModel> groups = allGroups.values
                             .where(
-                              (group) => group.members.keys.contains(myId),
+                              (group) => group.members
+                                  .map((e) => e.uuid)
+                                  .contains(myId),
                             )
                             .toList();
 
                         if (!showArchived) {
                           groups = groups
-                              .where((group) => group.archived != true)
+                              .where((group) => group.is_archived != true)
                               .toList();
                         }
                         if (isLoading) {
@@ -102,7 +104,7 @@ class HomeView extends GetView<HomeController> {
                                   child: Assets.images.explore.image(),
                                 ),
                                 Text(
-                                  "Hi ${myUser.fullName},",
+                                  "Hi ${myUser.name},",
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,

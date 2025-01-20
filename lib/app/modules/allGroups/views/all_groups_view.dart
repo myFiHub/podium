@@ -4,7 +4,7 @@ import 'package:hidable/hidable.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/groupsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -146,15 +146,16 @@ class AllGroupsList extends GetWidget<AllGroupsController> {
             final groups = controller.searchedGroups.value;
             final showArchived = globalController.showArchivedGroups.value;
             // final groupsController = Get.find<GroupsController>();
-            List<FirebaseGroup> groupsList =
+            List<OutpostModel> groupsList =
                 // ignore: unnecessary_null_comparison
                 groups != null ? groups.values.toList() : [];
             // if (groupsList.isEmpty && groupsController.groups.value != null) {
             //   groupsList = groupsController.groups.value!.values.toList();
             // }
             if (!showArchived) {
-              groupsList =
-                  groupsList.where((group) => group.archived != true).toList();
+              groupsList = groupsList
+                  .where((group) => group.is_archived != true)
+                  .toList();
             }
             return GroupList(
               scrollController: scrollController,

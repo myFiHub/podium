@@ -9,16 +9,16 @@ import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 
 class TicketSeller {
-  final UserInfoModel userInfo;
+  final UserModel userInfo;
   bool boughtTicketToSpeak;
   bool boughtTicketToAccess;
   bool buying;
@@ -63,7 +63,7 @@ class TicketSeller {
     this.speakPriceFullString,
   });
   copyWith({
-    UserInfoModel? userInfo,
+    UserModel? userInfo,
     bool? boughtTicketToSpeak,
     bool? boughtTicketToAccess,
     bool? buying,
@@ -92,13 +92,13 @@ class TicketSeller {
 
 class CheckticketController extends GetxController {
   final globalController = Get.find<GlobalController>();
-  final GroupsController groupsController = Get.find<GroupsController>();
-  final Map<String, UserInfoModel> usersToBuyTicketFromInOrderToHaveAccess = {};
-  final Map<String, UserInfoModel> usersToBuyTicketFromInOrderToSpeak = {};
+  final OutpostsController groupsController = Get.find<OutpostsController>();
+  final Map<String, UserModel> usersToBuyTicketFromInOrderToHaveAccess = {};
+  final Map<String, UserModel> usersToBuyTicketFromInOrderToSpeak = {};
   final allUsersToBuyTicketFrom = Rx<Map<String, TicketSeller>>({});
 
   final loadingUsers = false.obs;
-  final group = Rxn<FirebaseGroup>();
+  final group = Rxn<OutpostModel>();
 
   @override
   void onInit() {
@@ -118,41 +118,37 @@ class CheckticketController extends GetxController {
   }
 
   _fakeUserModel(String address) {
-    final fakeUser = UserInfoModel(
-      id: address,
-      fullName: 'Direct Address',
-      avatar: '',
+    final fakeUser = UserModel(
+      uuid: address,
+      name: 'Direct Address',
+      image: '',
       email: '',
-      evm_externalWalletAddress: address,
-      evmInternalWalletAddress: address,
-      following: [],
-      numberOfFollowers: 0,
+      external_wallet_address: address,
+      address: address,
     );
     return fakeUser;
   }
 
   userModelFromStarsArenaUserInfo({required StarsArenaUser user}) {
-    final fakeUser = UserInfoModel(
-      id: user.id,
-      fullName: user.twitterName,
-      avatar: user.twitterPicture,
+    final fakeUser = UserModel(
+      uuid: user.id,
+      name: user.twitterName,
+      image: user.twitterPicture,
       email: '',
-      evm_externalWalletAddress: user.mainAddress,
-      evmInternalWalletAddress: user.mainAddress,
-      following: [],
-      numberOfFollowers: 0,
+      external_wallet_address: user.mainAddress,
+      address: user.mainAddress,
     );
     return fakeUser;
   }
 
-  (List<UserInfoModel>, List<UserInfoModel>) _generateFakeUsers() {
+  (List<UserModel>, List<UserModel>) _generateFakeUsers() {
     final requiredDirectAddressesToAccess =
         group.value!.requiredAddressesToEnter;
     final requiredDirectAddressesToSpeak =
         group.value!.requiredAddressesToSpeak;
 
-    List<UserInfoModel> fakeUsersToBuyTicketFromInOrderToHaveAccess = [];
-    List<UserInfoModel> fakeUsersToBuyTicketFromInOrderToSpeak = [];
+    List<UserModel> fakeUsersToBuyTicketFromInOrderToHaveAccess = [];
+    List<UserModel> fakeUsersToBuyTicketFromInOrderToSpeak = [];
 
     requiredDirectAddressesToSpeak.forEach((element) {
       fakeUsersToBuyTicketFromInOrderToSpeak.add(_fakeUserModel(element));
@@ -371,7 +367,7 @@ class CheckticketController extends GetxController {
 
     for (var i = 0; i < FriendTechResults.length; i++) {
       final seller = friendTechTicketSellers[i];
-      final userId = seller.userInfo.id;
+      final userId = seller.userInfo.uuid;
       final access = FriendTechResults[i];
       final ticketTypeToSpeakForThisSeller =
           allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
@@ -394,7 +390,7 @@ class CheckticketController extends GetxController {
 
     for (var i = 0; i < podiumPassResults.length; i++) {
       final seller = podiumTicketSellers[i];
-      final userId = seller.userInfo.id;
+      final userId = seller.userInfo.uuid;
       final access = podiumPassResults[i];
       final original = allUsersToBuyTicketFrom.value[userId];
       allUsersToBuyTicketFrom.value[userId] = TicketSeller(
@@ -439,8 +435,8 @@ class CheckticketController extends GetxController {
     required TicketSeller ticketSeller,
   }) async {
     try {
-      final groupAccessType = group.value!.accessType;
-      final groupSpeakerType = group.value!.speakerType;
+      final groupAccessType = group.value!.enter_type;
+      final groupSpeakerType = group.value!.speak_type;
       final unsupportedAccessTicket = (groupAccessType !=
               BuyableTicketTypes.onlyArenaTicketHolders &&
           groupAccessType != BuyableTicketTypes.onlyFriendTechTicketHolders &&
@@ -459,7 +455,8 @@ class CheckticketController extends GetxController {
           title: "Update Required",
           message: "Please update the app to buy tickets",
         );
-        allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+        allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying =
+            false;
         allUsersToBuyTicketFrom.refresh();
         return;
       }

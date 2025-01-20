@@ -19,6 +19,8 @@ class UserModel {
   final String? referer_user_uuid;
   bool? is_over_18;
 
+  String get defaultWalletAddress => external_wallet_address ?? address;
+
   UserModel({
     required this.address,
     required this.uuid,

@@ -26,7 +26,7 @@ class ProfileView extends GetView<ProfileController> {
             children: <Widget>[
               const UserInfo(),
               FollowButton(
-                userId: controller.userInfo.value!.id,
+                userId: controller.userInfo.value!.uuid,
               ),
               space10,
               const _BuyOrSellPodiumPass(),
@@ -435,9 +435,9 @@ class UserInfo extends GetWidget<ProfileController> {
       if (user == null) {
         return Container();
       }
-      String avatar = user.avatar;
+      String avatar = user.image ?? defaultAvatar;
       if (avatar == defaultAvatar) {
-        avatar = avatarPlaceHolder(user.fullName);
+        avatar = avatarPlaceHolder(user.name!);
       }
       return Container(
         padding: const EdgeInsets.all(20),
@@ -445,13 +445,13 @@ class UserInfo extends GetWidget<ProfileController> {
           children: [
             Img(
               src: avatar,
-              alt: user.fullName,
+              alt: user.name!,
               size: 100,
             ),
             space10,
             space10,
             Text(
-              user.fullName,
+              user.name!,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,

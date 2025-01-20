@@ -9,14 +9,14 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
 final jitsiMeet = JitsiMeet();
 const MethodChannel jitsiMethodChannel = MethodChannel('jitsi_meet_wrapper');
 
-JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
+JitsiMeetEventListener jitsiListeners({required OutpostModel group}) {
   Get.put<OngoingGroupCallController>(OngoingGroupCallController());
   final groupCallController = Get.find<GroupCallController>();
   return JitsiMeetEventListener(

@@ -32,7 +32,7 @@ class SortTypes {
 class GroupCallController extends GetxController {
   final storage = GetStorage();
   // group session id is group id
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final globalController = Get.find<GlobalController>();
   final group = Rxn<FirebaseGroup>();
   final members = Rx<List<FirebaseSessionMember>>([]);

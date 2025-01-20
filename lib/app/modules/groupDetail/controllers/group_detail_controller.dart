@@ -9,18 +9,17 @@ import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/customLibs/omniDatePicker/src/enums/omni_datetime_picker_type.dart';
 import 'package:podium/customLibs/omniDatePicker/src/omni_datetime_picker_dialogs.dart';
-import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/notification_model.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -44,20 +43,20 @@ class GroupDetailsParametersKeys {
 }
 
 class GroupDetailController extends GetxController {
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;
   final forceUpdateIndicator = false.obs;
-  final group = Rxn<FirebaseGroup>();
+  final group = Rxn<OutpostModel>();
   final groupAccesses = Rxn<GroupAccesses>();
-  final membersList = Rx<List<UserInfoModel>>([]);
+  final membersList = Rx<List<UserModel>>([]);
   final reminderTime = Rx<DateTime?>(null);
   final isGettingGroupInfo = false.obs;
   final jointButtonContentProps =
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
   bool gotGroupInfo = false;
 
-  final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
+  final listOfSearchedUsersToInvite = Rx<List<UserModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InvitedMember>>({});
 //parameters for the group detail page
   late String stringedGroupInfo;
@@ -94,7 +93,7 @@ class GroupDetailController extends GetxController {
             GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining] ==
         'true';
 
-    final groupInfo = singleGroupParser(jsonDecode(stringedGroupInfo));
+    final groupInfo = OutpostModel.fromJson(jsonDecode(stringedGroupInfo));
 
     groupAccesses.value = GroupAccesses(
       canEnter: enterAccess == 'true',
@@ -108,7 +107,7 @@ class GroupDetailController extends GetxController {
       fetchInvitedMembers();
       scheduleChecks();
       _getLumaData();
-      startListeningToGroup(groupInfo.id, onGroupUpdate);
+      startListeningToGroup(groupInfo.uuid, onGroupUpdate);
     }
 
     globalController.ticker.listen((event) {
@@ -135,13 +134,13 @@ class GroupDetailController extends GetxController {
 
   _getLumaData() async {
     if (group.value == null) return;
-    if (group.value!.lumaEventId == null) return;
+    if (group.value!.luma_event_id == null) return;
     try {
       isGettingLumaEventDetails.value = true;
       isGettingLumaEventGuests.value = true;
       final (event, guestsResponse) = await (
-        HttpApis.lumaApi.getEvent(eventId: group.value!.lumaEventId!),
-        HttpApis.lumaApi.getGuests(eventId: group.value!.lumaEventId!),
+        HttpApis.lumaApi.getEvent(eventId: group.value!.luma_event_id!),
+        HttpApis.lumaApi.getGuests(eventId: group.value!.luma_event_id!),
       ).wait;
       final guests = guestsResponse.map((e) => e.guest).toList();
       final hosts = event?.hosts ?? [];
@@ -181,14 +180,14 @@ class GroupDetailController extends GetxController {
 
   onGroupUpdate(DatabaseEvent data) {
     if (group.value == null) return;
-    final newData = singleGroupParser(data.snapshot.value);
+    final newData = OutpostModel.fromJson(data.snapshot.value);
     if (newData != null) {
       if (newData.members.length != group.value!.members.length) {
         getMembers(newData);
       }
-      if (newData.scheduledFor != group.value!.scheduledFor ||
-          newData.creatorJoined != group.value!.creatorJoined ||
-          newData.archived != group.value!.archived) {
+      if (newData.scheduled_for != group.value!.scheduled_for ||
+          newData.creator_joined != group.value!.creator_joined ||
+          newData.is_archived != group.value!.is_archived) {
         group.value = newData;
         scheduleChecks();
       }
@@ -199,16 +198,16 @@ class GroupDetailController extends GetxController {
   }
 
   scheduleChecks() async {
-    final amICreator = group.value!.creator.id == myId;
-    final isScheduled = group.value!.scheduledFor != 0;
+    final amICreator = group.value!.creator_user_uuid == myId;
+    final isScheduled = group.value!.scheduled_for != 0;
     final passedScheduledTime =
-        group.value!.scheduledFor < DateTime.now().millisecondsSinceEpoch;
+        group.value!.scheduled_for < DateTime.now().millisecondsSinceEpoch;
     if (isScheduled) {
       if (passedScheduledTime) {
         if (amICreator) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Start');
-        } else if (group.value!.creatorJoined) {
+        } else if (group.value!.creator_joined) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Join');
         } else {
@@ -216,7 +215,7 @@ class GroupDetailController extends GetxController {
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }
       } else {
-        final reminderT = await getReminderTime(group.value!.alarmId);
+        final reminderT = await getReminderTime(group.value!.alarm_id);
         if (reminderT != null) {
           reminderTime.value = reminderT;
         }
@@ -225,7 +224,7 @@ class GroupDetailController extends GetxController {
               JoinButtonProps(enabled: true, text: 'Enter the Outpost');
         } else {
           final remaining = remainintTimeUntilMilSecondsFormated(
-              time: group.value!.scheduledFor);
+              time: group.value!.scheduled_for);
           jointButtonContentProps.value = JoinButtonProps(
               enabled: false,
               text: 'Scheduled for:\n ${remaining.replaceAll(' ', '')}');
@@ -245,7 +244,7 @@ class GroupDetailController extends GetxController {
   fetchInvitedMembers({String? userId}) async {
     if (group.value == null) return;
     final map = await getInvitedMembers(
-      groupId: group.value!.id,
+      groupId: group.value!.uuid,
       userId: userId,
     );
     if (userId != null) {
@@ -262,7 +261,7 @@ class GroupDetailController extends GetxController {
     if (isGettingGroupInfo.value) return;
     isGettingGroupInfo.value = true;
     final globalController = Get.find<GlobalController>();
-    final groupsController = Get.find<GroupsController>();
+    final groupsController = Get.find<OutpostsController>();
     if (globalController.loggedIn.value) {
       groupsController.joinGroupAndOpenGroupDetailPage(
         groupId: id,
@@ -279,8 +278,8 @@ class GroupDetailController extends GetxController {
     isGettingGroupInfo.value = false;
   }
 
-  getMembers(FirebaseGroup group) async {
-    final memberIds = group.members.keys.toList();
+  getMembers(OutpostModel group) async {
+    final memberIds = group.members.map((e) => e.uuid).toList();
     isGettingMembers.value = true;
     final list = await getUsersByIds(memberIds);
     membersList.value = list;
@@ -308,7 +307,8 @@ class GroupDetailController extends GetxController {
         final list = users.values.toList();
         // remove the users that are already in the group
         final filteredList = list
-            .where((element) => !group.value!.members.keys.contains(element.id))
+            .where((element) =>
+                !group.value!.members.any((e) => e.uuid == element.uuid))
             .toList();
         // // remove the users that are already invited
         // final filteredList2 = filteredList
@@ -317,7 +317,7 @@ class GroupDetailController extends GetxController {
         //     .toList();
         // remove my user from the list
         final filteredList3 =
-            filteredList.where((element) => element.id != myId).toList();
+            filteredList.where((element) => element.uuid != myId).toList();
         listOfSearchedUsersToInvite.value = filteredList3;
       }
     });
@@ -328,7 +328,7 @@ class GroupDetailController extends GetxController {
     if (group.value == null) return;
     try {
       await inviteUserToJoinGroup(
-        groupId: group.value!.id,
+        groupId: group.value!.uuid,
         userId: userId,
         invitedToSpeak: inviteToSpeak,
       );
@@ -339,14 +339,14 @@ class GroupDetailController extends GetxController {
       final invitationNotification = FirebaseNotificationModel(
         id: notifId,
         title:
-            "${myUser!.fullName} invited you to ${inviteToSpeak ? 'speak' : 'listen'} in Outpost: ${group.value!.name}",
+            "${myUser!.name} invited you to ${inviteToSpeak ? 'speak' : 'listen'} in Outpost: ${group.value!.name}",
         body:
             "${subject != null && subject.isNotEmpty ? "talking about: " + subject : 'No subject'}",
         type: NotificationTypes.inviteToJoinGroup.toString(),
         targetUserId: userId,
         isRead: false,
         timestamp: DateTime.now().millisecondsSinceEpoch,
-        actionId: group.value!.id,
+        actionId: group.value!.uuid,
       );
       await sendNotification(
         notification: invitationNotification,

@@ -24,8 +24,8 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
-import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
@@ -87,7 +87,7 @@ sendGroupPeresenceEvent(
   }
 }
 
-class GroupsController extends GetxController with FirebaseTags {
+class OutpostsController extends GetxController with FirebaseTags {
   // final _presentUsersRefreshThrottle =
   //     Throttling(duration: const Duration(seconds: 2));
   // final _takingUsersRefreshThrottle =
@@ -100,7 +100,7 @@ class GroupsController extends GetxController with FirebaseTags {
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
   final groupChannels = Rx<Map<String, ably.RealtimeChannel>>({});
-  final groups = Rx<Map<String, FirebaseGroup>>({});
+  final groups = Rx<Map<String, OutpostModel>>({});
   final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final tmpPresentUsersInGroupsMap = <String, List<String>>{};
@@ -174,14 +174,14 @@ class GroupsController extends GetxController with FirebaseTags {
   }
 
   Future<void> removeMyUserFromSessionAndGroup(
-      {required FirebaseGroup group}) async {
+      {required OutpostModel group}) async {
     // ask if user want to leave the group
     try {
       final canContinue = await _showModalToLeaveGroup(group: group);
       if (canContinue == null || canContinue == false) return;
-      await removeMyUserFromGroupAndSession(groupId: group.id);
+      await removeMyUserFromGroupAndSession(groupId: group.uuid);
       // remove group from groups list
-      groups.value.remove(group.id);
+      groups.value.remove(group.uuid);
       groups.refresh();
       if (Get.isRegistered<AllGroupsController>()) {
         final AllGroupsController allGroupsController = Get.find();
@@ -196,18 +196,18 @@ class GroupsController extends GetxController with FirebaseTags {
     }
   }
 
-  Future<void> toggleArchive({required FirebaseGroup group}) async {
+  Future<void> toggleArchive({required OutpostModel group}) async {
     final canContinue = await _showModalToToggleArchiveGroup(group: group);
     if (canContinue == null || canContinue == false) return;
-    final archive = !group.archived;
-    await toggleGroupArchive(groupId: group.id, archive: archive);
+    final archive = !group.is_archived;
+    await toggleGroupArchive(groupId: group.uuid, archive: archive);
     Toast.success(
       title: "Success",
       message: "Outpost ${archive ? "archived" : "is available again"}",
     );
-    final remoteGroup = await getGroupInfoById(group.id);
+    final remoteGroup = await getGroupInfoById(group.uuid);
     if (remoteGroup != null) {
-      groups.value[group.id] = remoteGroup;
+      groups.value[group.uuid] = remoteGroup;
       groups.refresh();
       if (Get.isRegistered<AllGroupsController>()) {
         final AllGroupsController allGroupsController = Get.find();
@@ -221,7 +221,7 @@ class GroupsController extends GetxController with FirebaseTags {
     analytics.logEvent(
       name: "group_archive_toggled",
       parameters: {
-        "group_id": group.id,
+        "group_id": group.uuid,
         "archive": archive.toString(),
       },
     );
@@ -249,7 +249,7 @@ class GroupsController extends GetxController with FirebaseTags {
   }
 
   _parseAndSetGroups(Map<dynamic, dynamic> data) async {
-    final Map<String, FirebaseGroup> groupsMap = await groupsParser(data);
+    final Map<String, OutpostModel> groupsMap = await groupsParser(data);
     if (globalController.currentUserInfo.value != null) {
       final myUser = globalController.currentUserInfo.value!;
       final myId = myUser.uuid;
@@ -261,7 +261,7 @@ class GroupsController extends GetxController with FirebaseTags {
           final bTime = b.value.lastActiveAt;
           return bTime.compareTo(aTime);
         });
-      final sortedMap = Map<String, FirebaseGroup>.fromEntries(sorted);
+      final sortedMap = Map<String, OutpostModel>.fromEntries(sorted);
       groups.value = sortedMap;
 
       initializeChannels();
@@ -521,7 +521,7 @@ class GroupsController extends GetxController with FirebaseTags {
       );
       final jsoned = newFirebaseSession.toJson();
       await firebaseSessionReference.set(jsoned);
-      GroupsController groupsController = Get.find();
+      OutpostsController groupsController = Get.find();
       groupsController.groups.value.addAll(
         {id: group},
       );

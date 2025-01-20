@@ -333,7 +333,7 @@ class GlobalController extends GetxController {
         return;
       }
       final groupId = splited[1];
-      final groupsController = Get.put(GroupsController());
+      final groupsController = Get.put(OutpostsController());
       Get.put(GroupDetailController());
       groupsController.joinGroupAndOpenGroupDetailPage(
         groupId: groupId,

@@ -80,7 +80,7 @@ class NotificationsController extends GetxController {
   }) async {
     final groupId = notif.actionId;
     if (groupId == null) return;
-    final GroupsController groupsController = Get.find<GroupsController>();
+    final OutpostsController groupsController = Get.find<OutpostsController>();
     await groupsController.joinGroupAndOpenGroupDetailPage(
       groupId: groupId,
     );

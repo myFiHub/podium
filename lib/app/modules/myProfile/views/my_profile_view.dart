@@ -436,7 +436,7 @@ class AptosAddressAndBalance extends StatelessWidget {
   const AptosAddressAndBalance({super.key});
   @override
   Widget build(BuildContext context) {
-    final aptosWalletAddress = myUser.aptosInternalWalletAddress;
+    final aptosWalletAddress = myUser.aptos_address!;
     return AddressAndBalanceWidget(
       address: aptosWalletAddress,
       balanceWidget: const AptosBalance(),
@@ -522,7 +522,7 @@ class EvmAddressAndBalances extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final walletAddress = myUser.evmInternalWalletAddress;
+    final walletAddress = myUser.address;
     return AddressAndBalanceWidget(
       address: walletAddress,
       balanceWidget: const EvmBalances(),
@@ -846,9 +846,9 @@ class UserInfo extends GetView<GlobalController> {
       if (myUser == null) {
         return Container();
       }
-      String avatar = myUser.avatar;
+      String avatar = myUser.image ?? defaultAvatar;
       if (avatar == defaultAvatar) {
-        avatar = avatarPlaceHolder(myUser.fullName);
+        avatar = avatarPlaceHolder(myUser.name);
       }
       return Container(
         padding: const EdgeInsets.all(20),
@@ -857,12 +857,12 @@ class UserInfo extends GetView<GlobalController> {
             Img(
               src: avatar,
               size: 100,
-              alt: myUser.fullName,
+              alt: myUser.name,
             ),
             space10,
             space10,
             Text(
-              myUser.fullName,
+              myUser.name ?? '',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 24,
@@ -896,7 +896,7 @@ class UserInfo extends GetView<GlobalController> {
                           text: 'ID: ',
                         ),
                         TextSpan(
-                          text: myUser.id,
+                          text: myUser.uuid,
                         ),
                       ],
                     ),
@@ -905,7 +905,7 @@ class UserInfo extends GetView<GlobalController> {
                 space5,
                 IconButton(
                     onPressed: () {
-                      Clipboard.setData(ClipboardData(text: myUser.id));
+                      Clipboard.setData(ClipboardData(text: myUser.uuid));
                       Toast.neutral(
                         title: 'Copied',
                         message: 'User ID copied to clipboard',

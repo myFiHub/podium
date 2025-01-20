@@ -5,7 +5,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
@@ -14,7 +14,7 @@ import 'package:podium/widgets/button/button.dart';
 // import 'package:web3modal_flutter/utils/util.dart';
 
 class UserList extends StatelessWidget {
-  final List<UserInfoModel> usersList;
+  final List<UserModel> usersList;
   const UserList({super.key, required this.usersList});
   @override
   Widget build(BuildContext context) {
@@ -23,16 +23,16 @@ class UserList extends StatelessWidget {
         itemCount: usersList.length,
         itemBuilder: (BuildContext context, int index) {
           final user = usersList[index];
-          final name = user.fullName;
-          String avatar = user.avatar;
+          final name = user.name ?? '';
+          String avatar = user.image ?? '';
           if (avatar.contains("https://ui-avatars.com/api/?name=Oo")) {
             avatar = '';
           }
           if (avatar.isEmpty) {
             avatar = avatarPlaceHolder(name);
           }
-          final userId = user.id;
-          final isItME = user.id == myId;
+          final userId = user.uuid;
+          final isItME = user.uuid == myId;
           return _SingleUser(
             key: Key(userId),
             isItME: isItME,
@@ -174,13 +174,11 @@ class FollowButton extends GetView<UsersController> {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
       final isLoading = loadingIds[userId] != null;
-      final idsImFollowing = controller.currentUserInfo.value!.following;
-      final isFollowing = idsImFollowing.contains(userId);
+      final isFollowing =
+          controller.currentUserInfo.value!.followed_by_me ?? false;
       return Button(
           size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
           onPressed: () {
-            final idsImFollowing = controller.currentUserInfo.value!.following;
-            final isFollowing = idsImFollowing.contains(userId);
             controller.followUnfollow(userId, !isFollowing);
           },
           type: isFollowing ? ButtonType.outline : ButtonType.solid,

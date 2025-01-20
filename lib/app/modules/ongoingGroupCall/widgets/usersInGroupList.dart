@@ -412,7 +412,7 @@ _shootReaction({required BuildContext context, required Reaction reaction}) {
   }
 }
 
-class _TalkingIndicator extends GetView<GroupsController> {
+class _TalkingIndicator extends GetView<OutpostsController> {
   final String groupId;
   final String userId;
   const _TalkingIndicator(
@@ -492,12 +492,10 @@ class FollowButton extends GetView<UsersController> {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
       final isLoading = loadingIds[userId] != null;
-      final idsImFollowing = controller.currentUserInfo.value!.following;
-      final isFollowing = idsImFollowing.contains(userId);
+      final isFollowing =
+          controller.currentUserInfo.value!.followed_by_me ?? false;
       return Button(
           onPressed: () {
-            final idsImFollowing = controller.currentUserInfo.value!.following;
-            final isFollowing = idsImFollowing.contains(userId);
             controller.followUnfollow(userId, !isFollowing);
           },
           type: ButtonType.outline,
@@ -545,7 +543,7 @@ class Actions extends GetView<OngoingGroupCallController> {
   Widget build(BuildContext context) {
     final globalController = Get.find<GlobalController>();
     final myUser = globalController.currentUserInfo.value;
-    final myId = myUser!.id;
+    final myId = myUser!.uuid;
 
     return Center(
       // width: Get.width * 0.5,

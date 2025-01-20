@@ -8,7 +8,7 @@ import 'package:podium/app/modules/notifications/controllers/notifications_contr
 
 final globalBindings = [
   Bind.put<GlobalController>(GlobalController(), permanent: true),
-  Bind.put<GroupsController>(GroupsController(), permanent: true),
+  Bind.put<OutpostsController>(OutpostsController(), permanent: true),
   Bind.put<UsersController>(UsersController(), permanent: true),
   Bind.put<GroupCallController>(GroupCallController(), permanent: true),
   Bind.put<NotificationsController>(NotificationsController(), permanent: true),

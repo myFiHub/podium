@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 
 class AllGroupsController extends GetxController {
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final searchValue = ''.obs;
-  final searchedGroups = Rx<Map<String, FirebaseGroup>>({});
+  final searchedGroups = Rx<Map<String, OutpostModel>>({});
 
   @override
   void onInit() {
@@ -39,7 +39,7 @@ class AllGroupsController extends GetxController {
     final filtered = groupsController.groups.value.entries.where((element) =>
         element.value.name.toLowerCase().contains(value.toLowerCase()));
     //await searchForGroupByName(value);
-    final groups = Map<String, FirebaseGroup>.fromEntries(filtered);
+    final groups = Map<String, OutpostModel>.fromEntries(filtered);
     // Map<String, FirebaseGroup> searchedGroupsMap = {};
     // if (value.isEmpty) {
     //   searchedGroupsMap = groupsController.groups.value ?? {};
@@ -50,9 +50,9 @@ class AllGroupsController extends GetxController {
     // });
   }
 
-  refreshSearchedGroup(FirebaseGroup group) {
-    if (searchedGroups.value.containsKey(group.id)) {
-      searchedGroups.value[group.id] = group;
+  refreshSearchedGroup(OutpostModel group) {
+    if (searchedGroups.value.containsKey(group.uuid)) {
+      searchedGroups.value[group.uuid] = group;
       searchedGroups.refresh();
     }
   }

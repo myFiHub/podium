@@ -5,6 +5,8 @@ import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/styles.dart';
 
 import '../controllers/search_controller.dart';
@@ -137,7 +139,7 @@ class SearchView extends GetView<SearchPageController> {
                   children: [
                     Obx(() {
                       final searchedGroups = controller.searchedGroups.value;
-                      List<FirebaseGroup> groupsList = [];
+                      List<OutpostModel> groupsList = [];
                       groupsList = searchedGroups.values.toList();
                       if (groupsList.isEmpty) {
                         return Container();
@@ -148,7 +150,7 @@ class SearchView extends GetView<SearchPageController> {
                     }),
                     Obx(() {
                       final usersMap = controller.searchedUsers.value;
-                      List<UserInfoModel> usersList = [];
+                      List<UserModel> usersList = [];
                       usersList = usersMap.values.toList();
                       if (usersList.isEmpty) {
                         return Container();

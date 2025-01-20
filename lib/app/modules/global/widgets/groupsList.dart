@@ -10,7 +10,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:pulsator/pulsator.dart';
@@ -18,7 +18,7 @@ import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
 
 class GroupList extends StatelessWidget {
-  final List<FirebaseGroup> groupsList;
+  final List<OutpostModel> groupsList;
   final ScrollController? scrollController;
   const GroupList({
     super.key,
@@ -27,7 +27,7 @@ class GroupList extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<GroupsController>();
+    final controller = Get.find<OutpostsController>();
     return Scrollbar(
       controller: scrollController,
       child: ListView.builder(
@@ -35,9 +35,9 @@ class GroupList extends StatelessWidget {
         itemCount: groupsList.length,
         itemBuilder: (context, index) {
           final group = groupsList[index];
-          final amICreator = group.creator.id == myId;
+          final amICreator = group.creator_user_uuid == myId;
           return _SingleGroup(
-            key: Key(group.id),
+            key: Key(group.uuid),
             controller: controller,
             amICreator: amICreator,
             group: group,
@@ -56,17 +56,17 @@ class _SingleGroup extends StatelessWidget {
     required this.group,
   });
 
-  final GroupsController controller;
+  final OutpostsController controller;
   final bool amICreator;
-  final FirebaseGroup group;
+  final OutpostModel group;
 
   @override
   Widget build(BuildContext context) {
-    final isScheduled = group.scheduledFor != 0;
+    final isScheduled = group.scheduled_for != 0;
     return GestureDetector(
       onTap: () async {
         controller.joinGroupAndOpenGroupDetailPage(
-          groupId: group.id,
+          groupId: group.uuid,
         );
       },
       child: Stack(
@@ -118,7 +118,7 @@ class _SingleGroup extends StatelessWidget {
                                   ),
                                   TextSpan(
                                     text:
-                                        " ${amICreator ? "You" : group.creator.fullName}",
+                                        " ${amICreator ? "You" : group.creator_user_uuid}",
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w500,
@@ -134,8 +134,8 @@ class _SingleGroup extends StatelessWidget {
                         Row(
                           children: [
                             Img(
-                              src: Uri.parse(group.imageUrl ?? "").isAbsolute
-                                  ? group.imageUrl!
+                              src: Uri.parse(group.image ?? "").isAbsolute
+                                  ? group.image!
                                   : '',
                               alt: group.name,
                               ifEmpty: Assets.images.logo.path,
@@ -144,7 +144,7 @@ class _SingleGroup extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (group.isRecordable)
+                                if (group.is_recordable)
                                   const Row(
                                     children: [
                                       Icon(
@@ -163,7 +163,7 @@ class _SingleGroup extends StatelessWidget {
                                       ),
                                     ],
                                   ),
-                                if (group.isRecordable) space5,
+                                if (group.is_recordable) space5,
                                 Row(
                                   children: [
                                     const Icon(
@@ -198,7 +198,7 @@ class _SingleGroup extends StatelessWidget {
                                     ),
                                     space5,
                                     Text(
-                                      parseAccessType(group.accessType),
+                                      parseAccessType(group.enter_type),
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
@@ -217,7 +217,7 @@ class _SingleGroup extends StatelessWidget {
                                     ),
                                     space5,
                                     Text(
-                                      parseSpeakerType(group.speakerType),
+                                      parseSpeakerType(group.speak_type),
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
@@ -245,7 +245,7 @@ class _SingleGroup extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                if (group.lumaEventId != null) ...[
+                                if (group.luma_event_id != null) ...[
                                   space5,
                                   Row(
                                     children: [
@@ -281,12 +281,12 @@ class _SingleGroup extends StatelessWidget {
                               analytics.logEvent(
                                 name: "share_group",
                                 parameters: {
-                                  "group_id": group.id,
+                                  "group_id": group.uuid,
                                   "group_name": group.name,
                                 },
                               );
                               Share.share(
-                                  generateGroupShareUrl(groupId: group.id));
+                                  generateGroupShareUrl(groupId: group.uuid));
                             },
                             icon: const Icon(
                               Icons.share,
@@ -310,8 +310,10 @@ class _SingleGroup extends StatelessWidget {
                               controller.toggleArchive(group: group);
                             },
                             icon: Icon(
-                              group.archived ? Icons.unarchive : Icons.archive,
-                              color: group.archived
+                              group.is_archived
+                                  ? Icons.unarchive
+                                  : Icons.archive,
+                              color: group.is_archived
                                   ? ColorName.greyText
                                   : Colors.red,
                             ),
@@ -321,9 +323,9 @@ class _SingleGroup extends StatelessWidget {
                   ],
                 ),
                 _JoiningIndicator(
-                  groupId: group.id,
+                  groupId: group.uuid,
                 ),
-                if (group.hasAdultContent)
+                if (group.has_adult_content)
                   Positioned(
                     child: Assets.images.ageRestricted.image(
                       width: 24,
@@ -338,11 +340,11 @@ class _SingleGroup extends StatelessWidget {
           if (isScheduled)
             _ScheduledBanner(
               group: group,
-              key: Key(group.id + 'scheduledBanner'),
+              key: Key(group.uuid + 'scheduledBanner'),
             ),
           _NumberOfActiveUsers(
-            groupId: group.id,
-            key: Key(group.id + 'numberOfActiveUsers'),
+            groupId: group.uuid,
+            key: Key(group.uuid + 'numberOfActiveUsers'),
           ),
         ],
       ),
@@ -350,7 +352,7 @@ class _SingleGroup extends StatelessWidget {
   }
 }
 
-class _NumberOfActiveUsers extends GetView<GroupsController> {
+class _NumberOfActiveUsers extends GetView<OutpostsController> {
   final String groupId;
   const _NumberOfActiveUsers({
     super.key,
@@ -400,7 +402,7 @@ String generateGroupShareUrl({required String groupId}) {
 }
 
 class _ScheduledBanner extends StatelessWidget {
-  final FirebaseGroup group;
+  final OutpostModel group;
   const _ScheduledBanner({
     super.key,
     required this.group,
@@ -409,7 +411,7 @@ class _ScheduledBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final passedAtLeast2h =
-        group.scheduledFor < DateTime.now().millisecondsSinceEpoch - 7200000;
+        group.scheduled_for < DateTime.now().millisecondsSinceEpoch - 7200000;
     if (passedAtLeast2h) {
       return const SizedBox();
     }
@@ -417,11 +419,11 @@ class _ScheduledBanner extends StatelessWidget {
         id: GlobalUpdateIds.ticker,
         builder: (globalController) {
           final remaining = remainintTimeUntilMilSecondsFormated(
-            time: group.scheduledFor,
+            time: group.scheduled_for,
             textIfAlreadyPassed: "Started",
           );
           final isStarted =
-              group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
+              group.scheduled_for < DateTime.now().millisecondsSinceEpoch;
           final size = 55;
           final remainingText = remaining.contains('d,')
               ? remaining.split('d,').join('d\n').replaceAll('d', 'days')
@@ -474,7 +476,7 @@ class TagsWrapper extends StatelessWidget {
     required this.group,
   });
 
-  final FirebaseGroup group;
+  final OutpostModel group;
 
   @override
   Widget build(BuildContext context) {
@@ -523,7 +525,7 @@ class SingleTag extends StatelessWidget {
   }
 }
 
-class _JoiningIndicator extends GetView<GroupsController> {
+class _JoiningIndicator extends GetView<OutpostsController> {
   final groupId;
   const _JoiningIndicator({super.key, required this.groupId});
 
@@ -584,44 +586,44 @@ String parseAccessType(String? accessType) {
   }
 }
 
-canShareGroupUrl({required FirebaseGroup group}) {
+canShareGroupUrl({required OutpostModel group}) {
   final GlobalController globalController = Get.find();
   if (globalController.currentUserInfo.value == null) {
     return false;
   }
-  final iAmCreator = group.creator.id == myId;
+  final iAmCreator = group.creator_user_uuid == myId;
   if (iAmCreator) {
     return true;
   }
-  if (group.accessType == FreeGroupAccessTypes.public) {
+  if (group.enter_type == FreeGroupAccessTypes.public) {
     return true;
   }
-  if (group.accessType == FreeGroupAccessTypes.onlyLink) {
-    if (group.members.keys.contains(myId)) {
+  if (group.enter_type == FreeGroupAccessTypes.onlyLink) {
+    if (group.members.any((element) => element.uuid == myId)) {
       return true;
     }
   }
   return false;
 }
 
-canLeaveGroup({required FirebaseGroup group}) {
+canLeaveGroup({required OutpostModel group}) {
   final GlobalController globalController = Get.find();
   if (globalController.currentUserInfo.value == null) {
     return false;
   }
-  final iAmCreator = group.creator.id == myId;
-  final amIMember = group.members.keys.contains(myId);
+  final iAmCreator = group.creator_user_uuid == myId;
+  final amIMember = group.members.any((element) => element.uuid == myId);
   if (iAmCreator) {
     return false;
   }
   return amIMember;
 }
 
-canArchiveGroup({required FirebaseGroup group}) {
+canArchiveGroup({required OutpostModel group}) {
   final GlobalController globalController = Get.find();
   if (globalController.currentUserInfo.value == null) {
     return false;
   }
-  final iAmCreator = group.creator.id == myId;
+  final iAmCreator = group.creator_user_uuid == myId;
   return iAmCreator;
 }

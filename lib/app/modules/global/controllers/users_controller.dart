@@ -18,7 +18,7 @@ class UsersController extends GetxController {
   final globalController = Get.find<GlobalController>();
   // current user is set by listening to global controller's currentUserInfo
   final currentUserInfo = Rxn<UserModel>();
-  final GroupsController groupsController = Get.find<GroupsController>();
+  final OutpostsController groupsController = Get.find<OutpostsController>();
   // final users = Map<String, UserInfoModel>();
   final followingsInProgress = Map<String, String>().obs;
 

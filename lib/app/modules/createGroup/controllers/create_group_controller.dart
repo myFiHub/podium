@@ -22,12 +22,12 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
 import 'package:podium/providers/api/luma/models/addHost.dart';
 import 'package:podium/providers/api/luma/models/createEvent.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
@@ -44,13 +44,13 @@ import 'package:uuid/uuid.dart';
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class TicketSellersListMember {
-  final UserInfoModel user;
+  final UserModel user;
   final String activeAddress;
   TicketSellersListMember({required this.user, required this.activeAddress});
 }
 
 class SearchedUser {
-  final UserInfoModel? podiumUserInfo;
+  final UserModel? podiumUserInfo;
   final StarsArenaUser? arenaUserInfo;
   final bool? isArenaUser;
   SearchedUser({
@@ -61,7 +61,7 @@ class SearchedUser {
 }
 
 class CreateGroupController extends GetxController {
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final storage = GetStorage();
   final isCreatingNewGroup = false.obs;
   final newGroupHasAdultContent = false.obs;
@@ -489,20 +489,19 @@ class CreateGroupController extends GetxController {
       Toast.error(message: 'User has no wallet address');
       return;
     }
-    final usersMap = list.map((e) => e.user.id).toList();
+    final usersMap = list.map((e) => e.user.uuid).toList();
     if (usersMap.contains(arenaUserIdPrefix + user.id)) {
-      list.removeWhere((e) => e.user.id == arenaUserIdPrefix + user.id);
+      list.removeWhere((e) => e.user.uuid == arenaUserIdPrefix + user.id);
     } else {
       list.add(TicketSellersListMember(
-        user: UserInfoModel(
-          id: arenaUserIdPrefix + user.id,
-          fullName: user.twitterName,
+        user: UserModel(
+          uuid: arenaUserIdPrefix + user.id,
+          name: user.twitterName,
           email: '',
-          avatar: user.twitterPicture,
-          evm_externalWalletAddress: user.mainAddress,
-          following: [],
-          numberOfFollowers: user.followerCount,
-          evmInternalWalletAddress: user.mainAddress,
+          image: user.twitterPicture,
+          external_wallet_address: user.mainAddress,
+          followers_count: user.followerCount,
+          address: user.mainAddress,
         ),
         activeAddress: user.mainAddress,
       ));
@@ -510,7 +509,7 @@ class CreateGroupController extends GetxController {
   }
 
   toggleUserToSelectedList({
-    required UserInfoModel user,
+    required UserModel user,
     required String ticketPermissiontype,
   }) async {
     final list = ticketPermissiontype == TicketPermissionType.speak
@@ -524,9 +523,9 @@ class CreateGroupController extends GetxController {
       return;
     }
 
-    final usersMap = list.map((e) => e.user.id).toList();
-    if (usersMap.contains(user.id)) {
-      list.removeWhere((e) => e.user.id == user.id);
+    final usersMap = list.map((e) => e.user.uuid).toList();
+    if (usersMap.contains(user.uuid)) {
+      list.removeWhere((e) => e.user.uuid == user.uuid);
     } else {
       String? activeAddress =
           ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
@@ -536,7 +535,7 @@ class CreateGroupController extends GetxController {
                   ticketPermissionType: ticketPermissiontype,
                 );
       if (ticketType == BuyableTicketTypes.onlyPodiumPassHolders) {
-        activeAddress = user.aptosInternalWalletAddress;
+        activeAddress = user.aptos_address;
       }
       if (activeAddress != null) {
         list.add(TicketSellersListMember(
@@ -562,16 +561,16 @@ class CreateGroupController extends GetxController {
   }
 
   Future<String?> checkIfUserCanBeAddedToList({
-    required UserInfoModel user,
+    required UserModel user,
     required String ticketPermissionType,
   }) async {
     if (!_shouldCheckIfUserIsActive(ticketPermissionType)) {
       return user.defaultWalletAddress;
     }
-    loadingUserIds.add(user.id);
+    loadingUserIds.add(user.uuid);
     try {
       final activeWallets = await internal_friendTech_getActiveUserWallets(
-        internalWalletAddress: user.evmInternalWalletAddress,
+        internalWalletAddress: user.address,
         externalWalletAddress: user.defaultWalletAddress,
         chainId: baseChainId,
       );
@@ -580,7 +579,7 @@ class CreateGroupController extends GetxController {
       if (isActive) {
         return preferedWalletAddress;
       } else {
-        if (user.id != myId) {
+        if (user.uuid != myId) {
           Toast.warning(
             title: "User isn't yet active on FriendTech",
             message: "",
@@ -622,7 +621,7 @@ class CreateGroupController extends GetxController {
       l.e(e);
       return null;
     } finally {
-      loadingUserIds.remove(user.id);
+      loadingUserIds.remove(user.uuid);
     }
   }
 
@@ -1046,7 +1045,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           .where(
                         (element) {
                           return element.isArenaUser != true &&
-                              element.podiumUserInfo!.id != myId;
+                              element.podiumUserInfo!.uuid != myId;
                         },
                       ).toList();
 
@@ -1059,21 +1058,21 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           controller
                               .selectedUsersToBuyTicketFrom_ToAccessRoom.value;
                       List<String> selectedIds = [];
-                      List<UserInfoModel> selectedUsers;
+                      List<UserModel> selectedUsers;
                       if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.speak) {
                         selectedUsers =
                             selsectedListOfUsersToBuyTicketFromInOrderToSpeak
                                 .map((e) => e.user)
                                 .toList();
-                        selectedIds = selectedUsers.map((e) => e.id).toList();
+                        selectedIds = selectedUsers.map((e) => e.uuid).toList();
                       } else if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.access) {
                         selectedUsers =
                             selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom
                                 .map((e) => e.user)
                                 .toList();
-                        selectedIds = selectedUsers.map((e) => e.id).toList();
+                        selectedIds = selectedUsers.map((e) => e.uuid).toList();
                       } else {
                         return Container(
                           child: const Center(
@@ -1082,7 +1081,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                         );
                       }
                       // move selectedIds to the top of the list then my id to the top of them
-                      List<UserInfoModel> listOfUsers = [];
+                      List<UserModel> listOfUsers = [];
 
                       final starsArenaUsers = controller
                           .listOfSearchedUsersToBuyTicketFrom.value
@@ -1095,12 +1094,12 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                       ).toList();
 
                       listOfUsers.add(myUser);
-                      final SelectedUsersExceptMe =
-                          selectedUsers.where((element) => element.id != myId);
+                      final SelectedUsersExceptMe = selectedUsers
+                          .where((element) => element.uuid != myId);
                       listOfUsers.addAll([...SelectedUsersExceptMe]);
                       final notSelectedPodiumUsers = podiumUsers.where(
                           (element) => !selectedIds
-                              .contains(element.podiumUserInfo!.id));
+                              .contains(element.podiumUserInfo!.uuid));
                       listOfUsers.addAll(notSelectedPodiumUsers.map(
                         (e) => e.podiumUserInfo!,
                       ));
@@ -1215,11 +1214,12 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           Row(
                                             children: [
                                               Img(
-                                                src: element.user?.avatar ==
+                                                src: (element.user?.image ??
+                                                            '') ==
                                                         defaultAvatar
                                                     ? ''
-                                                    : element.user!.avatar,
-                                                alt: element.user!.fullName,
+                                                    : element.user!.image ?? '',
+                                                alt: element.user!.name ?? '',
                                                 size: 20,
                                               ),
                                               space5
@@ -1227,12 +1227,12 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           ),
                                         if (element.user != null)
                                           Text(
-                                            element.user!.id == myId
+                                            element.user!.uuid == myId
                                                 ? "You"
-                                                : element.user!.fullName,
+                                                : element.user!.name ?? '',
                                             textAlign: TextAlign.start,
                                             style: TextStyle(
-                                              color: element.user!.id == myId
+                                              color: element.user!.uuid == myId
                                                   ? Colors.green
                                                   : Colors.white,
                                               fontSize: 14,
@@ -1257,7 +1257,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                         children: [
                                           Text(
                                             "user ID: " +
-                                                truncate(element.user!.id,
+                                                truncate(element.user!.uuid,
                                                     length: 12),
                                             style: const TextStyle(
                                               color: Colors.grey,
@@ -1272,7 +1272,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (element.user != null &&
-                                        loadingIds.contains(element.user!.id))
+                                        loadingIds.contains(element.user!.uuid))
                                       const Padding(
                                         padding: EdgeInsets.only(right: 18.0),
                                         child: GFLoader(),
@@ -1290,7 +1290,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           }
                                         },
                                         value: selectedIds
-                                            .contains(element.user!.id),
+                                            .contains(element.user!.uuid),
                                       )
                                     else if ((element.address != null &&
                                         loadingAddresses
@@ -1407,7 +1407,7 @@ class FreeGroupSpeakerTypes {
 }
 
 class SelectBoxOption {
-  UserInfoModel? user;
+  UserModel? user;
   String? address;
   StarsArenaUser? arenaUser;
   SelectBoxOption({this.user, this.address, this.arenaUser});

@@ -608,8 +608,8 @@ Future<Map<String, InvitedMember>> getInvitedMembers({
       .child(groupId)
       .child(FirebaseGroup.invitedMembersKey)
       .child(userId != null ? userId : '');
-  final snapshot = await databaseRef.get();
-  final invitedMembers = snapshot.value as dynamic;
+  final snapshot = await databaseRef.once();
+  final invitedMembers = snapshot.snapshot.value as dynamic;
   if (invitedMembers != null) {
     if (userId != null) {
       final invitedMember = InvitedMember(

@@ -333,13 +333,12 @@ class GroupDetailController extends GetxController {
         invitedToSpeak: inviteToSpeak,
       );
       await fetchInvitedMembers(userId: userId);
-      final myUser = Get.find<GlobalController>().currentUserInfo.value;
       final notifId = const Uuid().v4();
       final subject = group.value!.subject;
       final invitationNotification = FirebaseNotificationModel(
         id: notifId,
         title:
-            "${myUser!.fullName} invited you to ${inviteToSpeak ? 'speak' : 'listen'} in Outpost: ${group.value!.name}",
+            "${myUser.fullName} invited you to ${inviteToSpeak ? 'speak' : 'listen'} in Outpost: ${group.value!.name}",
         body:
             "${subject != null && subject.isNotEmpty ? "talking about: " + subject : 'No subject'}",
         type: NotificationTypes.inviteToJoinGroup.toString(),

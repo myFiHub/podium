@@ -35,7 +35,7 @@ class Env {
 
   static final fihubAddress_Aptos = dotenv.env['FIHUB_ADDRESS_APTOS']!;
 
-  static final VERSION = dotenv.env['VERSION'] ?? '1.1.4';
+  static final VERSION = dotenv.env['VERSION'] ?? '1.1.5';
 
   static final podimBackendBaseUrl = dotenv.env['PODIM_BACKEND_BASE_URL']!;
 

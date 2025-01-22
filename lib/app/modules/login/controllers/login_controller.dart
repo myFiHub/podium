@@ -590,6 +590,9 @@ class LoginController extends GetxController {
 
   Future<bool> _canContinueAuthentication(UserInfoModel user) async {
     final registeredUser = await getUserById(user.id);
+    if (registeredUser != null) {
+      return true;
+    }
     if (registeredUser == null && referrer.value != null) {
       if (referrer.value == null) {
         referralError.value = 'Referrer not found';
@@ -602,6 +605,9 @@ class LoginController extends GetxController {
       );
       if (remainingReferrals.isEmpty) {
         referralError.value = 'Referrer has no more referral codes';
+        Toast.error(
+          message: 'Referrer has no more referral codes',
+        );
         return false;
       } else {
         if (referrer.value != null && user.id == referrer.value!.id) {

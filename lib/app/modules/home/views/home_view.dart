@@ -30,18 +30,9 @@ class HomeView extends GetView<HomeController> {
           // Button(
           //   text: 'test',
           //   onPressed: () async {
-          //     final firebaseRefMovementAptos = FirebaseDatabase.instance
-          //         .ref(FireBaseConstants.movementAptosMetadata);
-
-          //     await firebaseRefMovementAptos.set(MovementAptosMetadata(
-          //       chainId: "1",
-          //       rpcUrl: "https://rpc.movement.xyz",
-          //       name: "Movement Aptos",
-          //       podiumProtocolAddress:
-          //           "0x625d878f6210509158416405ae9056bd9ba5c3138cfd284d7300e07dc73a5f77",
-          //       cheerBooAddress:
-          //           "0x3d0cdd46a11be2386e19e794b9ed72db3d3d623becfcde7f975265f9df142957",
-          //     ).toJson());
+          //     // final referralEnabledRef = FirebaseDatabase.instance
+          //     //     .ref(FireBaseConstants.referralsEnabled);
+          //     // await referralEnabledRef.set(false);
           //   },
           // ),
           space16,

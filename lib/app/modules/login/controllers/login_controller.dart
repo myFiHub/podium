@@ -16,12 +16,12 @@ import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeStrin
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
-import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
@@ -35,7 +35,6 @@ import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 import 'package:web3dart/web3dart.dart';
-import 'package:web3dart/crypto.dart' show Sign;
 
 class LoginParametersKeys {
   static const referrerId = 'referrerId';
@@ -398,8 +397,16 @@ class LoginController extends GetxController {
     temporaryUserInfo.value = userToCreate;
     bool canContinueAuthentication = false;
     try {
-      canContinueAuthentication =
-          await _canContinueAuthentication(userToCreate);
+      final firebasRefForRefferrals = FirebaseDatabase.instance.ref(
+        FireBaseConstants.referralsEnabled,
+      );
+      final isEnabled = await firebasRefForRefferrals.get();
+      if (isEnabled.value == true) {
+        canContinueAuthentication =
+            await _canContinueAuthentication(userToCreate);
+      } else {
+        canContinueAuthentication = true;
+      }
     } catch (e) {
       removeLogingInState();
     }

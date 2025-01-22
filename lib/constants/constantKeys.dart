@@ -11,6 +11,7 @@ class FireBaseConstants {
   static final paymentEvents = "paymentEvents_v3/";
   // end
   static final movementAptosMetadata = "movementAptosMetadata/";
+  static final referralsEnabled = "referralsEnabled/";
   static final versionRef = 'version/';
   static final forceUpdate = 'forceUpdate/';
   static final versionCheckRef = 'versionCheck/';

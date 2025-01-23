@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:aptos/aptos_account.dart';
-import 'package:convert/convert.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -19,9 +16,10 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
+import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
@@ -58,7 +56,7 @@ class LoginController extends GetxController {
   Function? afterLogin = null;
 
   String referrerId = '';
-  final referrer = Rxn<UserInfoModel>();
+  final referrer = Rxn<UserModel>();
   final referrerIsFul = false.obs;
   final boughtPodiumDefinedEntryTicket = false.obs;
   final referralError = Rxn<String>(null);
@@ -66,7 +64,7 @@ class LoginController extends GetxController {
   final loadingBuyTicketId = ''.obs;
   // used in referral prejoin page, to continue the process
   final temporaryLoginType = ''.obs;
-  final temporaryUserInfo = Rxn<UserInfoModel>();
+  final temporaryUserInfo = Rxn<UserModel>();
   bool isBeforeLaunchUser = false;
 
   @override
@@ -158,7 +156,7 @@ class LoginController extends GetxController {
           getAllTheUserReferals(userId: referrerId)
         ).wait;
         if (referrerUser.isNotEmpty) {
-          referrer.value = referrerUser.first;
+          // referrer.value = referrerUser.first;  FIXME: this is not working
           globalController.deepLinkRoute.value = '';
           if (allTheReferrals.isNotEmpty) {
             final remainingReferrals = allTheReferrals.values
@@ -315,47 +313,34 @@ class LoginController extends GetxController {
       internalAptosWalletAddress: aptosAddress,
       loginType: loginType,
       loginTypeIdentifier: userInfo.verifierId,
+      privateKey: privateKey,
     );
   }
 
-  UserInfoModel _fixUserData(UserInfoModel user) {
-    UserInfoModel userToCreate = user;
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('twitter|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('twitter|')[1];
+  String _fixLoginTypeIdentifier(String? loginTypeIdentifier) {
+    if (loginTypeIdentifier == null) {
+      return '';
     }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('github|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('github|')[1];
+
+    final providers = [
+      'x',
+      'twitter',
+      'github',
+      'google',
+      'email',
+      'apple',
+      'facebook',
+      'linkedin'
+    ];
+
+    for (final provider in providers) {
+      final delimiter = '$provider|';
+      if (loginTypeIdentifier.contains(delimiter)) {
+        return loginTypeIdentifier.split(delimiter)[1];
+      }
     }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('google|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('google|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('email|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('email|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('apple|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('apple|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('facebook|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('facebook|')[1];
-    }
-    if (userToCreate.loginTypeIdentifier != null &&
-        userToCreate.loginTypeIdentifier!.contains('linkedin|')) {
-      userToCreate.loginTypeIdentifier =
-          userToCreate.loginTypeIdentifier!.split('linkedin|')[1];
-    }
-    return userToCreate;
+
+    return loginTypeIdentifier;
   }
 
   Future<void> _socialLogin({
@@ -366,6 +351,7 @@ class LoginController extends GetxController {
     required String internalEvmWalletAddress,
     required String internalAptosWalletAddress,
     required String loginType,
+    required String privateKey,
     String? loginTypeIdentifier,
   }) async {
     final userId = id;
@@ -376,25 +362,35 @@ class LoginController extends GetxController {
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
     isBeforeLaunchUser = false;
     // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
-    UserInfoModel userData = UserInfoModel(
-      id: userId,
-      fullName: name,
+    final signature = signMessage(privateKey, internalEvmWalletAddress);
+    if (signature == null) {
+      l.e('Signature is not valid');
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    }
+    final userLoginResponse = await HttpApis.podium.login(
+      request: LoginRequest(
+          signature: signature, username: internalEvmWalletAddress),
+      aptosAddress: internalAptosWalletAddress,
       email: email,
-      avatar: avatar,
-      evm_externalWalletAddress: '',
-      evmInternalWalletAddress: internalEvmWalletAddress,
-      aptosInternalWalletAddress: internalAptosWalletAddress,
-      following: [],
-      numberOfFollowers: 0,
-      referrer: referrer.value?.id ?? '',
+      name: name,
+      image: avatar,
       loginType: loginType,
-      loginTypeIdentifier: loginTypeIdentifier,
-      lowercasename: name.toLowerCase(),
+      loginTypeIdentifier: _fixLoginTypeIdentifier(loginTypeIdentifier),
+      refererUserUuid: referrer.value?.uuid,
     );
-    final UserInfoModel userToCreate = _fixUserData(userData);
+    if (userLoginResponse == null) {
+      Toast.error(
+        message: 'Error logging in',
+      );
+      return;
+    }
 
     temporaryLoginType.value = loginType;
-    temporaryUserInfo.value = userToCreate;
+    temporaryUserInfo.value = userLoginResponse;
+
     bool canContinueAuthentication = false;
     try {
       final firebasRefForRefferrals = FirebaseDatabase.instance.ref(
@@ -403,7 +399,7 @@ class LoginController extends GetxController {
       final isEnabled = await firebasRefForRefferrals.get();
       if (isEnabled.value == true) {
         canContinueAuthentication =
-            await _canContinueAuthentication(userToCreate);
+            await _canContinueAuthentication(userLoginResponse);
       } else {
         canContinueAuthentication = true;
       }
@@ -436,9 +432,9 @@ class LoginController extends GetxController {
   _continueWithUserToCreate() async {
     final userToCreate = temporaryUserInfo.value!;
     final loginType = temporaryLoginType.value;
-    UserInfoModel? user = await saveUserLoggedInWithSocialIfNeeded(
-      user: userToCreate,
-    );
+    UserModel? user = null; //await saveUserLoggedInWithSocialIfNeeded(
+    //  user: userToCreate,
+    //    );
 
     if (user == null) {
       Toast.error(
@@ -448,11 +444,11 @@ class LoginController extends GetxController {
     }
     late String? savedName;
     // ignore: unnecessary_null_comparison
-    if (user.fullName.isEmpty || user.fullName == user.email) {
+    if (user.name != null || user.name == user.email) {
       savedName = await forceSaveUserFullName(user: user);
-      UserInfoModel? myUser;
+      UserModel? myUser;
       try {
-        myUser = (await getUsersByIds([user.id])).first;
+        myUser = await HttpApis.podium.getMyUserData();
       } catch (e) {
         myUser = null;
       }
@@ -466,11 +462,11 @@ class LoginController extends GetxController {
         return;
       }
     } else {
-      savedName = user.fullName;
+      savedName = user.name;
     }
     if (savedName != null) {
-      globalController.currentUserInfo.value = user;
-      globalController.currentUserInfo.refresh();
+      // globalController.currentUserInfo.value = user;
+      // globalController.currentUserInfo.refresh();
       await _initializeReferrals(
         user: userToCreate,
       );
@@ -492,19 +488,22 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserInfoModel user) async {
-    String identifier = user.loginTypeIdentifier!;
-    final DatabaseReference _database = FirebaseDatabase.instance.ref();
-    final snapshot = await _database.child('users');
-    final usersWithThisIdentifier = await snapshot
-        .orderByChild(UserInfoModel.loginTypeIdentifierKey)
-        .equalTo(identifier)
-        .once();
-    final results = usersWithThisIdentifier.snapshot.value;
-    if (results == null) {
-      return false;
-    }
+  Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserModel user) async {
+    // FIXME: this is not working
     return true;
+    // String identifier = user.login_type_identifier!;
+    // final DatabaseReference _database = FirebaseDatabase.instance.ref();
+    // final snapshot = await _database.child('users');
+    // final usersWithThisIdentifier = await snapshot
+    //     .orderByChild(UserInfoModel.loginTypeIdentifierKey)
+    //     .equalTo(identifier)
+    //     .once();
+    // final results = usersWithThisIdentifier.snapshot.value;
+    // if (results == null) {
+    //   return false;
+    // }
+    // return true;
+    // FIXME: this is not working
   }
 
   Future<bool> _checkIfUserHasPodiumDefinedEntryTicket() async {
@@ -573,23 +572,23 @@ class LoginController extends GetxController {
   }
 
   Future<bool> _initializeReferrals({
-    required UserInfoModel user,
+    required UserModel user,
   }) async {
-    if (referrer.value != null && user.id == referrer.value!.id) {
+    if (referrer.value != null && user.uuid == referrer.value!.uuid) {
       return true;
     }
-    final refers = await getAllTheUserReferals(userId: user.id);
+    final refers = await getAllTheUserReferals(userId: user.uuid);
     if (refers.isEmpty) {
       await initializeUseReferalCodes(
-        userId: user.id,
+        userId: user.uuid,
         isBeforeLaunchUser: isBeforeLaunchUser,
       );
     }
     return true;
   }
 
-  Future<bool> _canContinueAuthentication(UserInfoModel user) async {
-    final registeredUser = await getUserById(user.id);
+  Future<bool> _canContinueAuthentication(UserModel user) async {
+    final registeredUser = await getUserById(user.uuid);
     if (registeredUser != null) {
       return true;
     }
@@ -599,7 +598,7 @@ class LoginController extends GetxController {
         return false;
       }
       final allReferreReferrals =
-          await getAllTheUserReferals(userId: referrer.value!.id);
+          await getAllTheUserReferals(userId: referrer.value!.uuid);
       final remainingReferrals = allReferreReferrals.values.where(
         (element) => element.usedBy == '',
       );
@@ -610,15 +609,15 @@ class LoginController extends GetxController {
         );
         return false;
       } else {
-        if (referrer.value != null && user.id == referrer.value!.id) {
+        if (referrer.value != null && user.uuid == referrer.value!.uuid) {
           return true;
         }
         final firstAvailableCode = allReferreReferrals.keys.firstWhere(
             (element) => allReferreReferrals[element]!.usedBy == '');
         final code = await setUsedByToReferral(
-          userId: referrer.value!.id,
+          userId: referrer.value!.uuid,
           referralCode: firstAvailableCode,
-          usedById: user.id,
+          usedById: user.uuid,
         );
         if (code == null) {
           referralError.value = 'Error setting used by to referral';
@@ -633,7 +632,7 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<String?> forceSaveUserFullName({required UserInfoModel user}) async {
+  Future<String?> forceSaveUserFullName({required UserModel user}) async {
     final _formKey = GlobalKey<FormBuilderState>();
     String fullName = '';
     final name = await Get.bottomSheet(
@@ -685,7 +684,7 @@ class LoginController extends GetxController {
       ),
     );
     final savedName = await saveNameForUserById(
-      userId: user.id,
+      userId: user.uuid,
       name: name,
     );
 

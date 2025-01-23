@@ -55,8 +55,8 @@ class LoginView extends GetView<LoginController> {
                               ),
                               space5,
                               Img(
-                                src: referrer.avatar,
-                                alt: referrer.fullName,
+                                src: referrer.image ?? '',
+                                alt: referrer.name ?? '',
                                 size: 20,
                               ),
                               space5,
@@ -64,7 +64,7 @@ class LoginView extends GetView<LoginController> {
                                 baseColor: Colors.white,
                                 highlightColor: ColorName.primaryBlue,
                                 child: Text(
-                                  referrer.fullName,
+                                  referrer.name ?? '',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     fontSize: 12.0,

@@ -604,10 +604,10 @@ class _SelectGroupSpeakerType extends GetWidget<CreateGroupController> {
                       value: BuyableTicketTypes.onlyPodiumPassHolders,
                       text: 'Podium Pass Holders',
                     ),
-                    DropDownItem(
-                      value: BuyableTicketTypes.onlyArenaTicketHolders,
-                      text: 'Arena Ticket Holders',
-                    ),
+                    // DropDownItem(
+                    //   value: BuyableTicketTypes.onlyArenaTicketHolders,
+                    //   text: 'Arena Ticket Holders',
+                    // ),
                     DropDownItem(
                       value: BuyableTicketTypes.onlyFriendTechTicketHolders,
                       text: 'FriendTech Key Holders',
@@ -688,11 +688,11 @@ class _SelectGroupAccessType extends GetWidget<CreateGroupController> {
                       value: BuyableTicketTypes.onlyPodiumPassHolders,
                       text: 'Podium Pass Holders',
                     ),
-                    DropDownItem(
-                      value: BuyableTicketTypes.onlyArenaTicketHolders,
-                      text: 'Arena Ticket Holders',
-                      // enabled: false,
-                    ),
+                    // DropDownItem(
+                    //   value: BuyableTicketTypes.onlyArenaTicketHolders,
+                    //   text: 'Arena Ticket Holders',
+                    //   // enabled: false,
+                    // ),
                     DropDownItem(
                       value: BuyableTicketTypes.onlyFriendTechTicketHolders,
                       text: 'FriendTech Key Holders',

@@ -1,5 +1,5 @@
 name: podium
-version: 1.1.6+117
+version: 1.1.6+118
 publish_to: none
 description: web3 Podium.
 environment:
@@ -74,6 +74,7 @@ dependencies:
   flutter_timezone: ^4.0.0
   lint: ^2.3.0
   eth_sig_util: ^0.0.9
+  animated_icon: ^0.0.9
 # dependency_overrides:
 #   web: ^0.5.0
 # dependency overrides

@@ -393,11 +393,7 @@ class LoginController extends GetxController {
         myAptosAddress: internalAptosWalletAddress,
       );
       if (!hasTicket) {
-        try {
-          final balance = await AptosMovement.balance;
-          internalWalletBalance.value =
-              bigIntCoinToMoveOnAptos(balance).toString();
-        } catch (e) {
+        try {} catch (e) {
           removeLogingInState();
         }
         Navigate.to(
@@ -409,6 +405,11 @@ class LoginController extends GetxController {
       }
     }
     _continueWithUserToCreate();
+  }
+
+  getBalance() async {
+    final balance = await AptosMovement.balance;
+    internalWalletBalance.value = bigIntCoinToMoveOnAptos(balance).toString();
   }
 
   _continueWithUserToCreate() async {

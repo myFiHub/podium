@@ -385,7 +385,7 @@ class _ReferralStatus extends GetView<LoginController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "${referrer.fullName} doesnt have any unused referal code ",
+                      "${referrer.name} doesnt have any unused referal code ",
                       style: const TextStyle(
                         color: Colors.red,
                         fontSize: 14,

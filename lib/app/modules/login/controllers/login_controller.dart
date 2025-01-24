@@ -510,69 +510,34 @@ class LoginController extends GetxController {
     // FIXME: this is not working
   }
 
-  Future<bool> _checkIfUserHasPodiumDefinedEntryTicket() async {
+  Future<bool> _checkIfUserHasPodiumDefinedEntryTicket({
+    required String myAptosAddress,
+  }) async {
     isBeforeLaunchUser = await _chackIfUserIsSignedUpBeforeLaunch(
       temporaryUserInfo.value!,
     );
     if (isBeforeLaunchUser) {
       return true;
     }
-    bool bought = false;
-    final listOfBuyableTickets = await getPodiumDefinedEntryAddresses();
-    final List<StarsArenaUser> addressesToCheckForArena = [];
-    final List<Future> arenaCallArray = [];
-    for (var i = 0; i < listOfBuyableTickets.length; i++) {
-      final ticket = listOfBuyableTickets[i];
-      if (ticket.type == BuyableTicketTypes.onlyArenaTicketHolders) {
-        if (ticket.handle != null) {
-          arenaCallArray.add(HttpApis.arenaApi.getUserFromStarsArenaByHandle(
-            ticket.handle!,
-          ));
-        }
-      }
-    }
-    final arenaUsers = await Future.wait(arenaCallArray);
-    for (var i = 0; i < arenaUsers.length; i++) {
-      final user = arenaUsers[i];
-      if (user != null) {
-        addressesToCheckForArena.add(user);
-      }
-    }
-    // update the price for each user
-    final List<Future> SCcallArray = [];
-    for (var i = 0; i < addressesToCheckForArena.length; i++) {
-      final user = addressesToCheckForArena[i];
-      SCcallArray.add(getBuyPriceForArenaTicket(
-        sharesSubject: user.mainAddress,
-        chainId: avalancheChainId,
-      ));
-    }
-    final prices = await Future.wait(SCcallArray);
-    for (var i = 0; i < addressesToCheckForArena.length; i++) {
-      final user = addressesToCheckForArena[i];
-      final price = prices[i].toString();
-      user.lastKeyPrice = price;
-      user.keyPrice = price;
-    }
+    try {
+      final users = await getUsersByIds(podiumTeamMembers);
+      podiumUsersToBuyEntryTicketFrom.value = users;
 
-    starsArenaUsersToBuyEntryTicketFrom.value = addressesToCheckForArena;
-    final buyResults = await Future.wait(addressesToCheckForArena.map(
-      (user) async {
-        return getMyShares_arena(
-          sharesSubject: user.mainAddress,
-          chainId: avalancheChainId,
-        );
-      },
-    ));
-    for (var i = 0; i < buyResults.length; i++) {
-      final result = buyResults[i];
-      if (result != null && result > BigInt.zero) {
-        bought = true;
-        break;
-      }
+      final aptosAddresses =
+          users.map((user) => user.aptosInternalWalletAddress).toList();
+      final callArray = aptosAddresses.map(
+        (address) => AptosMovement.getMyBalanceOnPodiumPass(
+          sellerAddress: address,
+        ),
+      );
+      final balances = await Future.wait(callArray);
+      final hasTicket =
+          balances.any((balance) => balance != null && balance > BigInt.zero);
+      return hasTicket;
+    } catch (e) {
+      l.e(e);
+      return false;
     }
-    boughtPodiumDefinedEntryTicket.value = bought;
-    return bought;
   }
 
   Future<bool> _initializeReferrals({

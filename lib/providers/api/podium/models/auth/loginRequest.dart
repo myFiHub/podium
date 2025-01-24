@@ -6,8 +6,19 @@ part 'loginRequest.g.dart';
 class LoginRequest {
   final String signature;
   final String username;
+  final String aptos_address;
+  final bool has_ticket;
+  final String login_type_identifier;
+  final String? referrer_user_uuid;
 
-  LoginRequest({required this.signature, required this.username});
+  LoginRequest({
+    required this.signature,
+    required this.username,
+    required this.aptos_address,
+    required this.has_ticket,
+    required this.login_type_identifier,
+    required this.referrer_user_uuid,
+  });
 
   factory LoginRequest.fromJson(Map<String, dynamic> json) =>
       _$LoginRequestFromJson(json);

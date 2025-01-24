@@ -370,16 +370,20 @@ class LoginController extends GetxController {
       );
       return;
     }
+    final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
     final userLoginResponse = await HttpApis.podium.login(
       request: LoginRequest(
-          signature: signature, username: internalEvmWalletAddress),
-      aptosAddress: internalAptosWalletAddress,
+        signature: signature,
+        username: internalEvmWalletAddress,
+        aptos_address: internalAptosWalletAddress,
+        has_ticket: hasTicket,
+        login_type_identifier: _fixLoginTypeIdentifier(loginTypeIdentifier),
+        referrer_user_uuid: referrer.value?.uuid,
+      ),
       email: email,
       name: name,
       image: avatar,
       loginType: loginType,
-      loginTypeIdentifier: _fixLoginTypeIdentifier(loginTypeIdentifier),
-      refererUserUuid: referrer.value?.uuid,
     );
     if (userLoginResponse == null) {
       Toast.error(

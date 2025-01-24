@@ -22,8 +22,6 @@ class PodiumApi {
     String? name,
     String? image,
     String? loginType,
-    String? loginTypeIdentifier,
-    String? refererUserUuid,
   }) async {
     try {
       final response =
@@ -36,8 +34,6 @@ class PodiumApi {
           name: name,
           image: image,
           loginType: loginType,
-          loginTypeIdentifier: loginTypeIdentifier,
-          refererUserUuid: refererUserUuid,
         );
         return myUserData;
       } else {
@@ -54,8 +50,6 @@ class PodiumApi {
     String? name,
     String? image,
     String? loginType,
-    String? loginTypeIdentifier,
-    String? refererUserUuid,
   }) async {
     try {
       final response = await dio.get('$_baseUrl/users/profile',
@@ -68,11 +62,6 @@ class PodiumApi {
         'name': (myUser.name, name),
         'image': (myUser.image, image),
         'login_type': (myUser.login_type, loginType),
-        'login_type_identifier': (
-          myUser.login_type_identifier,
-          loginTypeIdentifier
-        ),
-        'referer_user_uuid': (myUser.referer_user_uuid, refererUserUuid),
       };
 
       patchJson.addAll(Map.fromEntries(fieldsToUpdate.entries

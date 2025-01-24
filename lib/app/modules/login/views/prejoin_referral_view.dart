@@ -341,8 +341,9 @@ class _ProfileCard extends GetView<LoginController> {
                 return Button(
                   loading: loadingId == user.id,
                   type: ButtonType.outline2x,
-                  onPressed: () {
+                  onPressed: () async {
                     if (balance.isEmpty) {
+                      await controller.getBalance();
                       return;
                     } else if (balance == '0.0') {
                       Toast.error(

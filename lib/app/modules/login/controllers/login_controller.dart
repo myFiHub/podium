@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -21,6 +22,7 @@ import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -43,6 +45,7 @@ addressToUuid(String address) {
 
 class LoginController extends GetxController {
   final globalController = Get.find<GlobalController>();
+  final storage = GetStorage();
   final isLoggingIn = false.obs;
   final $isAutoLoggingIn = false.obs;
   final email = ''.obs;
@@ -172,6 +175,7 @@ class LoginController extends GetxController {
       );
     } catch (e) {
       if (ignoreIfNotLoggedIn) {
+        storage.remove(StorageKeys.loginType);
         removeLogingInState();
         return;
       }
@@ -211,6 +215,7 @@ class LoginController extends GetxController {
               message:
                   'Error logging in, please try again, or use another method',
             );
+            storage.remove(StorageKeys.loginType);
             removeLogingInState();
           }
         }
@@ -232,6 +237,7 @@ class LoginController extends GetxController {
         Toast.error(
           message: 'Error logging in, please try again, or use another method',
         );
+        storage.remove(StorageKeys.loginType);
       }
     }
   }
@@ -338,7 +344,7 @@ class LoginController extends GetxController {
     );
     temporaryAdditionalData = AdditionalDataForLogin(
       email: email,
-      name: name,
+      name: name == email ? null : name,
       image: avatar,
       loginType: loginType,
     );
@@ -373,7 +379,8 @@ class LoginController extends GetxController {
     //force to add name if field is empty
     String? savedName;
     if (temporaryAdditionalData != null ||
-        temporaryAdditionalData!.name == email) {
+        temporaryAdditionalData!.name == email &&
+            userLoginResponse.name == null) {
       savedName = await forceSaveUserFullName();
       if (savedName == null) {
         Toast.error(

@@ -269,7 +269,7 @@ class LoginController extends GetxController {
     final aptosAddress = aptosAccount.address;
 // end aptos account
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
-    internalWalletAddress.value = publicAddress;
+    internalWalletAddress.value = aptosAddress;
 
     // final loginRes = await HttpApis.podium.login(
     //   request: LoginRequest(signature: signature, username: publicAddress),

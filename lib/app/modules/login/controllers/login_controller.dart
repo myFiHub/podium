@@ -503,6 +503,7 @@ class LoginController extends GetxController {
       final callArray = aptosAddresses.map(
         (address) => AptosMovement.getMyBalanceOnPodiumPass(
           sellerAddress: address,
+          myAddress: myAptosAddress,
         ),
       );
       final balances = await Future.wait(callArray);

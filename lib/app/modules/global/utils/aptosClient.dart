@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:aptos/aptos.dart';
 import 'package:aptos/coin_client.dart';
 import 'package:aptos/models/entry_function_payload.dart';
+import 'package:dio/dio.dart';
 // import 'package:aptos_sdk_dart/aptos_sdk_dart.dart' as AptosSdkDart;
 // import 'package:built_value/json_object.dart';
 import 'package:flutter/material.dart';
@@ -173,13 +174,14 @@ class AptosMovement {
 
   static Future<BigInt?> getMyBalanceOnPodiumPass({
     required String sellerAddress,
+    String? myAptosAddress,
   }) async {
     try {
       final respone = await client.view(
         "${podiumProtocolAddress}::$_podiumProtocolName::get_balance",
         [],
         [
-          myUser.aptosInternalWalletAddress,
+          myAptosAddress ?? myUser.aptosInternalWalletAddress,
           sellerAddress,
         ],
       );
@@ -280,21 +282,47 @@ class AptosMovement {
       await client.waitForTransaction(hash, checkSuccess: true);
       return true;
     } catch (e, stackTrace) {
-      l.e(e, stackTrace: stackTrace);
-      final isCopyableError = e.toString().contains('Waiting for transaction');
+      final errorString = e.toString();
+      l.e(errorString, stackTrace: stackTrace);
+      final isCopyableError = errorString.contains('Waiting for transaction');
+      bool accountIsNotActive = false;
+      if (e is DioException) {
+        accountIsNotActive = e.response?.data['message']
+                .toString()
+                .contains('Account not found by Address') ??
+            false;
+      }
+
       Toast.error(
         title: 'Error',
-        message: isCopyableError
-            ? e.toString()
-            : 'Error Submiting Transaction, please try again later',
-        mainbutton: !isCopyableError
-            ? null
-            : TextButton(
+        message: (accountIsNotActive)
+            ? 'Insufficient balance'
+            : isCopyableError
+                ? e.toString()
+                : 'Error Submiting Transaction, please try again later',
+        mainbutton: accountIsNotActive
+            ? TextButton(
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: e.toString()));
+                  Clipboard.setData(
+                    ClipboardData(
+                      text: account.address,
+                    ),
+                  );
+                  Toast.info(
+                    title: 'Copied!',
+                    message: 'Address copied to clipboard',
+                  );
                 },
-                child: const Text('Copy Error'),
-              ),
+                child: const Text('Copy Address'),
+              )
+            : !isCopyableError
+                ? null
+                : TextButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: e.toString()));
+                    },
+                    child: const Text('Copy Error'),
+                  ),
       );
       return false;
     }

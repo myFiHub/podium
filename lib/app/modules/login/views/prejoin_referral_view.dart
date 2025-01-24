@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/providers/api/arena/models/user.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -74,7 +73,7 @@ class PrejoinReferralView extends GetView<LoginController> {
                     text: ' by an existing user ',
                   ),
                   TextSpan(
-                    text: 'or hold at least one key or ticket',
+                    text: 'or hold at least one key or pass',
                     style: TextStyle(
                         color: Colors.red, fontStyle: FontStyle.italic),
                   ),
@@ -86,7 +85,7 @@ class PrejoinReferralView extends GetView<LoginController> {
             ),
             const _InternalWalletAddress(),
             space5,
-            const _ExternalWalletConnectButton(),
+            // const _ExternalWalletConnectButton(),
             const _ReferralStatus(),
             space10,
             const _AccessUsingTicket(),
@@ -158,7 +157,7 @@ class _InternalWalletAddress extends GetView<LoginController> {
               ),
               if (balance.isNotEmpty)
                 Text(
-                  "Balance: $balance AVAX",
+                  "Balance: $balance MOVE",
                   style: const TextStyle(
                     color: Colors.blueAccent,
                     fontSize: 12,
@@ -208,13 +207,13 @@ class _AccessUsingTicket extends GetView<LoginController> {
     return Expanded(
       child: Obx(() {
         final ticketHoldersList =
-            controller.starsArenaUsersToBuyEntryTicketFrom.value;
+            controller.podiumUsersToBuyEntryTicketFrom.value;
         return ListView.builder(
           shrinkWrap: true,
           itemCount: ticketHoldersList.length,
           itemBuilder: (context, index) {
             return _ProfileCard(
-              key: ValueKey(ticketHoldersList[index].id + 'starsArenaUser'),
+              key: ValueKey(ticketHoldersList[index].id + 'podiumUser'),
               user: ticketHoldersList[index],
             );
           },
@@ -225,16 +224,16 @@ class _AccessUsingTicket extends GetView<LoginController> {
 }
 
 class _ProfileCard extends GetView<LoginController> {
-  final StarsArenaUser user;
+  final UserInfoModel user;
   const _ProfileCard({
     super.key,
     required this.user,
   });
   @override
   Widget build(BuildContext context) {
-    final keyPrice = user.lastKeyPrice ?? '0';
-    final binIntKeyPrice = BigInt.from(int.parse(keyPrice));
-    final valueToShow = bigIntWeiToDouble(binIntKeyPrice).toString();
+    // final keyPrice = user.lastKeyPrice ?? '0';
+    // final binIntKeyPrice = BigInt.from(int.parse(keyPrice));
+    // final valueToShow = bigIntWeiToDouble(binIntKeyPrice).toString();
     return Container(
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -246,7 +245,7 @@ class _ProfileCard extends GetView<LoginController> {
       child: Column(
         children: [
           const Text(
-            'Arena ticket',
+            'Podium Pass',
             style: TextStyle(
               color: Colors.blueAccent,
               fontSize: 24,
@@ -256,8 +255,8 @@ class _ProfileCard extends GetView<LoginController> {
           Row(
             children: [
               Img(
-                src: user.twitterPicture,
-                alt: user.twitterName,
+                src: user.avatar,
+                alt: user.fullName,
                 size: 50,
               ),
               const SizedBox(width: 16),
@@ -265,7 +264,7 @@ class _ProfileCard extends GetView<LoginController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user.twitterName,
+                    user.fullName,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -291,25 +290,6 @@ class _ProfileCard extends GetView<LoginController> {
               Column(
                 children: [
                   const Text(
-                    'Followers',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    user.followerCount.toString(),
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  const Text(
                     'Address',
                     style: TextStyle(
                       color: Colors.white,
@@ -318,7 +298,7 @@ class _ProfileCard extends GetView<LoginController> {
                     ),
                   ),
                   Text(
-                    truncate(user.address, length: 20),
+                    truncate(user.aptosInternalWalletAddress, length: 20),
                     style: TextStyle(
                       color: Colors.grey[400],
                       fontSize: 12,
@@ -341,25 +321,11 @@ class _ProfileCard extends GetView<LoginController> {
                     controller.buyTicket(user: user);
                   },
                   child: RichText(
-                      text: TextSpan(
+                      text: const TextSpan(
                     children: [
-                      const TextSpan(
-                        text: 'Buy Arena Ticket for ',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
                       TextSpan(
-                        text: valueToShow,
+                        text: 'Buy Podium Pass  ',
                         style: const TextStyle(
-                          color: Colors.blueAccent,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const TextSpan(
-                        text: " AVAX",
-                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                         ),

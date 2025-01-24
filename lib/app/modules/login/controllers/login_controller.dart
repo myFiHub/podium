@@ -8,6 +8,7 @@ import 'package:podium/app/modules/createGroup/controllers/create_group_controll
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
@@ -19,6 +20,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
+import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
@@ -59,7 +61,7 @@ class LoginController extends GetxController {
   final referrerIsFul = false.obs;
   final boughtPodiumDefinedEntryTicket = false.obs;
   final referralError = Rxn<String>(null);
-  final starsArenaUsersToBuyEntryTicketFrom = Rx<List<StarsArenaUser>>([]);
+  final podiumUsersToBuyEntryTicketFrom = Rx<List<UserInfoModel>>([]);
   final loadingBuyTicketId = ''.obs;
   // used in referral prejoin page, to continue the process
   final temporaryLoginType = ''.obs;
@@ -95,50 +97,29 @@ class LoginController extends GetxController {
     super.onClose();
   }
 
-  Future<void> buyTicket({required StarsArenaUser user}) async {
-    final externalWalletAddress = globalController.connectedWalletAddress.value;
-
+  Future<void> buyTicket({required UserInfoModel user}) async {
     if (loadingBuyTicketId.value.isNotEmpty) {
       return;
     }
     loadingBuyTicketId.value = user.id;
-    bool bought = false;
+    bool? bought;
     try {
-      if (externalWalletAddress.isNotEmpty) {
-        final selectedWallet = await choseAWallet(chainId: avalancheChainId);
-        if (selectedWallet == null) {
-          return;
-        } else {
-          if (selectedWallet == WalletNames.internal_EVM) {
-            bought = await internal_buySharesWithReferrer(
-              sharesSubject: user.mainAddress,
-              chainId: avalancheChainId,
-            );
-          } else {
-            bought = await ext_buySharesWithReferrer(
-              sharesSubject: user.mainAddress,
-              chainId: avalancheChainId,
-            );
-          }
-        }
-      } else {
-        bought = await internal_buySharesWithReferrer(
-          sharesSubject: user.mainAddress,
-          chainId: avalancheChainId,
-        );
-      }
-      if (bought) {
+      bought = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+        sellerAddress: user.aptosInternalWalletAddress,
+        sellerName: user.fullName,
+      );
+      if (bought != null && bought) {
         Toast.success(
-          message: 'Ticket bought successfully',
+          message: 'Pass bought successfully',
         );
         boughtPodiumDefinedEntryTicket.value = true;
         _continueWithUserToCreate();
       }
     } catch (e) {
-      l.e('Error buying ticket: $e');
+      l.e('Error buying Pass: $e');
       Get.closeAllSnackbars();
       Toast.error(
-        message: 'Error buying ticket',
+        message: 'Error buying Pass',
       );
     } finally {
       loadingBuyTicketId.value = '';
@@ -408,14 +389,14 @@ class LoginController extends GetxController {
       removeLogingInState();
     }
     if (!canContinueAuthentication) {
-      final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
+      final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
+        myAptosAddress: internalAptosWalletAddress,
+      );
       if (!hasTicket) {
         try {
-          final avalancheClient = evmClientByChainId(avalancheChainId);
-          final res = await avalancheClient
-              .getBalance(parseAddress(internalEvmWalletAddress));
-          final balance = weiToDecimalString(wei: res);
-          internalWalletBalance.value = balance;
+          final balance = await AptosMovement.balance;
+          internalWalletBalance.value =
+              bigIntCoinToMoveOnAptos(balance).toString();
         } catch (e) {
           removeLogingInState();
         }
@@ -504,69 +485,34 @@ class LoginController extends GetxController {
     return true;
   }
 
-  Future<bool> _checkIfUserHasPodiumDefinedEntryTicket() async {
+  Future<bool> _checkIfUserHasPodiumDefinedEntryTicket({
+    required String myAptosAddress,
+  }) async {
     isBeforeLaunchUser = await _chackIfUserIsSignedUpBeforeLaunch(
       temporaryUserInfo.value!,
     );
     if (isBeforeLaunchUser) {
       return true;
     }
-    bool bought = false;
-    final listOfBuyableTickets = await getPodiumDefinedEntryAddresses();
-    final List<StarsArenaUser> addressesToCheckForArena = [];
-    final List<Future> arenaCallArray = [];
-    for (var i = 0; i < listOfBuyableTickets.length; i++) {
-      final ticket = listOfBuyableTickets[i];
-      if (ticket.type == BuyableTicketTypes.onlyArenaTicketHolders) {
-        if (ticket.handle != null) {
-          arenaCallArray.add(HttpApis.arenaApi.getUserFromStarsArenaByHandle(
-            ticket.handle!,
-          ));
-        }
-      }
-    }
-    final arenaUsers = await Future.wait(arenaCallArray);
-    for (var i = 0; i < arenaUsers.length; i++) {
-      final user = arenaUsers[i];
-      if (user != null) {
-        addressesToCheckForArena.add(user);
-      }
-    }
-    // update the price for each user
-    final List<Future> SCcallArray = [];
-    for (var i = 0; i < addressesToCheckForArena.length; i++) {
-      final user = addressesToCheckForArena[i];
-      SCcallArray.add(getBuyPriceForArenaTicket(
-        sharesSubject: user.mainAddress,
-        chainId: avalancheChainId,
-      ));
-    }
-    final prices = await Future.wait(SCcallArray);
-    for (var i = 0; i < addressesToCheckForArena.length; i++) {
-      final user = addressesToCheckForArena[i];
-      final price = prices[i].toString();
-      user.lastKeyPrice = price;
-      user.keyPrice = price;
-    }
+    try {
+      final users = await getUsersByIds(podiumTeamMembers);
+      podiumUsersToBuyEntryTicketFrom.value = users;
 
-    starsArenaUsersToBuyEntryTicketFrom.value = addressesToCheckForArena;
-    final buyResults = await Future.wait(addressesToCheckForArena.map(
-      (user) async {
-        return getMyShares_arena(
-          sharesSubject: user.mainAddress,
-          chainId: avalancheChainId,
-        );
-      },
-    ));
-    for (var i = 0; i < buyResults.length; i++) {
-      final result = buyResults[i];
-      if (result != null && result > BigInt.zero) {
-        bought = true;
-        break;
-      }
+      final aptosAddresses =
+          users.map((user) => user.aptosInternalWalletAddress).toList();
+      final callArray = aptosAddresses.map(
+        (address) => AptosMovement.getMyBalanceOnPodiumPass(
+          sellerAddress: address,
+        ),
+      );
+      final balances = await Future.wait(callArray);
+      final hasTicket =
+          balances.any((balance) => balance != null && balance > BigInt.zero);
+      return hasTicket;
+    } catch (e) {
+      l.e(e);
+      return false;
     }
-    boughtPodiumDefinedEntryTicket.value = bought;
-    return bought;
   }
 
   Future<bool> _initializeReferrals({

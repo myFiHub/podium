@@ -17,9 +17,11 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -61,7 +63,8 @@ class LoginController extends GetxController {
   final referrerIsFul = false.obs;
   final boughtPodiumDefinedEntryTicket = false.obs;
   final referralError = Rxn<String>(null);
-  final starsArenaUsersToBuyEntryTicketFrom = Rx<List<StarsArenaUser>>([]);
+  final podiumUsersToBuyEntryTicketFrom = Rx<List<UserInfoModel>>([]);
+
   final loadingBuyTicketId = ''.obs;
   // used in referral prejoin page, to continue the process
   final temporaryLoginType = ''.obs;
@@ -371,7 +374,9 @@ class LoginController extends GetxController {
       );
       return;
     }
-    final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
+    final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
+      myAptosAddress: internalAptosWalletAddress,
+    );
     final userLoginResponse = await HttpApis.podium.login(
       request: LoginRequest(
         signature: signature,
@@ -412,7 +417,9 @@ class LoginController extends GetxController {
       removeLogingInState();
     }
     if (!canContinueAuthentication) {
-      final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket();
+      final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
+        myAptosAddress: internalAptosWalletAddress,
+      );
       if (!hasTicket) {
         try {
           final avalancheClient = evmClientByChainId(avalancheChainId);
@@ -493,33 +500,9 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<bool> _chackIfUserIsSignedUpBeforeLaunch(UserModel user) async {
-    // FIXME: this is not working
-    return true;
-    // String identifier = user.login_type_identifier!;
-    // final DatabaseReference _database = FirebaseDatabase.instance.ref();
-    // final snapshot = await _database.child('users');
-    // final usersWithThisIdentifier = await snapshot
-    //     .orderByChild(UserInfoModel.loginTypeIdentifierKey)
-    //     .equalTo(identifier)
-    //     .once();
-    // final results = usersWithThisIdentifier.snapshot.value;
-    // if (results == null) {
-    //   return false;
-    // }
-    // return true;
-    // FIXME: this is not working
-  }
-
   Future<bool> _checkIfUserHasPodiumDefinedEntryTicket({
     required String myAptosAddress,
   }) async {
-    isBeforeLaunchUser = await _chackIfUserIsSignedUpBeforeLaunch(
-      temporaryUserInfo.value!,
-    );
-    if (isBeforeLaunchUser) {
-      return true;
-    }
     try {
       final users = await getUsersByIds(podiumTeamMembers);
       podiumUsersToBuyEntryTicketFrom.value = users;

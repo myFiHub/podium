@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -17,11 +18,7 @@ class PodiumApi {
 
   Future<(UserModel?, String?)> login({
     required LoginRequest request,
-    String? aptosAddress,
-    String? email,
-    String? name,
-    String? image,
-    String? loginType,
+    required AdditionalDataForLogin additionalData,
   }) async {
     try {
       final response =
@@ -29,11 +26,7 @@ class PodiumApi {
       if (response.statusCode == 200) {
         _token = response.data['data']['token'];
         final myUserData = await getMyUserData(
-          aptosAddress: aptosAddress,
-          email: email,
-          name: name,
-          image: image,
-          loginType: loginType,
+          additionalData: additionalData,
         );
         return (myUserData, null);
       } else {
@@ -48,11 +41,7 @@ class PodiumApi {
   }
 
   Future<UserModel?> getMyUserData({
-    String? aptosAddress,
-    String? email,
-    String? name,
-    String? image,
-    String? loginType,
+    required AdditionalDataForLogin additionalData,
   }) async {
     try {
       final response = await dio.get('$_baseUrl/users/profile',
@@ -60,11 +49,10 @@ class PodiumApi {
       UserModel myUser = UserModel.fromJson(response.data['data']);
       final Map<String, dynamic> patchJson = {};
       final fieldsToUpdate = {
-        'aptos_address': (myUser.aptos_address, aptosAddress),
-        'email': (myUser.email, email),
-        'name': (myUser.name, name),
-        'image': (myUser.image, image),
-        'login_type': (myUser.login_type, loginType),
+        'email': (myUser.email, additionalData.email),
+        'name': (myUser.name, additionalData.name),
+        'image': (myUser.image, additionalData.image),
+        'login_type': (myUser.login_type, additionalData.loginType),
       };
 
       patchJson.addAll(Map.fromEntries(fieldsToUpdate.entries

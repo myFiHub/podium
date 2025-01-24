@@ -1,31 +1,25 @@
+import 'package:ably_flutter/ably_flutter.dart';
 import 'package:aptos/aptos_account.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
-import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
-import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
-import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/constants/constantKeys.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/arena/models/user.dart';
+import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -67,8 +61,10 @@ class LoginController extends GetxController {
 
   final loadingBuyTicketId = ''.obs;
   // used in referral prejoin page, to continue the process
-  final temporaryLoginType = ''.obs;
-  final temporaryUserInfo = Rxn<UserModel>();
+
+  LoginRequest? temporaryLoginRequest = null;
+  AdditionalDataForLogin? temporaryAdditionalData = null;
+
   bool isBeforeLaunchUser = false;
 
   @override
@@ -77,7 +73,7 @@ class LoginController extends GetxController {
     referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
     l.i('deepLinkRoute: $referrerId');
     if (referrerId.isNotEmpty) {
-      initialReferral(referrerId);
+      initializeReferral(referrerId);
     }
     $isAutoLoggingIn.value = globalController.isAutoLoggingIn.value;
     globalController.isAutoLoggingIn.listen((v) {
@@ -89,7 +85,7 @@ class LoginController extends GetxController {
   void onReady() {
     globalController.deepLinkRoute.listen((v) {
       if (v.isNotEmpty) {
-        initialReferral(null);
+        initializeReferral(null);
       }
     });
     super.onReady();
@@ -116,10 +112,7 @@ class LoginController extends GetxController {
           message: 'Pass bought successfully, log in again',
         );
         boughtPodiumDefinedEntryTicket.value = true;
-        await Navigate.to(
-          route: Routes.LOGIN,
-          type: NavigationTypes.offToNamed,
-        );
+        _continueLogin(hasTicket: true);
       }
     } catch (e) {
       l.e('Error buying Pass: $e');
@@ -132,25 +125,12 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<void> initialReferral(String? id) async {
+  Future<void> initializeReferral(String? id) async {
     Future.delayed(const Duration(seconds: 0), () async {
-      final referrerId =
+      referrerId =
           id ?? _extractReferrerId(globalController.deepLinkRoute.value);
       if (referrerId.isNotEmpty) {
-        final (referrerUser, allTheReferrals) = await (
-          getUsersByIds([referrerId]),
-          getAllTheUserReferals(userId: referrerId)
-        ).wait;
-        if (referrerUser.isNotEmpty) {
-          // referrer.value = referrerUser.first;  FIXME: this is not working
-          globalController.deepLinkRoute.value = '';
-          if (allTheReferrals.isNotEmpty) {
-            final remainingReferrals = allTheReferrals.values
-                .where((element) => element.usedBy == '')
-                .toList();
-            referrerIsFul.value = remainingReferrals.isEmpty;
-          }
-        }
+        referrer.value = await HttpApis.podium.getUserData(referrerId);
       }
     });
   }
@@ -256,10 +236,11 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<void> _continueSocialLoginWithUserInfoAndPrivateKey(
-      {required String privateKey,
-      required TorusUserInfo userInfo,
-      required Provider loginMethod}) async {
+  Future<void> _continueSocialLoginWithUserInfoAndPrivateKey({
+    required String privateKey,
+    required TorusUserInfo userInfo,
+    required Provider loginMethod,
+  }) async {
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
     final signature = signMessage(privateKey, publicAddress);
@@ -275,20 +256,7 @@ class LoginController extends GetxController {
     final aptosAddress = aptosAccount.address;
 // end aptos account
     final loginType = web3AuthProviderToLoginTypeString(loginMethod);
-    internalWalletAddress.value = publicAddress;
-
-    // final loginRes = await HttpApis.podium.login(
-    //   request: LoginRequest(signature: signature, username: publicAddress),
-    //   aptosAddress: aptosAddress,
-    //   email: userInfo.email,
-    //   name: userInfo.name,
-    //   image: userInfo.profileImage,
-    // );
-    // if (loginRes == null) {
-    //   Toast.error(
-    //     message: 'Login failed',
-    //   );
-    // }
+    internalWalletAddress.value = aptosAddress;
 
     await _socialLogin(
       id: uid,
@@ -359,53 +327,70 @@ class LoginController extends GetxController {
     final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
       myAptosAddress: internalAptosWalletAddress,
     );
-    final (userLoginResponse, errorMessage) = await HttpApis.podium.login(
-      request: LoginRequest(
-        signature: signature,
-        username: internalEvmWalletAddress,
-        aptos_address: internalAptosWalletAddress,
-        has_ticket: hasTicket,
-        login_type_identifier: _fixLoginTypeIdentifier(loginTypeIdentifier),
-        referrer_user_uuid: referrer.value?.uuid,
-      ),
+    temporaryLoginRequest = LoginRequest(
+      signature: signature,
+      username: internalEvmWalletAddress,
+      aptos_address: internalAptosWalletAddress,
+      has_ticket: hasTicket,
+      login_type_identifier: _fixLoginTypeIdentifier(loginTypeIdentifier),
+      referrer_user_uuid: referrer.value?.uuid,
+    );
+    temporaryAdditionalData = AdditionalDataForLogin(
       email: email,
       name: name,
       image: avatar,
       loginType: loginType,
     );
+    _continueLogin(hasTicket: hasTicket);
+  }
+
+  _continueLogin({
+    required bool hasTicket,
+  }) async {
+    final (userLoginResponse, errorMessage) = await HttpApis.podium.login(
+      request: LoginRequest(
+        signature: temporaryLoginRequest!.signature,
+        username: temporaryLoginRequest!.username,
+        aptos_address: temporaryLoginRequest!.aptos_address,
+        has_ticket: hasTicket,
+        login_type_identifier: temporaryLoginRequest!.login_type_identifier,
+        referrer_user_uuid: temporaryLoginRequest!.referrer_user_uuid,
+      ),
+      additionalData: temporaryAdditionalData!,
+    );
+
     if (userLoginResponse == null) {
-      Toast.error(
-        message: errorMessage ?? 'Error logging in',
-      );
-      // await Web3AuthFlutter.logout();
-      removeLogingInState();
+      if (errorMessage == 'referrer has reached its limit') {
+        Toast.error(
+          message: errorMessage,
+        );
+      }
+      _redirectToBuyTicketPage();
       return;
     }
-//force to add name if field is empty
+
+    //force to add name if field is empty
     String? savedName;
-    // ignore: unnecessary_null_comparison
-    if (name != null || name == email) {
+    if (temporaryAdditionalData != null ||
+        temporaryAdditionalData!.name == email) {
       savedName = await forceSaveUserFullName();
       if (savedName == null) {
         Toast.error(
-          message: 'Error logging in',
+          title: 'Error logging in',
+          message: 'Name is required',
         );
+        await Web3AuthFlutter.logout();
         return;
       }
     } else {
       savedName = userLoginResponse.name;
     }
-// end force to add name if field is empty
-
-    if (!hasTicket) {
-      _redirectToBuyTicketPage();
-    }
+    // end force to add name if field is empty
   }
 
   _redirectToBuyTicketPage() async {
     try {
-      final balance = await AptosMovement.balance;
-      internalWalletBalance.value = bigIntCoinToMoveOnAptos(balance).toString();
+      await getBalance();
     } catch (e) {
       removeLogingInState();
     }
@@ -414,6 +399,11 @@ class LoginController extends GetxController {
       type: NavigationTypes.toNamed,
     );
     removeLogingInState();
+  }
+
+  getBalance() async {
+    final balance = await AptosMovement.balance;
+    internalWalletBalance.value = bigIntCoinToMoveOnAptos(balance).toString();
   }
 
   Future<bool> _checkIfUserHasPodiumDefinedEntryTicket({

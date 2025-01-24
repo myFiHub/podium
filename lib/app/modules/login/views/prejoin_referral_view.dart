@@ -1,3 +1,4 @@
+import 'package:animated_icon/animated_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -163,33 +164,54 @@ class _InternalWalletAddress extends GetView<LoginController> {
                     fontSize: 12,
                   ),
                 ),
-              GestureDetector(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: internalWalletAddress))
-                      .then(
-                    (_) => Toast.info(
-                      title: "Copied",
-                      message: 'Address copied to clipboard',
+              space5,
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Clipboard.setData(
+                              ClipboardData(text: internalWalletAddress))
+                          .then(
+                        (_) => Toast.info(
+                          title: "Copied",
+                          message: 'Address copied to clipboard',
+                        ),
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        Text(
+                          truncate(internalWalletAddress, length: 16),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                        space5,
+                        const Icon(
+                          Icons.copy,
+                          color: Colors.blueAccent,
+                          size: 16,
+                        ),
+                      ],
                     ),
-                  );
-                },
-                child: Row(
-                  children: [
-                    Text(
-                      truncate(internalWalletAddress, length: 16),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                    space5,
-                    const Icon(
-                      Icons.copy,
+                  ),
+                  space10,
+                  Tooltip(
+                    message: 'Refresh Balance',
+                    child: AnimateIcon(
+                      key: UniqueKey(),
+                      onTap: () {
+                        controller.getBalance();
+                      },
                       color: Colors.blueAccent,
-                      size: 16,
+                      iconType: IconType.animatedOnTap,
+                      height: 20,
+                      width: 20,
+                      animateIcon: AnimateIcons.refresh,
                     ),
-                  ],
-                ),
+                  )
+                ],
               ),
             ],
           ),
@@ -231,6 +253,8 @@ class _ProfileCard extends GetView<LoginController> {
   });
   @override
   Widget build(BuildContext context) {
+    final balance = controller.internalWalletBalance.value;
+
     // final keyPrice = user.lastKeyPrice ?? '0';
     // final binIntKeyPrice = BigInt.from(int.parse(keyPrice));
     // final valueToShow = bigIntWeiToDouble(binIntKeyPrice).toString();
@@ -318,7 +342,33 @@ class _ProfileCard extends GetView<LoginController> {
                   loading: loadingId == user.id,
                   type: ButtonType.outline2x,
                   onPressed: () {
-                    controller.buyTicket(user: user);
+                    if (balance.isEmpty) {
+                      return;
+                    } else if (balance == '0.0') {
+                      Toast.error(
+                        title: "Insufficient Balance",
+                        message:
+                            'You do not have enough balance to buy a ticket',
+                        mainbutton: TextButton(
+                          onPressed: () {
+                            Clipboard.setData(
+                              ClipboardData(
+                                text: user.aptosInternalWalletAddress,
+                              ),
+                            );
+                            Get.closeAllSnackbars();
+                            Toast.info(
+                              title: "Copied",
+                              message: 'Address copied to clipboard',
+                            );
+                          },
+                          child: const Text('Copy Address'),
+                        ),
+                      );
+                      return;
+                    } else {
+                      controller.buyTicket(user: user);
+                    }
                   },
                   child: RichText(
                       text: const TextSpan(

@@ -62,6 +62,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.9.0"
+  animated_icon:
+    dependency: "direct main"
+    description:
+      name: animated_icon
+      sha256: "13f7516a20d1ecfc31075ba90a92e969ec43c019fea3463c6e412733a0ad61c5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.9"
   ansicolor:
     dependency: transitive
     description:
@@ -1322,6 +1330,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  lottie:
+    dependency: transitive
+    description:
+      name: lottie
+      sha256: "377d87b8dcef640c04717e93afb86a510f0e1117a399ab94dc4b3f39c85eaa87"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.0"
   macros:
     dependency: transitive
     description:

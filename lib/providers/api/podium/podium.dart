@@ -15,7 +15,7 @@ class PodiumApi {
 
   PodiumApi(this.dio);
 
-  Future<UserModel?> login({
+  Future<(UserModel?, String?)> login({
     required LoginRequest request,
     String? aptosAddress,
     String? email,
@@ -35,12 +35,15 @@ class PodiumApi {
           image: image,
           loginType: loginType,
         );
-        return myUserData;
+        return (myUserData, null);
       } else {
-        return null;
+        return (null, 'User not found');
       }
+    } on DioException catch (e) {
+      final String? message = e.response?.data['message'];
+      return (null, message);
     } catch (e) {
-      return null;
+      return (null, 'User not found');
     }
   }
 

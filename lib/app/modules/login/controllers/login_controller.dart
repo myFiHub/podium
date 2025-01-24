@@ -359,7 +359,7 @@ class LoginController extends GetxController {
     final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
       myAptosAddress: internalAptosWalletAddress,
     );
-    final userLoginResponse = await HttpApis.podium.login(
+    final (userLoginResponse, errorMessage) = await HttpApis.podium.login(
       request: LoginRequest(
         signature: signature,
         username: internalEvmWalletAddress,
@@ -375,8 +375,10 @@ class LoginController extends GetxController {
     );
     if (userLoginResponse == null) {
       Toast.error(
-        message: 'Error logging in',
+        message: errorMessage ?? 'Error logging in',
       );
+      // await Web3AuthFlutter.logout();
+      removeLogingInState();
       return;
     }
 //force to add name if field is empty
@@ -396,22 +398,22 @@ class LoginController extends GetxController {
 // end force to add name if field is empty
 
     if (!hasTicket) {
-      try {
-        final avalancheClient = evmClientByChainId(avalancheChainId);
-        final res = await avalancheClient
-            .getBalance(parseAddress(internalEvmWalletAddress));
-        final balance = weiToDecimalString(wei: res);
-        internalWalletBalance.value = balance;
-      } catch (e) {
-        removeLogingInState();
-      }
-      Navigate.to(
-        route: Routes.PREJOIN_REFERRAL_PAGE,
-        type: NavigationTypes.toNamed,
-      );
-      removeLogingInState();
-      return;
+      _redirectToBuyTicketPage();
     }
+  }
+
+  _redirectToBuyTicketPage() async {
+    try {
+      final balance = await AptosMovement.balance;
+      internalWalletBalance.value = bigIntCoinToMoveOnAptos(balance).toString();
+    } catch (e) {
+      removeLogingInState();
+    }
+    Navigate.to(
+      route: Routes.PREJOIN_REFERRAL_PAGE,
+      type: NavigationTypes.toNamed,
+    );
+    removeLogingInState();
   }
 
   Future<bool> _checkIfUserHasPodiumDefinedEntryTicket({
@@ -436,22 +438,6 @@ class LoginController extends GetxController {
       l.e(e);
       return false;
     }
-  }
-
-  Future<bool> _initializeReferrals({
-    required UserModel user,
-  }) async {
-    if (referrer.value != null && user.uuid == referrer.value!.uuid) {
-      return true;
-    }
-    final refers = await getAllTheUserReferals(userId: user.uuid);
-    if (refers.isEmpty) {
-      await initializeUseReferalCodes(
-        userId: user.uuid,
-        isBeforeLaunchUser: isBeforeLaunchUser,
-      );
-    }
-    return true;
   }
 
   Future<String?> forceSaveUserFullName() async {

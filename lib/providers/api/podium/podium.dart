@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
-import 'package:podium/providers/api/podium/models/auth/loginResponse.dart';
 import 'package:podium/providers/api/podium/models/user/myUserDataResponse.dart';
 import 'package:podium/providers/api/podium/models/user/userDataResponse.dart';
 

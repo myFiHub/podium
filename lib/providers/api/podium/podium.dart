@@ -44,8 +44,10 @@ class PodiumApi {
     required AdditionalDataForLogin additionalData,
   }) async {
     try {
-      final response = await dio.get('$_baseUrl/users/profile',
-          options: Options(headers: _headers));
+      final response = await dio.get(
+        '$_baseUrl/users/profile',
+        options: Options(headers: _headers),
+      );
       UserModel myUser = UserModel.fromJson(response.data['data']);
       final Map<String, dynamic> patchJson = {};
       final fieldsToUpdate = {

@@ -172,6 +172,7 @@ class AptosMovement {
   }
 
   static Future<BigInt?> getMyBalanceOnPodiumPass({
+    String? myAddress,
     required String sellerAddress,
   }) async {
     try {
@@ -179,7 +180,7 @@ class AptosMovement {
         "${podiumProtocolAddress}::$_podiumProtocolName::get_balance",
         [],
         [
-          myUser.aptosInternalWalletAddress,
+          myAddress ?? myUser.aptosInternalWalletAddress,
           sellerAddress,
         ],
       );

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
+import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/providers/api/luma/models/addGuest.dart';
+import 'package:podium/providers/api/luma/models/addHost.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 
-class AddGuestsPopup extends GetView<CreateGroupController> {
-  const AddGuestsPopup({super.key});
+class AddHostsPopup extends GetView<CreateOutpostController> {
+  const AddHostsPopup({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class AddGuestsPopup extends GetView<CreateGroupController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Add Guests',
+                    'Add Hosts',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -44,7 +44,7 @@ class AddGuestsPopup extends GetView<CreateGroupController> {
               space10,
               space10,
               space10,
-              const _GuestsList(),
+              const _HostsList(),
               const _DoneButton(),
             ],
           ),
@@ -70,20 +70,19 @@ class _DoneButton extends StatelessWidget {
   }
 }
 
-class _GuestsList extends GetView<CreateGroupController> {
-  const _GuestsList({super.key});
+class _HostsList extends GetView<CreateOutpostController> {
+  const _HostsList({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Obx(
         () {
-          final guestsList = controller.lumaGuests;
+          final hostsList = controller.lumaHosts;
           return ListView.builder(
-            itemCount: guestsList.length,
+            itemCount: hostsList.length,
             itemBuilder: (context, index) {
-              return _GuestItem(
-                  guest: guestsList[index], controller: controller);
+              return _HostItem(host: hostsList[index], controller: controller);
             },
           );
         },
@@ -92,10 +91,10 @@ class _GuestsList extends GetView<CreateGroupController> {
   }
 }
 
-class _GuestItem extends StatelessWidget {
-  const _GuestItem({super.key, required this.guest, required this.controller});
-  final AddGuestModel guest;
-  final CreateGroupController controller;
+class _HostItem extends StatelessWidget {
+  const _HostItem({super.key, required this.host, required this.controller});
+  final AddHostModel host;
+  final CreateOutpostController controller;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -114,16 +113,16 @@ class _GuestItem extends StatelessWidget {
           Column(
             children: [
               Text(
-                guest.email,
+                host.email,
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: ColorName.white,
                 ),
               ),
-              if (guest.name != null && guest.name != '') ...[
+              if (host.name != null && host.name != '') ...[
                 Text(
-                  guest.name!,
+                  host.name!,
                   style: const TextStyle(
                     fontSize: 7,
                     fontWeight: FontWeight.w600,
@@ -139,7 +138,7 @@ class _GuestItem extends StatelessWidget {
           IconButton(
             padding: EdgeInsets.zero,
             onPressed: () {
-              controller.removeGuest(guest.email);
+              controller.removeHost(host.email);
             },
             icon: const Icon(
               Icons.delete,
@@ -151,7 +150,7 @@ class _GuestItem extends StatelessWidget {
   }
 }
 
-class _Form extends GetView<CreateGroupController> {
+class _Form extends GetView<CreateOutpostController> {
   _Form({super.key});
   final emailController = TextEditingController();
   final nameController = TextEditingController();
@@ -181,14 +180,14 @@ class _Form extends GetView<CreateGroupController> {
             blockButton: true,
             type: ButtonType.gradient,
             size: ButtonSize.MEDIUM,
-            text: 'Add Guest',
+            text: 'Add Host',
             onPressed: () {
-              // add the guest to the list
+              // add the host to the list
               final email = emailController.text;
               final name = nameController.text;
               // is email?
               if (email.contains('@')) {
-                controller.addGuest(email, name);
+                controller.addHost(email, name);
               } else {
                 Toast.warning(
                   message: 'Please enter a valid email',
@@ -206,8 +205,8 @@ class _Form extends GetView<CreateGroupController> {
   }
 }
 
-openAddGuestsDialog() {
+openAddHostsDialog() {
   Get.dialog(
-    const AddGuestsPopup(),
+    const AddHostsPopup(),
   );
 }

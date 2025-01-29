@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/allGroups/controllers/all_groups_controller.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
 import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
-import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
+import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
@@ -27,6 +27,7 @@ import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
@@ -452,6 +453,31 @@ class GroupsController extends GetxController with FirebaseTags {
     String? lumaEventId,
     String? imageUrl,
   }) async {
+    final accessAddresses = [
+      ...requiredAddressesToEnter.map((e) => e).toList(),
+      ...requiredTicketsToAccess.map((e) => e.activeAddress).toList(),
+    ];
+    final speakAddresses = [
+      ...requiredAddressesToSpeak.map((e) => e).toList(),
+      ...requiredTicketsToSpeak.map((e) => e.activeAddress).toList(),
+    ];
+
+    final createOutpostRequest = CreateOutpostRequest(
+      alarm_id: alarmId,
+      enter_type: accessType,
+      has_adult_content: adultContent,
+      image: imageUrl ?? '',
+      is_recordable: recordable,
+      luma_event_id: lumaEventId,
+      name: name,
+      scheduled_for: scheduledFor,
+      speak_type: speakerType,
+      subject: subject,
+      tags: tags,
+      tickets_to_enter: accessAddresses,
+      tickets_to_speak: speakAddresses,
+    );
+
     // final firebaseGroupsReference =
     //     FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + id);
     // final firebaseSessionReference =

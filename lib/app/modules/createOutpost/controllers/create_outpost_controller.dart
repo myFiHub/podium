@@ -60,7 +60,7 @@ class SearchedUser {
   });
 }
 
-class CreateGroupController extends GetxController {
+class CreateOutpostController extends GetxController {
   final groupsController = Get.find<GroupsController>();
   final storage = GetStorage();
   final isCreatingNewGroup = false.obs;
@@ -74,13 +74,14 @@ class CreateGroupController extends GetxController {
   final newGroupIsRecorable = false.obs;
   final groupAccessType = FreeGroupAccessTypes.public.obs;
   final groupSpeakerType = FreeGroupSpeakerTypes.everyone.obs;
-
+  // tutorial keys
   final intro_selectImageKey = GlobalKey();
   final intro_groupNameKey = GlobalKey();
   final intro_tagsKey = GlobalKey();
   final intro_groupSubjectKey = GlobalKey();
   final intro_groupAccessTypeKey = GlobalKey();
   final intro_groupSpeakerTypeKey = GlobalKey();
+  // end tutorial keys
   BuildContext? contextForIntro;
   late TutorialCoachMark tutorialCoachMark;
 
@@ -870,7 +871,7 @@ Future<bool?> showActivatePopup() async {
   );
 }
 
-class ScheduledGroupDateSelector extends GetView<CreateGroupController> {
+class ScheduledGroupDateSelector extends GetView<CreateOutpostController> {
   const ScheduledGroupDateSelector({super.key});
 
   @override
@@ -897,7 +898,7 @@ class ScheduledGroupDateSelector extends GetView<CreateGroupController> {
 }
 
 class SelectUsersToBuyTicketFromBottomSheetContent
-    extends GetView<CreateGroupController> {
+    extends GetView<CreateOutpostController> {
   final String buyTicketToGetPermisionFor;
   const SelectUsersToBuyTicketFromBottomSheetContent({
     super.key,

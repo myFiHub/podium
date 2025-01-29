@@ -1,4 +1,4 @@
-import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
+import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/models/user_info_model.dart';
 
 class FirebaseGroupCreator {

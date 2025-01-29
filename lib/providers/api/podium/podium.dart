@@ -3,6 +3,7 @@ import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 
@@ -96,6 +97,16 @@ class PodiumApi {
     try {
       final response = await dio.get('$_baseUrl/outposts/detail?uuid=$id',
           options: Options(headers: _headers));
+      return OutpostModel.fromJson(response.data['data']);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<OutpostModel?> createOutpost(CreateOutpostRequest request) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/create',
+          data: request.toJson(), options: Options(headers: _headers));
       return OutpostModel.fromJson(response.data['data']);
     } catch (e) {
       return null;

@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:podium/app/modules/createGroup/widgets/addGuestsPopup.dart';
-import 'package:podium/app/modules/createGroup/widgets/addHostsPopup.dart';
-import 'package:podium/app/modules/createGroup/widgets/groupType_dropDown.dart';
-import 'package:podium/app/modules/createGroup/widgets/tags_input.dart';
+import 'package:podium/app/modules/createOutpost/widgets/addGuestsPopup.dart';
+import 'package:podium/app/modules/createOutpost/widgets/addHostsPopup.dart';
+import 'package:podium/app/modules/createOutpost/widgets/groupType_dropDown.dart';
+import 'package:podium/app/modules/createOutpost/widgets/tags_input.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
@@ -16,9 +16,9 @@ import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../controllers/create_group_controller.dart';
+import '../controllers/create_outpost_controller.dart';
 
-class CreateGroupView extends GetView<CreateGroupController> {
+class CreateGroupView extends GetView<CreateOutpostController> {
   const CreateGroupView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -82,7 +82,7 @@ class CreateGroupView extends GetView<CreateGroupController> {
   }
 }
 
-class _SelectPicture extends GetWidget<CreateGroupController> {
+class _SelectPicture extends GetWidget<CreateOutpostController> {
   const _SelectPicture({super.key});
 
   @override
@@ -141,7 +141,7 @@ class _SelectPicture extends GetWidget<CreateGroupController> {
   }
 }
 
-class _ScheduleToggle extends GetView<CreateGroupController> {
+class _ScheduleToggle extends GetView<CreateOutpostController> {
   const _ScheduleToggle({super.key});
 
   @override
@@ -239,7 +239,7 @@ millisecondsToFormattedDateWithTime(int milliseconds) {
   return '$day/$month/$year $hour:$minute';
 }
 
-class _TagsInput extends GetWidget<CreateGroupController> {
+class _TagsInput extends GetWidget<CreateOutpostController> {
   const _TagsInput({
     super.key,
   });
@@ -257,7 +257,7 @@ class _TagsInput extends GetWidget<CreateGroupController> {
   }
 }
 
-class _SubjectInput extends GetWidget<CreateGroupController> {
+class _SubjectInput extends GetWidget<CreateOutpostController> {
   const _SubjectInput({
     super.key,
   });
@@ -279,7 +279,7 @@ class _SubjectInput extends GetWidget<CreateGroupController> {
   }
 }
 
-class _TitleBar extends GetWidget<CreateGroupController> {
+class _TitleBar extends GetWidget<CreateOutpostController> {
   const _TitleBar({
     super.key,
   });
@@ -300,7 +300,7 @@ class _TitleBar extends GetWidget<CreateGroupController> {
   }
 }
 
-class _RoomNameInput extends GetWidget<CreateGroupController> {
+class _RoomNameInput extends GetWidget<CreateOutpostController> {
   const _RoomNameInput({
     super.key,
   });
@@ -321,7 +321,7 @@ class _RoomNameInput extends GetWidget<CreateGroupController> {
   }
 }
 
-class _CreateButton extends GetWidget<CreateGroupController> {
+class _CreateButton extends GetWidget<CreateOutpostController> {
   const _CreateButton({
     super.key,
   });
@@ -357,7 +357,7 @@ class _CreateButton extends GetWidget<CreateGroupController> {
   }
 }
 
-class _AddLumaEventCheckboxAndButtons extends GetView<CreateGroupController> {
+class _AddLumaEventCheckboxAndButtons extends GetView<CreateOutpostController> {
   const _AddLumaEventCheckboxAndButtons({
     super.key,
   });
@@ -440,7 +440,7 @@ class _AddLumaEventCheckboxAndButtons extends GetView<CreateGroupController> {
   }
 }
 
-class _AddLumaEventHostsButton extends GetView<CreateGroupController> {
+class _AddLumaEventHostsButton extends GetView<CreateOutpostController> {
   final List<AddHostModel> hosts;
   const _AddLumaEventHostsButton({
     super.key,
@@ -459,7 +459,7 @@ class _AddLumaEventHostsButton extends GetView<CreateGroupController> {
   }
 }
 
-class _AddLumaEventGuestsButton extends GetView<CreateGroupController> {
+class _AddLumaEventGuestsButton extends GetView<CreateOutpostController> {
   final List<AddGuestModel> guests;
   const _AddLumaEventGuestsButton({
     super.key,
@@ -478,7 +478,7 @@ class _AddLumaEventGuestsButton extends GetView<CreateGroupController> {
   }
 }
 
-class _AdultsCheckbox extends GetView<CreateGroupController> {
+class _AdultsCheckbox extends GetView<CreateOutpostController> {
   const _AdultsCheckbox({
     super.key,
   });
@@ -525,7 +525,7 @@ class _AdultsCheckbox extends GetView<CreateGroupController> {
   }
 }
 
-class _RecordableCheckbox extends GetView<CreateGroupController> {
+class _RecordableCheckbox extends GetView<CreateOutpostController> {
   const _RecordableCheckbox();
 
   @override
@@ -570,7 +570,7 @@ class _RecordableCheckbox extends GetView<CreateGroupController> {
   }
 }
 
-class _SelectGroupSpeakerType extends GetWidget<CreateGroupController> {
+class _SelectGroupSpeakerType extends GetWidget<CreateOutpostController> {
   const _SelectGroupSpeakerType({
     super.key,
   });
@@ -647,7 +647,7 @@ class _SelectGroupSpeakerType extends GetWidget<CreateGroupController> {
   }
 }
 
-class _SelectGroupAccessType extends GetWidget<CreateGroupController> {
+class _SelectGroupAccessType extends GetWidget<CreateOutpostController> {
   const _SelectGroupAccessType({
     super.key,
   });

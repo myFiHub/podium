@@ -28,6 +28,7 @@ class PodiumApi {
         final myUserData = await getMyUserData(
           additionalData: additionalData,
         );
+
         return (myUserData, null);
       } else {
         return (null, 'User not found');

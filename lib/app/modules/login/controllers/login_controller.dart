@@ -299,7 +299,6 @@ class LoginController extends GetxController {
         return loginTypeIdentifier.split(delimiter)[1];
       }
     }
-
     return loginTypeIdentifier;
   }
 
@@ -315,7 +314,7 @@ class LoginController extends GetxController {
     String? loginTypeIdentifier,
   }) async {
     if (email.isEmpty) {
-      //since email will be used in jitsi meet, we have to save something TODO: save user id in jitsi
+      // just a placeholder for email
       email = const Uuid().v4().replaceAll('-', '') + '@gmail.com';
     }
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
@@ -377,10 +376,8 @@ class LoginController extends GetxController {
     }
 
     //force to add name if field is empty
-    String? savedName;
-    if (temporaryAdditionalData != null ||
-        temporaryAdditionalData!.name == email &&
-            userLoginResponse.name == null) {
+    String? savedName = userLoginResponse.name;
+    if (userLoginResponse.name == email || userLoginResponse.name == null) {
       savedName = await forceSaveUserFullName();
       if (savedName == null) {
         Toast.error(
@@ -388,12 +385,12 @@ class LoginController extends GetxController {
           message: 'Name is required',
         );
         await Web3AuthFlutter.logout();
+        removeLogingInState();
         return;
       }
-    } else {
-      savedName = userLoginResponse.name;
     }
     // end force to add name if field is empty
+    storage.write(StorageKeys.loginType, temporaryAdditionalData?.loginType);
   }
 
   _redirectToBuyTicketPage() async {
@@ -442,7 +439,7 @@ class LoginController extends GetxController {
   Future<String?> forceSaveUserFullName() async {
     final _formKey = GlobalKey<FormBuilderState>();
     String fullName = '';
-    final name = await Get.bottomSheet(
+    await Get.bottomSheet(
       isDismissible: false,
       Container(
         width: Get.width,

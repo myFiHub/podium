@@ -746,8 +746,7 @@ class CreateOutpostController extends GetxController {
     }
 
     try {
-      l.d(lumaEventId);
-      await outpostsController.createOutpost(
+      final response = await outpostsController.createOutpost(
         id: id,
         imageUrl: imageUrl,
         name: outpostName.value,
@@ -766,10 +765,17 @@ class CreateOutpostController extends GetxController {
         scheduledFor: scheduledFor.value,
         alarmId: alarmId,
       );
+      if (response == null) {
+        Toast.error(message: 'Failed to create outpost');
+        return;
+      }
       // preventing from creating the same name if controller is not deleted
       outpostName.value = "";
-    } catch (e) {}
-    isCreatingNewOutpost.value = false;
+    } catch (e) {
+      l.e(e);
+    } finally {
+      isCreatingNewOutpost.value = false;
+    }
   }
 
   openSelectTicketBottomSheet({

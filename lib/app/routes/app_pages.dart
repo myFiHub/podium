@@ -6,7 +6,7 @@ import '../modules/allGroups/bindings/all_groups_binding.dart';
 import '../modules/allGroups/views/all_groups_view.dart';
 import '../modules/chat/bindings/chat_binding.dart';
 import '../modules/chat/views/chat_view.dart';
-import '../modules/createOutpost/bindings/create_group_binding.dart';
+import '../modules/createOutpost/bindings/create_outpost_binding.dart';
 import '../modules/createOutpost/views/create_outpost_view.dart';
 import '../modules/editGroup/bindings/edit_group_binding.dart';
 import '../modules/editGroup/views/edit_group_view.dart';

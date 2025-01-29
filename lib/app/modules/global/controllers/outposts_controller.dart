@@ -477,7 +477,14 @@ class OutpostsController extends GetxController with FirebaseTags {
       tickets_to_enter: accessAddresses,
       tickets_to_speak: speakAddresses,
     );
-
+    try {
+      final response = await HttpApis.podium.createOutpost(
+        createOutpostRequest,
+      );
+      return response;
+    } catch (e) {
+      return null;
+    }
     // final firebaseGroupsReference =
     //     FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + id);
     // final firebaseSessionReference =

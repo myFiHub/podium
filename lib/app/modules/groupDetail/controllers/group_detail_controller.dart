@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -44,7 +44,7 @@ class GroupDetailsParametersKeys {
 }
 
 class GroupDetailController extends GetxController {
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;
   final forceUpdateIndicator = false.obs;
@@ -262,7 +262,7 @@ class GroupDetailController extends GetxController {
     if (isGettingGroupInfo.value) return;
     isGettingGroupInfo.value = true;
     final globalController = Get.find<GlobalController>();
-    final groupsController = Get.find<GroupsController>();
+    final groupsController = Get.find<OutpostsController>();
     if (globalController.loggedIn.value) {
       groupsController.joinGroupAndOpenGroupDetailPage(
         groupId: id,

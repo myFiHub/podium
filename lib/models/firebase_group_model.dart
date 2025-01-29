@@ -106,8 +106,8 @@ class FirebaseGroup {
     data[creatorKey] = creator.toJson();
     data[membersKey] = members;
     data[lumaEventIdKey] = lumaEventId;
-    data[accessTypeKey] = accessType ?? FreeGroupAccessTypes.public;
-    data[speakerTypeKey] = speakerType ?? FreeGroupSpeakerTypes.everyone;
+    data[accessTypeKey] = accessType ?? FreeOutpostAccessTypes.public;
+    data[speakerTypeKey] = speakerType ?? FreeOutpostSpeakerTypes.everyone;
     data[subjectKey] = subject ?? defaultSubject;
     data[lowercasenameKey] = lowercasename ?? name.toLowerCase();
     data[invitedMembersKey] = invitedMembers;

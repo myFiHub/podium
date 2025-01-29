@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
@@ -61,26 +61,26 @@ class SearchedUser {
 }
 
 class CreateOutpostController extends GetxController {
-  final groupsController = Get.find<GroupsController>();
+  final outpostsController = Get.find<OutpostsController>();
   final storage = GetStorage();
-  final isCreatingNewGroup = false.obs;
-  final newGroupHasAdultContent = false.obs;
+  final isCreatingNewOutpost = false.obs;
+  final newOutpostHasAdultContent = false.obs;
   // luma related
   final addToLuma = false.obs;
   final lumaGuests = RxList<AddGuestModel>([]);
   final lumaHosts = RxList<AddHostModel>([]);
 
   // luma related end
-  final newGroupIsRecorable = false.obs;
-  final groupAccessType = FreeGroupAccessTypes.public.obs;
-  final groupSpeakerType = FreeGroupSpeakerTypes.everyone.obs;
+  final newOutpostIsRecorable = false.obs;
+  final outpostAccessType = FreeOutpostAccessTypes.public.obs;
+  final outpostSpeakerType = FreeOutpostSpeakerTypes.everyone.obs;
   // tutorial keys
   final intro_selectImageKey = GlobalKey();
-  final intro_groupNameKey = GlobalKey();
+  final intro_outpostNameKey = GlobalKey();
   final intro_tagsKey = GlobalKey();
-  final intro_groupSubjectKey = GlobalKey();
-  final intro_groupAccessTypeKey = GlobalKey();
-  final intro_groupSpeakerTypeKey = GlobalKey();
+  final intro_outpostSubjectKey = GlobalKey();
+  final intro_outpostAccessTypeKey = GlobalKey();
+  final intro_outpostSpeakerTypeKey = GlobalKey();
   // end tutorial keys
   BuildContext? contextForIntro;
   late TutorialCoachMark tutorialCoachMark;
@@ -98,8 +98,8 @@ class CreateOutpostController extends GetxController {
   final scheduledFor = 0.obs;
   final searchValueForSeletTickets = "".obs;
   final tags = RxList<String>([]);
-  final roomSubject = defaultSubject.obs;
-  final groupName = "".obs;
+  final outpostSubject = defaultSubject.obs;
+  final outpostName = "".obs;
 
 // image
   final fileLocalAddress = ''.obs;
@@ -115,7 +115,7 @@ class CreateOutpostController extends GetxController {
   @override
   void onReady() async {
     super.onReady();
-    final alreadyViewed = storage.read(IntroStorageKeys.viewedCreateGroup);
+    final alreadyViewed = storage.read(IntroStorageKeys.viewedCreateOutpost);
     if (
         //
         // true
@@ -215,7 +215,7 @@ class CreateOutpostController extends GetxController {
     );
     targets.add(
       _createStep(
-        targetId: intro_groupSubjectKey,
+        targetId: intro_outpostSubjectKey,
         text:
             "enter the main subject of your outpost, to help people understand what it is about",
       ),
@@ -229,14 +229,14 @@ class CreateOutpostController extends GetxController {
 
     targets.add(
       _createStep(
-        targetId: intro_groupAccessTypeKey,
+        targetId: intro_outpostAccessTypeKey,
         text: "you can select the access type of your outpost",
       ),
     );
 
     targets.add(
       _createStep(
-        targetId: intro_groupSpeakerTypeKey,
+        targetId: intro_outpostSpeakerTypeKey,
         text: "you can select the speaker type of your outpost",
         hasNext: false,
       ),
@@ -314,7 +314,7 @@ class CreateOutpostController extends GetxController {
 
   void saveIntroAsDone(bool? setAsFinished) {
     if (setAsFinished == true) {
-      storage.write(IntroStorageKeys.viewedCreateGroup, true);
+      storage.write(IntroStorageKeys.viewedCreateOutpost, true);
     }
   }
 
@@ -345,10 +345,10 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  Future<String?> uploadFile({required groupId}) async {
+  Future<String?> uploadFile({required outpostId}) async {
     final storageRef = FirebaseStorage.instance
         .ref()
-        .child('${FireBaseConstants.groupsRef}$groupId');
+        .child('${FireBaseConstants.groupsRef}$outpostId');
 
     if (selectedFile == null) {
       return "";
@@ -379,15 +379,15 @@ class CreateOutpostController extends GetxController {
   }
 
   setRoomPrivacyType(String value) {
-    groupAccessType.value = value;
+    outpostAccessType.value = value;
   }
 
   setRoomSpeakingType(String value) {
-    groupSpeakerType.value = value;
+    outpostSpeakerType.value = value;
   }
 
   setRoomSubject(String value) {
-    roomSubject.value = value;
+    outpostSubject.value = value;
   }
 
   Future<int> openCalendarBottomSheet() async {
@@ -407,39 +407,39 @@ class CreateOutpostController extends GetxController {
   }
 
   get shouldSelectTicketHolersForSpeaking {
-    return (groupSpeakerType.value ==
+    return (outpostSpeakerType.value ==
                 BuyableTicketTypes.onlyFriendTechTicketHolders ||
-            groupSpeakerType.value ==
+            outpostSpeakerType.value ==
                 BuyableTicketTypes.onlyArenaTicketHolders ||
-            groupSpeakerType.value ==
+            outpostSpeakerType.value ==
                 BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyticketFrom_ToSpeak.isEmpty &&
         addressesToAddForSpeaking.isEmpty;
   }
 
   get shouldSelectTicketHolersForAccess {
-    return ((groupAccessType.value ==
+    return ((outpostAccessType.value ==
                 BuyableTicketTypes.onlyFriendTechTicketHolders) ||
-            groupAccessType.value ==
+            outpostAccessType.value ==
                 BuyableTicketTypes.onlyArenaTicketHolders ||
-            groupAccessType.value ==
+            outpostAccessType.value ==
                 BuyableTicketTypes.onlyPodiumPassHolders) &&
         selectedUsersToBuyTicketFrom_ToAccessRoom.isEmpty &&
         addressesToAddForEntering.isEmpty;
   }
 
   get shouldBuyTicketToSpeak {
-    return groupSpeakerType.value ==
+    return outpostSpeakerType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders ||
-        groupSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
-        groupSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
+        outpostSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        outpostSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   get shouldBuyTicketToAccess {
-    return groupAccessType.value ==
+    return outpostAccessType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders ||
-        groupAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
-        groupAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
+        outpostAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
+        outpostAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
   toggleAddressForSelectedList({
@@ -450,8 +450,8 @@ class CreateOutpostController extends GetxController {
         ? addressesToAddForSpeaking
         : addressesToAddForEntering;
     final ticketType = ticketPermissionType == TicketPermissionType.speak
-        ? groupSpeakerType.value
-        : groupAccessType.value;
+        ? outpostSpeakerType.value
+        : outpostAccessType.value;
     if (list.contains(address)) {
       list.remove(address);
     } else {
@@ -518,8 +518,8 @@ class CreateOutpostController extends GetxController {
         ? selectedUsersToBuyticketFrom_ToSpeak
         : selectedUsersToBuyTicketFrom_ToAccessRoom;
     final ticketType = ticketPermissiontype == TicketPermissionType.speak
-        ? groupSpeakerType.value
-        : groupAccessType.value;
+        ? outpostSpeakerType.value
+        : outpostAccessType.value;
     if (user.defaultWalletAddress.isEmpty) {
       Toast.error(message: 'User has no wallet address');
       return;
@@ -550,12 +550,12 @@ class CreateOutpostController extends GetxController {
 
   bool _shouldCheckIfUserIsActive(String ticketPermissionType) {
     if (ticketPermissionType == TicketPermissionType.access &&
-        groupAccessType.value ==
+        outpostAccessType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders) {
       return true;
     }
     if (ticketPermissionType == TicketPermissionType.speak &&
-        groupSpeakerType.value ==
+        outpostSpeakerType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders) {
       return true;
     }
@@ -693,10 +693,10 @@ class CreateOutpostController extends GetxController {
       lumaHosts.value.isNotEmpty &&
       lumaGuests.value.isNotEmpty;
   create() async {
-    if (groupName.value.isEmpty) {
+    if (outpostName.value.isEmpty) {
       Toast.error(message: 'room name cannot be empty');
       return;
-    } else if (groupName.value.length < 5) {
+    } else if (outpostName.value.length < 5) {
       Toast.error(message: 'room name must be at least 5 characters');
       return;
     }
@@ -706,7 +706,7 @@ class CreateOutpostController extends GetxController {
       final setFor = await setReminder(
         alarmId: alarmId,
         scheduledFor: scheduledFor.value,
-        eventName: groupName.value,
+        eventName: outpostName.value,
         timesList: defaultTimeList(
           endsAt: scheduledFor.value,
         ),
@@ -722,24 +722,24 @@ class CreateOutpostController extends GetxController {
       }
     }
 
-    String subject = roomSubject.value;
+    String subject = outpostSubject.value;
     if (subject.isEmpty) {
       subject = defaultSubject;
     }
-    isCreatingNewGroup.value = true;
-    final accessType = groupAccessType.value;
-    final speakerType = groupSpeakerType.value;
+    isCreatingNewOutpost.value = true;
+    final accessType = outpostAccessType.value;
+    final speakerType = outpostSpeakerType.value;
     final id = const Uuid().v4();
     String imageUrl = "";
     if (selectedFile != null) {
-      final res = await uploadFile(groupId: id);
+      final res = await uploadFile(outpostId: id);
       if (res == null) {
-        isCreatingNewGroup.value = false;
+        isCreatingNewOutpost.value = false;
         return;
       }
       imageUrl = res;
     }
-    final lumaEventId = await _createLumaEvent(groupId: id);
+    final lumaEventId = await _createLumaEvent(outpostId: id);
     if (_shouldCreateLumaEvent && lumaEventId == null) {
       Toast.error(message: 'Failed to create Luma Event');
       return;
@@ -747,17 +747,17 @@ class CreateOutpostController extends GetxController {
 
     try {
       l.d(lumaEventId);
-      await groupsController.createGroup(
+      await outpostsController.createOutpost(
         id: id,
         imageUrl: imageUrl,
-        name: groupName.value,
+        name: outpostName.value,
         lumaEventId: lumaEventId,
         accessType: accessType,
         speakerType: speakerType,
         subject: subject,
         tags: tags.value,
-        adultContent: newGroupHasAdultContent.value,
-        recordable: newGroupIsRecorable.value,
+        adultContent: newOutpostHasAdultContent.value,
+        recordable: newOutpostIsRecorable.value,
         requiredTicketsToAccess:
             selectedUsersToBuyTicketFrom_ToAccessRoom.value,
         requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
@@ -767,9 +767,9 @@ class CreateOutpostController extends GetxController {
         alarmId: alarmId,
       );
       // preventing from creating the same name if controller is not deleted
-      groupName.value = "";
+      outpostName.value = "";
     } catch (e) {}
-    isCreatingNewGroup.value = false;
+    isCreatingNewOutpost.value = false;
   }
 
   openSelectTicketBottomSheet({
@@ -784,7 +784,7 @@ class CreateOutpostController extends GetxController {
   }
 
   Future<String?> _createLumaEvent({
-    required String groupId,
+    required String outpostId,
   }) async {
     try {
       if (_shouldCreateLumaEvent) {
@@ -794,10 +794,10 @@ class CreateOutpostController extends GetxController {
                 scheduledFor.value + 60 * 60 * 1000)
             .toIso8601String();
         final lumaEvent = Luma_CreateEvent(
-          name: groupName.value,
+          name: outpostName.value,
           start_at: isoDate,
           end_at: oneHourAfter,
-          meeting_url: generateGroupShareUrl(groupId: groupId),
+          meeting_url: generateOutpostShareUrl(outpostId: outpostId),
         );
         final createdEvent =
             await HttpApis.lumaApi.createEvent(event: lumaEvent);
@@ -943,8 +943,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                 final isInputBusy = controller.showLoadingOnSearchInput.value;
                 final ticketType =
                     buyTicketToGetPermisionFor == TicketPermissionType.speak
-                        ? controller.groupSpeakerType.value
-                        : controller.groupAccessType.value;
+                        ? controller.outpostSpeakerType.value
+                        : controller.outpostAccessType.value;
                 bool isAddress =
                     controller.checkIfValueIsDirectAddress(searchValue);
                 try {} catch (e) {}
@@ -1385,7 +1385,7 @@ class BuyableTicketTypes {
   static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
 }
 
-class FreeGroupAccessTypes {
+class FreeOutpostAccessTypes {
   static const public = 'public';
   static const onlyLink = 'onlyLink';
   static const invitees = 'invitees';
@@ -1402,7 +1402,7 @@ class TicketTypes {
   static const friendTech = 'friendTech';
 }
 
-class FreeGroupSpeakerTypes {
+class FreeOutpostSpeakerTypes {
   static const everyone = 'everyone';
   static const invitees = 'invitees';
 }

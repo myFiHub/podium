@@ -27,9 +27,9 @@ FirebaseGroup? singleGroupParser(value) {
       invitedMembers[key] = invitedMember;
     });
     final accessType =
-        value[FirebaseGroup.accessTypeKey] ?? FreeGroupAccessTypes.public;
+        value[FirebaseGroup.accessTypeKey] ?? FreeOutpostAccessTypes.public;
     final speakerType =
-        value[FirebaseGroup.speakerTypeKey] ?? FreeGroupSpeakerTypes.everyone;
+        value[FirebaseGroup.speakerTypeKey] ?? FreeOutpostSpeakerTypes.everyone;
     final subject = value[FirebaseGroup.subjectKey] ?? defaultSubject;
     final creatorId = creator[UserInfoModel.idKey];
     final creatorName = creator[UserInfoModel.fullNameKey];

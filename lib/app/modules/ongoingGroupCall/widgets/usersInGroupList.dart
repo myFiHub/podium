@@ -5,7 +5,7 @@ import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -412,7 +412,7 @@ _shootReaction({required BuildContext context, required Reaction reaction}) {
   }
 }
 
-class _TalkingIndicator extends GetView<GroupsController> {
+class _TalkingIndicator extends GetView<OutpostsController> {
   final String groupId;
   final String userId;
   const _TalkingIndicator(

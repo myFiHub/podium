@@ -25,7 +25,7 @@ class IntroStorageKeys {
   }
   IntroStorageKeys._internal();
 
-  static const viewedCreateGroup = 'viewedCreateGroup';
+  static const viewedCreateOutpost = 'viewedCreateOutpost';
   static const viewedMyProfile = 'viewedMyProfile';
   static const viewedOngiongCall = 'viewedOngiongCall';
 }

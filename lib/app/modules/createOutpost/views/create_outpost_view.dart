@@ -43,11 +43,11 @@ class CreateGroupView extends GetView<CreateOutpostController> {
                     key: controller.intro_selectImageKey,
                   ),
                   _RoomNameInput(
-                    key: controller.intro_groupNameKey,
+                    key: controller.intro_outpostNameKey,
                   ),
                   space5,
                   _SubjectInput(
-                    key: controller.intro_groupSubjectKey,
+                    key: controller.intro_outpostSubjectKey,
                   ),
                   const SizedBox(
                     height: 8,
@@ -56,11 +56,11 @@ class CreateGroupView extends GetView<CreateOutpostController> {
                     key: controller.intro_tagsKey,
                   ),
                   _SelectGroupAccessType(
-                    key: controller.intro_groupAccessTypeKey,
+                    key: controller.intro_outpostAccessTypeKey,
                   ),
                   space5,
                   _SelectGroupSpeakerType(
-                    key: controller.intro_groupSpeakerTypeKey,
+                    key: controller.intro_outpostSpeakerTypeKey,
                   ),
                   space5,
                   const _ScheduleToggle(),
@@ -267,9 +267,9 @@ class _SubjectInput extends GetWidget<CreateOutpostController> {
     return SizedBox(
       height: 55,
       child: Input(
-        initialValue: controller.roomSubject.value,
+        initialValue: controller.outpostSubject.value,
         hintText: 'Main Subject (optional)',
-        onChanged: (value) => controller.roomSubject.value = value,
+        onChanged: (value) => controller.outpostSubject.value = value,
         marginvertical: 0,
         paddinghorizontal: 0,
         style: const TextStyle(
@@ -311,7 +311,7 @@ class _RoomNameInput extends GetWidget<CreateOutpostController> {
       height: 55,
       child: Input(
         hintText: 'Outpost Name',
-        onChanged: (value) => controller.groupName.value = value,
+        onChanged: (value) => controller.outpostName.value = value,
         marginvertical: 0,
         paddinghorizontal: 0,
         style: const TextStyle(
@@ -329,7 +329,7 @@ class _CreateButton extends GetWidget<CreateOutpostController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final loading = controller.isCreatingNewGroup.value;
+      final loading = controller.isCreatingNewOutpost.value;
       final shouldSelectTicketHolersForAccess =
           controller.shouldSelectTicketHolersForAccess;
       final shouldSelectTicketHolersForSpeaking =
@@ -509,13 +509,13 @@ class _AdultsCheckbox extends GetView<CreateOutpostController> {
         ),
         Obx(
           () {
-            final isChecked = controller.newGroupHasAdultContent.value;
+            final isChecked = controller.newOutpostHasAdultContent.value;
             return GFCheckbox(
               value: isChecked,
               activeBgColor: Colors.red,
               size: 24,
               onChanged: (value) {
-                controller.newGroupHasAdultContent.value = value;
+                controller.newOutpostHasAdultContent.value = value;
               },
             );
           },
@@ -554,13 +554,13 @@ class _RecordableCheckbox extends GetView<CreateOutpostController> {
         ),
         Obx(
           () {
-            final isChecked = controller.newGroupIsRecorable.value;
+            final isChecked = controller.newOutpostIsRecorable.value;
             return GFCheckbox(
               value: isChecked,
               activeBgColor: Colors.red,
               size: 24,
               onChanged: (value) {
-                controller.newGroupIsRecorable.value = value;
+                controller.newOutpostIsRecorable.value = value;
               },
             );
           },
@@ -578,7 +578,7 @@ class _SelectGroupSpeakerType extends GetWidget<CreateOutpostController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final selectedValue = controller.groupSpeakerType.value;
+      final selectedValue = controller.outpostSpeakerType.value;
       return Container(
         child: Stack(
           children: [
@@ -593,11 +593,11 @@ class _SelectGroupSpeakerType extends GetWidget<CreateOutpostController> {
                 DropDown(
                   items: [
                     DropDownItem(
-                      value: FreeGroupSpeakerTypes.everyone,
+                      value: FreeOutpostSpeakerTypes.everyone,
                       text: 'Everyone',
                     ),
                     DropDownItem(
-                      value: FreeGroupSpeakerTypes.invitees,
+                      value: FreeOutpostSpeakerTypes.invitees,
                       text: 'Only Invited Users',
                     ),
                     DropDownItem(
@@ -655,7 +655,7 @@ class _SelectGroupAccessType extends GetWidget<CreateOutpostController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final selectedValue = controller.groupAccessType.value;
+      final selectedValue = controller.outpostAccessType.value;
       return Stack(
         children: [
           Container(
@@ -673,15 +673,15 @@ class _SelectGroupAccessType extends GetWidget<CreateOutpostController> {
                 DropDown(
                   items: [
                     DropDownItem(
-                      value: FreeGroupAccessTypes.public,
+                      value: FreeOutpostAccessTypes.public,
                       text: 'Everyone',
                     ),
                     DropDownItem(
-                      value: FreeGroupAccessTypes.onlyLink,
+                      value: FreeOutpostAccessTypes.onlyLink,
                       text: 'Users having the Link',
                     ),
                     DropDownItem(
-                      value: FreeGroupAccessTypes.invitees,
+                      value: FreeOutpostAccessTypes.invitees,
                       text: 'Invited Users',
                     ),
                     DropDownItem(

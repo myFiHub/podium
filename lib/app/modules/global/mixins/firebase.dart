@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/groupsParser.dart';
@@ -677,7 +677,7 @@ Future<FirebaseSessionMember?> getUserSessionData(
         if (group == null) {
           return null;
         }
-        final initialMember = Get.find<GroupsController>()
+        final initialMember = Get.find<OutpostsController>()
             .createInitialSessionMember(user: user, group: group);
         if (initialMember == null) {
           return null;

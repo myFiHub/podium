@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/firebase_group_model.dart';
 
 class HomeController extends GetxController {
-  final GroupsController groupsController = Get.find<GroupsController>();
+  final OutpostsController groupsController = Get.find<OutpostsController>();
   final globalController = Get.find<GlobalController>();
   final groupsImIn = Rx<Map<String, FirebaseGroup>>({});
   final allGroups = Rx<Map<String, FirebaseGroup>>({});

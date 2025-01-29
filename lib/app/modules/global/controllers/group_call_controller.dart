@@ -8,7 +8,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -32,7 +32,7 @@ class SortTypes {
 class GroupCallController extends GetxController {
   final storage = GetStorage();
   // group session id is group id
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final globalController = Get.find<GlobalController>();
   final group = Rxn<FirebaseGroup>();
   final members = Rx<List<FirebaseSessionMember>>([]);
@@ -311,7 +311,7 @@ class GroupCallController extends GetxController {
 bool canISpeakWithoutTicket({required FirebaseGroup group}) {
   final iAmTheCreator = group.creator.id == myId;
   if (iAmTheCreator) return true;
-  if (group.speakerType == FreeGroupSpeakerTypes.invitees) {
+  if (group.speakerType == FreeOutpostSpeakerTypes.invitees) {
     // check if I am invited and am invited to speak
     final invitedMember = group.invitedMembers[myId];
     if (invitedMember != null && invitedMember.invitedToSpeak) return true;
@@ -319,7 +319,7 @@ bool canISpeakWithoutTicket({required FirebaseGroup group}) {
   }
 
   final iAmAllowedToSpeak = group.speakerType == null ||
-      group.speakerType == FreeGroupSpeakerTypes.everyone;
+      group.speakerType == FreeOutpostSpeakerTypes.everyone;
 
   return iAmAllowedToSpeak;
 }

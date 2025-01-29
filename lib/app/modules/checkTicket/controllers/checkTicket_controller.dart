@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
@@ -92,7 +92,7 @@ class TicketSeller {
 
 class CheckticketController extends GetxController {
   final globalController = Get.find<GlobalController>();
-  final GroupsController groupsController = Get.find<GroupsController>();
+  final OutpostsController groupsController = Get.find<OutpostsController>();
   final Map<String, UserInfoModel> usersToBuyTicketFromInOrderToHaveAccess = {};
   final Map<String, UserInfoModel> usersToBuyTicketFromInOrderToSpeak = {};
   final allUsersToBuyTicketFrom = Rx<Map<String, TicketSeller>>({});
@@ -857,16 +857,16 @@ canEnterWithoutATicket(FirebaseGroup group) {
   final g = group;
   final amIInvited = g.invitedMembers[myId] != null;
   final link = globalController.deepLinkRoute;
-  final cameHereByLink = g.accessType == FreeGroupAccessTypes.onlyLink &&
+  final cameHereByLink = g.accessType == FreeOutpostAccessTypes.onlyLink &&
       link.isNotEmpty &&
       link.contains(g.id);
-  if (g.accessType == FreeGroupAccessTypes.onlyLink) {
+  if (g.accessType == FreeOutpostAccessTypes.onlyLink) {
     return cameHereByLink;
   }
-  if (g.accessType == FreeGroupAccessTypes.invitees) {
+  if (g.accessType == FreeOutpostAccessTypes.invitees) {
     return amIInvited;
   }
-  if (g.accessType == FreeGroupAccessTypes.public) {
+  if (g.accessType == FreeOutpostAccessTypes.public) {
     return true;
   }
   return false;

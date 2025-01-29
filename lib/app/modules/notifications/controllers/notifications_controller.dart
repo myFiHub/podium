@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/notification_model.dart';
@@ -80,7 +80,7 @@ class NotificationsController extends GetxController {
   }) async {
     final groupId = notif.actionId;
     if (groupId == null) return;
-    final GroupsController groupsController = Get.find<GroupsController>();
+    final OutpostsController groupsController = Get.find<OutpostsController>();
     await groupsController.joinGroupAndOpenGroupDetailPage(
       groupId: groupId,
     );

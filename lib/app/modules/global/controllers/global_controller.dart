@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -371,7 +371,7 @@ class GlobalController extends GetxController {
         return;
       }
       final groupId = splited[1];
-      final groupsController = Get.put(GroupsController());
+      final groupsController = Get.put(OutpostsController());
       Get.put(GroupDetailController());
       groupsController.joinGroupAndOpenGroupDetailPage(
         groupId: groupId,
@@ -431,14 +431,14 @@ class GlobalController extends GetxController {
     final sawProfileIntro =
         storage.read<bool?>(IntroStorageKeys.viewedMyProfile);
     final sawCreateGroupIntro =
-        storage.read<bool?>(IntroStorageKeys.viewedCreateGroup);
+        storage.read<bool?>(IntroStorageKeys.viewedCreateOutpost);
     final sawOngoingCallIntro =
         storage.read<bool?>(IntroStorageKeys.viewedOngiongCall);
 
     storage.erase();
 
     storage.write(IntroStorageKeys.viewedMyProfile, sawProfileIntro);
-    storage.write(IntroStorageKeys.viewedCreateGroup, sawCreateGroupIntro);
+    storage.write(IntroStorageKeys.viewedCreateOutpost, sawCreateGroupIntro);
     storage.write(IntroStorageKeys.viewedOngiongCall, sawOngoingCallIntro);
   }
 

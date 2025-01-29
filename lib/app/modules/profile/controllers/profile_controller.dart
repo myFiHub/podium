@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
@@ -32,7 +32,7 @@ class Payments {
 class ProfileController extends GetxController {
   final userInfo = Rxn<UserInfoModel>();
   final globalController = Get.find<GlobalController>();
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final connectedWallet = ''.obs;
   final isGettingTicketPrice = false.obs;
   final isBuyingArenaTicket = false.obs;

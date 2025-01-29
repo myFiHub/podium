@@ -89,7 +89,7 @@ sendGroupPeresenceEvent(
   }
 }
 
-class GroupsController extends GetxController with FirebaseTags {
+class OutpostsController extends GetxController with FirebaseTags {
   // final _presentUsersRefreshThrottle =
   //     Throttling(duration: const Duration(seconds: 2));
   // final _takingUsersRefreshThrottle =
@@ -198,18 +198,18 @@ class GroupsController extends GetxController with FirebaseTags {
     }
   }
 
-  Future<void> toggleArchive({required FirebaseGroup group}) async {
-    final canContinue = await _showModalToToggleArchiveGroup(group: group);
+  Future<void> toggleArchive({required FirebaseGroup outpost}) async {
+    final canContinue = await _showModalToToggleArchiveGroup(group: outpost);
     if (canContinue == null || canContinue == false) return;
-    final archive = !group.archived;
-    await toggleGroupArchive(groupId: group.id, archive: archive);
+    final archive = !outpost.archived;
+    await toggleGroupArchive(groupId: outpost.id, archive: archive);
     Toast.success(
       title: "Success",
       message: "Outpost ${archive ? "archived" : "is available again"}",
     );
-    final remoteGroup = await getGroupInfoById(group.id);
+    final remoteGroup = await getGroupInfoById(outpost.id);
     if (remoteGroup != null) {
-      groups.value[group.id] = remoteGroup;
+      groups.value[outpost.id] = remoteGroup;
       groups.refresh();
       if (Get.isRegistered<AllGroupsController>()) {
         final AllGroupsController allGroupsController = Get.find();
@@ -223,7 +223,7 @@ class GroupsController extends GetxController with FirebaseTags {
     analytics.logEvent(
       name: "group_archive_toggled",
       parameters: {
-        "group_id": group.id,
+        "outpost_id": outpost.id,
         "archive": archive.toString(),
       },
     );
@@ -435,7 +435,7 @@ class GroupsController extends GetxController with FirebaseTags {
     }
   }
 
-  createGroup({
+  createOutpost({
     required String name,
     required String id,
     required String accessType,
@@ -813,10 +813,10 @@ class GroupsController extends GetxController with FirebaseTags {
     if (group.members.keys.contains(myUser.uuid))
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
-    if (group.accessType == FreeGroupAccessTypes.public)
+    if (group.accessType == FreeOutpostAccessTypes.public)
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
-    if (group.accessType == FreeGroupAccessTypes.onlyLink) {
+    if (group.accessType == FreeOutpostAccessTypes.onlyLink) {
       if (joiningByLink == true) {
         return GroupAccesses(
             canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
@@ -830,7 +830,7 @@ class GroupsController extends GetxController with FirebaseTags {
     }
 
     final invitedMembers = group.invitedMembers;
-    if (group.accessType == FreeGroupAccessTypes.invitees) {
+    if (group.accessType == FreeOutpostAccessTypes.invitees) {
       if (invitedMembers[myUser.uuid] != null) {
         return GroupAccesses(
           canEnter: true,

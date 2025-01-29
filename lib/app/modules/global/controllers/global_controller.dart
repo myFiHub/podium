@@ -26,6 +26,7 @@ import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/metadata/movementAptos.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
@@ -70,7 +71,7 @@ class GlobalController extends GetxController {
   final jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
   final firebaseUser = Rxn<User>();
-  final currentUserInfo = Rxn<UserInfoModel>();
+  final myUserInfo = Rxn<UserModel>();
   final activeRoute = AppPages.INITIAL.obs;
   final isAutoLoggingIn = true.obs;
   final isConnectedToInternet = true.obs;
@@ -324,7 +325,7 @@ class GlobalController extends GetxController {
   Future<void> listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
-      if (newAddress != '' && currentUserInfo.value != null) {
+      if (newAddress != '' && myUserInfo.value != null) {
         _saveExternalWalletAddress(newAddress);
       }
     });
@@ -333,8 +334,8 @@ class GlobalController extends GetxController {
   Future<void> _saveExternalWalletAddress(String address) async {
     try {
       await saveUserWalletAddressOnFirebase(address);
-      currentUserInfo.value!.evm_externalWalletAddress = address;
-      currentUserInfo.refresh();
+      myUserInfo.value!.external_wallet_address = address;
+      myUserInfo.refresh();
     } catch (e) {
       l.e("error saving wallet address $e");
       Toast.error(message: "Error saving wallet address, try again");
@@ -575,7 +576,7 @@ class GlobalController extends GetxController {
       analytics.logEvent(
         name: 'logout',
         parameters: {
-          'user_id': currentUserInfo.value?.id ?? '',
+          'user_id': myUserInfo.value?.uuid ?? '',
         },
       );
     } else {
@@ -644,8 +645,8 @@ class GlobalController extends GetxController {
   }
 
   void setIsMyUserOver18(bool value) {
-    currentUserInfo.value!.isOver18 = value;
-    currentUserInfo.refresh();
+    myUserInfo.value!.is_over_18 = value;
+    myUserInfo.refresh();
   }
 
   Future<UserInfoModel?> getUserInfoById(String userId) async {

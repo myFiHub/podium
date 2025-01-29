@@ -27,6 +27,7 @@ import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -250,9 +251,9 @@ class GroupsController extends GetxController with FirebaseTags {
 
   _parseAndSetGroups(Map<dynamic, dynamic> data) async {
     final Map<String, FirebaseGroup> groupsMap = await groupsParser(data);
-    if (globalController.currentUserInfo.value != null) {
-      final myUser = globalController.currentUserInfo.value!;
-      final myId = myUser.id;
+    if (globalController.myUserInfo.value != null) {
+      final myUser = globalController.myUserInfo.value!;
+      final myId = myUser.uuid;
       final unsorted = getGroupsVisibleToMe(groupsMap, myId);
       // sort groups by last active time
       final sorted = unsorted.entries.toList()
@@ -451,94 +452,94 @@ class GroupsController extends GetxController with FirebaseTags {
     String? lumaEventId,
     String? imageUrl,
   }) async {
-    final firebaseGroupsReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + id);
-    final firebaseSessionReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + id);
-    final myUser = globalController.currentUserInfo.value!;
-    final creator = FirebaseGroupCreator(
-      id: myUser.id,
-      fullName: myUser.fullName,
-      email: myUser.email,
-      avatar: myUser.avatar,
-    );
-    final group = FirebaseGroup(
-      id: id,
-      lumaEventId: lumaEventId,
-      imageUrl: imageUrl,
-      name: name,
-      creator: creator,
-      accessType: accessType,
-      speakerType: speakerType,
-      members: {myUser.id: myUser.id},
-      subject: subject,
-      hasAdultContent: adultContent,
-      isRecordable: recordable,
-      lowercasename: name.toLowerCase(),
-      tags: tags.map((e) => e).toList(),
-      alarmId: alarmId,
-      creatorJoined: false,
-      lastActiveAt: DateTime.now().millisecondsSinceEpoch,
-      requiredAddressesToEnter: requiredAddressesToEnter,
-      requiredAddressesToSpeak: requiredAddressesToSpeak,
-      ticketsRequiredToAccess: requiredTicketsToAccess
-          .map(
-            (e) => UserTicket(
-              userId: e.user.id,
-              userAddress: e.activeAddress,
-            ),
-          )
-          .toList(),
-      ticketsRequiredToSpeak: requiredTicketsToSpeak
-          .map(
-            (e) => UserTicket(
-              userId: e.user.id,
-              userAddress: e.activeAddress,
-            ),
-          )
-          .toList(),
-      scheduledFor: scheduledFor,
-    );
-    final jsonedGroup = group.toJson();
-    try {
-      await Future.wait([
-        firebaseGroupsReference.set(jsonedGroup),
-        ...tags.map((tag) => saveNewTagIfNeeded(tag: tag, group: group)),
-      ]);
+    // final firebaseGroupsReference =
+    //     FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + id);
+    // final firebaseSessionReference =
+    //     FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + id);
+    // final myUser = globalController.myUserInfo.value!;
+    // final creator = FirebaseGroupCreator(
+    //   id: myUser.uuid,
+    //   fullName: myUser.name ?? '',
+    //   email: myUser.email ?? '',
+    //   avatar: myUser.image ?? '',
+    // );
+    // final group = FirebaseGroup(
+    //   id: id,
+    //   lumaEventId: lumaEventId,
+    //   imageUrl: imageUrl,
+    //   name: name,
+    //   creator: creator,
+    //   accessType: accessType,
+    //   speakerType: speakerType,
+    //   members: {myUser.uuid: myUser.uuid},
+    //   subject: subject,
+    //   hasAdultContent: adultContent,
+    //   isRecordable: recordable,
+    //   lowercasename: name.toLowerCase(),
+    //   tags: tags.map((e) => e).toList(),
+    //   alarmId: alarmId,
+    //   creatorJoined: false,
+    //   lastActiveAt: DateTime.now().millisecondsSinceEpoch,
+    //   requiredAddressesToEnter: requiredAddressesToEnter,
+    //   requiredAddressesToSpeak: requiredAddressesToSpeak,
+    //   ticketsRequiredToAccess: requiredTicketsToAccess
+    //       .map(
+    //         (e) => UserTicket(
+    //           userId: e.user.id,
+    //           userAddress: e.activeAddress,
+    //         ),
+    //       )
+    //       .toList(),
+    //   ticketsRequiredToSpeak: requiredTicketsToSpeak
+    //       .map(
+    //         (e) => UserTicket(
+    //           userId: e.user.id,
+    //           userAddress: e.activeAddress,
+    //         ),
+    //       )
+    //       .toList(),
+    //   scheduledFor: scheduledFor,
+    // );
+    // final jsonedGroup = group.toJson();
+    // try {
+    //   await Future.wait([
+    //     firebaseGroupsReference.set(jsonedGroup),
+    //     ...tags.map((tag) => saveNewTagIfNeeded(tag: tag, group: group)),
+    //   ]);
 
-      groups.value[id] = group;
-      final newFirebaseSession = FirebaseSession(
-        name: name,
-        createdBy: myUser.id,
-        id: id,
-        accessType: group.accessType,
-        speakerType: group.speakerType,
-        subject: group.subject,
-        members: {
-          myUser.id: createInitialSessionMember(user: myUser, group: group)!
-        },
-      );
-      final jsoned = newFirebaseSession.toJson();
-      await firebaseSessionReference.set(jsoned);
-      GroupsController groupsController = Get.find();
-      groupsController.groups.value.addAll(
-        {id: group},
-      );
-      joinGroupAndOpenGroupDetailPage(
-        groupId: id,
-        openTheRoomAfterJoining: group.scheduledFor == 0 ||
-            group.scheduledFor < DateTime.now().millisecondsSinceEpoch,
-      );
-      await Future.delayed(const Duration(seconds: 1));
-      groupsController.groups.refresh();
-    } catch (e) {
-      deleteGroup(groupId: id);
-      Toast.error(
-        title: "Error",
-        message: "Failed to create the Outpost",
-      );
-      l.f("Error creating group: $e");
-    }
+    //   groups.value[id] = group;
+    //   final newFirebaseSession = FirebaseSession(
+    //     name: name,
+    //     createdBy: myUser.uuid,
+    //     id: id,
+    //     accessType: group.accessType,
+    //     speakerType: group.speakerType,
+    //     subject: group.subject,
+    //     members: {
+    //       // myUser.uuid: createInitialSessionMember(user: myUser, group: group)!
+    //     },
+    //   );
+    //   final jsoned = newFirebaseSession.toJson();
+    //   await firebaseSessionReference.set(jsoned);
+    //   GroupsController groupsController = Get.find();
+    //   groupsController.groups.value.addAll(
+    //     {id: group},
+    //   );
+    //   joinGroupAndOpenGroupDetailPage(
+    //     groupId: id,
+    //     openTheRoomAfterJoining: group.scheduledFor == 0 ||
+    //         group.scheduledFor < DateTime.now().millisecondsSinceEpoch,
+    //   );
+    //   await Future.delayed(const Duration(seconds: 1));
+    //   groupsController.groups.refresh();
+    // } catch (e) {
+    //   deleteGroup(groupId: id);
+    //   Toast.error(
+    //     title: "Error",
+    //     message: "Failed to create the Outpost",
+    //   );
+    //   l.f("Error creating group: $e");
+    // }
   }
 
   deleteGroup({required String groupId}) {
@@ -572,7 +573,7 @@ class GroupsController extends GetxController with FirebaseTags {
         FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
     final firebaseSessionsReference =
         FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
-    final myUser = globalController.currentUserInfo.value!;
+    final myUser = globalController.myUserInfo.value!;
 
     final group = await getGroupInfoById(groupId);
     if (group == null) {
@@ -608,38 +609,38 @@ class GroupsController extends GetxController with FirebaseTags {
     }
 
     final members = group.members;
-    if (!members.keys.contains(myUser.id)) {
+    if (!members.keys.contains(myUser.uuid)) {
       try {
         joiningGroupId.value = groupId;
         await firebaseGroupsReference
             .child(FirebaseGroup.membersKey)
-            .child(myUser.id)
-            .set(myUser.id);
+            .child(myUser.uuid)
+            .set(myUser.uuid);
         final mySession = await getUserSessionData(
           groupId: groupId,
-          userId: myUser.id,
+          userId: myUser.uuid,
         );
         if (mySession == null) {
-          final newFirebaseSessionMember =
-              createInitialSessionMember(user: myUser, group: group)!;
-          try {
-            final jsoned = newFirebaseSessionMember.toJson();
-            await firebaseSessionsReference
-                .child(FirebaseSession.membersKey)
-                .child(myUser.id)
-                .set(jsoned);
-          } catch (e) {
-            // remove user from db
-            await firebaseSessionsReference
-                .child(FirebaseSession.membersKey)
-                .child(myUser.id)
-                .remove();
-            Toast.error(
-              title: "Error",
-              message: "Failed to join the Outpost, try again or report a bug",
-            );
-            return;
-          }
+          // final newFirebaseSessionMember =
+          //     createInitialSessionMember(user: myUser, group: group)!;
+          // try {
+          //   final jsoned = newFirebaseSessionMember.toJson();
+          //   await firebaseSessionsReference
+          //       .child(FirebaseSession.membersKey)
+          //       .child(myUser.uuid)
+          //       .set(jsoned);
+          // } catch (e) {
+          //   // remove user from db
+          //   await firebaseSessionsReference
+          //       .child(FirebaseSession.membersKey)
+          //       .child(myUser.uuid)
+          //       .remove();
+          //   Toast.error(
+          //     title: "Error",
+          //     message: "Failed to join the Outpost, try again or report a bug",
+          //   );
+          //   return;
+          // }
         }
         _openGroup(
           group: group,
@@ -725,7 +726,7 @@ class GroupsController extends GetxController with FirebaseTags {
       {required FirebaseGroup group}) async {
     try {
       if (group.lumaEventId != null && group.lumaEventId!.isNotEmpty) {
-        final myLoginType = myUser.loginType;
+        final myLoginType = myUser.login_type;
         if (myLoginType != null) {
           if (myLoginType.contains('google') || myLoginType.contains('email')) {
             final myEmail = myUser.email;
@@ -754,8 +755,8 @@ class GroupsController extends GetxController with FirebaseTags {
 
   Future<GroupAccesses> getGroupAccesses(
       {required FirebaseGroup group, bool? joiningByLink}) async {
-    final myUser = globalController.currentUserInfo.value!;
-    final iAmGroupCreator = group.creator.id == myUser.id;
+    final myUser = globalController.myUserInfo.value!;
+    final iAmGroupCreator = group.creator.id == myUser.uuid;
     if (iAmGroupCreator) return GroupAccesses(canEnter: true, canSpeak: true);
     final lumaAccessResponse = await _checkLumaAccess(group: group);
     if (lumaAccessResponse != null) {
@@ -783,7 +784,7 @@ class GroupsController extends GetxController with FirebaseTags {
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
-    if (group.members.keys.contains(myUser.id))
+    if (group.members.keys.contains(myUser.uuid))
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
     if (group.accessType == FreeGroupAccessTypes.public)
@@ -804,7 +805,7 @@ class GroupsController extends GetxController with FirebaseTags {
 
     final invitedMembers = group.invitedMembers;
     if (group.accessType == FreeGroupAccessTypes.invitees) {
-      if (invitedMembers[myUser.id] != null) {
+      if (invitedMembers[myUser.uuid] != null) {
         return GroupAccesses(
           canEnter: true,
           canSpeak: canISpeakWithoutTicket(group: group),
@@ -843,13 +844,13 @@ class GroupsController extends GetxController with FirebaseTags {
 
   Future<bool> _showAreYouOver18Dialog({
     required FirebaseGroup group,
-    required UserInfoModel myUser,
+    required UserModel myUser,
   }) async {
     final isGroupAgeRestricted = group.hasAdultContent;
-    final iAmOwner = group.creator.id == myUser.id;
-    final iAmMember = group.members.keys.contains(myUser.id);
-    final amIOver18 = myUser.isOver18;
-    if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18) {
+    final iAmOwner = group.creator.id == myUser.uuid;
+    final iAmMember = group.members.keys.contains(myUser.uuid);
+    final amIOver18 = myUser.is_over_18;
+    if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18 == true) {
       return true;
     }
 
@@ -870,7 +871,7 @@ class GroupsController extends GetxController with FirebaseTags {
           TextButton(
             onPressed: () {
               final over18Ref = FirebaseDatabase.instance
-                  .ref(FireBaseConstants.usersRef + myUser.id)
+                  .ref(FireBaseConstants.usersRef + myUser.uuid)
                   .child(UserInfoModel.isOver18Key);
               over18Ref.set(true);
               globalController.setIsMyUserOver18(true);

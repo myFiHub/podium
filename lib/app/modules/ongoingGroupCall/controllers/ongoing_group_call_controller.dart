@@ -147,20 +147,20 @@ class OngoingGroupCallController extends GetxController {
       }
     });
 
-    final myUser = globalController.currentUserInfo.value!;
-    if (myUser.id == ongoingGroupCallGroup.creator.id) {
+    final myUser = globalController.myUserInfo.value!;
+    if (myUser.uuid == ongoingGroupCallGroup.creator.id) {
       amIAdmin.value = true;
     }
     mySession.value = await getUserSessionData(
       groupId: ongoingGroupCallGroup.id,
-      userId: myUser.id,
+      userId: myUser.uuid,
     );
     firebaseSession.value = await getSessionData(
       groupId: ongoingGroupCallGroup.id,
     );
     mySessionSubscription = startListeningToMyRemainingTalkingTime(
       groupId: ongoingGroupCallGroup.id,
-      userId: myUser.id,
+      userId: myUser.uuid,
       onData: onRemainingTimeUpdate,
     );
     sessionMembersSubscription = startListeningToSessionMembers(
@@ -535,7 +535,7 @@ class OngoingGroupCallController extends GetxController {
   }
 
   updateMyLastTalkingTime() async {
-    final myUserId = globalController.currentUserInfo.value?.id;
+    final myUserId = globalController.myUserInfo.value?.uuid;
     final group = groupCallController.group.value;
     if (group == null) {
       return;
@@ -645,7 +645,7 @@ class OngoingGroupCallController extends GetxController {
           InteractionKeys.targetId: userId,
           InteractionKeys.action: eventNames.like,
         });
-    final myUser = globalController.currentUserInfo.value!;
+    final myUser = globalController.myUserInfo.value!;
     final key = generateKeyForStorageAndObserver(
       userId: userId,
       groupId: groupCallController.group.value!.id,
@@ -663,7 +663,7 @@ class OngoingGroupCallController extends GetxController {
       parameters: {
         'targetUser': userId,
         'groupId': groupCallController.group.value!.id,
-        'fromUser': myUser.id,
+        'fromUser': myUser.uuid,
       },
     );
   }
@@ -688,13 +688,13 @@ class OngoingGroupCallController extends GetxController {
       seconds: amountToReduceForDislikeInSeconds,
       userId: userId,
     );
-    final myUser = globalController.currentUserInfo.value!;
+    final myUser = globalController.myUserInfo.value!;
     analytics.logEvent(
       name: 'dislike',
       parameters: {
         'targetUser': userId,
         'groupId': groupCallController.group.value!.id,
-        'fromUser': myUser.id,
+        'fromUser': myUser.uuid,
       },
     );
   }
@@ -728,9 +728,9 @@ class OngoingGroupCallController extends GetxController {
     if (targetAddress != '') {
       List<String> receiverAddresses = [];
       List<String> aptosReceiverAddresses = [];
-      final myUser = globalController.currentUserInfo.value!;
-      if (myUser.evm_externalWalletAddress == targetAddress ||
-          (myUser.evmInternalWalletAddress == targetAddress)) {
+      final myUser = globalController.myUserInfo.value!;
+      if (myUser.external_wallet_address == targetAddress ||
+          (myUser.address == targetAddress)) {
         final members = await getListOfUserWalletsPresentInSession(
           firebaseSession.value!.id,
         );
@@ -858,7 +858,7 @@ class OngoingGroupCallController extends GetxController {
           'amount': amount,
           'target': userId,
           'groupId': groupCallController.group.value!.id,
-          'fromUser': myUser.id,
+          'fromUser': myUser.uuid,
         });
         final internalWalletAddress =
             await web3AuthWalletAddress(); //await Evm.getAddress();

@@ -10,6 +10,7 @@ import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:uuid/uuid.dart';
@@ -17,7 +18,7 @@ import 'package:uuid/uuid.dart';
 class UsersController extends GetxController {
   final globalController = Get.find<GlobalController>();
   // current user is set by listening to global controller's currentUserInfo
-  final currentUserInfo = Rxn<UserInfoModel>();
+  final currentUserInfo = Rxn<UserModel>();
   final GroupsController groupsController = Get.find<GroupsController>();
   // final users = Map<String, UserInfoModel>();
   final followingsInProgress = Map<String, String>().obs;
@@ -26,7 +27,7 @@ class UsersController extends GetxController {
   void onInit() {
     super.onInit();
     followingsInProgress.assignAll({});
-    globalController.currentUserInfo.listen((user) {
+    globalController.myUserInfo.listen((user) {
       currentUserInfo.value = user;
     });
   }
@@ -60,31 +61,31 @@ class UsersController extends GetxController {
                 [follow(id), addFollowerToUser(userId: id, followerId: myId)])
             : [unfollow(id), unfollowUser(user.id)];
         final globalController = Get.find<GlobalController>();
-        final myUser = globalController.currentUserInfo.value;
+        final myUser = globalController.myUserInfo.value;
         if (startFollowing) {
-          myUser!.following.add(id);
-          final notifId = const Uuid().v4();
-          sendNotification(
-            notification: FirebaseNotificationModel(
-                id: notifId,
-                title: 'New follower',
-                body: '${myUser.fullName} followed you',
-                type: NotificationTypes.follow.toString(),
-                targetUserId: id,
-                isRead: false,
-                timestamp: DateTime.now().millisecondsSinceEpoch),
-          );
+          // myUser!.following.add(id);
+          // final notifId = const Uuid().v4();
+          // sendNotification(
+          //   notification: FirebaseNotificationModel(
+          //       id: notifId,
+          //       title: 'New follower',
+          //       body: '${myUser.fullName} followed you',
+          //       type: NotificationTypes.follow.toString(),
+          //       targetUserId: id,
+          //       isRead: false,
+          //       timestamp: DateTime.now().millisecondsSinceEpoch),
+          // );
         } else {
-          myUser!.following.remove(id);
+          // myUser!.following.remove(id);
         }
-        globalController.currentUserInfo.value = myUser;
-        followingsInProgress.remove(id);
-        followingsInProgress.refresh();
-        Get.closeCurrentSnackbar();
-        Toast.info(
-          title: "${startFollowing ? "" : "un"}followed",
-          message: "${startFollowing ? "" : "un"}followed ${user.fullName}",
-        );
+        // globalController.currentUserInfo.value = myUser;
+        // followingsInProgress.remove(id);
+        // followingsInProgress.refresh();
+        // Get.closeCurrentSnackbar();
+        // Toast.info(
+        //   title: "${startFollowing ? "" : "un"}followed",
+        //   message: "${startFollowing ? "" : "un"}followed ${user.fullName}",
+        // );
       } catch (e) {
         followingsInProgress.remove(id);
         followingsInProgress.refresh();

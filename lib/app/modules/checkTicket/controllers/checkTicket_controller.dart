@@ -538,8 +538,8 @@ class CheckticketController extends GetxController {
     bool? bought = false;
     String referrer = '';
 
-    final myReferrer = myUser.referrer;
-    if (myReferrer.isNotEmpty) {
+    final myReferrer = myUser.referer_user_uuid;
+    if (myReferrer != null) {
       final referrerInfo = await getUserById(myReferrer);
       if (referrerInfo != null) {
         referrer = referrerInfo.aptosInternalWalletAddress;
@@ -643,8 +643,8 @@ class CheckticketController extends GetxController {
     }
     bool bought = false;
     String referrer = '';
-    final myReferrer = myUser.referrer;
-    if (myReferrer.isNotEmpty) {
+    final myReferrer = myUser.referer_user_uuid;
+    if (myReferrer != null) {
       final referrerInfo = await getUserById(myReferrer);
       if (referrerInfo != null) {
         referrer = referrerInfo.defaultWalletAddress;
@@ -702,8 +702,8 @@ class CheckticketController extends GetxController {
     UserInfoModel user,
   ) async {
     final userId = user.id;
-    final myUser = globalController.currentUserInfo.value!;
-    if (userId == myUser.id)
+    final myUser = globalController.myUserInfo.value!;
+    if (userId == myUser.uuid)
       return GroupAccesses(canEnter: true, canSpeak: true);
     GroupAccesses access = GroupAccesses(canEnter: false, canSpeak: false);
 

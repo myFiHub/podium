@@ -15,7 +15,7 @@ class UserModel {
   final String? image;
   final String? login_type;
   String? login_type_identifier;
-  final String? name;
+    String? name;
   final String? referer_user_uuid;
   bool? is_over_18;
 

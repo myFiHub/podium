@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
 
 class MeetingConstants {
@@ -45,15 +46,15 @@ class MeetingConstants {
 
   static JitsiMeetConferenceOptions buildMeetOptions({
     required FirebaseGroup group,
-    required UserInfoModel myUser,
+    required UserModel myUser,
     required bool allowedToSpeak,
   }) {
     final globalController = Get.find<GlobalController>();
     final sa = globalController.jitsiServerAddress;
-    String avatar = myUser.avatar;
+    String avatar = myUser.image ?? '';
     // ignore: unnecessary_null_comparison
     if (avatar == null || avatar.isEmpty || avatar == defaultAvatar) {
-      avatar = avatarPlaceHolder(myUser.fullName);
+      avatar = avatarPlaceHolder(myUser.name);
     }
     return JitsiMeetConferenceOptions(
       serverURL: sa != '' ? sa : Env.jitsiServerUrl,
@@ -64,11 +65,11 @@ class MeetingConstants {
         allowedToSpeak: allowedToSpeak,
       ),
       userInfo: JitsiMeetUserInfo(
-        displayName: myUser.fullName,
+        displayName: myUser.name ?? '',
         // this is crucial for us to pass the email like this,
         // since cheering and booing listeners return email,
         // we use that email to determine who is being cheered/booed
-        email: transformIdToEmailLike(myUser.id),
+        email: transformIdToEmailLike(myUser.uuid),
         avatar: avatar,
       ),
     );

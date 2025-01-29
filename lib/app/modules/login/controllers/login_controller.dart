@@ -21,6 +21,7 @@ import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.d
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
@@ -390,7 +391,22 @@ class LoginController extends GetxController {
       }
     }
     // end force to add name if field is empty
-    storage.write(StorageKeys.loginType, temporaryAdditionalData?.loginType);
+
+    if (savedName != null) {
+      userLoginResponse.name = savedName;
+      globalController.myUserInfo.value = userLoginResponse;
+      globalController.myUserInfo.refresh();
+
+      LoginTypeService.setLoginType(temporaryAdditionalData?.loginType ?? '');
+      globalController.setLoggedIn(true);
+      // newx line is commented because loginController is cleared from memory (offAllNamed in global controller)
+      // removeLogingInState();
+      if (afterLogin != null) {
+        afterLogin!();
+        afterLogin = null;
+      }
+      // Navigate.toInitial();
+    }
   }
 
   _redirectToBuyTicketPage() async {

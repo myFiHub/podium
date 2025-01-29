@@ -586,7 +586,7 @@ String parseAccessType(String? accessType) {
 
 canShareGroupUrl({required FirebaseGroup group}) {
   final GlobalController globalController = Get.find();
-  if (globalController.currentUserInfo.value == null) {
+  if (globalController.myUserInfo.value == null) {
     return false;
   }
   final iAmCreator = group.creator.id == myId;
@@ -606,7 +606,7 @@ canShareGroupUrl({required FirebaseGroup group}) {
 
 canLeaveGroup({required FirebaseGroup group}) {
   final GlobalController globalController = Get.find();
-  if (globalController.currentUserInfo.value == null) {
+  if (globalController.myUserInfo.value == null) {
     return false;
   }
   final iAmCreator = group.creator.id == myId;
@@ -619,7 +619,7 @@ canLeaveGroup({required FirebaseGroup group}) {
 
 canArchiveGroup({required FirebaseGroup group}) {
   final GlobalController globalController = Get.find();
-  if (globalController.currentUserInfo.value == null) {
+  if (globalController.myUserInfo.value == null) {
     return false;
   }
   final iAmCreator = group.creator.id == myId;

@@ -492,12 +492,10 @@ class FollowButton extends GetView<UsersController> {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
       final isLoading = loadingIds[userId] != null;
-      final idsImFollowing = controller.currentUserInfo.value!.following;
-      final isFollowing = idsImFollowing.contains(userId);
+      final isFollowing = false;
       return Button(
           onPressed: () {
-            final idsImFollowing = controller.currentUserInfo.value!.following;
-            final isFollowing = idsImFollowing.contains(userId);
+            final isFollowing = false;
             controller.followUnfollow(userId, !isFollowing);
           },
           type: ButtonType.outline,
@@ -544,8 +542,8 @@ class Actions extends GetView<OngoingGroupCallController> {
   @override
   Widget build(BuildContext context) {
     final globalController = Get.find<GlobalController>();
-    final myUser = globalController.currentUserInfo.value;
-    final myId = myUser!.id;
+    final myUser = globalController.myUserInfo.value;
+    final myId = myUser!.uuid;
 
     return Center(
       // width: Get.width * 0.5,

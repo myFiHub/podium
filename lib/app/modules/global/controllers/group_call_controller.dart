@@ -257,9 +257,9 @@ class GroupCallController extends GetxController {
         await getPermission(Permission.notification);
     l.d("notifications allowed: $hasNotificationPermission");
 
-    final myUser = globalController.currentUserInfo.value!;
+    final myUser = globalController.myUserInfo.value!;
 
-    if ((myUser.evm_externalWalletAddress == '' ||
+    if ((myUser.external_wallet_address == '' ||
             globalController.connectedWalletAddress == '') &&
         myUser.defaultWalletAddress == '') {
       Toast.warning(
@@ -291,7 +291,7 @@ class GroupCallController extends GetxController {
         parameters: {
           'group_id': groupToJoin.id,
           'group_name': groupToJoin.name,
-          'user_id': myUser.id,
+          'user_id': myUser.uuid,
         },
       );
     } catch (e) {

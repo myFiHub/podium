@@ -1094,7 +1094,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                         },
                       ).toList();
 
-                      listOfUsers.add(myUser);
+                      // listOfUsers.add(myUser);
                       final SelectedUsersExceptMe =
                           selectedUsers.where((element) => element.id != myId);
                       listOfUsers.addAll([...SelectedUsersExceptMe]);

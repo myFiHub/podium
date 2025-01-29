@@ -174,13 +174,12 @@ class FollowButton extends GetView<UsersController> {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
       final isLoading = loadingIds[userId] != null;
-      final idsImFollowing = controller.currentUserInfo.value!.following;
-      final isFollowing = idsImFollowing.contains(userId);
+
+      final isFollowing = false;
       return Button(
           size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
           onPressed: () {
-            final idsImFollowing = controller.currentUserInfo.value!.following;
-            final isFollowing = idsImFollowing.contains(userId);
+            final isFollowing = false;
             controller.followUnfollow(userId, !isFollowing);
           },
           type: isFollowing ? ButtonType.outline : ButtonType.solid,

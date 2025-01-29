@@ -107,7 +107,7 @@ class HomeView extends GetView<HomeController> {
                                   child: Assets.images.explore.image(),
                                 ),
                                 Text(
-                                  "Hi ${myUser.fullName},",
+                                  "Hi ${myUser.name},",
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,

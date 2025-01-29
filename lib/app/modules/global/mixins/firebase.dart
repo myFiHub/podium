@@ -955,12 +955,12 @@ sendNotification({required FirebaseNotificationModel notification}) async {
 Future<List<FirebaseNotificationModel>> getMyNotifications() async {
   try {
     final globalController = Get.find<GlobalController>();
-    final myUser = globalController.currentUserInfo.value!;
+    final myUser = globalController.myUserInfo.value!;
     final DatabaseReference _database = FirebaseDatabase.instance.ref();
     final Query query = _database
         .child(FireBaseConstants.notificationsRef)
         .orderByChild(FirebaseNotificationModel.targetUserIdKey)
-        .equalTo(myUser.id);
+        .equalTo(myUser.uuid);
     final List<FirebaseNotificationModel> notificationsList = [];
     final snapshot = await query.get();
     final notifications = snapshot.value as dynamic;
@@ -995,11 +995,11 @@ StreamSubscription<DatabaseEvent>? startListeningToMyNotifications(
     void Function(List<FirebaseNotificationModel>) onData) {
   try {
     final globalController = Get.find<GlobalController>();
-    final myUser = globalController.currentUserInfo.value!;
+    final myUser = globalController.myUserInfo.value!;
     final Query query = FirebaseDatabase.instance
         .ref(FireBaseConstants.notificationsRef)
         .orderByChild(FirebaseNotificationModel.targetUserIdKey)
-        .equalTo(myUser.id);
+        .equalTo(myUser.uuid);
     final subscription = query.onValue.listen((event) {
       final notifications = event.snapshot.value as dynamic;
       if (notifications != null) {

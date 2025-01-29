@@ -252,7 +252,7 @@ class MembersList extends GetView<GroupCallController> {
   @override
   Widget build(BuildContext context) {
     final globalController = Get.find<GlobalController>();
-    final myUser = globalController.currentUserInfo.value;
+    final myUser = globalController.myUserInfo.value;
     if (controller.group.value == null) {
       return Container();
     }
@@ -339,7 +339,7 @@ class MembersList extends GetView<GroupCallController> {
             children: [
               if (canInvite(
                 group: controller.group.value!,
-                currentUserId: myUser.id,
+                currentUserId: myUser.uuid,
               ))
                 Container(
                   width: (Get.width / 2) - 20,
@@ -349,7 +349,7 @@ class MembersList extends GetView<GroupCallController> {
                       openInviteBottomSheet(
                         canInviteToSpeak: canInviteToSpeak(
                           group: controller.group.value!,
-                          currentUserId: myUser.id,
+                          currentUserId: myUser.uuid,
                         ),
                       );
                     },

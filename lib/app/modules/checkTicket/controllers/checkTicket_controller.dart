@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
+import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/groups_controller.dart';

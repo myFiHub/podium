@@ -151,4 +151,11 @@ class PodiumApi {
       return [];
     }
   }
+
+  Future<OutpostModel?> toggleOutpostArchive(String id, bool archive) async {
+    final response = await dio.post('$_baseUrl/outposts/set-archive',
+        data: {'uuid': id, 'archive': archive},
+        options: Options(headers: _headers));
+    return OutpostModel.fromJson(response.data['data']);
+  }
 }

@@ -202,7 +202,10 @@ class OutpostsController extends GetxController with FirebaseTags {
     final canContinue = await _showModalToToggleArchiveGroup(outpost: outpost);
     if (canContinue == null || canContinue == false) return;
     final archive = !outpost.is_archived;
-    await toggleGroupArchive(groupId: outpost.uuid, archive: archive);
+
+    final response =
+        await HttpApis.podium.toggleOutpostArchive(outpost.uuid, archive);
+
     Toast.success(
       title: "Success",
       message: "Outpost ${archive ? "archived" : "is available again"}",

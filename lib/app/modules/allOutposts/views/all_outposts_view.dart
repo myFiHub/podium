@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hidable/hidable.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 
-import '../controllers/all_groups_controller.dart';
+import '../controllers/all_outposts_controller.dart';
 
 final _scrollController = ScrollController();
 
-class AllGroupsView extends GetView<AllGroupsController> {
+class AllGroupsView extends GetView<AllOutpostsController> {
   const AllGroupsView({Key? key}) : super(key: key);
 
   @override
@@ -130,7 +131,7 @@ class AllGroupsView extends GetView<AllGroupsController> {
   }
 }
 
-class AllGroupsList extends GetWidget<AllGroupsController> {
+class AllGroupsList extends GetWidget<AllOutpostsController> {
   final ScrollController scrollController;
   const AllGroupsList({
     super.key,
@@ -143,22 +144,23 @@ class AllGroupsList extends GetWidget<AllGroupsController> {
         id: GlobalUpdateIds.showArchivedGroups,
         builder: (globalController) {
           return Obx(() {
-            final groups = controller.searchedGroups.value;
+            final outposts = controller.searchedOutposts.value;
             final showArchived = globalController.showArchivedGroups.value;
             // final groupsController = Get.find<GroupsController>();
-            List<FirebaseGroup> groupsList =
+            List<OutpostModel> outpostsList =
                 // ignore: unnecessary_null_comparison
-                groups != null ? groups.values.toList() : [];
+                outposts != null ? outposts.values.toList() : [];
             // if (groupsList.isEmpty && groupsController.groups.value != null) {
             //   groupsList = groupsController.groups.value!.values.toList();
             // }
             if (!showArchived) {
-              groupsList =
-                  groupsList.where((group) => group.archived != true).toList();
+              outpostsList = outpostsList
+                  .where((group) => group.is_archived != true)
+                  .toList();
             }
-            return GroupList(
+            return OutpostsList(
               scrollController: scrollController,
-              groupsList: groupsList,
+              outpostsList: outpostsList,
             );
           });
         });

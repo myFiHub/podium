@@ -2,8 +2,8 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/groupDetail/views/group_by_id_landing.dart';
 import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
 
-import '../modules/allGroups/bindings/all_groups_binding.dart';
-import '../modules/allGroups/views/all_groups_view.dart';
+import '../modules/allOutposts/bindings/all_groups_binding.dart';
+import '../modules/allOutposts/views/all_outposts_view.dart';
 import '../modules/chat/bindings/chat_binding.dart';
 import '../modules/chat/views/chat_view.dart';
 import '../modules/createOutpost/bindings/create_outpost_binding.dart';

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/home/widgets/addOutpostButton.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -11,6 +11,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/metadata/movementAptos.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -79,15 +80,19 @@ class HomeView extends GetView<HomeController> {
                             globalController.showArchivedGroups.value;
                         final allGroups = controller.allGroups.value;
                         final isLoading = allGroups.isEmpty;
-                        List<FirebaseGroup> groups = allGroups.values
+                        List<OutpostModel> groups = allGroups.values
                             .where(
-                              (group) => group.members.keys.contains(myId),
+                              (group) =>
+                                  group.members
+                                      ?.map((e) => e.uuid)
+                                      .contains(myId) ??
+                                  false,
                             )
                             .toList();
 
                         if (!showArchived) {
                           groups = groups
-                              .where((group) => group.archived != true)
+                              .where((group) => group.is_archived != true)
                               .toList();
                         }
                         if (isLoading) {
@@ -145,7 +150,7 @@ class HomeView extends GetView<HomeController> {
                             ),
                           );
                         }
-                        return GroupList(groupsList: groups);
+                        return OutpostsList(outpostsList: groups);
                       },
                     );
                   }),

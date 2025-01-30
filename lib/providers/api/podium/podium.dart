@@ -131,4 +131,24 @@ class PodiumApi {
       return null;
     }
   }
+
+  Future<List<OutpostModel>> getOutposts({
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/outposts',
+          queryParameters: {
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => OutpostModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
+    }
+  }
 }

@@ -4,10 +4,11 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
@@ -17,7 +18,7 @@ class SearchPageController extends GetxController with FirebaseTags {
   final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final searchValue = ''.obs;
-  final searchedGroups = Rx<Map<String, FirebaseGroup>>({});
+  final searchedOutposts = Rx<Map<String, OutpostModel>>({});
   final searchedUsers = Rx<Map<String, UserInfoModel>>({});
   final searchedTags = Rx<Map<String, Tag>>({});
   final loadingTag_name = ''.obs;
@@ -30,22 +31,22 @@ class SearchPageController extends GetxController with FirebaseTags {
     searchValue.listen((value) async {
       if (value.isEmpty) {
         searchedTags.value = {};
-        searchedGroups.value = {};
+        searchedOutposts.value = {};
         searchedUsers.value = {};
         isSearching.value = false;
         return;
       }
-      final Map<String, FirebaseGroup> groups = await filterGroupName(value);
+      final Map<String, OutpostModel> groups = await filterOutpostName(value);
       if (globalController.showArchivedGroups.value == false) {
-        groups.removeWhere((key, value) => value.archived == true);
+        groups.removeWhere((key, value) => value.is_archived == true);
       }
 
-      searchedGroups.value = groups;
+      searchedOutposts.value = groups;
       isSearching.value = true;
       _deb.debounce(() async {
         if (searchValue.value.isEmpty) {
           searchedTags.value = {};
-          searchedGroups.value = {};
+          searchedOutposts.value = {};
           searchedUsers.value = {};
           isSearching.value = false;
           return;
@@ -73,25 +74,25 @@ class SearchPageController extends GetxController with FirebaseTags {
     super.onClose();
   }
 
-  Future<Map<String, FirebaseGroup>> filterGroupName(String name) async {
-    final allGroups = groupsController.groups.value;
-    final filteredGroups = allGroups.entries
+  Future<Map<String, OutpostModel>> filterOutpostName(String name) async {
+    final allOutposts = groupsController.outposts.value;
+    final filteredOutposts = allOutposts.entries
         .where((element) =>
             element.value.name.toLowerCase().contains(name.toLowerCase()))
         .toList();
-    final filteredGroupsMap = Map<String, FirebaseGroup>.fromEntries(
-      filteredGroups,
+    final filteredOutpostsMap = Map<String, OutpostModel>.fromEntries(
+      filteredOutposts,
     );
-    return filteredGroupsMap;
+    return filteredOutpostsMap;
   }
 
-  searchGroup(String v) async {
+  searchOutpost(String v) async {
     if (v.isEmpty) {
-      searchedGroups.value = {};
+      searchedOutposts.value = {};
       return;
     }
-    final foundGroups = await searchForGroupByName(v);
-    searchedGroups.value = foundGroups;
+    final foundOutposts = await filterOutpostName(v);
+    searchedOutposts.value = foundOutposts;
   }
 
   tagClicked(Tag tag) async {
@@ -106,10 +107,10 @@ class SearchPageController extends GetxController with FirebaseTags {
       l.e('No groups found for tag: ${tag.tagName}');
       return;
     } else {
-      final parsedGroups = foundGroups
+      final parsedOutposts = foundGroups
           .where((element) => element != null)
           .toList()
-          .cast<FirebaseGroup>();
+          .cast<OutpostModel>();
       Get.dialog(
         SafeArea(
           child: Scaffold(
@@ -142,7 +143,7 @@ class SearchPageController extends GetxController with FirebaseTags {
                 Container(
                   height: Get.height - 150,
                   color: ColorName.pageBackground,
-                  child: GroupList(groupsList: parsedGroups),
+                  child: OutpostsList(outpostsList: parsedOutposts),
                 ),
               ],
             ),
@@ -162,15 +163,15 @@ class SearchPageController extends GetxController with FirebaseTags {
     searchedUsers.value = foundUsers;
   }
 
-  refreshSearchedGroup(FirebaseGroup group) {
-    if (searchedGroups.value.isEmpty) {
+  refreshSearchedGroup(OutpostModel group) {
+    if (searchedOutposts.value.isEmpty) {
       return;
     }
-    final currentGroups = searchedGroups.value;
-    if (currentGroups.containsKey(group.id)) {
-      currentGroups[group.id] = group;
-      searchedGroups.value = currentGroups;
-      searchedGroups.refresh();
+    final currentGroups = searchedOutposts.value;
+    if (currentGroups.containsKey(group.uuid)) {
+      currentGroups[group.uuid] = group;
+      searchedOutposts.value = currentGroups;
+      searchedOutposts.refresh();
     }
   }
 }

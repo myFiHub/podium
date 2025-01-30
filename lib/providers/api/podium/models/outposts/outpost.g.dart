@@ -17,26 +17,26 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       enter_type: json['enter_type'] as String,
       has_adult_content: json['has_adult_content'] as bool,
       image: json['image'] as String,
-      invites: (json['invites'] as List<dynamic>)
-          .map((e) => _InviteModel.fromJson(e as Map<String, dynamic>))
+      invites: (json['invites'] as List<dynamic>?)
+          ?.map((e) => _InviteModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       is_archived: json['is_archived'] as bool,
       is_recordable: json['is_recordable'] as bool,
       last_active_at: (json['last_active_at'] as num).toInt(),
-      members: (json['members'] as List<dynamic>)
-          .map((e) => OutpostMember.fromJson(e as Map<String, dynamic>))
+      members: (json['members'] as List<dynamic>?)
+          ?.map((e) => OutpostMember.fromJson(e as Map<String, dynamic>))
           .toList(),
-      members_count: (json['members_count'] as num).toInt(),
+      members_count: (json['members_count'] as num?)?.toInt(),
       name: json['name'] as String,
       scheduled_for: (json['scheduled_for'] as num).toInt(),
       speak_type: json['speak_type'] as String,
       subject: json['subject'] as String,
       tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
-      tickets_to_enter: (json['tickets_to_enter'] as List<dynamic>)
-          .map((e) => _TicketToEnterModel.fromJson(e as Map<String, dynamic>))
+      tickets_to_enter: (json['tickets_to_enter'] as List<dynamic>?)
+          ?.map((e) => _TicketToEnterModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      tickets_to_speak: (json['tickets_to_speak'] as List<dynamic>)
-          .map((e) => _TicketToSpeakModel.fromJson(e as Map<String, dynamic>))
+      tickets_to_speak: (json['tickets_to_speak'] as List<dynamic>?)
+          ?.map((e) => _TicketToSpeakModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       luma_event_id: json['luma_event_id'] as String?,
     );

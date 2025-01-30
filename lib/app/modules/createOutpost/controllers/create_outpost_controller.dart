@@ -16,7 +16,7 @@ import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
-import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
@@ -764,8 +764,8 @@ class CreateOutpostController extends GetxController {
           return;
         }
       }
-      _resetAllFields();
       // preventing from creating the same name if controller is not deleted
+      _resetAllFields();
     } catch (e) {
       l.e(e);
     } finally {

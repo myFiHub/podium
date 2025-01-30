@@ -15,19 +15,19 @@ class OutpostModel {
   final String enter_type;
   final bool has_adult_content;
   final String image;
-  final List<_InviteModel> invites;
+  final List<_InviteModel>? invites;
   final bool is_archived;
   final bool is_recordable;
   final int last_active_at;
-  final List<OutpostMember> members;
-  final int members_count;
+  final List<OutpostMember>? members;
+  final int? members_count;
   final String name;
   final int scheduled_for;
   final String speak_type;
   final String subject;
   final List<String> tags;
-  final List<_TicketToEnterModel> tickets_to_enter;
-  final List<_TicketToSpeakModel> tickets_to_speak;
+  final List<_TicketToEnterModel>? tickets_to_enter;
+  final List<_TicketToSpeakModel>? tickets_to_speak;
 
   OutpostModel({
     required this.alarm_id,
@@ -40,19 +40,19 @@ class OutpostModel {
     required this.enter_type,
     required this.has_adult_content,
     required this.image,
-    required this.invites,
+    this.invites,
     required this.is_archived,
     required this.is_recordable,
     required this.last_active_at,
-    required this.members,
+    this.members,
     required this.members_count,
     required this.name,
     required this.scheduled_for,
     required this.speak_type,
     required this.subject,
     required this.tags,
-    required this.tickets_to_enter,
-    required this.tickets_to_speak,
+    this.tickets_to_enter,
+    this.tickets_to_speak,
     this.luma_event_id,
   });
 

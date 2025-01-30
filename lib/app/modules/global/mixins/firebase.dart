@@ -19,6 +19,7 @@ import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/podiumDefinedEntryAddress/podiumDefinedEntryAddress.dart';
 import 'package:podium/models/referral/referral.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -885,26 +886,9 @@ Future<FirebaseGroup?> getGroupInfoById(String groupId) async {
   }
 }
 
-Future<Map<String, FirebaseGroup>> searchForGroupByName(
-    String groupName) async {
+Future<Map<String, OutpostModel>> searchForGroupByName(String groupName) async {
   if (groupName.isEmpty) return {};
   try {
-    final lowercased = groupName.toLowerCase();
-    final DatabaseReference _database = FirebaseDatabase.instance.ref();
-    Query query = _database
-        .child(FireBaseConstants.groupsRef)
-        .orderByChild(FirebaseGroup.lowercasenameKey)
-        .startAt(lowercased)
-        .endAt('$lowercased\uf8ff');
-    DataSnapshot snapshot = await query.get();
-    if (snapshot.value != null) {
-      try {
-        return groupsParser(snapshot.value);
-      } catch (e) {
-        l.e(e);
-        return {};
-      }
-    }
     return {};
   } catch (e) {
     return {};

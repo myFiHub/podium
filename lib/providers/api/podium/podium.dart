@@ -6,6 +6,7 @@ import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/utils/logger.dart';
 
 class PodiumApi {
   final _baseUrl = Env.podimBackendBaseUrl;
@@ -75,6 +76,23 @@ class PodiumApi {
     }
   }
 
+  Future<List<UserModel>> searchByName({
+    required String name,
+    int? page,
+    int? page_size,
+  }) async {
+    final response = await dio.get('$_baseUrl/users/search',
+        queryParameters: {
+          'text': name,
+          if (page != null) 'page': page,
+          if (page_size != null) 'page_size': page_size,
+        },
+        options: Options(headers: _headers));
+    return (response.data['data'] as List)
+        .map((e) => UserModel.fromJson(e))
+        .toList();
+  }
+
   Future<UserModel?> updateMyUserData(
     Map<String, dynamic> patchJson,
   ) async {
@@ -109,6 +127,7 @@ class PodiumApi {
           data: request.toJson(), options: Options(headers: _headers));
       return OutpostModel.fromJson(response.data['data']);
     } catch (e) {
+      l.e(e);
       return null;
     }
   }

@@ -6,7 +6,7 @@ part 'outpost.g.dart';
 class OutpostModel {
   final int alarm_id;
   final String uuid;
-  final String created_at;
+  final int created_at;
   final bool creator_joined;
   final String? luma_event_id;
   final String creator_user_name;
@@ -64,7 +64,7 @@ class OutpostModel {
 @JsonSerializable()
 class OutpostMember {
   final String address;
-  final String can_speak;
+  final bool can_speak;
   final String uuid;
   final String aptos_address;
   final String? external_wallet_address;
@@ -85,12 +85,12 @@ class OutpostMember {
 class _TicketToEnterModel {
   final String access_type;
   final String address;
-  final String user_uuid;
+  final String? user_uuid;
 
   _TicketToEnterModel({
     required this.access_type,
     required this.address,
-    required this.user_uuid,
+    this.user_uuid,
   });
 
   factory _TicketToEnterModel.fromJson(Map<String, dynamic> json) =>
@@ -102,12 +102,12 @@ class _TicketToEnterModel {
 class _TicketToSpeakModel {
   final String access_type;
   final String address;
-  final String user_uuid;
+  final String? user_uuid;
 
   _TicketToSpeakModel({
     required this.access_type,
     required this.address,
-    required this.user_uuid,
+    this.user_uuid,
   });
 
   factory _TicketToSpeakModel.fromJson(Map<String, dynamic> json) =>

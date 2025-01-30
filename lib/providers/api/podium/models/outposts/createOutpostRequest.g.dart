@@ -9,7 +9,6 @@ part of 'createOutpostRequest.dart';
 CreateOutpostRequest _$CreateOutpostRequestFromJson(
         Map<String, dynamic> json) =>
     CreateOutpostRequest(
-      alarm_id: (json['alarm_id'] as num).toInt(),
       enter_type: json['enter_type'] as String,
       has_adult_content: json['has_adult_content'] as bool,
       image: json['image'] as String,
@@ -31,7 +30,6 @@ CreateOutpostRequest _$CreateOutpostRequestFromJson(
 Map<String, dynamic> _$CreateOutpostRequestToJson(
         CreateOutpostRequest instance) =>
     <String, dynamic>{
-      'alarm_id': instance.alarm_id,
       'enter_type': instance.enter_type,
       'has_adult_content': instance.has_adult_content,
       'image': instance.image,

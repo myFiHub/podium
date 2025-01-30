@@ -9,7 +9,7 @@ part of 'outpost.dart';
 OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       alarm_id: (json['alarm_id'] as num).toInt(),
       uuid: json['uuid'] as String,
-      created_at: json['created_at'] as String,
+      created_at: (json['created_at'] as num).toInt(),
       creator_joined: json['creator_joined'] as bool,
       creator_user_name: json['creator_user_name'] as String,
       creator_user_uuid: json['creator_user_uuid'] as String,
@@ -72,7 +72,7 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
 OutpostMember _$OutpostMemberFromJson(Map<String, dynamic> json) =>
     OutpostMember(
       address: json['address'] as String,
-      can_speak: json['can_speak'] as String,
+      can_speak: json['can_speak'] as bool,
       uuid: json['uuid'] as String,
       aptos_address: json['aptos_address'] as String,
       external_wallet_address: json['external_wallet_address'] as String?,
@@ -91,7 +91,7 @@ _TicketToEnterModel _$TicketToEnterModelFromJson(Map<String, dynamic> json) =>
     _TicketToEnterModel(
       access_type: json['access_type'] as String,
       address: json['address'] as String,
-      user_uuid: json['user_uuid'] as String,
+      user_uuid: json['user_uuid'] as String?,
     );
 
 Map<String, dynamic> _$TicketToEnterModelToJson(_TicketToEnterModel instance) =>
@@ -105,7 +105,7 @@ _TicketToSpeakModel _$TicketToSpeakModelFromJson(Map<String, dynamic> json) =>
     _TicketToSpeakModel(
       access_type: json['access_type'] as String,
       address: json['address'] as String,
-      user_uuid: json['user_uuid'] as String,
+      user_uuid: json['user_uuid'] as String?,
     );
 
 Map<String, dynamic> _$TicketToSpeakModelToJson(_TicketToSpeakModel instance) =>

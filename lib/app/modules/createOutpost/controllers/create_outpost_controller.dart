@@ -11,7 +11,6 @@ import 'package:getwidget/getwidget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -22,12 +21,12 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
 import 'package:podium/providers/api/luma/models/addHost.dart';
 import 'package:podium/providers/api/luma/models/createEvent.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
@@ -44,13 +43,13 @@ import 'package:uuid/uuid.dart';
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class TicketSellersListMember {
-  final UserInfoModel user;
+  final UserModel user;
   final String activeAddress;
   TicketSellersListMember({required this.user, required this.activeAddress});
 }
 
 class SearchedUser {
-  final UserInfoModel? podiumUserInfo;
+  final UserModel? podiumUserInfo;
   final StarsArenaUser? arenaUserInfo;
   final bool? isArenaUser;
   SearchedUser({
@@ -490,20 +489,17 @@ class CreateOutpostController extends GetxController {
       Toast.error(message: 'User has no wallet address');
       return;
     }
-    final usersMap = list.map((e) => e.user.id).toList();
+    final usersMap = list.map((e) => e.user.uuid).toList();
     if (usersMap.contains(arenaUserIdPrefix + user.id)) {
-      list.removeWhere((e) => e.user.id == arenaUserIdPrefix + user.id);
+      list.removeWhere((e) => e.user.uuid == arenaUserIdPrefix + user.id);
     } else {
       list.add(TicketSellersListMember(
-        user: UserInfoModel(
-          id: arenaUserIdPrefix + user.id,
-          fullName: user.twitterName,
+        user: UserModel(
+          uuid: arenaUserIdPrefix + user.id,
+          name: user.twitterName,
           email: '',
-          avatar: user.twitterPicture,
-          evm_externalWalletAddress: user.mainAddress,
-          following: [],
-          numberOfFollowers: user.followerCount,
-          evmInternalWalletAddress: user.mainAddress,
+          image: user.twitterPicture,
+          address: user.mainAddress,
         ),
         activeAddress: user.mainAddress,
       ));
@@ -511,7 +507,7 @@ class CreateOutpostController extends GetxController {
   }
 
   toggleUserToSelectedList({
-    required UserInfoModel user,
+    required UserModel user,
     required String ticketPermissiontype,
   }) async {
     final list = ticketPermissiontype == TicketPermissionType.speak
@@ -525,9 +521,9 @@ class CreateOutpostController extends GetxController {
       return;
     }
 
-    final usersMap = list.map((e) => e.user.id).toList();
-    if (usersMap.contains(user.id)) {
-      list.removeWhere((e) => e.user.id == user.id);
+    final usersMap = list.map((e) => e.user.uuid).toList();
+    if (usersMap.contains(user.uuid)) {
+      list.removeWhere((e) => e.user.uuid == user.uuid);
     } else {
       String? activeAddress =
           ticketType != BuyableTicketTypes.onlyFriendTechTicketHolders
@@ -537,7 +533,7 @@ class CreateOutpostController extends GetxController {
                   ticketPermissionType: ticketPermissiontype,
                 );
       if (ticketType == BuyableTicketTypes.onlyPodiumPassHolders) {
-        activeAddress = user.aptosInternalWalletAddress;
+        activeAddress = user.address;
       }
       if (activeAddress != null) {
         list.add(TicketSellersListMember(
@@ -563,16 +559,16 @@ class CreateOutpostController extends GetxController {
   }
 
   Future<String?> checkIfUserCanBeAddedToList({
-    required UserInfoModel user,
+    required UserModel user,
     required String ticketPermissionType,
   }) async {
     if (!_shouldCheckIfUserIsActive(ticketPermissionType)) {
       return user.defaultWalletAddress;
     }
-    loadingUserIds.add(user.id);
+    loadingUserIds.add(user.uuid);
     try {
       final activeWallets = await internal_friendTech_getActiveUserWallets(
-        internalWalletAddress: user.evmInternalWalletAddress,
+        internalWalletAddress: user.address,
         externalWalletAddress: user.defaultWalletAddress,
         chainId: baseChainId,
       );
@@ -581,7 +577,7 @@ class CreateOutpostController extends GetxController {
       if (isActive) {
         return preferedWalletAddress;
       } else {
-        if (user.id != myId) {
+        if (user.uuid != myId) {
           Toast.warning(
             title: "User isn't yet active on FriendTech",
             message: "",
@@ -623,7 +619,7 @@ class CreateOutpostController extends GetxController {
       l.e(e);
       return null;
     } finally {
-      loadingUserIds.remove(user.id);
+      loadingUserIds.remove(user.uuid);
     }
   }
 
@@ -648,12 +644,12 @@ class CreateOutpostController extends GetxController {
       try {
         checkIfValueIsDirectAddress(value);
         final (users, arenaUser) = await (
-          searchForUserByName(value),
+          HttpApis.podium.searchByName(name: value),
           ticketType == BuyableTicketTypes.onlyArenaTicketHolders
               ? HttpApis.arenaApi.getUserFromStarsArenaByHandle(value)
               : Future.value(null)
         ).wait;
-        final podiumUsers = users.values
+        final podiumUsers = users
             .toList()
             .map((e) => SearchedUser(
                   podiumUserInfo: e,
@@ -701,27 +697,6 @@ class CreateOutpostController extends GetxController {
       return;
     }
 
-    final alarmId = Random().nextInt(100000000);
-    if (scheduledFor.value != 0) {
-      final setFor = await setReminder(
-        alarmId: alarmId,
-        scheduledFor: scheduledFor.value,
-        eventName: outpostName.value,
-        timesList: defaultTimeList(
-          endsAt: scheduledFor.value,
-        ),
-      );
-      if (setFor == -1) {
-        // means use calendar
-      }
-      if (setFor == -2) {
-        // means no reminder
-      } else if (setFor == null) {
-        // means tap on back or outside
-        return;
-      }
-    }
-
     String subject = outpostSubject.value;
     if (subject.isEmpty) {
       subject = defaultSubject;
@@ -763,19 +738,60 @@ class CreateOutpostController extends GetxController {
         requiredAddressesToEnter: addressesToAddForEntering.value,
         requiredAddressesToSpeak: addressesToAddForSpeaking.value,
         scheduledFor: scheduledFor.value,
-        alarmId: alarmId,
       );
       if (response == null) {
         Toast.error(message: 'Failed to create outpost');
         return;
       }
-      // preventing from creating the same name if controller is not deleted
       outpostName.value = "";
+
+      if (scheduledFor.value != 0) {
+        final setFor = await setReminder(
+          alarmId: response.alarm_id,
+          scheduledFor: scheduledFor.value,
+          eventName: outpostName.value,
+          timesList: defaultTimeList(
+            endsAt: scheduledFor.value,
+          ),
+        );
+        if (setFor == -1) {
+          // means use calendar
+        }
+        if (setFor == -2) {
+          // means no reminder
+        } else if (setFor == null) {
+          // means tap on back or outside
+          return;
+        }
+      }
+      _resetAllFields();
+      // preventing from creating the same name if controller is not deleted
     } catch (e) {
       l.e(e);
     } finally {
       isCreatingNewOutpost.value = false;
     }
+  }
+
+  _resetAllFields() {
+    outpostName.value = "";
+    selectedFile = null;
+    tags.value = [];
+    newOutpostHasAdultContent.value = false;
+    newOutpostIsRecorable.value = false;
+    selectedUsersToBuyTicketFrom_ToAccessRoom.value = [];
+    selectedUsersToBuyticketFrom_ToSpeak.value = [];
+    addressesToAddForEntering.value = [];
+    addressesToAddForSpeaking.value = [];
+    lumaHosts.value = [];
+    lumaGuests.value = [];
+    scheduledFor.value = 0;
+    searchValueForSeletTickets.value = "";
+    showLoadingOnSearchInput.value = false;
+    loadingUserIds.value = [];
+    loadingAddresses.value = [];
+    listOfSearchedUsersToBuyTicketFrom.value = [];
+    isCreatingNewOutpost.value = false;
   }
 
   openSelectTicketBottomSheet({
@@ -1053,7 +1069,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           .where(
                         (element) {
                           return element.isArenaUser != true &&
-                              element.podiumUserInfo!.id != myId;
+                              element.podiumUserInfo!.uuid != myId;
                         },
                       ).toList();
 
@@ -1066,21 +1082,21 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                           controller
                               .selectedUsersToBuyTicketFrom_ToAccessRoom.value;
                       List<String> selectedIds = [];
-                      List<UserInfoModel> selectedUsers;
+                      List<UserModel> selectedUsers;
                       if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.speak) {
                         selectedUsers =
                             selsectedListOfUsersToBuyTicketFromInOrderToSpeak
                                 .map((e) => e.user)
                                 .toList();
-                        selectedIds = selectedUsers.map((e) => e.id).toList();
+                        selectedIds = selectedUsers.map((e) => e.uuid).toList();
                       } else if (buyTicketToGetPermisionFor ==
                           TicketPermissionType.access) {
                         selectedUsers =
                             selsectedListOfUsersToBuyTicketFromInOrderToAccessRoom
                                 .map((e) => e.user)
                                 .toList();
-                        selectedIds = selectedUsers.map((e) => e.id).toList();
+                        selectedIds = selectedUsers.map((e) => e.uuid).toList();
                       } else {
                         return Container(
                           child: const Center(
@@ -1089,7 +1105,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                         );
                       }
                       // move selectedIds to the top of the list then my id to the top of them
-                      List<UserInfoModel> listOfUsers = [];
+                      List<UserModel> listOfUsers = [];
 
                       final starsArenaUsers = controller
                           .listOfSearchedUsersToBuyTicketFrom.value
@@ -1102,12 +1118,12 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                       ).toList();
 
                       // listOfUsers.add(myUser);
-                      final SelectedUsersExceptMe =
-                          selectedUsers.where((element) => element.id != myId);
-                      listOfUsers.addAll([...SelectedUsersExceptMe]);
+                      final SelectedUsersExceptMe = selectedUsers
+                          .where((element) => element.uuid != myId);
+                      listOfUsers.addAll([myUser, ...SelectedUsersExceptMe]);
                       final notSelectedPodiumUsers = podiumUsers.where(
                           (element) => !selectedIds
-                              .contains(element.podiumUserInfo!.id));
+                              .contains(element.podiumUserInfo!.uuid));
                       listOfUsers.addAll(notSelectedPodiumUsers.map(
                         (e) => e.podiumUserInfo!,
                       ));
@@ -1222,11 +1238,11 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           Row(
                                             children: [
                                               Img(
-                                                src: element.user?.avatar ==
+                                                src: element.user?.image ==
                                                         defaultAvatar
                                                     ? ''
-                                                    : element.user!.avatar,
-                                                alt: element.user!.fullName,
+                                                    : element.user!.image ?? '',
+                                                alt: element.user!.name,
                                                 size: 20,
                                               ),
                                               space5
@@ -1234,12 +1250,12 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           ),
                                         if (element.user != null)
                                           Text(
-                                            element.user!.id == myId
+                                            element.user!.uuid == myId
                                                 ? "You"
-                                                : element.user!.fullName,
+                                                : element.user!.name ?? '',
                                             textAlign: TextAlign.start,
                                             style: TextStyle(
-                                              color: element.user!.id == myId
+                                              color: element.user!.uuid == myId
                                                   ? Colors.green
                                                   : Colors.white,
                                               fontSize: 14,
@@ -1264,7 +1280,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                         children: [
                                           Text(
                                             "user ID: " +
-                                                truncate(element.user!.id,
+                                                truncate(element.user!.uuid,
                                                     length: 12),
                                             style: const TextStyle(
                                               color: Colors.grey,
@@ -1279,7 +1295,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (element.user != null &&
-                                        loadingIds.contains(element.user!.id))
+                                        loadingIds.contains(element.user!.uuid))
                                       const Padding(
                                         padding: EdgeInsets.only(right: 18.0),
                                         child: GFLoader(),
@@ -1297,7 +1313,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           }
                                         },
                                         value: selectedIds
-                                            .contains(element.user!.id),
+                                            .contains(element.user!.uuid),
                                       )
                                     else if ((element.address != null &&
                                         loadingAddresses
@@ -1386,15 +1402,15 @@ class SelectUsersToBuyTicketFromBottomSheetContent
 }
 
 class BuyableTicketTypes {
-  static const onlyFriendTechTicketHolders = 'onlyFriendTechTicketHolders';
-  static const onlyArenaTicketHolders = 'onlyArenaTicketHolders';
-  static const onlyPodiumPassHolders = 'onlyPodiumPassHolders';
+  static const onlyFriendTechTicketHolders = 'friend_tech_key_holders';
+  static const onlyArenaTicketHolders = 'arena_ticket_holders';
+  static const onlyPodiumPassHolders = 'podium_pass_holders';
 }
 
 class FreeOutpostAccessTypes {
-  static const public = 'public';
-  static const onlyLink = 'onlyLink';
-  static const invitees = 'invitees';
+  static const public = 'everyone';
+  static const onlyLink = 'having_link';
+  static const invitees = 'invited_users';
 }
 
 class TicketPermissionType {
@@ -1414,7 +1430,7 @@ class FreeOutpostSpeakerTypes {
 }
 
 class SelectBoxOption {
-  UserInfoModel? user;
+  UserModel? user;
   String? address;
   StarsArenaUser? arenaUser;
   SelectBoxOption({this.user, this.address, this.arenaUser});

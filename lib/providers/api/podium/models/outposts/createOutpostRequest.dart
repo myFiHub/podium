@@ -4,7 +4,6 @@ part 'createOutpostRequest.g.dart';
 
 @JsonSerializable()
 class CreateOutpostRequest {
-  final int alarm_id;
   final String enter_type;
   final bool has_adult_content;
   final String image;
@@ -19,7 +18,6 @@ class CreateOutpostRequest {
   final List<String> tickets_to_speak;
 
   CreateOutpostRequest({
-    required this.alarm_id,
     required this.enter_type,
     required this.has_adult_content,
     required this.image,

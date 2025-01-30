@@ -28,6 +28,7 @@ import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
@@ -435,7 +436,7 @@ class OutpostsController extends GetxController with FirebaseTags {
     }
   }
 
-  createOutpost({
+  Future<OutpostModel?> createOutpost({
     required String name,
     required String id,
     required String accessType,
@@ -449,7 +450,6 @@ class OutpostsController extends GetxController with FirebaseTags {
     required List<String> requiredAddressesToSpeak,
     required List<String> tags,
     required int scheduledFor,
-    required int alarmId,
     String? lumaEventId,
     String? imageUrl,
   }) async {
@@ -463,7 +463,6 @@ class OutpostsController extends GetxController with FirebaseTags {
     ];
 
     final createOutpostRequest = CreateOutpostRequest(
-      alarm_id: alarmId,
       enter_type: accessType,
       has_adult_content: adultContent,
       image: imageUrl ?? '',
@@ -481,6 +480,7 @@ class OutpostsController extends GetxController with FirebaseTags {
       final response = await HttpApis.podium.createOutpost(
         createOutpostRequest,
       );
+
       return response;
     } catch (e) {
       return null;

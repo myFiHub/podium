@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/timer.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/widgetWithTimer/timer.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 final thr = Throttling(duration: const Duration(seconds: 1));

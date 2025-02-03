@@ -10,7 +10,6 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/styles.dart';
@@ -67,7 +66,7 @@ class _SingleGroup extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         controller.joinGroupAndOpenGroupDetailPage(
-          groupId: outpost.uuid,
+          outpostId: outpost.uuid,
         );
       },
       child: Stack(

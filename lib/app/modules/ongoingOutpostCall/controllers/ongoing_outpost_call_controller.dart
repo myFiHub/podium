@@ -11,7 +11,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
@@ -21,8 +21,8 @@ import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
-import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/cheerBooBottomSheet.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
@@ -85,7 +85,7 @@ class ReactionLogElement {
   });
 }
 
-class OngoingGroupCallController extends GetxController {
+class OngoingOutpostCallController extends GetxController {
   BuildContext? contextForIntro;
   final shouldShowIntro = false.obs;
   bool introStartCalled = false;
@@ -96,7 +96,7 @@ class OngoingGroupCallController extends GetxController {
   final cheerBooKey = GlobalKey();
 
   final storage = GetStorage();
-  final groupCallController = Get.find<GroupCallController>();
+  final outpostCallController = Get.find<OutpostCallController>();
   final globalController = Get.find<GlobalController>();
   final firebaseSession = Rxn<FirebaseSession>();
   final mySession = Rxn<FirebaseSessionMember>();
@@ -125,8 +125,8 @@ class OngoingGroupCallController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    final ongoingGroupCallGroup = groupCallController.group.value!;
-    final channel = realtimeInstance.channels.get(ongoingGroupCallGroup.id);
+    final ongoingOutpost = outpostCallController.outpost.value!;
+    final channel = realtimeInstance.channels.get(ongoingOutpost.uuid);
     presenceUpdateStream = channel.presence
         .subscribe(action: PresenceAction.update)
         .listen((message) {
@@ -148,23 +148,23 @@ class OngoingGroupCallController extends GetxController {
     });
 
     final myUser = globalController.myUserInfo.value!;
-    if (myUser.uuid == ongoingGroupCallGroup.creator.id) {
+    if (myUser.uuid == ongoingOutpost.creator_user_uuid) {
       amIAdmin.value = true;
     }
     mySession.value = await getUserSessionData(
-      groupId: ongoingGroupCallGroup.id,
+      groupId: ongoingOutpost.uuid,
       userId: myUser.uuid,
     );
     firebaseSession.value = await getSessionData(
-      groupId: ongoingGroupCallGroup.id,
+      groupId: ongoingOutpost.uuid,
     );
     mySessionSubscription = startListeningToMyRemainingTalkingTime(
-      groupId: ongoingGroupCallGroup.id,
+      groupId: ongoingOutpost.uuid,
       userId: myUser.uuid,
       onData: onRemainingTimeUpdate,
     );
     sessionMembersSubscription = startListeningToSessionMembers(
-      sessionId: ongoingGroupCallGroup.id,
+      sessionId: ongoingOutpost.uuid,
       onData: (sessionMembers) {
         _parseReceivedSessionMembers(sessionMembers);
       },
@@ -405,9 +405,9 @@ class OngoingGroupCallController extends GetxController {
   _setIsRecording(bool recording) async {
     _recorder = AudioRecorder();
 
-    final group = groupCallController.group.value!;
+    final outpost = outpostCallController.outpost.value!;
     final recordingName =
-        'Podium Outpost record-${group.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
+        'Podium Outpost record-${outpost.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
     final hasPermissionForAudio = await getPermission(Permission.microphone);
     if (!hasPermissionForAudio) {
       return;
@@ -536,14 +536,14 @@ class OngoingGroupCallController extends GetxController {
 
   updateMyLastTalkingTime() async {
     final myUserId = globalController.myUserInfo.value?.uuid;
-    final group = groupCallController.group.value;
-    if (group == null) {
+    final outpost = outpostCallController.outpost.value;
+    if (outpost == null) {
       return;
     }
-    final isGroupCallRegistered = Get.isRegistered<GroupCallController>();
+    final isGroupCallRegistered = Get.isRegistered<OutpostCallController>();
     if (isGroupCallRegistered) {
-      final GroupCallController groupCallController =
-          Get.find<GroupCallController>();
+      final OutpostCallController groupCallController =
+          Get.find<OutpostCallController>();
       final canSpeak = groupCallController.canTalk.value;
       if (myUserId != null && canSpeak && amIMuted.value == false) {
         await setIsTalkingInSession(
@@ -569,18 +569,18 @@ class OngoingGroupCallController extends GetxController {
 
   Future<void> addToTimer(
       {required int seconds, required String userId}) async {
-    if (groupCallController.group.value == null) {
+    if (outpostCallController.outpost.value == null) {
       Toast.error(message: "Unknown error, please join again");
       return;
     }
-    final creatorId = groupCallController.group.value!.creator.id;
+    final creatorId = outpostCallController.outpost.value!.creator_user_uuid;
     if (creatorId == userId) {
       return;
     }
     l.d("adding ${seconds} seconds to ${userId}");
     final milliseconds = seconds * 1000;
     final remainingTalkTimeForUser = await getUserRemainingTalkTime(
-      groupId: groupCallController.group.value!.id,
+      groupId: outpostCallController.outpost.value!.uuid,
       userId: userId,
     );
     if (remainingTalkTimeForUser == null) {
@@ -597,17 +597,17 @@ class OngoingGroupCallController extends GetxController {
 
   Future<void> reduceFromTimer(
       {required int seconds, required String userId}) async {
-    if (groupCallController.group.value == null) {
+    if (outpostCallController.outpost.value == null) {
       Toast.error(message: "Unknown error, please join again");
       return;
     }
-    final creatorId = groupCallController.group.value!.creator.id;
+    final creatorId = outpostCallController.outpost.value!.creator_user_uuid;
     if (creatorId == userId) {
       return;
     }
     final milliseconds = seconds * 1000;
     final remainingTalkTimeForUser = await getUserRemainingTalkTime(
-        groupId: groupCallController.group.value!.id, userId: userId);
+        groupId: outpostCallController.outpost.value!.uuid, userId: userId);
     if (remainingTalkTimeForUser == null) {
       l.f("remaining talk time for user is null");
       return;
@@ -630,7 +630,7 @@ class OngoingGroupCallController extends GetxController {
     } else {
       return updateRemainingTimeOnFirebase(
         newValue: v,
-        groupId: groupCallController.group.value!.id,
+        groupId: outpostCallController.outpost.value!.uuid,
         userId: userId,
       );
     }
@@ -638,7 +638,7 @@ class OngoingGroupCallController extends GetxController {
 
   onLikeClicked(String userId) async {
     sendGroupPeresenceEvent(
-        groupId: groupCallController.group.value!.id,
+        groupId: outpostCallController.outpost.value!.uuid,
         eventName: eventNames.like,
         eventData: {
           InteractionKeys.initiatorId: myId,
@@ -648,7 +648,7 @@ class OngoingGroupCallController extends GetxController {
     final myUser = globalController.myUserInfo.value!;
     final key = generateKeyForStorageAndObserver(
       userId: userId,
-      groupId: groupCallController.group.value!.id,
+      groupId: outpostCallController.outpost.value!.uuid,
       like: true,
     );
     timers.value[key] = DateTime.now().millisecondsSinceEpoch +
@@ -662,7 +662,7 @@ class OngoingGroupCallController extends GetxController {
       name: 'like',
       parameters: {
         'targetUser': userId,
-        'groupId': groupCallController.group.value!.id,
+        'groupId': outpostCallController.outpost.value!.uuid,
         'fromUser': myUser.uuid,
       },
     );
@@ -670,7 +670,7 @@ class OngoingGroupCallController extends GetxController {
 
   onDislikeClicked(String userId) async {
     sendGroupPeresenceEvent(
-        groupId: groupCallController.group.value!.id,
+        groupId: outpostCallController.outpost.value!.uuid,
         eventName: eventNames.dislike,
         eventData: {
           InteractionKeys.initiatorId: myId,
@@ -679,7 +679,7 @@ class OngoingGroupCallController extends GetxController {
         });
     final key = generateKeyForStorageAndObserver(
         userId: userId,
-        groupId: groupCallController.group.value!.id,
+        groupId: outpostCallController.outpost.value!.uuid,
         like: false);
     timers.value[key] = DateTime.now().millisecondsSinceEpoch +
         likeDislikeTimeoutInMilliSeconds;
@@ -693,7 +693,7 @@ class OngoingGroupCallController extends GetxController {
       name: 'dislike',
       parameters: {
         'targetUser': userId,
-        'groupId': groupCallController.group.value!.id,
+        'groupId': outpostCallController.outpost.value!.uuid,
         'fromUser': myUser.uuid,
       },
     );
@@ -735,7 +735,7 @@ class OngoingGroupCallController extends GetxController {
           firebaseSession.value!.id,
         );
         final liveMemberIds =
-            groupCallController.sortedMembers.value.map((e) => e.id).toList();
+            outpostCallController.sortedMembers.value.map((e) => e.id).toList();
         members.forEach((element) {
           if (liveMemberIds.contains(element.id)) {
             if (element != targetAddress) {
@@ -798,7 +798,7 @@ class OngoingGroupCallController extends GetxController {
       // );
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
-          groupId: groupCallController.group.value!.id,
+          groupId: outpostCallController.outpost.value!.uuid,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount.abs(),
@@ -807,7 +807,7 @@ class OngoingGroupCallController extends GetxController {
         );
       } else if (selectedWallet == WalletNames.internal_EVM) {
         success = await internal_cheerOrBoo(
-          groupId: groupCallController.group.value!.id,
+          groupId: outpostCallController.outpost.value!.uuid,
           user: user,
           target: targetAddress,
           receiverAddresses: receiverAddresses,
@@ -817,7 +817,7 @@ class OngoingGroupCallController extends GetxController {
         );
       } else if (selectedWallet == WalletNames.internal_Aptos) {
         success = await AptosMovement.cheerBoo(
-          groupId: groupCallController.group.value!.id,
+          groupId: outpostCallController.outpost.value!.uuid,
           target: user.aptosInternalWalletAddress,
           receiverAddresses: aptosReceiverAddresses,
           amount: parsedAmount.abs(),
@@ -846,7 +846,7 @@ class OngoingGroupCallController extends GetxController {
         );
         final eventString = cheer ? eventNames.cheer : eventNames.boo;
         sendGroupPeresenceEvent(
-            groupId: groupCallController.group.value!.id,
+            groupId: outpostCallController.outpost.value!.uuid,
             eventName: eventString,
             eventData: {
               InteractionKeys.initiatorId: myId,
@@ -857,7 +857,7 @@ class OngoingGroupCallController extends GetxController {
           'cheer': cheer.toString(),
           'amount': amount,
           'target': userId,
-          'groupId': groupCallController.group.value!.id,
+          'groupId': outpostCallController.outpost.value!.uuid,
           'fromUser': myUser.uuid,
         });
         final internalWalletAddress =
@@ -880,7 +880,7 @@ class OngoingGroupCallController extends GetxController {
           targetAddress: targetAddress,
           initiatorId: myId,
           targetId: userId,
-          groupId: groupCallController.group.value!.id,
+          groupId: outpostCallController.outpost.value!.uuid,
           selfCheer: myId == userId,
           memberIds: myId == userId
               ? firebaseSession.value!.members.values.map((e) => e.id).toList()
@@ -907,28 +907,29 @@ class OngoingGroupCallController extends GetxController {
   }
 
   audioMuteChanged({required bool muted}) {
-    final groupId = groupCallController.group.value!.id;
+    final outpostId = outpostCallController.outpost.value!.uuid;
     if (muted) {
       stopTheTimer();
       amIMuted.value = true;
       talkTimer.endTimer();
       final elapsed = talkTimer.timeElapsedInSeconds;
       sendGroupPeresenceEvent(
-          groupId: groupId, eventName: eventNames.notTalking);
+          groupId: outpostId, eventName: eventNames.notTalking);
       if (elapsed > 0) {
         analytics.logEvent(
           name: 'talked',
           parameters: {
             'timeInSeconds': elapsed,
             'userId': myId,
-            'groupId': groupCallController.group.value!.id,
+            'groupId': outpostCallController.outpost.value!.uuid,
           },
         );
       }
     } else {
-      final groupCreator = groupCallController.group.value!.creator.id;
+      final outpostCreator =
+          outpostCallController.outpost.value!.creator_user_uuid;
       final remainingTime = remainingTimeTimer;
-      if (remainingTime <= 0 && myId != groupCreator) {
+      if (remainingTime <= 0 && myId != outpostCreator) {
         Toast.error(
           title: "You have ran out of time",
           message: "",
@@ -937,7 +938,8 @@ class OngoingGroupCallController extends GetxController {
         jitsiMeet.setAudioMuted(true);
         return;
       }
-      sendGroupPeresenceEvent(groupId: groupId, eventName: eventNames.talking);
+      sendGroupPeresenceEvent(
+          groupId: outpostId, eventName: eventNames.talking);
       amIMuted.value = false;
       jitsiMeet.setAudioMuted(false);
 

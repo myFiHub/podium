@@ -111,6 +111,19 @@ class PodiumApi {
     }
   }
 
+  Future<List<UserModel>> getUsersByIds(List<String> ids) async {
+    try {
+      final List<Future> callArray = [];
+      for (var id in ids) {
+        callArray.add(getUserData(id));
+      }
+      final response = await Future.wait(callArray);
+      return response.map((e) => UserModel.fromJson(e.data['data'])).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<OutpostModel?> getOutpost(String id) async {
     try {
       final response = await dio.get('$_baseUrl/outposts/detail?uuid=$id',
@@ -157,5 +170,27 @@ class PodiumApi {
         data: {'uuid': id, 'archive': archive},
         options: Options(headers: _headers));
     return OutpostModel.fromJson(response.data['data']);
+  }
+
+  Future<bool> addMeAsMember({
+    required String outpostId,
+    String? inviterId,
+  }) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/add-me-as-member',
+          data: {
+            'uuid': outpostId,
+            if (inviterId != null) 'inviter_uuid': inviterId,
+          },
+          options: Options(headers: _headers));
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
   }
 }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
+import 'package:podium/app/modules/groupDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 
-class GroupByIdLandingScreen extends GetView<GroupDetailController> {
+class GroupByIdLandingScreen extends GetView<OutpostDetailController> {
   String? id;
 
   GroupByIdLandingScreen({super.key});
@@ -44,7 +44,7 @@ class GroupByIdLandingScreen extends GetView<GroupDetailController> {
         ),
       );
     }
-    Get.put(GroupDetailController());
+    Get.put(OutpostDetailController());
     controller.getGroupInfo(id: id!);
     return Container(
       child: const Center(

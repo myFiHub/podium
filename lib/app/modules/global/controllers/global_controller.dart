@@ -18,7 +18,7 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
-import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
+import 'package:podium/app/modules/groupDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -372,9 +372,9 @@ class GlobalController extends GetxController {
       }
       final groupId = splited[1];
       final groupsController = Get.put(OutpostsController());
-      Get.put(GroupDetailController());
+      Get.put(OutpostDetailController());
       groupsController.joinGroupAndOpenGroupDetailPage(
-        groupId: groupId,
+        outpostId: groupId,
         joiningByLink: true,
       );
       deepLinkRoute.value = '';

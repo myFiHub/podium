@@ -3,22 +3,23 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
-import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
 final jitsiMeet = JitsiMeet();
 const MethodChannel jitsiMethodChannel = MethodChannel('jitsi_meet_wrapper');
 
-JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
-  Get.put<OngoingGroupCallController>(OngoingGroupCallController());
-  final groupCallController = Get.find<GroupCallController>();
+JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
+  Get.put<OngoingOutpostCallController>(OngoingOutpostCallController());
+  final groupCallController = Get.find<OutpostCallController>();
   return JitsiMeetEventListener(
     conferenceJoined: (url) async {
       if (Platform.isIOS) {
@@ -29,10 +30,10 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         type: NavigationTypes.toNamed,
       );
       final myUserId = myId;
-      final groupCreator = groupCallController.group.value!.creator.id;
+      final groupCreator = outpost.creator_user_uuid;
       final iAmCreator = groupCreator == myUserId;
-      if (group.creatorJoined != true && iAmCreator) {
-        await setCreatorJoinedToTrue(groupId: group.id);
+      if (outpost.creator_joined != true && iAmCreator) {
+        await setCreatorJoinedToTrue(groupId: outpost.uuid);
       }
       groupCallController.haveOngoingCall.value = true;
       // groupCallController.setIsUserPresentInSession(
@@ -41,12 +42,13 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       //   isPresent: true,
       // );
       await updateGroupLastActiveAt(
-        groupId: group.id,
+        groupId: outpost.uuid,
         lastActiveAt: DateTime.now().millisecondsSinceEpoch,
       );
 
       await Future.delayed(const Duration(seconds: 3));
-      sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.enter);
+      sendGroupPeresenceEvent(
+          groupId: outpost.uuid, eventName: eventNames.enter);
       await jitsiMeet.retrieveParticipantsInfo();
 
       l.d("conferenceJoined: url: $url");
@@ -61,8 +63,8 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
       l.d("participantLeft: $p");
     },
     audioMutedChanged: (muted) {
-      if (Get.isRegistered<OngoingGroupCallController>()) {
-        Get.find<OngoingGroupCallController>().audioMuteChanged(
+      if (Get.isRegistered<OngoingOutpostCallController>()) {
+        Get.find<OngoingOutpostCallController>().audioMuteChanged(
           muted: muted,
         );
       }
@@ -90,10 +92,11 @@ JitsiMeetEventListener jitsiListeners({required FirebaseGroup group}) {
         route: Routes.HOME,
         type: NavigationTypes.offNamed,
       );
-      sendGroupPeresenceEvent(groupId: group.id, eventName: eventNames.leave);
+      sendGroupPeresenceEvent(
+          groupId: outpost.uuid, eventName: eventNames.leave);
       groupCallController.cleanupAfterCall();
-      if (Get.isRegistered<OngoingGroupCallController>()) {
-        Get.delete<OngoingGroupCallController>();
+      if (Get.isRegistered<OngoingOutpostCallController>()) {
+        Get.delete<OngoingOutpostCallController>();
       }
     },
     // like: (idWithAddedAtSign, participantId) async {

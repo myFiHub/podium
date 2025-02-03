@@ -82,7 +82,7 @@ class NotificationsController extends GetxController {
     if (groupId == null) return;
     final OutpostsController groupsController = Get.find<OutpostsController>();
     await groupsController.joinGroupAndOpenGroupDetailPage(
-      groupId: groupId,
+      outpostId: groupId,
     );
     try {
       await deleteNotification(notificationId: notif.id);

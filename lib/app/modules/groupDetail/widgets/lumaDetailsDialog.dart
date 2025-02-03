@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
+import 'package:podium/app/modules/groupDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
 
-class LumaDetailsDialog extends GetView<GroupDetailController> {
+class LumaDetailsDialog extends GetView<OutpostDetailController> {
   const LumaDetailsDialog({super.key});
 
   @override
@@ -75,7 +75,7 @@ class LumaDetailsDialog extends GetView<GroupDetailController> {
   }
 }
 
-class _Info extends GetView<GroupDetailController> {
+class _Info extends GetView<OutpostDetailController> {
   const _Info({super.key});
 
   @override
@@ -91,7 +91,7 @@ class _Info extends GetView<GroupDetailController> {
       width: Get.width - 10,
       child: Obx(() {
         final event = controller.lumaEventDetails.value;
-        final group = controller.group.value;
+        final outpost = controller.outpost.value;
         final mycurrentIsoTime = DateTime.now().toIso8601String();
         final eventStartAt = controller.lumaEventDetails.value?.event.start_at;
         final isStarted = DateTime.parse(mycurrentIsoTime)
@@ -118,7 +118,7 @@ class _Info extends GetView<GroupDetailController> {
                 ),
               ],
             ),
-            if (group?.subject?.isNotEmpty ?? false) ...[
+            if (outpost?.subject?.isNotEmpty ?? false) ...[
               space10,
               Row(
                 children: [
@@ -130,7 +130,7 @@ class _Info extends GetView<GroupDetailController> {
                   ),
                   space10,
                   Text(
-                    group?.subject ?? '',
+                    outpost?.subject ?? '',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -191,7 +191,7 @@ String _isoStringToDate(String isoString) {
   return DateFormat('yyyy/MM/dd hh:mm a').format(date);
 }
 
-class _Contents extends GetView<GroupDetailController> {
+class _Contents extends GetView<OutpostDetailController> {
   const _Contents({super.key});
 
   @override
@@ -354,7 +354,7 @@ class _GuestItem extends StatelessWidget {
   }
 }
 
-class _DoneButton extends GetView<GroupDetailController> {
+class _DoneButton extends GetView<OutpostDetailController> {
   const _DoneButton({super.key});
   @override
   Widget build(BuildContext context) {

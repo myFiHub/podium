@@ -4,7 +4,6 @@ import 'package:hidable/hidable.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';

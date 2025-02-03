@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/groupDetail/views/group_detail_view.dart';
-import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/usersInGroupList.dart';
+import 'package:podium/app/modules/groupDetail/views/outpost_detail_view.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/usersInOutpostList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/storage.dart';
@@ -15,11 +15,11 @@ import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 
-class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
+class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final groupCallController = Get.find<GroupCallController>();
+    final groupCallController = Get.find<OutpostCallController>();
     final canITalk = groupCallController.canTalk.value;
 
     if (controller.introStartCalled == false) {
@@ -42,9 +42,9 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
         ),
         floatingWidget: Obx(() {
           final isGroupCallControllerRegistered =
-              Get.isRegistered<GroupCallController>();
+              Get.isRegistered<OutpostCallController>();
           final isControllerRegistered =
-              Get.isRegistered<OngoingGroupCallController>();
+              Get.isRegistered<OngoingOutpostCallController>();
 
           if (!isGroupCallControllerRegistered) {
             return Container(
@@ -52,19 +52,19 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
               height: 0,
             );
           }
-          final groupCallController = Get.find<GroupCallController>();
-          final group = groupCallController.group.value;
+          final outpostCallController = Get.find<OutpostCallController>();
+          final outpost = outpostCallController.outpost.value;
 
-          if (group == null || !isControllerRegistered) {
+          if (outpost == null || !isControllerRegistered) {
             return Container(
               width: 0,
               height: 0,
             );
           }
           final isMuted = controller.amIMuted.value;
-          final amICreator = group.creator.id == myId;
+          final amICreator = outpost.creator_user_uuid == myId;
           final isRecording = controller.isRecording.value;
-          final recordable = group.isRecordable;
+          final recordable = outpost.is_recordable;
           if (!canITalk) {
             return FloatingActionButton(
               key: controller.muteUnmuteKey,
@@ -122,7 +122,7 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
   }
 }
 
-class ContextSaver extends GetView<OngoingGroupCallController> {
+class ContextSaver extends GetView<OngoingOutpostCallController> {
   const ContextSaver({super.key});
 
   @override
@@ -132,7 +132,7 @@ class ContextSaver extends GetView<OngoingGroupCallController> {
   }
 }
 
-class GroupCall extends GetView<GroupCallController> {
+class GroupCall extends GetView<OutpostCallController> {
   final bool shouldShowIntro;
   const GroupCall({
     super.key,
@@ -154,7 +154,7 @@ class GroupCall extends GetView<GroupCallController> {
   }
 }
 
-class SessionInfo extends GetView<OngoingGroupCallController> {
+class SessionInfo extends GetView<OngoingOutpostCallController> {
   const SessionInfo({super.key});
 
   @override
@@ -216,25 +216,25 @@ class SessionInfo extends GetView<OngoingGroupCallController> {
   }
 }
 
-class GroupInfo extends GetView<GroupCallController> {
+class GroupInfo extends GetView<OutpostCallController> {
   const GroupInfo({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final group = controller.group.value;
-      return group != null
+      final outpost = controller.outpost.value;
+      return outpost != null
           ? Container(
               padding: const EdgeInsets.only(top: 10),
               child: Column(
                 children: [
                   Text(
-                    group.name,
+                    outpost.name,
                     style: const TextStyle(
                       color: Colors.white,
                     ),
                   ),
-                  Text(" by ${group.creator.fullName}"),
+                  Text(" by ${outpost.creator_user_name}"),
                 ],
               ),
             )
@@ -245,7 +245,7 @@ class GroupInfo extends GetView<GroupCallController> {
 
 const spaceBetween = const SizedBox(width: 10);
 
-class MembersList extends GetView<GroupCallController> {
+class MembersList extends GetView<OutpostCallController> {
   final bool shouldShowIntro;
   const MembersList({super.key, required this.shouldShowIntro});
 
@@ -253,7 +253,7 @@ class MembersList extends GetView<GroupCallController> {
   Widget build(BuildContext context) {
     final globalController = Get.find<GlobalController>();
     final myUser = globalController.myUserInfo.value;
-    if (controller.group.value == null) {
+    if (controller.outpost.value == null) {
       return Container();
     }
     if (myUser == null) {
@@ -309,7 +309,7 @@ class MembersList extends GetView<GroupCallController> {
                           return UsersInGroupList(
                             shouldShowIntro: shouldShowIntro,
                             usersList: members,
-                            groupId: controller.group.value!.id,
+                            groupId: controller.outpost.value!.uuid,
                           );
                         },
                       ),
@@ -322,7 +322,7 @@ class MembersList extends GetView<GroupCallController> {
                           return UsersInGroupList(
                             shouldShowIntro: false,
                             usersList: members,
-                            groupId: controller.group.value!.id,
+                            groupId: controller.outpost.value!.uuid,
                           );
                         },
                       ),
@@ -338,7 +338,7 @@ class MembersList extends GetView<GroupCallController> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               if (canInvite(
-                group: controller.group.value!,
+                outpost: controller.outpost.value!,
                 currentUserId: myUser.uuid,
               ))
                 Container(
@@ -348,7 +348,7 @@ class MembersList extends GetView<GroupCallController> {
                     onPressed: () {
                       openInviteBottomSheet(
                         canInviteToSpeak: canInviteToSpeak(
-                          group: controller.group.value!,
+                          outpost: controller.outpost.value!,
                           currentUserId: myUser.uuid,
                         ),
                       );
@@ -375,7 +375,7 @@ class MembersList extends GetView<GroupCallController> {
   }
 }
 
-class _StartIntroButton extends GetView<OngoingGroupCallController> {
+class _StartIntroButton extends GetView<OngoingOutpostCallController> {
   const _StartIntroButton({super.key});
 
   @override
@@ -390,7 +390,7 @@ class _StartIntroButton extends GetView<OngoingGroupCallController> {
   }
 }
 
-class SearchInRoom extends GetView<GroupCallController> {
+class SearchInRoom extends GetView<OutpostCallController> {
   const SearchInRoom({super.key});
 
   @override
@@ -419,7 +419,7 @@ class SearchInRoom extends GetView<GroupCallController> {
               child: UsersInGroupList(
                 shouldShowIntro: false,
                 usersList: filteredMembers,
-                groupId: controller.group.value!.id,
+                groupId: controller.outpost.value!.uuid,
               ),
             );
           },

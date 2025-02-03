@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
@@ -13,12 +13,14 @@ import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 
 class TicketSeller {
-  final UserInfoModel userInfo;
+  final UserModel userInfo;
   bool boughtTicketToSpeak;
   bool boughtTicketToAccess;
   bool buying;
@@ -63,7 +65,7 @@ class TicketSeller {
     this.speakPriceFullString,
   });
   copyWith({
-    UserInfoModel? userInfo,
+    UserModel? userInfo,
     bool? boughtTicketToSpeak,
     bool? boughtTicketToAccess,
     bool? buying,
@@ -92,13 +94,13 @@ class TicketSeller {
 
 class CheckticketController extends GetxController {
   final globalController = Get.find<GlobalController>();
-  final OutpostsController groupsController = Get.find<OutpostsController>();
-  final Map<String, UserInfoModel> usersToBuyTicketFromInOrderToHaveAccess = {};
-  final Map<String, UserInfoModel> usersToBuyTicketFromInOrderToSpeak = {};
+  final OutpostsController outpostsController = Get.find<OutpostsController>();
+  final Map<String, UserModel> usersToBuyTicketFromInOrderToHaveAccess = {};
+  final Map<String, UserModel> usersToBuyTicketFromInOrderToSpeak = {};
   final allUsersToBuyTicketFrom = Rx<Map<String, TicketSeller>>({});
 
   final loadingUsers = false.obs;
-  final group = Rxn<FirebaseGroup>();
+  final outpost = Rxn<OutpostModel>();
 
   @override
   void onInit() {
@@ -118,15 +120,12 @@ class CheckticketController extends GetxController {
   }
 
   _fakeUserModel(String address) {
-    final fakeUser = UserInfoModel(
-      id: address,
-      fullName: 'Direct Address',
-      avatar: '',
+    final fakeUser = UserModel(
+      uuid: address,
+      name: 'Direct Address',
       email: '',
-      evm_externalWalletAddress: address,
-      evmInternalWalletAddress: address,
-      following: [],
-      numberOfFollowers: 0,
+      external_wallet_address: address,
+      address: address,
     );
     return fakeUser;
   }
@@ -145,14 +144,20 @@ class CheckticketController extends GetxController {
     return fakeUser;
   }
 
-  (List<UserInfoModel>, List<UserInfoModel>) _generateFakeUsers() {
+  (List<UserModel>, List<UserModel>) _generateFakeUsers() {
     final requiredDirectAddressesToAccess =
-        group.value!.requiredAddressesToEnter;
+        (outpost.value!.tickets_to_enter ?? [])
+            .where((e) => e.user_uuid == null || e.user_uuid == '')
+            .map((e) => e.address)
+            .toList();
     final requiredDirectAddressesToSpeak =
-        group.value!.requiredAddressesToSpeak;
+        (outpost.value!.tickets_to_speak ?? [])
+            .where((e) => e.user_uuid == null || e.user_uuid == '')
+            .map((e) => e.address)
+            .toList();
 
-    List<UserInfoModel> fakeUsersToBuyTicketFromInOrderToHaveAccess = [];
-    List<UserInfoModel> fakeUsersToBuyTicketFromInOrderToSpeak = [];
+    List<UserModel> fakeUsersToBuyTicketFromInOrderToHaveAccess = [];
+    List<UserModel> fakeUsersToBuyTicketFromInOrderToSpeak = [];
 
     requiredDirectAddressesToSpeak.forEach((element) {
       fakeUsersToBuyTicketFromInOrderToSpeak.add(_fakeUserModel(element));
@@ -170,33 +175,35 @@ class CheckticketController extends GetxController {
   Future<GroupAccesses> checkTickets() async {
     allUsersToBuyTicketFrom.value = {};
     loadingUsers.value = true;
-    final requiredTicketsToAccess = group.value!.ticketsRequiredToAccess;
-    final requiredTicketsToSpeak = group.value!.ticketsRequiredToSpeak;
+    final requiredTicketsToAccess = outpost.value!.tickets_to_enter ?? [];
+    final requiredTicketsToSpeak = outpost.value!.tickets_to_speak ?? [];
 
     final accessIds = requiredTicketsToAccess
-        .map((e) => e.userId)
-        .where((e) => !e.contains(arenaUserIdPrefix))
+        .map((e) => e.user_uuid ?? '')
+        .where((e) => !(e).contains(arenaUserIdPrefix))
+        .where((e) => e.isNotEmpty)
         .toList();
     final speakIds = requiredTicketsToSpeak
-        .map((e) => e.userId)
-        .where((e) => !e.contains(arenaUserIdPrefix))
+        .map((e) => e.user_uuid ?? '')
+        .where((e) => !(e).contains(arenaUserIdPrefix))
+        .where((e) => e.isNotEmpty)
         .toList();
     final [usersForAccess, usersForSpeak] = await Future.wait([
-      getUsersByIds(accessIds),
-      getUsersByIds(speakIds),
+      HttpApis.podium.getUsersByIds(accessIds),
+      HttpApis.podium.getUsersByIds(speakIds),
     ]);
 // when we were saving a user that was added by handle, we added $arenaUserIdPrefix at the start ot the user id
 // now we should fetch them separately and add them to ticket list
 
     final directArenaAccessIds = requiredTicketsToAccess
-        .map((e) => e.userId)
-        .where((e) => e.contains(arenaUserIdPrefix))
-        .map((e) => e.replaceAll(arenaUserIdPrefix, ''))
+        .map((e) => e.user_uuid)
+        .where((e) => e?.contains(arenaUserIdPrefix) ?? false)
+        .map((e) => e?.replaceAll(arenaUserIdPrefix, '') ?? '')
         .toList();
     final directArenaSpeakIds = requiredTicketsToSpeak
-        .map((e) => e.userId)
-        .where((e) => e.contains(arenaUserIdPrefix))
-        .map((e) => e.replaceAll(arenaUserIdPrefix, ''))
+        .map((e) => e.user_uuid)
+        .where((e) => e?.contains(arenaUserIdPrefix) ?? false)
+        .map((e) => e?.replaceAll(arenaUserIdPrefix, '') ?? '')
         .toList();
 
     final directArenaUsersForAccess = await Future.wait(directArenaAccessIds
@@ -221,28 +228,31 @@ class CheckticketController extends GetxController {
     // that was the address that was SAVED in ticketsRequiredToAccess or ticketsRequiredToSpeak
     for (var i = 0; i < requiredTicketsToAccess.length; i++) {
       final user = requiredTicketsToAccess[i];
-      if (user.userId.contains(arenaUserIdPrefix) ||
-          // if the group is podium pass holders, we don't need to set the wallet address
-          group.value!.accessType == BuyableTicketTypes.onlyPodiumPassHolders) {
+      if (user.user_uuid?.contains(arenaUserIdPrefix) ??
+          false ||
+              // if the group is podium pass holders, we don't need to set the wallet address
+              outpost.value!.enter_type ==
+                  BuyableTicketTypes.onlyPodiumPassHolders) {
         continue;
       }
 
-      final userInfo =
-          usersForAccess.firstWhere((element) => element.id == user.userId);
-      userInfo.evm_externalWalletAddress = user.userAddress;
+      final userInfo = usersForAccess
+          .firstWhere((element) => element.uuid == user.user_uuid);
+      userInfo.external_wallet_address = user.address;
       usersForAccess[i] = userInfo;
     }
     for (var i = 0; i < requiredTicketsToSpeak.length; i++) {
       final user = requiredTicketsToSpeak[i];
-      if (user.userId.contains(arenaUserIdPrefix) ||
-          // if the group is podium pass holders, we don't need to set the wallet address
-          group.value!.speakerType ==
-              BuyableTicketTypes.onlyPodiumPassHolders) {
+      if (user.user_uuid?.contains(arenaUserIdPrefix) ??
+          false ||
+              // if the group is podium pass holders, we don't need to set the wallet address
+              outpost.value!.speak_type ==
+                  BuyableTicketTypes.onlyPodiumPassHolders) {
         continue;
       }
       final userInfo =
-          usersForSpeak.firstWhere((element) => element.id == user.userId);
-      userInfo.evm_externalWalletAddress = user.userAddress;
+          usersForSpeak.firstWhere((element) => element.uuid == user.user_uuid);
+      userInfo.external_wallet_address = user.address;
       usersForSpeak[i] = userInfo;
     }
     // fake users should be added after the real users have been added and modified
@@ -252,15 +262,15 @@ class CheckticketController extends GetxController {
     // add fake users to the list
     usersForAccess.addAll(fakeUsersToAccess);
     usersForSpeak.addAll(fakeUsersToSpeak);
-    accessIds.addAll(fakeUsersToAccess.map((e) => e.id).toList());
-    speakIds.addAll(fakeUsersToSpeak.map((e) => e.id).toList());
+    accessIds.addAll(fakeUsersToAccess.map((e) => e.uuid).toList());
+    speakIds.addAll(fakeUsersToSpeak.map((e) => e.uuid).toList());
     // end of adding fake users
 
     usersForAccess.forEach((element) {
-      usersToBuyTicketFromInOrderToHaveAccess[element.id] = element;
+      usersToBuyTicketFromInOrderToHaveAccess[element.uuid] = element;
     });
     usersForSpeak.forEach((element) {
-      usersToBuyTicketFromInOrderToSpeak[element.id] = element;
+      usersToBuyTicketFromInOrderToSpeak[element.uuid] = element;
     });
     loadingUsers.value = false;
     final mergedUsers = {
@@ -270,11 +280,11 @@ class CheckticketController extends GetxController {
     mergedUsers.forEach((key, value) {
       final requiredAccessTypeForThisUser =
           (accessIds.contains(key) || directArenaAccessIds.contains(key))
-              ? group.value!.accessType
+              ? outpost.value!.enter_type
               : null;
       final requiredSpeakTypeForThisUser =
           (speakIds.contains(key) || directArenaSpeakIds.contains(key))
-              ? group.value!.speakerType
+              ? outpost.value!.speak_type
               : null;
       allUsersToBuyTicketFrom.value[key] = TicketSeller(
         userInfo: value,
@@ -348,7 +358,7 @@ class CheckticketController extends GetxController {
     ]);
     for (var i = 0; i < arenaResults.length; i++) {
       final seller = arenaTicketSellers[i];
-      final userId = seller.userInfo.id;
+      final userId = seller.userInfo.uuid;
       final access = arenaResults[i];
       final ticketTypeToSpeakForThisSeller =
           allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
@@ -371,7 +381,7 @@ class CheckticketController extends GetxController {
 
     for (var i = 0; i < FriendTechResults.length; i++) {
       final seller = friendTechTicketSellers[i];
-      final userId = seller.userInfo.id;
+      final userId = seller.userInfo.uuid;
       final access = FriendTechResults[i];
       final ticketTypeToSpeakForThisSeller =
           allUsersToBuyTicketFrom.value[userId]?.speakTicketType;
@@ -394,7 +404,7 @@ class CheckticketController extends GetxController {
 
     for (var i = 0; i < podiumPassResults.length; i++) {
       final seller = podiumTicketSellers[i];
-      final userId = seller.userInfo.id;
+      final userId = seller.userInfo.uuid;
       final access = podiumPassResults[i];
       final original = allUsersToBuyTicketFrom.value[userId];
       allUsersToBuyTicketFrom.value[userId] = TicketSeller(
@@ -439,8 +449,8 @@ class CheckticketController extends GetxController {
     required TicketSeller ticketSeller,
   }) async {
     try {
-      final groupAccessType = group.value!.accessType;
-      final groupSpeakerType = group.value!.speakerType;
+      final groupAccessType = outpost.value!.enter_type;
+      final groupSpeakerType = outpost.value!.speak_type;
       final unsupportedAccessTicket = (groupAccessType !=
               BuyableTicketTypes.onlyArenaTicketHolders &&
           groupAccessType != BuyableTicketTypes.onlyFriendTechTicketHolders &&
@@ -459,7 +469,8 @@ class CheckticketController extends GetxController {
           title: "Update Required",
           message: "Please update the app to buy tickets",
         );
-        allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+        allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying =
+            false;
         allUsersToBuyTicketFrom.refresh();
         return;
       }
@@ -508,7 +519,7 @@ class CheckticketController extends GetxController {
             message: "Please update the app to buy tickets",
           );
 
-          allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying =
+          allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying =
               false;
           allUsersToBuyTicketFrom.refresh();
         }
@@ -525,7 +536,7 @@ class CheckticketController extends GetxController {
         message: e.toString(),
       );
     } finally {
-      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = false;
       allUsersToBuyTicketFrom.refresh();
     }
   }
@@ -533,7 +544,7 @@ class CheckticketController extends GetxController {
   Future<bool> buyTicketFromTicketSellerOnPodiumPass({
     required TicketSeller ticketSeller,
   }) async {
-    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
     bool? bought = false;
     String referrer = '';
@@ -547,24 +558,24 @@ class CheckticketController extends GetxController {
     }
 
     bought = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
-      sellerAddress: ticketSeller.userInfo.aptosInternalWalletAddress,
-      sellerName: ticketSeller.userInfo.fullName,
+      sellerAddress: ticketSeller.userInfo.aptos_address!,
+      sellerName: ticketSeller.userInfo.name!,
       referrer: referrer,
     );
     if (bought == null) {
       return false;
     }
-    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = false;
 
     if (ticketSeller.speakTicketType ==
         BuyableTicketTypes.onlyPodiumPassHolders) {
       allUsersToBuyTicketFrom
-          .value[ticketSeller.userInfo.id]!.boughtTicketToSpeak = bought;
+          .value[ticketSeller.userInfo.uuid]!.boughtTicketToSpeak = bought;
     }
     if (ticketSeller.accessTicketType ==
         BuyableTicketTypes.onlyPodiumPassHolders) {
       allUsersToBuyTicketFrom
-          .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
+          .value[ticketSeller.userInfo.uuid]!.boughtTicketToAccess = bought;
     }
     allUsersToBuyTicketFrom.refresh();
     return bought;
@@ -574,17 +585,17 @@ class CheckticketController extends GetxController {
     required TicketSeller ticketSeller,
   }) async {
     final selectedWallet = await choseAWallet(chainId: baseChainId);
-    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
     if (selectedWallet == null) {
-      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = false;
       allUsersToBuyTicketFrom.refresh();
       return false;
     }
     bool bought = false;
 
     final activeWallets = await internal_friendTech_getActiveUserWallets(
-      internalWalletAddress: ticketSeller.userInfo.evmInternalWalletAddress,
+      internalWalletAddress: ticketSeller.userInfo.address,
       externalWalletAddress: ticketSeller.userInfo.defaultWalletAddress,
       chainId: baseChainId,
     );
@@ -593,7 +604,7 @@ class CheckticketController extends GetxController {
         title: "User not activated",
         message: "",
       );
-      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = false;
       allUsersToBuyTicketFrom.refresh();
       return false;
     }
@@ -603,27 +614,27 @@ class CheckticketController extends GetxController {
         sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
         chainId: baseChainId,
-        targetUserId: ticketSeller.userInfo.id,
+        targetUserId: ticketSeller.userInfo.uuid,
       );
     } else {
       bought = await ext_buyFirendtechTicket(
         sharesSubject: preferedWalletAddress,
         // temp chainId hardcoded
         chainId: baseChainId,
-        targetUserId: ticketSeller.userInfo.id,
+        targetUserId: ticketSeller.userInfo.uuid,
       );
     }
-    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = false;
 
     if (ticketSeller.speakTicketType ==
         BuyableTicketTypes.onlyFriendTechTicketHolders) {
       allUsersToBuyTicketFrom
-          .value[ticketSeller.userInfo.id]!.boughtTicketToSpeak = bought;
+          .value[ticketSeller.userInfo.uuid]!.boughtTicketToSpeak = bought;
     }
     if (ticketSeller.accessTicketType ==
         BuyableTicketTypes.onlyFriendTechTicketHolders) {
       allUsersToBuyTicketFrom
-          .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
+          .value[ticketSeller.userInfo.uuid]!.boughtTicketToAccess = bought;
     }
 
     allUsersToBuyTicketFrom.refresh();
@@ -634,10 +645,10 @@ class CheckticketController extends GetxController {
     required TicketSeller ticketSeller,
   }) async {
     final selectedWallet = await choseAWallet(chainId: avalancheChainId);
-    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = true;
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = true;
     allUsersToBuyTicketFrom.refresh();
     if (selectedWallet == null) {
-      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+      allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = false;
       allUsersToBuyTicketFrom.refresh();
       return false;
     }
@@ -654,54 +665,54 @@ class CheckticketController extends GetxController {
       bought = await internal_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: avalancheChainId,
-        targetUserId: ticketSeller.userInfo.id,
+        targetUserId: ticketSeller.userInfo.uuid,
         referrerAddress: referrer.isEmpty ? null : referrer,
       );
     } else {
       bought = await ext_buySharesWithReferrer(
         sharesSubject: ticketSeller.userInfo.defaultWalletAddress,
         chainId: externalWalletChianId,
-        targetUserId: ticketSeller.userInfo.id,
+        targetUserId: ticketSeller.userInfo.uuid,
         referrerAddress: referrer.isEmpty ? null : referrer,
       );
       l.d('bought: $bought');
     }
-    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.id]!.buying = false;
+    allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = false;
     if (ticketSeller.accessTicketType ==
         BuyableTicketTypes.onlyArenaTicketHolders) {
       allUsersToBuyTicketFrom
-          .value[ticketSeller.userInfo.id]!.boughtTicketToAccess = bought;
+          .value[ticketSeller.userInfo.uuid]!.boughtTicketToAccess = bought;
     }
     if (ticketSeller.speakTicketType ==
         BuyableTicketTypes.onlyArenaTicketHolders) {
       allUsersToBuyTicketFrom
-          .value[ticketSeller.userInfo.id]!.boughtTicketToSpeak = bought;
+          .value[ticketSeller.userInfo.uuid]!.boughtTicketToSpeak = bought;
     }
     allUsersToBuyTicketFrom.refresh();
     return bought;
   }
 
   bool get isAccessBuyableByTicket {
-    return accessIsBuyableByTicket(group.value!);
+    return accessIsBuyableByTicket(outpost.value!);
   }
 
   bool get isSpeakBuyableByTicket {
-    return speakIsBuyableByTicket(group.value!);
+    return speakIsBuyableByTicket(outpost.value!);
   }
 
   bool get canSpeakWithoutATicket {
-    return canISpeakWithoutTicket(group: group.value!);
+    return canISpeakWithoutTicket(outpost: outpost.value!);
   }
 
   bool get canEnterWithoutTicket {
-    final g = group.value!;
+    final g = outpost.value!;
     return canEnterWithoutATicket(g);
   }
 
   Future<GroupAccesses> checkIfIveBoughtTheTicketFromUser(
-    UserInfoModel user,
+    UserModel user,
   ) async {
-    final userId = user.id;
+    final userId = user.uuid;
     final myUser = globalController.myUserInfo.value!;
     if (userId == myUser.uuid)
       return GroupAccesses(canEnter: true, canSpeak: true);
@@ -709,7 +720,7 @@ class CheckticketController extends GetxController {
 
     // check if user has access, using any ticket
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
-      if (group.value!.accessType ==
+      if (outpost.value!.enter_type ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
         final (myShares, price) = await (
           getMyShares_arena(
@@ -729,12 +740,12 @@ class CheckticketController extends GetxController {
               ' ${chainInfoByChainId(avalancheChainId).currency}';
           access.accessPriceFullString = priceStringFull;
         }
-      } else if (group.value!.accessType ==
+      } else if (outpost.value!.enter_type ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         final (myShares, price) = await (
           internal_getUserShares_friendTech(
             defaultWallet: user.defaultWalletAddress,
-            internalWallet: user.evmInternalWalletAddress,
+            internalWallet: user.address,
             chainId: baseChainId,
           ),
           internal_getFriendTechTicketPrice(
@@ -748,14 +759,14 @@ class CheckticketController extends GetxController {
               ' ${chainInfoByChainId(baseChainId).currency}';
           access.accessPriceFullString = priceStringFull;
         }
-      } else if (group.value!.accessType ==
+      } else if (outpost.value!.enter_type ==
           BuyableTicketTypes.onlyPodiumPassHolders) {
         final (myShares, price) = await (
           AptosMovement.getMyBalanceOnPodiumPass(
-            sellerAddress: user.aptosInternalWalletAddress,
+            sellerAddress: user.aptos_address!,
           ),
           AptosMovement.getTicketPriceForPodiumPass(
-            sellerAddress: user.aptosInternalWalletAddress,
+            sellerAddress: user.aptos_address!,
           )
         ).wait;
         if (myShares != null && myShares > BigInt.zero) {
@@ -772,7 +783,7 @@ class CheckticketController extends GetxController {
     }
 
     if (allUsersToBuyTicketFrom.value[userId]?.speakTicketType != null) {
-      if (group.value!.speakerType ==
+      if (outpost.value!.speak_type ==
           BuyableTicketTypes.onlyArenaTicketHolders) {
         final (myShares, price) = await (
           getMyShares_arena(
@@ -792,12 +803,12 @@ class CheckticketController extends GetxController {
               ' ${chainInfoByChainId(avalancheChainId).currency}';
           access.speakPriceFullString = priceStringFull;
         }
-      } else if (group.value!.speakerType ==
+      } else if (outpost.value!.speak_type ==
           BuyableTicketTypes.onlyFriendTechTicketHolders) {
         final (myShares, price) = await (
           internal_getUserShares_friendTech(
             defaultWallet: user.defaultWalletAddress,
-            internalWallet: user.evmInternalWalletAddress,
+            internalWallet: user.address,
             chainId: baseChainId,
           ),
           internal_getFriendTechTicketPrice(
@@ -811,14 +822,14 @@ class CheckticketController extends GetxController {
               ' ${chainInfoByChainId(baseChainId).currency}';
           access.speakPriceFullString = priceStringFull;
         }
-      } else if (group.value!.speakerType ==
+      } else if (outpost.value!.speak_type ==
           BuyableTicketTypes.onlyPodiumPassHolders) {
         final (myShares, price) = await (
           AptosMovement.getMyBalanceOnPodiumPass(
-            sellerAddress: user.aptosInternalWalletAddress,
+            sellerAddress: user.aptos_address!,
           ),
           AptosMovement.getTicketPriceForPodiumPass(
-            sellerAddress: user.aptosInternalWalletAddress,
+            sellerAddress: user.aptos_address!,
           )
         ).wait;
         if (myShares != null && myShares > BigInt.zero) {
@@ -838,35 +849,35 @@ class CheckticketController extends GetxController {
   }
 }
 
-accessIsBuyableByTicket(FirebaseGroup group) {
-  final groupAccessType = group.accessType;
+accessIsBuyableByTicket(OutpostModel group) {
+  final groupAccessType = group.enter_type;
   return groupAccessType == BuyableTicketTypes.onlyArenaTicketHolders ||
       groupAccessType == BuyableTicketTypes.onlyFriendTechTicketHolders ||
       groupAccessType == BuyableTicketTypes.onlyPodiumPassHolders;
 }
 
-speakIsBuyableByTicket(FirebaseGroup group) {
-  final groupSpeakType = group.speakerType;
+speakIsBuyableByTicket(OutpostModel group) {
+  final groupSpeakType = group.speak_type;
   return groupSpeakType == BuyableTicketTypes.onlyArenaTicketHolders ||
       groupSpeakType == BuyableTicketTypes.onlyFriendTechTicketHolders ||
       groupSpeakType == BuyableTicketTypes.onlyPodiumPassHolders;
 }
 
-canEnterWithoutATicket(FirebaseGroup group) {
+canEnterWithoutATicket(OutpostModel group) {
   final globalController = Get.find<GlobalController>();
   final g = group;
-  final amIInvited = g.invitedMembers[myId] != null;
+  final amIInvited = g.members?.any((e) => e.uuid == myId) ?? false;
   final link = globalController.deepLinkRoute;
-  final cameHereByLink = g.accessType == FreeOutpostAccessTypes.onlyLink &&
+  final cameHereByLink = g.enter_type == FreeOutpostAccessTypes.onlyLink &&
       link.isNotEmpty &&
-      link.contains(g.id);
-  if (g.accessType == FreeOutpostAccessTypes.onlyLink) {
+      link.contains(g.uuid);
+  if (g.enter_type == FreeOutpostAccessTypes.onlyLink) {
     return cameHereByLink;
   }
-  if (g.accessType == FreeOutpostAccessTypes.invitees) {
+  if (g.enter_type == FreeOutpostAccessTypes.invitees) {
     return amIInvited;
   }
-  if (g.accessType == FreeOutpostAccessTypes.public) {
+  if (g.enter_type == FreeOutpostAccessTypes.public) {
     return true;
   }
   return false;

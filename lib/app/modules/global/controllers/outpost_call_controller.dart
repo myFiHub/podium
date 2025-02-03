@@ -18,6 +18,7 @@ import 'package:podium/constants/meeting.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -29,12 +30,12 @@ class SortTypes {
   static const String timeJoined = 'timeJoined';
 }
 
-class GroupCallController extends GetxController {
+class OutpostCallController extends GetxController {
   final storage = GetStorage();
   // group session id is group id
   final groupsController = Get.find<OutpostsController>();
   final globalController = Get.find<GlobalController>();
-  final group = Rxn<FirebaseGroup>();
+  final outpost = Rxn<OutpostModel>();
   final members = Rx<List<FirebaseSessionMember>>([]);
   final sortedMembers = Rx<List<FirebaseSessionMember>>([]);
   final haveOngoingCall = false.obs;
@@ -54,39 +55,41 @@ class GroupCallController extends GetxController {
     super.onInit();
     sortType.value = storage.read(StorageKeys.ongoingCallSortType) ??
         SortTypes.recentlyTalked;
-    groupsController.takingUsersInGroupsMap.listen((takingUsersInGroupsMap) {
-      if (group.value != null) {
-        final groupId = group.value!.id;
-        final takingUsers = takingUsersInGroupsMap[groupId];
-        if (takingUsers != null) {
-          final takingUserIds = takingUsers.map((e) => e).toList();
-          updateTalkingMembers(ids: takingUserIds);
-        }
-      }
-    });
+    // TODO: add taking users in outposts map
+    // groupsController.takingUsersInGroupsMap.listen((takingUsersInGroupsMap) {
+    //   if (group.value != null) {
+    //     final groupId = group.value!.id;
+    //     final takingUsers = takingUsersInGroupsMap[groupId];
+    //     if (takingUsers != null) {
+    //       final takingUserIds = takingUsers.map((e) => e).toList();
+    //       updateTalkingMembers(ids: takingUserIds);
+    //     }
+    //   }
+    // });
 
-    group.listen((activeGroup) async {
+    outpost.listen((activeOutpost) async {
       members.value = [];
-      if (activeGroup != null) {
-        final currentPresentMembers =
-            groupsController.presentUsersInGroupsMap.value[activeGroup.id];
-        if (currentPresentMembers != null) {
-          await _updateByPresentMembers(
-            groupId: activeGroup.id,
-            presentMembers: currentPresentMembers,
-          );
-        }
-        groupsController.presentUsersInGroupsMap.listen(
-          (data) async {
-            final presentMembers = data[activeGroup.id];
-            if (presentMembers != null) {
-              await _updateByPresentMembers(
-                groupId: activeGroup.id,
-                presentMembers: presentMembers,
-              );
-            }
-          },
-        );
+      if (activeOutpost != null) {
+        // TODO: add present users in outposts map
+        // final currentPresentMembers =
+        //     groupsController.presentUsersInGroupsMap.value[activeGroup.id];
+        // if (currentPresentMembers != null) {
+        //   await _updateByPresentMembers(
+        //     groupId: activeGroup.id,
+        //     presentMembers: currentPresentMembers,
+        //   );
+        // }
+        // groupsController.presentUsersInGroupsMap.listen(
+        //   (data) async {
+        //     final presentMembers = data[activeGroup.id];
+        //     if (presentMembers != null) {
+        //       await _updateByPresentMembers(
+        //         groupId: activeGroup.id,
+        //         presentMembers: presentMembers,
+        //       );
+        //     }
+        //   },
+        // );
       }
     });
   }
@@ -140,28 +143,29 @@ class GroupCallController extends GetxController {
   ///////////////////////////////////////////////////////////////
 
   addMemberToListIfItDoesntAlreadyExist({required String id}) async {
-    final newMember =
-        await getSessionMember(groupId: group.value!.id, userId: id);
-    if (newMember != null) {
-      final member = FirebaseSessionMember(
-        id: newMember.id,
-        name: newMember.name,
-        avatar: newMember.avatar,
-        remainingTalkTime: newMember.remainingTalkTime,
-        initialTalkTime: newMember.initialTalkTime,
-        isMuted: newMember.isMuted,
-        present: newMember.present,
-        isTalking: newMember.isTalking,
-        startedToTalkAt: newMember.startedToTalkAt,
-        timeJoined: newMember.timeJoined,
-      );
-      //  add if it doesnt already exist and sort
-      if (!members.value.any((element) => element.id == newMember.id)) {
-        members.value.add(member);
-        final sorted = sortMembers(members: members.value);
-        sortedMembers.value = sorted;
-      }
-    }
+    // TODO: add member to list if it doesnt already exist
+    // final newMember =
+    //     await getSessionMember(groupId: outpost.value!.uuid, userId: id);
+    // if (newMember != null) {
+    //   final member = FirebaseSessionMember(
+    //     id: newMember.id,
+    //     name: newMember.name,
+    //     avatar: newMember.avatar,
+    //     remainingTalkTime: newMember.remainingTalkTime,
+    //     initialTalkTime: newMember.initialTalkTime,
+    //     isMuted: newMember.isMuted,
+    //     present: newMember.present,
+    //     isTalking: newMember.isTalking,
+    //     startedToTalkAt: newMember.startedToTalkAt,
+    //     timeJoined: newMember.timeJoined,
+    //   );
+    //   //  add if it doesnt already exist and sort
+    //   if (!members.value.any((element) => element.id == newMember.id)) {
+    //     members.value.add(member);
+    //     final sorted = sortMembers(members: members.value);
+    //     sortedMembers.value = sorted;
+    //   }
+    // }
   }
 
   removeMemberFromListIfItExists({required String id}) {
@@ -217,17 +221,17 @@ class GroupCallController extends GetxController {
     members.value = [];
     talkingMembers.value = [];
     searchedValueInMeet.value = '';
-    final groupId = group.value?.id;
-    if (groupId != null) {
-      sendGroupPeresenceEvent(groupId: groupId, eventName: eventNames.leave);
+    final outpostId = outpost.value?.uuid;
+    if (outpostId != null) {
+      sendGroupPeresenceEvent(groupId: outpostId, eventName: eventNames.leave);
       final userId = myId;
       setIsUserPresentInSession(
-        groupId: groupId,
+        groupId: outpostId,
         userId: myId,
         isPresent: false,
       );
       setIsTalkingInSession(
-        sessionId: groupId,
+        sessionId: outpostId,
         userId: userId,
         isTalking: false,
       );
@@ -235,12 +239,12 @@ class GroupCallController extends GetxController {
   }
 
   startCall(
-      {required FirebaseGroup groupToJoin,
+      {required OutpostModel outpostToJoin,
       GroupAccesses? accessOverRides}) async {
     final globalController = Get.find<GlobalController>();
     final iAmAllowedToSpeak = accessOverRides != null
         ? accessOverRides.canSpeak
-        : canISpeakWithoutTicket(group: groupToJoin);
+        : canISpeakWithoutTicket(outpost: outpostToJoin);
     canTalk.value = iAmAllowedToSpeak;
     bool hasMicAccess = false;
     if (iAmAllowedToSpeak) {
@@ -268,14 +272,15 @@ class GroupCallController extends GetxController {
       );
       globalController.connectToWallet(
         afterConnection: () {
-          startCall(groupToJoin: groupToJoin, accessOverRides: accessOverRides);
+          startCall(
+              outpostToJoin: outpostToJoin, accessOverRides: accessOverRides);
         },
       );
       return;
     }
-    group.value = groupToJoin;
+    outpost.value = outpostToJoin;
     var options = MeetingConstants.buildMeetOptions(
-      group: groupToJoin,
+      outpost: outpostToJoin,
       myUser: myUser,
       allowedToSpeak: iAmAllowedToSpeak,
     );
@@ -283,14 +288,14 @@ class GroupCallController extends GetxController {
       await jitsiMeet.join(
         options,
         jitsiListeners(
-          group: groupToJoin,
+          outpost: outpostToJoin,
         ),
       );
       analytics.logEvent(
         name: 'joined_group_call',
         parameters: {
-          'group_id': groupToJoin.id,
-          'group_name': groupToJoin.name,
+          'outpost_id': outpostToJoin.uuid,
+          'outpost_name': outpostToJoin.name,
           'user_id': myUser.uuid,
         },
       );
@@ -308,18 +313,19 @@ class GroupCallController extends GetxController {
   }
 }
 
-bool canISpeakWithoutTicket({required FirebaseGroup group}) {
-  final iAmTheCreator = group.creator.id == myId;
+bool canISpeakWithoutTicket({required OutpostModel outpost}) {
+  final iAmTheCreator = outpost.creator_user_uuid == myId;
   if (iAmTheCreator) return true;
-  if (group.speakerType == FreeOutpostSpeakerTypes.invitees) {
+  if (outpost.speak_type == FreeOutpostSpeakerTypes.invitees) {
     // check if I am invited and am invited to speak
-    final invitedMember = group.invitedMembers[myId];
-    if (invitedMember != null && invitedMember.invitedToSpeak) return true;
+    final invitedMember = (outpost.invites ?? [])
+        .firstWhereOrNull((element) => element.invitee_uuid == myId);
+    if (invitedMember != null && invitedMember.can_speak == true) return true;
     return false;
   }
 
-  final iAmAllowedToSpeak = group.speakerType == null ||
-      group.speakerType == FreeOutpostSpeakerTypes.everyone;
+  final iAmAllowedToSpeak =
+      outpost.speak_type == FreeOutpostSpeakerTypes.everyone;
 
   return iAmAllowedToSpeak;
 }

@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 
 class AllOutpostsController extends GetxController {

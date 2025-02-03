@@ -8,15 +8,15 @@ import 'package:podium/app/modules/groupDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
 
-import '../controllers/group_detail_controller.dart';
+import '../controllers/outpost_detail_controller.dart';
 
-class GroupDetailView extends GetView<GroupDetailController> {
+class GroupDetailView extends GetView<OutpostDetailController> {
   const GroupDetailView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -26,16 +26,16 @@ class GroupDetailView extends GetView<GroupDetailController> {
           Obx(() {
             // final isLoading = controller.isGettingMembers.value;
             final members = controller.membersList.value;
-            final group = controller.group.value;
-            final accesses = controller.groupAccesses.value;
-            if (group == null || accesses == null) {
+            final outpost = controller.outpost.value;
+            final accesses = controller.outpostAccesses.value;
+            if (outpost == null || accesses == null) {
               return Container(
                 width: Get.width,
                 height: Get.height - 110,
                 child: const Center(child: CircularProgressIndicator()),
               );
             }
-            final iAmOwner = group.creator.id == myId;
+            final iAmOwner = outpost.creator_user_uuid == myId;
 
             return Expanded(
               child: Column(
@@ -61,13 +61,13 @@ class GroupDetailView extends GetView<GroupDetailController> {
                                   overflow: TextOverflow.visible,
                                 ),
                               ),
-                              if (group.lumaEventId != null)
-                                const _LumaIconButton()
+                              if (outpost.luma_event_id != null)
+                                _LumaIconButton()
                             ],
                           ),
                           space5,
                           Text(
-                            group.name,
+                            outpost.name,
                             textAlign: TextAlign.left,
                             style: const TextStyle(
                               fontSize: 16,
@@ -75,10 +75,10 @@ class GroupDetailView extends GetView<GroupDetailController> {
                               overflow: TextOverflow.visible,
                             ),
                           ),
-                          if (group.subject != null &&
-                              group.subject!.trim().isNotEmpty)
+                          if (outpost.subject != null &&
+                              outpost.subject!.trim().isNotEmpty)
                             Text(
-                              group.subject!,
+                              outpost.subject!,
                               style: const TextStyle(
                                 fontSize: 14,
                               ),
@@ -87,14 +87,14 @@ class GroupDetailView extends GetView<GroupDetailController> {
                             const SizedBox.shrink(), // Evita espacio residual
                           if (iAmOwner)
                             Text(
-                              "Access Type: ${parseAccessType(group.accessType)}",
+                              "Access Type: ${parseAccessType(outpost.enter_type)}",
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Colors.grey[400],
                               ),
                             ),
                           Text(
-                            "Speakers: ${parseSpeakerType(group.speakerType)}",
+                            "Speakers: ${parseSpeakerType(outpost.speak_type)}",
                             style: TextStyle(
                               fontSize: 10,
                               color: Colors.grey[400],
@@ -114,7 +114,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       if (canInvite(
-                        group: group,
+                        outpost: outpost,
                         currentUserId: myId,
                       ))
                         Container(
@@ -124,7 +124,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                             onPressed: () {
                               openInviteBottomSheet(
                                   canInviteToSpeak: canInviteToSpeak(
-                                group: group,
+                                outpost: outpost,
                                 currentUserId: myId,
                               ));
                             },
@@ -139,7 +139,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                   ),
                   space10,
                   space10,
-                  if (group.scheduledFor != 0) const SetReminderButton(),
+                  if (outpost.scheduled_for != 0) const SetReminderButton(),
                   // if (group.scheduledFor != 0 && iAmOwner) ...[
                   //   space10,
                   //   const ChangeScheduleButton()
@@ -154,9 +154,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
   }
 }
 
-class _LumaIconButton extends GetView<GroupDetailController> {
-  const _LumaIconButton({super.key});
-
+class _LumaIconButton extends GetView<OutpostDetailController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -181,7 +179,7 @@ class _LumaIconButton extends GetView<GroupDetailController> {
   }
 }
 
-class ChangeScheduleButton extends GetView<GroupDetailController> {
+class ChangeScheduleButton extends GetView<OutpostDetailController> {
   const ChangeScheduleButton({super.key});
 
   @override
@@ -201,23 +199,24 @@ class ChangeScheduleButton extends GetView<GroupDetailController> {
   }
 }
 
-class SetReminderButton extends GetView<GroupDetailController> {
+class SetReminderButton extends GetView<OutpostDetailController> {
   const SetReminderButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final group = controller.group.value;
+    final outpost = controller.outpost.value;
 
     return Obx(() {
       final reminderTime = controller.reminderTime.value;
-      if (group == null) {
+      if (outpost == null) {
         return Container();
       }
       controller.forceUpdateIndicator.value;
       int? reminderIsSetForInMinotes = null;
       if (reminderTime != null) {
         final reminder = reminderTime
-            .difference(DateTime.fromMillisecondsSinceEpoch(group.scheduledFor))
+            .difference(
+                DateTime.fromMillisecondsSinceEpoch(outpost.scheduled_for))
             .inMinutes;
         reminderIsSetForInMinotes = reminder;
       }
@@ -229,11 +228,11 @@ class SetReminderButton extends GetView<GroupDetailController> {
         text = 'Reminder is set for when event starts';
       }
       final isPassed =
-          group.scheduledFor < DateTime.now().millisecondsSinceEpoch;
+          outpost.scheduled_for < DateTime.now().millisecondsSinceEpoch;
       if (isPassed) {
         return const SizedBox();
       }
-      if (group.alarmId == 0) {
+      if (outpost.alarm_id == 0) {
         return const SizedBox();
       }
       return Button(
@@ -242,10 +241,10 @@ class SetReminderButton extends GetView<GroupDetailController> {
         blockButton: true,
         onPressed: () async {
           final newDateInSeconds = await setReminder(
-            alarmId: group.alarmId,
-            scheduledFor: group.scheduledFor,
-            eventName: group.name,
-            timesList: defaultTimeList(endsAt: group.scheduledFor),
+            alarmId: outpost.alarm_id,
+            scheduledFor: outpost.scheduled_for,
+            eventName: outpost.name,
+            timesList: defaultTimeList(endsAt: outpost.scheduled_for),
           );
           l.d('newDateInSeconds: $newDateInSeconds');
         },
@@ -258,7 +257,7 @@ class SetReminderButton extends GetView<GroupDetailController> {
   }
 }
 
-class JoinTheRoomButton extends GetView<GroupDetailController> {
+class JoinTheRoomButton extends GetView<OutpostDetailController> {
   const JoinTheRoomButton({
     super.key,
   });
@@ -266,10 +265,10 @@ class JoinTheRoomButton extends GetView<GroupDetailController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final accesses = controller.groupAccesses.value;
-      final group = controller.group.value;
+      final accesses = controller.outpostAccesses.value;
+      final outpost = controller.outpost.value;
       final joinButtonContent = controller.jointButtonContentProps.value;
-      if (accesses == null || group == null) {
+      if (accesses == null || outpost == null) {
         return Container();
       }
 
@@ -298,12 +297,13 @@ openInviteBottomSheet({required bool canInviteToSpeak}) {
 }
 
 bool canInvite({
-  required FirebaseGroup group,
+  required OutpostModel outpost,
   required String currentUserId,
 }) {
-  final iAmCreator = currentUserId == group.creator.id;
-  final isGroupPublic = group.accessType == FreeOutpostAccessTypes.public;
-  final amIAMember = group.members.keys.toList().contains(currentUserId);
+  final iAmCreator = currentUserId == outpost.creator_user_uuid;
+  final isGroupPublic = outpost.enter_type == FreeOutpostAccessTypes.public;
+  final amIAMember =
+      (outpost.members ?? []).map((e) => e.uuid).contains(currentUserId);
   if (iAmCreator || isGroupPublic || amIAMember) {
     return true;
   }
@@ -311,18 +311,19 @@ bool canInvite({
 }
 
 bool canInviteToSpeak({
-  required FirebaseGroup group,
+  required OutpostModel outpost,
   required String currentUserId,
 }) {
-  final iAmCreator = currentUserId == group.creator.id;
-  final isGroupPublic = group.speakerType == FreeOutpostSpeakerTypes.everyone;
+  final iAmCreator = currentUserId == outpost.creator_user_uuid;
+  final isGroupPublic = outpost.speak_type == FreeOutpostSpeakerTypes.everyone;
   if (iAmCreator || isGroupPublic) {
     return true;
   }
   return false;
 }
 
-class UserInvitationBottomSheetContent extends GetView<GroupDetailController> {
+class UserInvitationBottomSheetContent
+    extends GetView<OutpostDetailController> {
   final bool canInviteToSpeak;
   const UserInvitationBottomSheetContent({
     super.key,

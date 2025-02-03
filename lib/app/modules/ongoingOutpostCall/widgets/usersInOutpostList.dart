@@ -9,10 +9,10 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
-import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
-import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/likePath.dart';
-import 'package:podium/app/modules/ongoingGroupCall/widgets/widgetWithTimer/widgetWrapper.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/likePath.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/widgetWithTimer/widgetWrapper.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -253,7 +253,7 @@ class _ConfettiDetector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final key = GlobalKey();
-    return GetBuilder<OngoingGroupCallController>(
+    return GetBuilder<OngoingOutpostCallController>(
         id: 'confetti' + userId,
         builder: (controller) {
           final lastReaction = controller.lastReaction.value;
@@ -451,7 +451,7 @@ class _TalkingIndicator extends GetView<OutpostsController> {
   }
 }
 
-class RemainingTime extends GetView<OngoingGroupCallController> {
+class RemainingTime extends GetView<OngoingOutpostCallController> {
   final String userId;
   const RemainingTime({super.key, required this.userId});
 
@@ -459,9 +459,10 @@ class RemainingTime extends GetView<OngoingGroupCallController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final timersMap = controller.allRemainingTimesMap.value;
-      final roomCreator = controller.groupCallController.group.value!.creator;
+      final roomCreator =
+          controller.outpostCallController.outpost.value!.creator_user_uuid;
       final userRemainingTime = timersMap[userId];
-      if (userId == roomCreator.id) {
+      if (userId == roomCreator) {
         return Text('Room creator',
             style: TextStyle(fontSize: 10, color: Colors.green[200]));
       }
@@ -530,7 +531,7 @@ class FollowButton extends GetView<UsersController> {
   }
 }
 
-class Actions extends GetView<OngoingGroupCallController> {
+class Actions extends GetView<OngoingOutpostCallController> {
   final String userId;
   final bool isIntroUser;
   const Actions({
@@ -573,7 +574,7 @@ class Actions extends GetView<OngoingGroupCallController> {
   }
 }
 
-class CheerBoo extends GetView<OngoingGroupCallController> {
+class CheerBoo extends GetView<OngoingOutpostCallController> {
   final bool cheer;
   final String userId;
   const CheerBoo({super.key, required this.cheer, required this.userId});
@@ -622,7 +623,7 @@ class CheerBoo extends GetView<OngoingGroupCallController> {
   }
 }
 
-class LikeDislike extends GetView<OngoingGroupCallController> {
+class LikeDislike extends GetView<OngoingOutpostCallController> {
   final bool isLike;
   final String userId;
   const LikeDislike({
@@ -653,7 +654,7 @@ class LikeDislike extends GetView<OngoingGroupCallController> {
           final timers = controller.timers.value;
           final storageKey = generateKeyForStorageAndObserver(
             userId: userId,
-            groupId: controller.groupCallController.group.value!.id,
+            groupId: controller.outpostCallController.outpost.value!.uuid,
             like: isLike,
           );
           final finishAt = timers[storageKey];

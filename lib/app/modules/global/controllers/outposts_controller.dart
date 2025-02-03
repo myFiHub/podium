@@ -11,11 +11,11 @@ import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controlle
 import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
+import 'package:podium/app/modules/groupDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantConfigs.dart';
@@ -608,22 +608,17 @@ class OutpostsController extends GetxController with FirebaseTags {
   }
 
   joinGroupAndOpenGroupDetailPage({
-    required String groupId,
+    required String outpostId,
     bool? openTheRoomAfterJoining,
     bool? joiningByLink,
   }) async {
-    if (groupId.isEmpty) return;
+    if (outpostId.isEmpty) return;
     if (joiningGroupId != '') {
       return;
     }
-    final firebaseGroupsReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
-    final firebaseSessionsReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
-    final myUser = globalController.myUserInfo.value!;
 
-    final group = await getGroupInfoById(groupId);
-    if (group == null) {
+    final outpost = await HttpApis.podium.getOutpost(outpostId);
+    if (outpost == null) {
       Toast.error(
         title: "Error",
         message: "Failed to join the Outpost, Outpost not found",
@@ -636,8 +631,8 @@ class OutpostsController extends GetxController with FirebaseTags {
       return;
     }
 
-    final accesses = await getGroupAccesses(
-      group: group,
+    final accesses = await getOutpostAccesses(
+      outpost: outpost,
       joiningByLink: joiningByLink,
     );
     l.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
@@ -647,7 +642,7 @@ class OutpostsController extends GetxController with FirebaseTags {
     }
 
     final hasAgeVerified = await _showAreYouOver18Dialog(
-      group: group,
+      outpost: outpost,
       myUser: myUser,
     );
     if (!hasAgeVerified) {
@@ -655,42 +650,47 @@ class OutpostsController extends GetxController with FirebaseTags {
       return;
     }
 
-    final members = group.members;
-    if (!members.keys.contains(myUser.uuid)) {
+    final members = outpost.members;
+    if (!(members ?? []).map((e) => e.uuid).contains(myUser.uuid)) {
       try {
-        joiningGroupId.value = groupId;
-        await firebaseGroupsReference
-            .child(FirebaseGroup.membersKey)
-            .child(myUser.uuid)
-            .set(myUser.uuid);
-        final mySession = await getUserSessionData(
-          groupId: groupId,
-          userId: myUser.uuid,
-        );
-        if (mySession == null) {
-          // final newFirebaseSessionMember =
-          //     createInitialSessionMember(user: myUser, group: group)!;
-          // try {
-          //   final jsoned = newFirebaseSessionMember.toJson();
-          //   await firebaseSessionsReference
-          //       .child(FirebaseSession.membersKey)
-          //       .child(myUser.uuid)
-          //       .set(jsoned);
-          // } catch (e) {
-          //   // remove user from db
-          //   await firebaseSessionsReference
-          //       .child(FirebaseSession.membersKey)
-          //       .child(myUser.uuid)
-          //       .remove();
-          //   Toast.error(
-          //     title: "Error",
-          //     message: "Failed to join the Outpost, try again or report a bug",
-          //   );
-          //   return;
-          // }
+        joiningGroupId.value = outpostId;
+        final added = await HttpApis.podium.addMeAsMember(outpostId: outpostId);
+        if (!added) {
+          Toast.error(
+            title: "Error",
+            message: "Failed to join the Outpost, try again or report a bug",
+          );
+          return;
         }
-        _openGroup(
-          group: group,
+        // TODO: add session
+        // final mySession = await getUserSessionData(
+        //   groupId: outpostId,
+        //   userId: myUser.uuid,
+        // );
+        // if (mySession == null) {
+        // final newFirebaseSessionMember =
+        //     createInitialSessionMember(user: myUser, group: group)!;
+        // try {
+        //   final jsoned = newFirebaseSessionMember.toJson();
+        //   await firebaseSessionsReference
+        //       .child(FirebaseSession.membersKey)
+        //       .child(myUser.uuid)
+        //       .set(jsoned);
+        // } catch (e) {
+        //   // remove user from db
+        //   await firebaseSessionsReference
+        //       .child(FirebaseSession.membersKey)
+        //       .child(myUser.uuid)
+        //       .remove();
+        //   Toast.error(
+        //     title: "Error",
+        //     message: "Failed to join the Outpost, try again or report a bug",
+        //   );
+        //   return;
+        // }
+        // }
+        _openOutpost(
+          outpost: outpost,
           openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
           accesses: accesses,
         );
@@ -706,8 +706,8 @@ class OutpostsController extends GetxController with FirebaseTags {
       }
     } else {
       joiningGroupId.value = '';
-      _openGroup(
-        group: group,
+      _openOutpost(
+        outpost: outpost,
         openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
         accesses: accesses,
       );
@@ -741,14 +741,14 @@ class OutpostsController extends GetxController with FirebaseTags {
     }
   }
 
-  _openGroup({
-    required FirebaseGroup group,
+  _openOutpost({
+    required OutpostModel outpost,
     required bool openTheRoomAfterJoining,
     required GroupAccesses accesses,
   }) async {
-    final isAlreadyRegistered = Get.isRegistered<GroupDetailController>();
+    final isAlreadyRegistered = Get.isRegistered<OutpostDetailController>();
     if (isAlreadyRegistered) {
-      Get.delete<GroupDetailController>();
+      Get.delete<OutpostDetailController>();
     }
 
     Navigate.to(
@@ -759,27 +759,27 @@ class OutpostsController extends GetxController with FirebaseTags {
           GroupDetailsParametersKeys.speakAccess: accesses.canSpeak.toString(),
           GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining:
               openTheRoomAfterJoining.toString(),
-          GroupDetailsParametersKeys.groupInfo: jsonEncode(group.toJson()),
+          GroupDetailsParametersKeys.outpostInfo: jsonEncode(outpost.toJson()),
         });
     analytics.logEvent(
-      name: "group_opened",
+      name: "outpost_opened",
       parameters: {
-        "group_id": group.id,
+        "outpost_id": outpost.uuid,
       },
     );
   }
 
   Future<GroupAccesses?> _checkLumaAccess(
-      {required FirebaseGroup group}) async {
+      {required OutpostModel outpost}) async {
     try {
-      if (group.lumaEventId != null && group.lumaEventId!.isNotEmpty) {
+      if (outpost.luma_event_id != null && outpost.luma_event_id!.isNotEmpty) {
         final myLoginType = myUser.login_type;
         if (myLoginType != null) {
           if (myLoginType.contains('google') || myLoginType.contains('email')) {
             final myEmail = myUser.email;
             final (guests, event) = await (
-              HttpApis.lumaApi.getGuests(eventId: group.lumaEventId!),
-              HttpApis.lumaApi.getEvent(eventId: group.lumaEventId!)
+              HttpApis.lumaApi.getGuests(eventId: outpost.luma_event_id!),
+              HttpApis.lumaApi.getEvent(eventId: outpost.luma_event_id!)
             ).wait;
             final guestsList = guests.map((e) => e.guest).toList();
             final hostsList = event?.hosts ?? [];
@@ -800,17 +800,17 @@ class OutpostsController extends GetxController with FirebaseTags {
     }
   }
 
-  Future<GroupAccesses> getGroupAccesses(
-      {required FirebaseGroup group, bool? joiningByLink}) async {
+  Future<GroupAccesses> getOutpostAccesses(
+      {required OutpostModel outpost, bool? joiningByLink}) async {
     final myUser = globalController.myUserInfo.value!;
-    final iAmGroupCreator = group.creator.id == myUser.uuid;
+    final iAmGroupCreator = outpost.creator_user_uuid == myUser.uuid;
     if (iAmGroupCreator) return GroupAccesses(canEnter: true, canSpeak: true);
-    final lumaAccessResponse = await _checkLumaAccess(group: group);
+    final lumaAccessResponse = await _checkLumaAccess(outpost: outpost);
     if (lumaAccessResponse != null) {
       return lumaAccessResponse;
     }
-    if (accessIsBuyableByTicket(group) || speakIsBuyableByTicket(group)) {
-      final GroupAccesses? accesses = await checkTicket(group: group);
+    if (accessIsBuyableByTicket(outpost) || speakIsBuyableByTicket(outpost)) {
+      final GroupAccesses? accesses = await checkTicket(outpost: outpost);
       if (accesses?.canEnter == false) {
         Toast.error(
           title: "Error",
@@ -824,23 +824,23 @@ class OutpostsController extends GetxController with FirebaseTags {
       }
     }
 
-    if (group.archived) {
+    if (outpost.is_archived) {
       Toast.error(
         title: "Error",
         message: "This Outpost is archived",
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
-    if (group.members.keys.contains(myUser.uuid))
+    if ((outpost.members ?? []).map((e) => e.uuid).contains(myUser.uuid))
       return GroupAccesses(
-          canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
-    if (group.accessType == FreeOutpostAccessTypes.public)
+          canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
+    if (outpost.enter_type == FreeOutpostAccessTypes.public)
       return GroupAccesses(
-          canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
-    if (group.accessType == FreeOutpostAccessTypes.onlyLink) {
+          canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
+    if (outpost.enter_type == FreeOutpostAccessTypes.onlyLink) {
       if (joiningByLink == true) {
         return GroupAccesses(
-            canEnter: true, canSpeak: canISpeakWithoutTicket(group: group));
+            canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
       } else {
         Toast.error(
           title: "Error",
@@ -850,12 +850,13 @@ class OutpostsController extends GetxController with FirebaseTags {
       }
     }
 
-    final invitedMembers = group.invitedMembers;
-    if (group.accessType == FreeOutpostAccessTypes.invitees) {
-      if (invitedMembers[myUser.uuid] != null) {
+    final invitedMembers = outpost.invites;
+    if (outpost.enter_type == FreeOutpostAccessTypes.invitees) {
+      if (invitedMembers?.map((e) => e.invitee_uuid).contains(myUser.uuid) ==
+          true) {
         return GroupAccesses(
           canEnter: true,
-          canSpeak: canISpeakWithoutTicket(group: group),
+          canSpeak: canISpeakWithoutTicket(outpost: outpost),
         );
       } else {
         Toast.error(
@@ -869,10 +870,10 @@ class OutpostsController extends GetxController with FirebaseTags {
     return GroupAccesses(canEnter: false, canSpeak: false);
   }
 
-  Future<GroupAccesses?> checkTicket({required FirebaseGroup group}) async {
-    joiningGroupId.value = group.id;
+  Future<GroupAccesses?> checkTicket({required OutpostModel outpost}) async {
+    joiningGroupId.value = outpost.uuid;
     final checkTicketController = Get.put(CheckticketController());
-    checkTicketController.group.value = group;
+    checkTicketController.outpost.value = outpost;
     final accesses = await checkTicketController.checkTickets();
     if (accesses.canEnter == true && accesses.canSpeak == true) {
       joiningGroupId.value = '';
@@ -890,12 +891,13 @@ class OutpostsController extends GetxController with FirebaseTags {
   }
 
   Future<bool> _showAreYouOver18Dialog({
-    required FirebaseGroup group,
+    required OutpostModel outpost,
     required UserModel myUser,
   }) async {
-    final isGroupAgeRestricted = group.hasAdultContent;
-    final iAmOwner = group.creator.id == myUser.uuid;
-    final iAmMember = group.members.keys.contains(myUser.uuid);
+    final isGroupAgeRestricted = outpost.has_adult_content;
+    final iAmOwner = outpost.creator_user_uuid == myUser.uuid;
+    final iAmMember =
+        (outpost.members ?? []).map((e) => e.uuid).contains(myUser.uuid);
     final amIOver18 = myUser.is_over_18;
     if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18 == true) {
       return true;

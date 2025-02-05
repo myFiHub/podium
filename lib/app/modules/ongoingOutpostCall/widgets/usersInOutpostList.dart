@@ -17,6 +17,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_session_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -484,20 +485,20 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
 }
 
 class FollowButton extends GetView<UsersController> {
-  final String userId;
+  final UserModel user;
   final bool fullWidth;
-  const FollowButton({super.key, required this.userId, this.fullWidth = false});
+  const FollowButton({super.key, required this.user, this.fullWidth = false});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
-      final isLoading = loadingIds[userId] != null;
-      final isFollowing = false;
+      final isLoading = loadingIds[user.uuid] != null;
+      final isFollowing = user.followed_by_me ?? false;
       return Button(
           onPressed: () {
             final isFollowing = false;
-            controller.followUnfollow(userId, !isFollowing);
+            controller.followUnfollow(user.uuid, !isFollowing);
           },
           type: ButtonType.outline,
           blockButton: fullWidth,

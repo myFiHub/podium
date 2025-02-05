@@ -117,7 +117,7 @@ class AllGroupsView extends GetView<AllOutpostsController> {
                   onPressed: () {
                     Navigate.to(
                       type: NavigationTypes.toNamed,
-                      route: Routes.CREATE_GROUP,
+                      route: Routes.CREATE_OUTPOST,
                     );
                   },
                 ),

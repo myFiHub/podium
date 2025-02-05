@@ -643,7 +643,7 @@ class CreateOutpostController extends GetxController {
       try {
         checkIfValueIsDirectAddress(value);
         final (users, arenaUser) = await (
-          HttpApis.podium.searchByName(name: value),
+          HttpApis.podium.searchUserByName(name: value),
           ticketType == BuyableTicketTypes.onlyArenaTicketHolders
               ? HttpApis.arenaApi.getUserFromStarsArenaByHandle(value)
               : Future.value(null)

@@ -8,7 +8,9 @@ import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
@@ -19,7 +21,7 @@ class SearchPageController extends GetxController with FirebaseTags {
   final GlobalController globalController = Get.find<GlobalController>();
   final searchValue = ''.obs;
   final searchedOutposts = Rx<Map<String, OutpostModel>>({});
-  final searchedUsers = Rx<Map<String, UserInfoModel>>({});
+  final searchedUsers = Rx<Map<String, UserModel>>({});
   final searchedTags = Rx<Map<String, Tag>>({});
   final loadingTag_name = ''.obs;
   final selectedSearchTab = 0.obs;
@@ -57,7 +59,7 @@ class SearchPageController extends GetxController with FirebaseTags {
           searchForUserByName(value),
           searchTags(value)
         ]);
-        searchedUsers.value = users as Map<String, UserInfoModel>;
+        searchedUsers.value = users as Map<String, UserModel>;
         searchedTags.value = tags as Map<String, Tag>;
         isSearching.value = false;
       });
@@ -159,8 +161,10 @@ class SearchPageController extends GetxController with FirebaseTags {
       searchedUsers.value = {};
       return;
     }
-    final foundUsers = await searchForUserByName(v);
-    searchedUsers.value = foundUsers;
+    final foundUsers = await HttpApis.podium.searchUserByName(name: v);
+    searchedUsers.value = Map<String, UserModel>.fromEntries(
+      foundUsers.map((e) => MapEntry(e.uuid, e)),
+    );
   }
 
   refreshSearchedGroup(OutpostModel group) {

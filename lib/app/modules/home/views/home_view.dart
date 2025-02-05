@@ -130,7 +130,7 @@ class HomeView extends GetView<HomeController> {
                                   onTap: () {
                                     Navigate.to(
                                       type: NavigationTypes.offAllNamed,
-                                      route: Routes.ALL_GROUPS,
+                                      route: Routes.ALL_OUTPOSTS,
                                     );
                                   },
                                   child: Shimmer.fromColors(

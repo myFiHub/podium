@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
-import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
+import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/styles.dart';
 
 import '../controllers/search_controller.dart';
@@ -149,7 +150,7 @@ class SearchView extends GetView<SearchPageController> {
                     }),
                     Obx(() {
                       final usersMap = controller.searchedUsers.value;
-                      List<UserInfoModel> usersList = [];
+                      List<UserModel> usersList = [];
                       usersList = usersMap.values.toList();
                       if (usersList.isEmpty) {
                         return Container();

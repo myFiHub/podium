@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
@@ -14,7 +15,7 @@ import 'package:podium/widgets/button/button.dart';
 // import 'package:web3modal_flutter/utils/util.dart';
 
 class UserList extends StatelessWidget {
-  final List<UserInfoModel> usersList;
+  final List<UserModel> usersList;
   const UserList({super.key, required this.usersList});
   @override
   Widget build(BuildContext context) {
@@ -23,20 +24,20 @@ class UserList extends StatelessWidget {
         itemCount: usersList.length,
         itemBuilder: (BuildContext context, int index) {
           final user = usersList[index];
-          final name = user.fullName;
-          String avatar = user.avatar;
+          final name = user.name ?? '';
+          String avatar = user.image ?? '';
           if (avatar.contains("https://ui-avatars.com/api/?name=Oo")) {
             avatar = '';
           }
           if (avatar.isEmpty) {
             avatar = avatarPlaceHolder(name);
           }
-          final userId = user.id;
-          final isItME = user.id == myId;
+          final userId = user.uuid;
+          final isItME = user.uuid == myUser.uuid;
           return _SingleUser(
             key: Key(userId),
             isItME: isItME,
-            userId: userId,
+            user: user,
             name: name,
             avatar: avatar,
           );
@@ -50,13 +51,13 @@ class _SingleUser extends StatelessWidget {
   const _SingleUser({
     super.key,
     required this.isItME,
-    required this.userId,
+    required this.user,
     required this.name,
     required this.avatar,
   });
 
   final bool isItME;
-  final String userId;
+  final UserModel user;
   final String name;
   final String avatar;
 
@@ -72,7 +73,7 @@ class _SingleUser extends StatelessWidget {
           );
           return;
         }
-        usersController.openUserProfile(userId);
+        usersController.openUserProfile(user.uuid);
       },
       child: Stack(
         children: [
@@ -86,7 +87,7 @@ class _SingleUser extends StatelessWidget {
             ),
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
             padding: const EdgeInsets.all(10),
-            key: Key(userId),
+            key: Key(user.uuid),
             child: Stack(
               children: [
                 Row(
@@ -123,7 +124,7 @@ class _SingleUser extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  truncate(userId, length: 10),
+                                  truncate(user.uuid, length: 10),
                                   style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w400,
@@ -143,10 +144,10 @@ class _SingleUser extends StatelessWidget {
                       )
                     else
                       FollowButton(
-                        userId: userId,
+                        user: user,
                         fullWidth: false,
                         small: true,
-                        key: Key(userId),
+                        key: Key(user.uuid),
                       ),
                   ],
                 ),
@@ -160,12 +161,12 @@ class _SingleUser extends StatelessWidget {
 }
 
 class FollowButton extends GetView<UsersController> {
-  final String userId;
+  final UserModel user;
   final bool fullWidth;
   final bool small;
   const FollowButton(
       {super.key,
-      required this.userId,
+      required this.user,
       this.fullWidth = false,
       this.small = false});
 
@@ -173,14 +174,14 @@ class FollowButton extends GetView<UsersController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
-      final isLoading = loadingIds[userId] != null;
+      final isLoading = loadingIds[user.uuid] != null;
 
-      final isFollowing = false;
+      final isFollowing = user.followed_by_me ?? false;
       return Button(
           size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
           onPressed: () {
             final isFollowing = false;
-            controller.followUnfollow(userId, !isFollowing);
+            controller.followUnfollow(user.uuid, !isFollowing);
           },
           type: isFollowing ? ButtonType.outline : ButtonType.solid,
           shape: ButtonShape.pills,

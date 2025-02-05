@@ -76,7 +76,7 @@ class PodiumApi {
     }
   }
 
-  Future<List<UserModel>> searchByName({
+  Future<List<UserModel>> searchUserByName({
     required String name,
     int? page,
     int? page_size,

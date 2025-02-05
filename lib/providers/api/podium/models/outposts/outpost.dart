@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 
 part 'outpost.g.dart';
 
@@ -55,6 +56,9 @@ class OutpostModel {
     this.tickets_to_speak,
     this.luma_event_id,
   });
+
+  bool get iAmMember =>
+      members?.map((e) => e.uuid).contains(myUser.uuid) ?? false;
 
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>
       _$OutpostModelFromJson(json);

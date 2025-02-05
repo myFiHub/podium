@@ -18,7 +18,7 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
-import 'package:podium/app/modules/groupDetail/controllers/outpost_detail_controller.dart';
+import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -360,12 +360,12 @@ class GlobalController extends GetxController {
   }
 
   Future<void> openDeepLinkGroup(String route) async {
-    if (route.contains(Routes.GROUP_DETAIL)) {
+    if (route.contains(Routes.OUTPOST_DETAIL)) {
       Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
-      final splited = route.split(Routes.GROUP_DETAIL);
+      final splited = route.split(Routes.OUTPOST_DETAIL);
       if (splited.length < 2) {
         l.f("splited: $splited");
         return;
@@ -387,7 +387,7 @@ class GlobalController extends GetxController {
     deepLinkRoute.value = route;
     if (loggedIn.value) {
       l.e("logged in, opening deep link $route");
-      if (route.contains(Routes.GROUP_DETAIL)) {
+      if (route.contains(Routes.OUTPOST_DETAIL)) {
         openDeepLinkGroup(route);
       } else {
         l.e("deep link not handled");

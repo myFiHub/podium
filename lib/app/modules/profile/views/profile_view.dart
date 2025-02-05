@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
-import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
+import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/constants.dart';
@@ -27,7 +27,7 @@ class ProfileView extends GetView<ProfileController> {
             children: <Widget>[
               const UserInfo(),
               FollowButton(
-                userId: controller.userInfo.value!.id,
+                user: controller.userInfo.value!,
               ),
               space10,
               const _BuyOrSellPodiumPass(),
@@ -436,9 +436,9 @@ class UserInfo extends GetWidget<ProfileController> {
       if (user == null) {
         return Container();
       }
-      String avatar = user.avatar;
+      String avatar = user.image ?? '';
       if (avatar == defaultAvatar) {
-        avatar = avatarPlaceHolder(user.fullName);
+        avatar = avatarPlaceHolder(user.name ?? '');
       }
       return Container(
         padding: const EdgeInsets.all(20),
@@ -446,13 +446,13 @@ class UserInfo extends GetWidget<ProfileController> {
           children: [
             Img(
               src: avatar,
-              alt: user.fullName,
+              alt: user.name ?? '',
               size: 100,
             ),
             space10,
             space10,
             Text(
-              user.fullName,
+              user.name ?? '',
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,

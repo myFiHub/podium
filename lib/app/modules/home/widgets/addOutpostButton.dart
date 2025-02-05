@@ -44,7 +44,7 @@ class _AddOutpostButtonState extends State<AddOutpostButton>
       onTap: () {
         Navigate.to(
           type: NavigationTypes.toNamed,
-          route: Routes.CREATE_GROUP,
+          route: Routes.CREATE_OUTPOST,
         );
       },
       child: Container(

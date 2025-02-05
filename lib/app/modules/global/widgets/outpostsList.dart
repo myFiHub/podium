@@ -399,7 +399,7 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
 }
 
 String generateOutpostShareUrl({required String outpostId}) {
-  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.GROUP_DETAIL}?id=${outpostId}&apn=com.web3podium&ibi=com.web3podium";
+  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.OUTPOST_DETAIL}?id=${outpostId}&apn=com.web3podium&ibi=com.web3podium";
 }
 
 class _ScheduledBanner extends StatelessWidget {

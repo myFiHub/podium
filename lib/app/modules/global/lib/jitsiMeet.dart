@@ -26,7 +26,7 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
         // jitsiMeet.enterPiP();
       }
       Navigate.to(
-        route: Routes.ONGOING_GROUP_CALL,
+        route: Routes.ONGOING_OUTPOST_CALL,
         type: NavigationTypes.toNamed,
       );
       final myUserId = myId;

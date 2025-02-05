@@ -22,6 +22,7 @@ import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -51,7 +52,7 @@ class OutpostDetailController extends GetxController {
   final forceUpdateIndicator = false.obs;
   final outpost = Rxn<OutpostModel>();
   final outpostAccesses = Rxn<GroupAccesses>();
-  final membersList = Rx<List<UserInfoModel>>([]);
+  final membersList = Rx<List<UserModel>>([]);
   final reminderTime = Rx<DateTime?>(null);
   final isGettingGroupInfo = false.obs;
   final jointButtonContentProps =
@@ -284,7 +285,7 @@ class OutpostDetailController extends GetxController {
   getMembers(OutpostModel outpost) async {
     final memberIds = outpost.members?.map((e) => e.uuid).toList() ?? [];
     isGettingMembers.value = true;
-    final list = await getUsersByIds(memberIds);
+    final list = await HttpApis.podium.getUsersByIds(memberIds);
     membersList.value = list;
     isGettingMembers.value = false;
   }

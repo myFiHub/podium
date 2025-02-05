@@ -5,7 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/groupDetail/views/outpost_detail_view.dart';
+import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/usersInOutpostList.dart';
 import 'package:podium/gen/colors.gen.dart';

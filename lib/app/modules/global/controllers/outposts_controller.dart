@@ -15,7 +15,7 @@ import 'package:podium/app/modules/global/controllers/outpost_call_controller.da
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/groupDetail/controllers/outpost_detail_controller.dart';
+import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantConfigs.dart';
@@ -616,44 +616,40 @@ class OutpostsController extends GetxController with FirebaseTags {
     if (joiningGroupId != '') {
       return;
     }
+    try {
+      joiningGroupId.value = outpostId;
+      final outpost = await HttpApis.podium.getOutpost(outpostId);
+      if (outpost == null) {
+        Toast.error(
+          title: "Error",
+          message: "Failed to join the Outpost, Outpost not found",
+        );
+        Navigate.to(
+          type: NavigationTypes.offAllNamed,
+          route: Routes.HOME,
+        );
+        return;
+      }
 
-    final outpost = await HttpApis.podium.getOutpost(outpostId);
-    if (outpost == null) {
-      Toast.error(
-        title: "Error",
-        message: "Failed to join the Outpost, Outpost not found",
+      final accesses = await getOutpostAccesses(
+        outpost: outpost,
+        joiningByLink: joiningByLink,
       );
-      Navigate.to(
-        type: NavigationTypes.offAllNamed,
-        route: Routes.HOME,
+      l.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
+      if (accesses.canEnter == false) {
+        joiningGroupId.value = '';
+        return;
+      }
+      final hasAgeVerified = await _showAreYouOver18Dialog(
+        outpost: outpost,
+        myUser: myUser,
       );
-      joiningGroupId.value = '';
-      return;
-    }
+      if (!hasAgeVerified) {
+        joiningGroupId.value = '';
+        return;
+      }
 
-    final accesses = await getOutpostAccesses(
-      outpost: outpost,
-      joiningByLink: joiningByLink,
-    );
-    l.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
-    if (accesses.canEnter == false) {
-      joiningGroupId.value = '';
-      return;
-    }
-
-    final hasAgeVerified = await _showAreYouOver18Dialog(
-      outpost: outpost,
-      myUser: myUser,
-    );
-    if (!hasAgeVerified) {
-      joiningGroupId.value = '';
-      return;
-    }
-
-    final members = outpost.members;
-    if (!(members ?? []).map((e) => e.uuid).contains(myUser.uuid)) {
-      try {
-        joiningGroupId.value = outpostId;
+      if (!outpost.iAmMember) {
         final added = await HttpApis.podium.addMeAsMember(outpostId: outpostId);
         if (!added) {
           Toast.error(
@@ -694,24 +690,25 @@ class OutpostsController extends GetxController with FirebaseTags {
           openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
           accesses: accesses,
         );
-      } catch (e) {
-        Toast.error(
-          title: "Error",
-          message:
-              "Failed to join the Outpost,please try again or report a bug",
+      } else {
+        l.d("Already a member");
+        _openOutpost(
+          outpost: outpost,
+          openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
+          accesses: accesses,
         );
-        l.f("Error joining group: $e");
-      } finally {
-        joiningGroupId.value = '';
       }
-    } else {
-      joiningGroupId.value = '';
-      _openOutpost(
-        outpost: outpost,
-        openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
-        accesses: accesses,
+    } catch (e) {
+      Toast.error(
+        title: "Error",
+        message: "Failed to join the Outpost,please try again or report a bug",
       );
+      l.f("Error joining group: $e");
+    } finally {
+      joiningGroupId.value = '';
     }
+
+    return;
   }
 
   FirebaseSessionMember? createInitialSessionMember(
@@ -753,7 +750,7 @@ class OutpostsController extends GetxController with FirebaseTags {
 
     Navigate.to(
         type: NavigationTypes.toNamed,
-        route: Routes.GROUP_DETAIL,
+        route: Routes.OUTPOST_DETAIL,
         parameters: {
           GroupDetailsParametersKeys.enterAccess: accesses.canEnter.toString(),
           GroupDetailsParametersKeys.speakAccess: accesses.canSpeak.toString(),
@@ -831,7 +828,7 @@ class OutpostsController extends GetxController with FirebaseTags {
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
-    if ((outpost.members ?? []).map((e) => e.uuid).contains(myUser.uuid))
+    if (outpost.iAmMember)
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
     if (outpost.enter_type == FreeOutpostAccessTypes.public)
@@ -896,8 +893,7 @@ class OutpostsController extends GetxController with FirebaseTags {
   }) async {
     final isGroupAgeRestricted = outpost.has_adult_content;
     final iAmOwner = outpost.creator_user_uuid == myUser.uuid;
-    final iAmMember =
-        (outpost.members ?? []).map((e) => e.uuid).contains(myUser.uuid);
+    final iAmMember = outpost.iAmMember;
     final amIOver18 = myUser.is_over_18;
     if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18 == true) {
       return true;

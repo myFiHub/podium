@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:podium/app/modules/groupDetail/views/outpost_by_id_landing.dart';
+import 'package:podium/app/modules/outpostDetail/views/outpost_by_id_landing.dart';
 import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
 
 import '../modules/allOutposts/bindings/all_groups_binding.dart';
@@ -10,8 +10,8 @@ import '../modules/createOutpost/bindings/create_outpost_binding.dart';
 import '../modules/createOutpost/views/create_outpost_view.dart';
 import '../modules/editGroup/bindings/edit_group_binding.dart';
 import '../modules/editGroup/views/edit_group_view.dart';
-import '../modules/groupDetail/bindings/group_detail_binding.dart';
-import '../modules/groupDetail/views/outpost_detail_view.dart';
+import '../modules/outpostDetail/bindings/outpost_detail_binding.dart';
+import '../modules/outpostDetail/views/outpost_detail_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
@@ -70,12 +70,12 @@ class AppPages {
       binding: LoginBinding(),
     ),
     GetPage(
-      name: _Paths.CREATE_GROUP,
+      name: _Paths.CREATE_OUTPOST,
       page: () => const CreateGroupView(),
       binding: CreateGroupBinding(),
     ),
     GetPage(
-      name: _Paths.GROUP_DETAIL,
+      name: _Paths.OUTPOST_DETAIL,
       page: () => const GroupDetailView(),
       binding: GroupDetailBinding(),
       children: [
@@ -88,7 +88,7 @@ class AppPages {
       ],
     ),
     GetPage(
-      name: _Paths.EDIT_GROUP,
+      name: _Paths.EDIT_OUTPOST,
       page: () => const EditGroupView(),
       binding: EditGroupBinding(),
     ),
@@ -98,7 +98,7 @@ class AppPages {
       binding: ChatBinding(),
     ),
     GetPage(
-      name: _Paths.ONGOING_GROUP_CALL,
+      name: _Paths.ONGOING_OUTPOST_CALL,
       page: () => const OngoingGroupCallView(),
       binding: OngoingGroupCallBinding(),
     ),
@@ -128,7 +128,7 @@ class AppPages {
       binding: NotificationsBinding(),
     ),
     GetPage(
-      name: _Paths.ALL_GROUPS,
+      name: _Paths.ALL_OUTPOSTS,
       page: () => const AllGroupsView(),
       binding: AllGroupsBinding(),
     ),

@@ -4,8 +4,8 @@ import 'package:podium/app/modules/createOutpost/controllers/create_outpost_cont
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
-import 'package:podium/app/modules/groupDetail/widgets/lumaDetailsDialog.dart';
-import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
+import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
+import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
@@ -302,8 +302,7 @@ bool canInvite({
 }) {
   final iAmCreator = currentUserId == outpost.creator_user_uuid;
   final isGroupPublic = outpost.enter_type == FreeOutpostAccessTypes.public;
-  final amIAMember =
-      (outpost.members ?? []).map((e) => e.uuid).contains(currentUserId);
+  final amIAMember = (outpost.iAmMember);
   if (iAmCreator || isGroupPublic || amIAMember) {
     return true;
   }

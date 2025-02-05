@@ -714,7 +714,7 @@ Future<FirebaseSessionMember?> getUserSessionData(
   }
 }
 
-Future<int?> getUserRemainingTalkTime({
+Future<int> getUserRemainingTalkTime({
   required String groupId,
   required String userId,
 }) async {
@@ -726,12 +726,7 @@ Future<int?> getUserRemainingTalkTime({
       .child(FirebaseSessionMember.remainingTalkTimeKey);
   final snapshot = await databaseRef.once();
   final remainingTime = snapshot.snapshot.value as int?;
-  if (remainingTime != null) {
-    return remainingTime;
-  } else {
-    l.i('session not found');
-    return null;
-  }
+  return remainingTime ?? 0;
 }
 
 StreamSubscription<DatabaseEvent>? startListeningToMyRemainingTalkingTime({
@@ -756,8 +751,30 @@ StreamSubscription<DatabaseEvent>? startListeningToMyRemainingTalkingTime({
   });
 }
 
-Future<void> updateRemainingTimeOnFirebase({
-  required int newValue,
+Future<void> lockRemainingTimeOnFirebase({
+  required String groupId,
+  required String userId,
+  required bool lock,
+}) async {
+  final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants
+          .sessionsRef +
+      groupId +
+      '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.isTimerLockedKey}');
+  await databaseRef.set(lock);
+}
+
+Future<bool> isMyTimerLocked(
+    {required String groupId, required String userId}) async {
+  final databaseRef = FirebaseDatabase.instance.ref(FireBaseConstants
+          .sessionsRef +
+      groupId +
+      '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.isTimerLockedKey}');
+  final snapshot = await databaseRef.once();
+  final isLocked = snapshot.snapshot.value as dynamic;
+  return isLocked ?? false;
+}
+
+Future<int?> getRemainingTimeForUser({
   required String groupId,
   required String userId,
 }) async {
@@ -765,8 +782,25 @@ Future<void> updateRemainingTimeOnFirebase({
           .sessionsRef +
       groupId +
       '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.remainingTalkTimeKey}');
+  final snapshot = await databaseRef.once();
+  final remainingTime = snapshot.snapshot.value as dynamic;
+  return remainingTime ?? 0;
+}
+
+Future<void> updateRemainingTimeOnFirebase({
+  required String groupId,
+  required String userId,
+  required int newValue,
+}) async {
+  final remainingTimeRef = FirebaseDatabase.instance.ref(FireBaseConstants
+          .sessionsRef +
+      groupId +
+      '/${FirebaseSession.membersKey}/$userId/${FirebaseSessionMember.remainingTalkTimeKey}');
+
   l.d("updating remaining time to $newValue in firebase");
-  await databaseRef.set(newValue);
+  await Future.wait([
+    remainingTimeRef.set(newValue),
+  ]);
 }
 
 Future setIsUserPresentInSession({

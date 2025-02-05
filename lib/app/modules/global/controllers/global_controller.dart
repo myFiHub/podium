@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:alarm/alarm.dart';
 import 'package:aptos/aptos.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -68,8 +67,7 @@ class GlobalController extends GetxController {
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
   final jitsiServerAddress = '';
-  final firebaseUserCredential = Rxn<UserCredential>();
-  final firebaseUser = Rxn<User>();
+
   final currentUserInfo = Rxn<UserInfoModel>();
   final activeRoute = AppPages.INITIAL.obs;
   final isAutoLoggingIn = true.obs;
@@ -633,14 +631,7 @@ class GlobalController extends GetxController {
         parameters: {
           if (referrerId.isNotEmpty) LoginParametersKeys.referrerId: referrerId,
         });
-    firebaseUserCredential.value = null;
-    try {
-      await FirebaseAuth.instance.signOut();
-      isLoggingOut.value = false;
-    } catch (e) {
-      l.e("error signing out from firebase $e");
-      isLoggingOut.value = false;
-    }
+    isLoggingOut.value = false;
   }
 
   void setIsMyUserOver18(bool value) {

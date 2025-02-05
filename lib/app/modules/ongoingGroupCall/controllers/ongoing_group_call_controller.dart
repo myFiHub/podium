@@ -6,7 +6,6 @@ import 'package:ably_flutter/ably_flutter.dart';
 import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -23,7 +22,6 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/ongoingGroupCall/utils.dart';
 import 'package:podium/app/modules/ongoingGroupCall/widgets/cheerBooBottomSheet.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
@@ -501,20 +499,21 @@ class OngoingGroupCallController extends GetxController {
       if (timer != null) {
         timer?.cancel();
       }
-      timer = Timer.periodic(const Duration(seconds: 1), (t) {
-        if (remainingTimeTimer.value > 0) {
-          if (!amIMuted.value) {
-            final v = remainingTimeTimer.value - 1000;
-            remainingTimeTimer.value = v;
-            if (v == 0) {
-              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
-              t.cancel();
-            } else {
-              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
-            }
+      timer = Timer.periodic(const Duration(seconds: 1), (t) async {
+        final myRemainingTime = await getUserRemainingTalkTime(
+          groupId: groupCallController.group.value!.id,
+          userId: myId,
+        );
+
+        if (!amIMuted.value) {
+          final v = myRemainingTime - 1000;
+          remainingTimeTimer.value = v;
+          if (v == 0) {
+            updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
+            t.cancel();
+          } else {
+            updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
           }
-        } else {
-          t.cancel();
         }
       });
     }
@@ -567,8 +566,10 @@ class OngoingGroupCallController extends GetxController {
     timer?.cancel();
   }
 
-  Future<void> addToTimer(
-      {required int seconds, required String userId}) async {
+  Future<void> addToTimer({
+    required int seconds,
+    required String userId,
+  }) async {
     if (groupCallController.group.value == null) {
       Toast.error(message: "Unknown error, please join again");
       return;
@@ -596,7 +597,7 @@ class OngoingGroupCallController extends GetxController {
   }
 
   Future<void> reduceFromTimer(
-      {required int seconds, required String userId}) async {
+      {required int seconds, required String userId, bool lock = false}) async {
     if (groupCallController.group.value == null) {
       Toast.error(message: "Unknown error, please join again");
       return;
@@ -618,11 +619,15 @@ class OngoingGroupCallController extends GetxController {
     }
 
     return updateRemainingTimeInMySessionOnFirebase(
-        v: v <= 0 ? 0 : v, userId: userId);
+      v: v <= 0 ? 0 : v,
+      userId: userId,
+    );
   }
 
-  Future<void> updateRemainingTimeInMySessionOnFirebase(
-      {required int v, required String userId}) {
+  Future<void> updateRemainingTimeInMySessionOnFirebase({
+    required int v,
+    required String userId,
+  }) {
     final latestSession = mySession.value;
     if (latestSession == null) {
       l.f("latest session is null");
@@ -658,6 +663,7 @@ class OngoingGroupCallController extends GetxController {
       seconds: amountToAddForLikeInSeconds,
       userId: userId,
     );
+
     analytics.logEvent(
       name: 'like',
       parameters: {
@@ -838,6 +844,7 @@ class OngoingGroupCallController extends GetxController {
             : reduceFromTimer(
                 seconds: finalAmountOfTimeToAdd.abs(),
                 userId: userId,
+                lock: true,
               );
 
         Toast.success(

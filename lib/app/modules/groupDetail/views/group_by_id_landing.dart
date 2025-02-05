@@ -23,7 +23,7 @@ class GroupByIdLandingScreen extends GetView<GroupDetailController> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
-                  'Room not found',
+                  'Outpost not found',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 24,

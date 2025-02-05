@@ -60,6 +60,7 @@ class FirebaseSessionMember {
   late bool isTalking = false;
   late int startedToTalkAt = 0;
   late int timeJoined = 0;
+  late bool isTimerLocked = false;
 
   static String idKey = 'id';
   static String nameKey = 'name';
@@ -71,6 +72,7 @@ class FirebaseSessionMember {
   static String isTalkingKey = 'isTalking';
   static String startedToTalkAtKey = 'startedToTalkAt';
   static String timeJoinedKey = 'timeJoined';
+  static String isTimerLockedKey = 'isTimerLocked';
 
   FirebaseSessionMember({
     required this.id,
@@ -83,6 +85,7 @@ class FirebaseSessionMember {
     required this.isTalking,
     required this.startedToTalkAt,
     required this.timeJoined,
+    this.isTimerLocked = false,
   });
 
   FirebaseSessionMember.fromJson(dynamic json) {
@@ -96,6 +99,7 @@ class FirebaseSessionMember {
     isTalking = json[isTalkingKey] ?? false;
     startedToTalkAt = json[startedToTalkAtKey] ?? 0;
     timeJoined = json[timeJoinedKey] ?? 0;
+    isTimerLocked = json[isTimerLockedKey] ?? false;
   }
 
   Map<String, dynamic> toJson() {
@@ -111,6 +115,7 @@ class FirebaseSessionMember {
     data[isTalkingKey] = isTalking;
     data[startedToTalkAtKey] = startedToTalkAt;
     data[timeJoinedKey] = timeJoined;
+    data[isTimerLockedKey] = isTimerLocked;
     return data;
   }
 }

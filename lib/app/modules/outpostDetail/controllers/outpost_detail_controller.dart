@@ -9,7 +9,6 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/groupsParser.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -62,7 +61,7 @@ class OutpostDetailController extends GetxController {
   final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InvitedMember>>({});
 //parameters for the group detail page
-  late String stringedGroupInfo;
+  late String stringedOutpostInfo;
   late String enterAccess;
   late String speakAccess;
   late bool shouldOpenJitsiAfterJoining;
@@ -89,14 +88,15 @@ class OutpostDetailController extends GetxController {
       l.e('Missing parameters');
       return;
     }
-    stringedGroupInfo = Get.parameters[GroupDetailsParametersKeys.outpostInfo]!;
+    stringedOutpostInfo =
+        Get.parameters[GroupDetailsParametersKeys.outpostInfo]!;
     enterAccess = Get.parameters[GroupDetailsParametersKeys.enterAccess]!;
     speakAccess = Get.parameters[GroupDetailsParametersKeys.speakAccess]!;
     shouldOpenJitsiAfterJoining = Get.parameters[
             GroupDetailsParametersKeys.shouldOpenJitsiAfterJoining] ==
         'true';
 
-    final outpostInfo = OutpostModel.fromJson(jsonDecode(stringedGroupInfo));
+    final outpostInfo = OutpostModel.fromJson(jsonDecode(stringedOutpostInfo));
 
     outpostAccesses.value = GroupAccesses(
       canEnter: enterAccess == 'true',
@@ -111,6 +111,10 @@ class OutpostDetailController extends GetxController {
       scheduleChecks();
       _getLumaData();
       startListeningToGroup(outpostInfo.uuid, onOutpostUpdate);
+    } else {
+      l.e('Outpost info is null');
+      Toast.error(message: 'Outpost info is null');
+      Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
     }
 
     globalController.ticker.listen((event) {
@@ -133,6 +137,18 @@ class OutpostDetailController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  updateSingleUser(String userId) async {
+    final userInfo = await HttpApis.podium.getUserData(userId);
+    if (userInfo != null) {
+      final index =
+          membersList.value.indexWhere((element) => element.uuid == userId);
+      if (index != -1) {
+        membersList.value[index] = userInfo;
+        membersList.refresh();
+      }
+    }
   }
 
   _getLumaData() async {
@@ -208,13 +224,15 @@ class OutpostDetailController extends GetxController {
         outpost.value!.scheduled_for < DateTime.now().millisecondsSinceEpoch;
     if (isScheduled) {
       if (passedScheduledTime) {
-        if (amICreator) {
+        if (amICreator && jointButtonContentProps.value.text != 'Start') {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Start');
-        } else if (outpost.value!.creator_joined) {
+        } else if (outpost.value!.creator_joined &&
+            jointButtonContentProps.value.text != 'Join') {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Join');
-        } else {
+        } else if (jointButtonContentProps.value.text !=
+            'Waiting for creator') {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }
@@ -283,11 +301,16 @@ class OutpostDetailController extends GetxController {
   }
 
   getMembers(OutpostModel outpost) async {
-    final memberIds = outpost.members?.map((e) => e.uuid).toList() ?? [];
-    isGettingMembers.value = true;
-    final list = await HttpApis.podium.getUsersByIds(memberIds);
-    membersList.value = list;
-    isGettingMembers.value = false;
+    try {
+      final memberIds = outpost.members?.map((e) => e.uuid).toList() ?? [];
+      isGettingMembers.value = true;
+      final list = await HttpApis.podium.getUsersByIds(memberIds);
+      membersList.value = list;
+    } catch (e) {
+      l.e(e);
+    } finally {
+      isGettingMembers.value = false;
+    }
   }
 
   startTheCall({required GroupAccesses accesses}) {

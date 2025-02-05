@@ -78,9 +78,9 @@ class HomeView extends GetView<HomeController> {
                       () {
                         final showArchived =
                             globalController.showArchivedGroups.value;
-                        final allGroups = controller.allGroups.value;
-                        final isLoading = allGroups.isEmpty;
-                        List<OutpostModel> groups = allGroups.values
+                        final allOutposts = controller.allOutposts.value;
+                        final isLoading = allOutposts.isEmpty;
+                        List<OutpostModel> outposts = allOutposts.values
                             .where(
                               (group) =>
                                   group.members
@@ -91,7 +91,7 @@ class HomeView extends GetView<HomeController> {
                             .toList();
 
                         if (!showArchived) {
-                          groups = groups
+                          outposts = outposts
                               .where((group) => group.is_archived != true)
                               .toList();
                         }
@@ -100,7 +100,7 @@ class HomeView extends GetView<HomeController> {
                             child: CircularProgressIndicator(),
                           );
                         }
-                        if (groups.isEmpty) {
+                        if (outposts.isEmpty) {
                           return Padding(
                             padding:
                                 const EdgeInsets.symmetric(horizontal: 16.0),
@@ -150,7 +150,7 @@ class HomeView extends GetView<HomeController> {
                             ),
                           );
                         }
-                        return OutpostsList(outpostsList: groups);
+                        return OutpostsList(outpostsList: outposts);
                       },
                     );
                   }),

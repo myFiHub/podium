@@ -5,6 +5,7 @@ import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.d
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -113,14 +114,25 @@ class PodiumApi {
 
   Future<List<UserModel>> getUsersByIds(List<String> ids) async {
     try {
-      final List<Future> callArray = [];
+      final List<Future<UserModel?>> callArray = [];
       for (var id in ids) {
         callArray.add(getUserData(id));
       }
-      final response = await Future.wait(callArray);
-      return response.map((e) => UserModel.fromJson(e.data['data'])).toList();
+      final List<UserModel?> response = await Future.wait(callArray);
+      return response.whereType<UserModel>().toList();
     } catch (e) {
       return [];
+    }
+  }
+
+  Future<bool> followUnfollow(String uuid, FollowUnfollowAction action) async {
+    try {
+      await dio.post('$_baseUrl/users/follow',
+          data: FollowUnfollowRequest(uuid: uuid, action: action).toJson(),
+          options: Options(headers: _headers));
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 

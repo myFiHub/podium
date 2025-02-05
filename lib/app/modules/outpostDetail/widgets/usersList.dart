@@ -5,7 +5,6 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -16,7 +15,13 @@ import 'package:podium/widgets/button/button.dart';
 
 class UserList extends StatelessWidget {
   final List<UserModel> usersList;
-  const UserList({super.key, required this.usersList});
+  final Function(String userId)? onRequestUpdate;
+  const UserList({
+    super.key,
+    required this.usersList,
+    this.onRequestUpdate,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Scrollbar(
@@ -40,6 +45,9 @@ class UserList extends StatelessWidget {
             user: user,
             name: name,
             avatar: avatar,
+            onRequestUpdate: () {
+              onRequestUpdate?.call(userId);
+            },
           );
         },
       ),
@@ -48,18 +56,21 @@ class UserList extends StatelessWidget {
 }
 
 class _SingleUser extends StatelessWidget {
+  final bool isItME;
+  final UserModel user;
+  final String name;
+  final String avatar;
+  final VoidCallback? onRequestUpdate;
+
   const _SingleUser({
     super.key,
     required this.isItME,
     required this.user,
     required this.name,
     required this.avatar,
+    // ignore: unused_element
+    this.onRequestUpdate,
   });
-
-  final bool isItME;
-  final UserModel user;
-  final String name;
-  final String avatar;
 
   @override
   Widget build(BuildContext context) {
@@ -148,6 +159,7 @@ class _SingleUser extends StatelessWidget {
                         fullWidth: false,
                         small: true,
                         key: Key(user.uuid),
+                        onFollowStatusChanged: onRequestUpdate,
                       ),
                   ],
                 ),
@@ -164,24 +176,28 @@ class FollowButton extends GetView<UsersController> {
   final UserModel user;
   final bool fullWidth;
   final bool small;
-  const FollowButton(
-      {super.key,
-      required this.user,
-      this.fullWidth = false,
-      this.small = false});
+  final VoidCallback? onFollowStatusChanged;
+
+  const FollowButton({
+    super.key,
+    required this.user,
+    this.fullWidth = false,
+    this.small = false,
+    this.onFollowStatusChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
       final isLoading = loadingIds[user.uuid] != null;
-
       final isFollowing = user.followed_by_me ?? false;
       return Button(
           size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
-          onPressed: () {
-            final isFollowing = false;
-            controller.followUnfollow(user.uuid, !isFollowing);
+          onPressed: () async {
+            final isFollowing = user.followed_by_me ?? false;
+            await controller.followUnfollow(user.uuid, !isFollowing);
+            onFollowStatusChanged?.call();
           },
           type: isFollowing ? ButtonType.outline : ButtonType.solid,
           shape: ButtonShape.pills,
@@ -192,9 +208,13 @@ class FollowButton extends GetView<UsersController> {
             color: isFollowing ? Colors.red : Colors.green,
           ),  */
           child: isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ? const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
                   ),
                 )
               : Row(

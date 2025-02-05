@@ -28,6 +28,9 @@ class ProfileView extends GetView<ProfileController> {
               const UserInfo(),
               FollowButton(
                 user: controller.userInfo.value!,
+                onFollowStatusChanged: () {
+                  controller.updateUserInfo();
+                },
               ),
               space10,
               const _BuyOrSellPodiumPass(),

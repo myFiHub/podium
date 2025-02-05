@@ -10,6 +10,7 @@ import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -70,6 +71,13 @@ class ProfileController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  updateUserInfo() async {
+    final info = await HttpApis.podium.getUserData(userInfo.value!.uuid);
+    if (info != null) {
+      userInfo.value = info;
+    }
   }
 
   _getPayments() async {

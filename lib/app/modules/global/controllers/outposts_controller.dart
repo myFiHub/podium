@@ -703,7 +703,7 @@ class OutpostsController extends GetxController with FirebaseTags {
         title: "Error",
         message: "Failed to join the Outpost,please try again or report a bug",
       );
-      l.f("Error joining group: $e");
+      l.f("Error joining outpost: $e");
     } finally {
       joiningGroupId.value = '';
     }

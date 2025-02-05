@@ -484,54 +484,6 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
   }
 }
 
-class FollowButton extends GetView<UsersController> {
-  final UserModel user;
-  final bool fullWidth;
-  const FollowButton({super.key, required this.user, this.fullWidth = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final loadingIds = controller.followingsInProgress;
-      final isLoading = loadingIds[user.uuid] != null;
-      final isFollowing = user.followed_by_me ?? false;
-      return Button(
-          onPressed: () {
-            final isFollowing = false;
-            controller.followUnfollow(user.uuid, !isFollowing);
-          },
-          type: ButtonType.outline,
-          blockButton: fullWidth,
-          textColor: isFollowing ? Colors.red : Colors.green,
-          borderSide: BorderSide(
-            color: isFollowing ? Colors.red : Colors.green,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 10,
-          ),
-          child: isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('${isFollowing ? "un" : ""}follow'),
-                    if (!isFollowing)
-                      const Icon(
-                        Icons.add,
-                        color: Colors.green,
-                        size: 24,
-                      ),
-                  ],
-                ));
-    });
-  }
-}
-
 class Actions extends GetView<OngoingOutpostCallController> {
   final String userId;
   final bool isIntroUser;

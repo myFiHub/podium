@@ -25,6 +25,7 @@ class GroupDetailView extends GetView<OutpostDetailController> {
         children: [
           Obx(() {
             // final isLoading = controller.isGettingMembers.value;
+            l.d('members: ${controller.membersList.value}');
             final members = controller.membersList.value;
             final outpost = controller.outpost.value;
             final accesses = controller.outpostAccesses.value;
@@ -75,10 +76,9 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                               overflow: TextOverflow.visible,
                             ),
                           ),
-                          if (outpost.subject != null &&
-                              outpost.subject!.trim().isNotEmpty)
+                          if (outpost.subject.trim().isNotEmpty)
                             Text(
-                              outpost.subject!,
+                              outpost.subject,
                               style: const TextStyle(
                                 fontSize: 14,
                               ),
@@ -108,6 +108,9 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                   Expanded(
                     child: UserList(
                       usersList: members,
+                      onRequestUpdate: (userId) {
+                        controller.updateSingleUser(userId);
+                      },
                     ),
                   ),
                   Row(

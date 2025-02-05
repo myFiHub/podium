@@ -5,15 +5,15 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/models/notification_model.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-import 'package:uuid/uuid.dart';
 
 class UsersController extends GetxController {
   final globalController = Get.find<GlobalController>();
@@ -50,61 +50,55 @@ class UsersController extends GetxController {
     return null;
   }
 
-  followUnfollow(String id, bool startFollowing) async {
-    final user = await getUserById(id);
+  Future<bool> followUnfollow(String id, bool startFollowing) async {
+    followingsInProgress[id] = id;
+    followingsInProgress.refresh();
+    final user = await HttpApis.podium.getUserData(id);
     if (user != null) {
       try {
-        followingsInProgress[id] = id;
-        followingsInProgress.refresh();
-        await startFollowing
-            ? Future.wait<void>(
-                [follow(id), addFollowerToUser(userId: id, followerId: myId)])
-            : [unfollow(id), unfollowUser(user.id)];
-        final globalController = Get.find<GlobalController>();
-        final myUser = globalController.myUserInfo.value;
-        if (startFollowing) {
-          // myUser!.following.add(id);
-          // final notifId = const Uuid().v4();
-          // sendNotification(
-          //   notification: FirebaseNotificationModel(
-          //       id: notifId,
-          //       title: 'New follower',
-          //       body: '${myUser.fullName} followed you',
-          //       type: NotificationTypes.follow.toString(),
-          //       targetUserId: id,
-          //       isRead: false,
-          //       timestamp: DateTime.now().millisecondsSinceEpoch),
-          // );
-        } else {
-          // myUser!.following.remove(id);
+        final success = await HttpApis.podium.followUnfollow(
+          id,
+          startFollowing
+              ? FollowUnfollowAction.follow
+              : FollowUnfollowAction.unfollow,
+        );
+        if (!success) {
+          return false;
         }
-        // globalController.currentUserInfo.value = myUser;
-        // followingsInProgress.remove(id);
-        // followingsInProgress.refresh();
-        // Get.closeCurrentSnackbar();
-        // Toast.info(
-        //   title: "${startFollowing ? "" : "un"}followed",
-        //   message: "${startFollowing ? "" : "un"}followed ${user.fullName}",
-        // );
+        Get.closeCurrentSnackbar();
+        Toast.info(
+          title: "${startFollowing ? "" : "un"}followed",
+          message: "${startFollowing ? "" : "un"}followed ${user.name}",
+        );
+        return true;
       } catch (e) {
-        followingsInProgress.remove(id);
-        followingsInProgress.refresh();
         Toast.error(
           title: 'Error',
           message: 'Error ${startFollowing ? "" : "un"}following user',
         );
+        return false;
+      } finally {
+        followingsInProgress.remove(id);
+        followingsInProgress.refresh();
       }
     }
+    return false;
   }
 
   openUserProfile(String userId) async {
-    final user = await getUserById(userId);
-    if (user != null) {
-      Navigate.to(
-        type: NavigationTypes.toNamed,
-        route: Routes.PROFILE,
-        parameters: {UserProfileParamsKeys.userInfo: jsonEncode(user.toJson())},
-      );
+    try {
+      final user = await HttpApis.podium.getUserData(userId);
+      if (user != null) {
+        Navigate.to(
+          type: NavigationTypes.toNamed,
+          route: Routes.PROFILE,
+          parameters: {
+            UserProfileParamsKeys.userInfo: jsonEncode(user.toJson())
+          },
+        );
+      }
+    } catch (e) {
+      l.e('Error opening user profile: $e');
     }
   }
 }

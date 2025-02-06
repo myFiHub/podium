@@ -6,9 +6,8 @@ part 'createOutpostRequest.g.dart';
 class CreateOutpostRequest {
   final String enter_type;
   final bool has_adult_content;
-  final String image;
+  final String? image;
   final bool is_recordable;
-  final String? luma_event_id;
   final String name;
   final int scheduled_for;
   final String speak_type;
@@ -20,9 +19,8 @@ class CreateOutpostRequest {
   CreateOutpostRequest({
     required this.enter_type,
     required this.has_adult_content,
-    required this.image,
+    this.image,
     required this.is_recordable,
-    required this.luma_event_id,
     required this.name,
     required this.scheduled_for,
     required this.speak_type,

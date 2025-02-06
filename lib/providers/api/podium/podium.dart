@@ -5,6 +5,7 @@ import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.d
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
@@ -142,6 +143,62 @@ class PodiumApi {
           options: Options(headers: _headers));
       return OutpostModel.fromJson(response.data['data']);
     } catch (e) {
+      return null;
+    }
+  }
+
+  Future<List<OutpostModel>> searchOutpostByName({
+    required String name,
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/outposts/search',
+          queryParameters: {'text': name}, options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => OutpostModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
+    }
+  }
+
+  Future<List<TagModel>> searchTag({
+    required String tagName,
+    int? page,
+    int? page_size,
+  }) async {
+    final response = await dio.get('$_baseUrl/tags/search',
+        queryParameters: {'text': tagName},
+        options: Options(headers: _headers));
+    return (response.data['data'] as List)
+        .map((e) => TagModel.fromJson(e))
+        .toList();
+  }
+
+  Future<List<OutpostModel>> searchOutpostByTags({
+    required List<String> tags,
+    int? page,
+    int? page_size,
+  }) async {
+    final response = await dio.get('$_baseUrl/outposts/search',
+        queryParameters: {'tags': tags}, options: Options(headers: _headers));
+    return (response.data['data'] as List)
+        .map((e) => OutpostModel.fromJson(e))
+        .toList();
+  }
+
+  Future<OutpostModel?> updateOutpost(
+    String id,
+    Map<String, dynamic> patchJson,
+  ) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/update',
+          data: patchJson, options: Options(headers: _headers));
+      return OutpostModel.fromJson(response.data['data']);
+    } catch (e) {
+      l.e(e);
       return null;
     }
   }

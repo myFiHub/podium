@@ -713,18 +713,11 @@ class CreateOutpostController extends GetxController {
       }
       imageUrl = res;
     }
-    final lumaEventId = await _createLumaEvent(outpostId: id);
-    if (_shouldCreateLumaEvent && lumaEventId == null) {
-      Toast.error(message: 'Failed to create Luma Event');
-      return;
-    }
 
     try {
       final response = await outpostsController.createOutpost(
-        id: id,
         imageUrl: imageUrl,
         name: outpostName.value,
-        lumaEventId: lumaEventId,
         accessType: accessType,
         speakerType: speakerType,
         subject: subject,
@@ -802,55 +795,6 @@ class CreateOutpostController extends GetxController {
         buyTicketToGetPermisionFor: buyTicketToGetPermisionFor,
       ),
     );
-  }
-
-  Future<String?> _createLumaEvent({
-    required String outpostId,
-  }) async {
-    try {
-      if (_shouldCreateLumaEvent) {
-        final isoDate = DateTime.fromMillisecondsSinceEpoch(scheduledFor.value)
-            .toIso8601String();
-        final oneHourAfter = DateTime.fromMillisecondsSinceEpoch(
-                scheduledFor.value + 60 * 60 * 1000)
-            .toIso8601String();
-        final lumaEvent = Luma_CreateEvent(
-          name: outpostName.value,
-          start_at: isoDate,
-          end_at: oneHourAfter,
-          meeting_url: generateOutpostShareUrl(outpostId: outpostId),
-        );
-        final createdEvent =
-            await HttpApis.lumaApi.createEvent(event: lumaEvent);
-        if (createdEvent != null) {
-          final eventId = createdEvent.event.api_id;
-          final Map<String, Future<bool?>> addHostsCallMap = {};
-          for (var host in lumaHosts.value) {
-            addHostsCallMap[host.email] = HttpApis.lumaApi.addHost(
-              host: AddHostModel(
-                event_api_id: eventId,
-                email: host.email,
-                name: host.name,
-              ),
-            );
-          }
-          // since we are adding hosts and guests in parallel, we need to wait for all of them to finish,
-          // ignoring the failed ones, since we always can add them later
-          await allSettled(addHostsCallMap);
-          final GuestsAdded = await HttpApis.lumaApi.addGuests(
-            eventId: eventId,
-            guests: lumaGuests.value,
-          );
-          if (GuestsAdded == true) {
-            Toast.success(message: 'Luma Event Created');
-            return eventId;
-          }
-        }
-      }
-    } catch (e) {
-      l.e(e);
-    }
-    return null;
   }
 }
 

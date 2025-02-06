@@ -6,6 +6,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/styles.dart';
 
@@ -162,7 +163,7 @@ class SearchView extends GetView<SearchPageController> {
                     Obx(() {
                       final tagsMap = controller.searchedTags.value;
                       final loadingName = controller.loadingTag_name.value;
-                      List<Tag> tagsList = [];
+                      List<TagModel> tagsList = [];
                       tagsList = tagsMap.values.toList();
 
                       if (tagsList.isEmpty) {
@@ -173,7 +174,7 @@ class SearchView extends GetView<SearchPageController> {
                         itemBuilder: (context, index) {
                           final tag = tagsList[index];
                           return GestureDetector(
-                            key: Key(tag.tagName),
+                            key: Key(tag.name),
                             onTap: () {
                               controller.tagClicked(tag);
                             },
@@ -188,10 +189,10 @@ class SearchView extends GetView<SearchPageController> {
                               ),
                               child: Row(
                                 children: [
-                                  Text(tag.tagName),
+                                  Text(tag.name),
                                   space10,
-                                  Text('(${tag.groupIds!.length.toString()})'),
-                                  if (loadingName == tag.tagName)
+                                  Text('(${tag.outpostIds.length.toString()})'),
+                                  if (loadingName == tag.name)
                                     Container(
                                       margin: const EdgeInsets.only(left: 10),
                                       width: 20,

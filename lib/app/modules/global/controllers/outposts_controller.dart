@@ -15,7 +15,9 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
+import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -27,6 +29,9 @@ import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/luma/models/addGuest.dart';
+import 'package:podium/providers/api/luma/models/addHost.dart';
+import 'package:podium/providers/api/luma/models/createEvent.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -267,7 +272,6 @@ class OutpostsController extends GetxController with FirebaseTags {
             myOutposts.value.remove(updatedOutpost.uuid);
             myOutposts.refresh();
           }
-
           Toast.success(
             title: "Success",
             message: "You have left the outpost",
@@ -283,10 +287,9 @@ class OutpostsController extends GetxController with FirebaseTags {
     final canContinue = await _showModalToToggleArchiveGroup(outpost: outpost);
     if (canContinue == null || canContinue == false) return;
     final archive = !outpost.is_archived;
-
     final success =
         await HttpApis.podium.toggleOutpostArchive(outpost.uuid, archive);
-    if (success == null || success == false) {
+    if (success != true) {
       Toast.error(
         title: "Error",
         message: "Failed to toggle archive",
@@ -298,24 +301,24 @@ class OutpostsController extends GetxController with FirebaseTags {
       message: "Outpost ${archive ? "archived" : "is available again"}",
     );
 
-    outposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
-    outposts.refresh();
     // set is archived for outpost in allOutpostsPagingController
     final outpostIndex = allOutpostsPagingController.value.itemList
         ?.indexWhere((element) => element.uuid == outpost.uuid);
     if (outpostIndex != null) {
       allOutpostsPagingController.value.itemList?[outpostIndex] =
           outpost.copyWith.is_archived(archive);
+      outposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
+      outposts.refresh();
     }
-    allOutpostsPagingController.refresh();
     // set is archived for outpost in myOutpostsPagingController
     final myOutpostIndex = myOutpostsPagingController.value.itemList
         ?.indexWhere((element) => element.uuid == outpost.uuid);
     if (myOutpostIndex != null) {
       myOutpostsPagingController.value.itemList?[myOutpostIndex] =
           outpost.copyWith.is_archived(archive);
+      myOutposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
+      myOutposts.refresh();
     }
-    myOutpostsPagingController.refresh();
     analytics.logEvent(
       name: "group_archive_toggled",
       parameters: {
@@ -523,9 +526,58 @@ class OutpostsController extends GetxController with FirebaseTags {
     });
   }
 
+  Future<String?> _createLumaEvent({
+    required String outpostId,
+    required int scheduledFor,
+    required String outpostName,
+    required List<AddHostModel> lumaHosts,
+    required List<AddGuestModel> lumaGuests,
+  }) async {
+    try {
+      final isoDate =
+          DateTime.fromMillisecondsSinceEpoch(scheduledFor).toIso8601String();
+      final oneHourAfter =
+          DateTime.fromMillisecondsSinceEpoch(scheduledFor + 60 * 60 * 1000)
+              .toIso8601String();
+      final lumaEvent = Luma_CreateEvent(
+        name: outpostName,
+        start_at: isoDate,
+        end_at: oneHourAfter,
+        meeting_url: generateOutpostShareUrl(outpostId: outpostId),
+      );
+      final createdEvent = await HttpApis.lumaApi.createEvent(event: lumaEvent);
+      if (createdEvent != null) {
+        final eventId = createdEvent.event.api_id;
+        final Map<String, Future<bool?>> addHostsCallMap = {};
+        for (var host in lumaHosts) {
+          addHostsCallMap[host.email] = HttpApis.lumaApi.addHost(
+            host: AddHostModel(
+              event_api_id: eventId,
+              email: host.email,
+              name: host.name,
+            ),
+          );
+        }
+        // since we are adding hosts and guests in parallel, we need to wait for all of them to finish,
+        // ignoring the failed ones, since we always can add them later
+        await allSettled(addHostsCallMap);
+        final GuestsAdded = await HttpApis.lumaApi.addGuests(
+          eventId: eventId,
+          guests: lumaGuests,
+        );
+        if (GuestsAdded == true) {
+          Toast.success(message: 'Luma Event Created');
+          return eventId;
+        }
+      }
+    } catch (e) {
+      l.e(e);
+    }
+    return null;
+  }
+
   Future<OutpostModel?> createOutpost({
     required String name,
-    required String id,
     required String accessType,
     required String speakerType,
     required String subject,
@@ -537,8 +589,10 @@ class OutpostsController extends GetxController with FirebaseTags {
     required List<String> requiredAddressesToSpeak,
     required List<String> tags,
     required int scheduledFor,
-    String? lumaEventId,
     String? imageUrl,
+    bool shouldCreateLumaEvent = false,
+    List<AddHostModel> lumaHosts = const [],
+    List<AddGuestModel> lumaGuests = const [],
   }) async {
     final accessAddresses = [
       ...requiredAddressesToEnter.map((e) => e).toList(),
@@ -554,7 +608,6 @@ class OutpostsController extends GetxController with FirebaseTags {
       has_adult_content: adultContent,
       image: imageUrl ?? '',
       is_recordable: recordable,
-      luma_event_id: lumaEventId,
       name: name,
       scheduled_for: scheduledFor,
       speak_type: speakerType,
@@ -564,12 +617,54 @@ class OutpostsController extends GetxController with FirebaseTags {
       tickets_to_speak: speakAddresses,
     );
     try {
-      final response = await HttpApis.podium.createOutpost(
+      OutpostModel? response;
+      response = await HttpApis.podium.createOutpost(
         createOutpostRequest,
       );
 
+      if (response != null) {
+        if (shouldCreateLumaEvent) {
+          final lumaEventId = await _createLumaEvent(
+            outpostId: response.uuid,
+            scheduledFor: scheduledFor,
+            outpostName: name,
+            lumaHosts: lumaHosts,
+            lumaGuests: lumaGuests,
+          );
+          if (lumaEventId == null) {
+            Toast.error(message: 'Failed to create Luma Event');
+            return null;
+          }
+          final patchJson = {
+            'luma_event_id': lumaEventId,
+          };
+          final updatedOutpost = await HttpApis.podium.updateOutpost(
+            response.uuid,
+            patchJson,
+          );
+          if (updatedOutpost != null) {
+            response = updatedOutpost;
+          }
+        }
+        // add outpost to the top of lists of my outposts and all outposts
+        allOutpostsPagingController.value.itemList?.insert(0, response);
+        myOutpostsPagingController.value.itemList?.insert(0, response);
+        myOutposts.value[response.uuid] = response;
+        myOutposts.refresh();
+        outposts.value[response.uuid] = response;
+        outposts.refresh();
+        joinOutpostAndOpenOutpostDetailPage(
+          outpostId: response.uuid,
+          openTheRoomAfterJoining: scheduledFor == 0 ||
+              scheduledFor < DateTime.now().millisecondsSinceEpoch,
+        );
+      }
       return response;
     } catch (e) {
+      Toast.error(
+        title: "Error",
+        message: "Failed to create the Outpost",
+      );
       return null;
     }
     // final firebaseGroupsReference =
@@ -645,11 +740,7 @@ class OutpostsController extends GetxController with FirebaseTags {
     //   groupsController.groups.value.addAll(
     //     {id: group},
     //   );
-    //   joinGroupAndOpenGroupDetailPage(
-    //     groupId: id,
-    //     openTheRoomAfterJoining: group.scheduledFor == 0 ||
-    //         group.scheduledFor < DateTime.now().millisecondsSinceEpoch,
-    //   );
+
     //   await Future.delayed(const Duration(seconds: 1));
     //   groupsController.groups.refresh();
     // } catch (e) {

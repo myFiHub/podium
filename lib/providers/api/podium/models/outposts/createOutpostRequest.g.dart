@@ -11,9 +11,8 @@ CreateOutpostRequest _$CreateOutpostRequestFromJson(
     CreateOutpostRequest(
       enter_type: json['enter_type'] as String,
       has_adult_content: json['has_adult_content'] as bool,
-      image: json['image'] as String,
+      image: json['image'] as String?,
       is_recordable: json['is_recordable'] as bool,
-      luma_event_id: json['luma_event_id'] as String?,
       name: json['name'] as String,
       scheduled_for: (json['scheduled_for'] as num).toInt(),
       speak_type: json['speak_type'] as String,
@@ -34,7 +33,6 @@ Map<String, dynamic> _$CreateOutpostRequestToJson(
       'has_adult_content': instance.has_adult_content,
       'image': instance.image,
       'is_recordable': instance.is_recordable,
-      'luma_event_id': instance.luma_event_id,
       'name': instance.name,
       'scheduled_for': instance.scheduled_for,
       'speak_type': instance.speak_type,

@@ -7,9 +7,9 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -22,7 +22,7 @@ class SearchPageController extends GetxController with FirebaseTags {
   final searchValue = ''.obs;
   final searchedOutposts = Rx<Map<String, OutpostModel>>({});
   final searchedUsers = Rx<Map<String, UserModel>>({});
-  final searchedTags = Rx<Map<String, Tag>>({});
+  final searchedTags = Rx<Map<String, TagModel>>({});
   final loadingTag_name = ''.obs;
   final selectedSearchTab = 0.obs;
   final isSearching = false.obs;
@@ -54,13 +54,13 @@ class SearchPageController extends GetxController with FirebaseTags {
           return;
         }
 
-        final [users, tags] = await Future.wait([
-          // searchForGroupByName(value),
-          searchForUserByName(value),
-          searchTags(value)
+        final [outposts, users, tags] = await Future.wait([
+          HttpApis.podium.searchOutpostByName(name: value),
+          HttpApis.podium.searchUserByName(name: value),
+          HttpApis.podium.searchTag(tagName: value),
         ]);
         searchedUsers.value = users as Map<String, UserModel>;
-        searchedTags.value = tags as Map<String, Tag>;
+        searchedTags.value = tags as Map<String, TagModel>;
         isSearching.value = false;
       });
     });
@@ -97,16 +97,14 @@ class SearchPageController extends GetxController with FirebaseTags {
     searchedOutposts.value = foundOutposts;
   }
 
-  tagClicked(Tag tag) async {
-    final groupIds = tag.groupIds;
-    loadingTag_name.value = tag.tagName;
-    if (groupIds == null) {
-      return;
-    }
+  tagClicked(TagModel tag) async {
+    final outpostIds = tag.outpostIds;
+    loadingTag_name.value = tag.name;
+
     final foundGroups =
-        await Future.wait(groupIds.map((e) => getGroupInfoById(e)));
+        await Future.wait(outpostIds.map((e) => getGroupInfoById(e)));
     if (foundGroups.isEmpty) {
-      l.e('No groups found for tag: ${tag.tagName}');
+      l.e('No groups found for tag: ${tag.name}');
       return;
     } else {
       final parsedOutposts = foundGroups
@@ -127,7 +125,7 @@ class SearchPageController extends GetxController with FirebaseTags {
                       Container(
                         width: Get.width - 100,
                         child: Text(
-                          '#${tag.tagName}',
+                          '#${tag.name}',
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 20,

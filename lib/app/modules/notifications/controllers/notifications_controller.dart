@@ -81,7 +81,7 @@ class NotificationsController extends GetxController {
     final groupId = notif.actionId;
     if (groupId == null) return;
     final OutpostsController groupsController = Get.find<OutpostsController>();
-    await groupsController.joinGroupAndOpenGroupDetailPage(
+    await groupsController.joinOutpostAndOpenOutpostDetailPage(
       outpostId: groupId,
     );
     try {

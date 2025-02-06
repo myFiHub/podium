@@ -305,7 +305,7 @@ bool canInvite({
 }) {
   final iAmCreator = currentUserId == outpost.creator_user_uuid;
   final isGroupPublic = outpost.enter_type == FreeOutpostAccessTypes.public;
-  final amIAMember = (outpost.iAmMember);
+  final amIAMember = (outpost.i_am_member);
   if (iAmCreator || isGroupPublic || amIAMember) {
     return true;
   }

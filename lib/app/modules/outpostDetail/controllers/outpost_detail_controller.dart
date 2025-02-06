@@ -285,14 +285,14 @@ class OutpostDetailController extends GetxController {
     final globalController = Get.find<GlobalController>();
     final groupsController = Get.find<OutpostsController>();
     if (globalController.loggedIn.value) {
-      groupsController.joinGroupAndOpenGroupDetailPage(
+      groupsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: id,
       );
     } else {
       Get.offAllNamed(Routes.LOGIN);
       final loginController = Get.put(LoginController());
       loginController.afterLogin = () {
-        groupsController.joinGroupAndOpenGroupDetailPage(
+        groupsController.joinOutpostAndOpenOutpostDetailPage(
           outpostId: id,
         );
       };

@@ -51,21 +51,19 @@ class ColorName {
   ///   700: #FF43DDEB
   ///   800: #FF3AD9E8
   ///   900: #FF29D1E4
-  static const MaterialColor primaryBlue = MaterialColor(
-    0xFF54E4EF,
-    <int, Color>{
-      50: Color(0xFFEAFCFD),
-      100: Color(0xFFCCF7FA),
-      200: Color(0xFFAAF2F7),
-      300: Color(0xFF87ECF4),
-      400: Color(0xFF6EE8F1),
-      500: Color(0xFF54E4EF),
-      600: Color(0xFF4DE1ED),
-      700: Color(0xFF43DDEB),
-      800: Color(0xFF3AD9E8),
-      900: Color(0xFF29D1E4),
-    },
-  );
+  static const MaterialColor primaryBlue =
+      MaterialColor(0xFF54E4EF, <int, Color>{
+        50: Color(0xFFEAFCFD),
+        100: Color(0xFFCCF7FA),
+        200: Color(0xFFAAF2F7),
+        300: Color(0xFF87ECF4),
+        400: Color(0xFF6EE8F1),
+        500: Color(0xFF54E4EF),
+        600: Color(0xFF4DE1ED),
+        700: Color(0xFF43DDEB),
+        800: Color(0xFF3AD9E8),
+        900: Color(0xFF29D1E4),
+      });
 
   /// Color: #FFFFFF
   static const Color primarytext = Color(0xFFFFFFFF);
@@ -81,36 +79,32 @@ class ColorName {
   ///   700: #FF3666FC
   ///   800: #FF2E5CFC
   ///   900: #FF1F49FC
-  static const MaterialColor secondaryBlue = MaterialColor(
-    0xFF4579FD,
-    <int, Color>{
-      50: Color(0xFFE9EFFF),
-      100: Color(0xFFC7D7FE),
-      200: Color(0xFFA2BCFE),
-      300: Color(0xFF7DA1FE),
-      400: Color(0xFF618DFD),
-      500: Color(0xFF4579FD),
-      600: Color(0xFF3E71FD),
-      700: Color(0xFF3666FC),
-      800: Color(0xFF2E5CFC),
-      900: Color(0xFF1F49FC),
-    },
-  );
+  static const MaterialColor secondaryBlue =
+      MaterialColor(0xFF4579FD, <int, Color>{
+        50: Color(0xFFE9EFFF),
+        100: Color(0xFFC7D7FE),
+        200: Color(0xFFA2BCFE),
+        300: Color(0xFF7DA1FE),
+        400: Color(0xFF618DFD),
+        500: Color(0xFF4579FD),
+        600: Color(0xFF3E71FD),
+        700: Color(0xFF3666FC),
+        800: Color(0xFF2E5CFC),
+        900: Color(0xFF1F49FC),
+      });
 
   /// MaterialAccentColor:
   ///   100: #FFF6F9FF
   ///   200: #FFB9CDFF
   ///   400: #FF9FBBFF
   ///   700: #FF90B1FF
-  static const MaterialAccentColor secondaryBlueAccent = MaterialAccentColor(
-    0xFFB9CDFF,
-    <int, Color>{
-      100: Color(0xFFF6F9FF),
-      200: Color(0xFFB9CDFF),
-      400: Color(0xFF9FBBFF),
-      700: Color(0xFF90B1FF),
-    },
-  );
+  static const MaterialAccentColor secondaryBlueAccent =
+      MaterialAccentColor(0xFFB9CDFF, <int, Color>{
+        100: Color(0xFFF6F9FF),
+        200: Color(0xFFB9CDFF),
+        400: Color(0xFF9FBBFF),
+        700: Color(0xFF90B1FF),
+      });
 
   /// Color: #7781A6
   static const Color secondaryText = Color(0xFF7781A6);

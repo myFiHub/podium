@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -20,36 +21,52 @@ import 'package:share_plus/share_plus.dart';
 class OutpostsList extends StatelessWidget {
   final List<OutpostModel> outpostsList;
   final ScrollController? scrollController;
+  final PagingController<int, OutpostModel>? pagingController;
   const OutpostsList({
     super.key,
     required this.outpostsList,
     this.scrollController,
+    this.pagingController,
   });
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<OutpostsController>();
     return Scrollbar(
-      controller: scrollController,
-      child: ListView.builder(
         controller: scrollController,
-        itemCount: outpostsList.length,
-        itemBuilder: (context, index) {
-          final outpost = outpostsList[index];
-          final amICreator = outpost.creator_user_uuid == myId;
-          return _SingleGroup(
-            key: Key(outpost.uuid),
-            controller: controller,
-            amICreator: amICreator,
-            outpost: outpost,
-          );
-        },
-      ),
-    );
+        child: pagingController == null
+            ? ListView.builder(
+                controller: scrollController,
+                itemCount: outpostsList.length,
+                itemBuilder: (context, index) {
+                  final outpost = outpostsList[index];
+                  final amICreator = outpost.creator_user_uuid == myId;
+                  return _SingleOutpost(
+                    key: Key(outpost.uuid),
+                    controller: controller,
+                    amICreator: amICreator,
+                    outpost: outpost,
+                  );
+                },
+              )
+            : PagedListView<int, OutpostModel>(
+                pagingController: pagingController!,
+                scrollController: scrollController,
+                builderDelegate: PagedChildBuilderDelegate<OutpostModel>(
+                    itemBuilder: (context, outpost, index) {
+                  final amICreator = outpost.creator_user_uuid == myId;
+                  return _SingleOutpost(
+                    key: Key(outpost.uuid),
+                    controller: controller,
+                    amICreator: amICreator,
+                    outpost: outpost,
+                  );
+                }),
+              ));
   }
 }
 
-class _SingleGroup extends StatelessWidget {
-  const _SingleGroup({
+class _SingleOutpost extends StatelessWidget {
+  const _SingleOutpost({
     super.key,
     required this.controller,
     required this.amICreator,
@@ -65,7 +82,7 @@ class _SingleGroup extends StatelessWidget {
     final isScheduled = outpost.scheduled_for != 0;
     return GestureDetector(
       onTap: () async {
-        controller.joinGroupAndOpenGroupDetailPage(
+        controller.joinOutpostAndOpenOutpostDetailPage(
           outpostId: outpost.uuid,
         );
       },
@@ -297,8 +314,7 @@ class _SingleGroup extends StatelessWidget {
                         if (canLeaveOutpost(outpost: outpost))
                           IconButton(
                             onPressed: () {
-                              controller.removeMyUserFromSessionAndGroup(
-                                  outpost: outpost);
+                              controller.leaveOutpost(outpost: outpost);
                             },
                             icon: const Icon(
                               Icons.exit_to_app,
@@ -600,7 +616,7 @@ canShareOutpostUrl({required OutpostModel outpost}) {
     return true;
   }
   if (outpost.enter_type == FreeOutpostAccessTypes.onlyLink) {
-    if (outpost.members?.map((e) => e.uuid).contains(myId) ?? false) {
+    if (outpost.i_am_member) {
       return true;
     }
   }
@@ -613,7 +629,7 @@ canLeaveOutpost({required OutpostModel outpost}) {
     return false;
   }
   final iAmCreator = outpost.creator_user_uuid == myId;
-  final amIMember = outpost.members?.map((e) => e.uuid).contains(myId) ?? false;
+  final amIMember = outpost.i_am_member;
   if (iAmCreator) {
     return false;
   }

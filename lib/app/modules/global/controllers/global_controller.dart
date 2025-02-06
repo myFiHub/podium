@@ -59,7 +59,7 @@ final _checkOptions = [
 ];
 
 class GlobalUpdateIds {
-  static const showArchivedGroups = 'showArchivedGroups';
+  static const showArchivedOutposts = 'showArchivedOutposts';
   static const ticker = 'ticker';
 }
 
@@ -224,7 +224,7 @@ class GlobalController extends GetxController {
   Future<void> toggleShowArchivedGroups() async {
     showArchivedGroups.value = !showArchivedGroups.value;
     storage.write(StorageKeys.showArchivedGroups, showArchivedGroups.value);
-    update([GlobalUpdateIds.showArchivedGroups]);
+    update([GlobalUpdateIds.showArchivedOutposts]);
   }
 
   Future<bool> switchExternalWalletChain(String chainId) async {
@@ -373,7 +373,7 @@ class GlobalController extends GetxController {
       final groupId = splited[1];
       final groupsController = Get.put(OutpostsController());
       Get.put(OutpostDetailController());
-      groupsController.joinGroupAndOpenGroupDetailPage(
+      groupsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: groupId,
         joiningByLink: true,
       );

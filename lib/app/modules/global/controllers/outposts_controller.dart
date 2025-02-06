@@ -6,6 +6,7 @@ import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:podium/app/modules/allOutposts/controllers/all_outposts_controller.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
 import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
@@ -89,6 +90,8 @@ sendGroupPeresenceEvent(
   }
 }
 
+const numberOfOutpostsPerPage = 10;
+
 class OutpostsController extends GetxController with FirebaseTags {
   // final _presentUsersRefreshThrottle =
   //     Throttling(duration: const Duration(seconds: 2));
@@ -103,6 +106,12 @@ class OutpostsController extends GetxController with FirebaseTags {
   final joiningGroupId = ''.obs;
   final groupChannels = Rx<Map<String, ably.RealtimeChannel>>({});
   final outposts = Rx<Map<String, OutpostModel>>({});
+  final myOutposts = Rx<Map<String, OutpostModel>>({});
+  final isGettingMyOutposts = false.obs;
+  final allOutpostsPagingController =
+      PagingController<int, OutpostModel>(firstPageKey: 0);
+  final myOutpostsPagingController =
+      PagingController<int, OutpostModel>(firstPageKey: 0);
   final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final tmpPresentUsersInGroupsMap = <String, List<String>>{};
@@ -155,6 +164,8 @@ class OutpostsController extends GetxController with FirebaseTags {
       if (loggedIn) {
         realtimeInstance.options.clientId = myId;
       }
+      _fetchAllOutpostsPage(0);
+      _fetchMyOutpostsPage(0);
     });
   }
 
@@ -171,27 +182,97 @@ class OutpostsController extends GetxController with FirebaseTags {
     _timerForTakingUsers.cancel();
   }
 
+  _fetchAllOutpostsPage(int pageKey) async {
+    try {
+      final newItems = await HttpApis.podium.getOutposts(
+        page: pageKey,
+        page_size: numberOfOutpostsPerPage,
+      );
+      final isLastPage = newItems.length < numberOfOutpostsPerPage;
+      if (isLastPage) {
+        allOutpostsPagingController.appendLastPage(newItems);
+      } else {
+        final nextPageKey = pageKey + 1;
+        allOutpostsPagingController.appendPage(newItems, nextPageKey);
+      }
+      final fetchedOutposts = allOutpostsPagingController.value.itemList ?? [];
+      final outpostsMap = Map<String, OutpostModel>.fromEntries(
+        fetchedOutposts.map((e) => MapEntry(e.uuid, e)),
+      );
+      outposts.value = outpostsMap;
+    } catch (error) {
+      allOutpostsPagingController.error = error;
+    }
+  }
+
+  _fetchMyOutpostsPage(int pageKey) async {
+    try {
+      if (pageKey == 0) {
+        isGettingMyOutposts.value = true;
+      }
+      final newItems = await HttpApis.podium.getMyOutposts(
+        page: pageKey,
+        page_size: numberOfOutpostsPerPage,
+      );
+      final isLastPage = newItems.length < numberOfOutpostsPerPage;
+      if (isLastPage) {
+        myOutpostsPagingController.appendLastPage(newItems);
+      } else {
+        final nextPageKey = pageKey + newItems.length;
+        myOutpostsPagingController.appendPage(newItems, nextPageKey);
+      }
+      final fetchedOutposts = myOutpostsPagingController.value.itemList ?? [];
+      final outpostsMap = Map<String, OutpostModel>.fromEntries(
+        fetchedOutposts.map((e) => MapEntry(e.uuid, e)),
+      );
+      myOutposts.value = outpostsMap;
+      if (pageKey == 0) {
+        isGettingMyOutposts.value = false;
+      }
+    } catch (error) {
+      myOutpostsPagingController.error = error;
+    }
+  }
+
   getPresentUsersInGroup(String groupId) {
     return tmpPresentUsersInGroupsMap[groupId] ?? [];
   }
 
-  Future<void> removeMyUserFromSessionAndGroup(
-      {required OutpostModel outpost}) async {
+  Future<void> leaveOutpost({required OutpostModel outpost}) async {
     // ask if user want to leave the group
     try {
       final canContinue = await _showModalToLeaveGroup(outpost: outpost);
       if (canContinue == null || canContinue == false) return;
-      await removeMyUserFromGroupAndSession(groupId: outpost.uuid);
-      // remove group from groups list
-      outposts.value.remove(outpost.uuid);
-      outposts.refresh();
-      if (Get.isRegistered<AllOutpostsController>()) {
-        final AllOutpostsController allGroupsController = Get.find();
-        allGroupsController.searchedOutposts.refresh();
-      }
-      if (Get.isRegistered<SearchPageController>()) {
-        final SearchPageController searchPageController = Get.find();
-        searchPageController.searchedOutposts.refresh();
+      final success = await HttpApis.podium.leaveOutpost(outpost.uuid);
+      if (success) {
+        //  update existing outpost in all outposts page controller and set i_am_member to false
+        final outpostIndex = allOutpostsPagingController.value.itemList
+            ?.indexWhere((element) => element.uuid == outpost.uuid);
+        if (outpostIndex != null) {
+          final outpost =
+              allOutpostsPagingController.value.itemList?[outpostIndex];
+          final updatedOutpost = outpost?.copyWith.i_am_member(false);
+          if (updatedOutpost == null) {
+            return;
+          }
+          allOutpostsPagingController.value.itemList?[outpostIndex] =
+              updatedOutpost;
+          outposts.refresh();
+
+          // update existing outpost in my outposts page controller and set i_am_member to false
+          final myOutpostIndex = myOutpostsPagingController.value.itemList
+              ?.indexWhere((element) => element.uuid == updatedOutpost.uuid);
+          if (myOutpostIndex != null) {
+            myOutpostsPagingController.value.itemList?.removeAt(myOutpostIndex);
+            myOutposts.value.remove(updatedOutpost.uuid);
+            myOutposts.refresh();
+          }
+
+          Toast.success(
+            title: "Success",
+            message: "You have left the outpost",
+          );
+        }
       }
     } catch (e) {
       l.e(e);
@@ -203,26 +284,38 @@ class OutpostsController extends GetxController with FirebaseTags {
     if (canContinue == null || canContinue == false) return;
     final archive = !outpost.is_archived;
 
-    final response =
+    final success =
         await HttpApis.podium.toggleOutpostArchive(outpost.uuid, archive);
-
+    if (success == null || success == false) {
+      Toast.error(
+        title: "Error",
+        message: "Failed to toggle archive",
+      );
+      return;
+    }
     Toast.success(
       title: "Success",
       message: "Outpost ${archive ? "archived" : "is available again"}",
     );
-    final remoteOutpost = await HttpApis.podium.getOutpost(outpost.uuid);
-    if (remoteOutpost != null) {
-      outposts.value[outpost.uuid] = remoteOutpost;
-      outposts.refresh();
-      if (Get.isRegistered<AllOutpostsController>()) {
-        final AllOutpostsController allGroupsController = Get.find();
-        // allGroupsController.refreshSearchedGroup(remoteOutpost); //TODO: implement this
-      }
-      if (Get.isRegistered<SearchPageController>()) {
-        final SearchPageController searchPageController = Get.find();
-        // searchPageController.refreshSearchedGroup(remoteOutpost); //TODO: implement this
-      }
+
+    outposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
+    outposts.refresh();
+    // set is archived for outpost in allOutpostsPagingController
+    final outpostIndex = allOutpostsPagingController.value.itemList
+        ?.indexWhere((element) => element.uuid == outpost.uuid);
+    if (outpostIndex != null) {
+      allOutpostsPagingController.value.itemList?[outpostIndex] =
+          outpost.copyWith.is_archived(archive);
     }
+    allOutpostsPagingController.refresh();
+    // set is archived for outpost in myOutpostsPagingController
+    final myOutpostIndex = myOutpostsPagingController.value.itemList
+        ?.indexWhere((element) => element.uuid == outpost.uuid);
+    if (myOutpostIndex != null) {
+      myOutpostsPagingController.value.itemList?[myOutpostIndex] =
+          outpost.copyWith.is_archived(archive);
+    }
+    myOutpostsPagingController.refresh();
     analytics.logEvent(
       name: "group_archive_toggled",
       parameters: {
@@ -250,6 +343,15 @@ class OutpostsController extends GetxController with FirebaseTags {
         gettingAllOutposts.value = false;
       }
     });
+  }
+
+  getMyOutposts() async {
+    final outposts = await HttpApis.podium.getMyOutposts();
+    final Map<String, OutpostModel> map = {};
+    for (var outpost in outposts) {
+      map[outpost.uuid] = outpost;
+    }
+    myOutposts.value = map;
   }
 
   _parseAndSetGroups(Map<String, OutpostModel> data) async {
@@ -412,42 +514,13 @@ class OutpostsController extends GetxController with FirebaseTags {
   }
 
   getRealtimeOutposts(bool loggedIn) async {
-    final liveThrottle = Throttling(duration: const Duration(seconds: 5));
-    if (loggedIn) {
-      gettingAllOutposts.value = true;
-      try {
-        final response = await HttpApis.podium.getOutposts(
-          page: 0,
-          page_size: 200,
-        );
-        final Map<String, OutpostModel> map = {};
-        for (var outpost in response) {
-          map[outpost.uuid] = outpost;
-        }
-        outposts.value = map;
-      } catch (e) {
-      } finally {
-        gettingAllOutposts.value = false;
-      }
-      // final databaseReference =
-      //     FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef);
-      // subscription = databaseReference.onValue.listen((event) async {
-      //   liveThrottle.throttle(() async {
-      //     final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      //     if (data != null) {
-      //       try {
-      //         await _parseAndSetGroups(data);
-      //       } catch (e) {
-      //         l.e(e);
-      //       } finally {
-      //         gettingAllGroups.value = false;
-      //       }
-      //     }
-      //   });
-      // });
-    } else {
-      // subscription?.cancel();
-    }
+    allOutpostsPagingController.addPageRequestListener((pageKey) {
+      _fetchAllOutpostsPage(pageKey);
+    });
+
+    myOutpostsPagingController.addPageRequestListener((pageKey) {
+      _fetchMyOutpostsPage(pageKey);
+    });
   }
 
   Future<OutpostModel?> createOutpost({
@@ -607,7 +680,7 @@ class OutpostsController extends GetxController with FirebaseTags {
     }
   }
 
-  joinGroupAndOpenGroupDetailPage({
+  joinOutpostAndOpenOutpostDetailPage({
     required String outpostId,
     bool? openTheRoomAfterJoining,
     bool? joiningByLink,
@@ -649,7 +722,7 @@ class OutpostsController extends GetxController with FirebaseTags {
         return;
       }
 
-      if (!outpost.iAmMember) {
+      if (!outpost.i_am_member) {
         final added = await HttpApis.podium.addMeAsMember(outpostId: outpostId);
         if (!added) {
           Toast.error(
@@ -658,33 +731,32 @@ class OutpostsController extends GetxController with FirebaseTags {
           );
           return;
         }
-        // TODO: add session
-        // final mySession = await getUserSessionData(
-        //   groupId: outpostId,
-        //   userId: myUser.uuid,
-        // );
-        // if (mySession == null) {
-        // final newFirebaseSessionMember =
-        //     createInitialSessionMember(user: myUser, group: group)!;
-        // try {
-        //   final jsoned = newFirebaseSessionMember.toJson();
-        //   await firebaseSessionsReference
-        //       .child(FirebaseSession.membersKey)
-        //       .child(myUser.uuid)
-        //       .set(jsoned);
-        // } catch (e) {
-        //   // remove user from db
-        //   await firebaseSessionsReference
-        //       .child(FirebaseSession.membersKey)
-        //       .child(myUser.uuid)
-        //       .remove();
-        //   Toast.error(
-        //     title: "Error",
-        //     message: "Failed to join the Outpost, try again or report a bug",
-        //   );
-        //   return;
-        // }
-        // }
+        // update outposts list in allOutpostsPagingController
+        final outpostIndex = allOutpostsPagingController.value.itemList
+            ?.indexWhere((element) => element.uuid == outpost.uuid);
+        if (outpostIndex != null) {
+          final outpost =
+              allOutpostsPagingController.value.itemList?[outpostIndex];
+          final updatedOutpost = outpost?.copyWith.i_am_member(true);
+          if (updatedOutpost == null) {
+            return;
+          }
+          allOutpostsPagingController.value.itemList?[outpostIndex] =
+              updatedOutpost;
+          outposts.value[updatedOutpost.uuid] = updatedOutpost;
+          outposts.refresh();
+
+          // add to top of my outposts if it doesn't exist
+          if (myOutpostsPagingController.value.itemList
+                  ?.any((element) => element.uuid == updatedOutpost.uuid) ==
+              false) {
+            myOutpostsPagingController.value.itemList
+                ?.insert(0, updatedOutpost);
+          }
+
+          myOutposts.value[updatedOutpost.uuid] = updatedOutpost;
+          myOutposts.refresh();
+        }
         _openOutpost(
           outpost: outpost,
           openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
@@ -828,7 +900,7 @@ class OutpostsController extends GetxController with FirebaseTags {
       );
       return GroupAccesses(canEnter: false, canSpeak: false);
     }
-    if (outpost.iAmMember)
+    if (outpost.i_am_member)
       return GroupAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
     if (outpost.enter_type == FreeOutpostAccessTypes.public)
@@ -893,7 +965,7 @@ class OutpostsController extends GetxController with FirebaseTags {
   }) async {
     final isGroupAgeRestricted = outpost.has_adult_content;
     final iAmOwner = outpost.creator_user_uuid == myUser.uuid;
-    final iAmMember = outpost.iAmMember;
+    final iAmMember = outpost.i_am_member;
     final amIOver18 = myUser.is_over_18;
     if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18 == true) {
       return true;

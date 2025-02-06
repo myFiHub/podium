@@ -1,9 +1,9 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
-
+import 'package:copy_with_extension/copy_with_extension.dart';
 part 'outpost.g.dart';
 
 @JsonSerializable()
+@CopyWith()
 class OutpostModel {
   final int alarm_id;
   final String uuid;
@@ -29,6 +29,7 @@ class OutpostModel {
   final List<String> tags;
   final List<_TicketToEnterModel>? tickets_to_enter;
   final List<_TicketToSpeakModel>? tickets_to_speak;
+  bool i_am_member;
 
   OutpostModel({
     required this.alarm_id,
@@ -55,10 +56,8 @@ class OutpostModel {
     this.tickets_to_enter,
     this.tickets_to_speak,
     this.luma_event_id,
+    required this.i_am_member,
   });
-
-  bool get iAmMember =>
-      members?.map((e) => e.uuid).contains(myUser.uuid) ?? false;
 
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>
       _$OutpostModelFromJson(json);

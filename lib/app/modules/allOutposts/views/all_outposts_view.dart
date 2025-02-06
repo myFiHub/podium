@@ -75,7 +75,7 @@ class AllGroupsView extends GetView<AllOutpostsController> {
                 // Lista de grupos
                 Expanded(
                   child: Container(
-                    child: AllGroupsList(
+                    child: AllOutpostsList(
                       scrollController: _scrollController,
                     ),
                   ),
@@ -130,9 +130,9 @@ class AllGroupsView extends GetView<AllOutpostsController> {
   }
 }
 
-class AllGroupsList extends GetWidget<AllOutpostsController> {
+class AllOutpostsList extends GetWidget<AllOutpostsController> {
   final ScrollController scrollController;
-  const AllGroupsList({
+  const AllOutpostsList({
     super.key,
     required this.scrollController,
   });
@@ -140,7 +140,7 @@ class AllGroupsList extends GetWidget<AllOutpostsController> {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<GlobalController>(
-        id: GlobalUpdateIds.showArchivedGroups,
+        id: GlobalUpdateIds.showArchivedOutposts,
         builder: (globalController) {
           return Obx(() {
             final outposts = controller.searchedOutposts.value;
@@ -160,6 +160,7 @@ class AllGroupsList extends GetWidget<AllOutpostsController> {
             return OutpostsList(
               scrollController: scrollController,
               outpostsList: outpostsList,
+              pagingController: controller.allOutpostsPagingController,
             );
           });
         });

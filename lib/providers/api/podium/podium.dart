@@ -177,11 +177,31 @@ class PodiumApi {
     }
   }
 
-  Future<OutpostModel?> toggleOutpostArchive(String id, bool archive) async {
+  Future<List<OutpostModel>> getMyOutposts({
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/outposts/my-outposts',
+          queryParameters: {
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => OutpostModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
+    }
+  }
+
+  Future<bool?> toggleOutpostArchive(String id, bool archive) async {
     final response = await dio.post('$_baseUrl/outposts/set-archive',
         data: {'uuid': id, 'archive': archive},
         options: Options(headers: _headers));
-    return OutpostModel.fromJson(response.data['data']);
+    return response.statusCode == 200;
   }
 
   Future<bool> addMeAsMember({
@@ -200,6 +220,17 @@ class PodiumApi {
       } else {
         return false;
       }
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> leaveOutpost(String id) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/leave',
+          data: {'uuid': id}, options: Options(headers: _headers));
+      return response.statusCode == 200;
     } catch (e) {
       l.e(e);
       return false;

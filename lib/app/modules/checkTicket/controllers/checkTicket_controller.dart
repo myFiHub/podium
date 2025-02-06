@@ -866,7 +866,7 @@ speakIsBuyableByTicket(OutpostModel group) {
 canEnterWithoutATicket(OutpostModel group) {
   final globalController = Get.find<GlobalController>();
   final g = group;
-  final amIInvited = g.members?.any((e) => e.uuid == myId) ?? false;
+  final amIInvited = g.i_am_member;
   final link = globalController.deepLinkRoute;
   final cameHereByLink = g.enter_type == FreeOutpostAccessTypes.onlyLink &&
       link.isNotEmpty &&

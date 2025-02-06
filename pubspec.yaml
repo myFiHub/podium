@@ -75,6 +75,8 @@ dependencies:
   lint: ^2.3.0
   eth_sig_util: ^0.0.9
   animated_icon: ^0.0.9
+  infinite_scroll_pagination: ^4.1.0
+  copy_with_extension_gen: ^6.0.1
 # dependency_overrides:
 #   web: ^0.5.0
 # dependency overrides
@@ -97,7 +99,6 @@ flutter_gen:
   # Optional
   integrations:
     flutter_svg: true
-    flare_flutter: true
     rive: true
     lottie: true
 

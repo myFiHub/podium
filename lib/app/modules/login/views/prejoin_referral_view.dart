@@ -338,6 +338,7 @@ class _ProfileCard extends GetView<LoginController> {
               width: double.infinity,
               child: Obx(() {
                 final loadingId = controller.loadingBuyTicketId.value;
+                final balance = controller.internalWalletBalance.value;
                 return Button(
                   loading: loadingId == user.id,
                   type: ButtonType.outline2x,

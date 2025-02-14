@@ -648,7 +648,7 @@ class CreateOutpostController extends GetxController {
               ? HttpApis.arenaApi.getUserFromStarsArenaByHandle(value)
               : Future.value(null)
         ).wait;
-        final podiumUsers = users
+        final podiumUsers = users.values
             .toList()
             .map((e) => SearchedUser(
                   podiumUserInfo: e,
@@ -687,6 +687,7 @@ class CreateOutpostController extends GetxController {
       scheduledFor != 0 &&
       lumaHosts.value.isNotEmpty &&
       lumaGuests.value.isNotEmpty;
+
   create() async {
     if (outpostName.value.isEmpty) {
       Toast.error(message: 'room name cannot be empty');
@@ -716,21 +717,21 @@ class CreateOutpostController extends GetxController {
 
     try {
       final response = await outpostsController.createOutpost(
-        imageUrl: imageUrl,
-        name: outpostName.value,
-        accessType: accessType,
-        speakerType: speakerType,
-        subject: subject,
-        tags: tags.value,
-        adultContent: newOutpostHasAdultContent.value,
-        recordable: newOutpostIsRecorable.value,
-        requiredTicketsToAccess:
-            selectedUsersToBuyTicketFrom_ToAccessRoom.value,
-        requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
-        requiredAddressesToEnter: addressesToAddForEntering.value,
-        requiredAddressesToSpeak: addressesToAddForSpeaking.value,
-        scheduledFor: scheduledFor.value,
-      );
+          imageUrl: imageUrl,
+          name: outpostName.value,
+          accessType: accessType,
+          speakerType: speakerType,
+          subject: subject,
+          tags: tags.value,
+          adultContent: newOutpostHasAdultContent.value,
+          recordable: newOutpostIsRecorable.value,
+          requiredTicketsToAccess:
+              selectedUsersToBuyTicketFrom_ToAccessRoom.value,
+          requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
+          requiredAddressesToEnter: addressesToAddForEntering.value,
+          requiredAddressesToSpeak: addressesToAddForSpeaking.value,
+          scheduledFor: scheduledFor.value,
+          shouldCreateLumaEvent: _shouldCreateLumaEvent);
       if (response == null) {
         Toast.error(message: 'Failed to create outpost');
         return;
@@ -753,11 +754,16 @@ class CreateOutpostController extends GetxController {
           // means no reminder
         } else if (setFor == null) {
           // means tap on back or outside
-          return;
+          // return;
         }
       }
       // preventing from creating the same name if controller is not deleted
       _resetAllFields();
+      outpostsController.joinOutpostAndOpenOutpostDetailPage(
+        outpostId: response.uuid,
+        openTheRoomAfterJoining: scheduledFor == 0 ||
+            scheduledFor < DateTime.now().millisecondsSinceEpoch,
+      );
     } catch (e) {
       l.e(e);
     } finally {

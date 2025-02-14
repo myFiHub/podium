@@ -3,8 +3,6 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -92,7 +90,7 @@ class SearchView extends GetView<SearchPageController> {
             ],
           ),
           Container(
-            height: Get.height - 205,
+            height: Get.height - 245,
             child: DefaultTabController(
               length: 3,
               child: Scaffold(
@@ -191,7 +189,6 @@ class SearchView extends GetView<SearchPageController> {
                                 children: [
                                   Text(tag.name),
                                   space10,
-                                  Text('(${tag.outpostIds.length.toString()})'),
                                   if (loadingName == tag.name)
                                     Container(
                                       margin: const EdgeInsets.only(left: 10),

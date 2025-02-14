@@ -7,12 +7,13 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/models/notification_model.dart';
+import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:uuid/uuid.dart';
 
 class NotificationsController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
-  final notifications = <FirebaseNotificationModel>[].obs;
+  final notifications = <NotificationModel>[].obs;
   final numberOfUnreadNotifications = 0.obs;
   StreamSubscription<DatabaseEvent>? notificationsSubscription = null;
 

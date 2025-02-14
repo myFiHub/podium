@@ -5,6 +5,7 @@ import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.d
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -78,21 +79,31 @@ class PodiumApi {
     }
   }
 
-  Future<List<UserModel>> searchUserByName({
+  Future<Map<String, UserModel>> searchUserByName({
     required String name,
     int? page,
     int? page_size,
   }) async {
-    final response = await dio.get('$_baseUrl/users/search',
-        queryParameters: {
-          'text': name,
-          if (page != null) 'page': page,
-          if (page_size != null) 'page_size': page_size,
-        },
-        options: Options(headers: _headers));
-    return (response.data['data'] as List)
-        .map((e) => UserModel.fromJson(e))
-        .toList();
+    try {
+      final response = await dio.get('$_baseUrl/users/search',
+          queryParameters: {
+            'text': name,
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      final usersList = (response.data['data'] as List)
+          .map((e) => UserModel.fromJson(e))
+          .toList();
+      final Map<String, UserModel> usersMap = {};
+      usersList.forEach((user) {
+        usersMap[user.uuid] = user;
+      });
+      return usersMap;
+    } catch (e) {
+      l.e(e);
+      return {};
+    }
   }
 
   Future<UserModel?> updateMyUserData(
@@ -147,7 +158,7 @@ class PodiumApi {
     }
   }
 
-  Future<List<OutpostModel>> searchOutpostByName({
+  Future<Map<String, OutpostModel>> searchOutpostByName({
     required String name,
     int? page,
     int? page_size,
@@ -155,51 +166,53 @@ class PodiumApi {
     try {
       final response = await dio.get('$_baseUrl/outposts/search',
           queryParameters: {'text': name}, options: Options(headers: _headers));
-      return (response.data['data'] as List)
+      final outposts = (response.data['data'] as List)
           .map((e) => OutpostModel.fromJson(e))
           .toList();
+      final Map<String, OutpostModel> outpostsMap = {};
+      outposts.forEach((outpost) {
+        outpostsMap[outpost.uuid] = outpost;
+      });
+      return outpostsMap;
     } catch (e) {
       l.e(e);
-      return [];
+      return {};
     }
   }
 
-  Future<List<TagModel>> searchTag({
+  Future<Map<String, TagModel>> searchTag({
     required String tagName,
     int? page,
     int? page_size,
   }) async {
-    final response = await dio.get('$_baseUrl/tags/search',
-        queryParameters: {'text': tagName},
-        options: Options(headers: _headers));
-    return (response.data['data'] as List)
-        .map((e) => TagModel.fromJson(e))
-        .toList();
-  }
-
-  Future<List<OutpostModel>> searchOutpostByTags({
-    required List<String> tags,
-    int? page,
-    int? page_size,
-  }) async {
-    final response = await dio.get('$_baseUrl/outposts/search',
-        queryParameters: {'tags': tags}, options: Options(headers: _headers));
-    return (response.data['data'] as List)
-        .map((e) => OutpostModel.fromJson(e))
-        .toList();
-  }
-
-  Future<OutpostModel?> updateOutpost(
-    String id,
-    Map<String, dynamic> patchJson,
-  ) async {
     try {
-      final response = await dio.post('$_baseUrl/outposts/update',
-          data: patchJson, options: Options(headers: _headers));
-      return OutpostModel.fromJson(response.data['data']);
+      final response = await dio.get('$_baseUrl/tags/search',
+          queryParameters: {'text': tagName},
+          options: Options(headers: _headers));
+      final tags = (response.data['data'] as List)
+          .map((e) => TagModel.fromJson(e))
+          .toList();
+      final Map<String, TagModel> tagsMap = {};
+      tags.forEach((tag) {
+        tagsMap[tag.id.toString()] = tag;
+      });
+      return tagsMap;
     } catch (e) {
       l.e(e);
-      return null;
+      return {};
+    }
+  }
+
+  Future<bool> updateOutpost({
+    required UpdateOutpostRequest request,
+  }) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/update',
+          data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
     }
   }
 
@@ -231,6 +244,33 @@ class PodiumApi {
     } catch (e) {
       l.e(e);
       return [];
+    }
+  }
+
+  Future<Map<String, OutpostModel>> getOutpostsByTagIds({
+    required List<int> ids,
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/outposts',
+          queryParameters: {
+            'tag_ids': ids,
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      final outposts = (response.data['data'] as List)
+          .map((e) => OutpostModel.fromJson(e))
+          .toList();
+      final Map<String, OutpostModel> outpostsMap = {};
+      outposts.forEach((outpost) {
+        outpostsMap[outpost.uuid] = outpost;
+      });
+      return outpostsMap;
+    } catch (e) {
+      l.e(e);
+      return {};
     }
   }
 

@@ -694,7 +694,7 @@ class _ButtonState extends State<Button> {
           onHover: _handleHoveredChanged,
           onTap: widget.loading ? () {} : widget.onPressed,
           onLongPress: widget.onLongPress,
-          enableFeedback: widget.enableFeedback,
+          enableFeedback: widget.enableFeedback ?? true,
           splashColor: widget.splashColor,
           highlightColor: widget.highlightColor,
           focusColor: widget.focusColor,

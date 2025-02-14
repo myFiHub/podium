@@ -4,13 +4,11 @@ part 'tag.g.dart';
 
 @JsonSerializable()
 class TagModel {
-  final String uuid;
+  final int id;
   final String name;
-  final List<String> outpostIds;
   TagModel({
-    required this.uuid,
+    required this.id,
     required this.name,
-    required this.outpostIds,
   });
 
   factory TagModel.fromJson(Map<String, dynamic> json) =>

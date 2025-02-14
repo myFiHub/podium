@@ -34,6 +34,7 @@ import 'package:podium/providers/api/luma/models/addHost.dart';
 import 'package:podium/providers/api/luma/models/createEvent.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
@@ -633,17 +634,19 @@ class OutpostsController extends GetxController with FirebaseTags {
           );
           if (lumaEventId == null) {
             Toast.error(message: 'Failed to create Luma Event');
-            return null;
-          }
-          final patchJson = {
-            'luma_event_id': lumaEventId,
-          };
-          final updatedOutpost = await HttpApis.podium.updateOutpost(
-            response.uuid,
-            patchJson,
-          );
-          if (updatedOutpost != null) {
-            response = updatedOutpost;
+            return response;
+          } else {
+            final success = await HttpApis.podium.updateOutpost(
+              request: UpdateOutpostRequest(
+                uuid: response.uuid,
+                luma_event_id: lumaEventId,
+              ),
+            );
+            if (!success) {
+              Toast.error(message: 'Failed to create Luma Event id');
+            } else {
+              response.luma_event_id = lumaEventId;
+            }
           }
         }
         // add outpost to the top of lists of my outposts and all outposts
@@ -653,11 +656,6 @@ class OutpostsController extends GetxController with FirebaseTags {
         myOutposts.refresh();
         outposts.value[response.uuid] = response;
         outposts.refresh();
-        joinOutpostAndOpenOutpostDetailPage(
-          outpostId: response.uuid,
-          openTheRoomAfterJoining: scheduledFor == 0 ||
-              scheduledFor < DateTime.now().millisecondsSinceEpoch,
-        );
       }
       return response;
     } catch (e) {
@@ -771,7 +769,7 @@ class OutpostsController extends GetxController with FirebaseTags {
     }
   }
 
-  joinOutpostAndOpenOutpostDetailPage({
+  Future<void> joinOutpostAndOpenOutpostDetailPage({
     required String outpostId,
     bool? openTheRoomAfterJoining,
     bool? joiningByLink,
@@ -1078,11 +1076,8 @@ class OutpostsController extends GetxController with FirebaseTags {
           ),
           TextButton(
             onPressed: () {
-              final over18Ref = FirebaseDatabase.instance
-                  .ref(FireBaseConstants.usersRef + myUser.uuid)
-                  .child(UserInfoModel.isOver18Key);
-              over18Ref.set(true);
               globalController.setIsMyUserOver18(true);
+              HttpApis.podium.updateMyUserData({'is_over_18': true});
               Navigator.of(Get.overlayContext!).pop(true);
             },
             child: const Text("Yes"),

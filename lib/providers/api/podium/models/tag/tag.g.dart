@@ -7,15 +7,11 @@ part of 'tag.dart';
 // **************************************************************************
 
 TagModel _$TagModelFromJson(Map<String, dynamic> json) => TagModel(
-      uuid: json['uuid'] as String,
+      id: (json['id'] as num).toInt(),
       name: json['name'] as String,
-      outpostIds: (json['outpostIds'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
     );
 
 Map<String, dynamic> _$TagModelToJson(TagModel instance) => <String, dynamic>{
-      'uuid': instance.uuid,
+      'id': instance.id,
       'name': instance.name,
-      'outpostIds': instance.outpostIds,
     };

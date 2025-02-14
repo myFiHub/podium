@@ -9,7 +9,7 @@ class OutpostModel {
   final String uuid;
   final int created_at;
   final bool creator_joined;
-  final String? luma_event_id;
+  String? luma_event_id;
   final String creator_user_name;
   final String creator_user_uuid;
   final String creator_user_image;

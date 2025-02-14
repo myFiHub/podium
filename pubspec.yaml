@@ -6,7 +6,7 @@ environment:
   sdk: ">=3.4.3 <4.0.0"
 
 dependencies:
-  get: ^5.0.0-release-candidate-9.2.1
+  get: ^5.0.0-release-candidate-9.3.0
   flutter:
     sdk: flutter
 

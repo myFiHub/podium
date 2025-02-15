@@ -378,14 +378,14 @@ class UserInvitationBottomSheetContent
                     itemCount: users.length,
                     itemBuilder: (context, index) {
                       final user = users[index];
-                      final userInInvitedList = liveInvitedMembers[user.id];
+                      final userInInvitedList = liveInvitedMembers[user.uuid];
                       if (userInInvitedList != null) {
                         final invitedToSpeal = userInInvitedList.invitedToSpeak;
                         return Column(
                           children: [
                             ListTile(
                               title: Text(
-                                user.fullName,
+                                user.name ?? '',
                                 style: const TextStyle(
                                   color: Colors.grey,
                                   fontSize: 14,
@@ -410,7 +410,7 @@ class UserInvitationBottomSheetContent
                         children: [
                           ListTile(
                             title: Text(
-                              user.fullName,
+                              user.name ?? '',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -424,8 +424,8 @@ class UserInvitationBottomSheetContent
                                     type: ButtonType.outline,
                                     size: ButtonSize.SMALL,
                                     onPressed: () {
-                                      controller.inviteUserToJoinThisGroup(
-                                        userId: user.id,
+                                      controller.inviteUserToJoinThisOutpost(
+                                        userId: user.uuid,
                                         inviteToSpeak: true,
                                       );
                                     },
@@ -437,8 +437,8 @@ class UserInvitationBottomSheetContent
                                   size: ButtonSize.SMALL,
                                   text: 'Invite to listen',
                                   onPressed: () {
-                                    controller.inviteUserToJoinThisGroup(
-                                      userId: user.id,
+                                    controller.inviteUserToJoinThisOutpost(
+                                      userId: user.uuid,
                                       inviteToSpeak: false,
                                     );
                                   },

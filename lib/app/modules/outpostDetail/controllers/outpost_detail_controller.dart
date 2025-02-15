@@ -15,18 +15,17 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/customLibs/omniDatePicker/src/enums/omni_datetime_picker_type.dart';
 import 'package:podium/customLibs/omniDatePicker/src/omni_datetime_picker_dialogs.dart';
 import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/notification_model.dart';
-import 'package:podium/models/user_info_model.dart';
+
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
+import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
-import 'package:uuid/uuid.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
@@ -58,7 +57,7 @@ class OutpostDetailController extends GetxController {
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
   bool gotGroupInfo = false;
 
-  final listOfSearchedUsersToInvite = Rx<List<UserInfoModel>>([]);
+  final listOfSearchedUsersToInvite = Rx<List<UserModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InvitedMember>>({});
 //parameters for the group detail page
   late String stringedOutpostInfo;
@@ -327,7 +326,7 @@ class OutpostDetailController extends GetxController {
         listOfSearchedUsersToInvite.value = [];
         return;
       }
-      final users = await searchForUserByName(value);
+      final users = await HttpApis.podium.searchUserByName(name: value);
       if (value.isEmpty) {
         membersList.value = [];
       } else {
@@ -336,7 +335,7 @@ class OutpostDetailController extends GetxController {
         final filteredList = list
             .where((element) => !(outpost.value!.members ?? [])
                 .map((e) => e.uuid)
-                .contains(element.id))
+                .contains(element.uuid))
             .toList();
         // // remove the users that are already invited
         // final filteredList2 = filteredList
@@ -345,39 +344,27 @@ class OutpostDetailController extends GetxController {
         //     .toList();
         // remove my user from the list
         final filteredList3 =
-            filteredList.where((element) => element.id != myId).toList();
+            filteredList.where((element) => element.uuid != myId).toList();
         listOfSearchedUsersToInvite.value = filteredList3;
       }
     });
   }
 
-  inviteUserToJoinThisGroup(
+  inviteUserToJoinThisOutpost(
       {required String userId, required bool inviteToSpeak}) async {
     if (outpost.value == null) return;
     try {
-      await inviteUserToJoinGroup(
-        groupId: outpost.value!.uuid,
-        userId: userId,
-        invitedToSpeak: inviteToSpeak,
+      final request = InviteRequestModel(
+        can_speak: inviteToSpeak,
+        invitee_user_uuid: userId,
+        outpost_uuid: outpost.value!.uuid,
       );
-      await fetchInvitedMembers(userId: userId);
-      final notifId = const Uuid().v4();
-      final subject = outpost.value!.subject;
-      final invitationNotification = FirebaseNotificationModel(
-        id: notifId,
-        title:
-            "${myUser.name} invited you to ${inviteToSpeak ? 'speak' : 'listen'} in Outpost: ${outpost.value!.name}",
-        body:
-            "${subject.isNotEmpty ? "talking about: " + subject : 'No subject'}",
-        type: NotificationTypes.inviteToJoinGroup.toString(),
-        targetUserId: userId,
-        isRead: false,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
-        actionId: outpost.value!.uuid,
-      );
-      await sendNotification(
-        notification: invitationNotification,
-      );
+      final success = await HttpApis.podium.inviteUserToJoinOutpost(request);
+      if (success) {
+        Toast.success(message: 'Invite sent');
+      } else {
+        Toast.error(message: 'Failed to send invite');
+      }
     } catch (e) {
       l.e(e);
     }

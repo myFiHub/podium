@@ -1,10 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:podium/env.dart';
+import 'package:podium/models/notification_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
+import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
@@ -247,15 +251,15 @@ class PodiumApi {
     }
   }
 
-  Future<Map<String, OutpostModel>> getOutpostsByTagIds({
-    required List<int> ids,
+  Future<Map<String, OutpostModel>> getOutpostsByTagId({
+    required int id,
     int? page,
     int? page_size,
   }) async {
     try {
       final response = await dio.get('$_baseUrl/outposts',
           queryParameters: {
-            'tag_ids': ids,
+            'tag_id': id,
             if (page != null) 'page': page,
             if (page_size != null) 'page_size': page_size,
           },
@@ -323,10 +327,78 @@ class PodiumApi {
     }
   }
 
+  Future<bool> inviteUserToJoinOutpost(InviteRequestModel request) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/invites/create',
+          data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> rejectInvitation(RejectInvitationRequest request) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/invites/reject',
+          data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
   Future<bool> leaveOutpost(String id) async {
     try {
       final response = await dio.post('$_baseUrl/outposts/leave',
           data: {'uuid': id}, options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<List<NotificationModel>> getNotifications() async {
+    try {
+      final response = await dio.get('$_baseUrl/notifications',
+          options: Options(headers: _headers));
+      return (response.data['data'] as List).map((e) {
+        final created_at = e['created_at'];
+        final is_read = e['is_read'];
+        final message = e['message'];
+        final notification_type = e['notification_type'];
+        final uuid = e['uuid'];
+        FollowMetadata? followMetadata = null;
+        InviteMetadata? inviteMetadata = null;
+        if (notification_type == NotificationTypes.follow.toString()) {
+          followMetadata = FollowMetadata.fromJson(e['metadata']);
+        }
+        if (notification_type == NotificationTypes.invite.toString()) {
+          inviteMetadata = InviteMetadata.fromJson(e['metadata']);
+        }
+        final NotificationModel notification = NotificationModel(
+          created_at: created_at,
+          is_read: is_read,
+          message: message,
+          notification_type: notification_type,
+          followMetadata: followMetadata,
+          inviteMetadata: inviteMetadata,
+          uuid: uuid,
+        );
+        return notification;
+      }).toList();
+    } catch (e) {
+      l.e(e);
+      return [];
+    }
+  }
+
+  Future<bool> markNotificationAsRead(String uuid) async {
+    try {
+      final response = await dio.post('$_baseUrl/notifications/mark-as-read',
+          data: {'uuid': uuid}, options: Options(headers: _headers));
       return response.statusCode == 200;
     } catch (e) {
       l.e(e);

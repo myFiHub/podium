@@ -93,8 +93,7 @@ class SearchPageController extends GetxController with FirebaseTags {
 
   tagClicked(TagModel tag) async {
     loadingTag_name.value = tag.name;
-    final foundOutposts =
-        await HttpApis.podium.getOutpostsByTagIds(ids: [tag.id]);
+    final foundOutposts = await HttpApis.podium.getOutpostsByTagId(id: tag.id);
     if (foundOutposts.isEmpty) {
       l.e('No groups found for tag: ${tag.name}');
       return;

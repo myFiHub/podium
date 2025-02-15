@@ -4,6 +4,7 @@ import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/notification_model.dart';
+import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import '../controllers/notifications_controller.dart';
@@ -23,19 +24,18 @@ class NotificationsView extends GetView<NotificationsController> {
                   final notifications = controller.notifications;
                   if (notifications.isEmpty) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Assets.images.bell.image(
-                            width: 64,
-                            height: 64,
-                          ),
-                          const SizedBox(height: 10),
-                          const Text('No notifications'),
-                        ],
-                      )
-                    );
+                        child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Assets.images.bell.image(
+                          width: 64,
+                          height: 64,
+                        ),
+                        const SizedBox(height: 10),
+                        const Text('No notifications'),
+                      ],
+                    ));
                   }
                   return ListView.builder(
                     itemCount: notifications.length,
@@ -65,7 +65,7 @@ class NotificationsView extends GetView<NotificationsController> {
                                   Container(
                                     width: Get.width - 200,
                                     child: Text(
-                                      notif.title,
+                                      notif.message,
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -75,7 +75,7 @@ class NotificationsView extends GetView<NotificationsController> {
                                   Container(
                                     width: Get.width - 200,
                                     child: Text(
-                                      notif.body,
+                                      notif.message,
                                       style: const TextStyle(
                                         fontSize: 14,
                                       ),
@@ -85,20 +85,20 @@ class NotificationsView extends GetView<NotificationsController> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      if (!notif.isRead)
+                                      if (!notif.is_read)
                                         Button(
                                           size: ButtonSize.SMALL,
                                           onPressed: () {
                                             markNotificationAsRead(
-                                              notificationId: notif.id,
+                                              notificationId: notif.uuid,
                                             );
                                           },
                                           type: ButtonType.outline,
                                           text: 'Mark as read',
                                         ),
                                       space10,
-                                      if (notif.type ==
-                                          NotificationTypes.follow.toString())
+                                      if (notif.notification_type ==
+                                          NotificationTypes.follow)
                                         Button(
                                           size: ButtonSize.SMALL,
                                           onPressed: () {
@@ -110,16 +110,15 @@ class NotificationsView extends GetView<NotificationsController> {
                                           text: 'Delete',
                                         ),
                                       space10,
-                                      if (notif.type ==
-                                          NotificationTypes.inviteToJoinGroup
-                                              .toString())
+                                      if (notif.notification_type ==
+                                          NotificationTypes.invite)
                                         Row(
                                           children: [
                                             Button(
                                               size: ButtonSize.SMALL,
                                               onPressed: () {
                                                 controller
-                                                    .rejectGroupInvitation(
+                                                    .rejectOutpostInvitation(
                                                   notif: notif,
                                                 );
                                               },
@@ -133,7 +132,7 @@ class NotificationsView extends GetView<NotificationsController> {
                                               size: ButtonSize.SMALL,
                                               onPressed: () {
                                                 controller
-                                                    .acceptGroupInvitation(
+                                                    .acceptOutpostInvitation(
                                                   notif: notif,
                                                 );
                                               },

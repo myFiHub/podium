@@ -3,13 +3,12 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/models/notification_model.dart';
+
+import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
+import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:uuid/uuid.dart';
 
 class NotificationsController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
@@ -20,21 +19,20 @@ class NotificationsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    globalController.loggedIn.listen((loggedIn) {
+    globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
-        notificationsSubscription =
-            startListeningToMyNotifications((notificationList) {
-          final sortedNotifs = notificationList
-            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-          int numberOfUnread = 0;
-          for (final notif in sortedNotifs) {
-            if (!notif.isRead) {
-              numberOfUnread++;
-            }
+        final notifs = await HttpApis.podium.getNotifications();
+        //   startListeningToMyNotifications((notificationList) {
+        // final sortedNotifs = notificationList
+        //   ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        int numberOfUnread = 0;
+        for (final notif in notifs) {
+          if (!notif.is_read) {
+            numberOfUnread++;
           }
-          numberOfUnreadNotifications.value = numberOfUnread;
-          notifications.assignAll(sortedNotifs);
-        });
+        }
+        numberOfUnreadNotifications.value = numberOfUnread;
+        notifications.assignAll(notifs);
       } else {
         notifications.clear();
         numberOfUnreadNotifications.value = 0;
@@ -61,62 +59,42 @@ class NotificationsController extends GetxController {
 
   getNotifications() async {
     try {
-      final notifs = await getMyNotifications();
+      final notifs = await HttpApis.podium.getNotifications();
       notifications.assignAll(notifs);
     } catch (e) {
       l.e(e);
     }
   }
 
-  deleteMyNotification(FirebaseNotificationModel notif) {
-    try {
-      deleteNotification(notificationId: notif.id);
-    } catch (e) {
+  deleteMyNotification(NotificationModel notif) {
+    try {} catch (e) {
       l.e(e);
     }
   }
 
-  acceptGroupInvitation({
-    required FirebaseNotificationModel notif,
+  acceptOutpostInvitation({
+    required NotificationModel notif,
   }) async {
-    final groupId = notif.actionId;
-    if (groupId == null) return;
-    final OutpostsController groupsController = Get.find<OutpostsController>();
-    await groupsController.joinOutpostAndOpenOutpostDetailPage(
-      outpostId: groupId,
-    );
-    try {
-      await deleteNotification(notificationId: notif.id);
-    } catch (e) {
+    try {} catch (e) {
       l.e(e);
     }
   }
 
-  rejectGroupInvitation({
-    required FirebaseNotificationModel notif,
+  rejectOutpostInvitation({
+    required NotificationModel notif,
   }) async {
-    final groupId = notif.actionId;
-    if (groupId == null) return;
     try {
-      await deleteNotification(notificationId: notif.id);
-    } catch (e) {
-      l.e(e);
-    }
-  }
-
-  sendTestNotif() async {
-    try {
-      await sendNotification(
-        notification: FirebaseNotificationModel(
-            id: const Uuid().v4(),
-            title: 'title',
-            body:
-                'bsodssssdddddddddddddddddddddddddddddssssdfsdddddddddddddddddddf sdf dsf dsssssssssssssssssssssssssssssssssssssssssssy',
-            type: 'type',
-            targetUserId: myId,
-            timestamp: DateTime.now().millisecondsSinceEpoch,
-            isRead: false),
+      final success = await HttpApis.podium.rejectInvitation(
+        RejectInvitationRequest(
+          inviter_uuid: notif.inviteMetadata!.inviter_uuid,
+          outpost_uuid: notif.inviteMetadata!.outpost_uuid,
+        ),
       );
+      if (success) {
+        Toast.success(message: 'Invitation rejected');
+      } else {
+        Toast.error(message: 'Failed to reject invitation');
+      }
     } catch (e) {
       l.e(e);
     }

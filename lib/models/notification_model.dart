@@ -57,8 +57,3 @@ class FirebaseNotificationModel {
     return data;
   }
 }
-
-enum NotificationTypes {
-  follow,
-  inviteToJoinGroup,
-}

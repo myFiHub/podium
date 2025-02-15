@@ -1032,22 +1032,6 @@ markNotificationAsRead({required String notificationId}) async {
   }
 }
 
-deleteNotification({required String notificationId}) async {
-  try {
-    final databaseRef = FirebaseDatabase.instance
-        .ref(FireBaseConstants.notificationsRef + notificationId);
-    await databaseRef.remove();
-    analytics.logEvent(
-      name: 'notification_deleted',
-      parameters: {
-        'notification_id': notificationId,
-      },
-    );
-  } catch (e) {
-    l.e(e);
-  }
-}
-
 Future<UserInfoModel?> getUserByInternalWalletAddress({
   required String internalWalletAddress,
 }) async {

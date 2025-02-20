@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/notification_model.dart';
 import 'package:podium/providers/api/api.dart';
@@ -19,7 +21,8 @@ class PodiumApi {
   final _baseUrl = Env.podimBackendBaseUrl;
   final Dio dio;
   String? _token;
-  get _headers => _token != null
+
+  Map<String, String> get _headers => _token != null
       ? {...defaultHeaders, 'Authorization': 'Bearer $_token'}
       : defaultHeaders;
 
@@ -34,6 +37,7 @@ class PodiumApi {
           await dio.post('$_baseUrl/auth/login', data: request.toJson());
       if (response.statusCode == 200) {
         _token = response.data['data']['token'];
+        Get.find<GlobalController>().initializeWebSocket(token: _token!);
         final myUserData = await getMyUserData(
           additionalData: additionalData,
         );
@@ -107,6 +111,17 @@ class PodiumApi {
     } catch (e) {
       l.e(e);
       return {};
+    }
+  }
+
+  Future<bool> setCreatorJoinedToTrue(String outpostId) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/creator-joined',
+          data: {'uuid': outpostId}, options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
     }
   }
 

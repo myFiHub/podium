@@ -39,6 +39,8 @@ class Env {
 
   static final podimBackendBaseUrl = dotenv.env['PODIM_BACKEND_BASE_URL']!;
 
+  static final centrifugeUrl = dotenv.env['CENTRIFUGE_URL']!;
+
   static String? starsArenaAddress(String chainId) {
     if (chainId == avalancheChainId) {
       return starsArenaAddress_Avalanche_Mainnet;

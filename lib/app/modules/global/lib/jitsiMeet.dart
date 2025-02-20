@@ -5,11 +5,10 @@ import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/models/firebase_group_model.dart';
+import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -33,23 +32,13 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       final groupCreator = outpost.creator_user_uuid;
       final iAmCreator = groupCreator == myUserId;
       if (outpost.creator_joined != true && iAmCreator) {
-        await setCreatorJoinedToTrue(groupId: outpost.uuid);
+        await HttpApis.podium.setCreatorJoinedToTrue(outpost.uuid);
       }
       groupCallController.haveOngoingCall.value = true;
-      // groupCallController.setIsUserPresentInSession(
-      //   groupId: groupCallController.group.value!.id,
-      //   userId: myId,
-      //   isPresent: true,
-      // );
-      await updateGroupLastActiveAt(
-        groupId: outpost.uuid,
-        lastActiveAt: DateTime.now().millisecondsSinceEpoch,
-      );
 
       await Future.delayed(const Duration(seconds: 3));
       sendGroupPeresenceEvent(
           groupId: outpost.uuid, eventName: eventNames.enter);
-      await jitsiMeet.retrieveParticipantsInfo();
 
       l.d("conferenceJoined: url: $url");
     },
@@ -76,14 +65,7 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       l.f("conferenceTerminated: url: $url, error: $error");
     },
     participantsInfoRetrieved: (participantsInfo) {
-      try {
-        // final members =
-        //     convertJitsiMembersResponseToReadableJson(participantsInfo);
-        // final OngoingGroupCallController ongoingGroupCallController =
-        //     Get.find<OngoingGroupCallController>();
-        // groupCallController.jitsiMembers.value = members;
-        // ongoingGroupCallController.jitsiMembers.value = members;
-      } catch (e) {
+      try {} catch (e) {
         l.e("participantsInfoRetrieved: $e");
       }
     },

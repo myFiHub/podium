@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:alarm/alarm.dart';
 import 'package:aptos/aptos.dart';
+import 'package:centrifuge/centrifuge.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,7 @@ import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/metadata/movementAptos.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/analytics.dart';
@@ -65,6 +67,9 @@ class GlobalUpdateIds {
 
 class GlobalController extends GetxController {
   static final storage = GetStorage();
+
+  Client? wsClient = null;
+
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
@@ -591,6 +596,32 @@ class GlobalController extends GetxController {
       }
       isAutoLoggingIn.value = false;
     }
+  }
+
+  initializeWebSocket({
+    required String token,
+  }) async {
+    if (wsClient != null) {
+      await wsClient!.disconnect();
+    }
+    wsClient = createClient(
+      Env.centrifugeUrl,
+      ClientConfig(
+        token: token,
+      ),
+    );
+
+    // listen to connect event
+    wsClient!.connected.listen((event) {
+      l.i("---------------------------------connected to ws---------------------------------");
+    });
+
+    // listen to disconnect event
+    wsClient!.disconnected.listen((event) {
+      l.e("---------------------------------disconnected from ws---------------------------------");
+    });
+
+    await wsClient!.connect();
   }
 
   String? _extractReferrerId(String route) {

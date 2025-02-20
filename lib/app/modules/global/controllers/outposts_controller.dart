@@ -245,10 +245,9 @@ class OutpostsController extends GetxController with FirebaseTags {
   }
 
   Future<void> leaveOutpost({required OutpostModel outpost}) async {
-    // ask if user want to leave the group
     try {
-      final canContinue = await _showModalToLeaveGroup(outpost: outpost);
-      if (canContinue == null || canContinue == false) return;
+      final userWantsToLeave = await _showModalToLeaveGroup(outpost: outpost);
+      if (userWantsToLeave != true) return;
       final success = await HttpApis.podium.leaveOutpost(outpost.uuid);
       if (success) {
         //  update existing outpost in all outposts page controller and set i_am_member to false

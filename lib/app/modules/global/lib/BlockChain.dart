@@ -20,6 +20,15 @@ final movementAptosBardokChain = ReownAppKitModalNetworkInfo(
   explorerUrl: 'https://explorer.movementlabs.xyz',
 );
 
+final movementTestnet = ReownAppKitModalNetworkInfo(
+  name: 'Movement Aptos Testnet',
+  chainId: '177',
+  chainIcon: movementIcon,
+  currency: 'MOVE',
+  rpcUrl: 'https://aptos.testnet.porto.movementlabs.xyz/v1',
+  explorerUrl: 'https://explorer.movementlabs.xyz',
+);
+
 ///////////////////
 final movementEVMMainNetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement',

@@ -195,7 +195,8 @@ class GlobalController extends GetxController {
           movementEVMMainNetChain,
           movementEVMDevnetChain,
           movementAptosNetwork,
-          movementAptosBardokChain
+          movementAptosBardokChain,
+          movementTestnet,
         ],
       );
     } catch (e) {

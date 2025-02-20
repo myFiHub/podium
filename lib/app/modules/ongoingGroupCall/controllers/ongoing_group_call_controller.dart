@@ -833,7 +833,6 @@ class OngoingGroupCallController extends GetxController {
       // success null means error is handled inside called function
       if (success == null) {
         _removeLoadingCheerBoo(userId: userId, cheer: cheer);
-
         return;
       }
       if (success) {

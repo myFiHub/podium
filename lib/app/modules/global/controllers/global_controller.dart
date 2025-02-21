@@ -196,7 +196,8 @@ class GlobalController extends GetxController {
           movementEVMDevnetChain,
           movementAptosNetwork,
           movementAptosBardokChain,
-          movementTestnet,
+          if (movementAptosNetwork.chainId != movementTestnet.chainId)
+            movementTestnet,
         ],
       );
     } catch (e) {

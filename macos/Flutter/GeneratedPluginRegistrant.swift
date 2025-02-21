@@ -6,6 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import app_links
+import app_settings
 import connectivity_plus
 import downloadsfolder
 import file_selector_macos
@@ -25,6 +26,7 @@ import webview_flutter_wkwebview
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AppLinksMacosPlugin.register(with: registry.registrar(forPlugin: "AppLinksMacosPlugin"))
+  AppSettingsPlugin.register(with: registry.registrar(forPlugin: "AppSettingsPlugin"))
   ConnectivityPlusPlugin.register(with: registry.registrar(forPlugin: "ConnectivityPlusPlugin"))
   DownloadsfolderPlugin.register(with: registry.registrar(forPlugin: "DownloadsfolderPlugin"))
   FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))

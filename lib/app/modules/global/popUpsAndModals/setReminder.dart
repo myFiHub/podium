@@ -11,6 +11,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:alarm/model/volume_settings.dart';
 
 Future<bool> createCalendarEventForScheduledGroup({
   String? eventUrl,
@@ -157,8 +158,10 @@ Future<int?> setReminder({
       assetAudioPath: 'assets/alarm.mp3',
       loopAudio: true,
       vibrate: true,
-      volume: 0.8,
-      fadeDuration: 3.0,
+      volumeSettings: VolumeSettings.fade(
+        volume: 0.8,
+        fadeDuration: const Duration(seconds: 3),
+      ),
       notificationSettings: NotificationSettings(
         title: 'Podium',
         body: alarmMeBefore == 0

@@ -184,7 +184,10 @@ class AptosMovement {
           sellerAddress,
         ],
       );
-      return BigInt.from(int.parse(respone[0]));
+      final bigIntAmoutn = BigInt.from(int.parse(respone[0]));
+      final parsedAmount = bigIntCoinToMoveOnAptos(bigIntAmoutn);
+      final bigItnParsed = BigInt.from(parsedAmount);
+      return bigItnParsed;
     } catch (e) {
       l.e(e);
       return null;
@@ -264,6 +267,14 @@ class AptosMovement {
       final payload = EntryFunctionPayload(
         functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
         typeArguments: [],
+        /**
+          "params": [
+          "&signer",
+          "address",
+          "u64",
+          "0x1::option::Option<address>"
+        ],
+         */
         arguments: [
           sellerAddress,
           numberOfTickets.toString(),

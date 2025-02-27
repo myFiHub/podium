@@ -1,3 +1,4 @@
+import 'package:animated_icon/animated_icon.dart';
 import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -29,7 +30,9 @@ class OngoingGroupCallView extends GetView<OngoingGroupCallController> {
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (res, r) {
-        controller.introFinished(false);
+        if (Get.isRegistered<GroupCallController>()) {
+          controller.introFinished(false);
+        }
       },
       child: FloatingDraggableWidget(
         mainScreenWidget: Scaffold(
@@ -281,10 +284,25 @@ class MembersList extends GetView<GroupCallController> {
                       labelColor: ColorName.primaryBlue,
                       unselectedLabelColor: Colors.grey,
                       tabs: [
-                        const Tab(
-                          child: Text(
-                            "Live",
-                            textAlign: TextAlign.center,
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text("Live"),
+                              space5,
+                              AnimateIcon(
+                                key: UniqueKey(),
+                                onTap: () {
+                                  // controller.groupsC
+                                  controller.refetchPresentUsersInGroup();
+                                },
+                                color: Colors.blueAccent,
+                                iconType: IconType.animatedOnTap,
+                                height: 20,
+                                width: 20,
+                                animateIcon: AnimateIcons.refresh,
+                              ),
+                            ],
                           ),
                         ),
                         const Tab(

@@ -173,6 +173,36 @@ class GroupsController extends GetxController with FirebaseTags {
     return tmpPresentUsersInGroupsMap[groupId] ?? [];
   }
 
+  refetchPresentUsersInGroup(String groupId,
+      {bool alsoSendPresenceEvent = false}) async {
+    final channel = groupChannels.value[groupId];
+    if (alsoSendPresenceEvent) {
+      sendGroupPeresenceEvent(groupId: groupId, eventName: eventNames.enter);
+    }
+    if (channel == null) {
+      // create channel
+      final newChannel = realtimeInstance.channels.get(groupId);
+      groupChannels.value[groupId] = newChannel;
+      groupChannels.refresh();
+      await _getCurrentNumberOfPresentUsers();
+      _startListeners();
+      return;
+    }
+
+    final presenceMessages = await channel.presence.get();
+    final currentListForThisGroup = tmpPresentUsersInGroupsMap[groupId] ?? [];
+    // currentListForThisGroup.clear();
+    presenceMessages.forEach((element) {
+      // add if it doesn't exist
+      if (!currentListForThisGroup.contains(element.clientId!)) {
+        currentListForThisGroup.add(element.clientId!);
+      }
+    });
+    l.d("Refetched present users in group $groupId: $currentListForThisGroup");
+    tmpPresentUsersInGroupsMap[groupId] = currentListForThisGroup;
+    _shouldUpdatePresentUsers = true;
+  }
+
   Future<void> removeMyUserFromSessionAndGroup(
       {required FirebaseGroup group}) async {
     // ask if user want to leave the group

@@ -60,6 +60,7 @@ class GroupCallController extends GetxController {
         final takingUsers = takingUsersInGroupsMap[groupId];
         if (takingUsers != null) {
           final takingUserIds = takingUsers.map((e) => e).toList();
+          l.d("Taking users: $takingUserIds");
           updateTalkingMembers(ids: takingUserIds);
         }
       }
@@ -107,6 +108,16 @@ class GroupCallController extends GetxController {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  refetchPresentUsersInGroup() async {
+    final groupId = group.value?.id;
+    if (groupId != null) {
+      await groupsController.refetchPresentUsersInGroup(
+        groupId,
+        alsoSendPresenceEvent: true,
+      );
+    }
   }
 
   Future<void> _updateByPresentMembers(
@@ -176,7 +187,8 @@ class GroupCallController extends GetxController {
   }
 
   updateTalkingMembers({required List<String> ids}) {
-    final talkingMembersList = members.value.where((element) {
+    l.d("Updating talking members: $ids");
+    final talkingMembersList = sortedMembers.value.where((element) {
       return ids.contains(element.id);
     }).toList();
 

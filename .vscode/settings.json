@@ -1,5 +1,7 @@
 {
-  "cSpell.words": ["RGBO"],
-  "dart.flutterSdkPath": ".fvm/versions/3.27.1",
+  "cSpell.words": [
+    "RGBO"
+  ],
+  "dart.flutterSdkPath": ".fvm/versions/3.29.0",
   "java.compile.nullAnalysis.mode": "disabled"
 }

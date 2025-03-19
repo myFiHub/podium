@@ -37,9 +37,14 @@ class WebSocketService {
       subscription = _channel!.stream.listen(
         (message) {
           try {
+            final jsoned = jsonDecode(message);
+            if (jsoned['name'] == 'error') {
+              l.e("Error: ${jsoned['data']['message']}");
+              return;
+            }
             final incomingMessage =
                 IncomingMessage.fromJson(jsonDecode(message));
-            print("Received: $incomingMessage");
+            _handleIncomingMessage(incomingMessage);
           } catch (e) {
             print("Error parsing message: $e");
           }
@@ -69,8 +74,41 @@ class WebSocketService {
     });
   }
 
+  void _handleIncomingMessage(IncomingMessage incomingMessage) {
+    l.d('handle incoming message: ${incomingMessage.name}');
+    switch (incomingMessage.name) {
+      case IncomingMessageType.userJoined:
+        l.f('handle user joined');
+        break;
+      case IncomingMessageType.userLeft:
+        l.f('handle user left');
+        break;
+      case IncomingMessageType.userLiked:
+        l.f('handle user liked');
+        break;
+      case IncomingMessageType.userDisliked:
+        l.f('handle user disliked');
+        break;
+      case IncomingMessageType.userBooed:
+        l.f('handle user booed');
+        break;
+      case IncomingMessageType.userCheered:
+        l.f('handle user cheered');
+        break;
+      case IncomingMessageType.userStartedSpeaking:
+        l.f('handle user started speaking');
+        break;
+      case IncomingMessageType.userStoppedSpeaking:
+        l.f('handle user stopped speaking');
+        break;
+    }
+  }
+
   void send(WsOutgoingMessage message) {
-    _channel?.sink.add(jsonEncode(message.toJson()));
+    final jsoned = message.toJson();
+    final stringified = jsonEncode(jsoned);
+    l.d('Sending message: $stringified');
+    _channel?.sink.add(stringified);
   }
 
   //send a pong message type to websocket, not using out message type

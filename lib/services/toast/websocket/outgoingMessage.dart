@@ -15,12 +15,12 @@ enum OutgoingMessageTypeEnums {
 
 @JsonSerializable()
 class WsOutgoingMessage {
-  final OutgoingMessageTypeEnums messageType;
-  final String outpostUuid;
+  final OutgoingMessageTypeEnums message_type;
+  final String outpost_uuid;
   final WsOutgoingMessageData? data;
 
   WsOutgoingMessage(
-      {required this.messageType, required this.outpostUuid, this.data});
+      {required this.message_type, required this.outpost_uuid, this.data});
 
   factory WsOutgoingMessage.fromJson(Map<String, dynamic> json) =>
       _$WsOutgoingMessageFromJson(json);
@@ -31,10 +31,10 @@ class WsOutgoingMessage {
 @JsonSerializable()
 class WsOutgoingMessageData {
   final double? amount;
-  final String reactToUserAddress;
+  final String react_to_user_address;
 
   WsOutgoingMessageData(
-      {required this.amount, required this.reactToUserAddress});
+      {required this.amount, required this.react_to_user_address});
 
   factory WsOutgoingMessageData.fromJson(Map<String, dynamic> json) =>
       _$WsOutgoingMessageDataFromJson(json);

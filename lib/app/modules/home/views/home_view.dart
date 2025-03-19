@@ -1,18 +1,15 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/home/widgets/addOutpostButton.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/metadata/movementAptos.dart';
+
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/services/toast/websocket/outgoingMessage.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -31,14 +28,26 @@ class HomeView extends GetView<HomeController> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          // Button(
-          //   text: 'test',
-          //   onPressed: () async {
-          //     // final referralEnabledRef = FirebaseDatabase.instance
-          //     //     .ref(FireBaseConstants.referralsEnabled);
-          //     // await referralEnabledRef.set(false);
-          //   },
-          // ),
+          Button(
+            text: 'test',
+            onPressed: () async {
+              wsClient.send(
+                // WsOutgoingMessage(
+                //   message_type: OutgoingMessageTypeEnums.join,
+                //   outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
+                // ),
+                WsOutgoingMessage(
+                  message_type: OutgoingMessageTypeEnums.like,
+                  outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
+                  data: WsOutgoingMessageData(
+                    amount: null,
+                    react_to_user_address:
+                        '45277375-9423-4353-a256-8ab19793f451',
+                  ),
+                ),
+              );
+            },
+          ),
           space16,
           Row(
             children: [

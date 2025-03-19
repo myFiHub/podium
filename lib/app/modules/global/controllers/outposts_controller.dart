@@ -57,8 +57,8 @@ sendGroupPeresenceEvent(
     }
     if (eventType == OutgoingMessageTypeEnums.leave) {
       wsClient.send(WsOutgoingMessage(
-        messageType: OutgoingMessageTypeEnums.leave,
-        outpostUuid: outpostId,
+        message_type: OutgoingMessageTypeEnums.leave,
+        outpost_uuid: outpostId,
       ));
       // channel.presence.leave(groupId);
       return;
@@ -67,8 +67,8 @@ sendGroupPeresenceEvent(
         eventType == OutgoingMessageTypeEnums.stop_speaking) {
       // channel.presence.update(eventName);
       wsClient.send(WsOutgoingMessage(
-        messageType: eventType,
-        outpostUuid: outpostId,
+        message_type: eventType,
+        outpost_uuid: outpostId,
       ));
       return;
     } else if (eventType == OutgoingMessageTypeEnums.like ||
@@ -76,16 +76,16 @@ sendGroupPeresenceEvent(
         eventType == OutgoingMessageTypeEnums.cheer ||
         eventType == OutgoingMessageTypeEnums.boo) {
       wsClient.send(WsOutgoingMessage(
-        messageType: eventType,
-        outpostUuid: outpostId,
+        message_type: eventType,
+        outpost_uuid: outpostId,
         data: eventData,
       ));
       return;
     }
     if (eventType == OutgoingMessageTypeEnums.join) {
       wsClient.send(WsOutgoingMessage(
-        messageType: eventType,
-        outpostUuid: outpostId,
+        message_type: eventType,
+        outpost_uuid: outpostId,
       ));
       return;
     }

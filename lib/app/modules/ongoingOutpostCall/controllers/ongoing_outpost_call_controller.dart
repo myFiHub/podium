@@ -619,7 +619,7 @@ class OngoingOutpostCallController extends GetxController {
       eventType: OutgoingMessageTypeEnums.like,
       eventData: WsOutgoingMessageData(
         amount: amountToAddForLikeInSeconds.toDouble(),
-        reactToUserAddress: userId,
+        react_to_user_address: userId,
       ),
     );
     final myUser = globalController.myUserInfo.value!;
@@ -651,7 +651,7 @@ class OngoingOutpostCallController extends GetxController {
       eventType: OutgoingMessageTypeEnums.dislike,
       eventData: WsOutgoingMessageData(
         amount: amountToReduceForDislikeInSeconds.toDouble(),
-        reactToUserAddress: userId,
+        react_to_user_address: userId,
       ),
     );
 
@@ -829,8 +829,8 @@ class OngoingOutpostCallController extends GetxController {
           outpostId: outpostCallController.outpost.value!.uuid,
           eventType: eventString,
           eventData: WsOutgoingMessageData(
-            amount: parsedAmount.abs(),
-            reactToUserAddress: userId,
+            amount: double.tryParse(amount) ?? 0,
+            react_to_user_address: userId,
           ),
         );
         analytics.logEvent(name: 'cheerBoo', parameters: {

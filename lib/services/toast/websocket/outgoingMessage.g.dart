@@ -8,9 +8,9 @@ part of 'outgoingMessage.dart';
 
 WsOutgoingMessage _$WsOutgoingMessageFromJson(Map<String, dynamic> json) =>
     WsOutgoingMessage(
-      messageType:
-          $enumDecode(_$OutpostEventTypeEnumsEnumMap, json['messageType']),
-      outpostUuid: json['outpostUuid'] as String,
+      message_type:
+          $enumDecode(_$OutgoingMessageTypeEnumsEnumMap, json['message_type']),
+      outpost_uuid: json['outpost_uuid'] as String,
       data: json['data'] == null
           ? null
           : WsOutgoingMessageData.fromJson(
@@ -19,12 +19,12 @@ WsOutgoingMessage _$WsOutgoingMessageFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$WsOutgoingMessageToJson(WsOutgoingMessage instance) =>
     <String, dynamic>{
-      'messageType': _$OutpostEventTypeEnumsEnumMap[instance.messageType]!,
-      'outpostUuid': instance.outpostUuid,
+      'message_type': _$OutgoingMessageTypeEnumsEnumMap[instance.message_type]!,
+      'outpost_uuid': instance.outpost_uuid,
       'data': instance.data,
     };
 
-const _$OutpostEventTypeEnumsEnumMap = {
+const _$OutgoingMessageTypeEnumsEnumMap = {
   OutgoingMessageTypeEnums.join: 'join',
   OutgoingMessageTypeEnums.leave: 'leave',
   OutgoingMessageTypeEnums.boo: 'boo',
@@ -39,12 +39,12 @@ WsOutgoingMessageData _$WsOutgoingMessageDataFromJson(
         Map<String, dynamic> json) =>
     WsOutgoingMessageData(
       amount: (json['amount'] as num?)?.toDouble(),
-      reactToUserAddress: json['reactToUserAddress'] as String,
+      react_to_user_address: json['react_to_user_address'] as String,
     );
 
 Map<String, dynamic> _$WsOutgoingMessageDataToJson(
         WsOutgoingMessageData instance) =>
     <String, dynamic>{
       'amount': instance.amount,
-      'reactToUserAddress': instance.reactToUserAddress,
+      'react_to_user_address': instance.react_to_user_address,
     };

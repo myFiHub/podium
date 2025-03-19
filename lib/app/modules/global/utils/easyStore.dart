@@ -1,8 +1,8 @@
 import 'package:aptos/aptos.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/services/toast/websocket/client.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
@@ -16,6 +16,11 @@ String get myId {
     l.f('****************************myId is empty************************');
   }
   return myUser.uuid;
+}
+
+WebSocketService get wsClient {
+  final globalController = Get.find<GlobalController>();
+  return globalController.ws_client!;
 }
 
 ReownAppKitModal get web3ModalService {

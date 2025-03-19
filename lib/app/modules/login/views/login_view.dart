@@ -145,7 +145,7 @@ class LoginView extends GetView<LoginController> {
                                   constraints:
                                       const BoxConstraints(maxWidth: 200),
                                   child: const Text(
-                                    'Where the attention Pay.',
+                                    'Where attention pays.',
                                     style: TextStyle(
                                       fontSize: 35,
                                       fontWeight: FontWeight.w300,

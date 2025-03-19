@@ -37,6 +37,7 @@ import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/services/toast/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -46,48 +47,46 @@ final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
 // detect presence time (groups that were active this milliseconds ago will be considered active)
 int dpt = 0;
 
-class eventNames {
-  static const String enter = "enter";
-  static const String leave = "leave";
-  static const String talking = "talking";
-  static const String notTalking = "notTalking";
-  // interactions
-  static const String like = "like";
-  static const String dislike = "dislike";
-  static const String cheer = "cheer";
-  static const String boo = "boo";
-  static isInteraction(String eventName) {
-    return [
-      like,
-      dislike,
-      cheer,
-      boo,
-    ].contains(eventName);
-  }
-}
-
 sendGroupPeresenceEvent(
-    {required String groupId,
-    required String eventName,
-    Map<String, dynamic>? eventData}) async {
+    {required String outpostId,
+    required OutgoingMessageTypeEnums eventType,
+    WsOutgoingMessageData? eventData}) async {
   try {
     if (dpt == 0) {
       return;
     }
-    final channel = realtimeInstance.channels.get(groupId);
-    if (eventName == eventNames.leave) {
-      channel.presence.leave(groupId);
+    if (eventType == OutgoingMessageTypeEnums.leave) {
+      wsClient.send(WsOutgoingMessage(
+        messageType: OutgoingMessageTypeEnums.leave,
+        outpostUuid: outpostId,
+      ));
+      // channel.presence.leave(groupId);
       return;
     }
-    if (eventName == eventNames.talking || eventName == eventNames.notTalking) {
-      channel.presence.update(eventName);
+    if (eventType == OutgoingMessageTypeEnums.start_speaking ||
+        eventType == OutgoingMessageTypeEnums.stop_speaking) {
+      // channel.presence.update(eventName);
+      wsClient.send(WsOutgoingMessage(
+        messageType: eventType,
+        outpostUuid: outpostId,
+      ));
       return;
-    } else if (eventNames.isInteraction(eventName)) {
-      channel.presence.update(eventData);
+    } else if (eventType == OutgoingMessageTypeEnums.like ||
+        eventType == OutgoingMessageTypeEnums.dislike ||
+        eventType == OutgoingMessageTypeEnums.cheer ||
+        eventType == OutgoingMessageTypeEnums.boo) {
+      wsClient.send(WsOutgoingMessage(
+        messageType: eventType,
+        outpostUuid: outpostId,
+        data: eventData,
+      ));
       return;
     }
-    if (eventName == eventNames.enter) {
-      channel.presence.enter(groupId);
+    if (eventType == OutgoingMessageTypeEnums.join) {
+      wsClient.send(WsOutgoingMessage(
+        messageType: eventType,
+        outpostUuid: outpostId,
+      ));
       return;
     }
   } catch (e) {
@@ -479,14 +478,14 @@ class OutpostsController extends GetxController with FirebaseTags {
   _hanldeNewUpdateMessage(
       {required String groupId, required PresenceMessage message}) {
     if (message.data is String) {
-      if (message.data == eventNames.talking) {
+      if (message.data == OutgoingMessageTypeEnums.start_speaking) {
         final currentListForThisGroup =
             tmpTakingUsersInGroupsMap[groupId] ?? [];
         currentListForThisGroup.add(message.clientId!);
         tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
         l.d("Talking users: $currentListForThisGroup");
         _shouldUpdateTakingUsers = true;
-      } else if (message.data == eventNames.notTalking) {
+      } else if (message.data == OutgoingMessageTypeEnums.stop_speaking) {
         final currentListForThisGroup =
             tmpTakingUsersInGroupsMap[groupId] ?? [];
         currentListForThisGroup.remove(message.clientId!);

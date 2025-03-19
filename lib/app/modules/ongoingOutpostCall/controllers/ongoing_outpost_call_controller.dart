@@ -28,6 +28,8 @@ import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/services/toast/websocket/incomingMessage.dart';
+import 'package:podium/services/toast/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -60,15 +62,9 @@ class MyTalkTimer {
   }
 }
 
-class InteractionKeys {
-  static const action = 'action';
-  static const initiatorId = 'initiatorId';
-  static const targetId = 'targetId';
-}
-
 class Reaction {
   String targetId;
-  String reaction;
+  IncomingMessageType reaction;
   Reaction({required this.targetId, required this.reaction});
 }
 
@@ -114,7 +110,7 @@ class OngoingOutpostCallController extends GetxController {
   final loadingWalletAddressForUser = RxList<String>([]);
 
   final lastReaction = Rx<Reaction>(
-    Reaction(targetId: '', reaction: ''),
+    Reaction(targetId: '', reaction: IncomingMessageType.userStoppedSpeaking),
   );
   StreamSubscription<DatabaseEvent>? sessionMembersSubscription = null;
   StreamSubscription<DatabaseEvent>? mySessionSubscription = null;
@@ -126,26 +122,6 @@ class OngoingOutpostCallController extends GetxController {
   void onInit() async {
     super.onInit();
     final ongoingOutpost = outpostCallController.outpost.value!;
-    final channel = realtimeInstance.channels.get(ongoingOutpost.uuid);
-    presenceUpdateStream = channel.presence
-        .subscribe(action: PresenceAction.update)
-        .listen((message) {
-      if (!(message.data is String)) {
-        if (message.data is Map &&
-            eventNames
-                .isInteraction((message.data as Map)[InteractionKeys.action])) {
-          final data = message.data as Map;
-          final initiatorId = data[InteractionKeys.initiatorId];
-          final targetId = data[InteractionKeys.targetId];
-          final action = data[InteractionKeys.action];
-          _handleInteractionEvent(
-            action: action,
-            initiatorId: initiatorId,
-            targetId: targetId,
-          );
-        }
-      }
-    });
 
     final myUser = globalController.myUserInfo.value!;
     if (myUser.uuid == ongoingOutpost.creator_user_uuid) {
@@ -520,15 +496,16 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  _handleInteractionEvent({
-    required String action,
+  handleInteractionEvent({
+    required IncomingMessageType action,
     required String initiatorId,
     required String targetId,
   }) {
     lastReaction.value = Reaction(targetId: targetId, reaction: action);
     update(['confetti' + targetId]);
     Future.delayed(const Duration(milliseconds: 10), () {
-      lastReaction.value = Reaction(targetId: '', reaction: '');
+      lastReaction.value = Reaction(
+          targetId: '', reaction: IncomingMessageType.userStoppedSpeaking);
     });
     // lastReaction.value = Reaction(targetId: '', reaction: '');
     // final initiatorUser=groupCallController.
@@ -638,13 +615,13 @@ class OngoingOutpostCallController extends GetxController {
 
   onLikeClicked(String userId) async {
     sendGroupPeresenceEvent(
-        groupId: outpostCallController.outpost.value!.uuid,
-        eventName: eventNames.like,
-        eventData: {
-          InteractionKeys.initiatorId: myId,
-          InteractionKeys.targetId: userId,
-          InteractionKeys.action: eventNames.like,
-        });
+      outpostId: outpostCallController.outpost.value!.uuid,
+      eventType: OutgoingMessageTypeEnums.like,
+      eventData: WsOutgoingMessageData(
+        amount: amountToAddForLikeInSeconds.toDouble(),
+        reactToUserAddress: userId,
+      ),
+    );
     final myUser = globalController.myUserInfo.value!;
     final key = generateKeyForStorageAndObserver(
       userId: userId,
@@ -670,13 +647,14 @@ class OngoingOutpostCallController extends GetxController {
 
   onDislikeClicked(String userId) async {
     sendGroupPeresenceEvent(
-        groupId: outpostCallController.outpost.value!.uuid,
-        eventName: eventNames.dislike,
-        eventData: {
-          InteractionKeys.initiatorId: myId,
-          InteractionKeys.targetId: userId,
-          InteractionKeys.action: eventNames.dislike,
-        });
+      outpostId: outpostCallController.outpost.value!.uuid,
+      eventType: OutgoingMessageTypeEnums.dislike,
+      eventData: WsOutgoingMessageData(
+        amount: amountToReduceForDislikeInSeconds.toDouble(),
+        reactToUserAddress: userId,
+      ),
+    );
+
     final key = generateKeyForStorageAndObserver(
         userId: userId,
         groupId: outpostCallController.outpost.value!.uuid,
@@ -844,15 +822,17 @@ class OngoingOutpostCallController extends GetxController {
           title: "Success",
           message: "${cheer ? "Cheer" : "Boo"} successful",
         );
-        final eventString = cheer ? eventNames.cheer : eventNames.boo;
+        final eventString = cheer
+            ? OutgoingMessageTypeEnums.cheer
+            : OutgoingMessageTypeEnums.boo;
         sendGroupPeresenceEvent(
-            groupId: outpostCallController.outpost.value!.uuid,
-            eventName: eventString,
-            eventData: {
-              InteractionKeys.initiatorId: myId,
-              InteractionKeys.targetId: userId,
-              InteractionKeys.action: eventString,
-            });
+          outpostId: outpostCallController.outpost.value!.uuid,
+          eventType: eventString,
+          eventData: WsOutgoingMessageData(
+            amount: parsedAmount.abs(),
+            reactToUserAddress: userId,
+          ),
+        );
         analytics.logEvent(name: 'cheerBoo', parameters: {
           'cheer': cheer.toString(),
           'amount': amount,
@@ -914,7 +894,8 @@ class OngoingOutpostCallController extends GetxController {
       talkTimer.endTimer();
       final elapsed = talkTimer.timeElapsedInSeconds;
       sendGroupPeresenceEvent(
-          groupId: outpostId, eventName: eventNames.notTalking);
+          outpostId: outpostId,
+          eventType: OutgoingMessageTypeEnums.stop_speaking);
       if (elapsed > 0) {
         analytics.logEvent(
           name: 'talked',
@@ -939,7 +920,8 @@ class OngoingOutpostCallController extends GetxController {
         return;
       }
       sendGroupPeresenceEvent(
-          groupId: outpostId, eventName: eventNames.talking);
+          outpostId: outpostId,
+          eventType: OutgoingMessageTypeEnums.start_speaking);
       amIMuted.value = false;
       jitsiMeet.setAudioMuted(false);
 

@@ -19,6 +19,7 @@ import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/services/toast/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -222,7 +223,10 @@ class OutpostCallController extends GetxController {
     searchedValueInMeet.value = '';
     final outpostId = outpost.value?.uuid;
     if (outpostId != null) {
-      sendGroupPeresenceEvent(groupId: outpostId, eventName: eventNames.leave);
+      sendGroupPeresenceEvent(
+        outpostId: outpostId,
+        eventType: OutgoingMessageTypeEnums.leave,
+      );
       final userId = myId;
       setIsUserPresentInSession(
         groupId: outpostId,

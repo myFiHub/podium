@@ -18,6 +18,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/services/toast/websocket/incomingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -391,22 +392,22 @@ _shootBoo(BuildContext context) {
 }
 
 _shootReaction({required BuildContext context, required Reaction reaction}) {
-  if (reaction.reaction == eventNames.like) {
+  if (reaction.reaction == IncomingMessageType.userLiked) {
     Timer(Duration.zero, () {
       _shootLike(context);
     });
   }
-  if (reaction.reaction == eventNames.dislike) {
+  if (reaction.reaction == IncomingMessageType.userDisliked) {
     Timer(Duration.zero, () {
       _shootDisLike(context);
     });
   }
-  if (reaction.reaction == eventNames.cheer) {
+  if (reaction.reaction == IncomingMessageType.userCheered) {
     Timer(Duration.zero, () {
       _shootCheer(context);
     });
   }
-  if (reaction.reaction == eventNames.boo) {
+  if (reaction.reaction == IncomingMessageType.userBooed) {
     Timer(Duration.zero, () {
       _shootBoo(context);
     });

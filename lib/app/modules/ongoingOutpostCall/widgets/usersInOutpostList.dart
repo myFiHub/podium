@@ -17,6 +17,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_session_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/websocket/incomingMessage.dart';
 import 'package:podium/utils/constants.dart';
@@ -28,7 +29,7 @@ import 'package:podium/widgets/button/button.dart';
 import 'package:pulsator/pulsator.dart';
 
 class UsersInGroupList extends StatelessWidget {
-  final List<FirebaseSessionMember> usersList;
+  final List<LiveMember> usersList;
   final String groupId;
   final bool shouldShowIntro;
   const UsersInGroupList({
@@ -46,14 +47,14 @@ class UsersInGroupList extends StatelessWidget {
             itemBuilder: (context, index) {
               final user = usersList[index];
               final name = user.name;
-              String avatar = user.avatar;
+              String avatar = user.image;
               if (avatar.isEmpty || avatar == defaultAvatar) {
                 avatar = avatarPlaceHolder(name);
               }
-              final userId = user.id;
-              final isItME = user.id == myId;
+              final userId = user.uuid;
+              final isItME = userId == myId;
               return _SingleUserInRoom(
-                key: Key(user.id + 'singleUserCard'),
+                key: Key(user.uuid + 'singleUserCard'),
                 isItME: isItME,
                 userId: userId,
                 user: user,
@@ -98,7 +99,7 @@ class _SingleUserInRoom extends StatelessWidget {
 
   final bool isItME;
   final String userId;
-  final FirebaseSessionMember user;
+  final LiveMember user;
   final String name;
   final String avatar;
   final String groupId;
@@ -118,7 +119,7 @@ class _SingleUserInRoom extends StatelessWidget {
         usersController.openUserProfile(userId);
       },
       child: _SingleUserCard(
-        id: user.id,
+        id: user.uuid,
         isItME: isItME,
         name: name,
         avatar: avatar,

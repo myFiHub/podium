@@ -24,9 +24,6 @@ class GroupDetailView extends GetView<OutpostDetailController> {
       body: Column(
         children: [
           Obx(() {
-            // final isLoading = controller.isGettingMembers.value;
-            l.d('members: ${controller.membersList.value}');
-            final members = controller.membersList.value;
             final outpost = controller.outpost.value;
             final accesses = controller.outpostAccesses.value;
             if (outpost == null || accesses == null) {
@@ -105,13 +102,8 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                     ),
                   ),
                   space10,
-                  Expanded(
-                    child: UserList(
-                      usersList: members,
-                      onRequestUpdate: (userId) {
-                        controller.updateSingleUser(userId);
-                      },
-                    ),
+                  const Expanded(
+                    child: MembersList(),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -154,6 +146,23 @@ class GroupDetailView extends GetView<OutpostDetailController> {
         ],
       ),
     );
+  }
+}
+
+class MembersList extends GetView<OutpostDetailController> {
+  const MembersList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final members = controller.membersList.value;
+      return UserList(
+        usersList: members,
+        onRequestUpdate: (userId) {
+          controller.updateSingleUser(userId);
+        },
+      );
+    });
   }
 }
 

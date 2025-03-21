@@ -7,12 +7,9 @@ import 'package:podium/app/modules/home/widgets/addOutpostButton.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
-import 'package:podium/services/toast/websocket/outgoingMessage.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/button/button.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../controllers/home_controller.dart';
@@ -28,26 +25,26 @@ class HomeView extends GetView<HomeController> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Button(
-            text: 'test',
-            onPressed: () async {
-              wsClient.send(
-                // WsOutgoingMessage(
-                //   message_type: OutgoingMessageTypeEnums.join,
-                //   outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
-                // ),
-                WsOutgoingMessage(
-                  message_type: OutgoingMessageTypeEnums.like,
-                  outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
-                  data: WsOutgoingMessageData(
-                    amount: null,
-                    react_to_user_address:
-                        '45277375-9423-4353-a256-8ab19793f451',
-                  ),
-                ),
-              );
-            },
-          ),
+          // Button(
+          //   text: 'test',
+          //   onPressed: () async {
+          //     wsClient.send(
+          //       // WsOutgoingMessage(
+          //       //   message_type: OutgoingMessageTypeEnums.join,
+          //       //   outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
+          //       // ),
+          //       WsOutgoingMessage(
+          //         message_type: OutgoingMessageTypeEnums.like,
+          //         outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
+          //         data: WsOutgoingMessageData(
+          //           amount: null,
+          //           react_to_user_address:
+          //               '45277375-9423-4353-a256-8ab19793f451',
+          //         ),
+          //       ),
+          //     );
+          //   },
+          // ),
           space16,
           Row(
             children: [

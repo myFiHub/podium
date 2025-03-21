@@ -27,6 +27,8 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/toast/websocket/incomingMessage.dart';
 import 'package:podium/services/toast/websocket/outgoingMessage.dart';
@@ -94,8 +96,8 @@ class OngoingOutpostCallController extends GetxController {
   final storage = GetStorage();
   final outpostCallController = Get.find<OutpostCallController>();
   final globalController = Get.find<GlobalController>();
-  final firebaseSession = Rxn<FirebaseSession>();
-  final mySession = Rxn<FirebaseSessionMember>();
+  final sessionData = Rxn<OutpostLiveData>();
+  final mySession = Rxn<LiveMember>();
   final allRemainingTimesMap = Rx<Map<String, int>>({});
   final talkTimer = MyTalkTimer();
   final amIAdmin = false.obs;
@@ -127,13 +129,15 @@ class OngoingOutpostCallController extends GetxController {
     if (myUser.uuid == ongoingOutpost.creator_user_uuid) {
       amIAdmin.value = true;
     }
-    mySession.value = await getUserSessionData(
-      groupId: ongoingOutpost.uuid,
-      userId: myUser.uuid,
+    final liveData = await HttpApis.podium.getLatestLiveData(
+      ongoingOutpost.uuid,
     );
-    firebaseSession.value = await getSessionData(
-      groupId: ongoingOutpost.uuid,
-    );
+    if (liveData != null) {
+      mySession.value = liveData.members.firstWhere(
+        (element) => element.uuid == myUser.uuid,
+      );
+    }
+
     mySessionSubscription = startListeningToMyRemainingTalkingTime(
       groupId: ongoingOutpost.uuid,
       userId: myUser.uuid,
@@ -167,10 +171,8 @@ class OngoingOutpostCallController extends GetxController {
     super.onClose();
     stopRecording();
     presenceUpdateStream?.cancel();
-    stopTheTimer();
-    stopSubscriptions();
     mySession.value = null;
-    firebaseSession.value = null;
+    sessionData.value = null;
     timer?.cancel();
     await jitsiMeet.hangUp();
   }
@@ -446,11 +448,6 @@ class OngoingOutpostCallController extends GetxController {
     isRecording.value = recording;
   }
 
-  stopSubscriptions() {
-    sessionMembersSubscription?.cancel();
-    mySessionSubscription?.cancel();
-  }
-
   onRemainingTimeUpdate(int? remainingTime) {
     l.d("remaining time is $remainingTime");
     remainingTimeTimer.value = remainingTime ?? 0;
@@ -474,25 +471,6 @@ class OngoingOutpostCallController extends GetxController {
         meet.setAudioMuted(true);
         return;
       }
-      if (timer != null) {
-        timer?.cancel();
-      }
-      timer = Timer.periodic(const Duration(seconds: 1), (t) {
-        if (remainingTimeTimer.value > 0) {
-          if (!amIMuted.value) {
-            final v = remainingTimeTimer.value - 1000;
-            remainingTimeTimer.value = v;
-            if (v == 0) {
-              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
-              t.cancel();
-            } else {
-              updateRemainingTimeInMySessionOnFirebase(v: v, userId: myId);
-            }
-          }
-        } else {
-          t.cancel();
-        }
-      });
     }
   }
 
@@ -524,92 +502,12 @@ class OngoingOutpostCallController extends GetxController {
       final canSpeak = groupCallController.canTalk.value;
       if (myUserId != null && canSpeak && amIMuted.value == false) {
         await setIsTalkingInSession(
-          sessionId: firebaseSession.value!.id,
+          sessionId: outpost.uuid,
           userId: myUserId,
           isTalking: true,
           startedToTalkAt: DateTime.now().millisecondsSinceEpoch,
         );
       }
-    }
-  }
-
-  stopTheTimer() async {
-    if (firebaseSession.value != null) {
-      await setIsTalkingInSession(
-        sessionId: firebaseSession.value!.id,
-        userId: myId,
-        isTalking: false,
-      );
-    }
-    timer?.cancel();
-  }
-
-  Future<void> addToTimer(
-      {required int seconds, required String userId}) async {
-    if (outpostCallController.outpost.value == null) {
-      Toast.error(message: "Unknown error, please join again");
-      return;
-    }
-    final creatorId = outpostCallController.outpost.value!.creator_user_uuid;
-    if (creatorId == userId) {
-      return;
-    }
-    l.d("adding ${seconds} seconds to ${userId}");
-    final milliseconds = seconds * 1000;
-    final remainingTalkTimeForUser = await getUserRemainingTalkTime(
-      groupId: outpostCallController.outpost.value!.uuid,
-      userId: userId,
-    );
-    if (remainingTalkTimeForUser == null) {
-      l.f("remaining talk time for user is null");
-      return;
-    } else {
-      final v = remainingTalkTimeForUser + milliseconds;
-      return await updateRemainingTimeInMySessionOnFirebase(
-        v: v,
-        userId: userId,
-      );
-    }
-  }
-
-  Future<void> reduceFromTimer(
-      {required int seconds, required String userId}) async {
-    if (outpostCallController.outpost.value == null) {
-      Toast.error(message: "Unknown error, please join again");
-      return;
-    }
-    final creatorId = outpostCallController.outpost.value!.creator_user_uuid;
-    if (creatorId == userId) {
-      return;
-    }
-    final milliseconds = seconds * 1000;
-    final remainingTalkTimeForUser = await getUserRemainingTalkTime(
-        groupId: outpostCallController.outpost.value!.uuid, userId: userId);
-    if (remainingTalkTimeForUser == null) {
-      l.f("remaining talk time for user is null");
-      return;
-    }
-    final v = remainingTalkTimeForUser - milliseconds;
-    if (v <= 0) {
-      stopTheTimer();
-    }
-
-    return updateRemainingTimeInMySessionOnFirebase(
-        v: v <= 0 ? 0 : v, userId: userId);
-  }
-
-  Future<void> updateRemainingTimeInMySessionOnFirebase(
-      {required int v, required String userId}) {
-    final latestSession = mySession.value;
-    if (latestSession == null) {
-      l.f("latest session is null");
-      return Future.value();
-    } else {
-      return updateRemainingTimeOnFirebase(
-        newValue: v,
-        groupId: outpostCallController.outpost.value!.uuid,
-        userId: userId,
-      );
     }
   }
 
@@ -622,7 +520,6 @@ class OngoingOutpostCallController extends GetxController {
         react_to_user_address: userId,
       ),
     );
-    final myUser = globalController.myUserInfo.value!;
     final key = generateKeyForStorageAndObserver(
       userId: userId,
       groupId: outpostCallController.outpost.value!.uuid,
@@ -631,18 +528,6 @@ class OngoingOutpostCallController extends GetxController {
     timers.value[key] = DateTime.now().millisecondsSinceEpoch +
         likeDislikeTimeoutInMilliSeconds;
     timers.refresh();
-    await addToTimer(
-      seconds: amountToAddForLikeInSeconds,
-      userId: userId,
-    );
-    analytics.logEvent(
-      name: 'like',
-      parameters: {
-        'targetUser': userId,
-        'groupId': outpostCallController.outpost.value!.uuid,
-        'fromUser': myUser.uuid,
-      },
-    );
   }
 
   onDislikeClicked(String userId) async {
@@ -662,19 +547,6 @@ class OngoingOutpostCallController extends GetxController {
     timers.value[key] = DateTime.now().millisecondsSinceEpoch +
         likeDislikeTimeoutInMilliSeconds;
     timers.refresh();
-    await reduceFromTimer(
-      seconds: amountToReduceForDislikeInSeconds,
-      userId: userId,
-    );
-    final myUser = globalController.myUserInfo.value!;
-    analytics.logEvent(
-      name: 'dislike',
-      parameters: {
-        'targetUser': userId,
-        'groupId': outpostCallController.outpost.value!.uuid,
-        'fromUser': myUser.uuid,
-      },
-    );
   }
 
   _removeLoadingCheerBoo({
@@ -709,16 +581,20 @@ class OngoingOutpostCallController extends GetxController {
       final myUser = globalController.myUserInfo.value!;
       if (myUser.external_wallet_address == targetAddress ||
           (myUser.address == targetAddress)) {
-        final members = await getListOfUserWalletsPresentInSession(
-          firebaseSession.value!.id,
+        final liveData = await HttpApis.podium.getLatestLiveData(
+          outpostCallController.outpost.value!.uuid,
         );
-        final liveMemberIds =
-            outpostCallController.sortedMembers.value.map((e) => e.id).toList();
+        if (liveData == null) {
+          l.e("live data is null");
+          return;
+        }
+        final liveMemberIds = liveData.members.map((e) => e.uuid).toList();
+        final members = liveData.members;
         members.forEach((element) {
-          if (liveMemberIds.contains(element.id)) {
+          if (liveMemberIds.contains(element.uuid)) {
             if (element != targetAddress) {
-              aptosReceiverAddresses.add(element.aptosInternalWalletAddress);
-              if (element.evm_externalWalletAddress.isNotEmpty) {
+              aptosReceiverAddresses.add(element.aptos_address!);
+              if (element.external_wallet_address != null) {
                 receiverAddresses.add(user.evm_externalWalletAddress);
               } else {
                 receiverAddresses.add(user.evmInternalWalletAddress);
@@ -808,15 +684,6 @@ class OngoingOutpostCallController extends GetxController {
       }
       if (success) {
         _removeLoadingCheerBoo(userId: userId, cheer: cheer);
-        cheer
-            ? addToTimer(
-                seconds: finalAmountOfTimeToAdd.abs(),
-                userId: userId,
-              )
-            : reduceFromTimer(
-                seconds: finalAmountOfTimeToAdd.abs(),
-                userId: userId,
-              );
 
         Toast.success(
           title: "Success",
@@ -863,7 +730,7 @@ class OngoingOutpostCallController extends GetxController {
           groupId: outpostCallController.outpost.value!.uuid,
           selfCheer: myId == userId,
           memberIds: myId == userId
-              ? firebaseSession.value!.members.values.map((e) => e.id).toList()
+              ? sessionData.value!.members.map((e) => e.uuid).toList()
               : null,
         ));
       } else {
@@ -889,7 +756,6 @@ class OngoingOutpostCallController extends GetxController {
   audioMuteChanged({required bool muted}) {
     final outpostId = outpostCallController.outpost.value!.uuid;
     if (muted) {
-      stopTheTimer();
       amIMuted.value = true;
       talkTimer.endTimer();
       final elapsed = talkTimer.timeElapsedInSeconds;

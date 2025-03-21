@@ -15,8 +15,9 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/meeting.dart';
-import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/models/jitsi_member.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/toast/websocket/outgoingMessage.dart';
@@ -36,11 +37,11 @@ class OutpostCallController extends GetxController {
   final groupsController = Get.find<OutpostsController>();
   final globalController = Get.find<GlobalController>();
   final outpost = Rxn<OutpostModel>();
-  final members = Rx<List<FirebaseSessionMember>>([]);
-  final sortedMembers = Rx<List<FirebaseSessionMember>>([]);
+  final members = Rx<List<LiveMember>>([]);
+  final sortedMembers = Rx<List<LiveMember>>([]);
   final haveOngoingCall = false.obs;
   final jitsiMembers = Rx<List<JitsiMember>>([]);
-  final talkingMembers = Rx<List<FirebaseSessionMember>>([]);
+  final talkingMembers = Rx<List<LiveMember>>([]);
   final searchedValueInMeet = Rx<String>('');
   final sortType = Rx<String>(SortTypes.recentlyTalked);
   final canTalk = false.obs;
@@ -70,26 +71,12 @@ class OutpostCallController extends GetxController {
     outpost.listen((activeOutpost) async {
       members.value = [];
       if (activeOutpost != null) {
-        // TODO: add present users in outposts map
-        // final currentPresentMembers =
-        //     groupsController.presentUsersInGroupsMap.value[activeGroup.id];
-        // if (currentPresentMembers != null) {
-        //   await _updateByPresentMembers(
-        //     groupId: activeGroup.id,
-        //     presentMembers: currentPresentMembers,
-        //   );
-        // }
-        // groupsController.presentUsersInGroupsMap.listen(
-        //   (data) async {
-        //     final presentMembers = data[activeGroup.id];
-        //     if (presentMembers != null) {
-        //       await _updateByPresentMembers(
-        //         groupId: activeGroup.id,
-        //         presentMembers: presentMembers,
-        //       );
-        //     }
-        //   },
-        // );
+        final liveData = await HttpApis.podium.getLatestLiveData(
+          activeOutpost.uuid,
+        );
+        if (liveData != null) {
+          members.value = liveData.members;
+        }
       }
     });
   }
@@ -112,76 +99,32 @@ class OutpostCallController extends GetxController {
     super.dispose();
   }
 
-  Future<void> _updateByPresentMembers(
-      {required String groupId, required List<String> presentMembers}) async {
-    if (presentMembers.length != members.value.length) {
-      final remoteMembers = await getSessionMembers(
-        sessionId: groupId,
-      );
-      final List<FirebaseSessionMember> tmp = [];
-      final membersList = remoteMembers.values.toList();
-      membersList.forEach((member) {
-        if (presentMembers.contains(member.id)) {
-          tmp.add(FirebaseSessionMember(
-            id: member.id,
-            name: member.name,
-            avatar: member.avatar,
-            remainingTalkTime: member.remainingTalkTime,
-            initialTalkTime: member.initialTalkTime,
-            isMuted: member.isMuted,
-            present: member.present,
-            isTalking: member.isTalking,
-            startedToTalkAt: member.startedToTalkAt,
-            timeJoined: member.timeJoined,
-          ));
-        }
-      });
-      final sorted = sortMembers(members: tmp);
-      sortedMembers.value = sorted;
-    }
-  }
   ///////////////////////////////////////////////////////////////
 
-  addMemberToListIfItDoesntAlreadyExist({required String id}) async {
-    // TODO: add member to list if it doesnt already exist
-    // final newMember =
-    //     await getSessionMember(groupId: outpost.value!.uuid, userId: id);
-    // if (newMember != null) {
-    //   final member = FirebaseSessionMember(
-    //     id: newMember.id,
-    //     name: newMember.name,
-    //     avatar: newMember.avatar,
-    //     remainingTalkTime: newMember.remainingTalkTime,
-    //     initialTalkTime: newMember.initialTalkTime,
-    //     isMuted: newMember.isMuted,
-    //     present: newMember.present,
-    //     isTalking: newMember.isTalking,
-    //     startedToTalkAt: newMember.startedToTalkAt,
-    //     timeJoined: newMember.timeJoined,
-    //   );
-    //   //  add if it doesnt already exist and sort
-    //   if (!members.value.any((element) => element.id == newMember.id)) {
-    //     members.value.add(member);
-    //     final sorted = sortMembers(members: members.value);
-    //     sortedMembers.value = sorted;
-    //   }
-    // }
+  fetchLiveData() async {
+    if (outpost.value == null) return;
+    final liveData = await HttpApis.podium.getLatestLiveData(
+      outpost.value!.uuid,
+    );
+    if (liveData != null) {
+      members.value = liveData.members;
+    }
   }
 
   removeMemberFromListIfItExists({required String id}) {
-    members.value.removeWhere((element) => element.id == id);
+    members.value.removeWhere((element) => element.uuid == id);
     final sorted = sortMembers(members: members.value);
     sortedMembers.value = sorted;
   }
 
-  setSortedMembers({required List<FirebaseSessionMember> members}) {
+  setSortedMembers({required List<LiveMember> members}) {
     final sorted = sortMembers(members: members);
     sortedMembers.value = sorted;
   }
 
   updateTalkingMembers({required List<String> ids}) {
     final talkingMembersList = members.value.where((element) {
-      return ids.contains(element.id);
+      return ids.contains(element.uuid);
     }).toList();
 
     // put talking talkingMembersList at start of the sortedMembers
@@ -189,7 +132,7 @@ class OutpostCallController extends GetxController {
     // of the list
     final sorted = [...sortedMembers.value];
     talkingMembersList.forEach((talkingMember) {
-      sorted.removeWhere((element) => element.id == talkingMember.id);
+      sorted.removeWhere((element) => element.uuid == talkingMember.uuid);
       sorted.insert(0, talkingMember);
     });
     talkingMembers.value = talkingMembersList;
@@ -199,16 +142,17 @@ class OutpostCallController extends GetxController {
     sortedMembers.value = sorted;
   }
 
-  List<FirebaseSessionMember> sortMembers(
-      {required List<FirebaseSessionMember> members}) {
+  List<LiveMember> sortMembers({required List<LiveMember> members}) {
     final sorted = [...members];
     if (sortType.value == SortTypes.recentlyTalked) {
       sorted.sort((a, b) {
-        return b.startedToTalkAt.compareTo(a.startedToTalkAt);
+        return (b.last_speaked_at_timestamp ?? 0)
+            .compareTo(a.last_speaked_at_timestamp ?? 0);
       });
     } else if (sortType.value == SortTypes.timeJoined) {
       sorted.sort((a, b) {
-        return b.timeJoined.compareTo(a.timeJoined);
+        return (b.last_speaked_at_timestamp ?? 0)
+            .compareTo(a.last_speaked_at_timestamp ?? 0);
       });
     }
     return sorted;

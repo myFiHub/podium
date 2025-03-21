@@ -251,18 +251,10 @@ class MembersList extends GetView<OutpostCallController> {
 
   @override
   Widget build(BuildContext context) {
-    final globalController = Get.find<GlobalController>();
-    final myUser = globalController.myUserInfo.value;
     if (controller.outpost.value == null) {
       return Container();
     }
-    if (myUser == null) {
-      return Container(
-        child: const Center(
-          child: Text('something went horribly wrong'),
-        ),
-      );
-    }
+
     return Expanded(
       // height: Get.height - 190,
       child: Column(

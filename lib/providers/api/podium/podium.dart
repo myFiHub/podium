@@ -9,6 +9,7 @@ import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
@@ -407,6 +408,19 @@ class PodiumApi {
     } catch (e) {
       l.e(e);
       return [];
+    }
+  }
+
+  Future<OutpostLiveData?> getLatestLiveData(String outpostId) async {
+    try {
+      final response = await dio.get('$_baseUrl/outposts/online-data',
+          queryParameters: {'uuid': outpostId},
+          options: Options(headers: _headers));
+      l.i(response.data);
+      return OutpostLiveData.fromJson(response.data['data']);
+    } catch (e) {
+      l.e(e);
+      return null;
     }
   }
 

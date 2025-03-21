@@ -7,19 +7,16 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
-import 'package:podium/app/modules/allOutposts/controllers/all_outposts_controller.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
 import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
-import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantConfigs.dart';
 import 'package:podium/constants/constantKeys.dart';
@@ -779,6 +776,7 @@ class OutpostsController extends GetxController with FirebaseTags {
     try {
       joiningGroupId.value = outpostId;
       final outpost = await HttpApis.podium.getOutpost(outpostId);
+      l.d("Outpost: $outpost");
       if (outpost == null) {
         Toast.error(
           title: "Error",

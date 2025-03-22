@@ -5,6 +5,7 @@ import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -87,14 +88,15 @@ class IntroUser extends StatelessWidget {
 }
 
 class _SingleUserInRoom extends StatelessWidget {
-  const _SingleUserInRoom(
-      {super.key,
-      required this.isItME,
-      required this.userId,
-      required this.user,
-      required this.name,
-      required this.avatar,
-      required this.groupId});
+  const _SingleUserInRoom({
+    super.key,
+    required this.isItME,
+    required this.userId,
+    required this.user,
+    required this.name,
+    required this.avatar,
+    required this.groupId,
+  });
 
   final bool isItME;
   final String userId;
@@ -414,35 +416,35 @@ _shootReaction({required BuildContext context, required Reaction reaction}) {
   }
 }
 
-class _TalkingIndicator extends GetView<OutpostsController> {
+class _TalkingIndicator extends GetView<OutpostCallController> {
   final String groupId;
   final String userId;
-  const _TalkingIndicator(
-      {super.key, required this.groupId, required this.userId});
+  const _TalkingIndicator({
+    super.key,
+    required this.groupId,
+    required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final talkingMembers = controller.takingUsersInGroupsMap.value;
-      final talkingUsers = talkingMembers[groupId];
-      if (talkingUsers == null) {
-        return const SizedBox();
-      }
-      final isTalking = talkingUsers.contains(userId);
+      final talkingMembers = controller.talkingUsers.value;
+      final isTalking =
+          talkingMembers.map((element) => element.uuid).contains(userId);
       return !isTalking
           ? const SizedBox()
           : Container(
               width: 40,
               height: 40,
               child: const Pulsator(
-                style: PulseStyle(color: Colors.green),
-                duration: Duration(seconds: 2),
+                style: const PulseStyle(color: Colors.green),
+                duration: const Duration(seconds: 2),
                 count: 2,
                 repeat: 0,
                 startFromScratch: false,
                 autoStart: true,
                 fit: PulseFit.contain,
-                child: Icon(
+                child: const Icon(
                   Icons.mic,
                   color: Colors.white,
                   size: 20,

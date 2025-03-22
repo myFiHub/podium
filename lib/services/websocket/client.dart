@@ -86,36 +86,34 @@ class WebSocketService {
 
   void _handleIncomingMessage(IncomingMessage incomingMessage) {
     l.d('handle incoming message: ${incomingMessage.name}');
+    final outpostCallControllerExists =
+        Get.isRegistered<OutpostCallController>();
+    if (!outpostCallControllerExists) {
+      return;
+    }
+    final exists = Get.isRegistered<OngoingOutpostCallController>();
+    if (!exists) return;
+
+    final ongoingOutpostCallController =
+        Get.find<OngoingOutpostCallController>();
+    final OutpostCallController outpostCallController =
+        Get.find<OutpostCallController>();
     switch (incomingMessage.name) {
       case IncomingMessageType.userJoined:
       case IncomingMessageType.userLeft:
         joinOrLeftThrottle.throttle(() {
-          final exists = Get.isRegistered<OutpostCallController>();
-          if (!exists) {
-            return;
-          }
-          final OutpostCallController outpostCallController =
-              Get.find<OutpostCallController>();
           outpostCallController.fetchLiveData();
         });
         break;
       case IncomingMessageType.remainingTimeUpdated:
         {
-          final exists = Get.isRegistered<OngoingOutpostCallController>();
-          if (!exists) return;
-          final ongoingOutpostCallController =
-              Get.find<OngoingOutpostCallController>();
           ongoingOutpostCallController.updateUserRemainingTime(
-              address: incomingMessage.data.address!,
-              newTimeInSeconds: incomingMessage.data.remaining_time!);
+            address: incomingMessage.data.address!,
+            newTimeInSeconds: incomingMessage.data.remaining_time!,
+          );
         }
-
       case IncomingMessageType.userStartedSpeaking:
         {
-          final exists = Get.isRegistered<OngoingOutpostCallController>();
-          if (!exists) return;
-          final ongoingOutpostCallController =
-              Get.find<OngoingOutpostCallController>();
           ongoingOutpostCallController.updateUserIsTalking(
             address: incomingMessage.data.address!,
             isTalking: true,
@@ -124,10 +122,6 @@ class WebSocketService {
         break;
       case IncomingMessageType.userStoppedSpeaking:
         {
-          final exists = Get.isRegistered<OngoingOutpostCallController>();
-          if (!exists) return;
-          final ongoingOutpostCallController =
-              Get.find<OngoingOutpostCallController>();
           ongoingOutpostCallController.updateUserIsTalking(
             address: incomingMessage.data.address!,
             isTalking: false,

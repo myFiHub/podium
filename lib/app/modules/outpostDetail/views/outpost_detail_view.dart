@@ -24,6 +24,8 @@ class GroupDetailView extends GetView<OutpostDetailController> {
       body: Column(
         children: [
           Obx(() {
+            final exists = Get.isRegistered<OutpostDetailController>();
+            if (!exists) return const SizedBox();
             final outpost = controller.outpost.value;
             final accesses = controller.outpostAccesses.value;
             if (outpost == null || accesses == null) {

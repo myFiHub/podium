@@ -1,16 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/env.dart';
-import 'package:podium/services/toast/websocket/incomingMessage.dart';
-import 'package:podium/services/toast/websocket/outgoingMessage.dart';
+import 'package:podium/services/websocket/incomingMessage.dart';
+import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
+
+final joinOrLeftThrottle = Throttling(duration: const Duration(seconds: 1));
 
 class WebSocketService {
   WebSocketChannel? _channel;
   Timer? _reconnectTimer;
-  bool _isConnected = false;
+  bool _isConnecting = false;
+  bool _connected = false;
   Timer? _pongTimer;
   StreamSubscription? subscription;
   final String token;
@@ -21,11 +28,14 @@ class WebSocketService {
 
   void _connect() async {
     try {
+      _isConnecting = true;
       _channel = WebSocketChannel.connect(
         Uri.parse('${Env.websocketAddress}?token=$token'),
       );
 
       await _channel!.ready;
+      _isConnecting = false;
+      _connected = true;
       l.d("Connected to websocket: ${_channel!.hashCode}");
       //  sen pong every 20 seconds
       if (_pongTimer != null) _pongTimer!.cancel();
@@ -65,11 +75,11 @@ class WebSocketService {
   }
 
   void _reconnect() {
-    if (_isConnected) return;
-    _isConnected = true;
+    if (_isConnecting) return;
+    _isConnecting = true;
     subscription?.cancel();
+    _connected = false;
     _reconnectTimer = Timer(const Duration(seconds: 1), () {
-      _isConnected = false;
       _connect();
     });
   }
@@ -78,11 +88,53 @@ class WebSocketService {
     l.d('handle incoming message: ${incomingMessage.name}');
     switch (incomingMessage.name) {
       case IncomingMessageType.userJoined:
-        l.f('handle user joined');
-        break;
       case IncomingMessageType.userLeft:
-        l.f('handle user left');
+        joinOrLeftThrottle.throttle(() {
+          final exists = Get.isRegistered<OutpostCallController>();
+          if (!exists) {
+            return;
+          }
+          final OutpostCallController outpostCallController =
+              Get.find<OutpostCallController>();
+          outpostCallController.fetchLiveData();
+        });
         break;
+      case IncomingMessageType.remainingTimeUpdated:
+        {
+          final exists = Get.isRegistered<OngoingOutpostCallController>();
+          if (!exists) return;
+          final ongoingOutpostCallController =
+              Get.find<OngoingOutpostCallController>();
+          ongoingOutpostCallController.updateUserRemainingTime(
+              address: incomingMessage.data.address!,
+              newTimeInSeconds: incomingMessage.data.remaining_time!);
+        }
+
+      case IncomingMessageType.userStartedSpeaking:
+        {
+          final exists = Get.isRegistered<OngoingOutpostCallController>();
+          if (!exists) return;
+          final ongoingOutpostCallController =
+              Get.find<OngoingOutpostCallController>();
+          ongoingOutpostCallController.updateUserIsTalking(
+            address: incomingMessage.data.address!,
+            isTalking: true,
+          );
+        }
+        break;
+      case IncomingMessageType.userStoppedSpeaking:
+        {
+          final exists = Get.isRegistered<OngoingOutpostCallController>();
+          if (!exists) return;
+          final ongoingOutpostCallController =
+              Get.find<OngoingOutpostCallController>();
+          ongoingOutpostCallController.updateUserIsTalking(
+            address: incomingMessage.data.address!,
+            isTalking: false,
+          );
+        }
+        break;
+
       case IncomingMessageType.userLiked:
         l.f('handle user liked');
         break;
@@ -95,17 +147,14 @@ class WebSocketService {
       case IncomingMessageType.userCheered:
         l.f('handle user cheered');
         break;
-      case IncomingMessageType.userStartedSpeaking:
-        l.f('handle user started speaking');
-        break;
-      case IncomingMessageType.userStoppedSpeaking:
-        l.f('handle user stopped speaking');
-        break;
     }
   }
 
   void send(WsOutgoingMessage message) {
     final jsoned = message.toJson();
+    if (jsoned['data'] == null) {
+      jsoned['data'] = {};
+    }
     final stringified = jsonEncode(jsoned);
     l.d('Sending message: $stringified');
     _channel?.sink.add(stringified);
@@ -113,7 +162,9 @@ class WebSocketService {
 
   //send a pong message type to websocket, not using out message type
   void _pong() {
-    _channel?.sink.add(List<int>.from([0x8A]));
+    if (!_isConnecting) {
+      _channel?.sink.add(List<int>.from([0x8A]));
+    }
   }
 
   void close() {

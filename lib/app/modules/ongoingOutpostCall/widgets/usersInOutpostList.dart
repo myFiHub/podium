@@ -19,13 +19,12 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
-import 'package:podium/services/toast/websocket/incomingMessage.dart';
+import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
-import 'package:podium/widgets/button/button.dart';
 import 'package:pulsator/pulsator.dart';
 
 class UsersInGroupList extends StatelessWidget {
@@ -466,7 +465,7 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
           controller.outpostCallController.outpost.value!.creator_user_uuid;
       final userRemainingTime = timersMap[userId];
       if (userId == roomCreator) {
-        return Text('Room creator',
+        return Text('Creator',
             style: TextStyle(fontSize: 10, color: Colors.green[200]));
       }
       if (userRemainingTime == null) {

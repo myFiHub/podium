@@ -27,6 +27,7 @@ const _$IncomingMessageTypeEnumMap = {
   IncomingMessageType.userCheered: 'user.cheered',
   IncomingMessageType.userStartedSpeaking: 'user.started_speaking',
   IncomingMessageType.userStoppedSpeaking: 'user.stopped_speaking',
+  IncomingMessageType.remainingTimeUpdated: 'remaining_time.updated',
 };
 
 IncomingMessageData _$IncomingMessageDataFromJson(Map<String, dynamic> json) =>
@@ -37,6 +38,7 @@ IncomingMessageData _$IncomingMessageDataFromJson(Map<String, dynamic> json) =>
       image: json['image'] as String?,
       react_to_user_address: json['react_to_user_address'] as String?,
       amount: (json['amount'] as num?)?.toInt(),
+      remaining_time: (json['remaining_time'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$IncomingMessageDataToJson(
@@ -48,4 +50,5 @@ Map<String, dynamic> _$IncomingMessageDataToJson(
       'image': instance.image,
       'react_to_user_address': instance.react_to_user_address,
       'amount': instance.amount,
+      'remaining_time': instance.remaining_time,
     };

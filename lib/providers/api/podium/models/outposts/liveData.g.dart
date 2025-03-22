@@ -20,12 +20,12 @@ Map<String, dynamic> _$OutpostLiveDataToJson(OutpostLiveData instance) =>
 
 LiveMember _$LiveMemberFromJson(Map<String, dynamic> json) => LiveMember(
       address: json['address'] as String,
-      canSpeak: json['canSpeak'] as bool,
+      can_speak: json['can_speak'] as bool,
       feedbacks: (json['feedbacks'] as List<dynamic>)
           .map((e) => Feedback.fromJson(e as Map<String, dynamic>))
           .toList(),
       image: json['image'] as String,
-      is_resent: json['is_resent'] as bool,
+      is_present: json['is_present'] as bool,
       is_speaking: json['is_speaking'] as bool,
       name: json['name'] as String,
       reactions: (json['reactions'] as List<dynamic>)
@@ -42,10 +42,10 @@ LiveMember _$LiveMemberFromJson(Map<String, dynamic> json) => LiveMember(
 Map<String, dynamic> _$LiveMemberToJson(LiveMember instance) =>
     <String, dynamic>{
       'address': instance.address,
-      'canSpeak': instance.canSpeak,
+      'can_speak': instance.can_speak,
       'feedbacks': instance.feedbacks,
       'image': instance.image,
-      'is_resent': instance.is_resent,
+      'is_present': instance.is_present,
       'is_speaking': instance.is_speaking,
       'name': instance.name,
       'reactions': instance.reactions,

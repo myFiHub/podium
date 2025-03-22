@@ -19,6 +19,8 @@ enum IncomingMessageType {
   userStartedSpeaking,
   @JsonValue("user.stopped_speaking")
   userStoppedSpeaking,
+  @JsonValue("remaining_time.updated")
+  remainingTimeUpdated,
 }
 
 @JsonSerializable()
@@ -42,14 +44,17 @@ class IncomingMessageData {
   final String? image;
   final String? react_to_user_address;
   final int? amount;
+  final int? remaining_time;
 
-  IncomingMessageData(
-      {this.address,
-      this.uuid,
-      this.name,
-      this.image,
-      this.react_to_user_address,
-      this.amount});
+  IncomingMessageData({
+    this.address,
+    this.uuid,
+    this.name,
+    this.image,
+    this.react_to_user_address,
+    this.amount,
+    this.remaining_time,
+  });
 
   factory IncomingMessageData.fromJson(Map<String, dynamic> json) =>
       _$IncomingMessageDataFromJson(json);

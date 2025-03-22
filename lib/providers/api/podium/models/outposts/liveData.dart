@@ -51,25 +51,25 @@ class OutpostLiveData {
 @JsonSerializable()
 class LiveMember {
   final String address;
-  final bool canSpeak;
+  final bool can_speak;
   final List<Feedback> feedbacks;
   final String image;
-  final bool is_resent;
-  final bool is_speaking;
+  final bool is_present;
+  bool is_speaking;
   final String name;
   final List<UserReaction> reactions;
-  final int remaining_time;
-  final int? last_speaked_at_timestamp;
+  int remaining_time;
+  int? last_speaked_at_timestamp;
   final String aptos_address;
   final String? external_wallet_address;
   final String uuid;
 
   LiveMember({
     required this.address,
-    required this.canSpeak,
+    required this.can_speak,
     required this.feedbacks,
     required this.image,
-    required this.is_resent,
+    required this.is_present,
     required this.is_speaking,
     required this.name,
     required this.reactions,

@@ -165,10 +165,9 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
         Obx(
           () {
             final isAdmin = controller.amIAdmin.value;
-            final remainingTimeInMillisecond =
-                controller.remainingTimeTimer.value;
+            final remainingTimeInSeconds = controller.remainingTimeTimer.value;
 
-            if (remainingTimeInMillisecond == -1) {
+            if (remainingTimeInSeconds == -1) {
               return const Text(
                 "loading...",
                 style: TextStyle(
@@ -186,10 +185,10 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
                 ),
               );
             }
-            final list = formatDuration(remainingTimeInMillisecond);
+            final list = formatDuration(remainingTimeInSeconds);
             final remainingTime = list.join(":");
             final isSmall = int.parse(list[0]) == 0 && int.parse(list[1]) < 2;
-            return remainingTimeInMillisecond != 0
+            return remainingTimeInSeconds != 0
                 ? Container(
                     key: controller.timerKey,
                     child: Text(
@@ -283,8 +282,7 @@ class MembersList extends GetView<OutpostCallController> {
                           child: Text("Search"),
                         ),
                         Obx(() {
-                          final talkingMembers =
-                              controller.talkingMembers.value;
+                          final talkingMembers = controller.talkingUsers.value;
                           return Tab(
                             child: Text("Talking (${talkingMembers.length})"),
                           );
@@ -310,7 +308,7 @@ class MembersList extends GetView<OutpostCallController> {
                       ),
                       Obx(
                         () {
-                          final members = controller.talkingMembers.value;
+                          final members = controller.talkingUsers.value;
                           return UsersInGroupList(
                             shouldShowIntro: false,
                             usersList: members,

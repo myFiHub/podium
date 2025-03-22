@@ -28,7 +28,7 @@ import 'package:podium/models/metadata/movementAptos.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
-import 'package:podium/services/toast/websocket/client.dart';
+import 'package:podium/services/websocket/client.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';

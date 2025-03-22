@@ -10,7 +10,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpos
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
-import 'package:podium/services/toast/websocket/outgoingMessage.dart';
+import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 

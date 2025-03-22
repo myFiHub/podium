@@ -411,12 +411,15 @@ class PodiumApi {
     }
   }
 
-  Future<OutpostLiveData?> getLatestLiveData(String outpostId) async {
+  Future<OutpostLiveData?> getLatestLiveData(
+      {required String outpostId, bool? alsoJoin}) async {
     try {
       final response = await dio.get('$_baseUrl/outposts/online-data',
-          queryParameters: {'uuid': outpostId},
+          queryParameters: {
+            'uuid': outpostId,
+            if (alsoJoin == true) "also_join": true
+          },
           options: Options(headers: _headers));
-      l.i(response.data);
       return OutpostLiveData.fromJson(response.data['data']);
     } catch (e) {
       l.e(e);

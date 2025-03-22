@@ -34,7 +34,7 @@ import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
-import 'package:podium/services/toast/websocket/outgoingMessage.dart';
+import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -49,9 +49,6 @@ sendGroupPeresenceEvent(
     required OutgoingMessageTypeEnums eventType,
     WsOutgoingMessageData? eventData}) async {
   try {
-    if (dpt == 0) {
-      return;
-    }
     if (eventType == OutgoingMessageTypeEnums.leave) {
       wsClient.send(WsOutgoingMessage(
         message_type: OutgoingMessageTypeEnums.leave,
@@ -62,7 +59,6 @@ sendGroupPeresenceEvent(
     }
     if (eventType == OutgoingMessageTypeEnums.start_speaking ||
         eventType == OutgoingMessageTypeEnums.stop_speaking) {
-      // channel.presence.update(eventName);
       wsClient.send(WsOutgoingMessage(
         message_type: eventType,
         outpost_uuid: outpostId,

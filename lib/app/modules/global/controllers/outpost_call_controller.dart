@@ -20,7 +20,7 @@ import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
-import 'package:podium/services/toast/websocket/outgoingMessage.dart';
+import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -39,9 +39,9 @@ class OutpostCallController extends GetxController {
   final outpost = Rxn<OutpostModel>();
   final members = Rx<List<LiveMember>>([]);
   final sortedMembers = Rx<List<LiveMember>>([]);
+  final talkingUsers = Rx<List<LiveMember>>([]);
   final haveOngoingCall = false.obs;
   final jitsiMembers = Rx<List<JitsiMember>>([]);
-  final talkingMembers = Rx<List<LiveMember>>([]);
   final searchedValueInMeet = Rx<String>('');
   final sortType = Rx<String>(SortTypes.recentlyTalked);
   final canTalk = false.obs;
@@ -67,16 +67,20 @@ class OutpostCallController extends GetxController {
     //     }
     //   }
     // });
-
+    sortedMembers.listen((listOfSortedUsers) {
+      final talking = listOfSortedUsers
+          .where((member) => member.is_speaking == true)
+          .toList();
+      talkingUsers.value = talking;
+    });
+    members.listen((listOfUsers) {
+      final sorted = sortMembers(members: listOfUsers);
+      sortedMembers.value = sorted;
+    });
     outpost.listen((activeOutpost) async {
       members.value = [];
       if (activeOutpost != null) {
-        final liveData = await HttpApis.podium.getLatestLiveData(
-          activeOutpost.uuid,
-        );
-        if (liveData != null) {
-          members.value = liveData.members;
-        }
+        fetchLiveData(alsoJoin: true);
       }
     });
   }
@@ -101,45 +105,37 @@ class OutpostCallController extends GetxController {
 
   ///////////////////////////////////////////////////////////////
 
-  fetchLiveData() async {
+  fetchLiveData({bool? alsoJoin}) async {
     if (outpost.value == null) return;
-    final liveData = await HttpApis.podium.getLatestLiveData(
-      outpost.value!.uuid,
-    );
+    final liveData = await HttpApis.podium
+        .getLatestLiveData(outpostId: outpost.value!.uuid, alsoJoin: alsoJoin);
     if (liveData != null) {
-      members.value = liveData.members;
+      members.value = liveData.members
+          .where((member) => member.is_present == true)
+          .toList();
     }
   }
 
-  removeMemberFromListIfItExists({required String id}) {
-    members.value.removeWhere((element) => element.uuid == id);
-    final sorted = sortMembers(members: members.value);
-    sortedMembers.value = sorted;
+  updateUserIsTalking({required String address, required bool isTalking}) {
+    final membersList = [...members.value];
+    final memberIndex = membersList.indexWhere((m) => m.address == address);
+    if (memberIndex != -1) {
+      membersList[memberIndex].last_speaked_at_timestamp =
+          DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      membersList[memberIndex].is_speaking = isTalking;
+      members.value = membersList;
+    }
   }
 
-  setSortedMembers({required List<LiveMember> members}) {
-    final sorted = sortMembers(members: members);
-    sortedMembers.value = sorted;
-  }
-
-  updateTalkingMembers({required List<String> ids}) {
-    final talkingMembersList = members.value.where((element) {
-      return ids.contains(element.uuid);
-    }).toList();
-
-    // put talking talkingMembersList at start of the sortedMembers
-    // forEach talking member, remove from sortedMembers and add to the start
-    // of the list
-    final sorted = [...sortedMembers.value];
-    talkingMembersList.forEach((talkingMember) {
-      sorted.removeWhere((element) => element.uuid == talkingMember.uuid);
-      sorted.insert(0, talkingMember);
-    });
-    talkingMembers.value = talkingMembersList;
-    // log.d("talking members: ${talkingMembersList.map((e) => e.id).toList()}");
-    // final sortedIds = sorted.map((e) => e.id).toList();
-    // log.d("sorted members: $sortedIds");
-    sortedMembers.value = sorted;
+  void updateUserTime({required String address, required int newTime}) {
+    final membersList = [...members.value];
+    final memberIndex = membersList.indexWhere((m) => m.address == address);
+    if (memberIndex != -1) {
+      membersList[memberIndex].last_speaked_at_timestamp =
+          DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      membersList[memberIndex].remaining_time = newTime;
+      members.value = membersList;
+    }
   }
 
   List<LiveMember> sortMembers({required List<LiveMember> members}) {
@@ -163,7 +159,6 @@ class OutpostCallController extends GetxController {
     jitsiMembers.value = [];
     jitsiMeet.hangUp();
     members.value = [];
-    talkingMembers.value = [];
     searchedValueInMeet.value = '';
     final outpostId = outpost.value?.uuid;
     if (outpostId != null) {

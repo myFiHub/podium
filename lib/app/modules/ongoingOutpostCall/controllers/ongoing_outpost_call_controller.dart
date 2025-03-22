@@ -4,7 +4,6 @@ import 'dart:ui';
 
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:downloadsfolder/downloadsfolder.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
@@ -23,15 +22,14 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/cheerBooBottomSheet.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/toast/toast.dart';
-import 'package:podium/services/toast/websocket/incomingMessage.dart';
-import 'package:podium/services/toast/websocket/outgoingMessage.dart';
+import 'package:podium/services/websocket/incomingMessage.dart';
+import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -114,11 +112,7 @@ class OngoingOutpostCallController extends GetxController {
   final lastReaction = Rx<Reaction>(
     Reaction(targetId: '', reaction: IncomingMessageType.userStoppedSpeaking),
   );
-  StreamSubscription<DatabaseEvent>? sessionMembersSubscription = null;
-  StreamSubscription<DatabaseEvent>? mySessionSubscription = null;
   StreamSubscription<PresenceMessage>? presenceUpdateStream = null;
-
-  Timer? timer;
 
   @override
   void onInit() async {
@@ -130,25 +124,17 @@ class OngoingOutpostCallController extends GetxController {
       amIAdmin.value = true;
     }
     final liveData = await HttpApis.podium.getLatestLiveData(
-      ongoingOutpost.uuid,
+      outpostId: ongoingOutpost.uuid,
+      alsoJoin: true,
     );
     if (liveData != null) {
       mySession.value = liveData.members.firstWhere(
         (element) => element.uuid == myUser.uuid,
       );
+      if (mySession.value != null) {
+        remainingTimeTimer.value = mySession.value!.remaining_time;
+      }
     }
-
-    mySessionSubscription = startListeningToMyRemainingTalkingTime(
-      groupId: ongoingOutpost.uuid,
-      userId: myUser.uuid,
-      onData: onRemainingTimeUpdate,
-    );
-    sessionMembersSubscription = startListeningToSessionMembers(
-      sessionId: ongoingOutpost.uuid,
-      onData: (sessionMembers) {
-        _parseReceivedSessionMembers(sessionMembers);
-      },
-    );
   }
 
   @override
@@ -173,34 +159,27 @@ class OngoingOutpostCallController extends GetxController {
     presenceUpdateStream?.cancel();
     mySession.value = null;
     sessionData.value = null;
-    timer?.cancel();
     await jitsiMeet.hangUp();
   }
 
-  _parseReceivedSessionMembers(
-    Map<String, FirebaseSessionMember> sessionMembers,
-  ) {
-    final Map<String, int> remainingTimeMap = {};
-    final membersList = sessionMembers.values.toList();
-    // sort based on last talking time to show the most recent talker first
-    membersList.sort((a, b) => b.startedToTalkAt.compareTo(a.startedToTalkAt));
-    // final talkingIdsList = membersList
-    //     .where((element) => element.isTalking)
-    //     .map((e) => e.id)
-    //     .toList();
-    // if (talkingIdsList.length != talkingIds.value.length) {
-    //   talkingIds.value = talkingIdsList;
-    //   final GroupCallController groupCallController =
-    //       Get.find<GroupCallController>();
-    //   groupCallController.updateTalkingMembers(
-    //     ids: talkingIdsList,
-    //   );
-    // }
-    sessionMembers.forEach((key, value) {
-      remainingTimeMap[key] = value.remainingTalkTime;
-    });
-    allRemainingTimesMap.value.addAll(remainingTimeMap);
-    allRemainingTimesMap.refresh();
+  updateUserRemainingTime(
+      {required String address, required int newTimeInSeconds}) {
+    final myAddress = myUser.address;
+    if (address == myAddress) {
+      remainingTimeTimer.value = newTimeInSeconds;
+    } else {
+      outpostCallController.updateUserTime(
+        address: address,
+        newTime: newTimeInSeconds,
+      );
+    }
+  }
+
+  updateUserIsTalking({required String address, required bool isTalking}) {
+    outpostCallController.updateUserIsTalking(
+      address: address,
+      isTalking: isTalking,
+    );
   }
 
   startIntro() {
@@ -448,32 +427,6 @@ class OngoingOutpostCallController extends GetxController {
     isRecording.value = recording;
   }
 
-  onRemainingTimeUpdate(int? remainingTime) {
-    l.d("remaining time is $remainingTime");
-    remainingTimeTimer.value = remainingTime ?? 0;
-    timer?.cancel();
-    startTheTimer();
-  }
-
-  startTheTimer() {
-    final latestSession = mySession.value;
-    if (latestSession == null) {
-      l.f("latest session is null");
-      return;
-    } else {
-      // remaining talk time is in milliSeconds
-      if (amIAdmin.value) {
-        timer?.cancel();
-        return;
-      }
-      if (remainingTimeTimer.value <= 0) {
-        final meet = jitsiMeet;
-        meet.setAudioMuted(true);
-        return;
-      }
-    }
-  }
-
   handleInteractionEvent({
     required IncomingMessageType action,
     required String initiatorId,
@@ -487,28 +440,6 @@ class OngoingOutpostCallController extends GetxController {
     });
     // lastReaction.value = Reaction(targetId: '', reaction: '');
     // final initiatorUser=groupCallController.
-  }
-
-  updateMyLastTalkingTime() async {
-    final myUserId = globalController.myUserInfo.value?.uuid;
-    final outpost = outpostCallController.outpost.value;
-    if (outpost == null) {
-      return;
-    }
-    final isGroupCallRegistered = Get.isRegistered<OutpostCallController>();
-    if (isGroupCallRegistered) {
-      final OutpostCallController groupCallController =
-          Get.find<OutpostCallController>();
-      final canSpeak = groupCallController.canTalk.value;
-      if (myUserId != null && canSpeak && amIMuted.value == false) {
-        await setIsTalkingInSession(
-          sessionId: outpost.uuid,
-          userId: myUserId,
-          isTalking: true,
-          startedToTalkAt: DateTime.now().millisecondsSinceEpoch,
-        );
-      }
-    }
   }
 
   onLikeClicked(String userId) async {
@@ -582,7 +513,7 @@ class OngoingOutpostCallController extends GetxController {
       if (myUser.external_wallet_address == targetAddress ||
           (myUser.address == targetAddress)) {
         final liveData = await HttpApis.podium.getLatestLiveData(
-          outpostCallController.outpost.value!.uuid,
+          outpostId: outpostCallController.outpost.value!.uuid,
         );
         if (liveData == null) {
           l.e("live data is null");
@@ -755,23 +686,15 @@ class OngoingOutpostCallController extends GetxController {
 
   audioMuteChanged({required bool muted}) {
     final outpostId = outpostCallController.outpost.value!.uuid;
+    l.d(
+      "audoi mute:$muted",
+    );
     if (muted) {
       amIMuted.value = true;
-      talkTimer.endTimer();
-      final elapsed = talkTimer.timeElapsedInSeconds;
       sendGroupPeresenceEvent(
-          outpostId: outpostId,
-          eventType: OutgoingMessageTypeEnums.stop_speaking);
-      if (elapsed > 0) {
-        analytics.logEvent(
-          name: 'talked',
-          parameters: {
-            'timeInSeconds': elapsed,
-            'userId': myId,
-            'groupId': outpostCallController.outpost.value!.uuid,
-          },
-        );
-      }
+        outpostId: outpostId,
+        eventType: OutgoingMessageTypeEnums.stop_speaking,
+      );
     } else {
       final outpostCreator =
           outpostCallController.outpost.value!.creator_user_uuid;
@@ -786,18 +709,12 @@ class OngoingOutpostCallController extends GetxController {
         return;
       }
       sendGroupPeresenceEvent(
-          outpostId: outpostId,
-          eventType: OutgoingMessageTypeEnums.start_speaking);
+        outpostId: outpostId,
+        eventType: OutgoingMessageTypeEnums.start_speaking,
+      );
       amIMuted.value = false;
       jitsiMeet.setAudioMuted(false);
-
-      startTheTimer();
-      if (remainingTimeTimer > 0) {
-        talkTimer.startTimer();
-        updateMyLastTalkingTime();
-      }
     }
-    // log.d("audioMutedChanged: $muted");
   }
 
   checkWalletConnected({void Function()? afterConnection}) {

@@ -130,16 +130,11 @@ class WebSocketService {
         break;
 
       case IncomingMessageType.userLiked:
-        l.f('handle user liked');
-        break;
       case IncomingMessageType.userDisliked:
-        l.f('handle user disliked');
-        break;
       case IncomingMessageType.userBooed:
-        l.f('handle user booed');
-        break;
       case IncomingMessageType.userCheered:
-        l.f('handle user cheered');
+        ongoingOutpostCallController.handleIncomingReaction(incomingMessage);
+
         break;
     }
   }

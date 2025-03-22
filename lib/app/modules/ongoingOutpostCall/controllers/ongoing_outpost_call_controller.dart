@@ -182,6 +182,22 @@ class OngoingOutpostCallController extends GetxController {
     );
   }
 
+  handleIncomingReaction(IncomingMessage incomingMessage) {
+    final members = outpostCallController.members.value;
+    final targetUserIndex = members.indexWhere(
+        (item) => item.address == incomingMessage.data.react_to_user_address);
+    final initiatorUserIndex = members
+        .indexWhere((item) => item.address == incomingMessage.data.address);
+    if (targetUserIndex == -1 || initiatorUserIndex == -1) return;
+    final targetUser = members[targetUserIndex];
+    final initiatorUser = members[initiatorUserIndex];
+    handleInteractionEvent(
+      action: incomingMessage.name,
+      initiatorId: initiatorUser.uuid,
+      targetId: targetUser.uuid,
+    );
+  }
+
   startIntro() {
     if (storage.read(IntroStorageKeys.viewedOngiongCall) == null) {
       shouldShowIntro.value = true;

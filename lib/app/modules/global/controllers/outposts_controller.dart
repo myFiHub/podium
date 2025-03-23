@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
@@ -109,7 +108,6 @@ class OutpostsController extends GetxController {
   final gettingAllOutposts = true.obs;
   bool initializedChannels = false;
   bool gotDetectPresenceTime = false;
-  StreamSubscription<DatabaseEvent>? subscription;
 
   @override
   void onInit() {
@@ -147,7 +145,6 @@ class OutpostsController extends GetxController {
   @override
   void onClose() {
     super.onClose();
-    subscription?.cancel();
     _timerForPresentUsers.cancel();
     _timerForTakingUsers.cancel();
   }

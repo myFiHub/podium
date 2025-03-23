@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:alarm/alarm.dart';
 import 'package:aptos/aptos.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -15,8 +14,8 @@ import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
-import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -67,8 +66,7 @@ class GlobalController extends GetxController {
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
   String jitsiServerAddress = '';
-  final firebaseUserCredential = Rxn<UserCredential>();
-  final firebaseUser = Rxn<User>();
+
   final myUserInfo = Rxn<UserModel>();
   final activeRoute = AppPages.INITIAL.obs;
   final isAutoLoggingIn = true.obs;
@@ -562,14 +560,7 @@ class GlobalController extends GetxController {
         parameters: {
           if (referrerId.isNotEmpty) LoginParametersKeys.referrerId: referrerId,
         });
-    firebaseUserCredential.value = null;
-    try {
-      await FirebaseAuth.instance.signOut();
-      isLoggingOut.value = false;
-    } catch (e) {
-      l.e("error signing out from firebase $e");
-      isLoggingOut.value = false;
-    }
+
     ws_client?.close();
     ws_client = null;
   }

@@ -27,6 +27,7 @@ import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
@@ -90,7 +91,6 @@ class OngoingOutpostCallController extends GetxController {
     Reaction(targetId: '', reaction: IncomingMessageType.userStoppedSpeaking),
   );
 
-  StreamSubscription<int>? tickerListener;
   StreamSubscription<List<LiveMember>>? membersListener;
 
   @override
@@ -107,10 +107,6 @@ class OngoingOutpostCallController extends GetxController {
   void onReady() async {
     super.onReady();
 
-    tickerListener = globalController.ticker.listen((d) {
-      l.d(d);
-      handleTimerTick();
-    });
     membersListener = outpostCallController.members.listen((listOfMembers) {
       members.value = [...listOfMembers];
       final my_user =
@@ -118,6 +114,9 @@ class OngoingOutpostCallController extends GetxController {
       if (my_user.length == 0) return;
       mySession.value = (my_user[0]);
       mySession.refresh();
+      if (mySession.value!.remaining_time <= 0) {
+        jitsiMeet.setAudioMuted(true);
+      }
     });
   }
 
@@ -126,13 +125,8 @@ class OngoingOutpostCallController extends GetxController {
     super.onClose();
     stopRecording();
     membersListener?.cancel();
-    tickerListener?.cancel();
     sessionData.value = null;
     await jitsiMeet.hangUp();
-  }
-
-  handleTimerTick() {
-    l.d(members);
   }
 
   updateUserRemainingTime(
@@ -148,6 +142,13 @@ class OngoingOutpostCallController extends GetxController {
       address: address,
       isTalking: isTalking,
     );
+  }
+
+  handleTimeIsUp(IncomingMessage incomingMessage) {
+    final address = incomingMessage.data.address!;
+    if (address == myUser.address) {
+      jitsiMeet.setAudioMuted(true);
+    }
   }
 
   handleIncomingReaction(IncomingMessage incomingMessage) {
@@ -338,6 +339,11 @@ class OngoingOutpostCallController extends GetxController {
     _setIsRecording(false);
   }
 
+  LiveMember _getUserById({required String id}) {
+    final membersList = members.value;
+    return membersList.firstWhere((m) => m.uuid == id);
+  }
+
   Future<void> recordFile(
       AudioRecorder recorder, RecordConfig config, String path) async {
     await recorder.start(config, path: path);
@@ -426,13 +432,14 @@ class OngoingOutpostCallController extends GetxController {
     // final initiatorUser=groupCallController.
   }
 
-  onLikeClicked(String userId) async {
+  onLikeClicked({required String userId}) async {
+    final user = _getUserById(id: userId);
     sendOutpostEvent(
       outpostId: outpostCallController.outpost.value!.uuid,
       eventType: OutgoingMessageTypeEnums.like,
       eventData: WsOutgoingMessageData(
-        amount: amountToAddForLikeInSeconds.toDouble(),
-        react_to_user_address: userId,
+        amount: null,
+        react_to_user_address: user.address,
       ),
     );
     final key = generateKeyForStorageAndObserver(
@@ -445,13 +452,15 @@ class OngoingOutpostCallController extends GetxController {
     timers.refresh();
   }
 
-  onDislikeClicked(String userId) async {
+  onDislikeClicked({required String userId}) async {
+    final user = _getUserById(id: userId);
+
     sendOutpostEvent(
       outpostId: outpostCallController.outpost.value!.uuid,
       eventType: OutgoingMessageTypeEnums.dislike,
       eventData: WsOutgoingMessageData(
-        amount: amountToReduceForDislikeInSeconds.toDouble(),
-        react_to_user_address: userId,
+        amount: null,
+        react_to_user_address: user.address,
       ),
     );
 
@@ -477,16 +486,15 @@ class OngoingOutpostCallController extends GetxController {
     String? targetAddress;
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final user = await getUserById(userId);
+    final user = await HttpApis.podium.getUserData(userId);
     if (user == null) {
       l.e("user is null");
       return;
     }
-    if (user.evm_externalWalletAddress != '') {
-      targetAddress = user.evm_externalWalletAddress;
+    if (user.external_wallet_address != '') {
+      targetAddress = user.external_wallet_address;
     } else {
-      final internalWalletAddress = await getUserInternalWalletAddress(userId);
-      targetAddress = internalWalletAddress;
+      targetAddress = user.address;
     }
 
     l.d("target address is $targetAddress for user $userId");
@@ -503,22 +511,22 @@ class OngoingOutpostCallController extends GetxController {
           l.e("live data is null");
           return;
         }
-        final liveMemberIds = liveData.members.map((e) => e.uuid).toList();
-        final members = liveData.members;
-        members.forEach((element) {
+        final liveMembers = liveData.members.where((m) => m.is_present == true);
+        final liveMemberIds = liveMembers.map((e) => e.uuid).toList();
+        liveMembers.forEach((element) {
           if (liveMemberIds.contains(element.uuid)) {
             if (element != targetAddress) {
-              aptosReceiverAddresses.add(element.aptos_address!);
+              aptosReceiverAddresses.add(element.aptos_address);
               if (element.external_wallet_address != null) {
-                receiverAddresses.add(user.evm_externalWalletAddress);
+                receiverAddresses.add(user.external_wallet_address!);
               } else {
-                receiverAddresses.add(user.evmInternalWalletAddress);
+                receiverAddresses.add(user.address);
               }
             }
           }
         });
       } else {
-        receiverAddresses = [targetAddress];
+        receiverAddresses = [targetAddress ?? myUser.address];
       }
       if (receiverAddresses.length == 0) {
         l.e("No Users found in session");
@@ -540,14 +548,9 @@ class OngoingOutpostCallController extends GetxController {
         return;
       }
       late double parsedAmount;
-      late int finalAmountOfTimeToAdd;
       try {
         // check if amount is integer
         parsedAmount = double.parse(amount);
-        final parsedMin = double.parse(Env.minimumCheerBooAmount);
-        final divided = parsedAmount / parsedMin;
-        final parsedMultiplier = double.parse(Env.cheerBooTimeMultiplication);
-        finalAmountOfTimeToAdd = (divided * parsedMultiplier).toInt();
       } catch (e) {
         l.e("something went wrong parsing amount");
         Toast.error(
@@ -568,7 +571,7 @@ class OngoingOutpostCallController extends GetxController {
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           groupId: outpostCallController.outpost.value!.uuid,
-          target: targetAddress,
+          target: targetAddress!,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
@@ -578,7 +581,7 @@ class OngoingOutpostCallController extends GetxController {
         success = await internal_cheerOrBoo(
           groupId: outpostCallController.outpost.value!.uuid,
           user: user,
-          target: targetAddress,
+          target: targetAddress!,
           receiverAddresses: receiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
@@ -587,7 +590,7 @@ class OngoingOutpostCallController extends GetxController {
       } else if (selectedWallet == WalletNames.internal_Aptos) {
         success = await AptosMovement.cheerBoo(
           groupId: outpostCallController.outpost.value!.uuid,
-          target: user.aptosInternalWalletAddress,
+          target: user.aptos_address!,
           receiverAddresses: aptosReceiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
@@ -595,6 +598,7 @@ class OngoingOutpostCallController extends GetxController {
       }
       // success null means error is handled inside called function
       if (success == null) {
+        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
         return;
       }
       if (success) {
@@ -604,14 +608,14 @@ class OngoingOutpostCallController extends GetxController {
           title: "Success",
           message: "${cheer ? "Cheer" : "Boo"} successful",
         );
-        final eventString = cheer
+        final ev = cheer
             ? OutgoingMessageTypeEnums.cheer
             : OutgoingMessageTypeEnums.boo;
         sendOutpostEvent(
           outpostId: outpostCallController.outpost.value!.uuid,
-          eventType: eventString,
+          eventType: ev,
           eventData: WsOutgoingMessageData(
-            amount: double.tryParse(amount) ?? 0,
+            amount: parsedAmount,
             react_to_user_address: userId,
           ),
         );
@@ -628,38 +632,18 @@ class OngoingOutpostCallController extends GetxController {
           l.e("podium address is null");
           return;
         }
-        final movemntAptosNetwork = globalController.movementAptosNetwork;
-        saveNewPayment(
-            event: PaymentEvent(
-          amount: amount,
-          chainId: selectedWallet == WalletNames.internal_Aptos
-              ? movemntAptosNetwork.chainId
-              : movementEVMChain.chainId,
-          type: cheer ? PaymentTypes.cheer : PaymentTypes.boo,
-          initiatorAddress: selectedWallet == WalletNames.external
-              ? externalWalletAddress!
-              : internalWalletAddress,
-          targetAddress: targetAddress,
-          initiatorId: myId,
-          targetId: userId,
-          groupId: outpostCallController.outpost.value!.uuid,
-          selfCheer: myId == userId,
-          memberIds: myId == userId
-              ? sessionData.value!.members.map((e) => e.uuid).toList()
-              : null,
-        ));
       } else {
         l.e("${cheer ? "Cheer" : "Boo"} failed");
         Toast.error(
           title: "Error",
           message: "${cheer ? "Cheer" : "Boo"} failed",
         );
-
         _removeLoadingCheerBoo(userId: userId, cheer: cheer);
       }
       ///////////////////////
     } else if (targetAddress == '') {
       l.e("User has not connected wallet for some reason");
+      _removeLoadingCheerBoo(userId: userId, cheer: cheer);
       Toast.error(
         title: "Error",
         message: "User has not connected wallet for some reason",

@@ -19,16 +19,7 @@ class NotificationsController extends GetxController {
     super.onInit();
     loggedInListener = globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
-        final notifs = await HttpApis.podium.getNotifications();
-
-        int numberOfUnread = 0;
-        for (final notif in notifs) {
-          if (!notif.is_read) {
-            numberOfUnread++;
-          }
-        }
-        numberOfUnreadNotifications.value = numberOfUnread;
-        notifications.assignAll(notifs);
+        getNotifications();
       } else {
         notifications.clear();
         numberOfUnreadNotifications.value = 0;
@@ -48,12 +39,15 @@ class NotificationsController extends GetxController {
   }
 
   getNotifications() async {
-    try {
-      final notifs = await HttpApis.podium.getNotifications();
-      notifications.assignAll(notifs);
-    } catch (e) {
-      l.e(e);
+    final notifs = await HttpApis.podium.getNotifications();
+    int numberOfUnread = 0;
+    for (final notif in notifs) {
+      if (!notif.is_read) {
+        numberOfUnread++;
+      }
     }
+    numberOfUnreadNotifications.value = numberOfUnread;
+    notifications.assignAll(notifs);
   }
 
   deleteMyNotification(NotificationModel notif) {
@@ -62,10 +56,19 @@ class NotificationsController extends GetxController {
     }
   }
 
+  markNotificationAsRead({required String id}) async {
+    final success = await HttpApis.podium.markNotificationAsRead(id: id);
+    if (success) {
+      getNotifications();
+    }
+  }
+
   acceptOutpostInvitation({
     required NotificationModel notif,
   }) async {
-    try {} catch (e) {
+    try {
+      final outpostId = notif.inviteMetadata!.outpost_uuid;
+    } catch (e) {
       l.e(e);
     }
   }

@@ -17,7 +17,7 @@ class Toast {
       forwardAnimationCurve: Curves.elasticInOut,
       boxShadows: [
         BoxShadow(
-          color: Colors.green.withOpacity(0.5),
+          color: Colors.green.withAlpha(128),
           spreadRadius: 1,
           blurRadius: 2,
           offset: const Offset(0, 1),
@@ -46,7 +46,7 @@ class Toast {
       forwardAnimationCurve: Curves.elasticInOut,
       boxShadows: [
         BoxShadow(
-          color: Colors.red.withOpacity(0.5),
+          color: Colors.red.withAlpha(128),
           spreadRadius: 1,
           blurRadius: 2,
           offset: const Offset(0, 1),
@@ -70,7 +70,7 @@ class Toast {
       forwardAnimationCurve: Curves.elasticInOut,
       boxShadows: [
         BoxShadow(
-          color: Colors.blue.withOpacity(0.5),
+          color: Colors.blue.withAlpha(128),
           spreadRadius: 1,
           blurRadius: 2,
           offset: const Offset(0, 1),
@@ -94,7 +94,7 @@ class Toast {
       forwardAnimationCurve: Curves.elasticInOut,
       boxShadows: [
         BoxShadow(
-          color: Colors.orange.withOpacity(0.5),
+          color: Colors.orange.withAlpha(128),
           spreadRadius: 1,
           blurRadius: 2,
           offset: const Offset(0, 1),
@@ -118,7 +118,7 @@ class Toast {
       forwardAnimationCurve: Curves.elasticInOut,
       boxShadows: [
         BoxShadow(
-          color: Colors.grey.withOpacity(0.5),
+          color: Colors.grey.withAlpha(128),
           spreadRadius: 1,
           blurRadius: 2,
           offset: const Offset(0, 1),

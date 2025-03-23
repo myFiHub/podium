@@ -57,6 +57,8 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel i_am_member(bool i_am_member);
 
+  OutpostModel online_users_count(int online_users_count);
+
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OutpostModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
   /// Usage
@@ -89,6 +91,7 @@ abstract class _$OutpostModelCWProxy {
     List<_TicketToSpeakModel>? tickets_to_speak,
     String? luma_event_id,
     bool i_am_member,
+    int online_users_count,
   });
 }
 
@@ -186,6 +189,10 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
   OutpostModel i_am_member(bool i_am_member) => this(i_am_member: i_am_member);
 
   @override
+  OutpostModel online_users_count(int online_users_count) =>
+      this(online_users_count: online_users_count);
+
+  @override
 
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OutpostModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
@@ -219,6 +226,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
     Object? tickets_to_speak = const $CopyWithPlaceholder(),
     Object? luma_event_id = const $CopyWithPlaceholder(),
     Object? i_am_member = const $CopyWithPlaceholder(),
+    Object? online_users_count = const $CopyWithPlaceholder(),
   }) {
     return OutpostModel(
       alarm_id: alarm_id == const $CopyWithPlaceholder()
@@ -321,6 +329,10 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
           ? _value.i_am_member
           // ignore: cast_nullable_to_non_nullable
           : i_am_member as bool,
+      online_users_count: online_users_count == const $CopyWithPlaceholder()
+          ? _value.online_users_count
+          // ignore: cast_nullable_to_non_nullable
+          : online_users_count as int,
     );
   }
 }
@@ -369,6 +381,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
           .toList(),
       luma_event_id: json['luma_event_id'] as String?,
       i_am_member: json['i_am_member'] as bool,
+      online_users_count: (json['online_users_count'] as num).toInt(),
     );
 
 Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
@@ -397,6 +410,7 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'tags': instance.tags,
       'tickets_to_enter': instance.tickets_to_enter,
       'tickets_to_speak': instance.tickets_to_speak,
+      'online_users_count': instance.online_users_count,
       'i_am_member': instance.i_am_member,
     };
 

@@ -29,6 +29,7 @@ class OutpostModel {
   final List<String> tags;
   final List<_TicketToEnterModel>? tickets_to_enter;
   final List<_TicketToSpeakModel>? tickets_to_speak;
+  final int online_users_count;
   bool i_am_member;
 
   OutpostModel({
@@ -57,6 +58,7 @@ class OutpostModel {
     this.tickets_to_speak,
     this.luma_event_id,
     required this.i_am_member,
+    required this.online_users_count,
   });
 
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>

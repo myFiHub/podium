@@ -50,7 +50,7 @@ class UsersInGroupList extends StatelessWidget {
               }
               final userId = user.uuid;
               final isItME = userId == myId;
-              return _SingleUserInRoom(
+              return _SingleUserInOutpost(
                 key: Key(user.uuid + 'singleUserCard'),
                 isItME: isItME,
                 userId: userId,
@@ -84,8 +84,8 @@ class IntroUser extends StatelessWidget {
   }
 }
 
-class _SingleUserInRoom extends StatelessWidget {
-  const _SingleUserInRoom({
+class _SingleUserInOutpost extends StatelessWidget {
+  const _SingleUserInOutpost({
     super.key,
     required this.isItME,
     required this.userId,
@@ -459,27 +459,27 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final timersMap = controller.allRemainingTimesMap.value;
       final roomCreator =
           controller.outpostCallController.outpost.value!.creator_user_uuid;
-      final userRemainingTime = timersMap[userId];
+      final users =
+          controller.members.value.where((m) => m.uuid == userId).toList();
+      if (users.length == 0) {
+        return const SizedBox();
+      }
+      final remainingTime = users[0].remaining_time;
       if (userId == roomCreator) {
         return Text('Creator',
             style: TextStyle(fontSize: 10, color: Colors.green[200]));
       }
-      if (userRemainingTime == null) {
-        return const SizedBox();
-      } else {
-        final [hh, mm, ss] = formatDuration(userRemainingTime);
-        return Text(
-          '$hh:$mm:$ss left',
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-            color: ColorName.greyText,
-          ),
-        );
-      }
+      final [hh, mm, ss] = formatDuration(remainingTime);
+      return Text(
+        '$hh:$mm:$ss left',
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w400,
+          color: ColorName.greyText,
+        ),
+      );
     });
   }
 }
@@ -594,8 +594,8 @@ class LikeDislike extends GetView<OngoingOutpostCallController> {
       ),
       onPressed: () {
         isLike
-            ? controller.onLikeClicked(userId)
-            : controller.onDislikeClicked(userId);
+            ? controller.onLikeClicked(userId: userId)
+            : controller.onDislikeClicked(userId: userId);
       },
       type: GFButtonType.transparent,
     );

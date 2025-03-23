@@ -28,6 +28,7 @@ const _$IncomingMessageTypeEnumMap = {
   IncomingMessageType.userStartedSpeaking: 'user.started_speaking',
   IncomingMessageType.userStoppedSpeaking: 'user.stopped_speaking',
   IncomingMessageType.remainingTimeUpdated: 'remaining_time.updated',
+  IncomingMessageType.timeIsUp: 'user.time_is_up',
 };
 
 IncomingMessageData _$IncomingMessageDataFromJson(Map<String, dynamic> json) =>

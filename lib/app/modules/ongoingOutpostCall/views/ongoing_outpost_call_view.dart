@@ -158,40 +158,43 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Obx(
-          () {
-            final mySession = controller.mySession.value;
-            final isAdmin = controller.amIAdmin.value;
-            if (controller.mySession.value == null) {
-              return const Text(
-                "loading...",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 36,
-                ),
-              );
-            }
-            final remainingTimeInSeconds = mySession!.remaining_time;
-            if (isAdmin) {
-              return Container(
-                key: controller.timerKey,
-                child: const Center(
-                  child: Text('presenting as admin'),
-                ),
-              );
-            }
-            final list = formatDuration(remainingTimeInSeconds);
-            final remainingTime = list.join(":");
-            final isSmall = int.parse(list[0]) == 0 && int.parse(list[1]) < 2;
-            return remainingTimeInSeconds != 0
-                ? Container(
+    return Obx(
+      () {
+        final mySession = controller.mySession.value;
+        final isAdmin = controller.amIAdmin.value;
+        if (controller.mySession.value == null) {
+          return const Text(
+            "loading...",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 36,
+            ),
+          );
+        }
+        final remainingTimeInSeconds = mySession!.remaining_time;
+        if (isAdmin) {
+          return Container(
+            key: controller.timerKey,
+            child: const Center(
+              child: Text('presenting as admin'),
+            ),
+          );
+        }
+        final list = formatDuration(remainingTimeInSeconds);
+        final remainingTime = list.join(":");
+        final isSmall = int.parse(list[0]) == 0 && int.parse(list[1]) < 2;
+        return remainingTimeInSeconds != 0
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: (Get.width / 3) - 12,
+                  ),
+                  Container(
                     key: controller.timerKey,
                     child: Text(
                       remainingTime,
+                      textAlign: TextAlign.left,
                       style: TextStyle(
                         color: isSmall ? Colors.red : Colors.white,
                         fontWeight: FontWeight.w700,
@@ -199,17 +202,21 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
                       ),
                     ),
                   )
-                : Container(
-                    child: const Center(
-                      child: Text(
-                        'time is up!',
-                        style: TextStyle(color: Colors.red),
-                      ),
+                ],
+              )
+            : Container(
+                child: const Center(
+                  child: Text(
+                    'time is up!',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 36,
                     ),
-                  );
-          },
-        )
-      ],
+                  ),
+                ),
+              );
+      },
     );
   }
 }

@@ -53,22 +53,17 @@ class OutpostCallController extends GetxController {
   StreamSubscription<List<LiveMember>>? sortedMembersListener;
   StreamSubscription<List<LiveMember>>? membersListener;
   StreamSubscription<OutpostModel?>? outpostListener;
+  StreamSubscription<int>? tickerListener;
+
   @override
   void onInit() {
     super.onInit();
     sortType.value = storage.read(StorageKeys.ongoingCallSortType) ??
         SortTypes.recentlyTalked;
-    // TODO: add taking users in outposts map
-    // groupsController.takingUsersInGroupsMap.listen((takingUsersInGroupsMap) {
-    //   if (group.value != null) {
-    //     final groupId = group.value!.id;
-    //     final takingUsers = takingUsersInGroupsMap[groupId];
-    //     if (takingUsers != null) {
-    //       final takingUserIds = takingUsers.map((e) => e).toList();
-    //       updateTalkingMembers(ids: takingUserIds);
-    //     }
-    //   }
-    // });
+
+    tickerListener = globalController.ticker.listen((d) {
+      handleTimerTick();
+    });
     sortedMembersListener = sortedMembers.listen((listOfSortedUsers) {
       final talking = listOfSortedUsers
           .where((member) => member.is_speaking == true)
@@ -98,6 +93,7 @@ class OutpostCallController extends GetxController {
     membersListener?.cancel();
     sortedMembersListener?.cancel();
     outpostListener?.cancel();
+    tickerListener?.cancel();
   }
 
   /////////////////////////////////////////////////////////////
@@ -108,6 +104,18 @@ class OutpostCallController extends GetxController {
   }
 
   ///////////////////////////////////////////////////////////////
+
+  handleTimerTick() {
+    final talkingMembers =
+        members.value.where((member) => member.is_speaking == true);
+    talkingMembers.forEach((member) {
+      final userIndex = members.value.indexWhere((m) => m.uuid == member.uuid);
+      if (member.remaining_time > 0) {
+        members.value[userIndex].remaining_time--;
+        members.refresh();
+      }
+    });
+  }
 
   fetchLiveData({bool? alsoJoin}) async {
     if (outpost.value == null) return;
@@ -146,13 +154,13 @@ class OutpostCallController extends GetxController {
     final sorted = [...members];
     if (sortType.value == SortTypes.recentlyTalked) {
       sorted.sort((a, b) {
-        return (b.last_speaked_at_timestamp ?? 0)
-            .compareTo(a.last_speaked_at_timestamp ?? 0);
+        return (b.last_speaked_at_timestamp ?? (-1 * b.remaining_time))
+            .compareTo(a.last_speaked_at_timestamp ?? (-1 * a.remaining_time));
       });
     } else if (sortType.value == SortTypes.timeJoined) {
       sorted.sort((a, b) {
-        return (b.last_speaked_at_timestamp ?? 0)
-            .compareTo(a.last_speaked_at_timestamp ?? 0);
+        return (b.last_speaked_at_timestamp ?? (-1 * b.remaining_time))
+            .compareTo(a.last_speaked_at_timestamp ?? (-1 * a.remaining_time));
       });
     }
     return sorted;

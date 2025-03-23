@@ -360,7 +360,7 @@ class _SingleOutpost extends StatelessWidget {
               key: Key(outpost.uuid + 'scheduledBanner'),
             ),
           _NumberOfActiveUsers(
-            outpostId: outpost.uuid,
+            outpost: outpost,
             key: Key(outpost.uuid + 'numberOfActiveUsers'),
           ),
         ],
@@ -370,47 +370,43 @@ class _SingleOutpost extends StatelessWidget {
 }
 
 class _NumberOfActiveUsers extends GetView<OutpostsController> {
-  final String outpostId;
+  final OutpostModel outpost;
   const _NumberOfActiveUsers({
     super.key,
-    required this.outpostId,
+    required this.outpost,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final allActiveUsers = controller.presentUsersInGroupsMap.value;
-      final activeInThisGroup = allActiveUsers[outpostId] ?? [];
-      final numberOfActiveUsers = activeInThisGroup.length;
-      return numberOfActiveUsers == 0
-          ? const SizedBox()
-          : Container(
-              width: 40,
-              height: 40,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Pulsator(
-                    style: const PulseStyle(color: Colors.red),
-                    duration: const Duration(seconds: 2),
-                    count: 5,
-                    repeat: 0,
-                    startFromScratch: false,
-                    autoStart: true,
-                    fit: PulseFit.contain,
-                    child: Text(
-                      "${numberOfActiveUsers}",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+    final numberOfActiveUsers = outpost.online_users_count;
+    return numberOfActiveUsers == 0
+        ? const SizedBox()
+        : Container(
+            width: 40,
+            height: 40,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Pulsator(
+                  style: const PulseStyle(color: Colors.red),
+                  duration: const Duration(seconds: 2),
+                  count: 5,
+                  repeat: 0,
+                  startFromScratch: false,
+                  autoStart: true,
+                  fit: PulseFit.contain,
+                  child: Text(
+                    "${numberOfActiveUsers}",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
                   ),
-                ],
-              ),
-            );
-    });
+                ),
+              ],
+            ),
+          );
   }
 }
 

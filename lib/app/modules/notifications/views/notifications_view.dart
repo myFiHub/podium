@@ -89,9 +89,8 @@ class NotificationsView extends GetView<NotificationsController> {
                                         Button(
                                           size: ButtonSize.SMALL,
                                           onPressed: () {
-                                            markNotificationAsRead(
-                                              notificationId: notif.uuid,
-                                            );
+                                            controller.markNotificationAsRead(
+                                                id: notif.uuid);
                                           },
                                           type: ButtonType.outline,
                                           text: 'Mark as read',

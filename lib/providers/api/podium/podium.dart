@@ -365,6 +365,17 @@ class PodiumApi {
     }
   }
 
+  Future<bool> markNotificationAsRead({required String id}) async {
+    try {
+      final response = await dio.post('$_baseUrl/notifications/mark-as-read',
+          data: {"uuid": id}, options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
   Future<bool> leaveOutpost(String id) async {
     try {
       final response = await dio.post('$_baseUrl/outposts/leave',
@@ -424,17 +435,6 @@ class PodiumApi {
     } catch (e) {
       l.e(e);
       return null;
-    }
-  }
-
-  Future<bool> markNotificationAsRead(String uuid) async {
-    try {
-      final response = await dio.post('$_baseUrl/notifications/mark-as-read',
-          data: {'uuid': uuid}, options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
     }
   }
 }

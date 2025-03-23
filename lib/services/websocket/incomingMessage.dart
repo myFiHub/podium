@@ -21,6 +21,12 @@ enum IncomingMessageType {
   userStoppedSpeaking,
   @JsonValue("remaining_time.updated")
   remainingTimeUpdated,
+  @JsonValue("user.time_is_up")
+  timeIsUp,
+  @JsonValue("user.followed")
+  follow,
+  @JsonValue("user.invited")
+  invite,
 }
 
 @JsonSerializable()

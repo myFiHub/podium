@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/env.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
@@ -98,6 +99,7 @@ class WebSocketService {
         Get.find<OngoingOutpostCallController>();
     final OutpostCallController outpostCallController =
         Get.find<OutpostCallController>();
+    final notificationsController = Get.find<NotificationsController>();
     switch (incomingMessage.name) {
       case IncomingMessageType.userJoined:
       case IncomingMessageType.userLeft:
@@ -134,8 +136,12 @@ class WebSocketService {
       case IncomingMessageType.userBooed:
       case IncomingMessageType.userCheered:
         ongoingOutpostCallController.handleIncomingReaction(incomingMessage);
-
         break;
+      case IncomingMessageType.timeIsUp:
+        ongoingOutpostCallController.handleTimeIsUp(incomingMessage);
+      case IncomingMessageType.invite:
+      case IncomingMessageType.follow:
+        notificationsController.getNotifications();
     }
   }
 
@@ -151,7 +157,7 @@ class WebSocketService {
 
   //send a pong message type to websocket, not using out message type
   void _pong() {
-    if (!_isConnecting) {
+    if (!_isConnecting && connected) {
       _channel?.sink.add(List<int>.from([0x8A]));
     }
   }

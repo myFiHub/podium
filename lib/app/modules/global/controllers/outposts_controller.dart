@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:ably_flutter/ably_flutter.dart' as ably;
-import 'package:ably_flutter/ably_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,8 +15,6 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/constants/constantKeys.dart';
-import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
@@ -35,7 +31,6 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
-final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
 // detect presence time (groups that were active this milliseconds ago will be considered active)
 int dpt = 0;
 
@@ -97,7 +92,6 @@ class OutpostsController extends GetxController {
 
   final globalController = Get.find<GlobalController>();
   final joiningGroupId = ''.obs;
-  final groupChannels = Rx<Map<String, ably.RealtimeChannel>>({});
   final outposts = Rx<Map<String, OutpostModel>>({});
   final myOutposts = Rx<Map<String, OutpostModel>>({});
   final isGettingMyOutposts = false.obs;
@@ -136,29 +130,12 @@ class OutpostsController extends GetxController {
       }
     });
 
-    realtimeInstance.connection
-        .on(ably.ConnectionEvent.connected)
-        .listen((ably.ConnectionStateChange stateChange) async {
-      switch (stateChange.current) {
-        case ably.ConnectionState.connected:
-          l.d('Connected to Ably!');
-          break;
-        case ably.ConnectionState.failed:
-          l.d('The connection to Ably failed.');
-          // Failed connection
-          break;
-        default:
-          break;
-      }
-    });
-
     globalController.loggedIn.listen((loggedIn) {
-      getRealtimeOutposts(loggedIn);
       if (loggedIn) {
-        realtimeInstance.options.clientId = myId;
+        getRealtimeOutposts(loggedIn);
+        _fetchAllOutpostsPage(0);
+        _fetchMyOutpostsPage(0);
       }
-      _fetchAllOutpostsPage(0);
-      _fetchMyOutpostsPage(0);
     });
   }
 
@@ -358,148 +335,6 @@ class OutpostsController extends GetxController {
         });
       final sortedMap = Map<String, OutpostModel>.fromEntries(sorted);
       outposts.value = sortedMap;
-      initializeChannels();
-    }
-  }
-
-  initializeChannels() async {
-    // if (initializedChannels) return;
-    final groupsMap = outposts.value;
-    // readt detectPresenceTime from firebase
-    try {
-      if (!gotDetectPresenceTime) {
-        final detectPresenceTimeRef =
-            FirebaseDatabase.instance.ref(FireBaseConstants.detectPresenceTime);
-        final detectPresenceTimeSnapshot = await detectPresenceTimeRef.get();
-        final detectPresenceTime = detectPresenceTimeSnapshot.value;
-        if (detectPresenceTime != null) {
-          gotDetectPresenceTime = true;
-          dpt = detectPresenceTime as int;
-        }
-      }
-    } catch (e) {}
-    if (dpt == 0) {
-      return;
-    }
-    l.d("Detect presence time: $dpt");
-
-    final groupsThatWereActiveRecently = groupsMap.entries.where((element) {
-      final group = element.value;
-      final lastActiveAt = group.last_active_at;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final diff = now - lastActiveAt;
-      final isActive = diff < (1 * dpt) && group.is_archived != true;
-      if (isActive) {
-        l.d("Group ${group.name} was active at ${DateTime.fromMillisecondsSinceEpoch(lastActiveAt)}");
-      }
-      return isActive;
-    }).toList();
-    final currentChannels = groupChannels.value;
-    groupsThatWereActiveRecently.forEach((element) {
-      final groupId = element.key;
-      if (currentChannels[groupId] == null) {
-        final channel = realtimeInstance.channels.get(groupId);
-        currentChannels[groupId] = channel;
-      }
-    });
-    groupChannels.value = currentChannels;
-    await _getCurrentNumberOfPresentUsers();
-    _startListeners();
-  }
-
-  _getCurrentNumberOfPresentUsers() async {
-    final allChannels = groupChannels.value;
-    final List<Future<List<PresenceMessage>>> arrayToCall = [];
-    allChannels.entries.forEach((element) async {
-      arrayToCall.add(element.value.presence.get());
-    });
-    final results = await Future.wait(arrayToCall);
-    final Map<String, List<String>> tmpMap = {};
-    for (var i = 0; i < results.length; i++) {
-      final groupId = allChannels.entries.elementAt(i).key;
-      final currentPresentUsers = results[i].map((e) => e.clientId!).toList();
-      tmpMap[groupId] = currentPresentUsers;
-    }
-    tmpPresentUsersInGroupsMap.addAll(tmpMap);
-    _shouldUpdatePresentUsers = true;
-  }
-
-  _startListeners() {
-    groupChannels.value.entries.forEach((element) {
-      final channel = element.value;
-      if (enterListenersMap[element.key] == null) {
-        enterListenersMap[element.key] = element;
-        channel.presence
-            .subscribe(action: PresenceAction.enter)
-            .listen((message) {
-          _handleNewEnterMessage(groupId: element.key, message: message);
-        });
-      }
-      if (leaveListenersMap[element.key] == null) {
-        leaveListenersMap[element.key] = element;
-        channel.presence
-            .subscribe(action: PresenceAction.leave)
-            .listen((message) {
-          _handleLeaveEvent(groupId: element.key, clientId: message.clientId!);
-        });
-      }
-      if (updateListenersMap[element.key] == null) {
-        updateListenersMap[element.key] = element;
-        channel.presence
-            .subscribe(action: PresenceAction.update)
-            .listen((message) {
-          _hanldeNewUpdateMessage(groupId: element.key, message: message);
-        });
-      }
-    });
-    initializedChannels = true;
-  }
-
-  _handleNewEnterMessage(
-      {required String groupId, required PresenceMessage message}) {
-    final currentListForThisGroup = tmpPresentUsersInGroupsMap[groupId] ?? [];
-    currentListForThisGroup.add(message.clientId!);
-    tmpPresentUsersInGroupsMap[groupId] = currentListForThisGroup;
-    _shouldUpdatePresentUsers = true;
-  }
-
-  _hanldeNewUpdateMessage(
-      {required String groupId, required PresenceMessage message}) {
-    if (message.data is String) {
-      if (message.data == OutgoingMessageTypeEnums.start_speaking) {
-        final currentListForThisGroup =
-            tmpTakingUsersInGroupsMap[groupId] ?? [];
-        currentListForThisGroup.add(message.clientId!);
-        tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
-        l.d("Talking users: $currentListForThisGroup");
-        _shouldUpdateTakingUsers = true;
-      } else if (message.data == OutgoingMessageTypeEnums.stop_speaking) {
-        final currentListForThisGroup =
-            tmpTakingUsersInGroupsMap[groupId] ?? [];
-        currentListForThisGroup.remove(message.clientId!);
-        tmpTakingUsersInGroupsMap[groupId] = currentListForThisGroup;
-        l.d("Talking users: $currentListForThisGroup");
-        _shouldUpdateTakingUsers = true;
-      }
-    } else {
-      l.d("Interaction: ${message.data}");
-    }
-  }
-
-  _handleLeaveEvent({required String groupId, required String clientId}) {
-    final currentListForThisGroup = tmpPresentUsersInGroupsMap[groupId] ?? [];
-    if (currentListForThisGroup.contains(clientId)) {
-      currentListForThisGroup.remove(clientId);
-      tmpPresentUsersInGroupsMap[groupId] = currentListForThisGroup;
-      _shouldUpdatePresentUsers = true;
-    }
-    final currentTakingListForThisGroup =
-        tmpTakingUsersInGroupsMap[groupId] ?? [];
-    if (currentTakingListForThisGroup.contains(clientId)) {
-      currentTakingListForThisGroup.remove(clientId);
-      tmpTakingUsersInGroupsMap[groupId] = currentTakingListForThisGroup;
-
-      _shouldUpdateTakingUsers = true;
     }
   }
 
@@ -650,24 +485,6 @@ class OutpostsController extends GetxController {
         message: "Failed to create the Outpost",
       );
       return null;
-    }
-  }
-
-  deleteGroup({required String groupId}) {
-    final firebaseGroupsReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.groupsRef + groupId);
-    final firebaseSessionReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.sessionsRef + groupId);
-    try {
-      firebaseGroupsReference.remove();
-      firebaseSessionReference.remove();
-      outposts.value.remove(groupId);
-    } catch (e) {
-      Toast.error(
-        title: "Error",
-        message: "Failed to delete room",
-      );
-      l.f("Error deleting group: $e");
     }
   }
 

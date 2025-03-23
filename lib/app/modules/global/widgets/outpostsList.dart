@@ -118,35 +118,44 @@ class _SingleOutpost extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          constraints: const BoxConstraints(
-                            maxWidth: 270,
-                          ),
-                          //width: Get.width - 300,
-                          child: RichText(
-                              overflow: TextOverflow.ellipsis,
-                              text: TextSpan(
-                                children: [
-                                  const TextSpan(
-                                    text: "Created by",
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: ColorName.greyText,
-                                    ),
+                            constraints: const BoxConstraints(
+                              maxWidth: 270,
+                            ),
+                            //width: Get.width - 300,
+                            child: Row(
+                              children: [
+                                RichText(
+                                  overflow: TextOverflow.ellipsis,
+                                  text: TextSpan(
+                                    children: [
+                                      const TextSpan(
+                                        text: "Created by",
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: ColorName.greyText,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text:
+                                            " ${amICreator ? "You" : outpost.creator_user_name}",
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                          color: amICreator
+                                              ? Colors.green[200]
+                                              : Colors.blue[200],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  TextSpan(
-                                    text:
-                                        " ${amICreator ? "You" : outpost.creator_user_name}",
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                      color: amICreator
-                                          ? Colors.green[200]
-                                          : Colors.blue[200],
-                                    ),
-                                  ),
-                                ],
-                              )),
-                        ),
+                                ),
+                                space5,
+                                Img(
+                                  src: outpost.creator_user_image,
+                                  size: 12,
+                                )
+                              ],
+                            )),
                         space10,
                         Row(
                           children: [
@@ -523,7 +532,7 @@ class SingleTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       margin: const EdgeInsets.only(right: 4),
       decoration: BoxDecoration(
-        color: ColorName.greyText.withOpacity(0.2),
+        color: ColorName.greyText.withAlpha(51),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

@@ -14,7 +14,6 @@ import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
-import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -341,9 +340,8 @@ class CreateOutpostController extends GetxController {
   }
 
   Future<String?> uploadFile({required outpostId}) async {
-    final storageRef = FirebaseStorage.instance
-        .ref()
-        .child('${FireBaseConstants.groupsRef}$outpostId');
+    final storageRef =
+        FirebaseStorage.instance.ref().child('outposts/$outpostId');
 
     if (selectedFile == null) {
       return "";

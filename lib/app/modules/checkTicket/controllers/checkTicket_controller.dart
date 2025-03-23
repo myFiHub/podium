@@ -8,7 +8,6 @@ import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
@@ -129,15 +128,14 @@ class CheckticketController extends GetxController {
   }
 
   userModelFromStarsArenaUserInfo({required StarsArenaUser user}) {
-    final fakeUser = UserInfoModel(
-      id: user.id,
-      fullName: user.twitterName,
-      avatar: user.twitterPicture,
+    final fakeUser = UserModel(
+      uuid: user.id,
+      name: user.twitterName,
+      image: user.twitterPicture,
       email: '',
-      evm_externalWalletAddress: user.mainAddress,
-      evmInternalWalletAddress: user.mainAddress,
-      following: [],
-      numberOfFollowers: 0,
+      external_wallet_address: user.mainAddress,
+      address: user.mainAddress,
+      followers_count: 0,
     );
     return fakeUser;
   }

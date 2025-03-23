@@ -6,7 +6,6 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
@@ -24,31 +23,6 @@ class PrejoinReferralView extends GetView<LoginController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            space10,
-            // Button(
-            //   onPressed: () async {
-            //     final databaseRef = FirebaseDatabase.instance
-            //         .ref(FireBaseConstants.podiumDefinedEntryAddresses);
-            //     await databaseRef.set([
-            //       PodiumDefinedEntryAddress(
-            //         address: '',
-            //         handle: 'jomari_p',
-            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
-            //       ).toJson(),
-            //       PodiumDefinedEntryAddress(
-            //         address: '',
-            //         handle: '0xLuis_',
-            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
-            //       ).toJson(),
-            //       PodiumDefinedEntryAddress(
-            //         address: '',
-            //         handle: 'mohsenparvar',
-            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
-            //       ).toJson(),
-            //     ]);
-            //   },
-            //   text: 'Join',
-            // ),
             space10,
             RichText(
               text: const TextSpan(

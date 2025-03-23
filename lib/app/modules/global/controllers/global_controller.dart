@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:alarm/alarm.dart';
 import 'package:aptos/aptos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -13,18 +12,14 @@ import 'package:internet_connection_checker_plus/internet_connection_checker_plu
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
-import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -71,7 +66,7 @@ class GlobalController extends GetxController {
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
-  final jitsiServerAddress = '';
+  String jitsiServerAddress = '';
   final firebaseUserCredential = Rxn<UserCredential>();
   final firebaseUser = Rxn<User>();
   final myUserInfo = Rxn<UserModel>();
@@ -128,18 +123,7 @@ class GlobalController extends GetxController {
     } catch (e) {
       l.e("error initializing app $e");
     }
-    FirebaseDatabase.instance.setPersistenceEnabled(false);
     await _addCustomNetworks();
-
-    // final firebaseUserDbReference =
-    //     FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
-    // final users = firebaseUserDbReference.once().then((event) {
-    //   final data = event.snapshot.value as dynamic;
-    //   if (data != null) {
-    //     final numberOfUsers = data.length;
-    //     l.f("number of users: $numberOfUsers");
-    //   }
-    // });
 
     startTicker();
     isFirebaseInitialized.value = true;
@@ -169,6 +153,7 @@ class GlobalController extends GetxController {
   _getAndSetMetadata() async {
     final metadata = await HttpApis.podium.appMetadata();
     appMetadata = metadata;
+    jitsiServerAddress = appMetadata.va;
   }
 
   _addCustomNetworks() async {
@@ -296,14 +281,9 @@ class GlobalController extends GetxController {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
           l.i("Internet connected");
-          final (versionResolved, serverAddress) = await (
-            checkVersion(),
-            getJitsiServerAddress(),
-          ).wait;
+          final versionResolved = await checkVersion();
 
-          if (versionResolved &&
-              serverAddress != null &&
-              !initializedOnce.value) {
+          if (versionResolved && !initializedOnce.value) {
             await initializeApp();
           }
 
@@ -337,18 +317,9 @@ class GlobalController extends GetxController {
   }
 
   saveUserWalletAddressOnFirebase(String walletAddress) async {
-    // final user = FirebaseAuth.instance.currentUser;
-    final userId = myId;
-    final firebaseUserDbReference = FirebaseDatabase.instance
-        .ref(FireBaseConstants.usersRef)
-        .child(userId)
-        .child(UserInfoModel.evm_externalWalletAddressKey);
-    final savedWalletAddress = await firebaseUserDbReference.get();
-    if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
-      return;
-    }
-
-    await firebaseUserDbReference.set(walletAddress);
+    await HttpApis.podium.updateMyUserData({
+      "external_wallet_address": walletAddress,
+    });
     l.d("new wallet address SAVED $walletAddress");
     return;
   }
@@ -407,19 +378,6 @@ class GlobalController extends GetxController {
     );
   }
 
-  Future<bool> removeUserWalletAddressOnFirebase() async {
-    try {
-      final firebaseUserDbReference = FirebaseDatabase.instance
-          .ref(FireBaseConstants.usersRef)
-          .child(myId + '/' + UserInfoModel.evm_externalWalletAddressKey);
-      await firebaseUserDbReference.set('');
-      return true;
-    } catch (e) {
-      l.e("error removing wallet address $e");
-      return false;
-    }
-  }
-
   cleanStorage() {
     final storage = GetStorage();
     final sawProfileIntro =
@@ -434,22 +392,6 @@ class GlobalController extends GetxController {
     storage.write(IntroStorageKeys.viewedMyProfile, sawProfileIntro);
     storage.write(IntroStorageKeys.viewedCreateOutpost, sawCreateGroupIntro);
     storage.write(IntroStorageKeys.viewedOngiongCall, sawOngoingCallIntro);
-  }
-
-  Future<String?> getJitsiServerAddress() {
-    final completer = Completer<String?>();
-    final serverAddressRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.jitsiServerAddressRef);
-    serverAddressRef.get().then((event) {
-      final data = event.value as dynamic;
-      final serverAddress = data as String?;
-      if (serverAddress == null) {
-        l.e('server address not found');
-        return completer.complete(null);
-      }
-      completer.complete(serverAddress);
-    });
-    return completer.future;
   }
 
   Future<bool> checkVersion() async {
@@ -637,22 +579,6 @@ class GlobalController extends GetxController {
     myUserInfo.refresh();
   }
 
-  Future<UserInfoModel?> getUserInfoById(String userId) async {
-    Completer<UserInfoModel> completer = Completer();
-    final firebaseUserDbReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.usersRef).child(userId);
-    firebaseUserDbReference.get().then((event) {
-      final data = event.value as dynamic;
-      if (data != null) {
-        final user = singleUserParser(data);
-        completer.complete(user);
-      } else {
-        completer.completeError("User not found");
-      }
-    });
-    return completer.future;
-  }
-
   Future<ReownAppKitModal?> initializeW3MService() async {
     web3ModalService = ReownAppKitModal(
       context: Get.context!,
@@ -713,8 +639,9 @@ class GlobalController extends GetxController {
   }
 
   Future<void> disconnect() async {
-    final removed = await removeUserWalletAddressOnFirebase();
-    if (removed) {
+    final removed = await HttpApis.podium
+        .updateMyUserData({'external_wallet_address': null});
+    if (removed != null) {
       try {
         web3ModalService.disconnect();
       } catch (e) {

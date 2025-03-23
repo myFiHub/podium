@@ -95,19 +95,19 @@ class NotificationsView extends GetView<NotificationsController> {
                                           type: ButtonType.outline,
                                           text: 'Mark as read',
                                         ),
-                                      space10,
-                                      if (notif.notification_type ==
-                                          NotificationTypes.follow)
-                                        Button(
-                                          size: ButtonSize.SMALL,
-                                          onPressed: () {
-                                            controller.deleteMyNotification(
-                                              notif,
-                                            );
-                                          },
-                                          type: ButtonType.outline,
-                                          text: 'Delete',
-                                        ),
+                                      // space10,
+                                      // if (notif.notification_type ==
+                                      //     NotificationTypes.follow)
+                                      //   Button(
+                                      //     size: ButtonSize.SMALL,
+                                      //     onPressed: () {
+                                      //       controller.deleteMyNotification(
+                                      //         notif,
+                                      //       );
+                                      //     },
+                                      //     type: ButtonType.outline,
+                                      //     text: 'Delete',
+                                      //   ),
                                       space10,
                                       if (notif.notification_type ==
                                           NotificationTypes.invite)

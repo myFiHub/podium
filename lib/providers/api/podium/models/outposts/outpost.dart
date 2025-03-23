@@ -16,7 +16,7 @@ class OutpostModel {
   final String enter_type;
   final bool has_adult_content;
   final String image;
-  final List<_InviteModel>? invites;
+  final List<InviteModel>? invites;
   final bool is_archived;
   final bool is_recordable;
   final int last_active_at;
@@ -29,7 +29,7 @@ class OutpostModel {
   final List<String> tags;
   final List<_TicketToEnterModel>? tickets_to_enter;
   final List<_TicketToSpeakModel>? tickets_to_speak;
-  final int online_users_count;
+  final int? online_users_count;
   bool i_am_member;
 
   OutpostModel({
@@ -121,16 +121,16 @@ class _TicketToSpeakModel {
 }
 
 @JsonSerializable()
-class _InviteModel {
+class InviteModel {
   final String invitee_uuid;
-  final String can_speak;
+  final bool can_speak;
 
-  _InviteModel({
+  InviteModel({
     required this.invitee_uuid,
     required this.can_speak,
   });
 
-  factory _InviteModel.fromJson(Map<String, dynamic> json) =>
+  factory InviteModel.fromJson(Map<String, dynamic> json) =>
       _$InviteModelFromJson(json);
   Map<String, dynamic> toJson() => _$InviteModelToJson(this);
 }

@@ -1,8 +1,7 @@
 import 'dart:async';
-
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
@@ -11,6 +10,7 @@ import 'package:podium/utils/logger.dart';
 
 class NotificationsController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
+  final OutpostsController outpostsController = Get.find<OutpostsController>();
   final notifications = <NotificationModel>[].obs;
   final numberOfUnreadNotifications = 0.obs;
   StreamSubscription<bool>? loggedInListener;
@@ -50,12 +50,6 @@ class NotificationsController extends GetxController {
     notifications.assignAll(notifs);
   }
 
-  deleteMyNotification(NotificationModel notif) {
-    try {} catch (e) {
-      l.e(e);
-    }
-  }
-
   markNotificationAsRead({required String id}) async {
     final success = await HttpApis.podium.markNotificationAsRead(id: id);
     if (success) {
@@ -68,6 +62,11 @@ class NotificationsController extends GetxController {
   }) async {
     try {
       final outpostId = notif.inviteMetadata!.outpost_uuid;
+      await outpostsController.joinOutpostAndOpenOutpostDetailPage(
+        outpostId: outpostId,
+      );
+      await markNotificationAsRead(id: notif.uuid);
+      await getNotifications();
     } catch (e) {
       l.e(e);
     }

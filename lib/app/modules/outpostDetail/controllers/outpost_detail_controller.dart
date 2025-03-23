@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
@@ -15,7 +13,6 @@ import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/customLibs/omniDatePicker/src/enums/omni_datetime_picker_type.dart';
 import 'package:podium/customLibs/omniDatePicker/src/omni_datetime_picker_dialogs.dart';
-import 'package:podium/models/firebase_group_model.dart';
 
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
@@ -59,7 +56,7 @@ class OutpostDetailController extends GetxController {
   bool gotGroupInfo = false;
 
   final listOfSearchedUsersToInvite = Rx<List<UserModel>>([]);
-  final liveInvitedMembers = Rx<Map<String, InvitedMember>>({});
+  final liveInvitedMembers = Rx<Map<String, InviteModel>>({});
 //parameters for the group detail page
   late String stringedOutpostInfo;
   late String enterAccess;
@@ -112,7 +109,6 @@ class OutpostDetailController extends GetxController {
       fetchInvitedMembers();
       scheduleChecks();
       _getLumaData();
-      startListeningToGroup(outpostInfo.uuid, onOutpostUpdate);
     } else {
       l.e('Outpost info is null');
       Toast.error(message: 'Outpost info is null');
@@ -200,26 +196,6 @@ class OutpostDetailController extends GetxController {
     l.i(dateTime);
   }
 
-  onOutpostUpdate(DatabaseEvent data) {
-    // TODO: implement onOutpostUpdate
-    // if (outpost.value == null) return;
-    // final newData = OutpostModel.fromJson(data.snapshot.value);
-    // if (newData != null) {
-    //   if (newData.members.length != outpost.value!.members.length) {
-    //     getMembers(newData);
-    //   }
-    //   if (newData.scheduledFor != group.value!.scheduledFor ||
-    //       newData.creatorJoined != group.value!.creatorJoined ||
-    //       newData.archived != group.value!.archived) {
-    //     group.value = newData;
-    //     scheduleChecks();
-    //   }
-    // } else {
-    //   Toast.error(message: 'Room is archived or deleted');
-    //   Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
-    // }
-  }
-
   scheduleChecks() async {
     final amICreator = outpost.value!.creator_user_uuid == myId;
     final isScheduled = outpost.value!.scheduled_for != 0;
@@ -266,23 +242,19 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  fetchInvitedMembers({String? userId}) async {
+  fetchInvitedMembers() async {
     if (outpost.value == null) return;
-    final map = await getInvitedMembers(
-      groupId: outpost.value!.uuid,
-      userId: userId,
-    );
-    if (userId != null) {
-      map.forEach((key, value) {
-        liveInvitedMembers.value[key] = value;
-      });
-      liveInvitedMembers.refresh();
-    } else {
-      liveInvitedMembers.value = map;
-    }
+    final res = await HttpApis.podium.getOutpost(outpost.value!.uuid);
+    if (res == null) return;
+    Map<String, InviteModel> map = {};
+    (res.invites ?? []).forEach((value) {
+      map[value.invitee_uuid] = value;
+    });
+
+    liveInvitedMembers.value = map;
   }
 
-  getGroupInfo({required String id}) async {
+  getOutpostInfo({required String id}) async {
     if (isGettingGroupInfo.value) return;
     isGettingGroupInfo.value = true;
     final globalController = Get.find<GlobalController>();

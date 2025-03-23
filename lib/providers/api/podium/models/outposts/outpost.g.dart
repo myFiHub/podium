@@ -27,7 +27,7 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel image(String image);
 
-  OutpostModel invites(List<_InviteModel>? invites);
+  OutpostModel invites(List<InviteModel>? invites);
 
   OutpostModel is_archived(bool is_archived);
 
@@ -57,7 +57,7 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel i_am_member(bool i_am_member);
 
-  OutpostModel online_users_count(int online_users_count);
+  OutpostModel online_users_count(int? online_users_count);
 
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OutpostModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
@@ -76,7 +76,7 @@ abstract class _$OutpostModelCWProxy {
     String enter_type,
     bool has_adult_content,
     String image,
-    List<_InviteModel>? invites,
+    List<InviteModel>? invites,
     bool is_archived,
     bool is_recordable,
     int last_active_at,
@@ -91,7 +91,7 @@ abstract class _$OutpostModelCWProxy {
     List<_TicketToSpeakModel>? tickets_to_speak,
     String? luma_event_id,
     bool i_am_member,
-    int online_users_count,
+    int? online_users_count,
   });
 }
 
@@ -137,7 +137,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
   OutpostModel image(String image) => this(image: image);
 
   @override
-  OutpostModel invites(List<_InviteModel>? invites) => this(invites: invites);
+  OutpostModel invites(List<InviteModel>? invites) => this(invites: invites);
 
   @override
   OutpostModel is_archived(bool is_archived) => this(is_archived: is_archived);
@@ -189,7 +189,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
   OutpostModel i_am_member(bool i_am_member) => this(i_am_member: i_am_member);
 
   @override
-  OutpostModel online_users_count(int online_users_count) =>
+  OutpostModel online_users_count(int? online_users_count) =>
       this(online_users_count: online_users_count);
 
   @override
@@ -272,7 +272,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       invites: invites == const $CopyWithPlaceholder()
           ? _value.invites
           // ignore: cast_nullable_to_non_nullable
-          : invites as List<_InviteModel>?,
+          : invites as List<InviteModel>?,
       is_archived: is_archived == const $CopyWithPlaceholder()
           ? _value.is_archived
           // ignore: cast_nullable_to_non_nullable
@@ -332,7 +332,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       online_users_count: online_users_count == const $CopyWithPlaceholder()
           ? _value.online_users_count
           // ignore: cast_nullable_to_non_nullable
-          : online_users_count as int,
+          : online_users_count as int?,
     );
   }
 }
@@ -359,7 +359,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       has_adult_content: json['has_adult_content'] as bool,
       image: json['image'] as String,
       invites: (json['invites'] as List<dynamic>?)
-          ?.map((e) => _InviteModel.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => InviteModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       is_archived: json['is_archived'] as bool,
       is_recordable: json['is_recordable'] as bool,
@@ -381,7 +381,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
           .toList(),
       luma_event_id: json['luma_event_id'] as String?,
       i_am_member: json['i_am_member'] as bool,
-      online_users_count: (json['online_users_count'] as num).toInt(),
+      online_users_count: (json['online_users_count'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
@@ -460,12 +460,12 @@ Map<String, dynamic> _$TicketToSpeakModelToJson(_TicketToSpeakModel instance) =>
       'user_uuid': instance.user_uuid,
     };
 
-_InviteModel _$InviteModelFromJson(Map<String, dynamic> json) => _InviteModel(
+InviteModel _$InviteModelFromJson(Map<String, dynamic> json) => InviteModel(
       invitee_uuid: json['invitee_uuid'] as String,
-      can_speak: json['can_speak'] as String,
+      can_speak: json['can_speak'] as bool,
     );
 
-Map<String, dynamic> _$InviteModelToJson(_InviteModel instance) =>
+Map<String, dynamic> _$InviteModelToJson(InviteModel instance) =>
     <String, dynamic>{
       'invitee_uuid': instance.invitee_uuid,
       'can_speak': instance.can_speak,

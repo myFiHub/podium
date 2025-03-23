@@ -45,7 +45,7 @@ class GroupByIdLandingScreen extends GetView<OutpostDetailController> {
       );
     }
     Get.put(OutpostDetailController());
-    controller.getGroupInfo(id: id!);
+    controller.getOutpostInfo(id: id!);
     return Container(
       child: const Center(
         child: CircularProgressIndicator(),

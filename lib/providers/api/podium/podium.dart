@@ -174,6 +174,7 @@ class PodiumApi {
           options: Options(headers: _headers));
       return OutpostModel.fromJson(response.data['data']);
     } catch (e) {
+      l.e(e);
       return null;
     }
   }

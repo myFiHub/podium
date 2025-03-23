@@ -104,9 +104,8 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                     ),
                   ),
                   space10,
-                  const Expanded(
-                    child: MembersList(),
-                  ),
+                  const MembersList(),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -158,11 +157,20 @@ class MembersList extends GetView<OutpostDetailController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final members = controller.membersList.value;
-      return UserList(
-        usersList: members,
-        onRequestUpdate: (userId) {
-          controller.updateSingleUser(userId);
-        },
+      if (members.length == 0) {
+        return const Expanded(
+          child: const Center(
+            child: const CircularProgressIndicator(),
+          ),
+        );
+      }
+      return Expanded(
+        child: UserList(
+          usersList: members,
+          onRequestUpdate: (userId) {
+            controller.updateSingleUser(userId);
+          },
+        ),
       );
     });
   }
@@ -391,7 +399,7 @@ class UserInvitationBottomSheetContent
                       final user = users[index];
                       final userInInvitedList = liveInvitedMembers[user.uuid];
                       if (userInInvitedList != null) {
-                        final invitedToSpeal = userInInvitedList.invitedToSpeak;
+                        final invitedToSpeak = userInInvitedList.can_speak;
                         return Column(
                           children: [
                             ListTile(
@@ -403,9 +411,9 @@ class UserInvitationBottomSheetContent
                                 ),
                               ),
                               trailing: Text(
-                                'Invited ${userInInvitedList.invitedToSpeak ? 'to speak' : 'to listen'}',
+                                'Invited ${invitedToSpeak ? 'to speak' : 'to listen'}',
                                 style: TextStyle(
-                                  color: invitedToSpeal
+                                  color: invitedToSpeak
                                       ? Colors.green[200]
                                       : Colors.blue[200],
                                 ),

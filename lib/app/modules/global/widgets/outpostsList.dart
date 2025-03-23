@@ -378,7 +378,7 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    final numberOfActiveUsers = outpost.online_users_count;
+    final numberOfActiveUsers = outpost.online_users_count ?? 0;
     return numberOfActiveUsers == 0
         ? const SizedBox()
         : Container(

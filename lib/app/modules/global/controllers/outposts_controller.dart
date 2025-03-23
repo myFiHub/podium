@@ -90,7 +90,7 @@ class OutpostsController extends GetxController {
   bool _shouldUpdateTakingUsers = false;
 
   final globalController = Get.find<GlobalController>();
-  final joiningGroupId = ''.obs;
+  final joiningOutpostId = ''.obs;
   final outposts = Rx<Map<String, OutpostModel>>({});
   final myOutposts = Rx<Map<String, OutpostModel>>({});
   final isGettingMyOutposts = false.obs;
@@ -491,11 +491,11 @@ class OutpostsController extends GetxController {
     bool? joiningByLink,
   }) async {
     if (outpostId.isEmpty) return;
-    if (joiningGroupId != '') {
+    if (joiningOutpostId != '') {
       return;
     }
     try {
-      joiningGroupId.value = outpostId;
+      joiningOutpostId.value = outpostId;
       final outpost = await HttpApis.podium.getOutpost(outpostId);
       l.d("Outpost: $outpost");
       if (outpost == null) {
@@ -516,7 +516,7 @@ class OutpostsController extends GetxController {
       );
       l.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
       if (accesses.canEnter == false) {
-        joiningGroupId.value = '';
+        joiningOutpostId.value = '';
         return;
       }
       final hasAgeVerified = await _showAreYouOver18Dialog(
@@ -524,7 +524,7 @@ class OutpostsController extends GetxController {
         myUser: myUser,
       );
       if (!hasAgeVerified) {
-        joiningGroupId.value = '';
+        joiningOutpostId.value = '';
         return;
       }
 
@@ -583,7 +583,7 @@ class OutpostsController extends GetxController {
       );
       l.f("Error joining outpost: $e");
     } finally {
-      joiningGroupId.value = '';
+      joiningOutpostId.value = '';
     }
 
     return;
@@ -719,12 +719,12 @@ class OutpostsController extends GetxController {
   }
 
   Future<GroupAccesses?> checkTicket({required OutpostModel outpost}) async {
-    joiningGroupId.value = outpost.uuid;
+    joiningOutpostId.value = outpost.uuid;
     final checkTicketController = Get.put(CheckticketController());
     checkTicketController.outpost.value = outpost;
     final accesses = await checkTicketController.checkTickets();
     if (accesses.canEnter == true && accesses.canSpeak == true) {
-      joiningGroupId.value = '';
+      joiningOutpostId.value = '';
       return GroupAccesses(
         canEnter: accesses.canEnter,
         canSpeak: accesses.canSpeak,
@@ -733,7 +733,7 @@ class OutpostsController extends GetxController {
       final result = await Get.dialog<GroupAccesses?>(CheckTicketView());
       l.d("Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
       Get.delete<CheckticketController>();
-      joiningGroupId.value = '';
+      joiningOutpostId.value = '';
       return result;
     }
   }

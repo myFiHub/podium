@@ -13,7 +13,6 @@ import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/customLibs/omniDatePicker/src/enums/omni_datetime_picker_type.dart';
 import 'package:podium/customLibs/omniDatePicker/src/omni_datetime_picker_dialogs.dart';
-
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
@@ -22,7 +21,6 @@ import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
@@ -102,18 +100,12 @@ class OutpostDetailController extends GetxController {
       canSpeak: speakAccess == 'true',
     );
     // final remoteGroup = await getGroupInfoById(groupId);
-    if (outpostInfo != null) {
-      outpost.value = outpostInfo;
-      gotGroupInfo = true;
-      getMembers(outpostInfo);
-      fetchInvitedMembers();
-      scheduleChecks();
-      _getLumaData();
-    } else {
-      l.e('Outpost info is null');
-      Toast.error(message: 'Outpost info is null');
-      Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
-    }
+    outpost.value = outpostInfo;
+    gotGroupInfo = true;
+    getMembers(outpostInfo);
+    fetchInvitedMembers();
+    scheduleChecks();
+    _getLumaData();
 
     tickerListener = globalController.ticker.listen((event) {
       if (outpost.value != null) {
@@ -280,6 +272,10 @@ class OutpostDetailController extends GetxController {
       final memberIds = outpost.members?.map((e) => e.uuid).toList() ?? [];
       isGettingMembers.value = true;
       final list = await HttpApis.podium.getUsersByIds(memberIds);
+      final myUserIndex = list.indexWhere((m) => m.uuid == myId);
+      if (myUserIndex == -1) {
+        list.insert(0, myUser);
+      }
       membersList.value = list;
     } catch (e) {
       l.e(e);

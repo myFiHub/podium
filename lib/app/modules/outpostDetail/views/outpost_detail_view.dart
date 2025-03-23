@@ -157,6 +157,8 @@ class MembersList extends GetView<OutpostDetailController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final members = controller.membersList.value;
+      // add my user to the top if it doesn't exist in the list
+
       if (members.length == 0) {
         return const Expanded(
           child: const Center(
@@ -164,6 +166,7 @@ class MembersList extends GetView<OutpostDetailController> {
           ),
         );
       }
+
       return Expanded(
         child: UserList(
           usersList: members,

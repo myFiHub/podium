@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:glow_container/glow_container.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -81,6 +82,7 @@ class _SingleOutpost extends StatelessWidget {
   Widget build(BuildContext context) {
     final isScheduled = outpost.scheduled_for != 0;
     return GestureDetector(
+      key: Key(outpost.uuid + "OutpostCard"),
       onTap: () async {
         controller.joinOutpostAndOpenOutpostDetailPage(
           outpostId: outpost.uuid,
@@ -89,279 +91,304 @@ class _SingleOutpost extends StatelessWidget {
       child: Stack(
         children: [
           space16,
-          Container(
-            decoration: const BoxDecoration(
-                color: ColorName.cardBackground,
-                borderRadius: BorderRadius.all(Radius.circular(8))),
-            margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-            padding: const EdgeInsets.all(10),
-            child: Stack(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          constraints: const BoxConstraints(
-                            maxWidth: 270,
-                          ),
-                          //width: Get.width - 200,
-                          child: Text(
-                            outpost.name,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        Container(
-                            constraints: const BoxConstraints(
-                              maxWidth: 270,
-                            ),
-                            //width: Get.width - 300,
-                            child: Row(
-                              children: [
-                                RichText(
-                                  overflow: TextOverflow.ellipsis,
-                                  text: TextSpan(
-                                    children: [
-                                      const TextSpan(
-                                        text: "Created by",
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: ColorName.greyText,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text:
-                                            " ${amICreator ? "You" : outpost.creator_user_name}",
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                          color: amICreator
-                                              ? Colors.green[200]
-                                              : Colors.blue[200],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                space5,
-                                Img(
-                                  src: outpost.creator_user_image,
-                                  size: 12,
-                                )
-                              ],
-                            )),
-                        space10,
-                        Row(
-                          children: [
-                            Img(
-                              src: Uri.parse(outpost.image).isAbsolute
-                                  ? outpost.image
-                                  : '',
-                              alt: outpost.name,
-                              ifEmpty: Assets.images.logo.path,
-                            ),
-                            space10,
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (outpost.is_recordable)
-                                  const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.circle,
-                                        color: Colors.redAccent,
-                                        size: 12,
-                                      ),
-                                      space5,
-                                      Text(
-                                        "Recordable by Creator",
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w400,
-                                          color: ColorName.greyText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                if (outpost.is_recordable) space5,
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.subject,
-                                      color: ColorName.greyText,
-                                      size: 14,
-                                    ),
-                                    Container(
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 180,
-                                      ),
-                                      // width: Get.width - 200,
-                                      child: Text(
-                                        " ${outpost.subject.isEmpty ? "No Subject" : outpost.subject}",
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w400,
-                                          color: ColorName.greyText,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                space5,
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.lock,
-                                      color: ColorName.greyText,
-                                      size: 14,
-                                    ),
-                                    space5,
-                                    Text(
-                                      parseAccessType(outpost.enter_type),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        color: ColorName.greyText,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                space5,
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.mic,
-                                      color: ColorName.greyText,
-                                      size: 14,
-                                    ),
-                                    space5,
-                                    Text(
-                                      parseSpeakerType(outpost.speak_type),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        color: ColorName.greyText,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                space5,
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.group,
-                                      color: ColorName.greyText,
-                                      size: 14,
-                                    ),
-                                    space5,
-                                    Text(
-                                      "${outpost.members_count ?? 0} Members",
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        color: ColorName.greyText,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if (outpost.luma_event_id != null) ...[
-                                  space5,
-                                  Row(
-                                    children: [
-                                      //  local image
-                                      Assets.images.lumaPng.image(
-                                        width: 14,
-                                        height: 14,
-                                      ),
-                                      space5,
-                                      const Text(
-                                        "Available on Luma",
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w400,
-                                          color: ColorName.greyText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ]
-                              ],
-                            )
-                          ],
-                        ),
-                        if (outpost.tags.isNotEmpty)
-                          TagsWrapper(outpost: outpost),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        if (canShareOutpostUrl(outpost: outpost))
-                          IconButton(
-                            onPressed: () {
-                              analytics.logEvent(
-                                name: "share_group",
-                                parameters: {
-                                  "outpost_id": outpost.uuid,
-                                  "outpost_name": outpost.name,
-                                },
-                              );
-                              Share.share(generateOutpostShareUrl(
-                                  outpostId: outpost.uuid));
-                            },
-                            icon: const Icon(
-                              Icons.share,
-                              color: ColorName.greyText,
-                            ),
-                          ),
-                        if (canLeaveOutpost(outpost: outpost))
-                          IconButton(
-                            onPressed: () {
-                              controller.leaveOutpost(outpost: outpost);
-                            },
-                            icon: const Icon(
-                              Icons.exit_to_app,
-                              color: Colors.red,
-                            ),
-                          ),
-                        if (canArchiveOutpost(outpost: outpost))
-                          IconButton(
-                            onPressed: () {
-                              controller.toggleArchive(outpost: outpost);
-                            },
-                            icon: Icon(
-                              outpost.is_archived
-                                  ? Icons.unarchive
-                                  : Icons.archive,
-                              color: outpost.is_archived
-                                  ? ColorName.greyText
-                                  : Colors.red,
-                            ),
-                          )
-                      ],
-                    )
-                  ],
-                ),
-                _JoiningIndicator(
-                  outpostId: outpost.uuid,
-                ),
-                if (outpost.has_adult_content)
-                  Positioned(
-                    child: Assets.images.ageRestricted.image(
-                      width: 24,
-                      height: 24,
-                    ),
-                    left: 0,
-                    bottom: outpost.tags.isEmpty ? 0 : 30,
+          Obx(
+            () {
+              final joiningOutpostId = controller.joiningOutpostId.value;
+              return GlowContainer(
+                glowRadius: 4,
+                gradientColors: const [
+                  ColorName.primaryBlue,
+                  ColorName.secondaryBlue
+                ],
+                rotationDuration: const Duration(seconds: 1),
+                glowLocation: GlowLocation.outerOnly,
+                containerOptions: ContainerOptions(
+                  width: Get.width - 2,
+                  borderRadius: 8,
+                  margin: const EdgeInsets.only(left: 1),
+                  backgroundColor: ColorName.cardBackground,
+                  borderSide: const BorderSide(
+                    width: 1.0,
+                    color: ColorName.cardBackground,
                   ),
-              ],
-            ),
+                ),
+                transitionDuration: const Duration(milliseconds: 200),
+                showAnimatedBorder: joiningOutpostId == outpost.uuid,
+                child: Container(
+                  decoration: const BoxDecoration(
+                      color: ColorName.cardBackground,
+                      borderRadius: BorderRadius.all(Radius.circular(8))),
+                  margin: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
+                  padding: const EdgeInsets.all(8),
+                  child: Stack(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 270,
+                                ),
+                                //width: Get.width - 200,
+                                child: Text(
+                                  outpost.name,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 270,
+                                  ),
+                                  //width: Get.width - 300,
+                                  child: Row(
+                                    children: [
+                                      RichText(
+                                        overflow: TextOverflow.ellipsis,
+                                        text: TextSpan(
+                                          children: [
+                                            const TextSpan(
+                                              text: "Created by",
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: ColorName.greyText,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text:
+                                                  " ${amICreator ? "You" : outpost.creator_user_name}",
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w500,
+                                                color: amICreator
+                                                    ? Colors.green[200]
+                                                    : Colors.blue[200],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      space5,
+                                      Img(
+                                        src: outpost.creator_user_image,
+                                        size: 12,
+                                      )
+                                    ],
+                                  )),
+                              space10,
+                              Row(
+                                children: [
+                                  Img(
+                                    src: Uri.parse(outpost.image).isAbsolute
+                                        ? outpost.image
+                                        : '',
+                                    alt: outpost.name,
+                                    ifEmpty: Assets.images.logo.path,
+                                  ),
+                                  space10,
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (outpost.is_recordable)
+                                        const Row(
+                                          children: [
+                                            Icon(
+                                              Icons.circle,
+                                              color: Colors.redAccent,
+                                              size: 12,
+                                            ),
+                                            space5,
+                                            Text(
+                                              "Recordable by Creator",
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w400,
+                                                color: ColorName.greyText,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      if (outpost.is_recordable) space5,
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.subject,
+                                            color: ColorName.greyText,
+                                            size: 14,
+                                          ),
+                                          Container(
+                                            constraints: const BoxConstraints(
+                                              maxWidth: 180,
+                                            ),
+                                            // width: Get.width - 200,
+                                            child: Text(
+                                              " ${outpost.subject.isEmpty ? "No Subject" : outpost.subject}",
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w400,
+                                                color: ColorName.greyText,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                      space5,
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.lock,
+                                            color: ColorName.greyText,
+                                            size: 14,
+                                          ),
+                                          space5,
+                                          Text(
+                                            parseAccessType(outpost.enter_type),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w400,
+                                              color: ColorName.greyText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      space5,
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.mic,
+                                            color: ColorName.greyText,
+                                            size: 14,
+                                          ),
+                                          space5,
+                                          Text(
+                                            parseSpeakerType(
+                                                outpost.speak_type),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w400,
+                                              color: ColorName.greyText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      space5,
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.group,
+                                            color: ColorName.greyText,
+                                            size: 14,
+                                          ),
+                                          space5,
+                                          Text(
+                                            "${outpost.members_count ?? 0} Members",
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w400,
+                                              color: ColorName.greyText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (outpost.luma_event_id != null) ...[
+                                        space5,
+                                        Row(
+                                          children: [
+                                            //  local image
+                                            Assets.images.lumaPng.image(
+                                              width: 14,
+                                              height: 14,
+                                            ),
+                                            space5,
+                                            const Text(
+                                              "Available on Luma",
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w400,
+                                                color: ColorName.greyText,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ]
+                                    ],
+                                  )
+                                ],
+                              ),
+                              if (outpost.tags.isNotEmpty)
+                                TagsWrapper(outpost: outpost),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              if (canShareOutpostUrl(outpost: outpost))
+                                IconButton(
+                                  onPressed: () {
+                                    analytics.logEvent(
+                                      name: "share_group",
+                                      parameters: {
+                                        "outpost_id": outpost.uuid,
+                                        "outpost_name": outpost.name,
+                                      },
+                                    );
+                                    Share.share(generateOutpostShareUrl(
+                                        outpostId: outpost.uuid));
+                                  },
+                                  icon: const Icon(
+                                    Icons.share,
+                                    color: ColorName.greyText,
+                                  ),
+                                ),
+                              if (canLeaveOutpost(outpost: outpost))
+                                IconButton(
+                                  onPressed: () {
+                                    controller.leaveOutpost(outpost: outpost);
+                                  },
+                                  icon: const Icon(
+                                    Icons.exit_to_app,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              if (canArchiveOutpost(outpost: outpost))
+                                IconButton(
+                                  onPressed: () {
+                                    controller.toggleArchive(outpost: outpost);
+                                  },
+                                  icon: Icon(
+                                    outpost.is_archived
+                                        ? Icons.unarchive
+                                        : Icons.archive,
+                                    color: outpost.is_archived
+                                        ? ColorName.greyText
+                                        : Colors.red,
+                                  ),
+                                )
+                            ],
+                          )
+                        ],
+                      ),
+                      if (outpost.has_adult_content)
+                        Positioned(
+                          child: Assets.images.ageRestricted.image(
+                            width: 24,
+                            height: 24,
+                          ),
+                          left: 0,
+                          bottom: outpost.tags.isEmpty ? 0 : 30,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           if (isScheduled)
             _ScheduledBanner(
@@ -532,8 +559,8 @@ class SingleTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       margin: const EdgeInsets.only(right: 4),
       decoration: BoxDecoration(
-        color: ColorName.greyText.withAlpha(51),
-        borderRadius: BorderRadius.circular(4),
+        color: ColorName.greyText.withAlpha(51), // 0.2 opacity * 255 = 51
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
       ),
       child: Text(
         tagName,
@@ -544,26 +571,6 @@ class SingleTag extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _JoiningIndicator extends GetView<OutpostsController> {
-  final String outpostId;
-  const _JoiningIndicator({super.key, required this.outpostId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final joiningGroupId = controller.joiningGroupId.value;
-      if (joiningGroupId != outpostId) {
-        return const SizedBox();
-      }
-      return Positioned(
-        right: Get.width / 2 - 20,
-        bottom: 40,
-        child: const CircularProgressIndicator(),
-      );
-    });
   }
 }
 

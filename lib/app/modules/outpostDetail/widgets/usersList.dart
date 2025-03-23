@@ -1,3 +1,4 @@
+import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
@@ -11,7 +12,6 @@ import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-// import 'package:web3modal_flutter/utils/util.dart';
 
 class UserList extends StatelessWidget {
   final List<UserModel> usersList;
@@ -22,36 +22,69 @@ class UserList extends StatelessWidget {
     this.onRequestUpdate,
   });
 
+  final options = const LiveOptions(
+    // Start animation after (default zero)
+    // delay: Duration(seconds: 0),
+
+    // Show each item through (default 250)
+    showItemInterval: Duration(milliseconds: 100),
+
+    // Animation duration (default 250)
+    // showItemDuration: Duration(seconds: 1),
+
+    // Animations starts at 0.05 visible
+    // item fraction in sight (default 0.025)
+    visibleFraction: 0.05,
+
+    // Repeat the animation of the appearance
+    // when scrolling in the opposite direction (default false)
+    // To get the effect as in a showcase for ListView, set true
+    reAnimateOnVisibility: false,
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scrollbar(
-      child: ListView.builder(
-        itemCount: usersList.length,
-        itemBuilder: (BuildContext context, int index) {
-          final user = usersList[index];
-          final name = user.name ?? '';
-          String avatar = user.image ?? '';
-          if (avatar.contains("https://ui-avatars.com/api/?name=Oo")) {
-            avatar = '';
-          }
-          if (avatar.isEmpty) {
-            avatar = avatarPlaceHolder(name);
-          }
-          final userId = user.uuid;
-          final isItME = user.uuid == myUser.uuid;
-          return _SingleUser(
-            key: Key(userId),
-            isItME: isItME,
-            user: user,
-            name: name,
-            avatar: avatar,
-            onRequestUpdate: () {
-              onRequestUpdate?.call(userId);
-            },
-          );
-        },
-      ),
-    );
+        child: LiveList.options(
+      options: options,
+      itemCount: usersList.length,
+      itemBuilder: (context, index, animation) {
+        final user = usersList[index];
+        final name = user.name ?? '';
+        String avatar = user.image ?? '';
+        if (avatar.contains("https://ui-avatars.com/api/?name=Oo")) {
+          avatar = '';
+        }
+        if (avatar.isEmpty) {
+          avatar = avatarPlaceHolder(name);
+        }
+        final userId = user.uuid;
+        final isItME = user.uuid == myUser.uuid;
+        return FadeTransition(
+          opacity: Tween<double>(
+            begin: 0,
+            end: 1,
+          ).animate(animation),
+          // And slide transition
+          child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, -0.1),
+                end: Offset.zero,
+              ).animate(animation),
+              // Paste you Widget
+              child: _SingleUser(
+                key: Key(userId),
+                isItME: isItME,
+                user: user,
+                name: name,
+                avatar: avatar,
+                onRequestUpdate: () {
+                  onRequestUpdate?.call(userId);
+                },
+              )),
+        );
+      },
+    ));
   }
 }
 

@@ -159,6 +159,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.12.0"
+  auto_animated:
+    dependency: "direct main"
+    description:
+      name: auto_animated
+      sha256: f62311033d043d2709c25444551debdfd08649138c2923b0298d776792291149
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.0"
   auto_size_text:
     dependency: "direct main"
     description:
@@ -963,6 +971,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  glow_container:
+    dependency: "direct main"
+    description:
+      name: glow_container
+      sha256: b445a379a963273f157d29d5b71d1804fc5a7ddf62a153510ee7f046e6d21f27
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   gql:
     dependency: transitive
     description:
@@ -2127,6 +2143,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.4"
+  visibility_detector:
+    dependency: transitive
+    description:
+      name: visibility_detector
+      sha256: dd5cc11e13494f432d15939c3aa8ae76844c42b723398643ce9addb88a5ed420
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0+2"
   vm_service:
     dependency: transitive
     description:

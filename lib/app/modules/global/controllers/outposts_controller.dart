@@ -22,7 +22,6 @@ import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/firebase_Session_model.dart';
-import 'package:podium/models/firebase_group_model.dart';
 import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
@@ -777,33 +776,6 @@ class OutpostsController extends GetxController {
     }
 
     return;
-  }
-
-  FirebaseSessionMember? createInitialSessionMember(
-      {required UserInfoModel user, required FirebaseGroup group}) {
-    try {
-      final iAmGroupCreator = group.creator.id == user.id;
-      final member = FirebaseSessionMember(
-        avatar: user.avatar,
-        id: user.id,
-        name: user.fullName,
-        isTalking: false,
-        startedToTalkAt: 0,
-        timeJoined: DateTime.now().millisecondsSinceEpoch,
-        initialTalkTime: iAmGroupCreator
-            ? double.maxFinite.toInt()
-            : SessionConstants.initialTakTime,
-        isMuted: true,
-        remainingTalkTime: iAmGroupCreator
-            ? double.maxFinite.toInt()
-            : SessionConstants.initialTakTime,
-        present: false,
-      );
-      return member;
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
   }
 
   _openOutpost({

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:ably_flutter/ably_flutter.dart';
 import 'package:aptos/aptos_account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -9,7 +8,6 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
@@ -63,7 +61,7 @@ class LoginController extends GetxController {
   final referrerIsFul = false.obs;
   final boughtPodiumDefinedEntryTicket = false.obs;
   final referralError = Rxn<String>(null);
-  final podiumUsersToBuyEntryTicketFrom = Rx<List<UserInfoModel>>([]);
+  final podiumUsersToBuyEntryTicketFrom = Rx<List<UserModel>>([]);
 
   final loadingBuyTicketId = ''.obs;
   // used in referral prejoin page, to continue the process
@@ -106,16 +104,16 @@ class LoginController extends GetxController {
     super.onClose();
   }
 
-  Future<void> buyTicket({required UserInfoModel user}) async {
+  Future<void> buyTicket({required UserModel user}) async {
     if (loadingBuyTicketId.value.isNotEmpty) {
       return;
     }
-    loadingBuyTicketId.value = user.id;
+    loadingBuyTicketId.value = user.uuid;
     bool? bought;
     try {
       bought = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
-        sellerAddress: user.aptosInternalWalletAddress,
-        sellerName: user.fullName,
+        sellerAddress: user.aptos_address!,
+        sellerName: user.name!,
       );
       if (bought != null && bought) {
         Toast.success(
@@ -437,11 +435,10 @@ class LoginController extends GetxController {
     required String myAptosAddress,
   }) async {
     try {
-      final users = await getUsersByIds(podiumTeamMembers);
+      final users = await HttpApis.podium.getUsersByIds(podiumTeamMembers);
       podiumUsersToBuyEntryTicketFrom.value = users;
 
-      final aptosAddresses =
-          users.map((user) => user.aptosInternalWalletAddress).toList();
+      final aptosAddresses = users.map((user) => user.aptos_address!).toList();
       final callArray = aptosAddresses.map(
         (address) => AptosMovement.getMyBalanceOnPodiumPass(
           sellerAddress: address,

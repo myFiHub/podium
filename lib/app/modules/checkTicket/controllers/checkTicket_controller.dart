@@ -4,7 +4,6 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
@@ -550,9 +549,9 @@ class CheckticketController extends GetxController {
 
     final myReferrer = myUser.referer_user_uuid;
     if (myReferrer != null) {
-      final referrerInfo = await getUserById(myReferrer);
+      final referrerInfo = await HttpApis.podium.getUserData(myReferrer);
       if (referrerInfo != null) {
-        referrer = referrerInfo.aptosInternalWalletAddress;
+        referrer = referrerInfo.aptos_address!;
       }
     }
 
@@ -655,7 +654,7 @@ class CheckticketController extends GetxController {
     String referrer = '';
     final myReferrer = myUser.referer_user_uuid;
     if (myReferrer != null) {
-      final referrerInfo = await getUserById(myReferrer);
+      final referrerInfo = await HttpApis.podium.getUserData(myReferrer);
       if (referrerInfo != null) {
         referrer = referrerInfo.defaultWalletAddress;
       }

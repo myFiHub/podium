@@ -4,12 +4,9 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
-import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/models/cheerBooEvent.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -82,14 +79,15 @@ class ProfileController extends GetxController {
 
   _getPayments() async {
     isGettingPayments.value = true;
-    final (received, paid) = await (
-      getReceivedPayments(
-        userId: userInfo.value!.uuid,
-      ),
-      getInitiatedPayments(
-        userId: userInfo.value!.uuid,
-      )
-    ).wait;
+    final (received, paid) = (
+      [], []
+      // getReceivedPayments(
+      //   userId: userInfo.value!.uuid,
+      // ),
+      // getInitiatedPayments(
+      //   userId: userInfo.value!.uuid,
+      // )
+    );
     final _payments = Payments(
       numberOfCheersReceived: 0,
       numberOfBoosReceived: 0,

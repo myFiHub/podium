@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -235,7 +236,7 @@ class _AccessUsingTicket extends GetView<LoginController> {
           itemCount: ticketHoldersList.length,
           itemBuilder: (context, index) {
             return _ProfileCard(
-              key: ValueKey(ticketHoldersList[index].id + 'podiumUser'),
+              key: ValueKey(ticketHoldersList[index].uuid + 'podiumUser'),
               user: ticketHoldersList[index],
             );
           },
@@ -246,7 +247,7 @@ class _AccessUsingTicket extends GetView<LoginController> {
 }
 
 class _ProfileCard extends GetView<LoginController> {
-  final UserInfoModel user;
+  final UserModel user;
   const _ProfileCard({
     super.key,
     required this.user,
@@ -279,8 +280,8 @@ class _ProfileCard extends GetView<LoginController> {
           Row(
             children: [
               Img(
-                src: user.avatar,
-                alt: user.fullName,
+                src: user.image ?? '',
+                alt: user.name,
                 size: 50,
               ),
               const SizedBox(width: 16),
@@ -288,7 +289,7 @@ class _ProfileCard extends GetView<LoginController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user.fullName,
+                    user.name ?? 'Podium team member',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -296,7 +297,7 @@ class _ProfileCard extends GetView<LoginController> {
                     ),
                   ),
                   Text(
-                    truncate(user.id, length: 20),
+                    truncate(user.uuid, length: 20),
                     style: TextStyle(
                       color: Colors.grey[400],
                       fontSize: 14,
@@ -322,7 +323,7 @@ class _ProfileCard extends GetView<LoginController> {
                     ),
                   ),
                   Text(
-                    truncate(user.aptosInternalWalletAddress, length: 20),
+                    truncate(user.aptos_address!, length: 20),
                     style: TextStyle(
                       color: Colors.grey[400],
                       fontSize: 12,
@@ -340,7 +341,7 @@ class _ProfileCard extends GetView<LoginController> {
                 final loadingId = controller.loadingBuyTicketId.value;
                 final balance = controller.internalWalletBalance.value;
                 return Button(
-                  loading: loadingId == user.id,
+                  loading: loadingId == user.uuid,
                   type: ButtonType.outline2x,
                   onPressed: () async {
                     if (balance.isEmpty) {
@@ -355,7 +356,7 @@ class _ProfileCard extends GetView<LoginController> {
                           onPressed: () {
                             Clipboard.setData(
                               ClipboardData(
-                                text: user.aptosInternalWalletAddress,
+                                text: user.aptos_address!,
                               ),
                             );
                             Get.closeAllSnackbars();

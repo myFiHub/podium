@@ -4,10 +4,8 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/models/user_info_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -42,8 +40,8 @@ class UsersController extends GetxController {
     super.onClose();
   }
 
-  Future<UserInfoModel?> getUserById(String id) async {
-    final users = await getUsersByIds([id]);
+  Future<UserModel?> getUserById(String id) async {
+    final users = await HttpApis.podium.getUsersByIds([id]);
     if (users.isNotEmpty) {
       return users[0];
     }

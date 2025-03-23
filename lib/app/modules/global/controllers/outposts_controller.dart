@@ -12,7 +12,6 @@ import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
-import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
@@ -90,7 +89,7 @@ sendOutpostEvent(
 
 const numberOfOutpostsPerPage = 10;
 
-class OutpostsController extends GetxController with FirebaseTags {
+class OutpostsController extends GetxController {
   // final _presentUsersRefreshThrottle =
   //     Throttling(duration: const Duration(seconds: 2));
   // final _takingUsersRefreshThrottle =

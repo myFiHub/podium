@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:ably_flutter/ably_flutter.dart' as ably;
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -10,7 +9,6 @@ import 'package:podium/app/modules/createOutpost/controllers/create_outpost_cont
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -177,17 +175,6 @@ class OutpostCallController extends GetxController {
       sendOutpostEvent(
         outpostId: outpostId,
         eventType: OutgoingMessageTypeEnums.leave,
-      );
-      final userId = myId;
-      setIsUserPresentInSession(
-        groupId: outpostId,
-        userId: myId,
-        isPresent: false,
-      );
-      setIsTalkingInSession(
-        sessionId: outpostId,
-        userId: userId,
-        isTalking: false,
       );
     }
   }

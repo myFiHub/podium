@@ -4,7 +4,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
 import 'package:podium/models/referral/referral.dart';
@@ -20,9 +19,7 @@ class ReferalController extends GetxController {
     super.onInit();
     loggedInListener = globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
-        myReferalsStream = startListeningToMyReferals((referals) {
-          myReferals.value = referals;
-        });
+        // TODO: listen to referrals used
       } else {
         myReferals.value = {};
         myReferalsStream?.cancel();
@@ -44,8 +41,9 @@ class ReferalController extends GetxController {
 
   Future<Map<String, Referral>> getAllTheReferals(
       {required String userId}) async {
-    final referals = await getAllTheUserReferals(userId: userId);
-    return referals;
+    // final referals = await getAllTheUserReferals(userId: userId);
+    // TODO: get all referrals
+    return {};
   }
 
   referButtonClicked() async {

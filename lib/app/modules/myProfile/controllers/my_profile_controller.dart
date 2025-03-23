@@ -6,9 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -344,14 +342,16 @@ class MyProfileController extends GetxController {
   _getPayments() async {
     try {
       isGettingPayments.value = true;
-      final (received, paid) = await (
-        getReceivedPayments(
-          userId: myId,
-        ),
-        getInitiatedPayments(
-          userId: myId,
-        )
-      ).wait;
+      final (received, paid) = (
+        // TODO: get payments
+        [], []
+        // getReceivedPayments(
+        //   userId: myId,
+        // ),
+        // getInitiatedPayments(
+        //   userId: myId,
+        // )
+      );
       final _payments = Payments(
         numberOfCheersReceived: 0,
         numberOfBoosReceived: 0,

@@ -90,14 +90,9 @@ class ReferalSystem extends GetView<ReferalController> {
       children: [
         space10,
         Obx(() {
-          final allReferrals = controller.myReferals.value.values.toList();
-          final count = allReferrals.length;
-          final remaining =
-              allReferrals.where((element) => element.usedBy == '').length;
-          final numberOfAllReferals = allReferrals.length;
-          if (numberOfAllReferals == 0) {
-            return const SizedBox();
-          }
+          final count = controller.myProfile.value?.referrals_count ?? 0;
+          final remaining = 0; //TODO: fix this
+
           return Button(
             onPressed: remaining == 0
                 ? null

@@ -12,6 +12,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
@@ -122,10 +123,12 @@ class GlobalController extends GetxController {
       await Future.wait<void>([
         initializeWeb3Auth(),
         _getAndSetMetadata(),
+        FirebaseInit.init(),
       ]);
     } catch (e) {
       l.e("error initializing app $e");
     }
+    FirebaseDatabase.instance.setPersistenceEnabled(false);
     await _addCustomNetworks();
 
     // final firebaseUserDbReference =

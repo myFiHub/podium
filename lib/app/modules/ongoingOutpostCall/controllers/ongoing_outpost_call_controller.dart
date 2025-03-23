@@ -21,7 +21,6 @@ import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/cheerBooBottomSheet.dart';
 import 'package:podium/env.dart';
-import 'package:podium/models/firebase_Session_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -42,19 +41,6 @@ class Reaction {
   String targetId;
   IncomingMessageType reaction;
   Reaction({required this.targetId, required this.reaction});
-}
-
-class ReactionLogElement {
-  FirebaseSessionMember target;
-  FirebaseSessionMember initiator;
-  String reaction;
-  int addedAt = DateTime.now().millisecondsSinceEpoch;
-
-  ReactionLogElement({
-    required this.target,
-    required this.initiator,
-    required this.reaction,
-  });
 }
 
 class OngoingOutpostCallController extends GetxController {

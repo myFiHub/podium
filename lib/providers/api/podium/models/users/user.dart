@@ -15,9 +15,10 @@ class UserModel {
   final String? image;
   final String? login_type;
   String? login_type_identifier;
-    String? name;
+  String? name;
   final String? referer_user_uuid;
   bool? is_over_18;
+  int? referrals_count;
 
   String get defaultWalletAddress => external_wallet_address ?? address;
 
@@ -36,6 +37,7 @@ class UserModel {
     this.name,
     this.referer_user_uuid,
     this.is_over_18,
+    this.referrals_count,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>

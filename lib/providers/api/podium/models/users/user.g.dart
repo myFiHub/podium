@@ -21,6 +21,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       name: json['name'] as String?,
       referer_user_uuid: json['referer_user_uuid'] as String?,
       is_over_18: json['is_over_18'] as bool?,
+      referrals_count: (json['referrals_count'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
@@ -38,4 +39,5 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
       'name': instance.name,
       'referer_user_uuid': instance.referer_user_uuid,
       'is_over_18': instance.is_over_18,
+      'referrals_count': instance.referrals_count,
     };

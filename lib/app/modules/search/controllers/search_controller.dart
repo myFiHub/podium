@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -25,11 +27,12 @@ class SearchPageController extends GetxController with FirebaseTags {
   final loadingTag_name = ''.obs;
   final selectedSearchTab = 0.obs;
   final isSearching = false.obs;
+  StreamSubscription<String>? searchValueListener;
 
   @override
   void onInit() {
     super.onInit();
-    searchValue.listen((value) async {
+    searchValueListener = searchValue.listen((value) async {
       isSearching.value = true;
       if (value.isEmpty) {
         searchedTags.value = {};
@@ -67,6 +70,7 @@ class SearchPageController extends GetxController with FirebaseTags {
 
   @override
   void onClose() {
+    searchValueListener?.cancel();
     super.onClose();
   }
 

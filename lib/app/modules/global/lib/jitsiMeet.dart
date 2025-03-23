@@ -38,7 +38,7 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       groupCallController.haveOngoingCall.value = true;
 
       await Future.delayed(const Duration(seconds: 3));
-      sendGroupPeresenceEvent(
+      sendOutpostEvent(
           outpostId: outpost.uuid, eventType: OutgoingMessageTypeEnums.join);
 
       l.d("conferenceJoined: url: $url");
@@ -75,7 +75,7 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
         route: Routes.HOME,
         type: NavigationTypes.offNamed,
       );
-      sendGroupPeresenceEvent(
+      sendOutpostEvent(
           outpostId: outpost.uuid, eventType: OutgoingMessageTypeEnums.leave);
       groupCallController.cleanupAfterCall();
       if (Get.isRegistered<OngoingOutpostCallController>()) {

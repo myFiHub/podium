@@ -46,11 +46,13 @@ class OutpostCallController extends GetxController {
   final sortType = Rx<String>(SortTypes.recentlyTalked);
   final canTalk = false.obs;
   final keysMap = Rx<Map<String, GlobalKey>>({});
-  StreamSubscription<DatabaseEvent>? membersListener;
 
   // presence channel
   ably.RealtimeChannel? presenceChannel = null;
 
+  StreamSubscription<List<LiveMember>>? sortedMembersListener;
+  StreamSubscription<List<LiveMember>>? membersListener;
+  StreamSubscription<OutpostModel?>? outpostListener;
   @override
   void onInit() {
     super.onInit();
@@ -67,17 +69,17 @@ class OutpostCallController extends GetxController {
     //     }
     //   }
     // });
-    sortedMembers.listen((listOfSortedUsers) {
+    sortedMembersListener = sortedMembers.listen((listOfSortedUsers) {
       final talking = listOfSortedUsers
           .where((member) => member.is_speaking == true)
           .toList();
       talkingUsers.value = talking;
     });
-    members.listen((listOfUsers) {
+    membersListener = members.listen((listOfUsers) {
       final sorted = sortMembers(members: listOfUsers);
       sortedMembers.value = sorted;
     });
-    outpost.listen((activeOutpost) async {
+    outpostListener = outpost.listen((activeOutpost) async {
       members.value = [];
       if (activeOutpost != null) {
         fetchLiveData(alsoJoin: true);
@@ -94,6 +96,8 @@ class OutpostCallController extends GetxController {
   void onClose() {
     super.onClose();
     membersListener?.cancel();
+    sortedMembersListener?.cancel();
+    outpostListener?.cancel();
   }
 
   /////////////////////////////////////////////////////////////
@@ -162,7 +166,7 @@ class OutpostCallController extends GetxController {
     searchedValueInMeet.value = '';
     final outpostId = outpost.value?.uuid;
     if (outpostId != null) {
-      sendGroupPeresenceEvent(
+      sendOutpostEvent(
         outpostId: outpostId,
         eventType: OutgoingMessageTypeEnums.leave,
       );

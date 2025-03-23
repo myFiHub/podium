@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
@@ -74,6 +75,8 @@ class OutpostDetailController extends GetxController {
 
   // end of luma event
 
+  StreamSubscription<int>? tickerListener;
+
   @override
   void onInit() async {
     super.onInit();
@@ -116,7 +119,7 @@ class OutpostDetailController extends GetxController {
       Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
     }
 
-    globalController.ticker.listen((event) {
+    tickerListener = globalController.ticker.listen((event) {
       if (outpost.value != null) {
         scheduleChecks();
       }
@@ -135,6 +138,7 @@ class OutpostDetailController extends GetxController {
 
   @override
   void onClose() {
+    tickerListener?.cancel();
     super.onClose();
   }
 

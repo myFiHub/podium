@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
-import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -17,9 +16,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/widgetWithTimer/wi
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_session_model.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
-import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';

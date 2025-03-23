@@ -41,27 +41,6 @@ const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
 const amountToAddForLikeInSeconds = 10; // 10 seconds
 const amountToReduceForDislikeInSeconds = 10; // 10 seconds
 
-class MyTalkTimer {
-  int startedAt = DateTime.now().millisecondsSinceEpoch;
-  int endedAt = 0;
-  startTimer() {
-    startedAt = DateTime.now().millisecondsSinceEpoch;
-  }
-
-  endTimer() {
-    endedAt = DateTime.now().millisecondsSinceEpoch;
-  }
-
-  int get timeElapsedInSeconds {
-    final elapsed =
-        int.parse(((endedAt - startedAt) / 1000).toStringAsFixed(0));
-    if (elapsed < 0) {
-      return 0;
-    }
-    return elapsed;
-  }
-}
-
 class Reaction {
   String targetId;
   IncomingMessageType reaction;
@@ -90,16 +69,14 @@ class OngoingOutpostCallController extends GetxController {
   final timerKey = GlobalKey();
   final likeDislikeKey = GlobalKey();
   final cheerBooKey = GlobalKey();
-
   final storage = GetStorage();
   final outpostCallController = Get.find<OutpostCallController>();
   final globalController = Get.find<GlobalController>();
   final sessionData = Rxn<OutpostLiveData>();
-  final mySession = Rxn<LiveMember>();
   final allRemainingTimesMap = Rx<Map<String, int>>({});
-  final talkTimer = MyTalkTimer();
+  final members = Rx<List<LiveMember>>([]);
+  final mySession = Rxn<LiveMember>();
   final amIAdmin = false.obs;
-  final remainingTimeTimer = (-1).obs;
   final amIMuted = true.obs;
   final isRecording = false.obs;
   final timers = Rx<Map<String, int>>({});
@@ -112,67 +89,58 @@ class OngoingOutpostCallController extends GetxController {
   final lastReaction = Rx<Reaction>(
     Reaction(targetId: '', reaction: IncomingMessageType.userStoppedSpeaking),
   );
-  StreamSubscription<PresenceMessage>? presenceUpdateStream = null;
+
+  StreamSubscription<int>? tickerListener;
+  StreamSubscription<List<LiveMember>>? membersListener;
 
   @override
   void onInit() async {
     super.onInit();
     final ongoingOutpost = outpostCallController.outpost.value!;
-
     final myUser = globalController.myUserInfo.value!;
     if (myUser.uuid == ongoingOutpost.creator_user_uuid) {
       amIAdmin.value = true;
-    }
-    final liveData = await HttpApis.podium.getLatestLiveData(
-      outpostId: ongoingOutpost.uuid,
-      alsoJoin: true,
-    );
-    if (liveData != null) {
-      mySession.value = liveData.members.firstWhere(
-        (element) => element.uuid == myUser.uuid,
-      );
-      if (mySession.value != null) {
-        remainingTimeTimer.value = mySession.value!.remaining_time;
-      }
     }
   }
 
   @override
   void onReady() async {
     super.onReady();
-    // try {
-    //   await Future.delayed(const Duration(seconds: 30));
-    //   final ongoingGroupCallGroup = groupCallController.group.value!;
-    //   final sessionMembers = await getSessionMembers(
-    //     sessionId: ongoingGroupCallGroup.id,
-    //   );
-    //   _parseReceivedSessionMembers(sessionMembers);
-    // } on Exception catch (e) {
-    //   debugPrint('init() error: $e\n');
-    // }
+
+    tickerListener = globalController.ticker.listen((d) {
+      l.d(d);
+      handleTimerTick();
+    });
+    membersListener = outpostCallController.members.listen((listOfMembers) {
+      members.value = [...listOfMembers];
+      final my_user =
+          listOfMembers.where((m) => m.uuid == myUser.uuid).toList();
+      if (my_user.length == 0) return;
+      mySession.value = (my_user[0]);
+      mySession.refresh();
+    });
   }
 
   @override
   void onClose() async {
     super.onClose();
     stopRecording();
-    presenceUpdateStream?.cancel();
-    mySession.value = null;
+    membersListener?.cancel();
+    tickerListener?.cancel();
     sessionData.value = null;
     await jitsiMeet.hangUp();
   }
 
+  handleTimerTick() {
+    l.d(members);
+  }
+
   updateUserRemainingTime(
       {required String address, required int newTimeInSeconds}) {
-    final myAddress = myUser.address;
-    if (address == myAddress) {
-      remainingTimeTimer.value = newTimeInSeconds;
-    } else {
-      outpostCallController.updateUserTime(
-        address: address,
-        newTime: newTimeInSeconds,
-      );
-    }
+    outpostCallController.updateUserTime(
+      address: address,
+      newTime: newTimeInSeconds,
+    );
   }
 
   updateUserIsTalking({required String address, required bool isTalking}) {
@@ -459,7 +427,7 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   onLikeClicked(String userId) async {
-    sendGroupPeresenceEvent(
+    sendOutpostEvent(
       outpostId: outpostCallController.outpost.value!.uuid,
       eventType: OutgoingMessageTypeEnums.like,
       eventData: WsOutgoingMessageData(
@@ -478,7 +446,7 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   onDislikeClicked(String userId) async {
-    sendGroupPeresenceEvent(
+    sendOutpostEvent(
       outpostId: outpostCallController.outpost.value!.uuid,
       eventType: OutgoingMessageTypeEnums.dislike,
       eventData: WsOutgoingMessageData(
@@ -639,7 +607,7 @@ class OngoingOutpostCallController extends GetxController {
         final eventString = cheer
             ? OutgoingMessageTypeEnums.cheer
             : OutgoingMessageTypeEnums.boo;
-        sendGroupPeresenceEvent(
+        sendOutpostEvent(
           outpostId: outpostCallController.outpost.value!.uuid,
           eventType: eventString,
           eventData: WsOutgoingMessageData(
@@ -701,30 +669,37 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   audioMuteChanged({required bool muted}) {
+    if (!wsClient.connected) {
+      Toast.warning(
+        title: 'Connection Error',
+        message: 'please check your internet connection',
+      );
+    }
     final outpostId = outpostCallController.outpost.value!.uuid;
     l.d(
       "audoi mute:$muted",
     );
     if (muted) {
       amIMuted.value = true;
-      sendGroupPeresenceEvent(
+      sendOutpostEvent(
         outpostId: outpostId,
         eventType: OutgoingMessageTypeEnums.stop_speaking,
       );
     } else {
       final outpostCreator =
           outpostCallController.outpost.value!.creator_user_uuid;
-      final remainingTime = remainingTimeTimer;
+      if (mySession.value == null) return;
+      final remainingTime = mySession.value!.remaining_time;
       if (remainingTime <= 0 && myId != outpostCreator) {
         Toast.error(
-          title: "You have ran out of time",
+          title: "You've ran out of time",
           message: "",
         );
         amIMuted.value = true;
         jitsiMeet.setAudioMuted(true);
         return;
       }
-      sendGroupPeresenceEvent(
+      sendOutpostEvent(
         outpostId: outpostId,
         eventType: OutgoingMessageTypeEnums.start_speaking,
       );

@@ -13,11 +13,11 @@ class NotificationsController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
   final notifications = <NotificationModel>[].obs;
   final numberOfUnreadNotifications = 0.obs;
-
+  StreamSubscription<bool>? loggedInListener;
   @override
   void onInit() {
     super.onInit();
-    globalController.loggedIn.listen((loggedIn) async {
+    loggedInListener = globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
         final notifs = await HttpApis.podium.getNotifications();
 
@@ -38,6 +38,7 @@ class NotificationsController extends GetxController {
 
   @override
   void onReady() async {
+    loggedInListener?.cancel();
     super.onReady();
   }
 

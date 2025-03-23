@@ -44,7 +44,7 @@ final realtimeInstance = ably.Realtime(key: Env.albyApiKey);
 // detect presence time (groups that were active this milliseconds ago will be considered active)
 int dpt = 0;
 
-sendGroupPeresenceEvent(
+sendOutpostEvent(
     {required String outpostId,
     required OutgoingMessageTypeEnums eventType,
     WsOutgoingMessageData? eventData}) async {

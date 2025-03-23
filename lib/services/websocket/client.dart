@@ -17,7 +17,7 @@ class WebSocketService {
   WebSocketChannel? _channel;
   Timer? _reconnectTimer;
   bool _isConnecting = false;
-  bool _connected = false;
+  bool connected = false;
   Timer? _pongTimer;
   StreamSubscription? subscription;
   final String token;
@@ -35,7 +35,7 @@ class WebSocketService {
 
       await _channel!.ready;
       _isConnecting = false;
-      _connected = true;
+      connected = true;
       l.d("Connected to websocket: ${_channel!.hashCode}");
       //  sen pong every 20 seconds
       if (_pongTimer != null) _pongTimer!.cancel();
@@ -78,7 +78,7 @@ class WebSocketService {
     if (_isConnecting) return;
     _isConnecting = true;
     subscription?.cancel();
-    _connected = false;
+    connected = false;
     _reconnectTimer = Timer(const Duration(seconds: 1), () {
       _connect();
     });

@@ -2,7 +2,6 @@ import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
@@ -164,10 +163,9 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
       children: [
         Obx(
           () {
+            final mySession = controller.mySession.value;
             final isAdmin = controller.amIAdmin.value;
-            final remainingTimeInSeconds = controller.remainingTimeTimer.value;
-
-            if (remainingTimeInSeconds == -1) {
+            if (controller.mySession.value == null) {
               return const Text(
                 "loading...",
                 style: TextStyle(
@@ -177,6 +175,7 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
                 ),
               );
             }
+            final remainingTimeInSeconds = mySession!.remaining_time;
             if (isAdmin) {
               return Container(
                 key: controller.timerKey,

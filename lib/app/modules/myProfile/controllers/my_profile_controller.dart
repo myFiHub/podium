@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:decimal/decimal.dart';
@@ -84,10 +85,13 @@ class MyProfileController extends GetxController {
     ),
   );
 
+  StreamSubscription<String>? externalWalletAddressListener;
+
   @override
   void onInit() {
     super.onInit();
-    globalController.externalWalletChainId.listen((address) {
+    externalWalletAddressListener =
+        globalController.externalWalletChainId.listen((address) {
       if (address.isNotEmpty && externalWalletChianId == baseChainId) {
         checkExternalWalletActivation();
       }
@@ -211,6 +215,7 @@ class MyProfileController extends GetxController {
 
   @override
   void onClose() {
+    externalWalletAddressListener?.cancel();
     super.onClose();
   }
 

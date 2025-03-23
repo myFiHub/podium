@@ -14,11 +14,11 @@ class ReferalController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
   final myReferals = Rx<Map<String, Referral>>({});
   StreamSubscription<DatabaseEvent>? myReferalsStream = null;
-
+  StreamSubscription<bool>? loggedInListener;
   @override
   void onInit() {
     super.onInit();
-    globalController.loggedIn.listen((loggedIn) async {
+    loggedInListener = globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
         myReferalsStream = startListeningToMyReferals((referals) {
           myReferals.value = referals;
@@ -39,6 +39,7 @@ class ReferalController extends GetxController {
   void onClose() {
     super.onClose();
     myReferalsStream?.cancel();
+    loggedInListener?.cancel();
   }
 
   Future<Map<String, Referral>> getAllTheReferals(

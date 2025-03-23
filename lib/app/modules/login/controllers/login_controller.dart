@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ably_flutter/ably_flutter.dart';
 import 'package:aptos/aptos_account.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +67,8 @@ class LoginController extends GetxController {
 
   final loadingBuyTicketId = ''.obs;
   // used in referral prejoin page, to continue the process
+  StreamSubscription<bool>? isLoggedInListener;
+  StreamSubscription<String>? deeplinkRouteListener;
 
   LoginRequest? temporaryLoginRequest = null;
   AdditionalDataForLogin? temporaryAdditionalData = null;
@@ -80,7 +84,7 @@ class LoginController extends GetxController {
       initializeReferral(referrerId);
     }
     $isAutoLoggingIn.value = globalController.isAutoLoggingIn.value;
-    globalController.isAutoLoggingIn.listen((v) {
+    isLoggedInListener = globalController.isAutoLoggingIn.listen((v) {
       $isAutoLoggingIn.value = v;
     });
   }
@@ -97,6 +101,8 @@ class LoginController extends GetxController {
 
   @override
   void onClose() {
+    isLoggedInListener?.cancel();
+    deeplinkRouteListener?.cancel();
     super.onClose();
   }
 

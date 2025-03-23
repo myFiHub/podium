@@ -2,10 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/env.dart';
-import 'package:podium/models/notification_model.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
@@ -28,6 +28,25 @@ class PodiumApi {
       : defaultHeaders;
 
   PodiumApi(this.dio);
+
+  Future<PodiumAppMetadata> appMetadata() async {
+    return const PodiumAppMetadata(
+      force_update: true,
+      movement_aptos_metadata: Movement_Aptos_Metadata(
+        chain_id: "126",
+        cheer_boo_address:
+            "0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa",
+        name: "Movement Mainnet",
+        podium_protocol_address:
+            "0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa",
+        rpc_url: "https://mainnet.movementnetwork.xyz/v1",
+      ),
+      referrals_enabled: true,
+      va: "https://outposts.myfihub.com",
+      version: "1.1.7",
+      version_check: true,
+    );
+  }
 
   Future<(UserModel?, String?)> login({
     required LoginRequest request,

@@ -12,7 +12,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
-import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/usersParser.dart';
@@ -24,8 +23,9 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/metadata/movementAptos.dart';
 import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/client.dart';
@@ -86,6 +86,7 @@ class GlobalController extends GetxController {
   final ticker = 0.obs;
   final showArchivedGroups =
       RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
+  late PodiumAppMetadata appMetadata;
   late ReownAppKitModalNetworkInfo movementAptosNetwork;
   late String movementAptosPodiumProtocolAddress;
   late String movementAptosCheerBooAddress;
@@ -118,14 +119,13 @@ class GlobalController extends GetxController {
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
 
     try {
-      await Future.wait([
+      await Future.wait<void>([
         initializeWeb3Auth(),
-        FirebaseInit.init(),
+        _getAndSetMetadata(),
       ]);
     } catch (e) {
       l.e("error initializing app $e");
     }
-    FirebaseDatabase.instance.setPersistenceEnabled(false);
     await _addCustomNetworks();
 
     // final firebaseUserDbReference =
@@ -163,37 +163,24 @@ class GlobalController extends GetxController {
     super.onClose();
   }
 
+  _getAndSetMetadata() async {
+    final metadata = await HttpApis.podium.appMetadata();
+    appMetadata = metadata;
+  }
+
   _addCustomNetworks() async {
-    final movementAptosMetadataRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.movementAptosMetadata);
-    final movementAptosMetadata = await movementAptosMetadataRef.get();
-    if (movementAptosMetadata.value != null) {
-      final response = MovementAptosMetadata.fromJson(
-        Map<String, dynamic>.from(movementAptosMetadata.value as Map),
-      );
-      movementAptosNetwork = ReownAppKitModalNetworkInfo(
-        name: response.name,
-        chainId: response.chainId,
-        chainIcon: movementIcon,
-        currency: 'MOVE',
-        rpcUrl: response.rpcUrl,
-        explorerUrl: 'https://explorer.movementlabs.xyz',
-      );
-      movementAptosPodiumProtocolAddress = response.podiumProtocolAddress;
-      movementAptosCheerBooAddress = response.cheerBooAddress;
-      l.d("movement aptos metadata: ${response.toJson()}");
-    } else {
-      l.e("movement aptos metadata not found");
-      Toast.error(message: "Movement Aptos metadata not found");
-      movementAptosNetwork = ReownAppKitModalNetworkInfo(
-        name: 'Movement Aptos Testnet',
-        chainId: '177',
-        chainIcon: movementIcon,
-        currency: 'MOVE',
-        rpcUrl: 'https://aptos.testnet.porto.movementlabs.xyz/v1',
-        explorerUrl: 'https://explorer.movementlabs.xyz',
-      );
-    }
+    final movementAptosMetadata = appMetadata.movement_aptos_metadata;
+    movementAptosNetwork = ReownAppKitModalNetworkInfo(
+      name: movementAptosMetadata.name,
+      chainId: movementAptosMetadata.chain_id,
+      chainIcon: movementIcon,
+      currency: 'MOVE',
+      rpcUrl: movementAptosMetadata.rpc_url,
+      explorerUrl: 'https://explorer.movementlabs.xyz',
+    );
+    movementAptosPodiumProtocolAddress =
+        movementAptosMetadata.podium_protocol_address;
+    movementAptosCheerBooAddress = movementAptosMetadata.cheer_boo_address;
 
     try {
       ReownAppKitModalNetworks.addSupportedNetworks(
@@ -466,37 +453,23 @@ class GlobalController extends GetxController {
     final storage = GetStorage();
     final ignoredOrAcceptedVersion =
         storage.read<String>(StorageKeys.ignoredOrAcceptedVersion) ?? '';
-    final versionRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.versionRef);
-    final shouldCheckVersionRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.versionCheckRef);
-    final forceUpdateRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.forceUpdate);
+
     final (
-      shouldCheckVersionEvent,
-      forceUpdateEvent,
-      versionEvent,
-    ) = await (
-      shouldCheckVersionRef.get(),
-      forceUpdateRef.get(),
-      versionRef.get()
-    ).wait;
-    bool forcetToUpdate = false;
-    if (forceUpdateEvent.value is bool) {
-      forcetToUpdate = forceUpdateEvent.value as bool;
-    }
-    final shouldCheckVersion = shouldCheckVersionEvent.value as dynamic;
+      shouldCheckVersion,
+      forcetToUpdate,
+      version,
+    ) = (
+      appMetadata.version_check,
+      appMetadata.force_update,
+      appMetadata.version
+    );
+
     if (shouldCheckVersion == false) {
       l.d('version check disabled');
       return true;
     }
     // listen to version changes
-    final data = versionEvent.value as dynamic;
-    final version = data as String?;
-    if (version == null) {
-      l.e('version not found');
-      return (true);
-    }
+
     final currentVersion = Env.VERSION.split('+')[0];
     final numberedLocalVersion = int.parse(currentVersion.replaceAll('.', ''));
     final numberedRemoteVersion = int.parse(version.replaceAll('.', ''));

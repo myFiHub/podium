@@ -23,7 +23,6 @@ dependencies:
   shimmer: ^3.0.0
   skeletonizer: ^1.4.3
   flutter_confetti: ^0.3.4
-  ably_flutter: ^1.2.37
   floating_draggable_widget: ^2.3.0
   dropdown_button2: ^2.3.9
   firebase_core: ^3.12.1

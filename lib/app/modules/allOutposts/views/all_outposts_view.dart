@@ -29,12 +29,12 @@ class AllGroupsView extends GetView<AllOutpostsController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 space16,
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         "All Outposts",
                         style: TextStyle(
                           fontSize: 24,
@@ -42,33 +42,33 @@ class AllGroupsView extends GetView<AllOutpostsController> {
                         ),
                       ),
                       space10,
-                      SizedBox(
-                        height: 40,
-                        child: TextField(
-                          controller: TextEditingController(
-                              text: controller.searchValue.value),
-                          decoration: InputDecoration(
-                            hintText: "What are we looking for?",
-                            hintStyle: const TextStyle(fontSize: 14),
-                            prefixIcon: const Icon(Icons.search),
-                            contentPadding: const EdgeInsets.all(16),
-                            filled: true,
-                            fillColor: Colors.grey[200],
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: Colors.black,
-                          ),
-                          onChanged: (value) {
-                            controller.search(value);
-                          },
-                        ),
-                      ),
-                      space10,
+                      // SizedBox(
+                      //   height: 40,
+                      //   child: TextField(
+                      //     controller: TextEditingController(
+                      //         text: controller.searchValue.value),
+                      //     decoration: InputDecoration(
+                      //       hintText: "What are we looking for?",
+                      //       hintStyle: const TextStyle(fontSize: 14),
+                      //       prefixIcon: const Icon(Icons.search),
+                      //       contentPadding: const EdgeInsets.all(16),
+                      //       filled: true,
+                      //       fillColor: Colors.grey[200],
+                      //       border: OutlineInputBorder(
+                      //         borderRadius: BorderRadius.circular(8),
+                      //         borderSide: BorderSide.none,
+                      //       ),
+                      //     ),
+                      //     style: const TextStyle(
+                      //       fontSize: 18,
+                      //       color: Colors.black,
+                      //     ),
+                      //     onChanged: (value) {
+                      //       controller.search(value);
+                      //     },
+                      //   ),
+                      // ),
+                      // space10,
                     ],
                   ),
                 ),

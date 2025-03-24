@@ -193,6 +193,7 @@ class OutpostsController extends GetxController {
         fetchedOutposts.map((e) => MapEntry(e.uuid, e)),
       );
       myOutposts.value = outpostsMap;
+
       if (pageKey == 0) {
         isGettingMyOutposts.value = false;
       }

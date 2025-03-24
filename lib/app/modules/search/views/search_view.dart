@@ -38,48 +38,61 @@ class SearchView extends GetView<SearchPageController> {
                       height: 40,
                       child: Stack(
                         children: [
-                          TextField(
-                            controller: TextEditingController(
-                              text: controller.searchValue.value,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: "Search Outposts, Users or Tags",
-                              hintStyle: const TextStyle(fontSize: 14),
-                              prefixIcon: const Icon(Icons.search),
-                              contentPadding: const EdgeInsets.all(10),
-                              filled: true,
-                              fillColor: Colors.grey[200],
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
+                          Obx(() {
+                            final searchValue = controller.searchValue.value;
+                            return TextField(
+                              controller: TextEditingController(
+                                text: searchValue,
                               ),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black,
-                            ),
-                            onChanged: (value) {
-                              controller.searchValue.value = value;
-                            },
-                          ),
-                          Positioned(
-                            right: 20,
-                            top: 10,
-                            child: Obx(() {
-                              final isSearching = controller.isSearching.value;
-                              if (isSearching) {
-                                return Container(
-                                  width: 20,
-                                  height: 20,
-                                  child: const CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        ColorName.pageBgGradientStart),
-                                  ),
-                                );
-                              }
-                              return const SizedBox();
-                            }),
-                          ),
+                              decoration: InputDecoration(
+                                hintText: "Search Outposts, Users or Tags",
+                                hintStyle: const TextStyle(fontSize: 14),
+                                prefixIcon: const Icon(Icons.search),
+                                contentPadding: const EdgeInsets.all(10),
+                                filled: true,
+                                fillColor: Colors.grey[200],
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
+                              onChanged: (value) {
+                                controller.searchValue.value = value;
+                              },
+                            );
+                          }),
+                          Obx(() {
+                            final searchValue = controller.searchValue.value;
+                            final isSearching = controller.isSearching.value;
+                            return Positioned(
+                                right: isSearching ? 12 : 0,
+                                top: isSearching ? 10 : -4,
+                                child: (isSearching)
+                                    ? Container(
+                                        width: 20,
+                                        height: 20,
+                                        child: const CircularProgressIndicator(
+                                          valueColor: AlwaysStoppedAnimation<
+                                                  Color>(
+                                              ColorName.pageBgGradientStart),
+                                        ),
+                                      )
+                                    : (searchValue.isNotEmpty)
+                                        ? IconButton(
+                                            color: ColorName.primaryBlue,
+                                            padding: EdgeInsets.zero,
+                                            onPressed: () {
+                                              controller.searchValue.value = "";
+                                            },
+                                            icon: const Icon(Icons.close,
+                                                color: Colors.black),
+                                          )
+                                        : const SizedBox());
+                          })
                         ],
                       ),
                     ),
@@ -144,6 +157,7 @@ class SearchView extends GetView<SearchPageController> {
                         return Container();
                       }
                       return Container(
+                        padding: const EdgeInsets.only(top: 16),
                         child: OutpostsList(outpostsList: outpostsList),
                       );
                     }),
@@ -155,6 +169,7 @@ class SearchView extends GetView<SearchPageController> {
                         return Container();
                       }
                       return Container(
+                        padding: const EdgeInsets.only(top: 16),
                         child: UserList(usersList: usersList),
                       );
                     }),

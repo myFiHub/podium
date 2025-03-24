@@ -28,7 +28,10 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (res, r) {
-        controller.introFinished(false);
+        final exists = Get.isRegistered<OngoingOutpostCallController>();
+        if (exists) {
+          controller.introFinished(false);
+        }
       },
       child: FloatingDraggableWidget(
         mainScreenWidget: Scaffold(

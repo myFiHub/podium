@@ -105,7 +105,7 @@ class _SingleOutpost extends StatelessWidget {
                 containerOptions: ContainerOptions(
                   width: Get.width - 2,
                   borderRadius: 8,
-                  margin: const EdgeInsets.only(left: 1),
+                  margin: const EdgeInsets.only(left: 1, bottom: 8),
                   backgroundColor: ColorName.cardBackground,
                   borderSide: const BorderSide(
                     width: 1.0,

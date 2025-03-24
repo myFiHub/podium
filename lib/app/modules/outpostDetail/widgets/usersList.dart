@@ -13,6 +13,26 @@ import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 
+final _options = const LiveOptions(
+  // Start animation after (default zero)
+  // delay: Duration(seconds: 0),
+
+  // Show each item through (default 250)
+  showItemInterval: Duration(milliseconds: 50),
+
+  // Animation duration (default 250)
+  // showItemDuration: Duration(seconds: 1),
+
+  // Animations starts at 0.05 visible
+  // item fraction in sight (default 0.025)
+  visibleFraction: 0.05,
+
+  // Repeat the animation of the appearance
+  // when scrolling in the opposite direction (default false)
+  // To get the effect as in a showcase for ListView, set true
+  reAnimateOnVisibility: false,
+);
+
 class UserList extends StatelessWidget {
   final List<UserModel> usersList;
   final Function(String userId)? onRequestUpdate;
@@ -22,31 +42,11 @@ class UserList extends StatelessWidget {
     this.onRequestUpdate,
   });
 
-  final options = const LiveOptions(
-    // Start animation after (default zero)
-    // delay: Duration(seconds: 0),
-
-    // Show each item through (default 250)
-    showItemInterval: Duration(milliseconds: 100),
-
-    // Animation duration (default 250)
-    // showItemDuration: Duration(seconds: 1),
-
-    // Animations starts at 0.05 visible
-    // item fraction in sight (default 0.025)
-    visibleFraction: 0.05,
-
-    // Repeat the animation of the appearance
-    // when scrolling in the opposite direction (default false)
-    // To get the effect as in a showcase for ListView, set true
-    reAnimateOnVisibility: false,
-  );
-
   @override
   Widget build(BuildContext context) {
     return Scrollbar(
         child: LiveList.options(
-      options: options,
+      options: _options,
       itemCount: usersList.length,
       itemBuilder: (context, index, animation) {
         final user = usersList[index];

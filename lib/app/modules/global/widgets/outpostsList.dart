@@ -395,10 +395,14 @@ class _SingleOutpost extends StatelessWidget {
               outpost: outpost,
               key: Key(outpost.uuid + 'scheduledBanner'),
             ),
-          _NumberOfActiveUsers(
-            outpost: outpost,
-            key: Key(outpost.uuid + 'numberOfActiveUsers'),
-          ),
+          Positioned(
+            child: _NumberOfActiveUsers(
+              outpost: outpost,
+              key: Key(outpost.uuid + 'numberOfActiveUsers'),
+            ),
+            left: 0,
+            bottom: 0,
+          )
         ],
       ),
     );

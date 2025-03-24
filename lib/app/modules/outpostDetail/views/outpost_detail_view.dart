@@ -36,7 +36,6 @@ class GroupDetailView extends GetView<OutpostDetailController> {
               );
             }
             final iAmOwner = outpost.creator_user_uuid == myId;
-
             return Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -92,12 +91,28 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                                 color: Colors.grey[400],
                               ),
                             ),
-                          Text(
-                            "Speakers: ${parseSpeakerType(outpost.speak_type)}",
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[400],
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                "Speakers: ${parseSpeakerType(outpost.speak_type)}",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                              const Spacer(),
+                              // AnimateIcon(
+                              //   key: UniqueKey(),
+                              //   onTap: () async {
+                              //     await controller.getMembers(outpost);
+                              //   },
+                              //   color: Colors.blueAccent,
+                              //   iconType: IconType.animatedOnTap,
+                              //   height: 20,
+                              //   width: 20,
+                              //   animateIcon: AnimateIcons.refresh,
+                              // ),
+                            ],
                           ),
                         ],
                       ),

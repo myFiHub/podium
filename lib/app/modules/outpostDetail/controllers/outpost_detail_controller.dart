@@ -189,16 +189,18 @@ class OutpostDetailController extends GetxController {
   }
 
   scheduleChecks() async {
-    final amICreator = outpost.value!.creator_user_uuid == myId;
-    final isScheduled = outpost.value!.scheduled_for != 0;
+    final outpostData = outpost.value;
+    if (outpostData == null) return;
+    final amICreator = outpostData.creator_user_uuid == myId;
+    final isScheduled = outpostData.scheduled_for != 0;
     final passedScheduledTime =
-        outpost.value!.scheduled_for < DateTime.now().millisecondsSinceEpoch;
+        outpostData.scheduled_for < DateTime.now().millisecondsSinceEpoch;
     if (isScheduled) {
       if (passedScheduledTime) {
         if (amICreator && jointButtonContentProps.value.text != 'Start') {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Start');
-        } else if (outpost.value!.creator_joined &&
+        } else if (outpostData.creator_joined &&
             jointButtonContentProps.value.text != 'Join') {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Join');
@@ -208,7 +210,7 @@ class OutpostDetailController extends GetxController {
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }
       } else {
-        final reminderT = await getReminderTime(outpost.value!.alarm_id);
+        final reminderT = await getReminderTime(outpostData.alarm_id);
         if (reminderT != null) {
           reminderTime.value = reminderT;
         }
@@ -217,7 +219,7 @@ class OutpostDetailController extends GetxController {
               JoinButtonProps(enabled: true, text: 'Enter the Outpost');
         } else {
           final remaining = remainintTimeUntilMilSecondsFormated(
-              time: outpost.value!.scheduled_for);
+              time: outpostData.scheduled_for);
           jointButtonContentProps.value = JoinButtonProps(
               enabled: false,
               text: 'Scheduled for:\n ${remaining.replaceAll(' ', '')}');

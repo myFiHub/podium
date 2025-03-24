@@ -17,6 +17,7 @@ import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
@@ -37,6 +38,14 @@ class OutpostCallController extends GetxController {
   final members = Rx<List<LiveMember>>([]);
   final sortedMembers = Rx<List<LiveMember>>([]);
   final talkingUsers = Rx<List<LiveMember>>([]);
+  final reactionsMap = Rx<Map<String, Map<OutgoingMessageTypeEnums, int>>>({
+    "0xf8b769e62e1752a43f9fe343bb37fc3d8cb168e2": {
+      OutgoingMessageTypeEnums.cheer: 2,
+      OutgoingMessageTypeEnums.boo: 1,
+      OutgoingMessageTypeEnums.like: 1,
+      OutgoingMessageTypeEnums.dislike: 1,
+    },
+  });
   final haveOngoingCall = false.obs;
   final jitsiMembers = Rx<List<JitsiMember>>([]);
   final searchedValueInMeet = Rx<String>('');
@@ -68,6 +77,7 @@ class OutpostCallController extends GetxController {
     });
     membersListener = members.listen((listOfUsers) {
       final sorted = sortMembers(members: listOfUsers);
+      _updateReactionsMap(listOfUsers);
       sortedMembers.value = sorted;
     });
     outpostListener = outpost.listen((activeOutpost) async {
@@ -86,6 +96,7 @@ class OutpostCallController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+    reactionsMap.value = {};
     membersListener?.cancel();
     sortedMembersListener?.cancel();
     outpostListener?.cancel();
@@ -101,7 +112,67 @@ class OutpostCallController extends GetxController {
 
   ///////////////////////////////////////////////////////////////
 
-  handleTimerTick() {
+  void updateReactionsMapByWsEvent(IncomingMessage incomingMessage) {
+    final reactionTypes = {
+      IncomingMessageType.userLiked: OutgoingMessageTypeEnums.like,
+      IncomingMessageType.userDisliked: OutgoingMessageTypeEnums.dislike,
+      IncomingMessageType.userCheered: OutgoingMessageTypeEnums.cheer,
+      IncomingMessageType.userBooed: OutgoingMessageTypeEnums.boo,
+    };
+
+    final reactionType = reactionTypes[incomingMessage.name];
+    if (reactionType == null) return;
+
+    final userAddress = incomingMessage.data.address;
+    if (userAddress == null) return;
+
+    reactionsMap.value[userAddress]![reactionType] =
+        (reactionsMap.value[userAddress]![reactionType] ?? 0) + 1;
+
+    reactionsMap.refresh();
+  }
+
+  void _updateReactionsMap(List<LiveMember> listOfUsers) {
+    final Map<String, Map<OutgoingMessageTypeEnums, int>> tmp = {};
+
+    final feedbackTypes = {
+      OutgoingMessageTypeEnums.like: OutgoingMessageTypeEnums.like,
+      OutgoingMessageTypeEnums.dislike: OutgoingMessageTypeEnums.dislike,
+    };
+
+    final reactionTypes = {
+      OutgoingMessageTypeEnums.cheer: OutgoingMessageTypeEnums.cheer,
+      OutgoingMessageTypeEnums.boo: OutgoingMessageTypeEnums.boo,
+    };
+
+    for (final user in listOfUsers) {
+      for (final feedback in user.feedbacks) {
+        final reactionType = feedbackTypes[feedback.feedback_type];
+        if (reactionType != null) {
+          _updateReactionCount(tmp, feedback.user_address, reactionType);
+        }
+      }
+
+      // Process reactions (cheers and boos)
+      for (final reaction in user.reactions) {
+        final reactionType = reactionTypes[reaction.reaction_type];
+        if (reactionType != null) {
+          _updateReactionCount(tmp, reaction.user_address, reactionType);
+        }
+      }
+    }
+    reactionsMap.value = tmp;
+  }
+
+  void _updateReactionCount(
+    Map<String, Map<OutgoingMessageTypeEnums, int>> reactions,
+    String userAddress,
+    OutgoingMessageTypeEnums type,
+  ) {
+    reactions[userAddress]![type] = (reactions[userAddress]![type] ?? 0) + 1;
+  }
+
+  void handleTimerTick() {
     final talkingMembers =
         members.value.where((member) => member.is_speaking == true);
     talkingMembers.forEach((member) {
@@ -113,18 +184,22 @@ class OutpostCallController extends GetxController {
     });
   }
 
-  fetchLiveData({bool? alsoJoin}) async {
+  void fetchLiveData({bool? alsoJoin}) async {
     if (outpost.value == null) return;
     final liveData = await HttpApis.podium
         .getLatestLiveData(outpostId: outpost.value!.uuid, alsoJoin: alsoJoin);
     if (liveData != null) {
-      members.value = liveData.members
-          .where((member) => member.is_present == true)
-          .toList();
+      final tmp = liveData.members;
+      tmp.asMap().forEach((index, element) {
+        if (element.last_speaked_at_timestamp == null) {
+          element.last_speaked_at_timestamp = -1 * (index);
+        }
+      });
+      members.value = tmp.where((member) => member.is_present == true).toList();
     }
   }
 
-  updateUserIsTalking({required String address, required bool isTalking}) {
+  void updateUserIsTalking({required String address, required bool isTalking}) {
     final membersList = [...members.value];
     final memberIndex = membersList.indexWhere((m) => m.address == address);
     if (memberIndex != -1) {
@@ -150,13 +225,13 @@ class OutpostCallController extends GetxController {
     final sorted = [...members];
     if (sortType.value == SortTypes.recentlyTalked) {
       sorted.sort((a, b) {
-        return (b.last_speaked_at_timestamp ?? (-1 * b.remaining_time))
-            .compareTo(a.last_speaked_at_timestamp ?? (-1 * a.remaining_time));
+        return (b.last_speaked_at_timestamp ?? 0)
+            .compareTo(a.last_speaked_at_timestamp ?? 0);
       });
     } else if (sortType.value == SortTypes.timeJoined) {
       sorted.sort((a, b) {
-        return (b.last_speaked_at_timestamp ?? (-1 * b.remaining_time))
-            .compareTo(a.last_speaked_at_timestamp ?? (-1 * a.remaining_time));
+        return (b.last_speaked_at_timestamp ?? 0)
+            .compareTo(a.last_speaked_at_timestamp ?? 0);
       });
     }
     return sorted;
@@ -177,7 +252,7 @@ class OutpostCallController extends GetxController {
     }
   }
 
-  startCall(
+  Future<void> startCall(
       {required OutpostModel outpostToJoin,
       GroupAccesses? accessOverRides}) async {
     final globalController = Get.find<GlobalController>();

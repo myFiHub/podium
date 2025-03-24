@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
@@ -9,8 +10,8 @@ import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 final joinOrLeftThrottle = Throttling(duration: const Duration(seconds: 1));
 
@@ -136,6 +137,7 @@ class WebSocketService {
       case IncomingMessageType.userBooed:
       case IncomingMessageType.userCheered:
         ongoingOutpostCallController.handleIncomingReaction(incomingMessage);
+        outpostCallController.updateReactionsMapByWsEvent(incomingMessage);
         break;
       case IncomingMessageType.timeIsUp:
         ongoingOutpostCallController.handleTimeIsUp(incomingMessage);

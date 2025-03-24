@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/usersInOutpostList.dart';
+import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/storage.dart';
@@ -187,6 +187,18 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
         return remainingTimeInSeconds != 0
             ? Row(
                 children: [
+                  // Button(onPressed: () {
+                  //   controller.handleIncomingReaction(
+                  //     IncomingMessage(
+                  //       name: IncomingMessageType.userBooed,
+                  //       data: IncomingMessageData(
+                  //         address: '0xf8b769e62e1752a43f9fe343bb37fc3d8cb168e2',
+                  //         react_to_user_address:
+                  //             '0xf8b769e62e1752a43f9fe343bb37fc3d8cb168e2',
+                  //       ),
+                  //     ),
+                  //   );
+                  // }),
                   SizedBox(
                     width: (Get.width / 3) - 12,
                   ),
@@ -302,10 +314,10 @@ class MembersList extends GetView<OutpostCallController> {
                         () {
                           final members = controller.sortedMembers.value;
                           //  sort the users based on the sort type, biggest to smallest
-                          return UsersInGroupList(
+                          return UsersInOutpostList(
                             shouldShowIntro: shouldShowIntro,
                             usersList: members,
-                            groupId: controller.outpost.value!.uuid,
+                            outpostId: controller.outpost.value!.uuid,
                           );
                         },
                       ),
@@ -315,10 +327,10 @@ class MembersList extends GetView<OutpostCallController> {
                       Obx(
                         () {
                           final members = controller.talkingUsers.value;
-                          return UsersInGroupList(
+                          return UsersInOutpostList(
                             shouldShowIntro: false,
                             usersList: members,
-                            groupId: controller.outpost.value!.uuid,
+                            outpostId: controller.outpost.value!.uuid,
                           );
                         },
                       ),
@@ -412,10 +424,10 @@ class SearchInRoom extends GetView<OutpostCallController> {
                   .contains(searchedValue.toLowerCase());
             }).toList();
             return Expanded(
-              child: UsersInGroupList(
+              child: UsersInOutpostList(
                 shouldShowIntro: false,
                 usersList: filteredMembers,
-                groupId: controller.outpost.value!.uuid,
+                outpostId: controller.outpost.value!.uuid,
               ),
             );
           },

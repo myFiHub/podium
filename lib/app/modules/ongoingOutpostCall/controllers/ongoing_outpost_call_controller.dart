@@ -310,6 +310,13 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   setMutedState(bool muted) {
+    if (!wsClient.connected) {
+      Toast.warning(
+        title: 'Connection Error',
+        message: 'please check your internet connection',
+      );
+      return;
+    }
     jitsiMeet.setAudioMuted(muted);
   }
 
@@ -406,7 +413,7 @@ class OngoingOutpostCallController extends GetxController {
   }) {
     lastReaction.value = Reaction(targetId: targetId, reaction: action);
     update(['confetti' + targetId]);
-    Future.delayed(const Duration(milliseconds: 10), () {
+    Future.delayed(const Duration(milliseconds: 50), () {
       lastReaction.value = Reaction(
           targetId: '', reaction: IncomingMessageType.userStoppedSpeaking);
     });
@@ -599,6 +606,8 @@ class OngoingOutpostCallController extends GetxController {
           eventData: WsOutgoingMessageData(
             amount: parsedAmount,
             react_to_user_address: userId,
+            chain_id:
+                globalController.appMetadata.movement_aptos_metadata.chain_id,
           ),
         );
         analytics.logEvent(name: 'cheerBoo', parameters: {
@@ -640,6 +649,11 @@ class OngoingOutpostCallController extends GetxController {
         title: 'Connection Error',
         message: 'please check your internet connection',
       );
+      if (!muted) {
+        amIMuted.value = true;
+        jitsiMeet.setAudioMuted(true);
+      }
+      return;
     }
     final outpostId = outpostCallController.outpost.value!.uuid;
     l.d(

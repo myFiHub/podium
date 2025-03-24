@@ -18,6 +18,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
+import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -25,14 +26,14 @@ import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:pulsator/pulsator.dart';
 
-class UsersInGroupList extends StatelessWidget {
+class UsersInOutpostList extends StatelessWidget {
   final List<LiveMember> usersList;
-  final String groupId;
+  final String outpostId;
   final bool shouldShowIntro;
-  const UsersInGroupList({
+  const UsersInOutpostList({
     super.key,
     required this.usersList,
-    required this.groupId,
+    required this.outpostId,
     required this.shouldShowIntro,
   });
   @override
@@ -57,7 +58,7 @@ class UsersInGroupList extends StatelessWidget {
                 user: user,
                 name: name,
                 avatar: avatar,
-                groupId: groupId,
+                groupId: outpostId,
               );
             },
           );
@@ -75,8 +76,9 @@ class IntroUser extends StatelessWidget {
           return const _SingleUserCard(
             isItME: false,
             name: 'Intro User',
+            address: 'intro',
             avatar: Constants.defaultProfilePic,
-            groupId: 'intro',
+            outpostId: 'intro',
             id: 'intro',
             isIntroUser: true,
           );
@@ -118,10 +120,11 @@ class _SingleUserInOutpost extends StatelessWidget {
       },
       child: _SingleUserCard(
         id: user.uuid,
+        address: user.address,
         isItME: isItME,
         name: name,
         avatar: avatar,
-        groupId: groupId,
+        outpostId: groupId,
         isIntroUser: false,
       ),
     );
@@ -134,16 +137,18 @@ class _SingleUserCard extends StatelessWidget {
     required this.isItME,
     required this.name,
     required this.avatar,
-    required this.groupId,
+    required this.outpostId,
     required this.id,
+    required this.address,
     required this.isIntroUser,
   });
   final String id;
+  final String address;
   final bool isItME;
   final bool isIntroUser;
   final String name;
   final String avatar;
-  final String groupId;
+  final String outpostId;
 
   @override
   Widget build(BuildContext context) {
@@ -229,13 +234,18 @@ class _SingleUserCard extends StatelessWidget {
                 ],
               ),
               Positioned(
-                  top: -5,
-                  right: 0,
-                  child: _TalkingIndicator(
-                    groupId: groupId,
-                    userId: id,
-                    key: Key(id + 'talking'),
-                  )),
+                top: -5,
+                right: 0,
+                child: _TalkingIndicator(
+                  userId: id,
+                  key: Key(id + 'talking'),
+                ),
+              ),
+              Positioned(
+                bottom: -5,
+                right: 0,
+                child: _Reactions(address: address),
+              ),
             ],
           ),
         ),
@@ -243,6 +253,85 @@ class _SingleUserCard extends StatelessWidget {
           userId: id,
         ),
       ],
+    );
+  }
+}
+
+class _Reactions extends GetView<OutpostCallController> {
+  final String address;
+  const _Reactions({super.key, required this.address});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final reactions = controller.reactionsMap.value[address];
+      if (reactions == null) return const SizedBox();
+
+      return Container(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            _buildReactionItem(
+              icon: Icons.thumb_up,
+              count: reactions[OutgoingMessageTypeEnums.like] ?? 0,
+              color: Colors.green,
+            ),
+            const SizedBox(width: 2),
+            _buildReactionItem(
+              icon: Icons.thumb_down,
+              count: reactions[OutgoingMessageTypeEnums.dislike] ?? 0,
+              color: Colors.red,
+            ),
+            const SizedBox(width: 2),
+            _buildReactionItem(
+              icon: Icons.sentiment_very_dissatisfied,
+              count: reactions[OutgoingMessageTypeEnums.boo] ?? 0,
+              color: Colors.red,
+            ),
+            const SizedBox(width: 2),
+            _buildReactionItem(
+              icon: Icons.celebration,
+              count: reactions[OutgoingMessageTypeEnums.cheer] ?? 0,
+              color: Colors.green,
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildReactionItem({
+    required IconData icon,
+    required int count,
+    required Color color,
+  }) {
+    if (count == 0) return const SizedBox();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(25),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            count.toString(),
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -414,11 +503,9 @@ _shootReaction({required BuildContext context, required Reaction reaction}) {
 }
 
 class _TalkingIndicator extends GetView<OutpostCallController> {
-  final String groupId;
   final String userId;
   const _TalkingIndicator({
     super.key,
-    required this.groupId,
     required this.userId,
   });
 

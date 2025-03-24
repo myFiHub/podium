@@ -200,17 +200,20 @@ class TicketBuyObserver extends GetView<CheckticketController> {
           ),
           if (showRawSpeakerType)
             RichText(
-                text: TextSpan(children: [
-              const TextSpan(
-                  text: 'Speakers: ',
-                  style:
-                      const TextStyle(fontSize: 16, color: ColorName.greyText)),
-              TextSpan(
-                  text: parseSpeakerType(outpost.speak_type),
-                  style: TextStyle(
-                      color: canSpeak ? Colors.green : Colors.blue,
-                      fontWeight: FontWeight.bold)),
-            ])),
+              text: TextSpan(
+                children: [
+                  const TextSpan(
+                      text: 'Speakers: ',
+                      style: const TextStyle(
+                          fontSize: 16, color: ColorName.greyText)),
+                  TextSpan(
+                      text: parseSpeakerType(outpost.speak_type),
+                      style: TextStyle(
+                          color: canSpeak ? Colors.green : Colors.blue,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
         ],
       );
     });

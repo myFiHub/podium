@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:ably_flutter/ably_flutter.dart' as ably;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -46,7 +45,6 @@ class OutpostCallController extends GetxController {
   final keysMap = Rx<Map<String, GlobalKey>>({});
 
   // presence channel
-  ably.RealtimeChannel? presenceChannel = null;
 
   StreamSubscription<List<LiveMember>>? sortedMembersListener;
   StreamSubscription<List<LiveMember>>? membersListener;

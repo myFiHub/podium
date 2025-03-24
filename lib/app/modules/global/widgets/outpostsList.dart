@@ -478,7 +478,7 @@ class _ScheduledBanner extends StatelessWidget {
               ? remaining.split('d,').join('d\n').replaceAll('d', 'days')
               : remaining;
           return Positioned(
-            right: 10,
+            right: 1,
             top: 0,
             child: Container(
               clipBehavior: Clip.hardEdge,

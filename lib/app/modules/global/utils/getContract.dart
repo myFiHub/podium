@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/chainInfo.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
@@ -70,17 +69,27 @@ String chainNameById(String chainId) {
 }
 
 ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
-  final chain =
-      ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
+  String id = chainId;
+  if (id == 'avalanche') {
+    id = '43114';
+  }
+  if (id == 'base') {
+    id = '8453';
+  }
+  if (id == 'movement') {
+    id = '126';
+  }
+
+  final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, id);
   if (chain == null) {
     return movementEVMChain;
   }
   final chainToReturn = ReownAppKitModalNetworkInfo(
     name: chain.name,
-    chainId: chainId,
+    chainId: id,
     extraRpcUrls: chain.extraRpcUrls,
     isTestNetwork: chain.isTestNetwork,
-    chainIcon: chainIconUrlByChainId(chainId),
+    chainIcon: chainIconUrlByChainId(id),
     currency: chain.currency,
     rpcUrl: chain.rpcUrl,
     explorerUrl: chain.explorerUrl,

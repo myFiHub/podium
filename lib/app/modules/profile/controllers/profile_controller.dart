@@ -6,7 +6,6 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/models/cheerBooEvent.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -57,7 +56,17 @@ class ProfileController extends GetxController {
     super.onInit();
     final stringedUserInfo = Get.parameters[UserProfileParamsKeys.userInfo]!;
     userInfo.value = UserModel.fromJson(jsonDecode(stringedUserInfo));
-    Future.wait<void>([getPrices(), _getPayments()]);
+
+    payments.value = Payments(
+      numberOfCheersReceived: userInfo.value!.received_cheer_count,
+      numberOfBoosReceived: userInfo.value!.received_boo_count,
+      numberOfCheersSent: userInfo.value!.sent_cheer_count,
+      numberOfBoosSent: userInfo.value!.sent_boo_count,
+    );
+
+    Future.wait<void>([
+      getPrices(),
+    ]);
   }
 
   @override
@@ -70,48 +79,17 @@ class ProfileController extends GetxController {
     super.onClose();
   }
 
-  updateUserInfo() async {
+  getUserInfo() async {
     final info = await HttpApis.podium.getUserData(userInfo.value!.uuid);
     if (info != null) {
       userInfo.value = info;
+      payments.value = Payments(
+        numberOfCheersReceived: info.received_cheer_count,
+        numberOfBoosReceived: info.received_boo_count,
+        numberOfCheersSent: info.sent_cheer_count,
+        numberOfBoosSent: info.sent_boo_count,
+      );
     }
-  }
-
-  _getPayments() async {
-    isGettingPayments.value = true;
-    final (received, paid) = (
-      [], []
-      // getReceivedPayments(
-      //   userId: userInfo.value!.uuid,
-      // ),
-      // getInitiatedPayments(
-      //   userId: userInfo.value!.uuid,
-      // )
-    );
-    final _payments = Payments(
-      numberOfCheersReceived: 0,
-      numberOfBoosReceived: 0,
-      numberOfCheersSent: 0,
-      numberOfBoosSent: 0,
-    );
-
-    received.forEach((element) {
-      if (element.type == PaymentTypes.cheer) {
-        _payments.numberOfCheersReceived++;
-      } else if (element.type == PaymentTypes.boo) {
-        _payments.numberOfBoosReceived++;
-      }
-    });
-    paid.forEach((element) {
-      if (element.type == PaymentTypes.cheer) {
-        _payments.numberOfCheersSent++;
-      } else if (element.type == PaymentTypes.boo) {
-        _payments.numberOfBoosSent++;
-      }
-    });
-    isGettingPayments.value = false;
-    payments.value = _payments;
-    payments.refresh();
   }
 
   getPrices() async {

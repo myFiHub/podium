@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -14,7 +13,8 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/models/cheerBooEvent.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -28,7 +28,7 @@ class Payments {
   int numberOfBoosReceived = 0;
   int numberOfCheersSent = 0;
   int numberOfBoosSent = 0;
-  Map<String, String> income = {};
+  Map<String, double> income = {};
   Payments(
       {this.numberOfCheersReceived = 0,
       this.numberOfBoosReceived = 0,
@@ -94,7 +94,7 @@ class MyProfileController extends GetxController {
         checkExternalWalletActivation();
       }
     });
-    _getPayments();
+    _getMyProfile();
     _getBalances();
   }
 
@@ -217,6 +217,21 @@ class MyProfileController extends GetxController {
     super.onClose();
   }
 
+  _getMyProfile() async {
+    final profile = await HttpApis.podium
+        .getMyUserData(additionalData: AdditionalDataForLogin());
+    if (profile == null) {
+      return;
+    }
+    payments.value = Payments(
+      income: profile.incomes ?? {},
+      numberOfCheersReceived: profile.received_cheer_count,
+      numberOfBoosReceived: profile.received_boo_count,
+      numberOfCheersSent: profile.sent_cheer_count,
+      numberOfBoosSent: profile.sent_boo_count,
+    );
+  }
+
   _createStep({
     required GlobalKey targetId,
     required String text,
@@ -336,63 +351,6 @@ class MyProfileController extends GetxController {
     } catch (e) {
       l.e(e);
       isGettingBalances.value = false;
-    }
-  }
-
-  _getPayments() async {
-    try {
-      isGettingPayments.value = true;
-      final (received, paid) = (
-        // TODO: get payments
-        [], []
-        // getReceivedPayments(
-        //   userId: myId,
-        // ),
-        // getInitiatedPayments(
-        //   userId: myId,
-        // )
-      );
-      final _payments = Payments(
-        numberOfCheersReceived: 0,
-        numberOfBoosReceived: 0,
-        numberOfCheersSent: 0,
-        numberOfBoosSent: 0,
-        income: {},
-      );
-
-      received.forEach((element) {
-        String thisIncome = '0.0';
-        if (_payments.income[element.chainId] == null) {
-          _payments.income[element.chainId] = thisIncome;
-        }
-        if (element.type == PaymentTypes.cheer ||
-            element.type == PaymentTypes.boo) {
-          thisIncome = (Decimal.parse(element.amount) * Decimal.parse("0.95"))
-              .toString();
-          if (element.type == PaymentTypes.cheer) {
-            _payments.numberOfCheersReceived++;
-          } else if (element.type == PaymentTypes.boo) {
-            _payments.numberOfBoosReceived++;
-          }
-        } else {
-          thisIncome = element.amount;
-        }
-        final addedDecimal = Decimal.parse(_payments.income[element.chainId]!) +
-            Decimal.parse(thisIncome);
-        _payments.income[element.chainId] = addedDecimal.toString();
-      });
-      paid.forEach((element) {
-        if (element.type == PaymentTypes.cheer) {
-          _payments.numberOfCheersSent++;
-        } else if (element.type == PaymentTypes.boo) {
-          _payments.numberOfBoosSent++;
-        }
-      });
-      isGettingPayments.value = false;
-      payments.value = _payments;
-      payments.refresh();
-    } catch (e) {
-      l.e(e);
     }
   }
 

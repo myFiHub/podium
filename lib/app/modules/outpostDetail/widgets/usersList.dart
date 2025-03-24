@@ -1,6 +1,7 @@
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:glow_container/glow_container.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -88,7 +89,7 @@ class UserList extends StatelessWidget {
   }
 }
 
-class _SingleUser extends StatelessWidget {
+class _SingleUser extends GetView<UsersController> {
   final bool isItME;
   final UserModel user;
   final String name;
@@ -121,84 +122,105 @@ class _SingleUser extends StatelessWidget {
       },
       child: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              color: ColorName.cardBackground,
-              border: Border.all(
-                color: isItME ? Colors.green : ColorName.cardBorder,
+          Obx(() {
+            final gettingUserInfo_uuid = controller.gettingUserInfo_uuid.value;
+            return GlowContainer(
+              glowRadius: 4,
+              gradientColors: const [
+                ColorName.primaryBlue,
+                ColorName.secondaryBlue
+              ],
+              rotationDuration: const Duration(seconds: 1),
+              glowLocation: GlowLocation.outerOnly,
+              containerOptions: ContainerOptions(
+                width: Get.width - 4,
+                borderRadius: 8,
+                margin: const EdgeInsets.only(left: 2, bottom: 8),
+                backgroundColor: ColorName.cardBackground,
+                borderSide: const BorderSide(
+                  width: 1.0,
+                  color: ColorName.cardBackground,
+                ),
               ),
-              borderRadius: const BorderRadius.all(const Radius.circular(8)),
-            ),
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
-            padding: const EdgeInsets.all(10),
-            key: Key(user.uuid),
-            child: Stack(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              transitionDuration: const Duration(milliseconds: 200),
+              showAnimatedBorder: gettingUserInfo_uuid == user.uuid,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: ColorName.cardBackground,
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                ),
+                // margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
+                padding: const EdgeInsets.all(10),
+                key: Key(user.uuid),
+                child: Stack(
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: Img(
-                                src: avatar,
-                                alt: name,
-                              ),
-                            ),
-                            space10,
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Row(
                               children: [
-                                Container(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 176,
+                                SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: Img(
+                                    src: avatar,
+                                    alt: name,
                                   ),
-                                  child: Text(
-                                    name,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      overflow: TextOverflow.ellipsis,
+                                ),
+                                space10,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 176,
+                                      ),
+                                      child: Text(
+                                        name,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                Text(
-                                  truncate(user.uuid, length: 10),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w400,
-                                    color: ColorName.greyText,
-                                  ),
-                                ),
+                                    Text(
+                                      truncate(user.uuid, length: 10),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorName.greyText,
+                                      ),
+                                    ),
+                                  ],
+                                )
                               ],
                             )
                           ],
-                        )
+                        ),
+                        if (isItME)
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                          )
+                        else
+                          FollowButton(
+                            user: user,
+                            fullWidth: false,
+                            small: true,
+                            key: Key(user.uuid),
+                            onFollowStatusChanged: onRequestUpdate,
+                          ),
                       ],
                     ),
-                    if (isItME)
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                      )
-                    else
-                      FollowButton(
-                        user: user,
-                        fullWidth: false,
-                        small: true,
-                        key: Key(user.uuid),
-                        onFollowStatusChanged: onRequestUpdate,
-                      ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          })
         ],
       ),
     );

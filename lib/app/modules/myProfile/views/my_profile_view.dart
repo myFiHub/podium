@@ -90,11 +90,13 @@ class ReferalSystem extends GetView<ReferalController> {
       children: [
         space10,
         Obx(() {
-          final count = controller.myProfile.value?.referrals_count ?? 0;
-          final remaining = 0; //TODO: fix this
+          final myProfileData = controller.myProfile.value;
+          // final usedReferrals = myProfileData?.referrals_count ?? 0;
+          final remainingReferrals =
+              myProfileData?.remaining_referrals_count ?? 0;
 
           return Button(
-            onPressed: remaining == 0
+            onPressed: remainingReferrals == 0
                 ? null
                 : () {
                     controller.referButtonClicked();
@@ -105,14 +107,16 @@ class ReferalSystem extends GetView<ReferalController> {
                 text: TextSpan(
               children: [
                 TextSpan(
-                  text: remaining > 0 ? 'Refer a friend' : 'All referrals used',
+                  text: remainingReferrals > 0
+                      ? 'Refer a friend'
+                      : 'All referrals used',
                   style: TextStyle(
                     fontSize: 18,
-                    color: remaining == 0 ? Colors.grey : Colors.white,
+                    color: remainingReferrals == 0 ? Colors.grey : Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                if (remaining > 0)
+                if (remainingReferrals > 0)
                   const WidgetSpan(
                     child: Padding(
                       padding: EdgeInsets.only(left: 10),
@@ -123,10 +127,10 @@ class ReferalSystem extends GetView<ReferalController> {
                       ),
                     ),
                   ),
-                if (remaining > 0)
+                if (remainingReferrals > 0)
                   WidgetSpan(
                       child: Text(
-                    ' $remaining/$count remaining',
+                    '$remainingReferrals remaining',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white,

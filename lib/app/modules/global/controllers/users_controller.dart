@@ -20,7 +20,7 @@ class UsersController extends GetxController {
   final OutpostsController groupsController = Get.find<OutpostsController>();
   // final users = Map<String, UserInfoModel>();
   final followingsInProgress = Map<String, String>().obs;
-
+  final gettingUserInfo_uuid = ''.obs;
   @override
   void onInit() {
     super.onInit();
@@ -85,6 +85,7 @@ class UsersController extends GetxController {
 
   openUserProfile(String userId) async {
     try {
+      gettingUserInfo_uuid.value = userId;
       final user = await HttpApis.podium.getUserData(userId);
       if (user != null) {
         Navigate.to(
@@ -97,6 +98,8 @@ class UsersController extends GetxController {
       }
     } catch (e) {
       l.e('Error opening user profile: $e');
+    } finally {
+      gettingUserInfo_uuid.value = '';
     }
   }
 }

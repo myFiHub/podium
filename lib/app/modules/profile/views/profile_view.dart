@@ -29,7 +29,7 @@ class ProfileView extends GetView<ProfileController> {
               FollowButton(
                 user: controller.userInfo.value!,
                 onFollowStatusChanged: () {
-                  controller.updateUserInfo();
+                  controller.getUserInfo();
                 },
               ),
               space10,

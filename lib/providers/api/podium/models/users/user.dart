@@ -16,9 +16,20 @@ class UserModel {
   final String? login_type;
   String? login_type_identifier;
   String? name;
-  final String? referer_user_uuid;
   bool? is_over_18;
   int? referrals_count;
+  final String? referrer_user_uuid;
+  final Map<String, double>? incomes;
+
+  final double received_boo_amount;
+  final int received_boo_count;
+  final double received_cheer_amount;
+  final int received_cheer_count;
+  final int remaining_referrals_count;
+  final double sent_boo_amount;
+  final int sent_boo_count;
+  final double sent_cheer_amount;
+  final int sent_cheer_count;
 
   String get defaultWalletAddress => external_wallet_address ?? address;
 
@@ -35,9 +46,19 @@ class UserModel {
     this.login_type,
     this.login_type_identifier,
     this.name,
-    this.referer_user_uuid,
     this.is_over_18,
-    this.referrals_count,
+    this.referrals_count = 0,
+    this.remaining_referrals_count = 0,
+    this.incomes,
+    this.received_boo_amount = 0.0,
+    this.received_boo_count = 0,
+    this.received_cheer_amount = 0.0,
+    this.received_cheer_count = 0,
+    this.referrer_user_uuid,
+    this.sent_boo_amount = 0.0,
+    this.sent_boo_count = 0,
+    this.sent_cheer_amount = 0.0,
+    this.sent_cheer_count = 0,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>

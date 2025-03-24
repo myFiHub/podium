@@ -19,9 +19,25 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       login_type: json['login_type'] as String?,
       login_type_identifier: json['login_type_identifier'] as String?,
       name: json['name'] as String?,
-      referer_user_uuid: json['referer_user_uuid'] as String?,
       is_over_18: json['is_over_18'] as bool?,
       referrals_count: (json['referrals_count'] as num?)?.toInt(),
+      incomes: (json['incomes'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, (e as num).toDouble()),
+      ),
+      received_boo_amount:
+          (json['received_boo_amount'] as num?)?.toDouble() ?? 0.0,
+      received_boo_count: (json['received_boo_count'] as num?)?.toInt() ?? 0,
+      received_cheer_amount:
+          (json['received_cheer_amount'] as num?)?.toDouble() ?? 0.0,
+      received_cheer_count:
+          (json['received_cheer_count'] as num?)?.toInt() ?? 0,
+      referrer_user_uuid: json['referrer_user_uuid'] as String?,
+      remaining_referrals_count:
+          (json['remaining_referrals_count'] as num?)?.toInt() ?? 0,
+      sent_boo_amount: (json['sent_boo_amount'] as num?)?.toDouble() ?? 0.0,
+      sent_boo_count: (json['sent_boo_count'] as num?)?.toInt() ?? 0,
+      sent_cheer_amount: (json['sent_cheer_amount'] as num?)?.toDouble() ?? 0.0,
+      sent_cheer_count: (json['sent_cheer_count'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
@@ -37,7 +53,17 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
       'login_type': instance.login_type,
       'login_type_identifier': instance.login_type_identifier,
       'name': instance.name,
-      'referer_user_uuid': instance.referer_user_uuid,
       'is_over_18': instance.is_over_18,
       'referrals_count': instance.referrals_count,
+      'referrer_user_uuid': instance.referrer_user_uuid,
+      'incomes': instance.incomes,
+      'received_boo_amount': instance.received_boo_amount,
+      'received_boo_count': instance.received_boo_count,
+      'received_cheer_amount': instance.received_cheer_amount,
+      'received_cheer_count': instance.received_cheer_count,
+      'remaining_referrals_count': instance.remaining_referrals_count,
+      'sent_boo_amount': instance.sent_boo_amount,
+      'sent_boo_count': instance.sent_boo_count,
+      'sent_cheer_amount': instance.sent_cheer_amount,
+      'sent_cheer_count': instance.sent_cheer_count,
     };

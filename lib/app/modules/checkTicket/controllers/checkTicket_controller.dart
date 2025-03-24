@@ -545,7 +545,7 @@ class CheckticketController extends GetxController {
     bool? bought = false;
     String referrer = '';
 
-    final myReferrer = myUser.referer_user_uuid;
+    final myReferrer = myUser.referrer_user_uuid;
     if (myReferrer != null) {
       final referrerInfo = await HttpApis.podium.getUserData(myReferrer);
       if (referrerInfo != null) {
@@ -650,7 +650,7 @@ class CheckticketController extends GetxController {
     }
     bool bought = false;
     String referrer = '';
-    final myReferrer = myUser.referer_user_uuid;
+    final myReferrer = myUser.referrer_user_uuid;
     if (myReferrer != null) {
       final referrerInfo = await HttpApis.podium.getUserData(myReferrer);
       if (referrerInfo != null) {

@@ -111,26 +111,20 @@ class OutpostsController extends GetxController {
   final lastPageReachedForAllOutposts = false.obs;
   final lastPageReachedForMyOutposts = false.obs;
 
+  StreamSubscription<bool>? _showArchivedListener;
+  StreamSubscription<bool>? _loggedInListener;
+
+  final showArchivedOutposts = false.obs;
+
   @override
   void onInit() {
     super.onInit();
-
-    _timerForPresentUsers = Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (_shouldUpdatePresentUsers) {
-        presentUsersInGroupsMap.value = tmpPresentUsersInGroupsMap;
-        presentUsersInGroupsMap.refresh();
-        _shouldUpdatePresentUsers = false;
-      }
+    showArchivedOutposts.value = globalController.showArchivedOutposts.value;
+    _showArchivedListener =
+        globalController.showArchivedOutposts.listen((show) {
+      showArchivedOutposts.value = show;
     });
-    _timerForTakingUsers = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_shouldUpdateTakingUsers) {
-        takingUsersInGroupsMap.value = tmpTakingUsersInGroupsMap;
-        takingUsersInGroupsMap.refresh();
-        _shouldUpdateTakingUsers = false;
-      }
-    });
-
-    globalController.loggedIn.listen((loggedIn) {
+    _loggedInListener = globalController.loggedIn.listen((loggedIn) {
       if (loggedIn) {
         fetchAllOutpostsPage(0);
         fetchMyOutpostsPage(0);
@@ -146,8 +140,8 @@ class OutpostsController extends GetxController {
   @override
   void onClose() {
     super.onClose();
-    _timerForPresentUsers.cancel();
-    _timerForTakingUsers.cancel();
+    _showArchivedListener?.cancel();
+    _loggedInListener?.cancel();
   }
 
   fetchAllOutpostsPage(int pageKey) async {

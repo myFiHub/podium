@@ -15,7 +15,7 @@ class StorageKeys {
   static const rememberSelectedWallet = 'rememberWallet';
   static const selectedWalletName = 'selectedWalletName';
   static const externalWalletChainId = 'externalWalletChainId';
-  static const showArchivedGroups = 'showArchivedGroups';
+  static const showArchivedOutposts = 'showArchivedOutposts';
 }
 
 class IntroStorageKeys {

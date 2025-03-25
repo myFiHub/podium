@@ -205,7 +205,7 @@ class ToggleShowArchivedGroups extends GetView<GlobalController> {
         ),
       ),
       trailing: Obx(() {
-        final value = controller.showArchivedGroups.value;
+        final value = controller.showArchivedOutposts.value;
         return Switch(
           value: value,
           onChanged: (v) {

@@ -165,8 +165,9 @@ class AllOutpostsList extends GetWidget<OutpostsController> {
       }
       return GestureDetector(
         onVerticalDragDown: (details) {
+          final difference = details.localPosition.dy - _lastPosition;
           // detect direction of the drag
-          if (details.localPosition.dy > _lastPosition) {
+          if (difference > 0 && difference > 20) {
             // up
             _lastPosition = details.localPosition.dy.toInt();
             controller.showCreateButton.value = false;

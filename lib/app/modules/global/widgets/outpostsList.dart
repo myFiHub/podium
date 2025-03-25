@@ -14,7 +14,6 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/analytics.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:pulsator/pulsator.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
@@ -35,15 +34,8 @@ class OutpostsList extends GetView<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    scrollController!.addListener(() {
-      l.d('Current scroll position: ${scrollController!.position.pixels}');
-      if (scrollController!.position.pixels > 100) {
-        // show the button
-      } else {
-        // hide the button
-      }
-    });
     return Obx(() {
+      final showArchivedOutposts = controller.showArchivedOutposts.value;
       final allOutposts = controller.outposts.value;
       final myOutposts = controller.myOutposts.value;
       final lastPageReachedForAllOutposts =
@@ -53,11 +45,13 @@ class OutpostsList extends GetView<OutpostsController> {
 
       Widget listWidget;
       if (outpostsList != null) {
+        List<OutpostModel> listToShow = outpostsList!;
+
         listWidget = ListView.builder(
           controller: scrollController,
-          itemCount: outpostsList!.length,
+          itemCount: listToShow.length,
           itemBuilder: (context, index) {
-            final outpost = outpostsList![index];
+            final outpost = listToShow[index];
             final amICreator = outpost.creator_user_uuid == myId;
             return _SingleOutpost(
               key: Key(outpost.uuid),
@@ -68,6 +62,10 @@ class OutpostsList extends GetView<OutpostsController> {
           },
         );
       } else {
+        List<OutpostModel> listToShow = listPage == ListPage.all
+            ? allOutposts.values.toList()
+            : myOutposts.values.toList();
+
         listWidget = EnhancedPaginatedView(
           hasReachedMax: listPage == ListPage.all
               ? lastPageReachedForAllOutposts
@@ -92,9 +90,7 @@ class OutpostsList extends GetView<OutpostsController> {
           },
           itemsPerPage: numberOfOutpostsPerPage,
           delegate: EnhancedDelegate(
-            listOfData: listPage == ListPage.all
-                ? allOutposts.values.toList()
-                : myOutposts.values.toList(),
+            listOfData: listToShow,
             status: EnhancedStatus.loaded,
           ),
           builder: (items, physics, reverse, shrinkWrap) {

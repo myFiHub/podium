@@ -78,8 +78,8 @@ class GlobalController extends GetxController {
   final isLoggingOut = false.obs;
   final isFirebaseInitialized = false.obs;
   final ticker = 0.obs;
-  final showArchivedGroups =
-      RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
+  final showArchivedOutposts =
+      RxBool(storage.read(StorageKeys.showArchivedOutposts) ?? true);
   late PodiumAppMetadata appMetadata;
   late ReownAppKitModalNetworkInfo movementAptosNetwork;
   late String movementAptosPodiumProtocolAddress;
@@ -199,8 +199,8 @@ class GlobalController extends GetxController {
   }
 
   Future<void> toggleShowArchivedGroups() async {
-    showArchivedGroups.value = !showArchivedGroups.value;
-    storage.write(StorageKeys.showArchivedGroups, showArchivedGroups.value);
+    showArchivedOutposts.value = !showArchivedOutposts.value;
+    storage.write(StorageKeys.showArchivedOutposts, showArchivedOutposts.value);
     update([GlobalUpdateIds.showArchivedOutposts]);
   }
 

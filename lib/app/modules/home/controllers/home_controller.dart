@@ -5,7 +5,6 @@ class HomeController extends GetxController {
   final OutpostsController outpostsController = Get.find<OutpostsController>();
   @override
   void onInit() async {
-    outpostsController.getMyOutposts();
     super.onInit();
   }
 

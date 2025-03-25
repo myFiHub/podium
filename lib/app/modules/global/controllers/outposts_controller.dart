@@ -94,10 +94,8 @@ class OutpostsController extends GetxController {
   final outposts = Rx<Map<String, OutpostModel>>({});
   final myOutposts = Rx<Map<String, OutpostModel>>({});
   final isGettingMyOutposts = false.obs;
-  final allOutpostsPagingController =
-      PagingController<int, OutpostModel>(firstPageKey: 0);
-  final myOutpostsPagingController =
-      PagingController<int, OutpostModel>(firstPageKey: 0);
+  late PagingController<int, OutpostModel> allOutpostsPagingController;
+  late PagingController<int, OutpostModel> myOutpostsPagingController;
   final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final tmpPresentUsersInGroupsMap = <String, List<String>>{};
@@ -130,9 +128,16 @@ class OutpostsController extends GetxController {
 
     globalController.loggedIn.listen((loggedIn) {
       if (loggedIn) {
-        getRealtimeOutposts(loggedIn);
+        allOutpostsPagingController =
+            PagingController<int, OutpostModel>(firstPageKey: 0);
+        myOutpostsPagingController =
+            PagingController<int, OutpostModel>(firstPageKey: 0);
         _fetchAllOutpostsPage(0);
         _fetchMyOutpostsPage(0);
+        getRealtimeOutposts(loggedIn);
+      } else {
+        allOutpostsPagingController.dispose();
+        myOutpostsPagingController.dispose();
       }
     });
   }
@@ -199,6 +204,8 @@ class OutpostsController extends GetxController {
       }
     } catch (error) {
       myOutpostsPagingController.error = error;
+    } finally {
+      isGettingMyOutposts.value = false;
     }
   }
 

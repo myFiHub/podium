@@ -23,9 +23,51 @@ class WebSocketService {
   Timer? _pongTimer;
   StreamSubscription? subscription;
   final String token;
+  int _reconnectAttempts = 0;
+  static const int _maxReconnectAttempts = 20;
+  static const Duration _initialReconnectDelay = Duration(seconds: 1);
 
   WebSocketService(this.token) {
     _connect();
+  }
+
+  Duration _getReconnectDelay() {
+    if (_reconnectAttempts >= _maxReconnectAttempts) {
+      return const Duration(seconds: 30); // Max delay of 30 seconds
+    }
+    return _initialReconnectDelay *
+        (1 << _reconnectAttempts); // Exponential backoff
+  }
+
+  void _cleanup() {
+    _pongTimer?.cancel();
+    _pongTimer = null;
+    subscription?.cancel();
+    subscription = null;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    connected = false;
+  }
+
+  void _reconnect() {
+    if (_isConnecting) return;
+
+    _isConnecting = true;
+    _cleanup();
+
+    if (_reconnectAttempts >= _maxReconnectAttempts) {
+      l.e("Max reconnection attempts reached. Please check your connection.");
+      _isConnecting = false;
+      return;
+    }
+
+    final delay = _getReconnectDelay();
+    l.d("Attempting to reconnect in ${delay.inSeconds} seconds (attempt ${_reconnectAttempts + 1}/$_maxReconnectAttempts)");
+
+    _reconnectTimer = Timer(delay, () {
+      _reconnectAttempts++;
+      _connect();
+    });
   }
 
   void _connect() async {
@@ -38,6 +80,7 @@ class WebSocketService {
       await _channel!.ready;
       _isConnecting = false;
       connected = true;
+      _reconnectAttempts = 0; // Reset attempts on successful connection
       l.d("Connected to websocket: ${_channel!.hashCode}");
       //  sen pong every 20 seconds
       if (_pongTimer != null) _pongTimer!.cancel();
@@ -74,16 +117,6 @@ class WebSocketService {
       l.e("Error connecting to websocket: $e");
       _reconnect();
     }
-  }
-
-  void _reconnect() {
-    if (_isConnecting) return;
-    _isConnecting = true;
-    subscription?.cancel();
-    connected = false;
-    _reconnectTimer = Timer(const Duration(seconds: 1), () {
-      _connect();
-    });
   }
 
   void _handleIncomingMessage(IncomingMessage incomingMessage) {

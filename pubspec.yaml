@@ -78,7 +78,7 @@ dependencies:
   web_socket_channel: ^3.0.2
   glow_container: ^1.0.1
   auto_animated: ^3.2.0
-
+  enhanced_paginated_view: ^2.0.3
 # dependency_overrides:
 #   web: ^0.5.0
 # dependency overrides

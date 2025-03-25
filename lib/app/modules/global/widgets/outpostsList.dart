@@ -400,8 +400,8 @@ class _SingleOutpost extends StatelessWidget {
               outpost: outpost,
               key: Key(outpost.uuid + 'numberOfActiveUsers'),
             ),
-            left: 0,
-            bottom: 0,
+            left: -8,
+            top: -6,
           )
         ],
       ),

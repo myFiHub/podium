@@ -134,7 +134,10 @@ class SearchPageController extends GetxController {
                 Container(
                   height: Get.height - 220,
                   color: ColorName.pageBackground,
-                  child: OutpostsList(outpostsList: parsedOutposts),
+                  child: OutpostsList(
+                    outpostsList: parsedOutposts,
+                    listPage: ListPage.search,
+                  ),
                 ),
               ],
             ),

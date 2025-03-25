@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
@@ -8,13 +7,10 @@ class AllOutpostsController extends GetxController {
   final outpostsController = Get.find<OutpostsController>();
   final searchValue = ''.obs;
   final searchedOutposts = Rx<Map<String, OutpostModel>>({});
-  late PagingController<int, OutpostModel> allOutpostsPagingController;
 
   @override
   void onInit() {
     super.onInit();
-    allOutpostsPagingController =
-        outpostsController.allOutpostsPagingController;
     searchedOutposts.value =
         getOutpostsVisibleToMe(outpostsController.outposts.value, myId);
 

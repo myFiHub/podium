@@ -1,7 +1,7 @@
+import 'package:enhanced_paginated_view/enhanced_paginated_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:glow_container/glow_container.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -14,55 +14,120 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/analytics.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:pulsator/pulsator.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:share_plus/share_plus.dart';
 
-class OutpostsList extends StatelessWidget {
-  final List<OutpostModel> outpostsList;
+enum ListPage { all, my, search }
+
+class OutpostsList extends GetView<OutpostsController> {
+  final List<OutpostModel>? outpostsList;
   final ScrollController? scrollController;
-  final PagingController<int, OutpostModel>? pagingController;
+  final ListPage listPage;
   const OutpostsList({
     super.key,
-    required this.outpostsList,
+    this.outpostsList,
     this.scrollController,
-    this.pagingController,
+    required this.listPage,
   });
+
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<OutpostsController>();
-    return Scrollbar(
+    scrollController!.addListener(() {
+      l.d('Current scroll position: ${scrollController!.position.pixels}');
+      if (scrollController!.position.pixels > 100) {
+        // show the button
+      } else {
+        // hide the button
+      }
+    });
+    return Obx(() {
+      final allOutposts = controller.outposts.value;
+      final myOutposts = controller.myOutposts.value;
+      final lastPageReachedForAllOutposts =
+          controller.lastPageReachedForAllOutposts.value;
+      final lastPageReachedForMyOutposts =
+          controller.lastPageReachedForMyOutposts.value;
+
+      Widget listWidget;
+      if (outpostsList != null) {
+        listWidget = ListView.builder(
+          controller: scrollController,
+          itemCount: outpostsList!.length,
+          itemBuilder: (context, index) {
+            final outpost = outpostsList![index];
+            final amICreator = outpost.creator_user_uuid == myId;
+            return _SingleOutpost(
+              key: Key(outpost.uuid),
+              controller: controller,
+              amICreator: amICreator,
+              outpost: outpost,
+            );
+          },
+        );
+      } else {
+        listWidget = EnhancedPaginatedView(
+          hasReachedMax: listPage == ListPage.all
+              ? lastPageReachedForAllOutposts
+              : lastPageReachedForMyOutposts,
+          onLoadMore: (int page) {
+            listPage == ListPage.all
+                ? controller.fetchAllOutpostsPage(page - 1)
+                : controller.fetchMyOutpostsPage(page - 1);
+          },
+          onRefresh: () async {
+            listPage == ListPage.all
+                ? controller.fetchAllOutpostsPage(0)
+                : controller.fetchMyOutpostsPage(0);
+          },
+          refreshBuilder: (context, onRefresh, child) {
+            return RefreshIndicator(
+              color: Colors.white,
+              backgroundColor: ColorName.primaryBlue,
+              onRefresh: onRefresh,
+              child: child,
+            );
+          },
+          itemsPerPage: numberOfOutpostsPerPage,
+          delegate: EnhancedDelegate(
+            listOfData: listPage == ListPage.all
+                ? allOutposts.values.toList()
+                : myOutposts.values.toList(),
+            status: EnhancedStatus.loaded,
+          ),
+          builder: (items, physics, reverse, shrinkWrap) {
+            return ListView.builder(
+              controller: scrollController,
+              itemCount: items.length,
+              physics: physics,
+              reverse: reverse,
+              shrinkWrap: shrinkWrap,
+              itemBuilder: (context, index) {
+                final outpost = items[index];
+                final amICreator = outpost.creator_user_uuid == myId;
+                return _SingleOutpost(
+                  key: Key(outpost.uuid),
+                  controller: controller,
+                  amICreator: amICreator,
+                  outpost: outpost,
+                );
+              },
+            );
+          },
+        );
+      }
+
+      return RawScrollbar(
+        thumbColor: ColorName.secondaryBlue.withAlpha(128),
+        trackColor: ColorName.cardBackground,
+        radius: const Radius.circular(4),
+        thickness: 4,
         controller: scrollController,
-        child: pagingController == null
-            ? ListView.builder(
-                controller: scrollController,
-                itemCount: outpostsList.length,
-                itemBuilder: (context, index) {
-                  final outpost = outpostsList[index];
-                  final amICreator = outpost.creator_user_uuid == myId;
-                  return _SingleOutpost(
-                    key: Key(outpost.uuid),
-                    controller: controller,
-                    amICreator: amICreator,
-                    outpost: outpost,
-                  );
-                },
-              )
-            : PagedListView<int, OutpostModel>(
-                pagingController: pagingController!,
-                scrollController: scrollController,
-                builderDelegate: PagedChildBuilderDelegate<OutpostModel>(
-                    itemBuilder: (context, outpost, index) {
-                  final amICreator = outpost.creator_user_uuid == myId;
-                  return _SingleOutpost(
-                    key: Key(outpost.uuid),
-                    controller: controller,
-                    amICreator: amICreator,
-                    outpost: outpost,
-                  );
-                }),
-              ));
+        child: listWidget,
+      );
+    });
   }
 }
 
@@ -105,7 +170,7 @@ class _SingleOutpost extends StatelessWidget {
                 containerOptions: ContainerOptions(
                   width: Get.width - 2,
                   borderRadius: 8,
-                  margin: const EdgeInsets.only(left: 1, bottom: 8),
+                  margin: const EdgeInsets.only(left: 1, bottom: 8, top: 2),
                   backgroundColor: ColorName.cardBackground,
                   borderSide: const BorderSide(
                     width: 1.0,
@@ -113,7 +178,7 @@ class _SingleOutpost extends StatelessWidget {
                   ),
                 ),
                 transitionDuration: const Duration(milliseconds: 200),
-                showAnimatedBorder: joiningOutpostId == outpost.uuid,
+                showAnimatedBorder: joiningOutpostId != outpost.uuid,
                 child: Container(
                   decoration: const BoxDecoration(
                       color: ColorName.cardBackground,
@@ -478,8 +543,13 @@ class _ScheduledBanner extends StatelessWidget {
           final isStarted =
               outpost.scheduled_for < DateTime.now().millisecondsSinceEpoch;
           final size = 55;
+          final numberOfDays = remaining.split('d,').length;
+
           final remainingText = remaining.contains('d,')
-              ? remaining.split('d,').join('d\n').replaceAll('d', 'days')
+              ? remaining
+                  .split('d,')
+                  .join('d\n')
+                  .replaceAll('d', 'day${(numberOfDays - 1) > 1 ? 's' : ''}')
               : remaining;
           return Positioned(
             right: 1,

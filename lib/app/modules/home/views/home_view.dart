@@ -156,8 +156,7 @@ class _MyOutpostsList extends GetWidget<OutpostsController> {
         }
         return OutpostsList(
           scrollController: _scrollController,
-          outpostsList: outposts,
-          pagingController: controller.myOutpostsPagingController,
+          listPage: ListPage.my,
         );
       },
     );

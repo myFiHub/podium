@@ -158,7 +158,10 @@ class SearchView extends GetView<SearchPageController> {
                       }
                       return Container(
                         padding: const EdgeInsets.only(top: 16),
-                        child: OutpostsList(outpostsList: outpostsList),
+                        child: OutpostsList(
+                          outpostsList: outpostsList,
+                          listPage: ListPage.search,
+                        ),
                       );
                     }),
                     Obx(() {

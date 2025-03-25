@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:podium/app/modules/outpostDetail/views/outpost_by_id_landing.dart';
 import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
+import 'package:podium/app/modules/outpostDetail/views/outpost_by_id_landing.dart';
 
 import '../modules/allOutposts/bindings/all_groups_binding.dart';
 import '../modules/allOutposts/views/all_outposts_view.dart';
@@ -10,8 +10,6 @@ import '../modules/createOutpost/bindings/create_outpost_binding.dart';
 import '../modules/createOutpost/views/create_outpost_view.dart';
 import '../modules/editGroup/bindings/edit_group_binding.dart';
 import '../modules/editGroup/views/edit_group_view.dart';
-import '../modules/outpostDetail/bindings/outpost_detail_binding.dart';
-import '../modules/outpostDetail/views/outpost_detail_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
@@ -22,6 +20,8 @@ import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
 import '../modules/ongoingOutpostCall/bindings/ongoing_group_call_binding.dart';
 import '../modules/ongoingOutpostCall/views/ongoing_outpost_call_view.dart';
+import '../modules/outpostDetail/bindings/outpost_detail_binding.dart';
+import '../modules/outpostDetail/views/outpost_detail_view.dart';
 import '../modules/playground/bindings/playground_binding.dart';
 import '../modules/playground/views/playground_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
@@ -129,7 +129,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.ALL_OUTPOSTS,
-      page: () => const AllGroupsView(),
+      page: () => const AllOutpostsView(),
       binding: AllGroupsBinding(),
     ),
     GetPage(

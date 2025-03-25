@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hidable/hidable.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -12,125 +10,150 @@ import 'package:podium/widgets/button/button.dart';
 import '../controllers/all_outposts_controller.dart';
 
 final _scrollController = ScrollController();
+// listen to scroll controller to show or hide the bottom button
 
-class AllGroupsView extends GetView<AllOutpostsController> {
-  const AllGroupsView({Key? key}) : super(key: key);
+class AllOutpostsView extends GetView<AllOutpostsController> {
+  const AllOutpostsView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          RefreshIndicator(
-            onRefresh: () async {
-              await controller.refresh();
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                space16,
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "All Outposts",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                        ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              space16,
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "All Outposts",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
                       ),
-                      space10,
-                      // SizedBox(
-                      //   height: 40,
-                      //   child: TextField(
-                      //     controller: TextEditingController(
-                      //         text: controller.searchValue.value),
-                      //     decoration: InputDecoration(
-                      //       hintText: "What are we looking for?",
-                      //       hintStyle: const TextStyle(fontSize: 14),
-                      //       prefixIcon: const Icon(Icons.search),
-                      //       contentPadding: const EdgeInsets.all(16),
-                      //       filled: true,
-                      //       fillColor: Colors.grey[200],
-                      //       border: OutlineInputBorder(
-                      //         borderRadius: BorderRadius.circular(8),
-                      //         borderSide: BorderSide.none,
-                      //       ),
-                      //     ),
-                      //     style: const TextStyle(
-                      //       fontSize: 18,
-                      //       color: Colors.black,
-                      //     ),
-                      //     onChanged: (value) {
-                      //       controller.search(value);
-                      //     },
-                      //   ),
-                      // ),
-                      // space10,
-                    ],
-                  ),
-                ),
-                // Lista de grupos
-                Expanded(
-                  child: Container(
-                    child: AllOutpostsList(
-                      scrollController: _scrollController,
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 10,
-            left: MediaQuery.of(context).size.width / 2 - 100,
-            child: Hidable(
-              controller: _scrollController,
-              enableOpacityAnimation: true,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  gradient: const LinearGradient(
-                    colors: [Colors.blue, Colors.green],
-                  ),
-                ),
-                child: Button(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add, color: Colors.white, size: 16),
-                      SizedBox(width: 8),
-                      Text(
-                        "Start new Outpost",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  type: ButtonType.gradient,
-                  onPressed: () {
-                    Navigate.to(
-                      type: NavigationTypes.toNamed,
-                      route: Routes.CREATE_OUTPOST,
-                    );
-                  },
+                    space10,
+                    // SizedBox(
+                    //   height: 40,
+                    //   child: TextField(
+                    //     controller: TextEditingController(
+                    //         text: controller.searchValue.value),
+                    //     decoration: InputDecoration(
+                    //       hintText: "What are we looking for?",
+                    //       hintStyle: const TextStyle(fontSize: 14),
+                    //       prefixIcon: const Icon(Icons.search),
+                    //       contentPadding: const EdgeInsets.all(16),
+                    //       filled: true,
+                    //       fillColor: Colors.grey[200],
+                    //       border: OutlineInputBorder(
+                    //         borderRadius: BorderRadius.circular(8),
+                    //         borderSide: BorderSide.none,
+                    //       ),
+                    //     ),
+                    //     style: const TextStyle(
+                    //       fontSize: 18,
+                    //       color: Colors.black,
+                    //     ),
+                    //     onChanged: (value) {
+                    //       controller.search(value);
+                    //     },
+                    //   ),
+                    // ),
+                    // space10,
+                  ],
                 ),
               ),
-            ),
+              // Lista de grupos
+              Expanded(
+                child: Container(
+                  child: AllOutpostsList(
+                    scrollController: _scrollController,
+                  ),
+                ),
+              ),
+            ],
           ),
+          const _FloatingCreateOutpostButton(),
         ],
       ),
     );
   }
 }
 
-class AllOutpostsList extends GetWidget<AllOutpostsController> {
+class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
+  const _FloatingCreateOutpostButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 10,
+      left: MediaQuery.of(context).size.width / 2 - 100,
+      child: Obx(
+        () {
+          final showCreateButton = controller.showCreateButton.value;
+          return IgnorePointer(
+            ignoring: !showCreateButton,
+            child: AnimatedOpacity(
+              opacity: showCreateButton ? 1 : 0,
+              duration: const Duration(milliseconds: 300),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: 50,
+                width: 200,
+                margin: EdgeInsets.only(bottom: showCreateButton ? 0 : 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    gradient: const LinearGradient(
+                      colors: [Colors.blue, Colors.green],
+                    ),
+                  ),
+                  child: Button(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add,
+                            color: showCreateButton
+                                ? Colors.white
+                                : Colors.transparent,
+                            size: 16),
+                        const SizedBox(width: 8),
+                        const Text(
+                          "Start new Outpost",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    type: ButtonType.gradient,
+                    onPressed: () {
+                      Navigate.to(
+                        type: NavigationTypes.toNamed,
+                        route: Routes.CREATE_OUTPOST,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+int _lastPosition = 0;
+
+class AllOutpostsList extends GetWidget<OutpostsController> {
   final ScrollController scrollController;
   const AllOutpostsList({
     super.key,
@@ -139,30 +162,31 @@ class AllOutpostsList extends GetWidget<AllOutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<GlobalController>(
-        id: GlobalUpdateIds.showArchivedOutposts,
-        builder: (globalController) {
-          return Obx(() {
-            final outposts = controller.searchedOutposts.value;
-            final showArchived = globalController.showArchivedGroups.value;
-            // final groupsController = Get.find<GroupsController>();
-            List<OutpostModel> outpostsList =
-                // ignore: unnecessary_null_comparison
-                outposts != null ? outposts.values.toList() : [];
-            // if (groupsList.isEmpty && groupsController.groups.value != null) {
-            //   groupsList = groupsController.groups.value!.values.toList();
-            // }
-            if (!showArchived) {
-              outpostsList = outpostsList
-                  .where((group) => group.is_archived != true)
-                  .toList();
-            }
-            return OutpostsList(
-              scrollController: scrollController,
-              outpostsList: outpostsList,
-              pagingController: controller.allOutpostsPagingController,
-            );
-          });
-        });
+    return Obx(() {
+      final isGettingAllOutposts = controller.isGettingAllOutposts.value;
+      if (isGettingAllOutposts) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      }
+      return GestureDetector(
+        onVerticalDragDown: (details) {
+          // detect direction of the drag
+          if (details.localPosition.dy > _lastPosition) {
+            // up
+            _lastPosition = details.localPosition.dy.toInt();
+            controller.showCreateButton.value = false;
+          } else {
+            // down
+            _lastPosition = details.localPosition.dy.toInt();
+            controller.showCreateButton.value = true;
+          }
+        },
+        child: OutpostsList(
+          scrollController: scrollController,
+          listPage: ListPage.all,
+        ),
+      );
+    });
   }
 }

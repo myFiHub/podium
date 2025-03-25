@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
 import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
@@ -89,13 +88,15 @@ class OutpostsController extends GetxController {
   late Timer _timerForTakingUsers;
   bool _shouldUpdateTakingUsers = false;
 
+  final showCreateButton = true.obs;
+
   final globalController = Get.find<GlobalController>();
   final joiningOutpostId = ''.obs;
   final outposts = Rx<Map<String, OutpostModel>>({});
   final myOutposts = Rx<Map<String, OutpostModel>>({});
   final isGettingMyOutposts = false.obs;
-  late PagingController<int, OutpostModel> allOutpostsPagingController;
-  late PagingController<int, OutpostModel> myOutpostsPagingController;
+  final isGettingAllOutposts = false.obs;
+
   final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
   final tmpPresentUsersInGroupsMap = <String, List<String>>{};
@@ -106,6 +107,9 @@ class OutpostsController extends GetxController {
   final gettingAllOutposts = true.obs;
   bool initializedChannels = false;
   bool gotDetectPresenceTime = false;
+
+  final lastPageReachedForAllOutposts = false.obs;
+  final lastPageReachedForMyOutposts = false.obs;
 
   @override
   void onInit() {
@@ -128,17 +132,9 @@ class OutpostsController extends GetxController {
 
     globalController.loggedIn.listen((loggedIn) {
       if (loggedIn) {
-        allOutpostsPagingController =
-            PagingController<int, OutpostModel>(firstPageKey: 0);
-        myOutpostsPagingController =
-            PagingController<int, OutpostModel>(firstPageKey: 0);
-        _fetchAllOutpostsPage(0);
-        _fetchMyOutpostsPage(0);
-        getRealtimeOutposts(loggedIn);
-      } else {
-        allOutpostsPagingController.dispose();
-        myOutpostsPagingController.dispose();
-      }
+        fetchAllOutpostsPage(0);
+        fetchMyOutpostsPage(0);
+      } else {}
     });
   }
 
@@ -154,48 +150,48 @@ class OutpostsController extends GetxController {
     _timerForTakingUsers.cancel();
   }
 
-  _fetchAllOutpostsPage(int pageKey) async {
+  fetchAllOutpostsPage(int pageKey) async {
     try {
+      if (pageKey == 0) {
+        isGettingAllOutposts.value = true;
+        outposts.value = {};
+        lastPageReachedForAllOutposts.value = false;
+      }
       final newItems = await HttpApis.podium.getOutposts(
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
       );
-      final isLastPage = newItems.length < numberOfOutpostsPerPage;
-      if (isLastPage) {
-        allOutpostsPagingController.appendLastPage(newItems);
-      } else {
-        final nextPageKey = pageKey + 1;
-        allOutpostsPagingController.appendPage(newItems, nextPageKey);
+      if (newItems.length < numberOfOutpostsPerPage) {
+        lastPageReachedForAllOutposts.value = true;
       }
-      final fetchedOutposts = allOutpostsPagingController.value.itemList ?? [];
+      final previousOutposts = outposts.value.values.toList();
       final outpostsMap = Map<String, OutpostModel>.fromEntries(
-        fetchedOutposts.map((e) => MapEntry(e.uuid, e)),
+        [...previousOutposts, ...newItems].map((e) => MapEntry(e.uuid, e)),
       );
       outposts.value = outpostsMap;
     } catch (error) {
-      allOutpostsPagingController.error = error;
+    } finally {
+      isGettingAllOutposts.value = false;
     }
   }
 
-  _fetchMyOutpostsPage(int pageKey) async {
+  fetchMyOutpostsPage(int pageKey) async {
     try {
       if (pageKey == 0) {
+        myOutposts.value = {};
+        lastPageReachedForMyOutposts.value = false;
         isGettingMyOutposts.value = true;
       }
       final newItems = await HttpApis.podium.getMyOutposts(
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
       );
-      final isLastPage = newItems.length < numberOfOutpostsPerPage;
-      if (isLastPage) {
-        myOutpostsPagingController.appendLastPage(newItems);
-      } else {
-        final nextPageKey = pageKey + newItems.length;
-        myOutpostsPagingController.appendPage(newItems, nextPageKey);
+      if (newItems.length < numberOfOutpostsPerPage) {
+        lastPageReachedForMyOutposts.value = true;
       }
-      final fetchedOutposts = myOutpostsPagingController.value.itemList ?? [];
+      final previousOutposts = myOutposts.value.values.toList();
       final outpostsMap = Map<String, OutpostModel>.fromEntries(
-        fetchedOutposts.map((e) => MapEntry(e.uuid, e)),
+        [...previousOutposts, ...newItems].map((e) => MapEntry(e.uuid, e)),
       );
       myOutposts.value = outpostsMap;
 
@@ -203,7 +199,6 @@ class OutpostsController extends GetxController {
         isGettingMyOutposts.value = false;
       }
     } catch (error) {
-      myOutpostsPagingController.error = error;
     } finally {
       isGettingMyOutposts.value = false;
     }
@@ -220,24 +215,20 @@ class OutpostsController extends GetxController {
       final success = await HttpApis.podium.leaveOutpost(outpost.uuid);
       if (success) {
         //  update existing outpost in all outposts page controller and set i_am_member to false
-        final outpostIndex = allOutpostsPagingController.value.itemList
-            ?.indexWhere((element) => element.uuid == outpost.uuid);
-        if (outpostIndex != null) {
-          final outpost =
-              allOutpostsPagingController.value.itemList?[outpostIndex];
-          final updatedOutpost = outpost?.copyWith.i_am_member(false);
-          if (updatedOutpost == null) {
-            return;
-          }
-          allOutpostsPagingController.value.itemList?[outpostIndex] =
-              updatedOutpost;
+        final outpostIndex = outposts.value.values
+            .toList()
+            .indexWhere((element) => element.uuid == outpost.uuid);
+        if (outpostIndex != -1) {
+          final outpost = outposts.value.values.toList()[outpostIndex];
+          final updatedOutpost = outpost.copyWith.i_am_member(false);
+          outposts.value[outpost.uuid] = updatedOutpost;
           outposts.refresh();
 
           // update existing outpost in my outposts page controller and set i_am_member to false
-          final myOutpostIndex = myOutpostsPagingController.value.itemList
-              ?.indexWhere((element) => element.uuid == updatedOutpost.uuid);
-          if (myOutpostIndex != null) {
-            myOutpostsPagingController.value.itemList?.removeAt(myOutpostIndex);
+          final myOutpostIndex = myOutposts.value.values
+              .toList()
+              .indexWhere((element) => element.uuid == updatedOutpost.uuid);
+          if (myOutpostIndex != -1) {
             myOutposts.value.remove(updatedOutpost.uuid);
             myOutposts.refresh();
           }
@@ -271,20 +262,18 @@ class OutpostsController extends GetxController {
     );
 
     // set is archived for outpost in allOutpostsPagingController
-    final outpostIndex = allOutpostsPagingController.value.itemList
-        ?.indexWhere((element) => element.uuid == outpost.uuid);
-    if (outpostIndex != null) {
-      allOutpostsPagingController.value.itemList?[outpostIndex] =
-          outpost.copyWith.is_archived(archive);
+    final outpostIndex = outposts.value.values
+        .toList()
+        .indexWhere((element) => element.uuid == outpost.uuid);
+    if (outpostIndex != -1) {
       outposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
       outposts.refresh();
     }
     // set is archived for outpost in myOutpostsPagingController
-    final myOutpostIndex = myOutpostsPagingController.value.itemList
-        ?.indexWhere((element) => element.uuid == outpost.uuid);
-    if (myOutpostIndex != null) {
-      myOutpostsPagingController.value.itemList?[myOutpostIndex] =
-          outpost.copyWith.is_archived(archive);
+    final myOutpostIndex = myOutposts.value.values
+        .toList()
+        .indexWhere((element) => element.uuid == outpost.uuid);
+    if (myOutpostIndex != -1) {
       myOutposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
       myOutposts.refresh();
     }
@@ -341,16 +330,6 @@ class OutpostsController extends GetxController {
       final sortedMap = Map<String, OutpostModel>.fromEntries(sorted);
       outposts.value = sortedMap;
     }
-  }
-
-  getRealtimeOutposts(bool loggedIn) async {
-    allOutpostsPagingController.addPageRequestListener((pageKey) {
-      _fetchAllOutpostsPage(pageKey);
-    });
-
-    myOutpostsPagingController.addPageRequestListener((pageKey) {
-      _fetchMyOutpostsPage(pageKey);
-    });
   }
 
   Future<String?> _createLumaEvent({
@@ -476,8 +455,6 @@ class OutpostsController extends GetxController {
           }
         }
         // add outpost to the top of lists of my outposts and all outposts
-        allOutpostsPagingController.value.itemList?.insert(0, response);
-        myOutpostsPagingController.value.itemList?.insert(0, response);
         myOutposts.value[response.uuid] = response;
         myOutposts.refresh();
         outposts.value[response.uuid] = response;
@@ -546,30 +523,23 @@ class OutpostsController extends GetxController {
           return;
         }
         // update outposts list in allOutpostsPagingController
-        final outpostIndex = allOutpostsPagingController.value.itemList
-            ?.indexWhere((element) => element.uuid == outpost.uuid);
-        if (outpostIndex != null) {
-          final outpost =
-              allOutpostsPagingController.value.itemList?[outpostIndex];
-          final updatedOutpost = outpost?.copyWith.i_am_member(true);
-          if (updatedOutpost == null) {
-            return;
-          }
-          allOutpostsPagingController.value.itemList?[outpostIndex] =
-              updatedOutpost;
+        final outpostIndex = outposts.value.values
+            .toList()
+            .indexWhere((element) => element.uuid == outpost.uuid);
+        if (outpostIndex != -1) {
+          final outpost = outposts.value.values.toList()[outpostIndex];
+          final updatedOutpost = outpost.copyWith.i_am_member(true);
           outposts.value[updatedOutpost.uuid] = updatedOutpost;
           outposts.refresh();
 
           // add to top of my outposts if it doesn't exist
-          if (myOutpostsPagingController.value.itemList
-                  ?.any((element) => element.uuid == updatedOutpost.uuid) ==
+          if (myOutposts.value.values
+                  .toList()
+                  .any((element) => element.uuid == updatedOutpost.uuid) ==
               false) {
-            myOutpostsPagingController.value.itemList
-                ?.insert(0, updatedOutpost);
+            myOutposts.value[updatedOutpost.uuid] = updatedOutpost;
+            myOutposts.refresh();
           }
-
-          myOutposts.value[updatedOutpost.uuid] = updatedOutpost;
-          myOutposts.refresh();
         }
         _openOutpost(
           outpost: outpost,

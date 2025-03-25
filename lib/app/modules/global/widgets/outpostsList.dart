@@ -178,7 +178,7 @@ class _SingleOutpost extends StatelessWidget {
                   ),
                 ),
                 transitionDuration: const Duration(milliseconds: 200),
-                showAnimatedBorder: joiningOutpostId != outpost.uuid,
+                showAnimatedBorder: joiningOutpostId == outpost.uuid,
                 child: Container(
                   decoration: const BoxDecoration(
                       color: ColorName.cardBackground,

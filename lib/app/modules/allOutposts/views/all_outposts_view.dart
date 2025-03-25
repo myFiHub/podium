@@ -89,13 +89,14 @@ class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      bottom: 10,
-      left: MediaQuery.of(context).size.width / 2 - 100,
-      child: Obx(
-        () {
-          final showCreateButton = controller.showCreateButton.value;
-          return IgnorePointer(
+    return Obx(() {
+      final showCreateButton = controller.showCreateButton.value;
+      return AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          bottom: showCreateButton ? 10 : -10,
+          left: MediaQuery.of(context).size.width / 2 - 100,
+          child: IgnorePointer(
             ignoring: !showCreateButton,
             child: AnimatedOpacity(
               opacity: showCreateButton ? 1 : 0,
@@ -104,7 +105,6 @@ class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
                 duration: const Duration(milliseconds: 300),
                 height: 50,
                 width: 200,
-                margin: EdgeInsets.only(bottom: showCreateButton ? 0 : 20),
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
@@ -115,16 +115,12 @@ class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
                   child: Button(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add,
-                            color: showCreateButton
-                                ? Colors.white
-                                : Colors.transparent,
-                            size: 16),
-                        const SizedBox(width: 8),
-                        const Text(
+                        Icon(Icons.add, color: Colors.white, size: 16),
+                        SizedBox(width: 8),
+                        Text(
                           "Start new Outpost",
                           style: TextStyle(
                             fontSize: 16,
@@ -144,10 +140,8 @@ class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
                 ),
               ),
             ),
-          );
-        },
-      ),
-    );
+          ));
+    });
   }
 }
 

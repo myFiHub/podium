@@ -94,7 +94,8 @@ class ReferalSystem extends GetView<ReferalController> {
           // final usedReferrals = myProfileData?.referrals_count ?? 0;
           final remainingReferrals =
               myProfileData?.remaining_referrals_count ?? 0;
-
+          final totalReferrals =
+              (myProfileData?.referrals_count ?? 0) + remainingReferrals;
           return Button(
             onPressed: remainingReferrals == 0
                 ? null
@@ -130,7 +131,7 @@ class ReferalSystem extends GetView<ReferalController> {
                 if (remainingReferrals > 0)
                   WidgetSpan(
                       child: Text(
-                    '$remainingReferrals remaining',
+                    '$remainingReferrals/$totalReferrals remaining',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white,

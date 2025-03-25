@@ -230,7 +230,10 @@ class _SingleUserCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Actions(userId: id, isIntroUser: isIntroUser),
+                  Actions(
+                    userId: id,
+                    isIntroUser: isIntroUser,
+                  ),
                 ],
               ),
               Positioned(
@@ -692,19 +695,18 @@ class LikeDislike extends GetView<OngoingOutpostCallController> {
       child: Center(
         child: Obx(() {
           final timers = controller.timers.value;
-          final storageKey = generateKeyForStorageAndObserver(
+          final key = generateKeyForStorageAndObserver(
             userId: userId,
             groupId: controller.outpostCallController.outpost.value!.uuid,
             like: isLike,
           );
-          final finishAt = timers[storageKey];
+          final finishAt = timers[key];
           return WidgetWithTimer(
             finishAt: finishAt,
-            storageKey: storageKey,
             onComplete: () {
-              if (controller.timers.value[storageKey] == null) return;
+              if (controller.timers.value[key] == null) return;
               controller.timers.update((val) {
-                val!.remove(storageKey);
+                val!.remove(key);
                 return val;
               });
               // ignore: invalid_use_of_protected_member

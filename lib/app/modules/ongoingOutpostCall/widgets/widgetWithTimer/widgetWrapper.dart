@@ -9,7 +9,6 @@ class WidgetWithTimer extends StatelessWidget {
   final double size;
   final double? timerThickness;
   final double? fontSize;
-  final String storageKey;
   final int? finishAt;
   final Widget child;
   final void Function()? onComplete;
@@ -19,7 +18,6 @@ class WidgetWithTimer extends StatelessWidget {
     super.key,
     required this.child,
     this.size = 25,
-    required this.storageKey,
     this.finishAt,
     this.fontSize,
     this.onComplete,
@@ -38,17 +36,11 @@ class WidgetWithTimer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (finishAt != null && GetStorage().read(storageKey) == null) {
-      GetStorage().write(storageKey, finishAt);
-    }
-    if (finishAt == null && GetStorage().read(storageKey) == null) {
+    if (finishAt == null) {
       return child;
     }
-    int finishTime = GetStorage().read(storageKey) ??
-        finishAt ??
-        DateTime.now().millisecondsSinceEpoch + 10000;
+    int finishTime = finishAt ?? DateTime.now().millisecondsSinceEpoch + 10000;
     if (finishTime <= 0) {
-      GetStorage().remove(storageKey);
       return child;
     }
 
@@ -79,7 +71,6 @@ class WidgetWithTimer extends StatelessWidget {
       autoStart: true,
       onComplete: () {
         if (onComplete != null) {
-          GetStorage().remove(storageKey);
           onComplete!();
         }
       },

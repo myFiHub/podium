@@ -39,7 +39,7 @@ class OutpostCallController extends GetxController {
   final sortedMembers = Rx<List<LiveMember>>([]);
   final talkingUsers = Rx<List<LiveMember>>([]);
   final reactionsMap = Rx<Map<String, Map<OutgoingMessageTypeEnums, int>>>({
-    // "0xf8b769e62e1752a43f9fe343bb37fc3d8cb168e2": {
+    // "0x673f34ad366c81bc5cd0e6bc2a5a1afe932dbf35": {
     //   OutgoingMessageTypeEnums.cheer: 2,
     //   OutgoingMessageTypeEnums.boo: 1,
     //   OutgoingMessageTypeEnums.like: 1,

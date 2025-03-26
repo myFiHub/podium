@@ -1,0 +1,2 @@
+/Users/mohsen/Desktop/my_projects/podium/android/app/.cxx/RelWithDebInfo/4i759v6e/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/mohsen/Desktop/my_projects/podium/android/app/.cxx/RelWithDebInfo/4i759v6e/armeabi-v7a/CMakeFiles/rebuild_cache.dir

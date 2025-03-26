@@ -97,3 +97,10 @@
 
 # Rule to avoid build errors related to SVGs.
 -keep public class com.horcrux.svg.** {*;}
+
+# SLF4J
+-keep class org.slf4j.** { *; }
+-keep class org.slf4j.impl.** { *; }
+-keep class org.slf4j.helpers.** { *; }
+-keep class org.slf4j.spi.** { *; }
+-dontwarn org.slf4j.**

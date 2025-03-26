@@ -30,22 +30,28 @@ class PodiumApi {
   PodiumApi(this.dio);
 
   Future<PodiumAppMetadata> appMetadata() async {
-    return const PodiumAppMetadata(
-      force_update: true,
-      movement_aptos_metadata: Movement_Aptos_Metadata(
-        chain_id: "126",
-        cheer_boo_address:
-            "0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa",
-        name: "Movement Mainnet",
-        podium_protocol_address:
-            "0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa",
-        rpc_url: "https://mainnet.movementnetwork.xyz/v1",
-      ),
-      referrals_enabled: true,
-      va: "https://outposts.myfihub.com",
-      version: "1.1.7",
-      version_check: true,
-    );
+    try {
+      final config = await dio.get('$_baseUrl/configurations/app-settings',
+          options: Options(headers: _headers));
+      return PodiumAppMetadata.fromJson(config.data['data']);
+    } catch (e) {
+      return const PodiumAppMetadata(
+        force_update: true,
+        movement_aptos_metadata: Movement_Aptos_Metadata(
+          chain_id: "126",
+          cheer_boo_address:
+              "0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa",
+          name: "Movement Mainnet",
+          podium_protocol_address:
+              "0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa",
+          rpc_url: "https://mainnet.movementnetwork.xyz/v1",
+        ),
+        referrals_enabled: true,
+        va: "https://outposts.myfihub.com",
+        version: "1.1.7",
+        version_check: true,
+      );
+    }
   }
 
   Future<(UserModel?, String?)> login({

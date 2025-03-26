@@ -4,7 +4,6 @@ import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
 import "package:device_preview/device_preview.dart";
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -114,8 +113,9 @@ processLink(String? link) async {
 }
 
 void main() async {
-  await dotenv.load(
-      fileName: "env/${kReleaseMode ? PRODUCTION : DEVELOPMENT}.env");
+  // final environment = read from dart-define
+  final environment = Platform.environment['ENVIRONMENT'];
+  await dotenv.load(fileName: "env/$environment.env");
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,
     DeviceOrientation.portraitUp,

@@ -149,6 +149,7 @@ class OutpostDetailController extends GetxController {
         creator_joined: true,
         creator_user_uuid: myId,
       );
+      scheduleChecks();
     }
   }
 

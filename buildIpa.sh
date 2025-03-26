@@ -1,5 +1,6 @@
 #!/bin/bash
 
+ENVIRONMENT_PARAM=$1
 # Read version from pubspec.yaml
 VERSION=$(grep "version:" pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
 
@@ -9,8 +10,13 @@ if [ -z "$VERSION" ]; then
     exit 1
 fi
 
+if [ -z "$ENVIRONMENT_PARAM" ]; then
+    ENVIRONMENT_PARAM="development"
+fi
+
+echo "ENVIRONMENT_PARAM: $ENVIRONMENT_PARAM"
 # Path to production.env
-ENV_FILE="env/production.env"
+ENV_FILE="env/$ENVIRONMENT_PARAM.env"
 
 # Update development.env
 if [ -f "$ENV_FILE" ]; then
@@ -28,4 +34,4 @@ else
     exit 1
 fi
 
-flutter build ipa --release  
+flutter build ipa --release  --dart-define=ENVIRONMENT=$ENVIRONMENT_PARAM

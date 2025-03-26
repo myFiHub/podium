@@ -164,19 +164,6 @@ class LoginView extends GetView<LoginController> {
                               Button(
                                 onPressed: () {
                                   controller.socialLogin(
-                                    loginMethod: Provider.email_passwordless,
-                                  );
-                                },
-                                text: 'Login with Email',
-                                size: ButtonSize.LARGE,
-                                type: ButtonType.solid,
-                                color: ColorName.black,
-                                blockButton: true,
-                              ),
-                              space10,
-                              Button(
-                                onPressed: () {
-                                  controller.socialLogin(
                                       loginMethod: Provider.twitter);
                                 },
                                 text: 'Enter Podium with X',
@@ -207,18 +194,30 @@ class LoginView extends GetView<LoginController> {
                                 color: ColorName.black,
                                 blockButton: true,
                               ),
-                              const SizedBox(
-                                height: 10,
-                              ),
+                              space10,
                               Button(
                                 onPressed: () {
                                   controller.socialLogin(
-                                      loginMethod: Provider.google);
+                                    loginMethod: Provider.google,
+                                  );
                                 },
                                 text: 'Sign in with Google',
                                 icon: Assets.images.gIcon.image(
                                   width: 20,
                                 ),
+                                size: ButtonSize.LARGE,
+                                type: ButtonType.solid,
+                                color: ColorName.black,
+                                blockButton: true,
+                              ),
+                              space10,
+                              Button(
+                                onPressed: () {
+                                  controller.socialLogin(
+                                    loginMethod: Provider.email_passwordless,
+                                  );
+                                },
+                                text: 'Login with Email',
                                 size: ButtonSize.LARGE,
                                 type: ButtonType.solid,
                                 color: ColorName.black,

@@ -140,6 +140,18 @@ class PodiumApi {
     }
   }
 
+  Future<int> getNumberOfOnlineMembers(String outpostId) async {
+    try {
+      final response = await dio.get('$_baseUrl/outposts/online-members-count',
+          queryParameters: {'uuid': outpostId},
+          options: Options(headers: _headers));
+      return response.data['data']['count'];
+    } catch (e) {
+      l.e(e);
+      return 0;
+    }
+  }
+
   Future<bool> setCreatorJoinedToTrue(String outpostId) async {
     try {
       final response = await dio.post('$_baseUrl/outposts/creator-joined',

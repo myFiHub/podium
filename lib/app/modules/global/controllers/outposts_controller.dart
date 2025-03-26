@@ -27,6 +27,7 @@ import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 // detect presence time (groups that were active this milliseconds ago will be considered active)
@@ -76,7 +77,10 @@ sendOutpostEvent(
   }
 }
 
-const numberOfOutpostsPerPage = 10;
+const numberOfOutpostsPerPage = 15;
+
+final debounceForFetchingNumberOfOnlineMembers =
+    Debouncing(duration: const Duration(seconds: 2));
 
 class OutpostsController extends GetxController {
   final showCreateButton = true.obs;
@@ -107,6 +111,9 @@ class OutpostsController extends GetxController {
 
   final showArchivedOutposts = false.obs;
 
+  final mapOfOutpostsInView = Rx<Map<String, bool>>({});
+  final mapOfOnlineUsersInOutposts = Rx<Map<String, int>>({});
+
   @override
   void onInit() {
     super.onInit();
@@ -134,6 +141,36 @@ class OutpostsController extends GetxController {
     super.onClose();
     _showArchivedListener?.cancel();
     _loggedInListener?.cancel();
+  }
+
+  void addOutpostsInView(String outpostId) {
+    mapOfOutpostsInView.value[outpostId] = true;
+  }
+
+  void addOutpostToView(String outpostId) {
+    mapOfOutpostsInView.value[outpostId] = true;
+    final ids = mapOfOutpostsInView.value.keys
+        .where((e) => mapOfOutpostsInView.value[e] == true)
+        .toList();
+    debounceForFetchingNumberOfOnlineMembers.debounce(() async {
+      final calls = <String, Future<int>>{};
+      for (var id in ids) {
+        calls[id] = HttpApis.podium.getNumberOfOnlineMembers(id);
+      }
+      final results = await allSettled(calls);
+      final map = <String, int>{};
+      for (var id in ids) {
+        if (results[id]?['status'] == AllSettledStatus.fulfilled &&
+            results[id]?['value'] != 0) {
+          map[id] = results[id]!['value'];
+        }
+      }
+      mapOfOnlineUsersInOutposts.value = map;
+    });
+  }
+
+  void removeOutpostFromView(String outpostId) {
+    mapOfOutpostsInView.value[outpostId] = false;
   }
 
   fetchAllOutpostsPage(int pageKey) async {

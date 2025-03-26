@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/navigation/navigation.dart';
@@ -35,32 +36,46 @@ final _options = const LiveOptions(
 );
 
 class UserList extends StatelessWidget {
-  final List<UserModel> usersList;
+  final List<LiveMember>? liveUsersList;
+  final List<UserModel>? userModelsList;
   final Function(String userId)? onRequestUpdate;
   const UserList({
     super.key,
-    required this.usersList,
+    this.liveUsersList,
+    this.userModelsList,
     this.onRequestUpdate,
   });
 
   @override
   Widget build(BuildContext context) {
+    final usersList = liveUsersList ?? userModelsList ?? [];
+
     return Scrollbar(
         child: LiveList.options(
       options: _options,
       itemCount: usersList.length,
       itemBuilder: (context, index, animation) {
-        final user = usersList[index];
-        final name = user.name ?? '';
-        String avatar = user.image ?? '';
+        final name = liveUsersList != null
+            ? liveUsersList![index].name
+            : userModelsList![index].name;
+        final uuid = liveUsersList != null
+            ? liveUsersList![index].uuid
+            : userModelsList![index].uuid;
+        final followed_by_me = liveUsersList != null
+            ? liveUsersList![index].followed_by_me
+            : userModelsList![index].followed_by_me;
+        final image = liveUsersList != null
+            ? liveUsersList![index].image
+            : userModelsList![index].image;
+        String avatar = image ?? '';
         if (avatar.contains("https://ui-avatars.com/api/?name=Oo")) {
           avatar = '';
         }
         if (avatar.isEmpty) {
           avatar = avatarPlaceHolder(name);
         }
-        final userId = user.uuid;
-        final isItME = user.uuid == myUser.uuid;
+        final userId = uuid;
+        final isItME = uuid == myUser.uuid;
         return FadeTransition(
           opacity: Tween<double>(
             begin: 0,
@@ -76,9 +91,10 @@ class UserList extends StatelessWidget {
               child: _SingleUser(
                 key: Key(userId),
                 isItME: isItME,
-                user: user,
-                name: name,
+                uuid: uuid,
+                name: name ?? '',
                 avatar: avatar,
+                followed_by_me: followed_by_me ?? false,
                 onRequestUpdate: () {
                   onRequestUpdate?.call(userId);
                 },
@@ -91,16 +107,18 @@ class UserList extends StatelessWidget {
 
 class _SingleUser extends GetView<UsersController> {
   final bool isItME;
-  final UserModel user;
+  final String uuid;
   final String name;
   final String avatar;
+  final bool followed_by_me;
   final VoidCallback? onRequestUpdate;
 
   const _SingleUser({
     super.key,
     required this.isItME,
-    required this.user,
     required this.name,
+    required this.uuid,
+    required this.followed_by_me,
     required this.avatar,
     // ignore: unused_element
     this.onRequestUpdate,
@@ -118,7 +136,7 @@ class _SingleUser extends GetView<UsersController> {
           );
           return;
         }
-        usersController.openUserProfile(user.uuid);
+        usersController.openUserProfile(uuid);
       },
       child: Stack(
         children: [
@@ -143,7 +161,7 @@ class _SingleUser extends GetView<UsersController> {
                 ),
               ),
               transitionDuration: const Duration(milliseconds: 200),
-              showAnimatedBorder: gettingUserInfo_uuid == user.uuid,
+              showAnimatedBorder: gettingUserInfo_uuid == uuid,
               child: Container(
                 decoration: const BoxDecoration(
                   color: ColorName.cardBackground,
@@ -151,7 +169,7 @@ class _SingleUser extends GetView<UsersController> {
                 ),
                 // margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
                 padding: const EdgeInsets.all(10),
-                key: Key(user.uuid),
+                key: Key(uuid),
                 child: Stack(
                   children: [
                     Row(
@@ -188,7 +206,7 @@ class _SingleUser extends GetView<UsersController> {
                                       ),
                                     ),
                                     Text(
-                                      truncate(user.uuid, length: 10),
+                                      truncate(uuid, length: 10),
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
@@ -208,10 +226,11 @@ class _SingleUser extends GetView<UsersController> {
                           )
                         else
                           FollowButton(
-                            user: user,
+                            uuid: uuid,
+                            followed_by_me: followed_by_me ?? false,
                             fullWidth: false,
                             small: true,
-                            key: Key(user.uuid),
+                            key: Key(uuid),
                             onFollowStatusChanged: onRequestUpdate,
                           ),
                       ],
@@ -228,14 +247,16 @@ class _SingleUser extends GetView<UsersController> {
 }
 
 class FollowButton extends GetView<UsersController> {
-  final UserModel user;
+  final String uuid;
+  final bool followed_by_me;
   final bool fullWidth;
   final bool small;
   final VoidCallback? onFollowStatusChanged;
 
   const FollowButton({
     super.key,
-    required this.user,
+    required this.uuid,
+    required this.followed_by_me,
     this.fullWidth = false,
     this.small = false,
     this.onFollowStatusChanged,
@@ -245,13 +266,13 @@ class FollowButton extends GetView<UsersController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
-      final isLoading = loadingIds[user.uuid] != null;
-      final isFollowing = user.followed_by_me ?? false;
+      final isLoading = loadingIds[uuid] != null;
+      final isFollowing = followed_by_me ?? false;
       return Button(
           size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
           onPressed: () async {
-            final isFollowing = user.followed_by_me ?? false;
-            await controller.followUnfollow(user.uuid, !isFollowing);
+            final isFollowing = followed_by_me ?? false;
+            await controller.followUnfollow(uuid, !isFollowing);
             onFollowStatusChanged?.call();
           },
           type: isFollowing ? ButtonType.outline : ButtonType.solid,

@@ -45,7 +45,7 @@ class UsersInOutpostList extends StatelessWidget {
             itemBuilder: (context, index) {
               final user = usersList[index];
               final name = user.name;
-              String avatar = user.image;
+              String avatar = user.image ?? '';
               if (avatar.isEmpty || avatar == defaultAvatar) {
                 avatar = avatarPlaceHolder(name);
               }

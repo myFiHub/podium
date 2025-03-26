@@ -114,7 +114,11 @@ processLink(String? link) async {
 
 void main() async {
   // final environment = read from dart-define
-  final environment = Platform.environment['ENVIRONMENT'];
+  final environment = const String.fromEnvironment(
+    'ENVIRONMENT',
+    defaultValue: 'development',
+  );
+  print("ENVIRONMENT: $environment");
   await dotenv.load(fileName: "env/$environment.env");
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,

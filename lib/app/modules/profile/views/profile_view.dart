@@ -27,7 +27,9 @@ class ProfileView extends GetView<ProfileController> {
             children: <Widget>[
               const UserInfo(),
               FollowButton(
-                user: controller.userInfo.value!,
+                uuid: controller.userInfo.value!.uuid,
+                followed_by_me:
+                    controller.userInfo.value!.followed_by_me ?? false,
                 onFollowStatusChanged: () {
                   controller.getUserInfo();
                 },

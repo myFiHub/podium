@@ -33,6 +33,7 @@
 
  */
 
+import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'liveData.g.dart';
@@ -49,6 +50,7 @@ class OutpostLiveData {
 }
 
 @JsonSerializable()
+@CopyWith()
 class LiveMember {
   final String address;
   final bool can_speak;
@@ -63,21 +65,23 @@ class LiveMember {
   final String aptos_address;
   final String? external_wallet_address;
   final String uuid;
+  final bool? followed_by_me;
 
   LiveMember({
     required this.address,
     required this.can_speak,
-    required this.feedbacks,
+    this.feedbacks = const [],
     required this.image,
-    required this.is_present,
-    required this.is_speaking,
+    this.is_present = false,
+    this.is_speaking = false,
     required this.name,
-    required this.reactions,
-    required this.remaining_time,
+    this.reactions = const [],
+    this.remaining_time = 0,
     required this.uuid,
     this.last_speaked_at_timestamp,
     required this.aptos_address,
     this.external_wallet_address,
+    this.followed_by_me,
   });
 
   factory LiveMember.fromJson(Map<String, dynamic> json) =>

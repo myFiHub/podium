@@ -35,7 +35,7 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel last_active_at(int last_active_at);
 
-  OutpostModel members(List<OutpostMember>? members);
+  OutpostModel members(List<LiveMember>? members);
 
   OutpostModel members_count(int? members_count);
 
@@ -80,7 +80,7 @@ abstract class _$OutpostModelCWProxy {
     bool is_archived,
     bool is_recordable,
     int last_active_at,
-    List<OutpostMember>? members,
+    List<LiveMember>? members,
     int? members_count,
     String name,
     int scheduled_for,
@@ -151,7 +151,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       this(last_active_at: last_active_at);
 
   @override
-  OutpostModel members(List<OutpostMember>? members) => this(members: members);
+  OutpostModel members(List<LiveMember>? members) => this(members: members);
 
   @override
   OutpostModel members_count(int? members_count) =>
@@ -288,7 +288,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       members: members == const $CopyWithPlaceholder()
           ? _value.members
           // ignore: cast_nullable_to_non_nullable
-          : members as List<OutpostMember>?,
+          : members as List<LiveMember>?,
       members_count: members_count == const $CopyWithPlaceholder()
           ? _value.members_count
           // ignore: cast_nullable_to_non_nullable
@@ -365,7 +365,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       is_recordable: json['is_recordable'] as bool,
       last_active_at: (json['last_active_at'] as num).toInt(),
       members: (json['members'] as List<dynamic>?)
-          ?.map((e) => OutpostMember.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => LiveMember.fromJson(e as Map<String, dynamic>))
           .toList(),
       members_count: (json['members_count'] as num?)?.toInt(),
       name: json['name'] as String,
@@ -412,24 +412,6 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'tickets_to_speak': instance.tickets_to_speak,
       'online_users_count': instance.online_users_count,
       'i_am_member': instance.i_am_member,
-    };
-
-OutpostMember _$OutpostMemberFromJson(Map<String, dynamic> json) =>
-    OutpostMember(
-      address: json['address'] as String,
-      can_speak: json['can_speak'] as bool,
-      uuid: json['uuid'] as String,
-      aptos_address: json['aptos_address'] as String,
-      external_wallet_address: json['external_wallet_address'] as String?,
-    );
-
-Map<String, dynamic> _$OutpostMemberToJson(OutpostMember instance) =>
-    <String, dynamic>{
-      'address': instance.address,
-      'can_speak': instance.can_speak,
-      'uuid': instance.uuid,
-      'aptos_address': instance.aptos_address,
-      'external_wallet_address': instance.external_wallet_address,
     };
 
 _TicketToEnterModel _$TicketToEnterModelFromJson(Map<String, dynamic> json) =>

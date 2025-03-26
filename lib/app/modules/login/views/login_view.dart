@@ -190,6 +190,23 @@ class LoginView extends GetView<LoginController> {
                                 color: ColorName.black,
                                 blockButton: true,
                               ),
+                              space10,
+                              Button(
+                                onPressed: () {
+                                  controller.socialLogin(
+                                      loginMethod: Provider.apple);
+                                },
+                                text: 'Apple Login',
+                                icon: Assets.images.apple.image(
+                                  width: 20,
+                                  height: 20,
+                                  color: ColorName.white,
+                                ),
+                                size: ButtonSize.LARGE,
+                                type: ButtonType.solid,
+                                color: ColorName.black,
+                                blockButton: true,
+                              ),
                               const SizedBox(
                                 height: 10,
                               ),
@@ -238,24 +255,6 @@ class LoginView extends GetView<LoginController> {
                                           color: ColorName.white,
                                           height: 25,
                                         )),
-                                  ),
-                                  Container(
-                                    width: 80,
-                                    height: 52,
-                                    decoration: BoxDecoration(
-                                      color: ColorName.black,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: IconButton(
-                                      onPressed: () {
-                                        controller.socialLogin(
-                                            loginMethod: Provider.apple);
-                                      },
-                                      icon: Assets.images.apple.image(
-                                        color: ColorName.white,
-                                        height: 25,
-                                      ),
-                                    ),
                                   ),
                                   Container(
                                     width: 80,

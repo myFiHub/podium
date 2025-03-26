@@ -1,5 +1,7 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
+
 part 'outpost.g.dart';
 
 @JsonSerializable()
@@ -20,7 +22,7 @@ class OutpostModel {
   final bool is_archived;
   final bool is_recordable;
   final int last_active_at;
-  final List<OutpostMember>? members;
+  final List<LiveMember>? members;
   final int? members_count;
   final String name;
   final int scheduled_for;
@@ -64,26 +66,6 @@ class OutpostModel {
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>
       _$OutpostModelFromJson(json);
   Map<String, dynamic> toJson() => _$OutpostModelToJson(this);
-}
-
-@JsonSerializable()
-class OutpostMember {
-  final String address;
-  final bool can_speak;
-  final String uuid;
-  final String aptos_address;
-  final String? external_wallet_address;
-  OutpostMember({
-    required this.address,
-    required this.can_speak,
-    required this.uuid,
-    required this.aptos_address,
-    this.external_wallet_address,
-  });
-
-  factory OutpostMember.fromJson(Map<String, dynamic> json) =>
-      _$OutpostMemberFromJson(json);
-  Map<String, dynamic> toJson() => _$OutpostMemberToJson(this);
 }
 
 @JsonSerializable()

@@ -17,6 +17,7 @@ import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -48,12 +49,12 @@ class OutpostDetailController extends GetxController {
   final forceUpdateIndicator = false.obs;
   final outpost = Rxn<OutpostModel>();
   final outpostAccesses = Rxn<GroupAccesses>();
-  final membersList = Rx<List<UserModel>>([]);
+  final membersList = Rx<List<LiveMember>>([]);
   final reminderTime = Rx<DateTime?>(null);
   final isGettingGroupInfo = false.obs;
   final jointButtonContentProps =
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
-  bool gotGroupInfo = false;
+  bool gotOutpostInfo = false;
 
   final listOfSearchedUsersToInvite = Rx<List<UserModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InviteModel>>({});
@@ -96,15 +97,14 @@ class OutpostDetailController extends GetxController {
         'true';
 
     final outpostInfo = OutpostModel.fromJson(jsonDecode(stringedOutpostInfo));
-
+    membersList.value = outpostInfo.members ?? [];
     outpostAccesses.value = GroupAccesses(
       canEnter: enterAccess == 'true',
       canSpeak: speakAccess == 'true',
     );
     // final remoteGroup = await getGroupInfoById(groupId);
     outpost.value = outpostInfo;
-    gotGroupInfo = true;
-    getMembersData(outpostInfo);
+    gotOutpostInfo = true;
     fetchInvitedMembers();
     scheduleChecks();
     _getLumaData();
@@ -153,23 +153,28 @@ class OutpostDetailController extends GetxController {
     }
   }
 
+  updatedFollowDataForMember(String uuid) async {
+    final userData = await HttpApis.podium.getUserData(uuid);
+    if (userData == null) return;
+    final outpostData = outpost.value;
+    if (outpostData == null) return;
+    final followed_by_me = userData.followed_by_me;
+    final userIndex =
+        membersList.value.indexWhere((element) => element.uuid == uuid);
+    if (userIndex != -1) {
+      membersList.value[userIndex] =
+          membersList.value[userIndex].copyWith(followed_by_me: followed_by_me);
+      outpost.value = outpost.value?.copyWith(members: membersList.value);
+      membersList.refresh();
+      outpost.refresh();
+    }
+  }
+
   onMembersUpdated(IncomingMessage incomingMessage) {
     final outpostData = outpost.value;
     if (incomingMessage.data.outpost_uuid != null &&
         incomingMessage.data.outpost_uuid == outpostData?.uuid) {
       refetchMembers();
-    }
-  }
-
-  updateSingleUser(String userId) async {
-    final userInfo = await HttpApis.podium.getUserData(userId);
-    if (userInfo != null) {
-      final index =
-          membersList.value.indexWhere((element) => element.uuid == userId);
-      if (index != -1) {
-        membersList.value[index] = userInfo;
-        membersList.refresh();
-      }
     }
   }
 
@@ -305,24 +310,7 @@ class OutpostDetailController extends GetxController {
     if (data == null) return;
     final outpostData = await HttpApis.podium.getOutpost(data.uuid);
     if (outpostData == null) return;
-    getMembersData(outpostData);
-  }
-
-  getMembersData(OutpostModel outpost) async {
-    try {
-      final memberIds = outpost.members?.map((e) => e.uuid).toList() ?? [];
-      isGettingMembers.value = true;
-      final list = await HttpApis.podium.getUsersByIds(memberIds);
-      final myUserIndex = list.indexWhere((m) => m.uuid == myId);
-      if (myUserIndex == -1) {
-        list.insert(0, myUser);
-      }
-      membersList.value = list;
-    } catch (e) {
-      l.e(e);
-    } finally {
-      isGettingMembers.value = false;
-    }
+    membersList.value = outpostData.members ?? [];
   }
 
   startTheCall({required GroupAccesses accesses}) {

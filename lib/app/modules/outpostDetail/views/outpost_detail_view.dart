@@ -184,9 +184,9 @@ class MembersList extends GetView<OutpostDetailController> {
 
       return Expanded(
         child: UserList(
-          usersList: members,
+          liveUsersList: members,
           onRequestUpdate: (userId) {
-            controller.updateSingleUser(userId);
+            controller.updatedFollowDataForMember(userId);
           },
         ),
       );

@@ -146,7 +146,7 @@ class OutpostCallController extends GetxController {
     };
 
     for (final user in listOfUsers) {
-      for (final feedback in user.feedbacks) {
+      for (final feedback in user.feedbacks ?? []) {
         final reactionType = feedbackTypes[feedback.feedback_type];
         if (reactionType != null) {
           _updateReactionCount(tmp, feedback.user_address, reactionType);
@@ -154,7 +154,7 @@ class OutpostCallController extends GetxController {
       }
 
       // Process reactions (cheers and boos)
-      for (final reaction in user.reactions) {
+      for (final reaction in user.reactions ?? []) {
         final reactionType = reactionTypes[reaction.reaction_type];
         if (reactionType != null) {
           _updateReactionCount(tmp, reaction.user_address, reactionType);

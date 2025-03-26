@@ -35,7 +35,6 @@ class OutpostsList extends GetView<OutpostsController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final showArchivedOutposts = controller.showArchivedOutposts.value;
       final allOutposts = controller.outposts.value;
       final myOutposts = controller.myOutposts.value;
       final lastPageReachedForAllOutposts =

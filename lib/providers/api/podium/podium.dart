@@ -315,6 +315,7 @@ class PodiumApi {
   }
 
   Future<List<OutpostModel>> getMyOutposts({
+    bool include_archived = true,
     int? page,
     int? page_size,
   }) async {
@@ -323,6 +324,7 @@ class PodiumApi {
           queryParameters: {
             if (page != null) 'page': page,
             if (page_size != null) 'page_size': page_size,
+            'include_archived': include_archived,
           },
           options: Options(headers: _headers));
       return (response.data['data'] as List)

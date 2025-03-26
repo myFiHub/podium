@@ -79,15 +79,6 @@ sendOutpostEvent(
 const numberOfOutpostsPerPage = 10;
 
 class OutpostsController extends GetxController {
-  // final _presentUsersRefreshThrottle =
-  //     Throttling(duration: const Duration(seconds: 2));
-  // final _takingUsersRefreshThrottle =
-  //     Throttling(duration: const Duration(seconds: 2));
-  bool _shouldUpdatePresentUsers = false; // This is the flag you'll be checking
-  late Timer _timerForPresentUsers;
-  late Timer _timerForTakingUsers;
-  bool _shouldUpdateTakingUsers = false;
-
   final showCreateButton = true.obs;
 
   final globalController = Get.find<GlobalController>();
@@ -123,6 +114,7 @@ class OutpostsController extends GetxController {
     _showArchivedListener =
         globalController.showArchivedOutposts.listen((show) {
       showArchivedOutposts.value = show;
+      fetchMyOutpostsPage(0);
     });
     _loggedInListener = globalController.loggedIn.listen((loggedIn) {
       if (loggedIn) {
@@ -176,7 +168,9 @@ class OutpostsController extends GetxController {
         lastPageReachedForMyOutposts.value = false;
         isGettingMyOutposts.value = true;
       }
+      final showArchived = showArchivedOutposts.value;
       final newItems = await HttpApis.podium.getMyOutposts(
+        include_archived: showArchived,
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
       );
@@ -298,15 +292,6 @@ class OutpostsController extends GetxController {
         gettingAllOutposts.value = false;
       }
     });
-  }
-
-  getMyOutposts() async {
-    final outposts = await HttpApis.podium.getMyOutposts();
-    final Map<String, OutpostModel> map = {};
-    for (var outpost in outposts) {
-      map[outpost.uuid] = outpost;
-    }
-    myOutposts.value = map;
   }
 
   _parseAndSetGroups(Map<String, OutpostModel> data) async {

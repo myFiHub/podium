@@ -72,6 +72,16 @@ class SearchPageController extends GetxController {
     super.onClose();
   }
 
+  updateUserFollow(String id) async {
+    final foundUser = await HttpApis.podium.getUserData(id);
+    final user = searchedUsers.value[id];
+    if (user != null && foundUser != null) {
+      searchedUsers.value[id] = searchedUsers.value[id]!.copyWith
+          .followed_by_me(foundUser.followed_by_me);
+      searchedUsers.refresh();
+    }
+  }
+
   Future<Map<String, OutpostModel>> filterOutpostName(String name) async {
     final allOutposts = groupsController.outposts.value;
     final filteredOutposts = allOutposts.entries

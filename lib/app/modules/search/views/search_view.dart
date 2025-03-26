@@ -173,7 +173,12 @@ class SearchView extends GetView<SearchPageController> {
                       }
                       return Container(
                         padding: const EdgeInsets.only(top: 16),
-                        child: UserList(userModelsList: usersList),
+                        child: UserList(
+                          userModelsList: usersList,
+                          onRequestUpdate: (user) {
+                            controller.updateUserFollow(user);
+                          },
+                        ),
                       );
                     }),
                     Obx(() {

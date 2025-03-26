@@ -1,15 +1,17 @@
+import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user.g.dart';
 
 @JsonSerializable()
+@CopyWith()
 class UserModel {
   final String address;
   final String uuid;
   final String? aptos_address;
   final String? email;
   String? external_wallet_address;
-  final bool? followed_by_me;
+  bool? followed_by_me;
   final int? followers_count;
   final int? followings_count;
   final String? image;

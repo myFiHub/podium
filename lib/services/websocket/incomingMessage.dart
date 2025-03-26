@@ -27,6 +27,10 @@ enum IncomingMessageType {
   follow,
   @JsonValue("user.invited")
   invite,
+  @JsonValue("waitlist.updated")
+  waitlistUpdated,
+  @JsonValue("creator.joined")
+  creatorJoined,
 }
 
 @JsonSerializable()
@@ -49,6 +53,7 @@ class IncomingMessageData {
   final String? name;
   final String? image;
   final String? react_to_user_address;
+  final String? outpost_uuid;
   final int? amount;
   final int? remaining_time;
 
@@ -60,6 +65,7 @@ class IncomingMessageData {
     this.react_to_user_address,
     this.amount,
     this.remaining_time,
+    this.outpost_uuid,
   });
 
   factory IncomingMessageData.fromJson(Map<String, dynamic> json) =>

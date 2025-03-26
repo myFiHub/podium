@@ -31,6 +31,8 @@ const _$IncomingMessageTypeEnumMap = {
   IncomingMessageType.timeIsUp: 'user.time_is_up',
   IncomingMessageType.follow: 'user.followed',
   IncomingMessageType.invite: 'user.invited',
+  IncomingMessageType.waitlistUpdated: 'waitlist.updated',
+  IncomingMessageType.creatorJoined: 'creator.joined',
 };
 
 IncomingMessageData _$IncomingMessageDataFromJson(Map<String, dynamic> json) =>
@@ -42,6 +44,7 @@ IncomingMessageData _$IncomingMessageDataFromJson(Map<String, dynamic> json) =>
       react_to_user_address: json['react_to_user_address'] as String?,
       amount: (json['amount'] as num?)?.toInt(),
       remaining_time: (json['remaining_time'] as num?)?.toInt(),
+      outpost_uuid: json['outpost_uuid'] as String?,
     );
 
 Map<String, dynamic> _$IncomingMessageDataToJson(
@@ -52,6 +55,7 @@ Map<String, dynamic> _$IncomingMessageDataToJson(
       'name': instance.name,
       'image': instance.image,
       'react_to_user_address': instance.react_to_user_address,
+      'outpost_uuid': instance.outpost_uuid,
       'amount': instance.amount,
       'remaining_time': instance.remaining_time,
     };

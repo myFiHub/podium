@@ -549,7 +549,7 @@ class _ScheduledBanner extends StatelessWidget {
               : remaining;
           return Positioned(
             right: 1,
-            top: 0,
+            top: 2,
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(

@@ -11,6 +11,7 @@ enum OutgoingMessageTypeEnums {
   dislike,
   start_speaking,
   stop_speaking,
+  wait_for_creator
 }
 
 @JsonSerializable()

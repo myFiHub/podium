@@ -20,7 +20,9 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       login_type_identifier: json['login_type_identifier'] as String?,
       name: json['name'] as String?,
       is_over_18: json['is_over_18'] as bool?,
-      referrals_count: (json['referrals_count'] as num?)?.toInt(),
+      referrals_count: (json['referrals_count'] as num?)?.toInt() ?? 0,
+      remaining_referrals_count:
+          (json['remaining_referrals_count'] as num?)?.toInt() ?? 0,
       incomes: (json['incomes'] as Map<String, dynamic>?)?.map(
         (k, e) => MapEntry(k, (e as num).toDouble()),
       ),
@@ -32,8 +34,6 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       received_cheer_count:
           (json['received_cheer_count'] as num?)?.toInt() ?? 0,
       referrer_user_uuid: json['referrer_user_uuid'] as String?,
-      remaining_referrals_count:
-          (json['remaining_referrals_count'] as num?)?.toInt() ?? 0,
       sent_boo_amount: (json['sent_boo_amount'] as num?)?.toDouble() ?? 0.0,
       sent_boo_count: (json['sent_boo_count'] as num?)?.toInt() ?? 0,
       sent_cheer_amount: (json['sent_cheer_amount'] as num?)?.toDouble() ?? 0.0,

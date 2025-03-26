@@ -20,6 +20,8 @@ import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.d
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/services/websocket/incomingMessage.dart';
+import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
@@ -102,7 +104,7 @@ class OutpostDetailController extends GetxController {
     // final remoteGroup = await getGroupInfoById(groupId);
     outpost.value = outpostInfo;
     gotGroupInfo = true;
-    getMembers(outpostInfo);
+    getMembersData(outpostInfo);
     fetchInvitedMembers();
     scheduleChecks();
     _getLumaData();
@@ -121,6 +123,15 @@ class OutpostDetailController extends GetxController {
 
   @override
   void onReady() {
+    final outpostData = outpost.value;
+    if (outpostData != null) {
+      wsClient.send(
+        WsOutgoingMessage(
+          message_type: OutgoingMessageTypeEnums.wait_for_creator,
+          outpost_uuid: outpostData.uuid,
+        ),
+      );
+    }
     super.onReady();
   }
 
@@ -128,6 +139,25 @@ class OutpostDetailController extends GetxController {
   void onClose() {
     tickerListener?.cancel();
     super.onClose();
+  }
+
+  onCreatorJoined(IncomingMessage incomingMessage) {
+    final outpostData = outpost.value;
+    if (incomingMessage.data.outpost_uuid != null &&
+        incomingMessage.data.outpost_uuid == outpostData?.uuid) {
+      outpost.value = outpostData?.copyWith(
+        creator_joined: true,
+        creator_user_uuid: myId,
+      );
+    }
+  }
+
+  onMembersUpdated(IncomingMessage incomingMessage) {
+    final outpostData = outpost.value;
+    if (incomingMessage.data.outpost_uuid != null &&
+        incomingMessage.data.outpost_uuid == outpostData?.uuid) {
+      refetchMembers();
+    }
   }
 
   updateSingleUser(String userId) async {
@@ -269,7 +299,15 @@ class OutpostDetailController extends GetxController {
     isGettingGroupInfo.value = false;
   }
 
-  getMembers(OutpostModel outpost) async {
+  refetchMembers() async {
+    final data = outpost.value;
+    if (data == null) return;
+    final outpostData = await HttpApis.podium.getOutpost(data.uuid);
+    if (outpostData == null) return;
+    getMembersData(outpostData);
+  }
+
+  getMembersData(OutpostModel outpost) async {
     try {
       final memberIds = outpost.members?.map((e) => e.uuid).toList() ?? [];
       isGettingMembers.value = true;

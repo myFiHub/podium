@@ -377,7 +377,7 @@ class LoginController extends GetxController {
       }
       if (errorMessage?.toLowerCase().contains('deactivated') ?? false) {
         Toast.error(
-          message: 'Account has been deactivated',
+          message: 'Account has been deleted',
         );
         return;
       }

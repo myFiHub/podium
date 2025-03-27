@@ -375,6 +375,12 @@ class LoginController extends GetxController {
           message: errorMessage,
         );
       }
+      if (errorMessage == 'account has been deactivated') {
+        Toast.error(
+          message: errorMessage,
+        );
+        return;
+      }
       _redirectToBuyTicketPage();
       return;
     }

@@ -492,40 +492,40 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    final numberOfActiveUsers = outpost.online_users_count ?? 0;
-
-    return numberOfActiveUsers == 0
-        ? const SizedBox()
-        : Container(
-            width: 40,
-            height: 40,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Pulsator(
-                  style: const PulseStyle(color: Colors.red),
-                  duration: const Duration(seconds: 2),
-                  count: 5,
-                  repeat: 0,
-                  startFromScratch: false,
-                  autoStart: true,
-                  fit: PulseFit.contain,
-                  child: Obx(() {
-                    final numberOfActiveUsers = controller
-                        .mapOfOnlineUsersInOutposts.value[outpost.uuid];
-                    return Text(
-                      "${numberOfActiveUsers ?? 0}",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    );
-                  }),
+    return Obx(
+      () {
+        final numberOfActiveUsers = outpost.online_users_count ?? 0;
+        final liveNumberOfActiveUsers =
+            controller.mapOfOnlineUsersInOutposts.value[outpost.uuid];
+        return (liveNumberOfActiveUsers ?? 0) == 0 && numberOfActiveUsers == 0
+            ? const SizedBox()
+            : Container(
+                width: 40,
+                height: 40,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Pulsator(
+                        style: const PulseStyle(color: Colors.red),
+                        duration: const Duration(seconds: 2),
+                        count: 5,
+                        repeat: 0,
+                        startFromScratch: false,
+                        autoStart: true,
+                        fit: PulseFit.contain,
+                        child: Text(
+                          "${liveNumberOfActiveUsers ?? numberOfActiveUsers}",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        )),
+                  ],
                 ),
-              ],
-            ),
-          );
+              );
+      },
+    );
   }
 }
 

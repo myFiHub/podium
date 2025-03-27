@@ -28,7 +28,14 @@ if [ -f "$ENV_FILE" ]; then
         # Add VERSION line if it doesn't exist
         echo "VERSION=$VERSION" >> "$ENV_FILE"
     fi
-    echo "Successfully updated VERSION to $VERSION in $ENV_FILE"
+
+    echo -e "\033[32mSuccessfully updated VERSION to $VERSION in $ENV_FILE\033[0m"
+    # make the color red if the environment is production
+    if [ "$ENVIRONMENT_PARAM" = "production" ]; then
+        echo -e "\033[31mBuilding apk for $ENVIRONMENT_PARAM\033[0m"
+    else
+        echo -e "\033[32mBuilding apk for $ENVIRONMENT_PARAM\033[0m"
+    fi
 else
     echo "Error: $ENV_FILE file not found"
     exit 1

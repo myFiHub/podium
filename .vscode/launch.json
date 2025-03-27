@@ -13,6 +13,12 @@
       "args": ["--dart-define=ENVIRONMENT=development"]
     },
     {
+      "name": "DEV-PROD",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--dart-define=ENVIRONMENT=production"]
+    },
+    {
       "name": "DEV-VERBOSE",
       "request": "launch",
       "type": "dart",

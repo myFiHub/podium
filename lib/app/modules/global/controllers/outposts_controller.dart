@@ -143,10 +143,6 @@ class OutpostsController extends GetxController {
     _loggedInListener?.cancel();
   }
 
-  void addOutpostsInView(String outpostId) {
-    mapOfOutpostsInView.value[outpostId] = true;
-  }
-
   void addOutpostToView(String outpostId) {
     mapOfOutpostsInView.value[outpostId] = true;
     final List<String> ids = mapOfOutpostsInView.value.keys

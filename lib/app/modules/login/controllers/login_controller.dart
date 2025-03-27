@@ -372,12 +372,12 @@ class LoginController extends GetxController {
     if (userLoginResponse == null) {
       if (errorMessage == 'referrer has reached its limit') {
         Toast.error(
-          message: errorMessage,
+          message: 'All the referral codes of the referrer have been used',
         );
       }
-      if (errorMessage == 'account has been deactivated') {
+      if (errorMessage?.toLowerCase().contains('deactivated') ?? false) {
         Toast.error(
-          message: errorMessage,
+          message: 'Account has been deactivated',
         );
         return;
       }

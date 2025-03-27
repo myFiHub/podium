@@ -483,22 +483,22 @@ class MyProfileController extends GetxController {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: const DeactivationForm(),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: DeactivationForm(),
         ),
       ),
     );
   }
 }
 
-final TextEditingController _deactivationController = TextEditingController();
-final _formKey = GlobalKey<FormState>();
-
 class DeactivationForm extends GetView<MyProfileController> {
-  const DeactivationForm({super.key});
+  DeactivationForm({super.key});
   @override
   Widget build(BuildContext context) {
+    final TextEditingController _deactivationController =
+        TextEditingController();
+    final _formKey = GlobalKey<FormState>();
     return Form(
       key: _formKey,
       child: Column(
@@ -512,7 +512,7 @@ class DeactivationForm extends GetView<MyProfileController> {
                 color: ColorName.white,
               ),
               children: [
-                TextSpan(text: 'Deactivate Account'),
+                TextSpan(text: 'Delete Account'),
               ],
             ),
           ),
@@ -527,10 +527,10 @@ class DeactivationForm extends GetView<MyProfileController> {
               children: [
                 TextSpan(
                   text:
-                      'Are you sure you want to deactivate your account? This action cannot be undone. \n',
+                      'You are about to delete your account.\nYour account will be deactivated and \nyou will not be able to use it anymore. \nAre you sure you want to delete your account? This action cannot be undone. \n',
                 ),
                 TextSpan(
-                  text: 'Type "deactivate" to confirm.',
+                  text: 'Type "delete" to confirm.',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.red,
@@ -543,15 +543,15 @@ class DeactivationForm extends GetView<MyProfileController> {
           TextFormField(
             controller: _deactivationController,
             decoration: const InputDecoration(
-              hintText: 'Type "deactivate" to confirm',
+              hintText: 'Type "delete" to confirm',
               border: OutlineInputBorder(),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter "deactivate" to confirm';
+                return 'Please enter "delete" to confirm';
               }
-              if (value.toLowerCase() != 'deactivate') {
-                return 'Please enter exactly "deactivate"';
+              if (value.toLowerCase() != 'delete') {
+                return 'Please enter exactly "delete"';
               }
               return null;
             },
@@ -588,7 +588,7 @@ class DeactivationForm extends GetView<MyProfileController> {
                           height: 20,
                           child: CircularProgressIndicator(),
                         )
-                      : const Text('Deactivate Account'),
+                      : const Text('Delete Account'),
                 ));
               }),
             ],

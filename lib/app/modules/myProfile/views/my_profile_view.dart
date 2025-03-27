@@ -63,7 +63,7 @@ class MyProfileView extends GetView<MyProfileController> {
               space10,
               const LogoutButton(),
               space10,
-              const DeactivationButton(),
+              const DeleteAccountButton(),
             ],
           ),
         ),
@@ -72,8 +72,8 @@ class MyProfileView extends GetView<MyProfileController> {
   }
 }
 
-class DeactivationButton extends GetView<MyProfileController> {
-  const DeactivationButton({super.key});
+class DeleteAccountButton extends GetView<MyProfileController> {
+  const DeleteAccountButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +89,7 @@ class DeactivationButton extends GetView<MyProfileController> {
         onPressed: () {
           controller.showDeactivationDialog();
         },
-        text: 'Deactivate Account',
+        text: 'Delete Account',
       );
     });
   }

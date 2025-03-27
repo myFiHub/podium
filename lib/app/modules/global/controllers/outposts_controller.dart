@@ -149,22 +149,24 @@ class OutpostsController extends GetxController {
 
   void addOutpostToView(String outpostId) {
     mapOfOutpostsInView.value[outpostId] = true;
-    final ids = mapOfOutpostsInView.value.keys
-        .where((e) => mapOfOutpostsInView.value[e] == true)
+    final List<String> ids = mapOfOutpostsInView.value.keys
+        .where((String e) => mapOfOutpostsInView.value[e] == true)
         .toList();
     debounceForFetchingNumberOfOnlineMembers.debounce(() async {
-      final calls = <String, Future<int>>{};
-      for (var id in ids) {
+      final Map<String, Future<int>> calls = <String, Future<int>>{};
+      for (String id in ids) {
         calls[id] = HttpApis.podium.getNumberOfOnlineMembers(id);
       }
-      final results = await allSettled(calls);
-      final map = <String, int>{};
-      for (var id in ids) {
+      final Map<String, dynamic> results = await allSettled(calls);
+      final Map<String, int> map = <String, int>{};
+      for (String id in ids) {
         if (results[id]?['status'] == AllSettledStatus.fulfilled &&
             results[id]?['value'] != 0) {
           map[id] = results[id]!['value'];
         }
       }
+
+      mapOfOutpostsInView.value = <String, bool>{};
       mapOfOnlineUsersInOutposts.value = map;
     });
   }

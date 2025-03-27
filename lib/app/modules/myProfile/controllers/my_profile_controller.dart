@@ -13,6 +13,7 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -68,6 +69,7 @@ class MyProfileController extends GetxController {
   final loadingExternalWalletActivation = false.obs;
   final isGettingPayments = false.obs;
   final isGettingBalances = false.obs;
+  final isDeactivatingAccount = false.obs;
   final balances = Rx(
     Balances(
       Base: '0.0',
@@ -460,6 +462,138 @@ class MyProfileController extends GetxController {
     launchUrl(
       Uri.parse(
         'https://docs.google.com/forms/u/1/d/1yj3GC6-JkFnWo1UiWj36sMISave9529x2fpqzHv2hIo/edit',
+      ),
+    );
+  }
+
+  deactivateAccount() async {
+    isDeactivatingAccount.value = true;
+    Get.close();
+    final success = await HttpApis.podium.deactivateAccount();
+    if (success) {
+      globalController.setLoggedIn(false);
+    }
+    isDeactivatingAccount.value = false;
+  }
+
+  void showDeactivationDialog() {
+    Get.dialog(
+      Dialog(
+        backgroundColor: ColorName.cardBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: const DeactivationForm(),
+        ),
+      ),
+    );
+  }
+}
+
+final TextEditingController _deactivationController = TextEditingController();
+final _formKey = GlobalKey<FormState>();
+
+class DeactivationForm extends GetView<MyProfileController> {
+  const DeactivationForm({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: ColorName.white,
+              ),
+              children: [
+                TextSpan(text: 'Deactivate Account'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(
+                height: 1.5,
+                fontSize: 14,
+                color: ColorName.secondaryText,
+              ),
+              children: [
+                TextSpan(
+                  text:
+                      'Are you sure you want to deactivate your account? This action cannot be undone. \n',
+                ),
+                TextSpan(
+                  text: 'Type "deactivate" to confirm.',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          TextFormField(
+            controller: _deactivationController,
+            decoration: const InputDecoration(
+              hintText: 'Type "deactivate" to confirm',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter "deactivate" to confirm';
+              }
+              if (value.toLowerCase() != 'deactivate') {
+                return 'Please enter exactly "deactivate"';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                width: 100,
+                child: TextButton(
+                  onPressed: () => Get.close(),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Obx(() {
+                final isDeactivatingAccount =
+                    controller.isDeactivatingAccount.value;
+                return Expanded(
+                    child: ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      controller.deactivateAccount();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: isDeactivatingAccount
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(),
+                        )
+                      : const Text('Deactivate Account'),
+                ));
+              }),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -62,11 +62,36 @@ class MyProfileView extends GetView<MyProfileController> {
               const BugsAndFeedbacks(),
               space10,
               const LogoutButton(),
+              space10,
+              const DeactivationButton(),
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+class DeactivationButton extends GetView<MyProfileController> {
+  const DeactivationButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isDeactivatingAccount = controller.isDeactivatingAccount.value;
+      return Button(
+        loading: isDeactivatingAccount,
+        type: ButtonType.outline,
+        color: ButtonColors.DANGER,
+        borderSide: const BorderSide(color: Colors.red),
+        blockButton: true,
+        textColor: Colors.red,
+        onPressed: () {
+          controller.showDeactivationDialog();
+        },
+        text: 'Deactivate Account',
+      );
+    });
   }
 }
 

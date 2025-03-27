@@ -462,6 +462,17 @@ class PodiumApi {
     }
   }
 
+  Future<bool> deactivateAccount() async {
+    try {
+      final response = await dio.post('$_baseUrl/users/deactivate',
+          options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
   Future<OutpostLiveData?> getLatestLiveData(
       {required String outpostId, bool? alsoJoin}) async {
     try {

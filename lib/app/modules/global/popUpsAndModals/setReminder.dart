@@ -158,8 +158,11 @@ Future<int?> setReminder({
       assetAudioPath: 'assets/alarm.mp3',
       loopAudio: true,
       vibrate: true,
-      volumeSettings: const VolumeSettings.fixed(
-        volume: 0.8,
+      volumeSettings: VolumeSettings.fromJson(
+        const {
+          'volume': 0.8,
+          'fadeDuration': 3.0,
+        },
       ),
       notificationSettings: NotificationSettings(
         title: 'Podium',

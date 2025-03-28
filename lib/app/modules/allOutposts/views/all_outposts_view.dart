@@ -90,7 +90,11 @@ class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final showCreateButton = controller.showCreateButton.value;
+      final numberOfAllOutposts = controller.outposts.value.length;
+      bool showCreateButton = controller.showCreateButton.value;
+      if (numberOfAllOutposts < 5) {
+        showCreateButton = true;
+      }
       return AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,

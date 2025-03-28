@@ -181,12 +181,35 @@ class PodiumApi {
     }
   }
 
+  Future<UserModel?> getUserByAptosAddress(String address) async {
+    try {
+      final response = await dio.get('$_baseUrl/users/detail/by-aptos-address',
+          queryParameters: {'aptos_address': address},
+          options: Options(headers: _headers));
+      return UserModel.fromJson(response.data['data']);
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<List<UserModel>> getUsersByIds(List<String> ids) async {
     try {
       final List<Future<UserModel?>> callArray = [];
       for (var id in ids) {
         callArray.add(getUserData(id));
       }
+      final List<UserModel?> response = await Future.wait(callArray);
+      return response.whereType<UserModel>().toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<UserModel>> getUserByAptosAddresses(
+      List<String> addresses) async {
+    try {
+      final callArray =
+          addresses.map((address) => getUserByAptosAddress(address));
       final List<UserModel?> response = await Future.wait(callArray);
       return response.whereType<UserModel>().toList();
     } catch (e) {
@@ -474,12 +497,11 @@ class PodiumApi {
   }
 
   Future<OutpostLiveData?> getLatestLiveData(
-      {required String outpostId, bool? alsoJoin}) async {
+      {required String outpostId}) async {
     try {
       final response = await dio.get('$_baseUrl/outposts/online-data',
           queryParameters: {
             'uuid': outpostId,
-            if (alsoJoin == true) "also_join": true
           },
           options: Options(headers: _headers));
       return OutpostLiveData.fromJson(response.data['data']);

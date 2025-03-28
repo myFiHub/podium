@@ -440,9 +440,10 @@ class LoginController extends GetxController {
     required String myAptosAddress,
   }) async {
     try {
-      final users = await HttpApis.podium.getUsersByIds(podiumTeamMembers);
+      final users = await HttpApis.podium.getUserByAptosAddresses(
+        podiumTeamMembersAptosAddresses,
+      );
       podiumUsersToBuyEntryTicketFrom.value = users;
-
       final aptosAddresses = users.map((user) => user.aptos_address!).toList();
       final callArray = aptosAddresses.map(
         (address) => AptosMovement.getMyBalanceOnPodiumPass(

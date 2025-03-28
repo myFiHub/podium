@@ -53,8 +53,7 @@ class OutpostCallController extends GetxController {
   final canTalk = false.obs;
   final keysMap = Rx<Map<String, GlobalKey>>({});
 
-  // presence channel
-
+  StreamSubscription<bool>? triggerLiveDataFetchListener;
   StreamSubscription<List<LiveMember>>? sortedMembersListener;
   StreamSubscription<List<LiveMember>>? membersListener;
   StreamSubscription<OutpostModel?>? outpostListener;
@@ -83,7 +82,12 @@ class OutpostCallController extends GetxController {
     outpostListener = outpost.listen((activeOutpost) async {
       members.value = [];
       if (activeOutpost != null) {
-        fetchLiveData(alsoJoin: true);
+        wsClient.send(
+          WsOutgoingMessage(
+            message_type: OutgoingMessageTypeEnums.join,
+            outpost_uuid: outpost.value!.uuid,
+          ),
+        );
       }
     });
   }
@@ -101,6 +105,7 @@ class OutpostCallController extends GetxController {
     sortedMembersListener?.cancel();
     outpostListener?.cancel();
     tickerListener?.cancel();
+    triggerLiveDataFetchListener?.cancel();
   }
 
   /////////////////////////////////////////////////////////////
@@ -184,10 +189,11 @@ class OutpostCallController extends GetxController {
     });
   }
 
-  void fetchLiveData({bool? alsoJoin}) async {
+  void fetchLiveData() async {
     if (outpost.value == null) return;
-    final liveData = await HttpApis.podium
-        .getLatestLiveData(outpostId: outpost.value!.uuid, alsoJoin: alsoJoin);
+
+    final liveData =
+        await HttpApis.podium.getLatestLiveData(outpostId: outpost.value!.uuid);
     if (liveData != null) {
       final tmp = liveData.members;
       tmp.asMap().forEach((index, element) {
@@ -242,6 +248,12 @@ class OutpostCallController extends GetxController {
     jitsiMembers.value = [];
     jitsiMeet.hangUp();
     members.value = [];
+    wsClient.send(
+      WsOutgoingMessage(
+        message_type: OutgoingMessageTypeEnums.leave,
+        outpost_uuid: outpost.value!.uuid,
+      ),
+    );
     searchedValueInMeet.value = '';
     final outpostId = outpost.value?.uuid;
     if (outpostId != null) {

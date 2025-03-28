@@ -199,7 +199,7 @@ class WebSocketService {
     }
   }
 
-  void send(WsOutgoingMessage message) {
+  send(WsOutgoingMessage message) {
     final jsoned = message.toJson();
     if (jsoned['data'] == null) {
       jsoned['data'] = {};

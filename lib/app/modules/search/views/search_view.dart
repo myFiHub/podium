@@ -14,6 +14,7 @@ class SearchView extends GetView<SearchPageController> {
   const SearchView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    final textFieldController = controller.textFieldController;
     return Scaffold(
       body: Column(
         children: [
@@ -38,33 +39,28 @@ class SearchView extends GetView<SearchPageController> {
                       height: 40,
                       child: Stack(
                         children: [
-                          Obx(() {
-                            final searchValue = controller.searchValue.value;
-                            return TextField(
-                              controller: TextEditingController(
-                                text: searchValue,
+                          TextField(
+                            controller: textFieldController,
+                            decoration: InputDecoration(
+                              hintText: "Search Outposts, Users or Tags",
+                              hintStyle: const TextStyle(fontSize: 14),
+                              prefixIcon: const Icon(Icons.search),
+                              contentPadding: const EdgeInsets.all(10),
+                              filled: true,
+                              fillColor: Colors.grey[200],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
                               ),
-                              decoration: InputDecoration(
-                                hintText: "Search Outposts, Users or Tags",
-                                hintStyle: const TextStyle(fontSize: 14),
-                                prefixIcon: const Icon(Icons.search),
-                                contentPadding: const EdgeInsets.all(10),
-                                filled: true,
-                                fillColor: Colors.grey[200],
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black,
-                              ),
-                              onChanged: (value) {
-                                controller.searchValue.value = value;
-                              },
-                            );
-                          }),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black,
+                            ),
+                            onChanged: (value) {
+                              controller.setSeachValue(value);
+                            },
+                          ),
                           Obx(() {
                             final searchValue = controller.searchValue.value;
                             final isSearching = controller.isSearching.value;
@@ -86,7 +82,7 @@ class SearchView extends GetView<SearchPageController> {
                                             color: ColorName.primaryBlue,
                                             padding: EdgeInsets.zero,
                                             onPressed: () {
-                                              controller.searchValue.value = "";
+                                              controller.setSeachValue("");
                                             },
                                             icon: const Icon(Icons.close,
                                                 color: Colors.black),

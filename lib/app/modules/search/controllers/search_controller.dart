@@ -13,7 +13,7 @@ import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
-final _deb = Debouncing(duration: const Duration(milliseconds: 500));
+final _deb = Debouncing(duration: const Duration(milliseconds: 600));
 
 class SearchPageController extends GetxController {
   final groupsController = Get.find<OutpostsController>();
@@ -26,13 +26,21 @@ class SearchPageController extends GetxController {
   final selectedSearchTab = 0.obs;
   final isSearching = false.obs;
   StreamSubscription<String>? searchValueListener;
+  final textFieldController = TextEditingController();
 
   @override
   void onInit() {
     super.onInit();
     searchValueListener = searchValue.listen((value) async {
+      textFieldController.text = value;
+      // move the cursor to the end of the text field if it's at the start. because a bug happened on Majid's phone
+      if (textFieldController.selection.start == 0) {
+        textFieldController.selection = TextSelection.fromPosition(
+          TextPosition(offset: value.length),
+        );
+      }
       isSearching.value = true;
-      if (value.isEmpty) {
+      if (value.isEmpty || value.length < 3) {
         searchedTags.value = {};
         searchedOutposts.value = {};
         searchedUsers.value = {};
@@ -70,6 +78,11 @@ class SearchPageController extends GetxController {
   void onClose() {
     searchValueListener?.cancel();
     super.onClose();
+  }
+
+  setSeachValue(String value) {
+    searchValue.value = value;
+    textFieldController.text = value;
   }
 
   updateUserFollow(String id) async {

@@ -11,11 +11,11 @@ dependencies:
     sdk: flutter
   visibility_detector: ^0.4.0+2
 
-  reown_appkit: ^1.2.0
-  record: ^5.2.1
+  reown_appkit: ^1.4.2
+  record: ^6.0.0
   flutter_dotenv: ^5.2.1
   downloadsfolder: ^1.2.0
-  alarm: ^4.1.1
+  alarm: ^5.1.0
   # intl: ^0.19.0
   decimal: ^3.0.2
   share_plus: ^10.1.4
@@ -23,7 +23,7 @@ dependencies:
   app_links: ^6.4.0
   shimmer: ^3.0.0
   skeletonizer: ^1.4.3
-  flutter_confetti: ^0.3.4
+  flutter_confetti: ^0.5.1
   floating_draggable_widget: ^2.3.0
   dropdown_button2: ^2.3.9
   firebase_core: ^3.12.1
@@ -38,7 +38,8 @@ dependencies:
   image_picker: ^1.1.2
   uuid: ^4.5.1
   logger: ^2.5.0
-  dio: ^5.7.0
+
+  dio: ^5.8.0+1
   gap: ^3.0.1
   internet_connection_checker_plus: ^2.7.1
   cached_network_image: ^3.4.1
@@ -51,11 +52,9 @@ dependencies:
   equatable: ^2.0.7
   pulsator: ^1.0.0+2
   # rxdart: ^0.27.7
-  bounce: ^1.0.2
   rotated_corner_decoration: 2.1.0
   add_2_calendar: ^3.0.1
   json_annotation: ^4.9.0
-  toasty_box: ^1.0.4
   # jitsi_meet_flutter_sdk: ^10.3.0
   jitsi_meet_flutter_sdk:
     path: ./jitsi-meet-flutter-sdk
@@ -68,7 +67,7 @@ dependencies:
       ref: developing
 
   ed25519_edwards: ^0.3.1
-  tutorial_coach_mark: ^1.2.12
+  tutorial_coach_mark: ^1.2.13
   flutter_timezone: ^4.0.0
   lint: ^2.3.0
   eth_sig_util: ^0.0.9
@@ -78,9 +77,8 @@ dependencies:
   glow_container: ^1.0.1
   auto_animated: ^3.2.0
   enhanced_paginated_view: ^2.0.3
-# dependency_overrides:
-#   web: ^0.5.0
-# dependency overrides
+dependency_overrides:
+  intl: ^0.19.0
 
 dev_dependencies:
   device_preview: ^1.2.0

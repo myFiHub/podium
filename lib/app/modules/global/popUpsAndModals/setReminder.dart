@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:alarm/alarm.dart';
+import 'package:alarm/model/volume_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -157,8 +158,9 @@ Future<int?> setReminder({
       assetAudioPath: 'assets/alarm.mp3',
       loopAudio: true,
       vibrate: true,
-      volume: 0.8,
-      fadeDuration: 3.0,
+      volumeSettings: const VolumeSettings.fixed(
+        volume: 0.8,
+      ),
       notificationSettings: NotificationSettings(
         title: 'Podium',
         body: alarmMeBefore == 0

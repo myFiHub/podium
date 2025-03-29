@@ -24,9 +24,48 @@ class LoginView extends GetView<LoginController> {
             () {
               final referrer = controller.referrer.value;
               final referrerIsFul = controller.referrerIsFul.value;
+              final referrerNotFound = controller.referrerNotFound.value;
+              if (referrerNotFound)
+                return Positioned(
+                  top: 12,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.red.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Referrer not found',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               if (referrer == null) return const SizedBox();
               return Positioned(
-                  top: 60,
+                  top: 12,
                   right: 0,
                   child: Container(
                     margin: const EdgeInsets.all(10),
@@ -296,6 +335,8 @@ class LoginView extends GetView<LoginController> {
                           );
                         }),
                         space10,
+                        const ReferralInput(),
+                        space10,
                         Center(
                           child: Text(
                             "Version: " + Env.VERSION,
@@ -316,5 +357,107 @@ class LoginView extends GetView<LoginController> {
         ],
       ),
     );
+  }
+}
+
+class ReferralInput extends GetView<LoginController> {
+  const ReferralInput({super.key});
+
+  void _showReferralDialog() {
+    Get.dialog(
+      Dialog(
+        backgroundColor: ColorName.cardBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Enter Referrer ID',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Obx(() {
+                final referrerNotFound = controller.referrerNotFound.value;
+                return Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: controller.textController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter referrer ID',
+                          border: const OutlineInputBorder(),
+                          errorText: referrerNotFound ? 'User not found' : null,
+                          errorStyle: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.paste),
+                      onPressed: () {
+                        controller.handlePaste();
+                        Get.close();
+                      },
+                      tooltip: 'Paste',
+                    ),
+                  ],
+                );
+              }),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.close(),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.close();
+                      controller.handleConfirm();
+                    },
+                    child: const Text('Confirm'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isLoggingIn = controller.isLoggingIn.value ||
+          controller.globalController.isAutoLoggingIn.value;
+      if (isLoggingIn) return const SizedBox.shrink();
+      return InkWell(
+        onTap: _showReferralDialog,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            textAlign: TextAlign.center,
+            'Referred by someone? Enter the ID',
+            style: TextStyle(
+              color: ColorName.primaryBlue,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
+      );
+    });
   }
 }

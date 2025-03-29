@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:aptos/aptos_account.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
@@ -54,6 +55,59 @@ class LoginController extends GetxController {
   final internalWalletAddress = ''.obs;
   final internalWalletBalance = ''.obs;
   Function? afterLogin = null;
+
+  final isReferrerInputExpanded = false.obs;
+  final referrerNotFound = false.obs;
+
+  final textController = TextEditingController();
+
+  toggleExpanded() {
+    isReferrerInputExpanded.value = !isReferrerInputExpanded.value;
+  }
+
+  handlePaste() async {
+    referrerNotFound.value = false;
+    referrerIsFul.value = false;
+    referrer.value = null;
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text != null) {
+      final text = data!.text!.trim();
+      textController.text = text;
+      referrerId = text;
+      referrer.value = await HttpApis.podium.getUserData(referrerId);
+      if (referrer.value != null) {
+        if (referrer.value?.remaining_referrals_count == 0) {
+          referrerIsFul.value = true;
+        }
+        isReferrerInputExpanded.value = false;
+        Toast.success(message: 'Referrered by ${referrer.value!.name}');
+      } else {
+        referrerNotFound.value = true;
+        Toast.error(message: 'Referrer not found');
+      }
+    }
+  }
+
+  Future<void> handleConfirm() async {
+    referrerNotFound.value = false;
+    referrerIsFul.value = false;
+    referrer.value = null;
+    if (textController.text.isNotEmpty) {
+      referrerId = textController.text.trim();
+    }
+    textController.clear();
+    referrer.value = await HttpApis.podium.getUserData(referrerId);
+    if (referrer.value != null) {
+      if (referrer.value?.remaining_referrals_count == 0) {
+        referrerIsFul.value = true;
+      }
+      isReferrerInputExpanded.value = false;
+      Toast.success(message: 'Referrered by ${referrer.value!.name}');
+    } else {
+      referrerNotFound.value = true;
+      Toast.error(message: 'Referrer not found');
+    }
+  }
 
   String referrerId = '';
   final referrer = Rxn<UserModel>();
@@ -133,11 +187,21 @@ class LoginController extends GetxController {
   }
 
   Future<void> initializeReferral(String? id) async {
+    referrerNotFound.value = false;
+    referrerIsFul.value = false;
+    referrer.value = null;
     Future.delayed(const Duration(seconds: 0), () async {
       referrerId =
           id ?? _extractReferrerId(globalController.deepLinkRoute.value);
       if (referrerId.isNotEmpty) {
         referrer.value = await HttpApis.podium.getUserData(referrerId);
+        if (referrer.value?.remaining_referrals_count == 0) {
+          referrerIsFul.value = true;
+        }
+        if (referrer.value == null) {
+          referrerNotFound.value = true;
+          Toast.error(message: 'Referrer not found');
+        }
       }
     });
   }

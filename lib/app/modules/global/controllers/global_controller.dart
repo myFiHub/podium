@@ -516,7 +516,8 @@ class GlobalController extends GetxController {
   initializeWebSocket({
     required String token,
   }) async {
-    ws_client = WebSocketService(token);
+    ws_client = WebSocketService.instance;
+    ws_client?.connect(token);
   }
 
   String? _extractReferrerId(String route) {
@@ -563,6 +564,7 @@ class GlobalController extends GetxController {
 
     ws_client?.close();
     ws_client = null;
+    isLoggingOut.value = false;
   }
 
   void setIsMyUserOver18(bool value) {

@@ -63,7 +63,8 @@ class PodiumApi {
           await dio.post('$_baseUrl/auth/login', data: request.toJson());
       if (response.statusCode == 200) {
         _token = response.data['data']['token'];
-        Get.find<GlobalController>().initializeWebSocket(token: _token!);
+        final globalController = Get.find<GlobalController>();
+        globalController.initializeWebSocket(token: _token!);
         final myUserData = await getMyUserData(
           additionalData: additionalData,
         );
@@ -173,6 +174,7 @@ class PodiumApi {
 
   Future<UserModel?> getUserData(String id) async {
     try {
+      id = id.replaceAll('/', '');
       final response = await dio.get('$_baseUrl/users/detail?uuid=$id',
           options: Options(headers: _headers));
       return UserModel.fromJson(response.data['data']);
@@ -230,6 +232,7 @@ class PodiumApi {
 
   Future<OutpostModel?> getOutpost(String id) async {
     try {
+      id = id.replaceAll('/', '');
       final response = await dio.get('$_baseUrl/outposts/detail?uuid=$id',
           options: Options(headers: _headers));
       return OutpostModel.fromJson(response.data['data']);

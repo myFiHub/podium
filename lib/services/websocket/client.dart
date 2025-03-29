@@ -23,12 +23,23 @@ class WebSocketService {
   bool connected = false;
   Timer? _pongTimer;
   StreamSubscription? subscription;
-  final String token;
+  String token = '';
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 20;
   static const Duration _initialReconnectDelay = Duration(seconds: 1);
 
-  WebSocketService(this.token) {
+  static WebSocketService? _instance;
+
+  static WebSocketService get instance {
+    _instance ??= WebSocketService._();
+    return _instance!;
+  }
+
+  WebSocketService._();
+
+  void connect(String newToken) {
+    if (token == newToken) return;
+    token = newToken;
     _connect();
   }
 
@@ -51,8 +62,10 @@ class WebSocketService {
   }
 
   void _reconnect() {
+    if (token.isEmpty) return;
+    print("WebSocket closed, reconnecting...");
+    connected = false;
     if (_isConnecting) return;
-
     _isConnecting = true;
     _cleanup();
 
@@ -110,7 +123,6 @@ class WebSocketService {
           _reconnect();
         },
         onDone: () {
-          print("WebSocket closed, reconnecting...");
           _reconnect();
         },
       );
@@ -211,14 +223,20 @@ class WebSocketService {
 
   //send a pong message type to websocket, not using out message type
   void _pong() {
-    if (!_isConnecting && connected) {
-      _channel?.sink.add(List<int>.from([0x8A]));
+    if (!_isConnecting && connected && token.isNotEmpty) {
+      try {
+        _channel?.sink.add(List<int>.from([0x8A]));
+      } catch (e) {
+        l.e("Error sending pong: $e");
+      }
+    } else {
+      l.e("Not sending pong because not connected or token is empty");
     }
   }
 
   void close() {
-    _channel?.sink.close(status.goingAway);
-    _reconnectTimer?.cancel();
-    subscription?.cancel();
+    token = '';
+    _channel?.sink.close(status.normalClosure);
+    _cleanup();
   }
 }

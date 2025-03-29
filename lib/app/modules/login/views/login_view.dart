@@ -445,6 +445,8 @@ class ReferralInput extends GetView<LoginController> {
           controller.globalController.isAutoLoggingIn.value;
       if (isLoggingIn) return const SizedBox.shrink();
       return InkWell(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         onTap: _showReferralDialog,
         child: const Padding(
           padding: EdgeInsets.symmetric(vertical: 8.0),
@@ -452,7 +454,7 @@ class ReferralInput extends GetView<LoginController> {
             textAlign: TextAlign.center,
             'Referred by someone? Enter the ID',
             style: TextStyle(
-              color: ColorName.primaryBlue,
+              color: ColorName.greyText,
               decoration: TextDecoration.underline,
             ),
           ),

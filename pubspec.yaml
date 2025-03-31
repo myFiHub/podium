@@ -1,5 +1,5 @@
 name: podium
-version: 1.1.8+129
+version: 1.1.8+131
 publish_to: none
 description: web3 Podium.
 environment:
@@ -58,7 +58,7 @@ dependencies:
   # jitsi_meet_flutter_sdk: ^10.3.0
   jitsi_meet_flutter_sdk:
     path: ./jitsi-meet-flutter-sdk
-  web3auth_flutter: ^6.1.2
+  web3auth_flutter: ^5.0.4
   web3dart: ^2.7.3
   aptos:
     # path: ./aptos

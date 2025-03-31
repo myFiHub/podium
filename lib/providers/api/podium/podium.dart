@@ -74,6 +74,7 @@ class PodiumApi {
         return (null, 'User not found');
       }
     } on DioException catch (e) {
+      l.d('e: ${e.response}');
       final String? message = e.response?.data['message'];
       return (null, message);
     } catch (e) {

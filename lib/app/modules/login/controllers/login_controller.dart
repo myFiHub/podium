@@ -74,17 +74,7 @@ class LoginController extends GetxController {
       final text = data!.text!.trim();
       textController.text = text;
       referrerId = text;
-      referrer.value = await HttpApis.podium.getUserData(referrerId);
-      if (referrer.value != null) {
-        if (referrer.value?.remaining_referrals_count == 0) {
-          referrerIsFul.value = true;
-        }
-        isReferrerInputExpanded.value = false;
-        Toast.success(message: 'Referrered by ${referrer.value!.name}');
-      } else {
-        referrerNotFound.value = true;
-        Toast.error(message: 'Referrer not found');
-      }
+      initializeReferral(text);
     }
   }
 
@@ -96,17 +86,7 @@ class LoginController extends GetxController {
       referrerId = textController.text.trim();
     }
     textController.clear();
-    referrer.value = await HttpApis.podium.getUserData(referrerId);
-    if (referrer.value != null) {
-      if (referrer.value?.remaining_referrals_count == 0) {
-        referrerIsFul.value = true;
-      }
-      isReferrerInputExpanded.value = false;
-      Toast.success(message: 'Referrered by ${referrer.value!.name}');
-    } else {
-      referrerNotFound.value = true;
-      Toast.error(message: 'Referrer not found');
-    }
+    initializeReferral(referrerId);
   }
 
   String referrerId = '';
@@ -195,6 +175,7 @@ class LoginController extends GetxController {
           id ?? _extractReferrerId(globalController.deepLinkRoute.value);
       if (referrerId.isNotEmpty) {
         referrer.value = await HttpApis.podium.getUserData(referrerId);
+        storage.write(StorageKeys.referrerId, referrerId);
         if (referrer.value?.remaining_referrals_count == 0) {
           referrerIsFul.value = true;
         }
@@ -421,15 +402,20 @@ class LoginController extends GetxController {
   _continueLogin({
     required bool hasTicket,
   }) async {
+    final storageReferreId = storage.read<String>(StorageKeys.referrerId);
+    final request = LoginRequest(
+      signature: temporaryLoginRequest!.signature,
+      username: temporaryLoginRequest!.username,
+      aptos_address: temporaryLoginRequest!.aptos_address,
+      has_ticket: hasTicket,
+      login_type_identifier: temporaryLoginRequest!.login_type_identifier,
+      referrer_user_uuid: storageReferreId,
+    );
+
+    storage.remove(StorageKeys.referrerId);
+    l.d('request: ${request.toJson()}');
     final (userLoginResponse, errorMessage) = await HttpApis.podium.login(
-      request: LoginRequest(
-        signature: temporaryLoginRequest!.signature,
-        username: temporaryLoginRequest!.username,
-        aptos_address: temporaryLoginRequest!.aptos_address,
-        has_ticket: hasTicket,
-        login_type_identifier: temporaryLoginRequest!.login_type_identifier,
-        referrer_user_uuid: temporaryLoginRequest!.referrer_user_uuid,
-      ),
+      request: request,
       additionalData: temporaryAdditionalData!,
     );
 
@@ -445,7 +431,14 @@ class LoginController extends GetxController {
         );
         return;
       }
-      _redirectToBuyTicketPage();
+      if (errorMessage == 'user neither reffered nor bought ticket') {
+        _redirectToBuyTicketPage();
+      } else {
+        Toast.error(
+          title: 'Error logging in',
+          message: errorMessage,
+        );
+      }
       return;
     }
 

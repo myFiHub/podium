@@ -1,5 +1,5 @@
 name: podium
-version: 1.1.8+131
+version: 1.1.8+132
 publish_to: none
 description: web3 Podium.
 environment:
@@ -47,11 +47,9 @@ dependencies:
   app_settings: ^5.2.0
   pretty_dio_logger: ^1.4.0
   textfield_tags: ^3.0.1
-  # bloc is used in customized datepicker, don't upgrade  it
   flutter_bloc: ^9.1.0
   equatable: ^2.0.7
   pulsator: ^1.0.0+2
-  # rxdart: ^0.27.7
   rotated_corner_decoration: ^2.1.0
   add_2_calendar: ^3.0.1
   json_annotation: ^4.9.0

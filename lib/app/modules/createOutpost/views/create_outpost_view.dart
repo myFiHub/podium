@@ -608,10 +608,10 @@ class _SelectGroupSpeakerType extends GetWidget<CreateOutpostController> {
                     //   value: BuyableTicketTypes.onlyArenaTicketHolders,
                     //   text: 'Arena Ticket Holders',
                     // ),
-                    DropDownItem(
-                      value: BuyableTicketTypes.onlyFriendTechTicketHolders,
-                      text: 'FriendTech Key Holders',
-                    ),
+                    // DropDownItem(
+                    //   value: BuyableTicketTypes.onlyFriendTechTicketHolders,
+                    //   text: 'FriendTech Key Holders',
+                    // ),
                   ],
                   selectedValue: selectedValue,
                   onChanged: (value) {
@@ -693,10 +693,10 @@ class _SelectGroupAccessType extends GetWidget<CreateOutpostController> {
                     //   text: 'Arena Ticket Holders',
                     //   // enabled: false,
                     // ),
-                    DropDownItem(
-                      value: BuyableTicketTypes.onlyFriendTechTicketHolders,
-                      text: 'FriendTech Key Holders',
-                    ),
+                    // DropDownItem(
+                    //   value: BuyableTicketTypes.onlyFriendTechTicketHolders,
+                    //   text: 'FriendTech Key Holders',
+                    // ),
                   ],
                   selectedValue: selectedValue,
                   onChanged: (value) {

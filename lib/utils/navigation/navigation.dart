@@ -18,12 +18,13 @@ final List<String> _validRoutesForNavigation =
     List.from(navbarItems.map((e) => e.route));
 
 class Navigate {
-  static Future to(
-      {required NavigationTypes type,
-      required String route,
-      dynamic id,
-      Map<String, String>? parameters,
-      dynamic arguments}) async {
+  static Future to({
+    required NavigationTypes type,
+    required String route,
+    dynamic id,
+    Map<String, String>? parameters,
+    dynamic arguments,
+  }) async {
     switch (type) {
       case NavigationTypes.toNamed:
         Get.toNamed(

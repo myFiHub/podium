@@ -6,6 +6,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
 
 import '../controllers/search_controller.dart';
@@ -16,7 +17,8 @@ class SearchView extends GetView<SearchPageController> {
   Widget build(BuildContext context) {
     final textFieldController = controller.textFieldController;
     return Scaffold(
-      body: Column(
+        body: PageWrapper(
+      child: Column(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,6 +235,6 @@ class SearchView extends GetView<SearchPageController> {
           ),
         ],
       ),
-    );
+    ));
   }
 }

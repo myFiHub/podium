@@ -8,6 +8,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpos
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/usersInOutpostList.dart';
 import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/root.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
@@ -143,15 +144,17 @@ class GroupCall extends GetView<OutpostCallController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const ContextSaver(),
-        const GroupInfo(),
-        const SessionInfo(),
-        MembersList(
-          shouldShowIntro: shouldShowIntro,
-        ),
-      ],
+    return PageWrapper(
+      child: Column(
+        children: [
+          const ContextSaver(),
+          const GroupInfo(),
+          const SessionInfo(),
+          MembersList(
+            shouldShowIntro: shouldShowIntro,
+          ),
+        ],
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/root.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -16,34 +17,36 @@ class ProfileView extends GetView<ProfileController> {
   const ProfileView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
-          width: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              const UserInfo(),
-              FollowButton(
-                uuid: controller.userInfo.value!.uuid,
-                followed_by_me:
-                    controller.userInfo.value!.followed_by_me ?? false,
-                onFollowStatusChanged: () {
-                  controller.getUserInfo();
-                },
-              ),
-              space10,
-              const _BuyOrSellPodiumPass(),
-              // space10,
-              // const _BuyArenaTicketButton(),
-              // space10,
-              // const _BuyFriendTechTicket(),
-              space10,
-              const _Statistics(),
-              space10,
-            ],
+    return PageWrapper(
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const UserInfo(),
+                FollowButton(
+                  uuid: controller.userInfo.value!.uuid,
+                  followed_by_me:
+                      controller.userInfo.value!.followed_by_me ?? false,
+                  onFollowStatusChanged: () {
+                    controller.getUserInfo();
+                  },
+                ),
+                space10,
+                const _BuyOrSellPodiumPass(),
+                // space10,
+                // const _BuyArenaTicketButton(),
+                // space10,
+                // const _BuyFriendTechTicket(),
+                space10,
+                const _Statistics(),
+                space10,
+              ],
+            ),
           ),
         ),
       ),

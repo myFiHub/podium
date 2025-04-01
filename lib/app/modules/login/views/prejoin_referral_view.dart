@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -17,55 +18,57 @@ class PrejoinReferralView extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            space10,
-            RichText(
-              text: const TextSpan(
-                style:
-                    TextStyle(color: Colors.white, fontSize: 18, height: 1.5),
-                children: [
-                  TextSpan(
-                    text: 'In order to use ',
-                  ),
-                  TextSpan(
-                    text: 'Podium',
-                    style: TextStyle(
-                        color: Colors.blue, fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(
-                    text: ', you need to be ',
-                  ),
-                  TextSpan(
-                    text: 'Referred ',
-                    style: TextStyle(
-                        color: Colors.green, fontStyle: FontStyle.italic),
-                  ),
-                  TextSpan(
-                    text: ' by an existing user ',
-                  ),
-                  TextSpan(
-                    text: 'or hold at least one key or pass',
-                    style: TextStyle(
-                        color: Colors.red, fontStyle: FontStyle.italic),
-                  ),
-                  TextSpan(
-                    text: '.',
-                  ),
-                ],
+    return PageWrapper(
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              space10,
+              RichText(
+                text: const TextSpan(
+                  style:
+                      TextStyle(color: Colors.white, fontSize: 18, height: 1.5),
+                  children: [
+                    TextSpan(
+                      text: 'In order to use ',
+                    ),
+                    TextSpan(
+                      text: 'Podium',
+                      style: TextStyle(
+                          color: Colors.blue, fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: ', you need to be ',
+                    ),
+                    TextSpan(
+                      text: 'Referred ',
+                      style: TextStyle(
+                          color: Colors.green, fontStyle: FontStyle.italic),
+                    ),
+                    TextSpan(
+                      text: ' by an existing user ',
+                    ),
+                    TextSpan(
+                      text: 'or hold at least one key or pass',
+                      style: TextStyle(
+                          color: Colors.red, fontStyle: FontStyle.italic),
+                    ),
+                    TextSpan(
+                      text: '.',
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const _InternalWalletAddress(),
-            space5,
-            // const _ExternalWalletConnectButton(),
-            const _ReferralStatus(),
-            space10,
-            const _AccessUsingTicket(),
-          ],
+              const _InternalWalletAddress(),
+              space5,
+              // const _ExternalWalletConnectButton(),
+              const _ReferralStatus(),
+              space10,
+              const _AccessUsingTicket(),
+            ],
+          ),
         ),
       ),
     );

@@ -8,6 +8,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/root.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:shimmer/shimmer.dart';
@@ -21,69 +22,71 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          // Button(
-          //   text: 'test',
-          //   onPressed: () async {
-          //     wsClient.send(
-          //       // WsOutgoingMessage(
-          //       //   message_type: OutgoingMessageTypeEnums.join,
-          //       //   outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
-          //       // ),
-          //       WsOutgoingMessage(
-          //         message_type: OutgoingMessageTypeEnums.like,
-          //         outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
-          //         data: WsOutgoingMessageData(
-          //           amount: null,
-          //           react_to_user_address:
-          //               '45277375-9423-4353-a256-8ab19793f451',
-          //         ),
-          //       ),
-          //     );
-          //   },
-          // ),
-          space16,
-          Row(
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: const Text(
-                  "Home",
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
+      body: PageWrapper(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            // Button(
+            //   text: 'test',
+            //   onPressed: () async {
+            //     wsClient.send(
+            //       // WsOutgoingMessage(
+            //       //   message_type: OutgoingMessageTypeEnums.join,
+            //       //   outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
+            //       // ),
+            //       WsOutgoingMessage(
+            //         message_type: OutgoingMessageTypeEnums.like,
+            //         outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
+            //         data: WsOutgoingMessageData(
+            //           amount: null,
+            //           react_to_user_address:
+            //               '45277375-9423-4353-a256-8ab19793f451',
+            //         ),
+            //       ),
+            //     );
+            //   },
+            // ),
+            space16,
+            const Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Text(
+                    "Home",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: AddOutpostButton(),
-              ),
-            ],
-          ),
-          space14,
-          const Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: const Text(
-              "My Outposts",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                Spacer(),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: AddOutpostButton(),
+                ),
+              ],
+            ),
+            space14,
+            const Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: const Text(
+                "My Outposts",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          space10,
-          Expanded(
-            child: Container(
-              width: Get.width,
-              child: const _MyOutpostsList(),
+            space10,
+            Expanded(
+              child: Container(
+                width: Get.width,
+                child: const _MyOutpostsList(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

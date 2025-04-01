@@ -13,6 +13,7 @@ import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.d
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/loginType.dart';
@@ -32,39 +33,41 @@ class MyProfileView extends GetView<MyProfileController> {
         controller.introFinished(false);
       },
       child: Scaffold(
-        body: SingleChildScrollView(
-          controller: controller.scrollController,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              const ContextSaver(),
-              const UserInfo(),
-              ReferalSystem(
-                key: controller.referalSystemKey,
-              ),
-              const DefaultWallet(),
-              space10,
-              InternalWallet(
-                key: controller.internalWalletKey,
-              ),
-              const ExternalWallet(),
-              WalletConnect(
-                key: controller.walletConnectKey,
-              ),
-              space10,
-              _Statistics(
-                key: controller.statisticsKey,
-              ),
-              space10,
-              const ToggleShowArchivedGroups(),
-              space10,
-              const BugsAndFeedbacks(),
-              space10,
-              const LogoutButton(),
-              space10,
-              const DeleteAccountButton(),
-            ],
+        body: PageWrapper(
+          child: SingleChildScrollView(
+            controller: controller.scrollController,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const ContextSaver(),
+                const UserInfo(),
+                ReferalSystem(
+                  key: controller.referalSystemKey,
+                ),
+                const DefaultWallet(),
+                space10,
+                InternalWallet(
+                  key: controller.internalWalletKey,
+                ),
+                const ExternalWallet(),
+                WalletConnect(
+                  key: controller.walletConnectKey,
+                ),
+                space10,
+                _Statistics(
+                  key: controller.statisticsKey,
+                ),
+                space10,
+                const ToggleShowArchivedGroups(),
+                space10,
+                const BugsAndFeedbacks(),
+                space10,
+                const LogoutButton(),
+                space10,
+                const DeleteAccountButton(),
+              ],
+            ),
           ),
         ),
       ),

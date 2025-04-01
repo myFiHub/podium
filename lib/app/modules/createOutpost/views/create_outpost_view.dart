@@ -11,6 +11,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
 import 'package:podium/providers/api/luma/models/addHost.dart';
+import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -27,52 +28,54 @@ class CreateGroupView extends GetView<CreateOutpostController> {
       onPopInvokedWithResult: (res, r) {
         controller.introFinished(false);
       },
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: Container(
-            // padding: const EdgeInsets.only(top: 16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  space16,
-                  const _TitleBar(),
-                  //space10,
-                  _SelectPicture(
-                    key: controller.intro_selectImageKey,
-                  ),
-                  _RoomNameInput(
-                    key: controller.intro_outpostNameKey,
-                  ),
-                  space5,
-                  _SubjectInput(
-                    key: controller.intro_outpostSubjectKey,
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  _TagsInput(
-                    key: controller.intro_tagsKey,
-                  ),
-                  _SelectGroupAccessType(
-                    key: controller.intro_outpostAccessTypeKey,
-                  ),
-                  space5,
-                  _SelectGroupSpeakerType(
-                    key: controller.intro_outpostSpeakerTypeKey,
-                  ),
-                  space5,
-                  const _ScheduleToggle(),
-                  space5,
-                  const _AddLumaEventCheckboxAndButtons(),
-                  space5,
-                  const _AdultsCheckbox(),
-                  space5,
-                  const _RecordableCheckbox(),
-                  space16,
-                  const _CreateButton(),
-                ],
+      child: PageWrapper(
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: Container(
+              // padding: const EdgeInsets.only(top: 16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    space16,
+                    const _TitleBar(),
+                    //space10,
+                    _SelectPicture(
+                      key: controller.intro_selectImageKey,
+                    ),
+                    _RoomNameInput(
+                      key: controller.intro_outpostNameKey,
+                    ),
+                    space5,
+                    _SubjectInput(
+                      key: controller.intro_outpostSubjectKey,
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    _TagsInput(
+                      key: controller.intro_tagsKey,
+                    ),
+                    _SelectGroupAccessType(
+                      key: controller.intro_outpostAccessTypeKey,
+                    ),
+                    space5,
+                    _SelectGroupSpeakerType(
+                      key: controller.intro_outpostSpeakerTypeKey,
+                    ),
+                    space5,
+                    const _ScheduleToggle(),
+                    space5,
+                    const _AddLumaEventCheckboxAndButtons(),
+                    space5,
+                    const _AdultsCheckbox(),
+                    space5,
+                    const _RecordableCheckbox(),
+                    space16,
+                    const _CreateButton(),
+                  ],
+                ),
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/root.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -18,67 +19,69 @@ class AllOutpostsView extends GetView<AllOutpostsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              space16,
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "All Outposts",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
+      body: PageWrapper(
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                space16,
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "All Outposts",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    space10,
-                    // SizedBox(
-                    //   height: 40,
-                    //   child: TextField(
-                    //     controller: TextEditingController(
-                    //         text: controller.searchValue.value),
-                    //     decoration: InputDecoration(
-                    //       hintText: "What are we looking for?",
-                    //       hintStyle: const TextStyle(fontSize: 14),
-                    //       prefixIcon: const Icon(Icons.search),
-                    //       contentPadding: const EdgeInsets.all(16),
-                    //       filled: true,
-                    //       fillColor: Colors.grey[200],
-                    //       border: OutlineInputBorder(
-                    //         borderRadius: BorderRadius.circular(8),
-                    //         borderSide: BorderSide.none,
-                    //       ),
-                    //     ),
-                    //     style: const TextStyle(
-                    //       fontSize: 18,
-                    //       color: Colors.black,
-                    //     ),
-                    //     onChanged: (value) {
-                    //       controller.search(value);
-                    //     },
-                    //   ),
-                    // ),
-                    // space10,
-                  ],
-                ),
-              ),
-              // Lista de grupos
-              Expanded(
-                child: Container(
-                  child: AllOutpostsList(
-                    scrollController: _scrollController,
+                      space10,
+                      // SizedBox(
+                      //   height: 40,
+                      //   child: TextField(
+                      //     controller: TextEditingController(
+                      //         text: controller.searchValue.value),
+                      //     decoration: InputDecoration(
+                      //       hintText: "What are we looking for?",
+                      //       hintStyle: const TextStyle(fontSize: 14),
+                      //       prefixIcon: const Icon(Icons.search),
+                      //       contentPadding: const EdgeInsets.all(16),
+                      //       filled: true,
+                      //       fillColor: Colors.grey[200],
+                      //       border: OutlineInputBorder(
+                      //         borderRadius: BorderRadius.circular(8),
+                      //         borderSide: BorderSide.none,
+                      //       ),
+                      //     ),
+                      //     style: const TextStyle(
+                      //       fontSize: 18,
+                      //       color: Colors.black,
+                      //     ),
+                      //     onChanged: (value) {
+                      //       controller.search(value);
+                      //     },
+                      //   ),
+                      // ),
+                      // space10,
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const _FloatingCreateOutpostButton(),
-        ],
+                // Lista de grupos
+                Expanded(
+                  child: Container(
+                    child: AllOutpostsList(
+                      scrollController: _scrollController,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const _FloatingCreateOutpostButton(),
+          ],
+        ),
       ),
     );
   }

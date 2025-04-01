@@ -9,6 +9,7 @@ import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -21,145 +22,147 @@ class GroupDetailView extends GetView<OutpostDetailController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Obx(() {
-            final exists = Get.isRegistered<OutpostDetailController>();
-            if (!exists) return const SizedBox();
-            final outpost = controller.outpost.value;
-            final accesses = controller.outpostAccesses.value;
-            if (outpost == null || accesses == null) {
-              return Container(
-                width: Get.width,
-                height: Get.height - 110,
-                child: const Center(child: CircularProgressIndicator()),
-              );
-            }
-            final iAmOwner = outpost.creator_user_uuid == myId;
-            return Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  space16,
-                  SizedBox(
-                    width: Get.width,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                "Joining:",
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  overflow: TextOverflow.visible,
+      body: PageWrapper(
+        child: Column(
+          children: [
+            Obx(() {
+              final exists = Get.isRegistered<OutpostDetailController>();
+              if (!exists) return const SizedBox();
+              final outpost = controller.outpost.value;
+              final accesses = controller.outpostAccesses.value;
+              if (outpost == null || accesses == null) {
+                return Container(
+                  width: Get.width,
+                  height: Get.height - 110,
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              }
+              final iAmOwner = outpost.creator_user_uuid == myId;
+              return Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    space16,
+                    SizedBox(
+                      width: Get.width,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  "Joining:",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    overflow: TextOverflow.visible,
+                                  ),
                                 ),
-                              ),
-                              if (outpost.luma_event_id != null)
-                                _LumaIconButton()
-                            ],
-                          ),
-                          space5,
-                          Text(
-                            outpost.name,
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              overflow: TextOverflow.visible,
+                                if (outpost.luma_event_id != null)
+                                  _LumaIconButton()
+                              ],
                             ),
-                          ),
-                          if (outpost.subject.trim().isNotEmpty)
+                            space5,
                             Text(
-                              outpost.subject,
+                              outpost.name,
+                              textAlign: TextAlign.left,
                               style: const TextStyle(
-                                fontSize: 14,
-                              ),
-                            )
-                          else
-                            const SizedBox.shrink(), // Evita espacio residual
-                          if (iAmOwner)
-                            Text(
-                              "Access Type: ${parseAccessType(outpost.enter_type)}",
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey[400],
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                overflow: TextOverflow.visible,
                               ),
                             ),
-                          Row(
-                            children: [
+                            if (outpost.subject.trim().isNotEmpty)
                               Text(
-                                "Speakers: ${parseSpeakerType(outpost.speak_type)}",
+                                outpost.subject,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                ),
+                              )
+                            else
+                              const SizedBox.shrink(), // Evita espacio residual
+                            if (iAmOwner)
+                              Text(
+                                "Access Type: ${parseAccessType(outpost.enter_type)}",
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: Colors.grey[400],
                                 ),
                               ),
-                              const Spacer(),
-                              // AnimateIcon(
-                              //   key: UniqueKey(),
-                              //   onTap: () async {
-                              //     await controller.getMembers(outpost);
-                              //   },
-                              //   color: Colors.blueAccent,
-                              //   iconType: IconType.animatedOnTap,
-                              //   height: 20,
-                              //   width: 20,
-                              //   animateIcon: AnimateIcons.refresh,
-                              // ),
-                            ],
-                          ),
-                        ],
+                            Row(
+                              children: [
+                                Text(
+                                  "Speakers: ${parseSpeakerType(outpost.speak_type)}",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
+                                const Spacer(),
+                                // AnimateIcon(
+                                //   key: UniqueKey(),
+                                //   onTap: () async {
+                                //     await controller.getMembers(outpost);
+                                //   },
+                                //   color: Colors.blueAccent,
+                                //   iconType: IconType.animatedOnTap,
+                                //   height: 20,
+                                //   width: 20,
+                                //   animateIcon: AnimateIcons.refresh,
+                                // ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  space10,
-                  const MembersList(),
+                    space10,
+                    const MembersList(),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      if (canInvite(
-                        outpost: outpost,
-                        currentUserId: myId,
-                      ))
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        if (canInvite(
+                          outpost: outpost,
+                          currentUserId: myId,
+                        ))
+                          Container(
+                            width: (Get.width / 2) - 20,
+                            child: Button(
+                              type: ButtonType.outline,
+                              onPressed: () {
+                                openInviteBottomSheet(
+                                    canInviteToSpeak: canInviteToSpeak(
+                                  outpost: outpost,
+                                  currentUserId: myId,
+                                ));
+                              },
+                              child: const Text('Invite users'),
+                            ),
+                          ),
                         Container(
                           width: (Get.width / 2) - 20,
-                          child: Button(
-                            type: ButtonType.outline,
-                            onPressed: () {
-                              openInviteBottomSheet(
-                                  canInviteToSpeak: canInviteToSpeak(
-                                outpost: outpost,
-                                currentUserId: myId,
-                              ));
-                            },
-                            child: const Text('Invite users'),
-                          ),
+                          child: const JoinTheRoomButton(),
                         ),
-                      Container(
-                        width: (Get.width / 2) - 20,
-                        child: const JoinTheRoomButton(),
-                      ),
-                    ],
-                  ),
-                  space10,
-                  space10,
-                  if (outpost.scheduled_for != 0) const SetReminderButton(),
-                  // if (group.scheduledFor != 0 && iAmOwner) ...[
-                  //   space10,
-                  //   const ChangeScheduleButton()
-                  // ],
-                ],
-              ),
-            );
-          }),
-        ],
+                      ],
+                    ),
+                    space10,
+                    space10,
+                    if (outpost.scheduled_for != 0) const SetReminderButton(),
+                    // if (group.scheduledFor != 0 && iAmOwner) ...[
+                    //   space10,
+                    //   const ChangeScheduleButton()
+                    // ],
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

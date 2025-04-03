@@ -77,6 +77,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                           scale: 3.0,
                           strokeWidth: 2.0,
                           pixelsPerStep: 1.0,
+                          onSeek: controller.seekToPosition,
                         )),
                   );
                 },
@@ -98,7 +99,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () => {
-                    if (controller.isPlaying.value)
+                    if (isPlaying)
                       {controller.stopPlayback()}
                     else
                       {controller.playRecording(file)}
@@ -181,6 +182,7 @@ class AudioWaveformWidget extends StatefulWidget {
   final Duration start;
   final Duration duration;
   final Duration? currentPosition;
+  final Function(Duration)? onSeek;
 
   const AudioWaveformWidget({
     super.key,
@@ -188,6 +190,7 @@ class AudioWaveformWidget extends StatefulWidget {
     required this.start,
     required this.duration,
     this.currentPosition,
+    this.onSeek,
     this.waveColor = Colors.blue,
     this.scale = 1.0,
     this.strokeWidth = 5.0,
@@ -199,22 +202,39 @@ class AudioWaveformWidget extends StatefulWidget {
 }
 
 class _AudioWaveformState extends State<AudioWaveformWidget> {
+  Duration? seekPosition;
+
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: CustomPaint(
-        painter: AudioWaveformPainter(
-          waveColor: widget.waveColor,
-          waveform: widget.waveform,
-          start: widget.start,
-          duration: widget.duration,
-          currentPosition: widget.currentPosition,
-          scale: widget.scale,
-          strokeWidth: widget.strokeWidth,
-          pixelsPerStep: widget.pixelsPerStep,
+    return GestureDetector(
+      onTapDown: (details) => _handleSeek(details.localPosition.dx),
+      onPanUpdate: (details) => _handleSeek(details.localPosition.dx),
+      onPanEnd: (_) => seekPosition = null,
+      child: ClipRect(
+        child: CustomPaint(
+          painter: AudioWaveformPainter(
+            waveColor: widget.waveColor,
+            waveform: widget.waveform,
+            start: widget.start,
+            duration: widget.duration,
+            currentPosition: seekPosition ?? widget.currentPosition,
+            scale: widget.scale,
+            strokeWidth: widget.strokeWidth,
+            pixelsPerStep: widget.pixelsPerStep,
+          ),
         ),
       ),
     );
+  }
+
+  void _handleSeek(double x) {
+    final width = context.size?.width ?? 0;
+    if (width == 0) return;
+
+    final position = (x / width) * widget.duration.inMilliseconds;
+    seekPosition = Duration(milliseconds: position.toInt());
+    widget.onSeek?.call(seekPosition!);
+    setState(() {});
   }
 }
 
@@ -306,7 +326,8 @@ class AudioWaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant AudioWaveformPainter oldDelegate) {
-    return oldDelegate.currentPosition != currentPosition;
+    return oldDelegate.currentPosition != currentPosition ||
+        oldDelegate.waveform != waveform;
   }
 
   double normalise(int s, double height, double maxAmplitude) {

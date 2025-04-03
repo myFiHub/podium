@@ -99,12 +99,15 @@ class RecordsController extends GetxController {
 
   Future<void> playRecording(RecordingFile file) async {
     try {
-      await _audioPlayer.stop();
+      if (_audioPlayer.playing) {
+        await _audioPlayer.stop();
+      }
+
       await _audioPlayer.setFilePath(file.path);
-      isPlaying.value = true; // Set playing state immediately
+      isPlaying.value = true;
       await _audioPlayer.play();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to play recording');
+      Get.snackbar('Error', 'Failed to play recording: $e');
       isPlaying.value = false;
     }
   }
@@ -128,7 +131,6 @@ class RecordsController extends GetxController {
     try {
       await _audioPlayer.stop();
       isPlaying.value = false;
-      currentPosition.value = Duration.zero;
     } catch (e) {
       Get.snackbar('Error', 'Failed to stop playback');
     }
@@ -157,6 +159,15 @@ class RecordsController extends GetxController {
 
     generateWaveform();
     return progressStream;
+  }
+
+  Future<void> seekToPosition(Duration position) async {
+    try {
+      await _audioPlayer.seek(position);
+      currentPosition.value = position;
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to seek to position');
+    }
   }
 
   @override

@@ -35,9 +35,31 @@ class RecordsController extends GetxController {
   }
 
   void _setupAudioPlayer() {
+    _audioPlayer.positionStream.listen((position) {
+      currentPosition.value = position;
+    });
+
     _audioPlayer.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
-        isPlaying.value = false;
+      switch (state.processingState) {
+        case ProcessingState.completed:
+          isPlaying.value = false;
+          currentPosition.value = Duration.zero;
+          break;
+        case ProcessingState.ready:
+          if (state.playing) {
+            isPlaying.value = true;
+          } else {
+            isPlaying.value = false;
+            currentPosition.value = Duration.zero;
+          }
+          break;
+        case ProcessingState.buffering:
+        case ProcessingState.loading:
+          break;
+        case ProcessingState.idle:
+          isPlaying.value = false;
+          currentPosition.value = Duration.zero;
+          break;
       }
     });
   }
@@ -79,18 +101,11 @@ class RecordsController extends GetxController {
     try {
       await _audioPlayer.stop();
       await _audioPlayer.setFilePath(file.path);
-      _audioPlayer.positionStream.listen((position) {
-        currentPosition.value = position;
-      });
-      _audioPlayer.playerStateStream.listen((state) {
-        if (state.processingState == ProcessingState.completed) {
-          stopPlayback();
-        }
-      });
+      isPlaying.value = true; // Set playing state immediately
       await _audioPlayer.play();
-      isPlaying.value = true;
     } catch (e) {
       Get.snackbar('Error', 'Failed to play recording');
+      isPlaying.value = false;
     }
   }
 

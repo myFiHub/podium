@@ -106,7 +106,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(100, 36),
                   ),
-                  child: Text(controller.isPlaying.value ? 'Stop' : 'Play'),
+                  child: Text(isPlaying ? 'Stop' : 'Play'),
                 )
               ],
             ),
@@ -315,11 +315,11 @@ class AudioWaveformPainter extends CustomPainter {
     if (waveform.flags == 0) {
       // For 16-bit audio
       final y = (scale * s).clamp(-32768.0, 32767.0).toDouble();
-      return height / 2 - (y * height / (2 * maxAmplitude));
+      return height / 2 - (y * height / (maxAmplitude * 4));
     } else {
       // For 8-bit audio
       final y = (scale * s).clamp(-128.0, 127.0).toDouble();
-      return height / 2 - (y * height / (2 * maxAmplitude));
+      return height / 2 - (y * height / (maxAmplitude * 4));
     }
   }
 }

@@ -22,6 +22,7 @@ abstract class Routes {
   static const NOTIFICATIONS = _Paths.NOTIFICATIONS;
   static const ALL_OUTPOSTS = _Paths.ALL_OUTPOSTS;
   static const PLAYGROUND = _Paths.PLAYGROUND;
+  static const RECORDS = _Paths.RECORDS;
 }
 
 abstract class _Paths {
@@ -41,6 +42,7 @@ abstract class _Paths {
   static const WALLET = '/wallet';
   static const PROFILE = '/profile';
   static const MY_PROFILE = '/my-profile';
+  static const RECORDS = '/records';
   static const SEARCH = '/search';
   static const NOTIFICATIONS = '/notifications';
   static const ALL_OUTPOSTS = '/all-outposts';

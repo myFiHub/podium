@@ -27,12 +27,6 @@ class HomeView extends GetView<HomeController> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Button(
-            //   text: 'test',
-            //   onPressed: () async {
-            //     //
-            //   },
-            // ),
             space16,
             const Row(
               children: [

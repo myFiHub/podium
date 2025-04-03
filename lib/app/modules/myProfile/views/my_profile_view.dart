@@ -11,6 +11,8 @@ import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/app/modules/records/controllers/records_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -19,6 +21,7 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -1066,6 +1069,26 @@ class _Statistics extends GetWidget<MyProfileController> {
                       ],
                     ),
                   ],
+                ),
+                space10,
+                Button(
+                  text: 'Recorded Audios',
+                  size: ButtonSize.SMALL,
+                  type: ButtonType.outline,
+                  color: ButtonColors.WARNING,
+                  textColor: Colors.white,
+                  borderSide: const BorderSide(color: Colors.white),
+                  onPressed: () {
+                    final isRegistered = Get.isRegistered<RecordsController>();
+                    if (isRegistered) {
+                      final recordsController = Get.find<RecordsController>();
+                      recordsController.loadRecordings();
+                    }
+                    Navigate.to(
+                      type: NavigationTypes.toNamed,
+                      route: Routes.RECORDS,
+                    );
+                  },
                 ),
               ],
             ),

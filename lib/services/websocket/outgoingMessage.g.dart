@@ -41,7 +41,7 @@ WsOutgoingMessageData _$WsOutgoingMessageDataFromJson(
     WsOutgoingMessageData(
       amount: (json['amount'] as num?)?.toDouble(),
       react_to_user_address: json['react_to_user_address'] as String,
-      chain_id: json['chain_id'] as String?,
+      chain_id: (json['chain_id'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$WsOutgoingMessageDataToJson(

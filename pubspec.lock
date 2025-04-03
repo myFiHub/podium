@@ -844,14 +844,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.10.0"
-  flutter_hooks:
-    dependency: transitive
-    description:
-      name: flutter_hooks
-      sha256: cde36b12f7188c85286fba9b38cc5a902e7279f36dd676967106c041dc9dde70
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.20.5"
   flutter_localizations:
     dependency: transitive
     description: flutter
@@ -1043,14 +1035,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.2.0-beta.10"
-  graphql_flutter:
-    dependency: "direct main"
-    description:
-      name: graphql_flutter
-      sha256: fad0c3bad7e4aeec9a2eee11de8e4d305e0fbce260a24351b6c688911aea5fc8
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.2.0-beta.8"
   graphs:
     dependency: transitive
     description:

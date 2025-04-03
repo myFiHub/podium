@@ -472,6 +472,19 @@ class OngoingOutpostCallController extends GetxController {
 
   cheerBoo(
       {required String userId, required bool cheer, bool? fromMeetPage}) async {
+    // sendOutpostEvent(
+    //   outpostId: outpostCallController.outpost.value!.uuid,
+    //   eventType:
+    //       cheer ? OutgoingMessageTypeEnums.cheer : OutgoingMessageTypeEnums.boo,
+    //   eventData: WsOutgoingMessageData(
+    //     amount: 0.1,
+    //     react_to_user_address: userId,
+    //     chain_id: int.parse(
+    //       globalController.appMetadata.movement_aptos_metadata.chain_id,
+    //     ),
+    //   ),
+    // );
+    // return;
     String? targetAddress;
     loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
@@ -605,9 +618,10 @@ class OngoingOutpostCallController extends GetxController {
           eventType: ev,
           eventData: WsOutgoingMessageData(
             amount: parsedAmount,
-            react_to_user_address: userId,
-            chain_id:
-                globalController.appMetadata.movement_aptos_metadata.chain_id,
+            react_to_user_address: user.address,
+            chain_id: int.parse(
+              globalController.appMetadata.movement_aptos_metadata.chain_id,
+            ),
           ),
         );
         analytics.logEvent(name: 'cheerBoo', parameters: {

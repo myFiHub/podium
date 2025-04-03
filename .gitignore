@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 /aptos/
+private_keys
 
 # IntelliJ related
 *.iml

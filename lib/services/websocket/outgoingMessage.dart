@@ -33,7 +33,7 @@ class WsOutgoingMessage {
 class WsOutgoingMessageData {
   final double? amount;
   final String react_to_user_address;
-  final String? chain_id;
+  final int? chain_id;
 
   WsOutgoingMessageData({
     required this.amount,

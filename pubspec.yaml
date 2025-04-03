@@ -1,5 +1,5 @@
 name: podium
-version: 1.1.8+132
+version: 1.1.9+136
 publish_to: none
 description: web3 Podium.
 environment:
@@ -76,7 +76,6 @@ dependencies:
   auto_animated: ^3.2.0
   animate_do: ^4.2.0
   enhanced_paginated_view: ^2.0.3
-  graphql_flutter: ^5.2.0-beta.8
 dependency_overrides:
   intl: ^0.19.0
 

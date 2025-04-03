@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:aptos/aptos.dart';
 import 'package:aptos/coin_client.dart';
 import 'package:aptos/models/entry_function_payload.dart';
+import 'package:flutter/foundation.dart';
 // import 'package:aptos_sdk_dart/aptos_sdk_dart.dart' as AptosSdkDart;
 // import 'package:built_value/json_object.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class AptosMovement {
     return AptosClient(
       // movementAptosBardokChain.rpcUrl,
       movementAptosProtoTestNetChain.rpcUrl,
-      enableDebugLog: Env.environment == DEVELOPMENT,
+      enableDebugLog: !kReleaseMode, // Env.environment == DEVELOPMENT,
     );
   }
 

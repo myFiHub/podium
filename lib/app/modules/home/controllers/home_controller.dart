@@ -3,8 +3,9 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 
 class HomeController extends GetxController {
   final OutpostsController outpostsController = Get.find<OutpostsController>();
+
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
   }
 

@@ -1,23 +1,20 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
-import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/controllers/recorder_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
-import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/cheerBooBottomSheet.dart';
 import 'package:podium/env.dart';
@@ -53,6 +50,7 @@ class OngoingOutpostCallController extends GetxController {
   final likeDislikeKey = GlobalKey();
   final cheerBooKey = GlobalKey();
   final storage = GetStorage();
+  final recorderController = Get.find<RecorderController>();
   final outpostCallController = Get.find<OutpostCallController>();
   final globalController = Get.find<GlobalController>();
   final sessionData = Rxn<OutpostLiveData>();
@@ -61,12 +59,11 @@ class OngoingOutpostCallController extends GetxController {
   final mySession = Rxn<LiveMember>();
   final amIAdmin = false.obs;
   final amIMuted = true.obs;
-  final isRecording = false.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
-  int _numberOfRecording = 0;
-  AudioRecorder _recorder = AudioRecorder();
 
+  final isRecording = false.obs;
+  StreamSubscription<bool>? recordingListeners;
   final loadingWalletAddressForUser = RxList<String>([]);
 
   final lastReaction = Rx<Reaction>(
@@ -78,6 +75,9 @@ class OngoingOutpostCallController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
+    recordingListeners = recorderController.isRecording.listen((recording) {
+      isRecording.value = recording;
+    });
     final ongoingOutpost = outpostCallController.outpost.value!;
     final myUser = globalController.myUserInfo.value!;
     if (myUser.uuid == ongoingOutpost.creator_user_uuid) {
@@ -106,6 +106,7 @@ class OngoingOutpostCallController extends GetxController {
   void onClose() async {
     super.onClose();
     stopRecording();
+    recordingListeners?.cancel();
     membersListener?.cancel();
     sessionData.value = null;
     await jitsiMeet.hangUp();
@@ -339,71 +340,26 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   _setIsRecording(bool recording) async {
-    _recorder = AudioRecorder();
-
-    final outpost = outpostCallController.outpost.value!;
-    final recordingName =
-        'Podium Outpost record-${outpost.name}${_numberOfRecording == 0 ? '' : '-${_numberOfRecording}'}';
-    final hasPermissionForAudio = await getPermission(Permission.microphone);
-    if (!hasPermissionForAudio) {
+    final canRecord = await recorderController.initializeRecorder();
+    if (!canRecord) {
       return;
     }
-    Directory downloadDirectory = await getDownloadDirectory();
-    String path =
-        '${downloadDirectory.path}/${recordingName}-${DateTime.now().millisecondsSinceEpoch}.m4a'
-            .replaceAll(':', '');
-
-    if (recording) {
-      _numberOfRecording++;
-      if (await _recorder.hasPermission()) {
-        try {
-          const encoder = AudioEncoder.aacLc;
-
-          const config = RecordConfig(encoder: encoder, numChannels: 1);
-          await recordFile(_recorder, config, path);
-          // await _recorder.start(const RecordConfig(), path: '${path}');
-          Toast.success(
-            title: "Recording started",
-            message: "Recording started",
-          );
-        } catch (e) {
-          _numberOfRecording--;
-          Toast.error(
-            title: "Error",
-            message: "Error starting recording",
-          );
-          l.e("error starting recording: $e");
-          isRecording.value = false;
-          return;
-        }
+    if (recorderController.hasPermission) {
+      if (recording) {
+        await recorderController.startRecording(true);
       } else {
-        Toast.error(
-          title: "Error",
-          message: "Permission denied",
-        );
-      }
-    } else {
-      if (isRecording.value) {
-        try {
-          final path = await _recorder.stop();
-          l.d("path is $path");
-          _recorder.dispose();
-
+        await recorderController.startRecording(false);
+        final path = await recorderController.lastRecordedPath;
+        if (path != null) {
           Toast.success(
-            title: "Recording saved",
-            message: "Recording saved into Downloads folder",
-            duration: 5,
+            title: 'Recording saved',
+            message: 'to $path',
           );
-          // await Share.shareXFiles(
-          //   [XFile(path)],
-          //   text: 'Podium: ${recordingName}',
-          // );
-        } catch (e) {
-          l.e("error stopping recording: $e");
         }
       }
     }
-    isRecording.value = recording;
+
+    // use recorder controller to record the file
   }
 
   handleInteractionEvent({
@@ -493,7 +449,8 @@ class OngoingOutpostCallController extends GetxController {
       l.e("user is null");
       return;
     }
-    if (user.external_wallet_address != '') {
+    if (user.external_wallet_address != '' &&
+        user.external_wallet_address != null) {
       targetAddress = user.external_wallet_address;
     } else {
       targetAddress = user.address;

@@ -30,21 +30,7 @@ class HomeView extends GetView<HomeController> {
             // Button(
             //   text: 'test',
             //   onPressed: () async {
-            //     wsClient.send(
-            //       // WsOutgoingMessage(
-            //       //   message_type: OutgoingMessageTypeEnums.join,
-            //       //   outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
-            //       // ),
-            //       WsOutgoingMessage(
-            //         message_type: OutgoingMessageTypeEnums.like,
-            //         outpost_uuid: 'ef22f1da-ba77-4c29-a9db-58975e775263',
-            //         data: WsOutgoingMessageData(
-            //           amount: null,
-            //           react_to_user_address:
-            //               '45277375-9423-4353-a256-8ab19793f451',
-            //         ),
-            //       ),
-            //     );
+            //     //
             //   },
             // ),
             space16,

@@ -1,5 +1,5 @@
 name: podium
-version: 1.1.9+136
+version: 1.1.9+137
 publish_to: none
 description: web3 Podium.
 environment:
@@ -10,6 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   visibility_detector: ^0.4.0+2
+  path_provider: ^2.1.2
+  just_audio: ^0.9.36
 
   reown_appkit: ^1.4.2
   record: ^6.0.0

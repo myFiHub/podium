@@ -9,6 +9,8 @@ PODS:
     - Flutter
   - appcheck (1.0.3):
     - Flutter
+  - audio_session (0.0.1):
+    - Flutter
   - BigInt (5.2.0)
   - coinbase_wallet_sdk (0.0.1):
     - CoinbaseWalletSDK/CrossPlatform (= 1.0.4)
@@ -160,6 +162,9 @@ PODS:
   - jitsi_meet_flutter_sdk (10.3.0):
     - Flutter
   - JitsiWebRTC (124.0.2)
+  - just_audio (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - KeychainSwift (20.0.0)
   - libwebp (1.5.0):
     - libwebp/demux (= 1.5.0)
@@ -220,6 +225,7 @@ DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
   - app_settings (from `.symlinks/plugins/app_settings/ios`)
   - appcheck (from `.symlinks/plugins/appcheck/ios`)
+  - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - coinbase_wallet_sdk (from `.symlinks/plugins/coinbase_wallet_sdk/ios`)
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - downloadsfolder (from `.symlinks/plugins/downloadsfolder/ios`)
@@ -235,6 +241,7 @@ DEPENDENCIES:
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - jitsi_meet_flutter_sdk (from `.symlinks/plugins/jitsi_meet_flutter_sdk/ios`)
   - JitsiWebRTC
+  - just_audio (from `.symlinks/plugins/just_audio/darwin`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -285,6 +292,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/app_settings/ios"
   appcheck:
     :path: ".symlinks/plugins/appcheck/ios"
+  audio_session:
+    :path: ".symlinks/plugins/audio_session/ios"
   coinbase_wallet_sdk:
     :path: ".symlinks/plugins/coinbase_wallet_sdk/ios"
   connectivity_plus:
@@ -311,6 +320,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   jitsi_meet_flutter_sdk:
     :path: ".symlinks/plugins/jitsi_meet_flutter_sdk/ios"
+  just_audio:
+    :path: ".symlinks/plugins/just_audio/darwin"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
@@ -338,6 +349,7 @@ SPEC CHECKSUMS:
   app_links: 76b66b60cc809390ca1ad69bfd66b998d2387ac7
   app_settings: 5127ae0678de1dcc19f2293271c51d37c89428b2
   appcheck: f3c430f928f9c69ccd8b5d4df04766ac0e57c9aa
+  audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
   BigInt: f668a80089607f521586bbe29513d708491ef2f7
   coinbase_wallet_sdk: c893738400ef78bd20e7f4195cbb38266f7d15e8
   CoinbaseWalletSDK: ea1f37512bbc69ebe07416e3b29bf840f5cc3152
@@ -369,6 +381,7 @@ SPEC CHECKSUMS:
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
   jitsi_meet_flutter_sdk: fddce7036a8893f5cef6dbda0323b72aaad151dc
   JitsiWebRTC: b47805ab5668be38e7ee60e2258f49badfe8e1d0
+  just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   KeychainSwift: 0ce6a4d13f7228054d1a71bb1b500448fb2ab837
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275

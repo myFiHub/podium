@@ -103,13 +103,15 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
                   heroTag: 'record',
                   backgroundColor: Colors.white,
                   onPressed: () {
-                    isRecording
+                    controller.isRecording.value
                         ? controller.stopRecording()
                         : controller.startRecording();
                   },
                   tooltip: 'Record',
                   child: Icon(
-                    isRecording ? Icons.stop : Icons.fiber_manual_record,
+                    controller.isRecording.value
+                        ? Icons.stop
+                        : Icons.fiber_manual_record,
                     color: Colors.red,
                   ),
                 ),

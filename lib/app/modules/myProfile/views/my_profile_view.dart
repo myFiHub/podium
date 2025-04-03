@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/referral_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -16,6 +17,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
@@ -500,6 +502,9 @@ class AddressAndBalanceWidget extends StatelessWidget {
           space10,
           GestureDetector(
             onTap: () async {
+              final balance = await AptosMovement.getAddressBalance(
+                  '0x0e9583e041326faa8b549ad4b3deeb3ee935120fba63b093a46996a2f907b9f2');
+              l.d('balance: $balance');
               await Clipboard.setData(
                 ClipboardData(
                   text: address,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -342,6 +343,10 @@ class MyProfileController extends GetxController {
           results['movementAptos']!['status'] == AllSettledStatus.fulfilled
               ? results['movementAptos']!['value']
               : BigInt.zero;
+      final reason = results['movementAptos']!['reason'];
+      if (reason is DioException) {
+        l.e(reason.response?.data);
+      }
 
       balances.value = Balances(
         Base: weiToDecimalString(wei: baseBalance),

@@ -329,7 +329,7 @@ class _ProfileCard extends GetView<LoginController> {
                         title: "Insufficient Balance",
                         message:
                             'You do not have enough balance to buy a ticket',
-                        mainbutton: TextButton(
+                        mainButton: TextButton(
                           onPressed: () {
                             Clipboard.setData(
                               ClipboardData(

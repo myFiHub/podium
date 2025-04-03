@@ -28,14 +28,18 @@ class ProfileView extends GetView<ProfileController> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 const UserInfo(),
-                FollowButton(
-                  uuid: controller.userInfo.value!.uuid,
-                  followed_by_me:
-                      controller.userInfo.value!.followed_by_me ?? false,
-                  onFollowStatusChanged: () {
-                    controller.getUserInfo();
-                  },
-                ),
+                Obx(() {
+                  final followedByMe =
+                      controller.userInfo.value!.followed_by_me ?? false;
+                  return FollowButton(
+                    fullWidth: true,
+                    uuid: controller.userInfo.value!.uuid,
+                    followed_by_me: followedByMe,
+                    onFollowStatusChanged: () {
+                      controller.getUserInfo();
+                    },
+                  );
+                }),
                 space10,
                 const _BuyOrSellPodiumPass(),
                 // space10,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:aptos/aptos.dart';
 import 'package:aptos/coin_client.dart';
@@ -8,6 +9,7 @@ import 'package:aptos/models/entry_function_payload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -63,12 +65,63 @@ class AptosMovement {
     return exists;
   }
 
+  static const String _indexerUrl =
+      'https://indexer.mainnet.movementnetwork.xyz/v1/graphql';
+
+  static Future<BigInt> _getBalanceFromIndexer(String address) async {
+    try {
+      final String query = '''
+        query GetBalance(\$address: String!) {
+          current_fungible_asset_balances(
+            where: {
+              owner_address: {_eq: \$address},
+              asset_type: {_eq: "0x000000000000000000000000000000000000000000000000000000000000000a"}
+            }
+            limit: 1
+          ) {
+            amount
+          }
+        }
+      ''';
+
+      final response = await http.post(
+        Uri.parse(_indexerUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'query': query,
+          'variables': {'address': address},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final balances = data['data']['current_fungible_asset_balances'];
+        if (balances != null && balances.isNotEmpty) {
+          return BigInt.parse(balances[0]['amount'].toString());
+        }
+      }
+      return BigInt.zero;
+    } catch (e) {
+      l.e('Error fetching balance from indexer: $e');
+      return BigInt.zero;
+    }
+  }
+
+  static Future<BigInt> getAddressBalance(String address) async {
+    try {
+      return await _getBalanceFromIndexer(address);
+    } catch (e) {
+      l.e(e);
+      return BigInt.zero;
+    }
+  }
+
   static Future<BigInt> get balance async {
     final exists = await isMyAccountActive;
     if (!exists) {
       return BigInt.zero;
     }
-    return await _coinClient.checkBalance(address);
+    return await getAddressBalance(address);
   }
 
   static CoinClient get _coinClient {
@@ -87,7 +140,7 @@ class AptosMovement {
       if (b < doubleToBigIntMoveForAptos(amount)) {
         Toast.error(
           title: 'Insufficient balance',
-          mainbutton: TextButton(
+          mainButton: TextButton(
             onPressed: () {
               final addr = address;
               Clipboard.setData(
@@ -288,7 +341,7 @@ class AptosMovement {
         message: isCopyableError
             ? e.toString()
             : 'Error Submiting Transaction, please try again later',
-        mainbutton: !isCopyableError
+        mainButton: !isCopyableError
             ? null
             : TextButton(
                 onPressed: () {

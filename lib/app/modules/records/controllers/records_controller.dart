@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_waveform/just_waveform.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:share_plus/share_plus.dart';
 
 class RecordingFile {
@@ -20,6 +25,7 @@ class RecordsController extends GetxController {
   final recordings = <RecordingFile>[].obs;
   final isPlaying = false.obs;
   final selectedFile = Rxn<RecordingFile>();
+  final currentPosition = Duration.zero.obs;
 
   @override
   void onInit() {
@@ -73,11 +79,18 @@ class RecordsController extends GetxController {
     try {
       await _audioPlayer.stop();
       await _audioPlayer.setFilePath(file.path);
-      _audioPlayer.play();
+      _audioPlayer.positionStream.listen((position) {
+        currentPosition.value = position;
+      });
+      _audioPlayer.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed) {
+          stopPlayback();
+        }
+      });
+      await _audioPlayer.play();
       isPlaying.value = true;
     } catch (e) {
-      print('Error playing audio: $e');
-      isPlaying.value = false;
+      Get.snackbar('Error', 'Failed to play recording');
     }
   }
 
@@ -96,9 +109,39 @@ class RecordsController extends GetxController {
     selectedFile.value = file;
   }
 
-  void stopPlayback() async {
-    await _audioPlayer.stop();
-    isPlaying.value = false;
+  Future<void> stopPlayback() async {
+    try {
+      await _audioPlayer.stop();
+      isPlaying.value = false;
+      currentPosition.value = Duration.zero;
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to stop playback');
+    }
+  }
+
+  Stream<WaveformProgress> getWaveformProgress(RecordingFile recording) {
+    final progressStream = BehaviorSubject<WaveformProgress>();
+
+    Future<void> generateWaveform() async {
+      try {
+        final audioFile = File(recording.path);
+        final waveFile = File(p.join(
+            (await getTemporaryDirectory()).path, '${recording.name}.wave'));
+
+        JustWaveform.extract(
+          audioInFile: audioFile,
+          waveOutFile: waveFile,
+        ).listen(
+          progressStream.add,
+          onError: progressStream.addError,
+        );
+      } catch (e) {
+        progressStream.addError(e);
+      }
+    }
+
+    generateWaveform();
+    return progressStream;
   }
 
   @override

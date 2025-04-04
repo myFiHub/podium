@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:get/get.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:just_waveform/just_waveform.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -21,47 +22,87 @@ class RecordingFile {
 }
 
 class RecordsController extends GetxController {
-  final _audioPlayer = AudioPlayer();
+  late final FlutterSoundPlayer _audioPlayer;
   final recordings = <RecordingFile>[].obs;
   final isPlaying = false.obs;
   final selectedFile = Rxn<RecordingFile>();
   final currentPosition = Duration.zero.obs;
+  final _isInitialized = false.obs;
+  StreamSubscription? _positionSubscription;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
+    _audioPlayer = FlutterSoundPlayer();
+    await _initializeAudioPlayer();
     loadRecordings();
-    _setupAudioPlayer();
   }
 
-  void _setupAudioPlayer() {
-    _audioPlayer.positionStream.listen((position) {
-      currentPosition.value = position;
-    });
+  Future<void> _initializeAudioPlayer() async {
+    await _audioPlayer.openPlayer();
+    _audioPlayer.setSubscriptionDuration(const Duration(milliseconds: 10));
+    _isInitialized.value = true;
+  }
 
-    _audioPlayer.playerStateStream.listen((state) {
-      switch (state.processingState) {
-        case ProcessingState.completed:
-          isPlaying.value = false;
-          currentPosition.value = Duration.zero;
-          break;
-        case ProcessingState.ready:
-          if (state.playing) {
-            isPlaying.value = true;
-          } else {
-            isPlaying.value = false;
-            currentPosition.value = Duration.zero;
-          }
-          break;
-        case ProcessingState.buffering:
-        case ProcessingState.loading:
-          break;
-        case ProcessingState.idle:
-          isPlaying.value = false;
-          currentPosition.value = Duration.zero;
-          break;
+  Future<void> playRecording(RecordingFile file) async {
+    if (!_isInitialized.value) return;
+
+    try {
+      if (_audioPlayer.isPlaying) {
+        await stopPlayback();
       }
-    });
+
+      isPlaying.value = true;
+      await _audioPlayer.startPlayer(
+        fromURI: file.path,
+        codec: Codec.aacADTS,
+        whenFinished: () {
+          isPlaying.value = false;
+          currentPosition.value = Duration.zero;
+          _positionSubscription?.cancel();
+        },
+      );
+
+      // Start position tracking
+      _positionSubscription?.cancel();
+      _positionSubscription = _audioPlayer.onProgress?.listen((e) {
+        currentPosition.value = e.position;
+      });
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to play recording: $e');
+      isPlaying.value = false;
+    }
+  }
+
+  Future<void> stopPlayback() async {
+    if (!_isInitialized.value) return;
+
+    try {
+      await _audioPlayer.stopPlayer();
+      _positionSubscription?.cancel();
+      isPlaying.value = false;
+      currentPosition.value = Duration.zero;
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to stop playback');
+    }
+  }
+
+  Future<void> seekToPosition(Duration position) async {
+    if (!_isInitialized.value) return;
+
+    try {
+      await _audioPlayer.seekToPlayer(position);
+      currentPosition.value = position;
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to seek to position');
+    }
+  }
+
+  @override
+  void onClose() async {
+    _positionSubscription?.cancel();
+    await _audioPlayer.closePlayer();
+    super.onClose();
   }
 
   Future<void> loadRecordings() async {
@@ -97,21 +138,6 @@ class RecordsController extends GetxController {
     }
   }
 
-  Future<void> playRecording(RecordingFile file) async {
-    try {
-      if (_audioPlayer.playing) {
-        await _audioPlayer.stop();
-      }
-
-      await _audioPlayer.setFilePath(file.path);
-      isPlaying.value = true;
-      await _audioPlayer.play();
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to play recording: $e');
-      isPlaying.value = false;
-    }
-  }
-
   Future<void> shareRecording(RecordingFile file) async {
     try {
       await Share.shareXFiles(
@@ -125,15 +151,6 @@ class RecordsController extends GetxController {
 
   void selectRecording(RecordingFile file) {
     selectedFile.value = file;
-  }
-
-  Future<void> stopPlayback() async {
-    try {
-      await _audioPlayer.stop();
-      isPlaying.value = false;
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to stop playback');
-    }
   }
 
   Stream<WaveformProgress> getWaveformProgress(RecordingFile recording) {
@@ -159,20 +176,5 @@ class RecordsController extends GetxController {
 
     generateWaveform();
     return progressStream;
-  }
-
-  Future<void> seekToPosition(Duration position) async {
-    try {
-      await _audioPlayer.seek(position);
-      currentPosition.value = position;
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to seek to position');
-    }
-  }
-
-  @override
-  void onClose() {
-    _audioPlayer.dispose();
-    super.onClose();
   }
 }

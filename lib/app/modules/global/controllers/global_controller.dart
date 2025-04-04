@@ -513,11 +513,11 @@ class GlobalController extends GetxController {
     }
   }
 
-  initializeWebSocket({
+  Future<bool> initializeWebSocket({
     required String token,
   }) async {
     ws_client = WebSocketService.instance;
-    ws_client?.connect(token);
+    return await ws_client?.connect(token) ?? false;
   }
 
   String? _extractReferrerId(String route) {

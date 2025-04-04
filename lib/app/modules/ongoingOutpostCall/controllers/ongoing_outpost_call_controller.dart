@@ -310,13 +310,16 @@ class OngoingOutpostCallController extends GetxController {
     } catch (e) {}
   }
 
-  setMutedState(bool muted) {
+  setMutedState(bool muted) async {
     if (!wsClient.connected) {
-      Toast.warning(
-        title: 'Connection Error',
-        message: 'please check your internet connection',
-      );
-      return;
+      final connected = await HttpApis.podium.connectToWebSocket();
+      if (!connected) {
+        Toast.warning(
+          title: 'Connection Error',
+          message: 'please check your internet connection',
+        );
+        return;
+      }
     }
     jitsiMeet.setAudioMuted(muted);
   }
@@ -346,9 +349,15 @@ class OngoingOutpostCallController extends GetxController {
     }
     if (recorderController.hasPermission) {
       if (recording) {
-        await recorderController.startRecording(true);
+        await recorderController.startRecording(
+          true,
+          prefix: outpostCallController.outpost.value!.name,
+        );
       } else {
-        await recorderController.startRecording(false);
+        await recorderController.startRecording(
+          false,
+          prefix: outpostCallController.outpost.value!.name,
+        );
         final path = await recorderController.lastRecordedPath;
         if (path != null) {
           Toast.success(
@@ -472,18 +481,27 @@ class OngoingOutpostCallController extends GetxController {
         }
         final liveMembers = liveData.members.where((m) => m.is_present == true);
         final liveMemberIds = liveMembers.map((e) => e.uuid).toList();
-        liveMembers.forEach((element) {
-          if (liveMemberIds.contains(element.uuid)) {
-            if (element != targetAddress) {
-              aptosReceiverAddresses.add(element.aptos_address);
-              if (element.external_wallet_address != null) {
-                receiverAddresses.add(user.external_wallet_address!);
-              } else {
-                receiverAddresses.add(user.address);
-              }
-            }
-          }
-        });
+        if (liveMemberIds.length < 2) {
+          Toast.error(
+            title: "Error",
+            message: "why are you cheering yourself? for who? t p t . . . why?",
+          );
+          _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+          return;
+        }
+
+        if (user.uuid == myId) {
+          final userAddressesExceptMe = liveMembers
+              .where((m) => m.uuid != myUser.uuid)
+              .map((e) => e.address)
+              .toList();
+          receiverAddresses.addAll(userAddressesExceptMe);
+          final aptosAddressesExceptMe = liveMembers
+              .where((m) => m.uuid != myUser.uuid)
+              .map((e) => e.aptos_address)
+              .toList();
+          aptosReceiverAddresses.addAll(aptosAddressesExceptMe);
+        }
       } else {
         receiverAddresses = [targetAddress ?? myUser.address];
       }
@@ -548,7 +566,7 @@ class OngoingOutpostCallController extends GetxController {
         );
       } else if (selectedWallet == WalletNames.internal_Aptos) {
         success = await AptosMovement.cheerBoo(
-          groupId: outpostCallController.outpost.value!.uuid,
+          outpostId: outpostCallController.outpost.value!.uuid,
           target: user.aptos_address!,
           receiverAddresses: aptosReceiverAddresses,
           amount: parsedAmount.abs(),
@@ -614,17 +632,20 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  audioMuteChanged({required bool muted}) {
+  audioMuteChanged({required bool muted}) async {
     if (!wsClient.connected) {
-      Toast.warning(
-        title: 'Connection Error',
-        message: 'please check your internet connection',
-      );
-      if (!muted) {
-        amIMuted.value = true;
-        jitsiMeet.setAudioMuted(true);
+      final connected = await HttpApis.podium.connectToWebSocket();
+      if (!connected) {
+        Toast.warning(
+          title: 'Connection Error',
+          message: 'please check your internet connection',
+        );
+        if (!muted) {
+          amIMuted.value = true;
+          jitsiMeet.setAudioMuted(true);
+        }
+        return;
       }
-      return;
     }
     final outpostId = outpostCallController.outpost.value!.uuid;
     l.d(

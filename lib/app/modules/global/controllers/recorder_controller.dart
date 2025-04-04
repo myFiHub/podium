@@ -41,7 +41,7 @@ class RecorderController extends GetxController {
     });
   }
 
-  Future<void> startRecording(bool start) async {
+  Future<void> startRecording(bool start, {String? prefix}) async {
     try {
       if (start) {
         // Check and request permission if needed
@@ -63,8 +63,9 @@ class RecorderController extends GetxController {
           await directory.create(recursive: true);
         }
 
-        // Generate unique filename with timestamp
-        final fileName = 'podium_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        // Generate unique filename with timestamp and optional prefix
+        final fileName =
+            'podium_${prefix != null ? '${prefix}_' : ''}${DateTime.now().millisecondsSinceEpoch}.m4a';
         final filePath = '${directory.path}/$fileName';
 
         print('Starting recording to: $filePath');

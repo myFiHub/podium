@@ -37,10 +37,9 @@ class WebSocketService {
 
   WebSocketService._();
 
-  void connect(String newToken) {
-    if (token == newToken) return;
+  Future<bool> connect(String newToken) async {
     token = newToken;
-    _connect();
+    return await _connect();
   }
 
   Duration _getReconnectDelay() {
@@ -84,7 +83,7 @@ class WebSocketService {
     });
   }
 
-  void _connect() async {
+  Future<bool> _connect() async {
     try {
       _isConnecting = true;
       _channel = WebSocketChannel.connect(
@@ -126,10 +125,12 @@ class WebSocketService {
           _reconnect();
         },
       );
+      return true;
     } catch (e) {
       l.e("Error connecting to websocket: $e");
       _reconnect();
     }
+    return false;
   }
 
   void _handleIncomingMessage(IncomingMessage incomingMessage) {

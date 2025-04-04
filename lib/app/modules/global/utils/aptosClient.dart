@@ -134,7 +134,7 @@ class AptosMovement {
     required List<String> receiverAddresses,
     required num amount,
     required bool cheer,
-    required groupId,
+    required String outpostId,
   }) async {
     try {
       final b = await balance;
@@ -165,12 +165,18 @@ class AptosMovement {
       }
 
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
-      int percentage = cheer ? 100 : 50;
-      if (receiverAddresses.length > 1) {
-        percentage = 0;
+      final isSelfReaction =
+          target == myUser.aptos_address && receiverAddresses.length > 0;
+      final isBoo = !cheer;
+      int percentage = 100;
+      if (isSelfReaction) {
+        percentage = 100;
       }
-      final PercentageString = percentage.toString();
+      if (isBoo && !isSelfReaction) {
+        percentage = 50;
+      }
 
+      final PercentageString = percentage.toString();
       final payload = EntryFunctionPayload(
         functionId: "${cheerBooAddress}::$_cheerBooName::cheer_or_boo",
         typeArguments: [],
@@ -181,7 +187,7 @@ class AptosMovement {
           cheer,
           amountToSend,
           PercentageString,
-          groupId,
+          outpostId,
         ],
       );
       final transactionRequest = await client.generateTransaction(

@@ -29,6 +29,11 @@ class PodiumApi {
 
   PodiumApi(this.dio);
 
+  Future<bool> connectToWebSocket() async {
+    final globalController = Get.find<GlobalController>();
+    return await globalController.initializeWebSocket(token: _token!);
+  }
+
   Future<PodiumAppMetadata> appMetadata() async {
     try {
       final config = await dio.get('$_baseUrl/configurations/app-settings',
@@ -63,8 +68,7 @@ class PodiumApi {
           await dio.post('$_baseUrl/auth/login', data: request.toJson());
       if (response.statusCode == 200) {
         _token = response.data['data']['token'];
-        final globalController = Get.find<GlobalController>();
-        globalController.initializeWebSocket(token: _token!);
+        await connectToWebSocket();
         final myUserData = await getMyUserData(
           additionalData: additionalData,
         );

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
@@ -119,7 +120,11 @@ class WebSocketService {
 
       _reconnectTimer = Timer(delay, () async {
         _reconnectAttempts++;
-        await _connect();
+        final success = await _connect();
+        if (!success) {
+          // Reset _isConnecting if connection failed to allow future reconnection attempts
+          _isConnecting = false;
+        }
       });
     });
   }
@@ -214,10 +219,15 @@ class WebSocketService {
     switch (incomingMessage.name) {
       case IncomingMessageType.userJoined:
       case IncomingMessageType.userLeft:
+        if (!Get.isRegistered<OutpostCallController>()) {
+          l.w("OutpostCallController not registered, cannot process userJoined or userLeft");
+          return;
+        }
+        final outpostCallController = Get.find<OutpostCallController>();
         // TODO: moved to jitsiMeet.dart
-        // joinOrLeftThrottle.throttle(() {
-        //   outpostCallController.fetchLiveData();
-        // });
+        joinOrLeftDebounce.debounce(() {
+          outpostCallController.fetchLiveData();
+        });
         break;
 
       case IncomingMessageType.remainingTimeUpdated:

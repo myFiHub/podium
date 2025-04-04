@@ -170,7 +170,7 @@ class AptosMovement {
       final isBoo = !cheer;
       int percentage = 100;
       if (isSelfReaction) {
-        percentage = 100;
+        percentage = 0;
       }
       if (isBoo && !isSelfReaction) {
         percentage = 50;

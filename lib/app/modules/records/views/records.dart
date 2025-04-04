@@ -88,7 +88,10 @@ class BottomSheetBody extends GetView<RecordsController> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 TextButton(
-                  onPressed: () => Get.close(),
+                  onPressed: () {
+                    controller.stopPlayback();
+                    Get.close();
+                  },
                   child: const Text('Close'),
                 ),
                 const SizedBox(width: 8),
@@ -138,9 +141,13 @@ class Records extends GetView<RecordsController> {
             color: ColorName.cardBackground,
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: InkWell(
-              onTap: () {
+              onTap: () async {
                 controller.selectRecording(recording);
-                Get.bottomSheet(const BottomSheetBody());
+                final res = await Get.bottomSheet(const BottomSheetBody());
+                if (res == null) {
+                  controller.stopPlayback();
+                  controller.selectedFile.value = null;
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.all(16),

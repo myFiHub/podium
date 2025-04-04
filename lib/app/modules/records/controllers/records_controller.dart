@@ -189,7 +189,7 @@ class RecordsController extends GetxController {
     return progressStream;
   }
 
-  Future<void> shareSelectedPortion(RecordingFile file) async {
+  Future<void> shareSelectedPortion(RecordingFile trimmedFile) async {
     try {
       if (trimStartTime.value >= trimEndTime.value) {
         Toast.warning(
@@ -198,6 +198,10 @@ class RecordsController extends GetxController {
         );
         return;
       }
+      await Share.shareXFiles(
+        [XFile(trimmedFile.path)],
+        subject: '${trimmedFile.name}',
+      );
     } catch (e) {
       print('Error sharing selected portion: $e');
     }

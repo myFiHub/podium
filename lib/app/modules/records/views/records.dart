@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:just_waveform/just_waveform.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/services/toast/toast.dart';
+import 'package:siri_wave/siri_wave.dart';
 
 class BottomSheetBody extends GetView<RecordsController> {
   const BottomSheetBody({super.key});
@@ -33,9 +35,35 @@ class BottomSheetBody extends GetView<RecordsController> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Name: ${file.name}'),
-            const SizedBox(height: 8),
-            Text('Date: ${file.date.toString().split('.')[0]}'),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[900]?.withAlpha(50),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    file.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    file.date.toString().split('.')[0],
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[400],
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             SizedBox(
               height: 100,
@@ -78,6 +106,24 @@ class BottomSheetBody extends GetView<RecordsController> {
                               waveColor: Colors.blue[700]!,
                               onSeek: controller.seekToPosition,
                             )),
+                      ),
+                      Positioned.fill(
+                        child: Obx(() {
+                          final siriController = IOS9SiriWaveformController()
+                            ..amplitude = controller.isPlaying.value ? 1.0 : 0.0
+                            ..speed = 0.5
+                            ..color1 = Colors.purple[400]!.withAlpha(150)
+                            ..color2 = Colors.blue[400]!.withAlpha(150)
+                            ..color3 = Colors.teal[400]!.withAlpha(150);
+                          return SiriWaveform.ios9(
+                            controller: siriController,
+                            options: IOS9SiriWaveformOptions(
+                              height: 100,
+                              width: Get.width - 32,
+                              showSupportBar: false,
+                            ),
+                          );
+                        }),
                       ),
                       Positioned(
                         top: 8,
@@ -412,8 +458,8 @@ class AudioWaveformPainter extends CustomPainter {
       // Draw a slightly thicker line for better visibility
       final indicatorPaint = Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.0
-        ..color = Colors.red;
+        ..strokeWidth = 1.5
+        ..color = Colors.red.withAlpha(100);
 
       canvas.drawLine(
         Offset(positionX, 0),
@@ -424,12 +470,12 @@ class AudioWaveformPainter extends CustomPainter {
       // Add a small circle at the top and bottom for better visual indication
       canvas.drawCircle(
         Offset(positionX, 0),
-        4.0,
+        2.0,
         indicatorPaint,
       );
       canvas.drawCircle(
         Offset(positionX, height),
-        4.0,
+        2.0,
         indicatorPaint,
       );
     }
@@ -503,7 +549,7 @@ class TimePickerWidget extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: time == selectedTime
-                          ? Colors.blue.withOpacity(0.1)
+                          ? Colors.blue.withAlpha(25)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -566,30 +612,11 @@ class TrimDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Obx(() => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: TimePickerWidget(
-                        duration: waveform.duration,
-                        selectedTime: controller.trimStartTime.value,
-                        onTimeChanged: (time) =>
-                            controller.trimStartTime.value = time,
-                        label: 'Start Time',
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TimePickerWidget(
-                        duration: waveform.duration,
-                        selectedTime: controller.trimEndTime.value,
-                        onTimeChanged: (time) =>
-                            controller.trimEndTime.value = time,
-                        label: 'End Time',
-                      ),
-                    ),
-                  ],
-                )),
+            Container(
+              height: 140,
+              width: double.infinity,
+              color: Colors.red,
+            ),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -603,7 +630,10 @@ class TrimDialog extends StatelessWidget {
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: () {
-                    controller.shareSelectedPortion(file);
+                    // controller.shareSelectedPortion(file);
+                    Toast.info(
+                      message: 'we are working on this feature',
+                    );
                   },
                   child: const Text('Share Trimmed'),
                 ),

@@ -81,6 +81,39 @@ class BottomSheetBody extends GetView<RecordsController> {
                       ),
                       Positioned(
                         top: 8,
+                        left: 8,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            iconSize: 16,
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.content_cut,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              // Initialize trim times
+                              controller.trimStartTime.value =
+                                  controller.currentPosition.value;
+                              controller.trimEndTime.value = waveform.duration;
+                              Get.dialog(
+                                TrimDialog(
+                                  controller: controller,
+                                  waveform: waveform,
+                                  file: file,
+                                ),
+                                barrierDismissible: true,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
                         right: 8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -372,12 +405,32 @@ class AudioWaveformPainter extends CustomPainter {
 
     // Draw the play position indicator
     if (currentPosition != null) {
+      // Calculate position more accurately
       final positionX =
           (currentPosition!.inMilliseconds / duration.inMilliseconds) * width;
+
+      // Draw a slightly thicker line for better visibility
+      final indicatorPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0
+        ..color = Colors.red;
+
       canvas.drawLine(
         Offset(positionX, 0),
         Offset(positionX, height),
-        positionPaint,
+        indicatorPaint,
+      );
+
+      // Add a small circle at the top and bottom for better visual indication
+      canvas.drawCircle(
+        Offset(positionX, 0),
+        4.0,
+        indicatorPaint,
+      );
+      canvas.drawCircle(
+        Offset(positionX, height),
+        4.0,
+        indicatorPaint,
       );
     }
   }
@@ -402,5 +455,163 @@ class AudioWaveformPainter extends CustomPainter {
       final y = (scale * s).clamp(-128.0, 127.0).toDouble();
       return height / 2 - (y * height / (maxAmplitude * 4));
     }
+  }
+}
+
+class TimePickerWidget extends StatelessWidget {
+  final Duration duration;
+  final Duration selectedTime;
+  final Function(Duration) onTimeChanged;
+  final String label;
+
+  const TimePickerWidget({
+    super.key,
+    required this.duration,
+    required this.selectedTime,
+    required this.onTimeChanged,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 100,
+          child: ListWheelScrollView(
+            itemExtent: 40,
+            physics: const FixedExtentScrollPhysics(),
+            onSelectedItemChanged: (index) {
+              onTimeChanged(Duration(seconds: index));
+            },
+            children: List.generate(
+              duration.inSeconds + 1,
+              (index) {
+                final time = Duration(seconds: index);
+                return Center(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: time == selectedTime
+                          ? Colors.blue.withOpacity(0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _formatDuration(time),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: time == selectedTime
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: time == selectedTime
+                            ? Colors.blue
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
+}
+
+class TrimDialog extends StatelessWidget {
+  final RecordsController controller;
+  final Waveform waveform;
+  final RecordingFile file;
+
+  const TrimDialog({
+    super.key,
+    required this.controller,
+    required this.waveform,
+    required this.file,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: ColorName.cardBackground,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Trim Recording',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Obx(() => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: TimePickerWidget(
+                        duration: waveform.duration,
+                        selectedTime: controller.trimStartTime.value,
+                        onTimeChanged: (time) =>
+                            controller.trimStartTime.value = time,
+                        label: 'Start Time',
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TimePickerWidget(
+                        duration: waveform.duration,
+                        selectedTime: controller.trimEndTime.value,
+                        onTimeChanged: (time) =>
+                            controller.trimEndTime.value = time,
+                        label: 'End Time',
+                      ),
+                    ),
+                  ],
+                )),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Close'),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    controller.shareSelectedPortion(file);
+                  },
+                  child: const Text('Share Trimmed'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

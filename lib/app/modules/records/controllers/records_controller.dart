@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:just_waveform/just_waveform.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -27,6 +28,8 @@ class RecordsController extends GetxController {
   final isPlaying = false.obs;
   final selectedFile = Rxn<RecordingFile>();
   final currentPosition = Duration.zero.obs;
+  final trimStartTime = Duration.zero.obs;
+  final trimEndTime = Duration.zero.obs;
   final _isInitialized = false.obs;
   StreamSubscription? _positionSubscription;
 
@@ -184,5 +187,19 @@ class RecordsController extends GetxController {
 
     generateWaveform();
     return progressStream;
+  }
+
+  Future<void> shareSelectedPortion(RecordingFile file) async {
+    try {
+      if (trimStartTime.value >= trimEndTime.value) {
+        Toast.warning(
+          title: 'Invalid Selection',
+          message: 'End time must be after start time',
+        );
+        return;
+      }
+    } catch (e) {
+      print('Error sharing selected portion: $e');
+    }
   }
 }

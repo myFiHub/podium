@@ -61,24 +61,49 @@ class BottomSheetBody extends GetView<RecordsController> {
                       ),
                     );
                   }
-                  return Container(
-                    height: 100,
-                    width: Get.width - 32,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Obx(() => AudioWaveformWidget(
-                          waveform: waveform,
-                          start: Duration.zero,
-                          duration: waveform.duration,
-                          currentPosition: controller.currentPosition.value,
-                          waveColor: Colors.blue[700]!,
-                          scale: 3.0,
-                          strokeWidth: 2.0,
-                          pixelsPerStep: 1.0,
-                          onSeek: controller.seekToPosition,
-                        )),
+                  return Stack(
+                    children: [
+                      Container(
+                        height: 100,
+                        width: Get.width - 32,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Obx(() => AudioWaveformWidget(
+                              waveform: waveform,
+                              start: Duration.zero,
+                              duration: waveform.duration,
+                              currentPosition: controller.currentPosition.value,
+                              waveColor: Colors.blue[700]!,
+                              onSeek: controller.seekToPosition,
+                            )),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Obx(() {
+                            final position = controller.currentPosition.value;
+                            final duration = waveform.duration;
+                            return Text(
+                              '${_formatDuration(position)} / ${_formatDuration(duration)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -96,21 +121,27 @@ class BottomSheetBody extends GetView<RecordsController> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () => controller.shareRecording(file),
+                  onPressed: () => {
+                    if (controller.selectedFile.value != null)
+                      {
+                        controller
+                            .shareRecording(controller.selectedFile.value!)
+                      }
+                  },
                   child: const Text('Share'),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () => {
-                    if (isPlaying)
+                    if (controller.isPlaying.value)
                       {controller.stopPlayback()}
-                    else
-                      {controller.playRecording(file)}
+                    else if (controller.selectedFile.value != null)
+                      {controller.playRecording(controller.selectedFile.value!)}
                   },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(100, 36),
                   ),
-                  child: Text(isPlaying ? 'Stop' : 'Play'),
+                  child: Text(controller.isPlaying.value ? 'Stop' : 'Play'),
                 )
               ],
             ),
@@ -118,6 +149,13 @@ class BottomSheetBody extends GetView<RecordsController> {
         ),
       );
     });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 }
 
@@ -200,8 +238,8 @@ class AudioWaveformWidget extends StatefulWidget {
     this.onSeek,
     this.waveColor = Colors.blue,
     this.scale = 1.0,
-    this.strokeWidth = 5.0,
-    this.pixelsPerStep = 8.0,
+    this.strokeWidth = 2.0,
+    this.pixelsPerStep = 3.0,
   });
 
   @override
@@ -216,18 +254,30 @@ class _AudioWaveformState extends State<AudioWaveformWidget> {
     return GestureDetector(
       onTapDown: (details) => _handleSeek(details.localPosition.dx),
       onPanUpdate: (details) => _handleSeek(details.localPosition.dx),
-      onPanEnd: (_) => seekPosition = null,
-      child: ClipRect(
-        child: CustomPaint(
-          painter: AudioWaveformPainter(
-            waveColor: widget.waveColor,
-            waveform: widget.waveform,
-            start: widget.start,
-            duration: widget.duration,
-            currentPosition: seekPosition ?? widget.currentPosition,
-            scale: widget.scale,
-            strokeWidth: widget.strokeWidth,
-            pixelsPerStep: widget.pixelsPerStep,
+      onPanEnd: (_) {
+        setState(() {
+          seekPosition = null;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          seekPosition = null;
+        });
+      },
+      child: RepaintBoundary(
+        child: ClipRect(
+          child: CustomPaint(
+            painter: AudioWaveformPainter(
+              waveColor: widget.waveColor,
+              waveform: widget.waveform,
+              start: widget.start,
+              duration: widget.duration,
+              currentPosition: seekPosition ?? widget.currentPosition,
+              scale: widget.scale,
+              strokeWidth: widget.strokeWidth,
+              pixelsPerStep: widget.pixelsPerStep,
+            ),
+            size: Size.infinite,
           ),
         ),
       ),
@@ -263,8 +313,8 @@ class AudioWaveformPainter extends CustomPainter {
     this.currentPosition,
     Color waveColor = Colors.blue,
     this.scale = 1.0,
-    this.strokeWidth = 5.0,
-    this.pixelsPerStep = 8.0,
+    this.strokeWidth = 2.0,
+    this.pixelsPerStep = 3.0,
   })  : wavePaint = Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = strokeWidth
@@ -282,6 +332,7 @@ class AudioWaveformPainter extends CustomPainter {
     double width = size.width;
     double height = size.height;
 
+    // Draw the waveform
     final waveformPixelsPerWindow = waveform.positionToPixel(duration).toInt();
     final waveformPixelsPerDevicePixel = waveformPixelsPerWindow / width;
     final waveformPixelsPerStep = waveformPixelsPerDevicePixel * pixelsPerStep;
@@ -334,7 +385,9 @@ class AudioWaveformPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant AudioWaveformPainter oldDelegate) {
     return oldDelegate.currentPosition != currentPosition ||
-        oldDelegate.waveform != waveform;
+        oldDelegate.waveform != waveform ||
+        oldDelegate.duration != duration ||
+        oldDelegate.start != start;
   }
 
   double normalise(int s, double height, double maxAmplitude) {

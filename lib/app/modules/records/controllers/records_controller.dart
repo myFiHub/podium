@@ -52,7 +52,9 @@ class RecordsController extends GetxController {
         await stopPlayback();
       }
 
+      final startPosition = currentPosition.value;
       isPlaying.value = true;
+
       await _audioPlayer.startPlayer(
         fromURI: file.path,
         codec: Codec.aacADTS,
@@ -63,9 +65,15 @@ class RecordsController extends GetxController {
         },
       );
 
+      // Seek to the desired position after starting playback
+      if (startPosition > Duration.zero) {
+        await _audioPlayer.seekToPlayer(startPosition);
+      }
+
       // Start position tracking
       _positionSubscription?.cancel();
       _positionSubscription = _audioPlayer.onProgress?.listen((e) {
+        if (!isPlaying.value) return; // Don't update if not playing
         currentPosition.value = e.position;
       });
     } catch (e) {

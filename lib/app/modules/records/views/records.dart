@@ -130,7 +130,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                         left: 8,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withAlpha(120),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconButton(
@@ -168,7 +168,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withAlpha(153),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Obx(() {

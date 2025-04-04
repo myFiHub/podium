@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/views/report_form.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/usersInOutpostList.dart';
 import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -36,12 +37,43 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
       },
       child: FloatingDraggableWidget(
         mainScreenWidget: Scaffold(
-          body: Obx(() {
-            final shouldShowIntro = controller.shouldShowIntro.value;
-            return GroupCall(
-              shouldShowIntro: shouldShowIntro,
-            );
-          }),
+          body: Stack(
+            children: [
+              Obx(() {
+                final shouldShowIntro = controller.shouldShowIntro.value;
+                return GroupCall(
+                  shouldShowIntro: shouldShowIntro,
+                );
+              }),
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha(100),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.flag,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      Get.dialog(
+                        Dialog(
+                          backgroundColor: ColorName.cardBackground,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: ReportForm(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         floatingWidget: Obx(() {
           final isGroupCallControllerRegistered =

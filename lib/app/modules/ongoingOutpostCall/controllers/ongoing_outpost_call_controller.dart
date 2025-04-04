@@ -61,6 +61,8 @@ class OngoingOutpostCallController extends GetxController {
   final amIMuted = true.obs;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
+  final reportReasonController = TextEditingController();
+  final reportReason = Rx<String>('');
 
   final isRecording = false.obs;
   StreamSubscription<bool>? recordingListeners;
@@ -112,6 +114,30 @@ class OngoingOutpostCallController extends GetxController {
     await jitsiMeet.hangUp();
   }
 
+  report() async {
+    final reason = reportReason.value;
+    if (reason.isEmpty) {
+      return;
+    }
+    final success = await HttpApis.podium.reportOutpost(
+      outpostId: outpostCallController.outpost.value!.uuid,
+      reasons: [reason],
+    );
+    if (!success) {
+      Toast.error(
+        title: 'Error',
+        message: 'Failed to report outpost',
+      );
+    } else {
+      Toast.success(
+        title: 'Success',
+        message: 'Report submitted successfully',
+      );
+      reportReason.value = '';
+      reportReasonController.clear();
+    }
+  }
+
   updateUserRemainingTime(
       {required String address, required int newTimeInSeconds}) {
     outpostCallController.updateUserTime(
@@ -129,7 +155,8 @@ class OngoingOutpostCallController extends GetxController {
 
   handleTimeIsUp(IncomingMessage incomingMessage) {
     final address = incomingMessage.data.address!;
-    if (address == myUser.address) {
+    final creatorUuid = outpostCallController.outpost.value!.creator_user_uuid;
+    if (address == myUser.address && creatorUuid != myUser.uuid) {
       jitsiMeet.setAudioMuted(true);
     }
   }
@@ -312,8 +339,8 @@ class OngoingOutpostCallController extends GetxController {
 
   setMutedState(bool muted) async {
     if (!wsClient.connected) {
-      final connected = await HttpApis.podium.connectToWebSocket();
-      if (!connected) {
+      await wsClient.reconnect();
+      if (!wsClient.connected) {
         Toast.warning(
           title: 'Connection Error',
           message: 'please check your internet connection',
@@ -634,8 +661,8 @@ class OngoingOutpostCallController extends GetxController {
 
   audioMuteChanged({required bool muted}) async {
     if (!wsClient.connected) {
-      final connected = await HttpApis.podium.connectToWebSocket();
-      if (!connected) {
+      await wsClient.reconnect();
+      if (!wsClient.connected) {
         Toast.warning(
           title: 'Connection Error',
           message: 'please check your internet connection',

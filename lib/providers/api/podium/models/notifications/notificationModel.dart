@@ -1,8 +1,11 @@
 import 'package:json_annotation/json_annotation.dart';
+
 part 'notificationModel.g.dart';
 
 enum NotificationTypes {
+  @JsonValue("follow")
   follow,
+  @JsonValue("invite")
   invite,
 }
 
@@ -11,8 +14,8 @@ class NotificationModel {
   final int created_at;
   final bool is_read;
   final String message;
-  final FollowMetadata? followMetadata;
-  final InviteMetadata? inviteMetadata;
+  final FollowMetadata? follow_metadata;
+  final InviteMetadata? invite_metadata;
   final NotificationTypes notification_type;
   final String uuid;
 
@@ -20,8 +23,8 @@ class NotificationModel {
     required this.created_at,
     required this.is_read,
     required this.message,
-    this.followMetadata,
-    this.inviteMetadata,
+    this.follow_metadata,
+    this.invite_metadata,
     required this.notification_type,
     required this.uuid,
   });

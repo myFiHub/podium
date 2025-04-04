@@ -392,6 +392,21 @@ class PodiumApi {
     return response.statusCode == 200;
   }
 
+  Future<bool> reportOutpost({
+    required String outpostId,
+    required List<String> reasons,
+  }) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/report',
+          data: {'uuid': outpostId, 'reasons': reasons},
+          options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
   Future<bool> addMeAsMember({
     required String outpostId,
     String? inviterId,
@@ -466,14 +481,25 @@ class PodiumApi {
         final created_at = e['created_at'];
         final is_read = e['is_read'];
         final message = e['message'];
-        final notification_type = e['notification_type'];
+        final notification_type_str = e['notification_type'];
         final uuid = e['uuid'];
+
+        // Convert string to enum
+        NotificationTypes notification_type;
+        if (notification_type_str == 'follow') {
+          notification_type = NotificationTypes.follow;
+        } else if (notification_type_str == 'invite') {
+          notification_type = NotificationTypes.invite;
+        } else {
+          throw Exception('Unknown notification type: $notification_type_str');
+        }
+
         FollowMetadata? followMetadata = null;
         InviteMetadata? inviteMetadata = null;
-        if (notification_type == NotificationTypes.follow.toString()) {
+        if (notification_type == NotificationTypes.follow) {
           followMetadata = FollowMetadata.fromJson(e['metadata']);
         }
-        if (notification_type == NotificationTypes.invite.toString()) {
+        if (notification_type == NotificationTypes.invite) {
           inviteMetadata = InviteMetadata.fromJson(e['metadata']);
         }
         final NotificationModel notification = NotificationModel(
@@ -481,8 +507,8 @@ class PodiumApi {
           is_read: is_read,
           message: message,
           notification_type: notification_type,
-          followMetadata: followMetadata,
-          inviteMetadata: inviteMetadata,
+          follow_metadata: followMetadata,
+          invite_metadata: inviteMetadata,
           uuid: uuid,
         );
         return notification;

@@ -11,14 +11,14 @@ NotificationModel _$NotificationModelFromJson(Map<String, dynamic> json) =>
       created_at: (json['created_at'] as num).toInt(),
       is_read: json['is_read'] as bool,
       message: json['message'] as String,
-      followMetadata: json['followMetadata'] == null
+      follow_metadata: json['follow_metadata'] == null
           ? null
           : FollowMetadata.fromJson(
-              json['followMetadata'] as Map<String, dynamic>),
-      inviteMetadata: json['inviteMetadata'] == null
+              json['follow_metadata'] as Map<String, dynamic>),
+      invite_metadata: json['invite_metadata'] == null
           ? null
           : InviteMetadata.fromJson(
-              json['inviteMetadata'] as Map<String, dynamic>),
+              json['invite_metadata'] as Map<String, dynamic>),
       notification_type:
           $enumDecode(_$NotificationTypesEnumMap, json['notification_type']),
       uuid: json['uuid'] as String,
@@ -29,8 +29,8 @@ Map<String, dynamic> _$NotificationModelToJson(NotificationModel instance) =>
       'created_at': instance.created_at,
       'is_read': instance.is_read,
       'message': instance.message,
-      'followMetadata': instance.followMetadata,
-      'inviteMetadata': instance.inviteMetadata,
+      'follow_metadata': instance.follow_metadata,
+      'invite_metadata': instance.invite_metadata,
       'notification_type':
           _$NotificationTypesEnumMap[instance.notification_type]!,
       'uuid': instance.uuid,

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -17,6 +18,7 @@ class NotificationsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
     loggedInListener = globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
         getNotifications();
@@ -29,12 +31,12 @@ class NotificationsController extends GetxController {
 
   @override
   void onReady() async {
-    loggedInListener?.cancel();
     super.onReady();
   }
 
   @override
   void onClose() {
+    loggedInListener?.cancel();
     super.onClose();
   }
 
@@ -61,7 +63,7 @@ class NotificationsController extends GetxController {
     required NotificationModel notif,
   }) async {
     try {
-      final outpostId = notif.inviteMetadata!.outpost_uuid;
+      final outpostId = notif.invite_metadata!.outpost_uuid;
       await outpostsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: outpostId,
       );
@@ -78,8 +80,8 @@ class NotificationsController extends GetxController {
     try {
       final success = await HttpApis.podium.rejectInvitation(
         RejectInvitationRequest(
-          inviter_uuid: notif.inviteMetadata!.inviter_uuid,
-          outpost_uuid: notif.inviteMetadata!.outpost_uuid,
+          inviter_uuid: notif.invite_metadata!.inviter_uuid,
+          outpost_uuid: notif.invite_metadata!.outpost_uuid,
         ),
       );
       if (success) {

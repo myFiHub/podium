@@ -143,17 +143,20 @@ class BottomSheetBody extends GetView<RecordsController> {
                             ),
                             onPressed: () {
                               // Initialize trim times
-                              controller.trimStartTime.value =
-                                  controller.currentPosition.value;
-                              controller.trimEndTime.value = waveform.duration;
-                              Get.dialog(
-                                TrimDialog(
-                                  controller: controller,
-                                  waveform: waveform,
-                                  file: file,
-                                ),
-                                barrierDismissible: true,
+                              Toast.info(
+                                message: 'we are working on this feature',
                               );
+                              // controller.trimStartTime.value =
+                              //     controller.currentPosition.value;
+                              // controller.trimEndTime.value = waveform.duration;
+                              // Get.dialog(
+                              //   TrimDialog(
+                              //     controller: controller,
+                              //     waveform: waveform,
+                              //     file: file,
+                              //   ),
+                              //   barrierDismissible: true,
+                              // );
                             },
                           ),
                         ),
@@ -250,48 +253,52 @@ class Records extends GetView<RecordsController> {
         );
       }
 
-      return ListView.builder(
-        itemCount: controller.recordings.length,
-        itemBuilder: (context, index) {
-          final recording = controller.recordings[index];
-          return Card(
-            color: ColorName.cardBackground,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: InkWell(
-              onTap: () async {
-                controller.selectRecording(recording);
-                final res = await Get.bottomSheet(const BottomSheetBody());
-                if (res == null) {
-                  controller.stopPlayback();
-                  controller.selectedFile.value = null;
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      recording.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+      return Stack(
+        children: [
+          ListView.builder(
+            itemCount: controller.recordings.length,
+            itemBuilder: (context, index) {
+              final recording = controller.recordings[index];
+              return Card(
+                color: ColorName.cardBackground,
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: InkWell(
+                  onTap: () async {
+                    controller.selectRecording(recording);
+                    final res = await Get.bottomSheet(const BottomSheetBody());
+                    if (res == null) {
+                      controller.stopPlayback();
+                      controller.selectedFile.value = null;
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recording.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          recording.date.toString().split('.')[0],
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      recording.date.toString().split('.')[0],
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ],
       );
     });
   }
@@ -642,6 +649,64 @@ class TrimDialog extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class ReportForm extends StatelessWidget {
+  final String userId;
+
+  const ReportForm({super.key, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Report Form',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'User ID: $userId',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Additional details:',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 8),
+        const TextField(
+          maxLines: 4,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton(
+              onPressed: () {
+                // Handle form submission
+                Toast.info(
+                  message: 'Report submitted successfully',
+                );
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

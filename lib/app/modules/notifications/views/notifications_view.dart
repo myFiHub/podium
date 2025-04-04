@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
@@ -42,6 +43,13 @@ class NotificationsView extends GetView<NotificationsController> {
                       itemCount: notifications.length,
                       itemBuilder: (context, index) {
                         final notif = notifications[index];
+                        final imageSrc =
+                            notif.follow_metadata?.follower_image ??
+                                notif.invite_metadata?.inviter_image ??
+                                '';
+                        final alt = notif.follow_metadata?.follower_name ??
+                            notif.invite_metadata?.inviter_name ??
+                            '';
                         return Column(
                           children: [
                             Container(
@@ -63,23 +71,33 @@ class NotificationsView extends GetView<NotificationsController> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: Get.width - 200,
-                                      child: Text(
-                                        notif.message,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                    Row(
+                                      children: [
+                                        Img(
+                                          src: imageSrc,
+                                          alt: alt,
+                                          width: 24,
+                                          height: 24,
                                         ),
-                                      ),
+                                        space10,
+                                        Text(
+                                          notif.notification_type.name,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     Container(
-                                      width: Get.width - 200,
+                                      width: Get.width - 60,
                                       child: Text(
                                         notif.message,
                                         style: const TextStyle(
                                           fontSize: 14,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     space10,

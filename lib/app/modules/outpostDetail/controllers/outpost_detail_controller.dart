@@ -147,8 +147,8 @@ class OutpostDetailController extends GetxController {
         incomingMessage.data.outpost_uuid == outpostData?.uuid) {
       outpost.value = outpostData?.copyWith(
         creator_joined: true,
-        creator_user_uuid: myId,
       );
+      outpost.refresh();
       scheduleChecks();
     }
   }

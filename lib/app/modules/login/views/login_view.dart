@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
@@ -9,6 +10,7 @@ import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:web3auth_flutter/enums.dart';
 
 import '../controllers/login_controller.dart';
@@ -348,6 +350,71 @@ class LoginView extends GetView<LoginController> {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w300,
                               ),
+                            ),
+                          ),
+                          space10,
+                          Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                      color: ColorName.greyText,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w300,
+                                      height: 2,
+                                    ),
+                                    children: [
+                                      const TextSpan(
+                                        text:
+                                            "By logging in, you agree to our ",
+                                      ),
+                                      TextSpan(
+                                        text: "End User License Agreement",
+                                        style: const TextStyle(
+                                          color: ColorName.primaryBlue,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () {
+                                            launchUrl(Uri.parse(
+                                                "https://docs.google.com/document/d/e/2PACX-1vRnlrIO5cBCm4Zlmn4WMQzCzl5TXpHsS5vN22j4NP8HIgPiWB8YHo0syZ9oVp1qvfh-9tlDEWvA5P8I/pub"));
+                                          },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                      color: ColorName.greyText,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w300,
+                                    ),
+                                    children: [
+                                      const TextSpan(
+                                        text: "and ",
+                                      ),
+                                      TextSpan(
+                                        text: "Privacy Policy",
+                                        style: const TextStyle(
+                                          color: ColorName.primaryBlue,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () {
+                                            launchUrl(Uri.parse(
+                                                "https://docs.google.com/document/d/e/2PACX-1vQdVu6L4I-aubHE15l876bcloKgqO-FCWXn5OW3rhVy26EPgsSVpTP35kX9TGbD8jOyZ5TzL7dPnzOO/pub"));
+                                          },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

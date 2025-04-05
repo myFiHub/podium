@@ -110,12 +110,7 @@ class CreateOutpostController extends GetxController {
   void onReady() async {
     super.onReady();
     final alreadyViewed = storage.read(IntroStorageKeys.viewedCreateOutpost);
-    if (
-        //
-        // true
-        alreadyViewed == null
-        //
-        ) {
+    if (alreadyViewed == null) {
       // wait for the context to be ready
       await Future.delayed(const Duration(seconds: 0));
       tutorialCoachMark = TutorialCoachMark(

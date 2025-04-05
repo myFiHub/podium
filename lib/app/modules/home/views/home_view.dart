@@ -1,3 +1,4 @@
+import 'package:animated_icon/animated_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -48,14 +49,33 @@ class HomeView extends GetView<HomeController> {
               ],
             ),
             space14,
-            const Padding(
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: const Text(
-                "My Outposts",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "My Outposts",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Tooltip(
+                    message: 'Refresh',
+                    child: AnimateIcon(
+                      key: UniqueKey(),
+                      onTap: () {
+                        controller.refreshOutposts();
+                      },
+                      color: Colors.blueAccent,
+                      iconType: IconType.animatedOnTap,
+                      height: 20,
+                      width: 20,
+                      animateIcon: AnimateIcons.refresh,
+                    ),
+                  )
+                ],
               ),
             ),
             space10,

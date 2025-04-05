@@ -18,4 +18,8 @@ class HomeController extends GetxController {
   void onClose() {
     super.onClose();
   }
+
+  Future<void> refreshOutposts() async {
+    await outpostsController.fetchMyOutpostsPage(0);
+  }
 }

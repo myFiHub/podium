@@ -1,17 +1,17 @@
 name: podium
-version: 1.1.9+141
+version: 1.1.9+143
 publish_to: none
 description: web3 Podium.
 environment:
   sdk: ">=3.4.3 <4.0.0"
 
 dependencies:
-  get: ^5.0.0-release-candidate-9.3.0
+  get: ^5.0.0-release-candidate-9.3.2
   flutter:
     sdk: flutter
   visibility_detector: ^0.4.0+2
-  path_provider: ^2.1.2
-  just_audio: ^0.9.36
+  path_provider: ^2.1.5
+  just_audio: ^0.9.46
   just_waveform: ^0.0.7
 
   reown_appkit: ^1.4.2
@@ -29,10 +29,10 @@ dependencies:
   flutter_confetti: ^0.5.1
   floating_draggable_widget: ^2.3.0
   dropdown_button2: ^2.3.9
-  firebase_core: ^3.12.1
-  firebase_analytics: ^11.4.4
-  firebase_storage: ^12.4.4
-  firebase_auth: ^5.5.1
+  firebase_core: ^3.13.0
+  firebase_analytics: ^11.4.5
+  firebase_storage: ^12.4.5
+  firebase_auth: ^5.5.2
   url_launcher: ^6.3.1
   get_storage: ^2.1.1
   getwidget: ^6.0.0
@@ -47,7 +47,7 @@ dependencies:
   internet_connection_checker_plus: ^2.7.1
   cached_network_image: ^3.4.1
   permission_handler: ^11.4.0
-  app_settings: ^5.2.0
+  app_settings: ^6.1.1
   pretty_dio_logger: ^1.4.0
   textfield_tags: ^3.0.1
   flutter_bloc: ^9.1.0
@@ -69,7 +69,7 @@ dependencies:
 
   ed25519_edwards: ^0.3.1
   tutorial_coach_mark: ^1.2.13
-  flutter_timezone: ^4.0.0
+  flutter_timezone: ^4.1.0
   lint: ^2.3.0
   eth_sig_util: ^0.0.9
   animated_icon: ^0.0.9

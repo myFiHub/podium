@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
@@ -14,6 +15,7 @@ class NotificationsController extends GetxController {
   final OutpostsController outpostsController = Get.find<OutpostsController>();
   final notifications = <NotificationModel>[].obs;
   final numberOfUnreadNotifications = 0.obs;
+  final loadingUserId = ''.obs;
   StreamSubscription<bool>? loggedInListener;
   @override
   void onInit() {
@@ -57,6 +59,13 @@ class NotificationsController extends GetxController {
     if (success) {
       getNotifications();
     }
+  }
+
+  openUserProfile({required String id, required String notifId}) async {
+    loadingUserId.value = id + notifId;
+    final usersController = Get.find<UsersController>();
+    await usersController.openUserProfile(id);
+    loadingUserId.value = '';
   }
 
   acceptOutpostInvitation({

@@ -83,7 +83,7 @@ class UsersController extends GetxController {
     return false;
   }
 
-  openUserProfile(String userId) async {
+  Future<void> openUserProfile(String userId) async {
     try {
       gettingUserInfo_uuid.value = userId;
       final user = await HttpApis.podium.getUserData(userId);

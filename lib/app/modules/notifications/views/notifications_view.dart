@@ -6,6 +6,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
+import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 
 import '../controllers/notifications_controller.dart';
@@ -43,13 +44,19 @@ class NotificationsView extends GetView<NotificationsController> {
                       itemCount: notifications.length,
                       itemBuilder: (context, index) {
                         final notif = notifications[index];
-                        final imageSrc =
-                            notif.follow_metadata?.follower_image ??
-                                notif.invite_metadata?.inviter_image ??
-                                '';
-                        final alt = notif.follow_metadata?.follower_name ??
-                            notif.invite_metadata?.inviter_name ??
-                            '';
+                        final isInvite =
+                            notif.notification_type == NotificationTypes.invite;
+                        final imageSrc = isInvite
+                            ? notif.invite_metadata?.inviter_image ?? ''
+                            : notif.follow_metadata?.follower_image ?? '';
+                        final alt = isInvite
+                            ? notif.invite_metadata?.inviter_name ?? ''
+                            : notif.follow_metadata?.follower_name ?? '';
+                        final idPrefix =
+                            isInvite ? 'Inviter ID: ' : 'Follower ID: ';
+                        final notifierId = isInvite
+                            ? notif.invite_metadata?.inviter_uuid ?? ''
+                            : notif.follow_metadata?.follower_uuid ?? '';
                         return Column(
                           children: [
                             Container(
@@ -63,11 +70,11 @@ class NotificationsView extends GetView<NotificationsController> {
                                 ),
                               ),
                               margin: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 8,
+                                horizontal: 12,
+                                vertical: 4,
                               ),
                               child: Container(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(12),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -89,6 +96,7 @@ class NotificationsView extends GetView<NotificationsController> {
                                         ),
                                       ],
                                     ),
+                                    space5,
                                     Container(
                                       width: Get.width - 60,
                                       child: Text(
@@ -100,7 +108,65 @@ class NotificationsView extends GetView<NotificationsController> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    space10,
+                                    space5,
+                                    GestureDetector(
+                                      onTap: () {
+                                        controller.openUserProfile(
+                                          id: notifierId,
+                                          notifId: notif.uuid,
+                                        );
+                                      },
+                                      child: Row(children: [
+                                        RichText(
+                                          text: TextSpan(
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: ColorName.greyText,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                            children: [
+                                              TextSpan(
+                                                text: '$idPrefix ',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: truncate(
+                                                  notifierId,
+                                                  length: 15,
+                                                ),
+                                                style: const TextStyle(
+                                                  color: ColorName.primaryBlue,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Obx(() {
+                                          final loadingUserId =
+                                              controller.loadingUserId.value;
+                                          return loadingUserId ==
+                                                  notifierId + notif.uuid
+                                              ? const Padding(
+                                                  padding: EdgeInsets.only(
+                                                    left: 4,
+                                                  ),
+                                                  child: SizedBox(
+                                                    width: 10,
+                                                    height: 10,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      color:
+                                                          ColorName.primaryBlue,
+                                                      strokeWidth: 1,
+                                                    ),
+                                                  ))
+                                              : const SizedBox.shrink();
+                                        })
+                                      ]),
+                                    ),
+                                    space5,
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
@@ -114,19 +180,6 @@ class NotificationsView extends GetView<NotificationsController> {
                                             type: ButtonType.outline,
                                             text: 'Mark as read',
                                           ),
-                                        // space10,
-                                        // if (notif.notification_type ==
-                                        //     NotificationTypes.follow)
-                                        //   Button(
-                                        //     size: ButtonSize.SMALL,
-                                        //     onPressed: () {
-                                        //       controller.deleteMyNotification(
-                                        //         notif,
-                                        //       );
-                                        //     },
-                                        //     type: ButtonType.outline,
-                                        //     text: 'Delete',
-                                        //   ),
                                         space10,
                                         if (notif.notification_type ==
                                             NotificationTypes.invite)

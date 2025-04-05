@@ -462,6 +462,17 @@ class PodiumApi {
     }
   }
 
+  Future<bool> deleteNotification(String id) async {
+    try {
+      final response = await dio.delete('$_baseUrl/notifications',
+          data: {'uuid': id}, options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
   Future<bool> leaveOutpost(String id) async {
     try {
       final response = await dio.post('$_baseUrl/outposts/leave',

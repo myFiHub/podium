@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/follower_badge.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -453,7 +454,7 @@ class UserInfo extends GetWidget<ProfileController> {
         avatar = avatarPlaceHolder(user.name ?? '');
       }
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(top: 12),
         child: Column(
           children: [
             Img(
@@ -462,7 +463,6 @@ class UserInfo extends GetWidget<ProfileController> {
               size: 100,
             ),
             space10,
-            space10,
             Text(
               user.name ?? '',
               style: const TextStyle(
@@ -470,6 +470,11 @@ class UserInfo extends GetWidget<ProfileController> {
                 fontWeight: FontWeight.w700,
               ),
             ),
+            space10,
+            FollowerBadge(
+              followerCount: user.followers_count ?? 0,
+            ),
+            space10,
           ],
         ),
       );

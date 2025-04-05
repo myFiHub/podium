@@ -339,42 +339,60 @@ class NotificationActions extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         if (!notification.is_read)
-          Button(
-            size: ButtonSize.SMALL,
-            onPressed: () {
-              controller.markNotificationAsRead(id: notification.uuid);
+          Obx(
+            () {
+              final loadingInviteId = controller.loadingInviteId.value;
+              return Button(
+                loading: loadingInviteId == notification.uuid + 'read',
+                size: ButtonSize.SMALL,
+                onPressed: () {
+                  controller.markNotificationAsRead(id: notification.uuid);
+                },
+                type: ButtonType.outline,
+                text: 'Mark as read',
+              );
             },
-            type: ButtonType.outline,
-            text: 'Mark as read',
           ),
         space10,
         if (notification.notification_type == NotificationTypes.invite)
           Row(
             children: [
-              Button(
-                size: ButtonSize.SMALL,
-                onPressed: () {
-                  controller.rejectOutpostInvitation(
-                    notif: notification,
+              Obx(
+                () {
+                  final loadingInviteId = controller.loadingInviteId.value;
+                  return Button(
+                    loading: loadingInviteId == notification.uuid + 'reject',
+                    size: ButtonSize.SMALL,
+                    onPressed: () {
+                      controller.rejectOutpostInvitation(
+                        notif: notification,
+                      );
+                    },
+                    color: Colors.red[200]!,
+                    textColor: Colors.red[200]!,
+                    type: ButtonType.outline,
+                    text: 'Reject',
                   );
                 },
-                color: Colors.red[200]!,
-                textColor: Colors.red[200]!,
-                type: ButtonType.outline,
-                text: 'Reject',
               ),
               space10,
-              Button(
-                size: ButtonSize.SMALL,
-                onPressed: () {
-                  controller.acceptOutpostInvitation(
-                    notif: notification,
+              Obx(
+                () {
+                  final loadingInviteId = controller.loadingInviteId.value;
+                  return Button(
+                    loading: loadingInviteId == notification.uuid + 'accept',
+                    size: ButtonSize.SMALL,
+                    onPressed: () {
+                      controller.acceptOutpostInvitation(
+                        notif: notification,
+                      );
+                    },
+                    color: Colors.green[200]!,
+                    textColor: Colors.green[200]!,
+                    type: ButtonType.outline,
+                    text: 'Accept',
                   );
                 },
-                color: Colors.green[200]!,
-                textColor: Colors.green[200]!,
-                type: ButtonType.outline,
-                text: 'Accept',
               ),
             ],
           )

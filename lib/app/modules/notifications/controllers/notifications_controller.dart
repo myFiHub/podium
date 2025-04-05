@@ -16,6 +16,7 @@ class NotificationsController extends GetxController {
   final notifications = <NotificationModel>[].obs;
   final numberOfUnreadNotifications = 0.obs;
   final loadingUserId = ''.obs;
+  final loadingInviteId = ''.obs;
   StreamSubscription<bool>? loggedInListener;
   @override
   void onInit() {
@@ -55,10 +56,12 @@ class NotificationsController extends GetxController {
   }
 
   markNotificationAsRead({required String id}) async {
+    loadingInviteId.value = id + 'read';
     final success = await HttpApis.podium.markNotificationAsRead(id: id);
     if (success) {
       getNotifications();
     }
+    loadingInviteId.value = '';
   }
 
   openUserProfile({required String id, required String notifId}) async {
@@ -72,14 +75,20 @@ class NotificationsController extends GetxController {
     required NotificationModel notif,
   }) async {
     try {
+      loadingInviteId.value = notif.uuid + 'accept';
       final outpostId = notif.invite_metadata!.outpost_uuid;
       await outpostsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: outpostId,
       );
       await markNotificationAsRead(id: notif.uuid);
-      await getNotifications();
+      final success = await HttpApis.podium.deleteNotification(notif.uuid);
+      if (success) {
+        await getNotifications();
+      }
     } catch (e) {
       l.e(e);
+    } finally {
+      loadingInviteId.value = '';
     }
   }
 
@@ -87,6 +96,7 @@ class NotificationsController extends GetxController {
     required NotificationModel notif,
   }) async {
     try {
+      loadingInviteId.value = notif.uuid + 'reject';
       final success = await HttpApis.podium.rejectInvitation(
         RejectInvitationRequest(
           inviter_uuid: notif.invite_metadata!.inviter_uuid,
@@ -95,11 +105,17 @@ class NotificationsController extends GetxController {
       );
       if (success) {
         Toast.success(message: 'Invitation rejected');
+        final success = await HttpApis.podium.deleteNotification(notif.uuid);
+        if (success) {
+          await getNotifications();
+        }
       } else {
         Toast.error(message: 'Failed to reject invitation');
       }
     } catch (e) {
       l.e(e);
+    } finally {
+      loadingInviteId.value = '';
     }
   }
 }

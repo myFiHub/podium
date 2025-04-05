@@ -915,10 +915,10 @@ class UserInfo extends GetView<GlobalController> {
                 color: ColorName.greyText,
               ),
             ),
-            space10,
-            FollowerBadge(
-              followerCount: myUser.followers_count ?? 0,
-            ),
+            // space10,
+            // FollowerBadge(
+            //   followerCount: myUser.followers_count ?? 0,
+            // ),
             space10,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

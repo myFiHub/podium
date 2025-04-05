@@ -230,7 +230,7 @@ class ToggleShowArchivedGroups extends GetView<GlobalController> {
   Widget build(BuildContext context) {
     return ListTile(
       title: const Text(
-        'Show My Archived Rooms',
+        'Show My Archived Outposts',
         style: const TextStyle(
           fontSize: 18,
           color: Colors.white,
@@ -242,7 +242,7 @@ class ToggleShowArchivedGroups extends GetView<GlobalController> {
         return Switch(
           value: value,
           onChanged: (v) {
-            controller.toggleShowArchivedGroups();
+            controller.toggleShowArchivedOutposts();
           },
         );
       }),

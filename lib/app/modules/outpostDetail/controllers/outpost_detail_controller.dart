@@ -126,7 +126,11 @@ class OutpostDetailController extends GetxController {
   @override
   void onReady() {
     final outpostData = outpost.value;
-    if (outpostData != null) {
+    if (outpostData != null &&
+        // if the creator is not joined
+        !outpostData.creator_joined &&
+        // if the creator is not me
+        outpostData.creator_user_uuid != myId) {
       wsClient.send(
         WsOutgoingMessage(
           message_type: OutgoingMessageTypeEnums.wait_for_creator,
@@ -367,7 +371,14 @@ class OutpostDetailController extends GetxController {
       final success = await HttpApis.podium.inviteUserToJoinOutpost(request);
       if (success) {
         Toast.success(message: 'Invite sent');
-        await fetchInvitedMembers();
+        final newMap = {
+          ...liveInvitedMembers.value,
+          userId: InviteModel(
+            invitee_uuid: userId,
+            can_speak: inviteToSpeak,
+          ),
+        };
+        liveInvitedMembers.value = newMap;
       } else {
         Toast.error(message: 'Failed to send invite');
       }

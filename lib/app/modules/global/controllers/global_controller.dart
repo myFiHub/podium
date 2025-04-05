@@ -198,7 +198,7 @@ class GlobalController extends GetxController {
     });
   }
 
-  Future<void> toggleShowArchivedGroups() async {
+  Future<void> toggleShowArchivedOutposts() async {
     showArchivedOutposts.value = !showArchivedOutposts.value;
     storage.write(StorageKeys.showArchivedOutposts, showArchivedOutposts.value);
     update([GlobalUpdateIds.showArchivedOutposts]);

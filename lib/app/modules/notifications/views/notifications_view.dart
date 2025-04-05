@@ -27,263 +27,358 @@ class NotificationsView extends GetView<NotificationsController> {
                   child: Obx(() {
                     final notifications = controller.notifications;
                     if (notifications.isEmpty) {
-                      return Center(
-                          child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Assets.images.bell.image(
-                            width: 64,
-                            height: 64,
-                          ),
-                          const SizedBox(height: 10),
-                          const Text('No notifications'),
-                        ],
-                      ));
+                      return const EmptyNotificationsWidget();
                     }
                     return ListView.builder(
                       itemCount: notifications.length,
                       itemBuilder: (context, index) {
                         final notif = notifications[index];
-                        final isInvite =
-                            notif.notification_type == NotificationTypes.invite;
-                        final imageSrc = isInvite
-                            ? notif.invite_metadata?.inviter_image ?? ''
-                            : notif.follow_metadata?.follower_image ?? '';
-                        final alt = isInvite
-                            ? notif.invite_metadata?.inviter_name ?? ''
-                            : notif.follow_metadata?.follower_name ?? '';
-                        final idPrefix =
-                            isInvite ? 'Inviter ID: ' : 'Follower ID: ';
-                        final notifierId = isInvite
-                            ? notif.invite_metadata?.inviter_uuid ?? ''
-                            : notif.follow_metadata?.follower_uuid ?? '';
-                        final title = notif.notification_type.name ==
-                                NotificationTypes.invite.name
-                            ? 'Outpost Invitation'
-                            : 'New Follower';
-                        return Column(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: ColorName.cardBackground,
-                                border: Border.all(
-                                  color: ColorName.cardBorder,
-                                ),
-                                borderRadius: const BorderRadius.all(
-                                  const Radius.circular(8),
-                                ),
-                              ),
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Img(
-                                          src: imageSrc,
-                                          alt: alt,
-                                          width: 24,
-                                          height: 24,
-                                        ),
-                                        space10,
-                                        if (isInvite && !notif.is_read)
-                                          Shimmer.fromColors(
-                                            loop: 5,
-                                            baseColor: Colors.white,
-                                            highlightColor: Colors.blueAccent,
-                                            child: NotifTitleWidget(
-                                              title: title,
-                                            ),
-                                          )
-                                        else
-                                          NotifTitleWidget(title: title),
-                                      ],
-                                    ),
-                                    space5,
-                                    Container(
-                                      width: Get.width - 60,
-                                      child: Text(
-                                        notif.message,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    space5,
-                                    GestureDetector(
-                                      onTap: () {
-                                        controller.openUserProfile(
-                                          id: notifierId,
-                                          notifId: notif.uuid,
-                                        );
-                                      },
-                                      child: Row(children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 6,
-                                            horizontal: 10,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: ColorName.primaryBlue
-                                                .withAlpha(25),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                              color: ColorName.primaryBlue
-                                                  .withAlpha(77),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              RichText(
-                                                text: TextSpan(
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w400,
-                                                  ),
-                                                  children: [
-                                                    TextSpan(
-                                                      text: '$idPrefix ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: isInvite
-                                                            ? ColorName
-                                                                .primaryBlue
-                                                            : ColorName
-                                                                .primaryBlue,
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text: truncate(
-                                                        notifierId,
-                                                        length: 15,
-                                                      ),
-                                                      style: TextStyle(
-                                                        color: isInvite
-                                                            ? ColorName
-                                                                .primaryBlue
-                                                            : ColorName
-                                                                .primaryBlue,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              space5,
-                                              const Icon(
-                                                  Icons.arrow_forward_ios,
-                                                  size: 10,
-                                                  color: ColorName.primaryBlue),
-                                            ],
-                                          ),
-                                        ),
-                                        Obx(() {
-                                          final loadingUserId =
-                                              controller.loadingUserId.value;
-                                          return loadingUserId ==
-                                                  notifierId + notif.uuid
-                                              ? const Padding(
-                                                  padding: EdgeInsets.only(
-                                                    left: 6,
-                                                  ),
-                                                  child: SizedBox(
-                                                    width: 12,
-                                                    height: 12,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      color:
-                                                          ColorName.primaryBlue,
-                                                      strokeWidth: 1.5,
-                                                    ),
-                                                  ))
-                                              : const SizedBox.shrink();
-                                        })
-                                      ]),
-                                    ),
-                                    space5,
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        if (!notif.is_read)
-                                          Button(
-                                            size: ButtonSize.SMALL,
-                                            onPressed: () {
-                                              controller.markNotificationAsRead(
-                                                  id: notif.uuid);
-                                            },
-                                            type: ButtonType.outline,
-                                            text: 'Mark as read',
-                                          ),
-                                        space10,
-                                        if (notif.notification_type ==
-                                            NotificationTypes.invite)
-                                          Row(
-                                            children: [
-                                              Button(
-                                                size: ButtonSize.SMALL,
-                                                onPressed: () {
-                                                  controller
-                                                      .rejectOutpostInvitation(
-                                                    notif: notif,
-                                                  );
-                                                },
-                                                color: Colors.red[200]!,
-                                                textColor: Colors.red[200]!,
-                                                type: ButtonType.outline,
-                                                text: 'Reject',
-                                              ),
-                                              space10,
-                                              Button(
-                                                size: ButtonSize.SMALL,
-                                                onPressed: () {
-                                                  controller
-                                                      .acceptOutpostInvitation(
-                                                    notif: notif,
-                                                  );
-                                                },
-                                                color: Colors.green[200]!,
-                                                textColor: Colors.green[200]!,
-                                                type: ButtonType.outline,
-                                                text: 'Accept',
-                                              ),
-                                            ],
-                                          )
-                                      ],
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                        return NotificationCard(
+                          notification: notif,
+                          controller: controller,
                         );
                       },
                     );
                   }),
                 ),
               ),
-              // Button(
-              //   onPressed: () {
-              //     controller.sendTestNotif();
-              //   },
-              //   text: 'add notification',
-              // ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class EmptyNotificationsWidget extends StatelessWidget {
+  const EmptyNotificationsWidget({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Assets.images.bell.image(
+            width: 64,
+            height: 64,
+          ),
+          const SizedBox(height: 10),
+          const Text('No notifications'),
+        ],
+      ),
+    );
+  }
+}
+
+class NotificationCard extends StatelessWidget {
+  final NotificationModel notification;
+  final NotificationsController controller;
+
+  const NotificationCard({
+    Key? key,
+    required this.notification,
+    required this.controller,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isInvite = notification.notification_type == NotificationTypes.invite;
+    final imageSrc = isInvite
+        ? notification.invite_metadata?.inviter_image ?? ''
+        : notification.follow_metadata?.follower_image ?? '';
+    final alt = isInvite
+        ? notification.invite_metadata?.inviter_name ?? ''
+        : notification.follow_metadata?.follower_name ?? '';
+    final idPrefix = isInvite ? 'Inviter ID: ' : 'Follower ID: ';
+    final notifierId = isInvite
+        ? notification.invite_metadata?.inviter_uuid ?? ''
+        : notification.follow_metadata?.follower_uuid ?? '';
+    final title =
+        notification.notification_type.name == NotificationTypes.invite.name
+            ? 'Outpost Invitation'
+            : 'New Follower';
+
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: ColorName.cardBackground,
+            border: Border.all(
+              color: ColorName.cardBorder,
+            ),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(8),
+            ),
+          ),
+          margin: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 4,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                NotificationHeader(
+                  imageSrc: imageSrc,
+                  alt: alt,
+                  title: title,
+                  isInvite: isInvite,
+                  isRead: notification.is_read,
+                ),
+                space5,
+                NotificationMessage(message: notification.message),
+                space5,
+                NotificationIdSection(
+                  idPrefix: idPrefix,
+                  notifierId: notifierId,
+                  isInvite: isInvite,
+                  notificationId: notification.uuid,
+                  controller: controller,
+                ),
+                space5,
+                NotificationActions(
+                  notification: notification,
+                  controller: controller,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class NotificationHeader extends StatelessWidget {
+  final String imageSrc;
+  final String alt;
+  final String title;
+  final bool isInvite;
+  final bool isRead;
+
+  const NotificationHeader({
+    Key? key,
+    required this.imageSrc,
+    required this.alt,
+    required this.title,
+    required this.isInvite,
+    required this.isRead,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Img(
+          src: imageSrc,
+          alt: alt,
+          width: 24,
+          height: 24,
+        ),
+        space10,
+        if (isInvite && !isRead)
+          Shimmer.fromColors(
+            loop: 5,
+            baseColor: Colors.white,
+            highlightColor: Colors.blueAccent,
+            child: NotifTitleWidget(
+              title: title,
+            ),
+          )
+        else
+          NotifTitleWidget(title: title),
+      ],
+    );
+  }
+}
+
+class NotificationMessage extends StatelessWidget {
+  final String message;
+
+  const NotificationMessage({
+    Key? key,
+    required this.message,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: Get.width - 60,
+      child: Text(
+        message,
+        style: const TextStyle(
+          fontSize: 14,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+class NotificationIdSection extends StatelessWidget {
+  final String idPrefix;
+  final String notifierId;
+  final bool isInvite;
+  final String notificationId;
+  final NotificationsController controller;
+
+  const NotificationIdSection({
+    Key? key,
+    required this.idPrefix,
+    required this.notifierId,
+    required this.isInvite,
+    required this.notificationId,
+    required this.controller,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        controller.openUserProfile(
+          id: notifierId,
+          notifId: notificationId,
+        );
+      },
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: 6,
+            horizontal: 10,
+          ),
+          decoration: BoxDecoration(
+            color: ColorName.primaryBlue.withAlpha(25),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: ColorName.primaryBlue.withAlpha(77),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: '$idPrefix ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: isInvite
+                            ? ColorName.primaryBlue
+                            : ColorName.primaryBlue,
+                      ),
+                    ),
+                    TextSpan(
+                      text: truncate(
+                        notifierId,
+                        length: 15,
+                      ),
+                      style: TextStyle(
+                        color: isInvite
+                            ? ColorName.primaryBlue
+                            : ColorName.primaryBlue,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              space5,
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 10,
+                color: ColorName.primaryBlue,
+              ),
+            ],
+          ),
+        ),
+        Obx(() {
+          final loadingUserId = controller.loadingUserId.value;
+          return loadingUserId == notifierId + notificationId
+              ? const Padding(
+                  padding: EdgeInsets.only(
+                    left: 6,
+                  ),
+                  child: SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      color: ColorName.primaryBlue,
+                      strokeWidth: 1.5,
+                    ),
+                  ))
+              : const SizedBox.shrink();
+        })
+      ]),
+    );
+  }
+}
+
+class NotificationActions extends StatelessWidget {
+  final NotificationModel notification;
+  final NotificationsController controller;
+
+  const NotificationActions({
+    Key? key,
+    required this.notification,
+    required this.controller,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        if (!notification.is_read)
+          Button(
+            size: ButtonSize.SMALL,
+            onPressed: () {
+              controller.markNotificationAsRead(id: notification.uuid);
+            },
+            type: ButtonType.outline,
+            text: 'Mark as read',
+          ),
+        space10,
+        if (notification.notification_type == NotificationTypes.invite)
+          Row(
+            children: [
+              Button(
+                size: ButtonSize.SMALL,
+                onPressed: () {
+                  controller.rejectOutpostInvitation(
+                    notif: notification,
+                  );
+                },
+                color: Colors.red[200]!,
+                textColor: Colors.red[200]!,
+                type: ButtonType.outline,
+                text: 'Reject',
+              ),
+              space10,
+              Button(
+                size: ButtonSize.SMALL,
+                onPressed: () {
+                  controller.acceptOutpostInvitation(
+                    notif: notification,
+                  );
+                },
+                color: Colors.green[200]!,
+                textColor: Colors.green[200]!,
+                type: ButtonType.outline,
+                text: 'Accept',
+              ),
+            ],
+          )
+      ],
     );
   }
 }

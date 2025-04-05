@@ -886,8 +886,27 @@ class UserInfo extends GetView<GlobalController> {
       if (avatar == defaultAvatar) {
         avatar = avatarPlaceHolder(myUser.name);
       }
+
+      // Calculate follower badge
+      final followerCount = myUser.followers_count ?? 0;
+      final badgeColor = followerCount >= 1000
+          ? Colors.purple
+          : followerCount >= 100
+              ? Colors.blue
+              : followerCount >= 10
+                  ? Colors.green
+                  : Colors.grey;
+
+      final badgeText = followerCount >= 1000
+          ? 'Elite'
+          : followerCount >= 100
+              ? 'Popular'
+              : followerCount >= 10
+                  ? 'Rising'
+                  : 'Emerging';
+
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(top: 12),
         child: Column(
           children: [
             Img(
@@ -895,7 +914,6 @@ class UserInfo extends GetView<GlobalController> {
               size: 100,
               alt: myUser.name,
             ),
-            space10,
             space10,
             Text(
               myUser.name ?? '',
@@ -914,6 +932,52 @@ class UserInfo extends GetView<GlobalController> {
                 color: ColorName.greyText,
               ),
             ),
+            space10,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: badgeColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: badgeColor),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.people,
+                    color: badgeColor,
+                    size: 16,
+                  ),
+                  space5,
+                  Text(
+                    '$followerCount followers',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: badgeColor,
+                    ),
+                  ),
+                  space5,
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: badgeColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            space10,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

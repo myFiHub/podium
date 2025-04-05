@@ -8,6 +8,7 @@ import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../controllers/notifications_controller.dart';
 
@@ -57,6 +58,10 @@ class NotificationsView extends GetView<NotificationsController> {
                         final notifierId = isInvite
                             ? notif.invite_metadata?.inviter_uuid ?? ''
                             : notif.follow_metadata?.follower_uuid ?? '';
+                        final title = notif.notification_type.name ==
+                                NotificationTypes.invite.name
+                            ? 'Outpost Invitation'
+                            : 'New Follower';
                         return Column(
                           children: [
                             Container(
@@ -87,13 +92,17 @@ class NotificationsView extends GetView<NotificationsController> {
                                           height: 24,
                                         ),
                                         space10,
-                                        Text(
-                                          notif.notification_type.name,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
+                                        if (isInvite && !notif.is_read)
+                                          Shimmer.fromColors(
+                                            loop: 5,
+                                            baseColor: Colors.white,
+                                            highlightColor: Colors.blueAccent,
+                                            child: NotifTitleWidget(
+                                              title: title,
+                                            ),
+                                          )
+                                        else
+                                          NotifTitleWidget(title: title),
                                       ],
                                     ),
                                     space5,
@@ -116,96 +125,93 @@ class NotificationsView extends GetView<NotificationsController> {
                                           notifId: notif.uuid,
                                         );
                                       },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 6,
-                                          horizontal: 10,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: isInvite
-                                              ? ColorName.primaryBlue
-                                                  .withAlpha(25)
-                                              : ColorName.primaryBlue
-                                                  .withAlpha(25),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: Border.all(
-                                            color: isInvite
-                                                ? ColorName.primaryBlue
-                                                    .withAlpha(77)
-                                                : ColorName.primaryBlue
-                                                    .withAlpha(77),
-                                            width: 1,
+                                      child: Row(children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 6,
+                                            horizontal: 10,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: ColorName.primaryBlue
+                                                .withAlpha(25),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: ColorName.primaryBlue
+                                                  .withAlpha(77),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              RichText(
+                                                text: TextSpan(
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                                  children: [
+                                                    TextSpan(
+                                                      text: '$idPrefix ',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: isInvite
+                                                            ? ColorName
+                                                                .primaryBlue
+                                                            : ColorName
+                                                                .primaryBlue,
+                                                      ),
+                                                    ),
+                                                    TextSpan(
+                                                      text: truncate(
+                                                        notifierId,
+                                                        length: 15,
+                                                      ),
+                                                      style: TextStyle(
+                                                        color: isInvite
+                                                            ? ColorName
+                                                                .primaryBlue
+                                                            : ColorName
+                                                                .primaryBlue,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              space5,
+                                              const Icon(
+                                                  Icons.arrow_forward_ios,
+                                                  size: 10,
+                                                  color: ColorName.primaryBlue),
+                                            ],
                                           ),
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            RichText(
-                                              text: TextSpan(
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                                children: [
-                                                  TextSpan(
-                                                    text: '$idPrefix ',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: isInvite
-                                                          ? ColorName
-                                                              .primaryBlue
-                                                          : ColorName
-                                                              .primaryBlue,
-                                                    ),
+                                        Obx(() {
+                                          final loadingUserId =
+                                              controller.loadingUserId.value;
+                                          return loadingUserId ==
+                                                  notifierId + notif.uuid
+                                              ? const Padding(
+                                                  padding: EdgeInsets.only(
+                                                    left: 6,
                                                   ),
-                                                  TextSpan(
-                                                    text: truncate(
-                                                      notifierId,
-                                                      length: 15,
+                                                  child: SizedBox(
+                                                    width: 12,
+                                                    height: 12,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      color:
+                                                          ColorName.primaryBlue,
+                                                      strokeWidth: 1.5,
                                                     ),
-                                                    style: TextStyle(
-                                                      color: isInvite
-                                                          ? ColorName
-                                                              .primaryBlue
-                                                          : ColorName
-                                                              .primaryBlue,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            const Icon(Icons.arrow_forward_ios,
-                                                size: 10,
-                                                color: ColorName.primaryBlue),
-                                            Obx(() {
-                                              final loadingUserId = controller
-                                                  .loadingUserId.value;
-                                              return loadingUserId ==
-                                                      notifierId + notif.uuid
-                                                  ? const Padding(
-                                                      padding: EdgeInsets.only(
-                                                        left: 6,
-                                                      ),
-                                                      child: SizedBox(
-                                                        width: 12,
-                                                        height: 12,
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                          color: ColorName
-                                                              .primaryBlue,
-                                                          strokeWidth: 1.5,
-                                                        ),
-                                                      ))
-                                                  : const SizedBox.shrink();
-                                            })
-                                          ],
-                                        ),
-                                      ),
+                                                  ))
+                                              : const SizedBox.shrink();
+                                        })
+                                      ]),
                                     ),
                                     space5,
                                     Row(
@@ -278,6 +284,26 @@ class NotificationsView extends GetView<NotificationsController> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class NotifTitleWidget extends StatelessWidget {
+  final String title;
+
+  const NotifTitleWidget({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
     );
   }
 }

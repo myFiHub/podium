@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
@@ -412,6 +413,7 @@ class UserInvitationBottomSheetContent
               Expanded(child: Container(
                 child: Obx(() {
                   final users = controller.listOfSearchedUsersToInvite.value;
+                  final loadingInviteId = controller.loadingInviteId.value;
                   final liveInvitedMembers =
                       controller.liveInvitedMembers.value;
                   return ListView.builder(
@@ -449,6 +451,12 @@ class UserInvitationBottomSheetContent
                       return Column(
                         children: [
                           ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Img(
+                              src: user.image ?? '',
+                              size: 32,
+                              alt: user.name,
+                            ),
                             title: Text(
                               user.name ?? '',
                               style: const TextStyle(
@@ -460,28 +468,38 @@ class UserInvitationBottomSheetContent
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (canInviteToSpeak)
-                                  Button(
+                                  SizedBox(
+                                      width: 100,
+                                      child: Button(
+                                        loading: loadingInviteId ==
+                                            user.uuid + 'true',
+                                        type: ButtonType.outline,
+                                        size: ButtonSize.SMALL,
+                                        onPressed: () {
+                                          controller
+                                              .inviteUserToJoinThisOutpost(
+                                            userId: user.uuid,
+                                            inviteToSpeak: true,
+                                          );
+                                        },
+                                        text: 'Invite to speak',
+                                      )),
+                                space5,
+                                SizedBox(
+                                  width: 100,
+                                  child: Button(
+                                    loading:
+                                        loadingInviteId == user.uuid + 'false',
                                     type: ButtonType.outline,
                                     size: ButtonSize.SMALL,
+                                    text: 'Invite to listen',
                                     onPressed: () {
                                       controller.inviteUserToJoinThisOutpost(
                                         userId: user.uuid,
-                                        inviteToSpeak: true,
+                                        inviteToSpeak: false,
                                       );
                                     },
-                                    text: 'Invite to speak',
                                   ),
-                                space10,
-                                Button(
-                                  type: ButtonType.outline,
-                                  size: ButtonSize.SMALL,
-                                  text: 'Invite to listen',
-                                  onPressed: () {
-                                    controller.inviteUserToJoinThisOutpost(
-                                      userId: user.uuid,
-                                      inviteToSpeak: false,
-                                    );
-                                  },
                                 ),
                               ],
                             ),

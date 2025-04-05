@@ -28,7 +28,6 @@ import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
-import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 // detect presence time (groups that were active this milliseconds ago will be considered active)
 int dpt = 0;
@@ -307,43 +306,6 @@ class OutpostsController extends GetxController {
         "archive": archive.toString(),
       },
     );
-  }
-
-  final _getAllGroupsthrottle =
-      Throttling(duration: const Duration(seconds: 5));
-  getAllOutposts() async {
-    _getAllGroupsthrottle.throttle(() async {
-      gettingAllOutposts.value = true;
-      final outposts = await HttpApis.podium.getOutposts();
-      final Map<String, OutpostModel> map = {};
-      for (var outpost in outposts) {
-        map[outpost.uuid] = outpost;
-      }
-      try {
-        await _parseAndSetGroups(map);
-      } catch (e) {
-        l.e(e);
-      } finally {
-        gettingAllOutposts.value = false;
-      }
-    });
-  }
-
-  _parseAndSetGroups(Map<String, OutpostModel> data) async {
-    if (globalController.myUserInfo.value != null) {
-      final myUser = globalController.myUserInfo.value!;
-      final myId = myUser.uuid;
-      final unsorted = getOutpostsVisibleToMe(data, myId);
-      // sort groups by last active time
-      final sorted = unsorted.entries.toList()
-        ..sort((a, b) {
-          final aTime = a.value.last_active_at;
-          final bTime = b.value.last_active_at;
-          return bTime.compareTo(aTime);
-        });
-      final sortedMap = Map<String, OutpostModel>.fromEntries(sorted);
-      outposts.value = sortedMap;
-    }
   }
 
   Future<String?> _createLumaEvent({

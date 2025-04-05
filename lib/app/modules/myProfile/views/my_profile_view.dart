@@ -473,7 +473,7 @@ class AptosAddressAndBalance extends StatelessWidget {
     return AddressAndBalanceWidget(
       address: aptosWalletAddress ?? '',
       balanceWidget: const AptosBalance(),
-      addressPrefix: 'Aptos:',
+      addressPrefix: 'Movement: ',
     );
   }
 }
@@ -562,7 +562,7 @@ class EvmAddressAndBalances extends StatelessWidget {
     return AddressAndBalanceWidget(
       address: walletAddress,
       balanceWidget: const EvmBalances(),
-      addressPrefix: 'EVM:',
+      addressPrefix: 'EVM: ',
     );
   }
 }

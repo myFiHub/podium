@@ -56,6 +56,8 @@ class OutpostDetailController extends GetxController {
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
   bool gotOutpostInfo = false;
 
+  final loadingInviteId = ''.obs;
+
   final listOfSearchedUsersToInvite = Rx<List<UserModel>>([]);
   final liveInvitedMembers = Rx<Map<String, InviteModel>>({});
 //parameters for the group detail page
@@ -354,7 +356,9 @@ class OutpostDetailController extends GetxController {
   inviteUserToJoinThisOutpost(
       {required String userId, required bool inviteToSpeak}) async {
     if (outpost.value == null) return;
+    if (loadingInviteId.value == userId + inviteToSpeak.toString()) return;
     try {
+      loadingInviteId.value = userId + inviteToSpeak.toString();
       final request = InviteRequestModel(
         can_speak: inviteToSpeak,
         invitee_user_uuid: userId,
@@ -363,11 +367,14 @@ class OutpostDetailController extends GetxController {
       final success = await HttpApis.podium.inviteUserToJoinOutpost(request);
       if (success) {
         Toast.success(message: 'Invite sent');
+        await fetchInvitedMembers();
       } else {
         Toast.error(message: 'Failed to send invite');
       }
     } catch (e) {
       l.e(e);
+    } finally {
+      loadingInviteId.value = '';
     }
   }
 }

@@ -116,55 +116,96 @@ class NotificationsView extends GetView<NotificationsController> {
                                           notifId: notif.uuid,
                                         );
                                       },
-                                      child: Row(children: [
-                                        RichText(
-                                          text: TextSpan(
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: ColorName.greyText,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                            children: [
-                                              TextSpan(
-                                                text: '$idPrefix ',
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text: truncate(
-                                                  notifierId,
-                                                  length: 15,
-                                                ),
-                                                style: const TextStyle(
-                                                  color: ColorName.primaryBlue,
-                                                ),
-                                              ),
-                                            ],
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
+                                          horizontal: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isInvite
+                                              ? ColorName.primaryBlue
+                                                  .withAlpha(25)
+                                              : ColorName.primaryBlue
+                                                  .withAlpha(25),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: isInvite
+                                                ? ColorName.primaryBlue
+                                                    .withAlpha(77)
+                                                : ColorName.primaryBlue
+                                                    .withAlpha(77),
+                                            width: 1,
                                           ),
                                         ),
-                                        Obx(() {
-                                          final loadingUserId =
-                                              controller.loadingUserId.value;
-                                          return loadingUserId ==
-                                                  notifierId + notif.uuid
-                                              ? const Padding(
-                                                  padding: EdgeInsets.only(
-                                                    left: 4,
-                                                  ),
-                                                  child: SizedBox(
-                                                    width: 10,
-                                                    height: 10,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      color:
-                                                          ColorName.primaryBlue,
-                                                      strokeWidth: 1,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            RichText(
+                                              text: TextSpan(
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w400,
+                                                ),
+                                                children: [
+                                                  TextSpan(
+                                                    text: '$idPrefix ',
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: isInvite
+                                                          ? ColorName
+                                                              .primaryBlue
+                                                          : ColorName
+                                                              .primaryBlue,
                                                     ),
-                                                  ))
-                                              : const SizedBox.shrink();
-                                        })
-                                      ]),
+                                                  ),
+                                                  TextSpan(
+                                                    text: truncate(
+                                                      notifierId,
+                                                      length: 15,
+                                                    ),
+                                                    style: TextStyle(
+                                                      color: isInvite
+                                                          ? ColorName
+                                                              .primaryBlue
+                                                          : ColorName
+                                                              .primaryBlue,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            const Icon(Icons.arrow_forward_ios,
+                                                size: 10,
+                                                color: ColorName.primaryBlue),
+                                            Obx(() {
+                                              final loadingUserId = controller
+                                                  .loadingUserId.value;
+                                              return loadingUserId ==
+                                                      notifierId + notif.uuid
+                                                  ? const Padding(
+                                                      padding: EdgeInsets.only(
+                                                        left: 6,
+                                                      ),
+                                                      child: SizedBox(
+                                                        width: 12,
+                                                        height: 12,
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                          color: ColorName
+                                                              .primaryBlue,
+                                                          strokeWidth: 1.5,
+                                                        ),
+                                                      ))
+                                                  : const SizedBox.shrink();
+                                            })
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                     space5,
                                     Row(

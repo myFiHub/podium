@@ -575,7 +575,9 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final roomCreator =
+      final exists = Get.isRegistered<OngoingOutpostCallController>();
+      if (!exists) return const SizedBox();
+      final outpostCreator =
           controller.outpostCallController.outpost.value!.creator_user_uuid;
       final users =
           controller.members.value.where((m) => m.uuid == userId).toList();
@@ -583,7 +585,7 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
         return const SizedBox();
       }
       final remainingTime = users[0].remaining_time;
-      if (userId == roomCreator) {
+      if (userId == outpostCreator) {
         return Text('Creator',
             style: TextStyle(fontSize: 10, color: Colors.green[200]));
       }

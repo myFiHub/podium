@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/ongoingGroupCall/controllers/ongoing_group_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/widgets/navbar.dart';
 
@@ -18,12 +18,13 @@ final List<String> _validRoutesForNavigation =
     List.from(navbarItems.map((e) => e.route));
 
 class Navigate {
-  static Future to(
-      {required NavigationTypes type,
-      required String route,
-      dynamic id,
-      Map<String, String>? parameters,
-      dynamic arguments}) async {
+  static Future to({
+    required NavigationTypes type,
+    required String route,
+    dynamic id,
+    Map<String, String>? parameters,
+    dynamic arguments,
+  }) async {
     switch (type) {
       case NavigationTypes.toNamed:
         Get.toNamed(
@@ -57,7 +58,7 @@ class Navigate {
 }
 
 Future<bool?> canNavigate() async {
-  final hasOngoingCall = Get.isRegistered<OngoingGroupCallController>();
+  final hasOngoingCall = Get.isRegistered<OngoingOutpostCallController>();
   if (!hasOngoingCall) return true;
   final bool? can = await Get.dialog(
     AlertDialog(

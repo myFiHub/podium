@@ -33,7 +33,7 @@ final List<NavbarItem> navbarItems = [
     label: 'Home',
   ),
   NavbarItem(
-    route: Routes.ALL_GROUPS,
+    route: Routes.ALL_OUTPOSTS,
     icon: Icons.group_outlined,
     label: 'Groups',
   ),

@@ -1,13 +1,12 @@
+import 'dart:async';
 import 'dart:ui';
 
-import 'package:decimal/decimal.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -15,7 +14,9 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/models/cheerBooEvent.dart';
+import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -29,7 +30,7 @@ class Payments {
   int numberOfBoosReceived = 0;
   int numberOfCheersSent = 0;
   int numberOfBoosSent = 0;
-  Map<String, String> income = {};
+  Map<String, double> income = {};
   Payments(
       {this.numberOfCheersReceived = 0,
       this.numberOfBoosReceived = 0,
@@ -69,6 +70,7 @@ class MyProfileController extends GetxController {
   final loadingExternalWalletActivation = false.obs;
   final isGettingPayments = false.obs;
   final isGettingBalances = false.obs;
+  final isDeactivatingAccount = false.obs;
   final balances = Rx(
     Balances(
       Base: '0.0',
@@ -84,15 +86,18 @@ class MyProfileController extends GetxController {
     ),
   );
 
+  StreamSubscription<String>? externalWalletAddressListener;
+
   @override
   void onInit() {
     super.onInit();
-    globalController.externalWalletChainId.listen((address) {
+    externalWalletAddressListener =
+        globalController.externalWalletChainId.listen((address) {
       if (address.isNotEmpty && externalWalletChianId == baseChainId) {
         checkExternalWalletActivation();
       }
     });
-    _getPayments();
+    _getMyProfile();
     _getBalances();
   }
 
@@ -211,7 +216,23 @@ class MyProfileController extends GetxController {
 
   @override
   void onClose() {
+    externalWalletAddressListener?.cancel();
     super.onClose();
+  }
+
+  _getMyProfile() async {
+    final profile = await HttpApis.podium
+        .getMyUserData(additionalData: AdditionalDataForLogin());
+    if (profile == null) {
+      return;
+    }
+    payments.value = Payments(
+      income: profile.incomes ?? {},
+      numberOfCheersReceived: profile.received_cheer_count,
+      numberOfBoosReceived: profile.received_boo_count,
+      numberOfCheersSent: profile.sent_cheer_count,
+      numberOfBoosSent: profile.sent_boo_count,
+    );
   }
 
   _createStep({
@@ -322,6 +343,10 @@ class MyProfileController extends GetxController {
           results['movementAptos']!['status'] == AllSettledStatus.fulfilled
               ? results['movementAptos']!['value']
               : BigInt.zero;
+      final reason = results['movementAptos']!['reason'];
+      if (reason is DioException) {
+        l.e(reason.response?.data);
+      }
 
       balances.value = Balances(
         Base: weiToDecimalString(wei: baseBalance),
@@ -333,61 +358,6 @@ class MyProfileController extends GetxController {
     } catch (e) {
       l.e(e);
       isGettingBalances.value = false;
-    }
-  }
-
-  _getPayments() async {
-    try {
-      isGettingPayments.value = true;
-      final (received, paid) = await (
-        getReceivedPayments(
-          userId: myId,
-        ),
-        getInitiatedPayments(
-          userId: myId,
-        )
-      ).wait;
-      final _payments = Payments(
-        numberOfCheersReceived: 0,
-        numberOfBoosReceived: 0,
-        numberOfCheersSent: 0,
-        numberOfBoosSent: 0,
-        income: {},
-      );
-
-      received.forEach((element) {
-        String thisIncome = '0.0';
-        if (_payments.income[element.chainId] == null) {
-          _payments.income[element.chainId] = thisIncome;
-        }
-        if (element.type == PaymentTypes.cheer ||
-            element.type == PaymentTypes.boo) {
-          thisIncome = (Decimal.parse(element.amount) * Decimal.parse("0.95"))
-              .toString();
-          if (element.type == PaymentTypes.cheer) {
-            _payments.numberOfCheersReceived++;
-          } else if (element.type == PaymentTypes.boo) {
-            _payments.numberOfBoosReceived++;
-          }
-        } else {
-          thisIncome = element.amount;
-        }
-        final addedDecimal = Decimal.parse(_payments.income[element.chainId]!) +
-            Decimal.parse(thisIncome);
-        _payments.income[element.chainId] = addedDecimal.toString();
-      });
-      paid.forEach((element) {
-        if (element.type == PaymentTypes.cheer) {
-          _payments.numberOfCheersSent++;
-        } else if (element.type == PaymentTypes.boo) {
-          _payments.numberOfBoosSent++;
-        }
-      });
-      isGettingPayments.value = false;
-      payments.value = _payments;
-      payments.refresh();
-    } catch (e) {
-      l.e(e);
     }
   }
 
@@ -497,6 +467,138 @@ class MyProfileController extends GetxController {
     launchUrl(
       Uri.parse(
         'https://docs.google.com/forms/u/1/d/1yj3GC6-JkFnWo1UiWj36sMISave9529x2fpqzHv2hIo/edit',
+      ),
+    );
+  }
+
+  deactivateAccount() async {
+    isDeactivatingAccount.value = true;
+    Get.close();
+    final success = await HttpApis.podium.deactivateAccount();
+    if (success) {
+      globalController.setLoggedIn(false);
+    }
+    isDeactivatingAccount.value = false;
+  }
+
+  void showDeactivationDialog() {
+    Get.dialog(
+      Dialog(
+        backgroundColor: ColorName.cardBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: DeactivationForm(),
+        ),
+      ),
+    );
+  }
+}
+
+class DeactivationForm extends GetView<MyProfileController> {
+  DeactivationForm({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final TextEditingController _deactivationController =
+        TextEditingController();
+    final _formKey = GlobalKey<FormState>();
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: ColorName.white,
+              ),
+              children: [
+                TextSpan(text: 'Delete Account'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(
+                height: 1.5,
+                fontSize: 14,
+                color: ColorName.secondaryText,
+              ),
+              children: [
+                TextSpan(
+                  text:
+                      'You are about to delete your account.\nYour account will be deactivated and \nyou will not be able to use it anymore. \nAre you sure you want to delete your account? This action cannot be undone. \n',
+                ),
+                TextSpan(
+                  text: 'Type "delete" to confirm.',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          TextFormField(
+            controller: _deactivationController,
+            decoration: const InputDecoration(
+              hintText: 'Type "delete" to confirm',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter "delete" to confirm';
+              }
+              if (value.toLowerCase() != 'delete') {
+                return 'Please enter exactly "delete"';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                width: 100,
+                child: TextButton(
+                  onPressed: () => Get.close(),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Obx(() {
+                final isDeactivatingAccount =
+                    controller.isDeactivatingAccount.value;
+                return Expanded(
+                    child: ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      controller.deactivateAccount();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: isDeactivatingAccount
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(),
+                        )
+                      : const Text('Delete Account'),
+                ));
+              }),
+            ],
+          ),
+        ],
       ),
     );
   }

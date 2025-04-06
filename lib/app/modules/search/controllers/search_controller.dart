@@ -1,63 +1,69 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
-import 'package:podium/app/modules/global/mixins/firbase_tags.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
-import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/tag/tag.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
-final _deb = Debouncing(duration: const Duration(seconds: 1));
+final _deb = Debouncing(duration: const Duration(milliseconds: 600));
 
-class SearchPageController extends GetxController with FirebaseTags {
-  final groupsController = Get.find<GroupsController>();
+class SearchPageController extends GetxController {
+  final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final searchValue = ''.obs;
-  final searchedGroups = Rx<Map<String, FirebaseGroup>>({});
-  final searchedUsers = Rx<Map<String, UserInfoModel>>({});
-  final searchedTags = Rx<Map<String, Tag>>({});
+  final searchedOutposts = Rx<Map<String, OutpostModel>>({});
+  final searchedUsers = Rx<Map<String, UserModel>>({});
+  final searchedTags = Rx<Map<String, TagModel>>({});
   final loadingTag_name = ''.obs;
   final selectedSearchTab = 0.obs;
   final isSearching = false.obs;
+  StreamSubscription<String>? searchValueListener;
+  final textFieldController = TextEditingController();
 
   @override
   void onInit() {
     super.onInit();
-    searchValue.listen((value) async {
-      if (value.isEmpty) {
+    searchValueListener = searchValue.listen((value) async {
+      textFieldController.text = value;
+      // move the cursor to the end of the text field if it's at the start. because a bug happened on Majid's phone
+      if (textFieldController.selection.start == 0) {
+        textFieldController.selection = TextSelection.fromPosition(
+          TextPosition(offset: value.length),
+        );
+      }
+      isSearching.value = true;
+      if (value.isEmpty || value.length < 3) {
         searchedTags.value = {};
-        searchedGroups.value = {};
+        searchedOutposts.value = {};
         searchedUsers.value = {};
         isSearching.value = false;
         return;
       }
-      final Map<String, FirebaseGroup> groups = await filterGroupName(value);
-      if (globalController.showArchivedGroups.value == false) {
-        groups.removeWhere((key, value) => value.archived == true);
-      }
-
-      searchedGroups.value = groups;
-      isSearching.value = true;
       _deb.debounce(() async {
         if (searchValue.value.isEmpty) {
           searchedTags.value = {};
-          searchedGroups.value = {};
+          searchedOutposts.value = {};
           searchedUsers.value = {};
           isSearching.value = false;
           return;
         }
 
-        final [users, tags] = await Future.wait([
-          // searchForGroupByName(value),
-          searchForUserByName(value),
-          searchTags(value)
+        final [outposts, users, tags] = await Future.wait([
+          HttpApis.podium.searchOutpostByName(name: value),
+          HttpApis.podium.searchUserByName(name: value),
+          HttpApis.podium.searchTag(tagName: value),
         ]);
-        searchedUsers.value = users as Map<String, UserInfoModel>;
-        searchedTags.value = tags as Map<String, Tag>;
+        searchedOutposts.value = outposts as Map<String, OutpostModel>;
+        searchedUsers.value = users as Map<String, UserModel>;
+        searchedTags.value = tags as Map<String, TagModel>;
         isSearching.value = false;
       });
     });
@@ -70,46 +76,55 @@ class SearchPageController extends GetxController with FirebaseTags {
 
   @override
   void onClose() {
+    searchValueListener?.cancel();
     super.onClose();
   }
 
-  Future<Map<String, FirebaseGroup>> filterGroupName(String name) async {
-    final allGroups = groupsController.groups.value;
-    final filteredGroups = allGroups.entries
+  setSeachValue(String value) {
+    searchValue.value = value;
+    textFieldController.text = value;
+  }
+
+  updateUserFollow(String id) async {
+    final foundUser = await HttpApis.podium.getUserData(id);
+    final user = searchedUsers.value[id];
+    if (user != null && foundUser != null) {
+      searchedUsers.value[id] = searchedUsers.value[id]!.copyWith
+          .followed_by_me(foundUser.followed_by_me);
+      searchedUsers.refresh();
+    }
+  }
+
+  Future<Map<String, OutpostModel>> filterOutpostName(String name) async {
+    final allOutposts = groupsController.outposts.value;
+    final filteredOutposts = allOutposts.entries
         .where((element) =>
             element.value.name.toLowerCase().contains(name.toLowerCase()))
         .toList();
-    final filteredGroupsMap = Map<String, FirebaseGroup>.fromEntries(
-      filteredGroups,
+    final filteredOutpostsMap = Map<String, OutpostModel>.fromEntries(
+      filteredOutposts,
     );
-    return filteredGroupsMap;
+    return filteredOutpostsMap;
   }
 
-  searchGroup(String v) async {
+  searchOutpost(String v) async {
     if (v.isEmpty) {
-      searchedGroups.value = {};
+      searchedOutposts.value = {};
       return;
     }
-    final foundGroups = await searchForGroupByName(v);
-    searchedGroups.value = foundGroups;
+    final foundOutposts = await filterOutpostName(v);
+    searchedOutposts.value = foundOutposts;
   }
 
-  tagClicked(Tag tag) async {
-    final groupIds = tag.groupIds;
-    loadingTag_name.value = tag.tagName;
-    if (groupIds == null) {
-      return;
-    }
-    final foundGroups =
-        await Future.wait(groupIds.map((e) => getGroupInfoById(e)));
-    if (foundGroups.isEmpty) {
-      l.e('No groups found for tag: ${tag.tagName}');
+  tagClicked(TagModel tag) async {
+    loadingTag_name.value = tag.name;
+    final foundOutposts = await HttpApis.podium.getOutpostsByTagId(id: tag.id);
+    if (foundOutposts.isEmpty) {
+      l.e('No groups found for tag: ${tag.name}');
       return;
     } else {
-      final parsedGroups = foundGroups
-          .where((element) => element != null)
-          .toList()
-          .cast<FirebaseGroup>();
+      final parsedOutposts = foundOutposts.values.toList();
+
       Get.dialog(
         SafeArea(
           child: Scaffold(
@@ -124,7 +139,7 @@ class SearchPageController extends GetxController with FirebaseTags {
                       Container(
                         width: Get.width - 100,
                         child: Text(
-                          '#${tag.tagName}',
+                          '#${tag.name}',
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 20,
@@ -140,9 +155,12 @@ class SearchPageController extends GetxController with FirebaseTags {
                   ),
                 ),
                 Container(
-                  height: Get.height - 150,
+                  height: Get.height - 220,
                   color: ColorName.pageBackground,
-                  child: GroupList(groupsList: parsedGroups),
+                  child: OutpostsList(
+                    outpostsList: parsedOutposts,
+                    listPage: ListPage.search,
+                  ),
                 ),
               ],
             ),
@@ -158,19 +176,19 @@ class SearchPageController extends GetxController with FirebaseTags {
       searchedUsers.value = {};
       return;
     }
-    final foundUsers = await searchForUserByName(v);
+    final foundUsers = await HttpApis.podium.searchUserByName(name: v);
     searchedUsers.value = foundUsers;
   }
 
-  refreshSearchedGroup(FirebaseGroup group) {
-    if (searchedGroups.value.isEmpty) {
+  refreshSearchedGroup(OutpostModel group) {
+    if (searchedOutposts.value.isEmpty) {
       return;
     }
-    final currentGroups = searchedGroups.value;
-    if (currentGroups.containsKey(group.id)) {
-      currentGroups[group.id] = group;
-      searchedGroups.value = currentGroups;
-      searchedGroups.refresh();
+    final currentGroups = searchedOutposts.value;
+    if (currentGroups.containsKey(group.uuid)) {
+      currentGroups[group.uuid] = group;
+      searchedOutposts.value = currentGroups;
+      searchedOutposts.refresh();
     }
   }
 }

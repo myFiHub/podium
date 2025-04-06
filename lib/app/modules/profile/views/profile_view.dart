@@ -3,9 +3,10 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
-import 'package:podium/app/modules/groupDetail/widgets/usersList.dart';
+import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/root.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -16,29 +17,40 @@ class ProfileView extends GetView<ProfileController> {
   const ProfileView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
-          width: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              const UserInfo(),
-              FollowButton(
-                userId: controller.userInfo.value!.id,
-              ),
-              space10,
-              const _BuyOrSellPodiumPass(),
-              // space10,
-              // const _BuyArenaTicketButton(),
-              space10,
-              const _BuyFriendTechTicket(),
-              space10,
-              const _Statistics(),
-              space10,
-            ],
+    return PageWrapper(
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const UserInfo(),
+                Obx(() {
+                  final followedByMe =
+                      controller.userInfo.value!.followed_by_me ?? false;
+                  return FollowButton(
+                    fullWidth: true,
+                    uuid: controller.userInfo.value!.uuid,
+                    followed_by_me: followedByMe,
+                    onFollowStatusChanged: () {
+                      controller.getUserInfo();
+                    },
+                  );
+                }),
+                space10,
+                const _BuyOrSellPodiumPass(),
+                // space10,
+                // const _BuyArenaTicketButton(),
+                // space10,
+                // const _BuyFriendTechTicket(),
+                space10,
+                const _Statistics(),
+                space10,
+              ],
+            ),
           ),
         ),
       ),
@@ -47,7 +59,7 @@ class ProfileView extends GetView<ProfileController> {
 }
 
 class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
-  const _BuyOrSellPodiumPass({super.key});
+  const _BuyOrSellPodiumPass();
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +146,7 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
 }
 
 class _Statistics extends GetWidget<ProfileController> {
-  const _Statistics({super.key});
+  const _Statistics();
 
   @override
   Widget build(BuildContext context) {
@@ -436,28 +448,32 @@ class UserInfo extends GetWidget<ProfileController> {
       if (user == null) {
         return Container();
       }
-      String avatar = user.avatar;
+      String avatar = user.image ?? '';
       if (avatar == defaultAvatar) {
-        avatar = avatarPlaceHolder(user.fullName);
+        avatar = avatarPlaceHolder(user.name ?? '');
       }
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(top: 12),
         child: Column(
           children: [
             Img(
               src: avatar,
-              alt: user.fullName,
+              alt: user.name ?? '',
               size: 100,
             ),
             space10,
-            space10,
             Text(
-              user.fullName,
+              user.name ?? '',
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
               ),
             ),
+            // space10,
+            // FollowerBadge(
+            //   followerCount: user.followers_count ?? 0,
+            // ),
+            space10,
           ],
         ),
       );

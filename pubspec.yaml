@@ -1,5 +1,5 @@
 name: podium
-version: 1.1.7+122
+version: 1.1.9+145
 publish_to: none
 description: web3 Podium.
 environment:
@@ -9,52 +9,53 @@ dependencies:
   get: ^5.0.0-release-candidate-9.3.2
   flutter:
     sdk: flutter
+  visibility_detector: ^0.4.0+2
+  path_provider: ^2.1.5
+  just_audio: ^0.9.46
+  just_waveform: ^0.0.7
 
-  reown_appkit: ^1.4.0
-  record: ^5.2.1
+  reown_appkit: ^1.4.2
+  record: ^6.0.0
   flutter_dotenv: ^5.2.1
   downloadsfolder: ^1.2.0
-  alarm: ^5.0.2
-  intl: ^0.19.0 #other packages are using this version, don't change it
-  decimal: ^3.0.2
+  alarm: ^5.1.0
+  # intl: ^0.19.0
+  decimal: ^3.2.1
   share_plus: ^10.1.4
   auto_size_text: ^3.0.0
   app_links: ^6.4.0
   shimmer: ^3.0.0
   skeletonizer: ^1.4.3
-  flutter_confetti: ^0.4.0
-  ably_flutter: ^1.2.37
+  flutter_confetti: ^0.5.1
   floating_draggable_widget: ^2.3.0
   dropdown_button2: ^2.3.9
-  firebase_core: ^3.12.0
-  firebase_database: ^11.3.3
-  firebase_analytics: ^11.4.3
-  firebase_storage: ^12.4.3
+  firebase_core: ^3.13.0
+  firebase_analytics: ^11.4.5
+  firebase_storage: ^12.4.5
+  firebase_auth: ^5.5.2
   url_launcher: ^6.3.1
   get_storage: ^2.1.1
-  getwidget: ^5.0.0
-  flutter_form_builder: ^9.7.0
-  form_builder_validators: ^11.1.1
+  getwidget: ^6.0.0
+  flutter_form_builder: ^10.0.1
+  form_builder_validators: ^11.1.2
   image_picker: ^1.1.2
   uuid: ^4.5.1
   logger: ^2.5.0
-  dio: ^5.7.0 # this is used in Aptos package, don't change it
+
+  dio: ^5.8.0+1
   gap: ^3.0.1
-  internet_connection_checker_plus: ^2.7.0
+  internet_connection_checker_plus: ^2.7.1
   cached_network_image: ^3.4.1
   permission_handler: ^11.4.0
-  app_settings: ^5.2.0
+  app_settings: ^6.1.1
   pretty_dio_logger: ^1.4.0
   textfield_tags: ^3.0.1
-  flutter_bloc: ^8.1.6 # used by timepicker package only, don't change it
+  flutter_bloc: ^9.1.0
   equatable: ^2.0.7
   pulsator: ^1.0.0+2
-  # rxdart: ^0.27.7
-  bounce: ^1.0.2
-  rotated_corner_decoration: 2.1.0
+  rotated_corner_decoration: ^2.1.0
   add_2_calendar: ^3.0.1
   json_annotation: ^4.9.0
-  toasty_box: ^1.0.4
   # jitsi_meet_flutter_sdk: ^10.3.0
   jitsi_meet_flutter_sdk:
     path: ./jitsi-meet-flutter-sdk
@@ -67,25 +68,29 @@ dependencies:
       ref: developing
 
   ed25519_edwards: ^0.3.1
-  tutorial_coach_mark: ^1.2.12
-  hidable: ^1.0.6
+  tutorial_coach_mark: ^1.2.13
   flutter_timezone: ^4.1.0
-  lint: ^2.6.1
+  lint: ^2.3.0
   eth_sig_util: ^0.0.9
   animated_icon: ^0.0.9
-# dependency_overrides:
-#   web: ^0.5.0
+  copy_with_extension_gen: ^6.0.1
+  web_socket_channel: ^3.0.2
+  glow_container: ^1.0.1
+  auto_animated: ^3.2.0
+  enhanced_paginated_view: ^2.0.3
+  flutter_sound: ^9.28.0
+  siri_wave: ^2.3.0
 dependency_overrides:
-  intl: ^0.20.2
+  intl: ^0.19.0
 
 dev_dependencies:
   device_preview: ^1.2.0
   flutter_native_splash: ^2.4.5
   build_runner: ^2.4.15
-  flutter_gen_runner: ^5.9.0
-  icons_launcher: ^3.0.0
+  flutter_gen_runner: ^5.10.0
+  icons_launcher: ^3.0.1
   json_serializable: ^6.9.4
-  change_app_package_name: ^1.4.0
+  change_app_package_name: ^1.5.0
 
 flutter_gen:
   output: lib/gen/ # Optional (default: lib/gen/)
@@ -96,7 +101,6 @@ flutter_gen:
   # Optional
   integrations:
     flutter_svg: true
-    flare_flutter: true
     rive: true
     lottie: true
 

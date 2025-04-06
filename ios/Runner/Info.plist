@@ -13,7 +13,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>podium</string>
+		<string>Podium</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -22,6 +22,10 @@
 		<string>????</string>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>LSApplicationCategoryType</key>
+		<string>public.app-category.productivity</string>
+		<key>LSApplicationDescription</key>
+		<string>where attention pays</string>
 		
 		<!-- Deep Linking Configuration -->
 		<key>CFBundleURLTypes</key>

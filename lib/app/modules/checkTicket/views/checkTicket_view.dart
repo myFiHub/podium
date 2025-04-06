@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
-import 'package:podium/app/modules/createGroup/controllers/create_group_controller.dart';
-import 'package:podium/app/modules/global/controllers/group_call_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
-import 'package:podium/app/modules/global/widgets/groupsList.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -77,7 +77,7 @@ class EnterButton extends GetView<CheckticketController> {
               (element) =>
                   element.boughtTicketToSpeak &&
                   element.speakTicketType != null) ||
-          canISpeakWithoutTicket(group: controller.group.value!);
+          canISpeakWithoutTicket(outpost: controller.outpost.value!);
 
       final remainingTicketsToTalk = controller
           .allUsersToBuyTicketFrom.value.values
@@ -144,7 +144,7 @@ class TicketBuyObserver extends GetView<CheckticketController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final group = controller.group.value!;
+      final outpost = controller.outpost.value!;
       bool showRawSpeakerType = !controller.isSpeakBuyableByTicket;
 
       final allUsersToBuyTicketFrom =
@@ -200,17 +200,20 @@ class TicketBuyObserver extends GetView<CheckticketController> {
           ),
           if (showRawSpeakerType)
             RichText(
-                text: TextSpan(children: [
-              const TextSpan(
-                  text: 'Speakers: ',
-                  style:
-                      const TextStyle(fontSize: 16, color: ColorName.greyText)),
-              TextSpan(
-                  text: parseSpeakerType(group.speakerType),
-                  style: TextStyle(
-                      color: canSpeak ? Colors.green : Colors.blue,
-                      fontWeight: FontWeight.bold)),
-            ])),
+              text: TextSpan(
+                children: [
+                  const TextSpan(
+                      text: 'Speakers: ',
+                      style: const TextStyle(
+                          fontSize: 16, color: ColorName.greyText)),
+                  TextSpan(
+                      text: parseSpeakerType(outpost.speak_type),
+                      style: TextStyle(
+                          color: canSpeak ? Colors.green : Colors.blue,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
         ],
       );
     });
@@ -235,12 +238,12 @@ class SingleTicketHolder extends StatelessWidget {
             BuyableTicketTypes.onlyPodiumPassHolders ||
         ticketSeller.speakTicketType ==
             BuyableTicketTypes.onlyPodiumPassHolders) {
-      address = ticketSeller.userInfo.aptosInternalWalletAddress;
+      address = ticketSeller.userInfo.aptos_address!;
     }
     final accessPriceFullString = ticketSeller.accessPriceFullString;
     final speakPriceFullString = ticketSeller.speakPriceFullString;
     return Container(
-      key: ValueKey(ticketSeller.userInfo.id),
+      key: ValueKey(ticketSeller.userInfo.uuid),
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(10),
       decoration: const BoxDecoration(
@@ -257,15 +260,15 @@ class SingleTicketHolder extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    if (userInfo.avatar.isNotEmpty)
+                    if ((userInfo.image ?? '').isNotEmpty)
                       Img(
-                        src: userInfo.avatar,
+                        src: userInfo.image!,
                         size: 30,
                       ),
-                    if (userInfo.avatar.isNotEmpty) space10,
+                    if ((userInfo.image ?? '').isNotEmpty) space10,
                     Container(
                       constraints: const BoxConstraints(maxWidth: 170),
-                      child: Text(userInfo.fullName,
+                      child: Text(userInfo.name ?? '',
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold)),

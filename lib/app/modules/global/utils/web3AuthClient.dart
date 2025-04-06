@@ -72,7 +72,7 @@ Future<String?> sendTransaction({
       Toast.error(
         title: "Insufficient ${chainInfo.currency}",
         message: "Please top up your wallet on ${chainInfo.name}",
-        mainbutton: TextButton(
+        mainButton: TextButton(
           onPressed: () {
             _copyToClipboard(myAddress, prefix: "Address");
           },

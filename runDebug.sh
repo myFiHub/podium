@@ -26,4 +26,4 @@ else
     exit 1
 fi
 
-flutter run --no-enable-impeller
+flutter run

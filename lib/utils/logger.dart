@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
-import 'package:podium/env.dart';
 
 class L {
   static final L _singleton = L._internal();
@@ -24,7 +24,11 @@ class L {
 class CustomFilter extends LogFilter {
   @override
   bool shouldLog(LogEvent event) {
-    return Env.environment == DEVELOPMENT;
+    // is krelease
+    if (kReleaseMode) {
+      return false;
+    }
+    return true; //Env.environment == DEVELOPMENT;
   }
 }
 

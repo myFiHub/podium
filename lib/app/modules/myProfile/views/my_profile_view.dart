@@ -5,17 +5,24 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/referral_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
+import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
+import 'package:podium/app/modules/global/widgets/follower_badge.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/app/modules/records/controllers/records_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -32,41 +39,68 @@ class MyProfileView extends GetView<MyProfileController> {
         controller.introFinished(false);
       },
       child: Scaffold(
-        body: SingleChildScrollView(
-          controller: controller.scrollController,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              const ContextSaver(),
-              const UserInfo(),
-              ReferalSystem(
-                key: controller.referalSystemKey,
-              ),
-              const DefaultWallet(),
-              space10,
-              InternalWallet(
-                key: controller.internalWalletKey,
-              ),
-              const ExternalWallet(),
-              WalletConnect(
-                key: controller.walletConnectKey,
-              ),
-              space10,
-              _Statistics(
-                key: controller.statisticsKey,
-              ),
-              space10,
-              const ToggleShowArchivedGroups(),
-              space10,
-              const BugsAndFeedbacks(),
-              space10,
-              const LogoutButton(),
-            ],
+        body: PageWrapper(
+          child: SingleChildScrollView(
+            controller: controller.scrollController,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const ContextSaver(),
+                const UserInfo(),
+                ReferalSystem(
+                  key: controller.referalSystemKey,
+                ),
+                const DefaultWallet(),
+                space10,
+                InternalWallet(
+                  key: controller.internalWalletKey,
+                ),
+                const ExternalWallet(),
+                WalletConnect(
+                  key: controller.walletConnectKey,
+                ),
+                space10,
+                _Statistics(
+                  key: controller.statisticsKey,
+                ),
+                space10,
+                const ToggleShowArchivedGroups(),
+                space10,
+                const BugsAndFeedbacks(),
+                space10,
+                const LogoutButton(),
+                space10,
+                const DeleteAccountButton(),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+}
+
+class DeleteAccountButton extends GetView<MyProfileController> {
+  const DeleteAccountButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isDeactivatingAccount = controller.isDeactivatingAccount.value;
+      return Button(
+        loading: isDeactivatingAccount,
+        type: ButtonType.outline,
+        color: ButtonColors.DANGER,
+        borderSide: const BorderSide(color: Colors.red),
+        blockButton: true,
+        textColor: Colors.red,
+        onPressed: () {
+          controller.showDeactivationDialog();
+        },
+        text: 'Delete Account',
+      );
+    });
   }
 }
 
@@ -90,16 +124,14 @@ class ReferalSystem extends GetView<ReferalController> {
       children: [
         space10,
         Obx(() {
-          final allReferrals = controller.myReferals.value.values.toList();
-          final count = allReferrals.length;
-          final remaining =
-              allReferrals.where((element) => element.usedBy == '').length;
-          final numberOfAllReferals = allReferrals.length;
-          if (numberOfAllReferals == 0) {
-            return const SizedBox();
-          }
+          final myProfileData = controller.myProfile.value;
+          // final usedReferrals = myProfileData?.referrals_count ?? 0;
+          final remainingReferrals =
+              myProfileData?.remaining_referrals_count ?? 0;
+          final totalReferrals =
+              (myProfileData?.referrals_count ?? 0) + remainingReferrals;
           return Button(
-            onPressed: remaining == 0
+            onPressed: remainingReferrals == 0
                 ? null
                 : () {
                     controller.referButtonClicked();
@@ -110,14 +142,16 @@ class ReferalSystem extends GetView<ReferalController> {
                 text: TextSpan(
               children: [
                 TextSpan(
-                  text: remaining > 0 ? 'Refer a friend' : 'All referrals used',
+                  text: remainingReferrals > 0
+                      ? 'Refer a friend'
+                      : 'All referrals used',
                   style: TextStyle(
                     fontSize: 18,
-                    color: remaining == 0 ? Colors.grey : Colors.white,
+                    color: remainingReferrals == 0 ? Colors.grey : Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                if (remaining > 0)
+                if (remainingReferrals > 0)
                   const WidgetSpan(
                     child: Padding(
                       padding: EdgeInsets.only(left: 10),
@@ -128,10 +162,10 @@ class ReferalSystem extends GetView<ReferalController> {
                       ),
                     ),
                   ),
-                if (remaining > 0)
+                if (remainingReferrals > 0)
                   WidgetSpan(
                       child: Text(
-                    ' $remaining/$count remaining',
+                    '$remainingReferrals/$totalReferrals remaining',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white,
@@ -197,7 +231,7 @@ class ToggleShowArchivedGroups extends GetView<GlobalController> {
   Widget build(BuildContext context) {
     return ListTile(
       title: const Text(
-        'Show My Archived Rooms',
+        'Show My Archived Outposts',
         style: const TextStyle(
           fontSize: 18,
           color: Colors.white,
@@ -205,11 +239,11 @@ class ToggleShowArchivedGroups extends GetView<GlobalController> {
         ),
       ),
       trailing: Obx(() {
-        final value = controller.showArchivedGroups.value;
+        final value = controller.showArchivedOutposts.value;
         return Switch(
           value: value,
           onChanged: (v) {
-            controller.toggleShowArchivedGroups();
+            controller.toggleShowArchivedOutposts();
           },
         );
       }),
@@ -436,11 +470,11 @@ class AptosAddressAndBalance extends StatelessWidget {
   const AptosAddressAndBalance({super.key});
   @override
   Widget build(BuildContext context) {
-    final aptosWalletAddress = myUser.aptosInternalWalletAddress;
+    final aptosWalletAddress = myUser.aptos_address;
     return AddressAndBalanceWidget(
-      address: aptosWalletAddress,
+      address: aptosWalletAddress ?? '',
       balanceWidget: const AptosBalance(),
-      addressPrefix: 'Aptos:',
+      addressPrefix: 'Movement: ',
     );
   }
 }
@@ -472,6 +506,9 @@ class AddressAndBalanceWidget extends StatelessWidget {
           space10,
           GestureDetector(
             onTap: () async {
+              final balance = await AptosMovement.getAddressBalance(
+                  '0x0e9583e041326faa8b549ad4b3deeb3ee935120fba63b093a46996a2f907b9f2');
+              l.d('balance: $balance');
               await Clipboard.setData(
                 ClipboardData(
                   text: address,
@@ -522,11 +559,11 @@ class EvmAddressAndBalances extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final walletAddress = myUser.evmInternalWalletAddress;
+    final walletAddress = myUser.address;
     return AddressAndBalanceWidget(
       address: walletAddress,
       balanceWidget: const EvmBalances(),
-      addressPrefix: 'EVM:',
+      addressPrefix: 'EVM: ',
     );
   }
 }
@@ -823,7 +860,7 @@ class UserInfo extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    String emailValue = controller.currentUserInfo.value?.email as String;
+    String emailValue = controller.myUserInfo.value?.email as String;
     final loginType = GetStorage().read(StorageKeys.loginType);
     if (loginType == LoginType.x) {
       emailValue = 'Logged in with X platform';
@@ -842,27 +879,27 @@ class UserInfo extends GetView<GlobalController> {
     }
 
     return Obx(() {
-      final myUser = controller.currentUserInfo.value;
+      final myUser = controller.myUserInfo.value;
       if (myUser == null) {
         return Container();
       }
-      String avatar = myUser.avatar;
+      String avatar = myUser.image ?? '';
       if (avatar == defaultAvatar) {
-        avatar = avatarPlaceHolder(myUser.fullName);
+        avatar = avatarPlaceHolder(myUser.name);
       }
+
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(top: 12),
         child: Column(
           children: [
             Img(
               src: avatar,
               size: 100,
-              alt: myUser.fullName,
+              alt: myUser.name,
             ),
             space10,
-            space10,
             Text(
-              myUser.fullName,
+              myUser.name ?? '',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 24,
@@ -878,6 +915,11 @@ class UserInfo extends GetView<GlobalController> {
                 color: ColorName.greyText,
               ),
             ),
+            // space10,
+            // FollowerBadge(
+            //   followerCount: myUser.followers_count ?? 0,
+            // ),
+            space10,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -896,7 +938,7 @@ class UserInfo extends GetView<GlobalController> {
                           text: 'ID: ',
                         ),
                         TextSpan(
-                          text: myUser.id,
+                          text: myUser.uuid,
                         ),
                       ],
                     ),
@@ -905,7 +947,7 @@ class UserInfo extends GetView<GlobalController> {
                 space5,
                 IconButton(
                     onPressed: () {
-                      Clipboard.setData(ClipboardData(text: myUser.id));
+                      Clipboard.setData(ClipboardData(text: myUser.uuid));
                       Toast.neutral(
                         title: 'Copied',
                         message: 'User ID copied to clipboard',
@@ -1033,6 +1075,26 @@ class _Statistics extends GetWidget<MyProfileController> {
                       ],
                     ),
                   ],
+                ),
+                space10,
+                Button(
+                  text: 'Recorded Audios',
+                  size: ButtonSize.SMALL,
+                  type: ButtonType.outline,
+                  color: ButtonColors.WARNING,
+                  textColor: Colors.white,
+                  borderSide: const BorderSide(color: Colors.white),
+                  onPressed: () {
+                    final isRegistered = Get.isRegistered<RecordsController>();
+                    if (isRegistered) {
+                      final recordsController = Get.find<RecordsController>();
+                      recordsController.loadRecordings();
+                    }
+                    Navigate.to(
+                      type: NavigationTypes.toNamed,
+                      route: Routes.RECORDS,
+                    );
+                  },
                 ),
               ],
             ),

@@ -6,7 +6,8 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -17,80 +18,57 @@ class PrejoinReferralView extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            space10,
-            // Button(
-            //   onPressed: () async {
-            //     final databaseRef = FirebaseDatabase.instance
-            //         .ref(FireBaseConstants.podiumDefinedEntryAddresses);
-            //     await databaseRef.set([
-            //       PodiumDefinedEntryAddress(
-            //         address: '',
-            //         handle: 'jomari_p',
-            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
-            //       ).toJson(),
-            //       PodiumDefinedEntryAddress(
-            //         address: '',
-            //         handle: '0xLuis_',
-            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
-            //       ).toJson(),
-            //       PodiumDefinedEntryAddress(
-            //         address: '',
-            //         handle: 'mohsenparvar',
-            //         type: BuyableTicketTypes.onlyArenaTicketHolders,
-            //       ).toJson(),
-            //     ]);
-            //   },
-            //   text: 'Join',
-            // ),
-            space10,
-            RichText(
-              text: const TextSpan(
-                style:
-                    TextStyle(color: Colors.white, fontSize: 18, height: 1.5),
-                children: [
-                  TextSpan(
-                    text: 'In order to use ',
-                  ),
-                  TextSpan(
-                    text: 'Podium',
-                    style: TextStyle(
-                        color: Colors.blue, fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(
-                    text: ', you need to be ',
-                  ),
-                  TextSpan(
-                    text: 'Referred ',
-                    style: TextStyle(
-                        color: Colors.green, fontStyle: FontStyle.italic),
-                  ),
-                  TextSpan(
-                    text: ' by an existing user ',
-                  ),
-                  TextSpan(
-                    text: 'or hold at least one key or pass',
-                    style: TextStyle(
-                        color: Colors.red, fontStyle: FontStyle.italic),
-                  ),
-                  TextSpan(
-                    text: '.',
-                  ),
-                ],
+    return PageWrapper(
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              space10,
+              RichText(
+                text: const TextSpan(
+                  style:
+                      TextStyle(color: Colors.white, fontSize: 18, height: 1.5),
+                  children: [
+                    TextSpan(
+                      text: 'In order to use ',
+                    ),
+                    TextSpan(
+                      text: 'Podium',
+                      style: TextStyle(
+                          color: Colors.blue, fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: ', you need to be ',
+                    ),
+                    TextSpan(
+                      text: 'Referred ',
+                      style: TextStyle(
+                          color: Colors.green, fontStyle: FontStyle.italic),
+                    ),
+                    TextSpan(
+                      text: ' by an existing user ',
+                    ),
+                    TextSpan(
+                      text: 'or hold at least one key or pass',
+                      style: TextStyle(
+                          color: Colors.red, fontStyle: FontStyle.italic),
+                    ),
+                    TextSpan(
+                      text: '.',
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const _InternalWalletAddress(),
-            space5,
-            // const _ExternalWalletConnectButton(),
-            const _ReferralStatus(),
-            space10,
-            const _AccessUsingTicket(),
-          ],
+              const _InternalWalletAddress(),
+              space5,
+              // const _ExternalWalletConnectButton(),
+              const _ReferralStatus(),
+              space10,
+              const _AccessUsingTicket(),
+            ],
+          ),
         ),
       ),
     );
@@ -164,6 +142,7 @@ class _InternalWalletAddress extends GetView<LoginController> {
                     fontSize: 12,
                   ),
                 ),
+              space5,
               Row(
                 children: [
                   GestureDetector(
@@ -234,7 +213,7 @@ class _AccessUsingTicket extends GetView<LoginController> {
           itemCount: ticketHoldersList.length,
           itemBuilder: (context, index) {
             return _ProfileCard(
-              key: ValueKey(ticketHoldersList[index].id + 'podiumUser'),
+              key: ValueKey(ticketHoldersList[index].uuid + 'podiumUser'),
               user: ticketHoldersList[index],
             );
           },
@@ -245,13 +224,15 @@ class _AccessUsingTicket extends GetView<LoginController> {
 }
 
 class _ProfileCard extends GetView<LoginController> {
-  final UserInfoModel user;
+  final UserModel user;
   const _ProfileCard({
     super.key,
     required this.user,
   });
   @override
   Widget build(BuildContext context) {
+    final balance = controller.internalWalletBalance.value;
+
     // final keyPrice = user.lastKeyPrice ?? '0';
     // final binIntKeyPrice = BigInt.from(int.parse(keyPrice));
     // final valueToShow = bigIntWeiToDouble(binIntKeyPrice).toString();
@@ -276,8 +257,8 @@ class _ProfileCard extends GetView<LoginController> {
           Row(
             children: [
               Img(
-                src: user.avatar,
-                alt: user.fullName,
+                src: user.image ?? '',
+                alt: user.name,
                 size: 50,
               ),
               const SizedBox(width: 16),
@@ -285,7 +266,7 @@ class _ProfileCard extends GetView<LoginController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user.fullName,
+                    user.name ?? 'Podium team member',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -293,7 +274,7 @@ class _ProfileCard extends GetView<LoginController> {
                     ),
                   ),
                   Text(
-                    truncate(user.id, length: 20),
+                    truncate(user.uuid, length: 20),
                     style: TextStyle(
                       color: Colors.grey[400],
                       fontSize: 14,
@@ -319,7 +300,7 @@ class _ProfileCard extends GetView<LoginController> {
                     ),
                   ),
                   Text(
-                    truncate(user.aptosInternalWalletAddress, length: 20),
+                    truncate(user.aptos_address!, length: 20),
                     style: TextStyle(
                       color: Colors.grey[400],
                       fontSize: 12,
@@ -335,11 +316,39 @@ class _ProfileCard extends GetView<LoginController> {
               width: double.infinity,
               child: Obx(() {
                 final loadingId = controller.loadingBuyTicketId.value;
+                final balance = controller.internalWalletBalance.value;
                 return Button(
-                  loading: loadingId == user.id,
+                  loading: loadingId == user.uuid,
                   type: ButtonType.outline2x,
-                  onPressed: () {
-                    controller.buyTicket(user: user);
+                  onPressed: () async {
+                    if (balance.isEmpty) {
+                      await controller.getBalance();
+                      return;
+                    } else if (balance == '0.0') {
+                      Toast.error(
+                        title: "Insufficient Balance",
+                        message:
+                            'You do not have enough balance to buy a ticket',
+                        mainButton: TextButton(
+                          onPressed: () {
+                            Clipboard.setData(
+                              ClipboardData(
+                                text: user.aptos_address!,
+                              ),
+                            );
+                            Get.closeAllSnackbars();
+                            Toast.info(
+                              title: "Copied",
+                              message: 'Address copied to clipboard',
+                            );
+                          },
+                          child: const Text('Copy Address'),
+                        ),
+                      );
+                      return;
+                    } else {
+                      controller.buyTicket(user: user);
+                    }
                   },
                   child: RichText(
                       text: const TextSpan(
@@ -406,7 +415,7 @@ class _ReferralStatus extends GetView<LoginController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "${referrer.fullName} doesnt have any unused referal code ",
+                      "${referrer.name} doesnt have any unused referal code ",
                       style: const TextStyle(
                         color: Colors.red,
                         fontSize: 14,

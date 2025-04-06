@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
@@ -14,8 +13,7 @@ import 'package:podium/env.dart' as Environment;
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/cheerBooEvent.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -105,7 +103,7 @@ internal_cheerOrBoo({
   required num amount,
   required bool cheer,
   required String chainId,
-  required UserInfoModel user,
+  required UserModel user,
   required groupId,
 }) async {
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();
@@ -154,7 +152,7 @@ internal_cheerOrBoo({
     } else {
       metadata = TransactionMetadata(
         title: cheer ? 'Cheer' : 'Boo',
-        message: '${cheer ? 'Cheer' : 'Boo'} ${user.fullName}',
+        message: '${cheer ? 'Cheer' : 'Boo'} ${user.name}',
         amount: weiToDecimalString(wei: value, decimals: 2),
       );
     }
@@ -599,17 +597,18 @@ Future<bool> internal_buyFriendTechTicket({
 
     if (signature != null && signature.length > 10) {
       if (targetUserId != myId) {
-        saveNewPayment(
-          event: PaymentEvent(
-            type: PaymentTypes.frienTechTicket,
-            targetAddress: sharesSubjectWallet,
-            amount: bigIntWeiToDouble(buyPrice).toString(),
-            initiatorAddress: myAddress,
-            initiatorId: myId,
-            targetId: targetUserId,
-            chainId: chainId,
-          ),
-        );
+        // TODO: save new payment
+        // saveNewPayment(
+        //   event: PaymentEvent(
+        //     type: PaymentTypes.frienTechTicket,
+        //     targetAddress: sharesSubjectWallet,
+        //     amount: bigIntWeiToDouble(buyPrice).toString(),
+        //     initiatorAddress: myAddress,
+        //     initiatorId: myId,
+        //     targetId: targetUserId,
+        //     chainId: chainId,
+        //   ),
+        // );
       }
 
       return true;
@@ -673,17 +672,18 @@ Future<bool> ext_buyFirendtechTicket({
       final isValid =
           (response as String).startsWith('0x') && response.length > 10;
       if (isValid && targetUserId != myId) {
-        saveNewPayment(
-          event: PaymentEvent(
-            type: PaymentTypes.frienTechTicket,
-            targetAddress: sharesSubjectWallet.hex,
-            amount: bigIntWeiToDouble(buyPrice).toString(),
-            initiatorAddress: externalWalletAddress!,
-            initiatorId: myId,
-            targetId: targetUserId,
-            chainId: chainId,
-          ),
-        );
+        // TODO: save payment
+        // saveNewPayment(
+        //   event: PaymentEvent(
+        //     type: PaymentTypes.frienTechTicket,
+        //     targetAddress: sharesSubjectWallet.hex,
+        //     amount: bigIntWeiToDouble(buyPrice).toString(),
+        //     initiatorAddress: externalWalletAddress!,
+        //     initiatorId: myId,
+        //     targetId: targetUserId,
+        //     chainId: chainId,
+        //   ),
+        // );
         return true;
       }
       return false;
@@ -752,17 +752,18 @@ Future<bool> ext_buySharesWithReferrer({
         response.startsWith("0x") &&
         response.length > 10;
     if (success && targetUserId != null) {
-      saveNewPayment(
-        event: PaymentEvent(
-          type: PaymentTypes.arenaTicket,
-          targetAddress: sharesSubjectWallet.hex,
-          amount: bigIntWeiToDouble(bigIntValue).toString(),
-          initiatorAddress: externalWalletAddress!,
-          initiatorId: myId,
-          targetId: targetUserId,
-          chainId: chainId,
-        ),
-      );
+      // TODO: save payment
+      // saveNewPayment(
+      //   event: PaymentEvent(
+      //     type: PaymentTypes.arenaTicket,
+      //     targetAddress: sharesSubjectWallet.hex,
+      //     amount: bigIntWeiToDouble(bigIntValue).toString(),
+      //     initiatorAddress: externalWalletAddress!,
+      //     initiatorId: myId,
+      //     targetId: targetUserId,
+      //     chainId: chainId,
+      //   ),
+      // );
     }
 
     return success;
@@ -883,17 +884,18 @@ Future<bool> internal_buySharesWithReferrer({
 
     if (signature != null && signature.length > 10) {
       if (targetUserId != null) {
-        saveNewPayment(
-          event: PaymentEvent(
-            type: PaymentTypes.arenaTicket,
-            targetAddress: sharesSubjectWallet,
-            amount: bigIntWeiToDouble(buyPrice).toString(),
-            initiatorAddress: myAddress,
-            initiatorId: myId,
-            targetId: targetUserId,
-            chainId: chainId,
-          ),
-        );
+        // TODO: save payment
+        // saveNewPayment(
+        //   event: PaymentEvent(
+        //     type: PaymentTypes.arenaTicket,
+        //     targetAddress: sharesSubjectWallet,
+        //     amount: bigIntWeiToDouble(buyPrice).toString(),
+        //     initiatorAddress: myAddress,
+        //     initiatorId: myId,
+        //     targetId: targetUserId,
+        //     chainId: chainId,
+        //   ),
+        // );
       }
       return true;
     }

@@ -82,6 +82,8 @@ class OutpostCallController extends GetxController {
     outpostListener = outpost.listen((activeOutpost) async {
       members.value = [];
       if (activeOutpost != null) {
+        // NOTE: this should be the only place where this is used to join the outpost when the user is in the outpost call screen
+        // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
         sendOutpostEvent(
           outpostId: activeOutpost.uuid,
           eventType: OutgoingMessageTypeEnums.join,
@@ -307,10 +309,11 @@ class OutpostCallController extends GetxController {
           outpost: outpostToJoin,
         ),
       );
-      sendOutpostEvent(
-        outpostId: outpost.value!.uuid,
-        eventType: OutgoingMessageTypeEnums.join,
-      );
+      // sendOutpostEvent(
+      //   outpostId: outpost.value!.uuid,
+      //   eventType: OutgoingMessageTypeEnums.join,
+      // );
+
       analytics.logEvent(
         name: 'joined_group_call',
         parameters: {

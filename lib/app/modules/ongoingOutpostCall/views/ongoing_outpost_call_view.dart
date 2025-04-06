@@ -339,10 +339,8 @@ class MembersList extends GetView<OutpostCallController> {
                               space5,
                               AnimateIcon(
                                 key: UniqueKey(),
-                                onTap: () {
+                                onTap: () async {
                                   controller.fetchLiveData();
-                                  // controller.groupsC
-                                  // controller.refetchPresentUsersInGroup();
                                 },
                                 color: Colors.blueAccent,
                                 iconType: IconType.animatedOnTap,

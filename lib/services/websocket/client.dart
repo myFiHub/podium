@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
@@ -11,6 +12,7 @@ import 'package:podium/env.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// WebSocketService manages the WebSocket connection for the application.
@@ -18,6 +20,12 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class WebSocketService {
   // Singleton instance
   static WebSocketService? _instance;
+  final _joinSubject = PublishSubject<String>();
+  Stream<String> get joinStream => _joinSubject.stream;
+
+  // Join request tracking
+  final _joinRequests = <String, Completer<bool>>{};
+
   static WebSocketService get instance {
     _instance ??= WebSocketService._();
     return _instance!;
@@ -88,6 +96,14 @@ class WebSocketService {
     _isConnecting = false;
     _channel = null;
     connected = false;
+
+    // Clean up pending join requests
+    for (final completer in _joinRequests.values) {
+      if (!completer.isCompleted) {
+        completer.complete(false);
+      }
+    }
+    _joinRequests.clear();
   }
 
   /// Establishes a connection to the WebSocket server
@@ -191,9 +207,33 @@ class WebSocketService {
     // Process message based on type
     switch (incomingMessage.name) {
       case IncomingMessageType.userJoined:
+        if (incomingMessage.data.address == myUser.address) {
+          final joinId = _generateMyUser_UID();
+          l.d("User joined joinId: $joinId");
+          // Add to join stream
+          _joinSubject.add(joinId);
+          // Complete any pending join request
+          if (_joinRequests.containsKey(joinId)) {
+            l.d("Completing join request for: $joinId");
+            _joinRequests[joinId]!.complete(true);
+            _joinRequests.remove(joinId);
+          }
+        }
+
+        if (!Get.isRegistered<OutpostCallController>()) {
+          l.w("OutpostCallController not registered, cannot process userJoined");
+          return;
+        }
+        final outpostCallController = Get.find<OutpostCallController>();
+        // NOTE: also in jitsiMeet.dart
+        joinOrLeftDebounce.debounce(() {
+          outpostCallController.fetchLiveData();
+        });
+        break;
+
       case IncomingMessageType.userLeft:
         if (!Get.isRegistered<OutpostCallController>()) {
-          l.w("OutpostCallController not registered, cannot process userJoined or userLeft");
+          l.w("OutpostCallController not registered, cannot process userLeft");
           return;
         }
         final outpostCallController = Get.find<OutpostCallController>();
@@ -412,6 +452,7 @@ class WebSocketService {
   void close() {
     token = '';
     _cleanup();
+    _joinSubject.close();
   }
 
   /// Attempts to reconnect to the WebSocket server
@@ -461,6 +502,62 @@ class WebSocketService {
           reconnect();
         }
       });
+    });
+  }
+
+  /// Generates a unique ID for a join request
+  String _generateMyUser_UID() {
+    return 'join-${myUser.address}';
+  }
+
+  /// Asynchronously joins an outpost and returns a future that completes when the join is confirmed
+  Future<bool> asyncJoinOutpost(String outpostId) async {
+    final isRegistered = Get.isRegistered<OngoingOutpostCallController>();
+    if (isRegistered) {
+      final currentOutpost = Get.find<OngoingOutpostCallController>()
+          .outpostCallController
+          .outpost
+          .value;
+      if (currentOutpost != null && currentOutpost.uuid == outpostId) {
+        l.d("Already joined outpost: $outpostId");
+        return true;
+      }
+    }
+    final generatedId = _generateMyUser_UID();
+    l.d("Starting async join for outpost: $outpostId, joinId: $generatedId");
+
+    // Create a completer to track this join request
+    final completer = Completer<bool>();
+    _joinRequests[generatedId] = completer;
+
+    // Set a timeout for the join request
+    final timeout = Timer(const Duration(seconds: 2), () {
+      if (_joinRequests.containsKey(generatedId)) {
+        l.w("Join request timed out for outpost: $outpostId");
+        _joinRequests[generatedId]!.complete(false);
+        _joinRequests.remove(generatedId);
+      }
+    });
+
+    // Send the join message
+    final success = await send(WsOutgoingMessage(
+      message_type: OutgoingMessageTypeEnums.join,
+      outpost_uuid: outpostId,
+    ));
+
+    if (!success) {
+      l.e("Failed to send join message for outpost: $outpostId");
+      timeout.cancel();
+      _joinRequests.remove(generatedId);
+      return false;
+    }
+
+    l.d("Join message sent successfully, waiting for confirmation");
+
+    // Return the future that will complete when the join is confirmed
+    return completer.future.then((result) {
+      timeout.cancel();
+      return result;
     });
   }
 }

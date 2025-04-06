@@ -42,9 +42,9 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       }
       outpostCallController.haveOngoingCall.value = true;
 
-      await Future.delayed(const Duration(seconds: 3));
-      sendOutpostEvent(
-          outpostId: outpost.uuid, eventType: OutgoingMessageTypeEnums.join);
+      // await Future.delayed(const Duration(seconds: 3));
+      // sendOutpostEvent(
+      //     outpostId: outpost.uuid, eventType: OutgoingMessageTypeEnums.join);
 
       l.d("conferenceJoined: url: $url");
     },
@@ -87,7 +87,9 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
         type: NavigationTypes.offNamed,
       );
       sendOutpostEvent(
-          outpostId: outpost.uuid, eventType: OutgoingMessageTypeEnums.leave);
+        outpostId: outpost.uuid,
+        eventType: OutgoingMessageTypeEnums.leave,
+      );
       outpostCallController.cleanupAfterCall();
       if (Get.isRegistered<OngoingOutpostCallController>()) {
         Get.delete<OngoingOutpostCallController>();

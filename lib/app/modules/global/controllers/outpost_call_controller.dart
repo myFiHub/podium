@@ -32,7 +32,7 @@ class SortTypes {
 class OutpostCallController extends GetxController {
   final storage = GetStorage();
   // group session id is group id
-  final groupsController = Get.find<OutpostsController>();
+  final outpostsController = Get.find<OutpostsController>();
   final globalController = Get.find<GlobalController>();
   final outpost = Rxn<OutpostModel>();
   final members = Rx<List<LiveMember>>([]);

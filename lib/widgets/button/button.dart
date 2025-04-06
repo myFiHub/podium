@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -694,7 +695,7 @@ class _ButtonState extends State<Button> {
           onHover: _handleHoveredChanged,
           onTap: widget.loading ? () {} : widget.onPressed,
           onLongPress: widget.onLongPress,
-          enableFeedback: widget.enableFeedback,
+          enableFeedback: widget.enableFeedback ?? true,
           splashColor: widget.splashColor,
           highlightColor: widget.highlightColor,
           focusColor: widget.focusColor,

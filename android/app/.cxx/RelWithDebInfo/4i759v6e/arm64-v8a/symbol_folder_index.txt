@@ -1,0 +1,1 @@
+/Users/mohsen/Desktop/my_projects/podium/build/app/intermediates/cxx/RelWithDebInfo/4i759v6e/obj/arm64-v8a

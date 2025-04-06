@@ -28,20 +28,18 @@ class Env {
   static final chainNamespace = dotenv.env['CHAIN_NAMESPACE']!;
   static final albyApiKey = dotenv.env['ALBY_API_KEY']!;
 
+  static final lumaApiKey = dotenv.env['LUMA_API_KEY']!;
+
   static final fihubAddress_Avalanche_MainNet =
       dotenv.env['FIHUB_ADDRESS_AVALANCHE_MAINNET']!;
 
   static final fihubAddress_Aptos = dotenv.env['FIHUB_ADDRESS_APTOS']!;
 
-  static final podiumProtocolAptosAddress =
-      dotenv.env['PODIUM_PROTOCOL_APTOS_ADDRESS']!;
+  static final VERSION = dotenv.env['VERSION'] ?? '1.1.5';
 
-  static final cheerBooAptosAddress = dotenv.env['CHEERBOO_APTOS_ADDRESS']!;
+  static final podimBackendBaseUrl = dotenv.env['PODIM_BACKEND_BASE_URL']!;
 
-  static final VERSION =
-      // ignore: prefer_const_constructors
-      String.fromEnvironment('VERSION', defaultValue: '1.1.1');
-  // read from --dart-define=VERSION=$version
+  static final websocketAddress = dotenv.env['WEBSOCKET_ADDRESS']!;
 
   static String? starsArenaAddress(String chainId) {
     if (chainId == avalancheChainId) {
@@ -62,24 +60,6 @@ class Env {
   static String? fihubAddress(String chainId) {
     if (chainId == avalancheChainId) {
       return fihubAddress_Avalanche_MainNet;
-    } else {
-      return null;
-    }
-  }
-
-  static String? cheerBooAddress(String chainId) {
-    if (chainId == movementChain.chainId) {
-      return cheerBooAddress_Movement_Devnet;
-    } else if (chainId == movementAptosChainId) {
-      return cheerBooAptosAddress;
-    } else {
-      return null;
-    }
-  }
-
-  static String? podiumProtocolAddress(String chainId) {
-    if (chainId == movementAptosChainId) {
-      return podiumProtocolAptosAddress;
     } else {
       return null;
     }

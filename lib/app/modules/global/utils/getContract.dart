@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/chainInfo.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/contracts/cheerBoo.dart';
 import 'package:podium/contracts/friendTech.dart';
 import 'package:podium/contracts/starsArena.dart';
@@ -70,29 +69,27 @@ String chainNameById(String chainId) {
 }
 
 ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
-  if (chainId == movementAptosChainId || chainId == '127') {
-    return ReownAppKitModalNetworkInfo(
-      name: 'Aptos Movement',
-      chainId: chainId,
-      extraRpcUrls: [],
-      isTestNetwork: false,
-      chainIcon: chainIconUrlByChainId(movementChain.chainId),
-      currency: 'MOVE',
-      rpcUrl: 'https://bsc-dataseed.binance.org/',
-      explorerUrl: 'https://bscscan.com/',
-    );
+  String id = chainId;
+  if (id == 'avalanche') {
+    id = '43114';
   }
-  final chain =
-      ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
+  if (id == 'base') {
+    id = '8453';
+  }
+  if (id == 'movement') {
+    id = '126';
+  }
+
+  final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, id);
   if (chain == null) {
-    return movementChain;
+    return movementEVMChain;
   }
   final chainToReturn = ReownAppKitModalNetworkInfo(
     name: chain.name,
-    chainId: chainId,
+    chainId: id,
     extraRpcUrls: chain.extraRpcUrls,
     isTestNetwork: chain.isTestNetwork,
-    chainIcon: chainIconUrlByChainId(chainId),
+    chainIcon: chainIconUrlByChainId(id),
     currency: chain.currency,
     rpcUrl: chain.rpcUrl,
     explorerUrl: chain.explorerUrl,
@@ -107,7 +104,7 @@ String chainIconUrlByChainId(String chainId) {
     chainNameById(chainId),
   );
   if (chain == null) {
-    return movementChain.chainIcon!;
+    return movementEVMChain.chainIcon!;
   }
   return chain.icon;
 }
@@ -159,10 +156,8 @@ DeployedContract _getContract(
 }
 
 String _cheerBooAddress(String chainId) {
-  final address = Environment.Env.cheerBooAddress(externalWalletChianId);
-  if (address == null || address.isEmpty) {
-    return ZERO_ADDRESS;
-  }
+  final address = movementAptosCheerBooAddress;
+
   return address;
 }
 

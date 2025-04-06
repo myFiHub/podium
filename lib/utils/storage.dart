@@ -15,7 +15,8 @@ class StorageKeys {
   static const rememberSelectedWallet = 'rememberWallet';
   static const selectedWalletName = 'selectedWalletName';
   static const externalWalletChainId = 'externalWalletChainId';
-  static const showArchivedGroups = 'showArchivedGroups';
+  static const showArchivedOutposts = 'showArchivedOutposts';
+  static const referrerId = 'referrerId';
 }
 
 class IntroStorageKeys {
@@ -25,7 +26,7 @@ class IntroStorageKeys {
   }
   IntroStorageKeys._internal();
 
-  static const viewedCreateGroup = 'viewedCreateGroup';
+  static const viewedCreateOutpost = 'viewedCreateOutpost';
   static const viewedMyProfile = 'viewedMyProfile';
   static const viewedOngiongCall = 'viewedOngiongCall';
 }

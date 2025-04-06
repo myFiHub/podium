@@ -32,18 +32,10 @@ target 'Runner' do
   use_frameworks! :linkage => :static
   use_modular_headers!
 
-  # Add the required Particle pods
-  pod 'Thresh', '2.0.3'
-  pod 'ParticleMPCCore', '2.0.3'
-  pod 'ParticleAuthCore', '2.0.3'
-  pod 'AuthCoreAdapter', '2.0.3'
-  pod 'ParticleNetworkBase', '2.0.3'
-  pod 'ParticleNetworkChains', '2.0.3'
-  pod 'ConnectCommon', '2.0.3'
+  pod 'Giphy', '2.2.12' 
 
-  # Additional dependencies
-  pod 'SwiftyUserDefaults', :git => 'https://github.com/SunZhiC/SwiftyUserDefaults.git', :branch => 'master'
-  pod 'SkeletonView', :git => 'https://github.com/SunZhiC/SkeletonView.git', :branch => 'main'
+
+  pod 'JitsiWebRTC'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
@@ -81,6 +73,12 @@ post_install do |installer|
         config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-O'
         config.build_settings['GCC_OPTIMIZATION_LEVEL'] = 's'
       end
+
+            # # Add these lines specifically for hermes
+            # if target.name == "hermes-engine"
+            #   config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
+            #   config.build_settings['VALID_ARCHS'] = 'arm64 x86_64'
+            # end
       
       config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [

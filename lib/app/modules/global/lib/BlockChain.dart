@@ -6,32 +6,48 @@ import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
-final movementProtoTestNetRpcUrl =
-    "https://aptos.testnet.porto.movementlabs.xyz/v1";
-final movementMainNetChain = ReownAppKitModalNetworkInfo(
+const movementIcon =
+    "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg";
+////////// Aptos chains (these are just to format things and keep things in shape,
+/// they are not used for anything else since they are not supported by the appkit)
+
+final movementAptosBardokChain = ReownAppKitModalNetworkInfo(
+  name: 'Movement Testnet',
+  chainId: '250',
+  chainIcon: movementIcon,
+  currency: 'MOVE',
+  rpcUrl: 'https://aptos.testnet.bardock.movementlabs.xyz/v1',
+  explorerUrl: 'https://explorer.movementlabs.xyz',
+);
+
+final movementTestnet = ReownAppKitModalNetworkInfo(
+  name: 'Movement Aptos Testnet',
+  chainId: '177',
+  chainIcon: movementIcon,
+  currency: 'MOVE',
+  rpcUrl: 'https://aptos.testnet.porto.movementlabs.xyz/v1',
+  explorerUrl: 'https://explorer.movementlabs.xyz',
+);
+
+///////////////////
+final movementEVMMainNetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement',
   chainId: '126',
-  chainIcon:
-      "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg",
+  chainIcon: movementIcon,
   currency: 'MOVE',
   rpcUrl: 'https://mainnet.movementnetwork.xyz/v1',
   explorerUrl: 'https://explorer.movementnetwork.xyz/?network=mainnet',
 );
-final movementDevnetChain = ReownAppKitModalNetworkInfo(
+
+final movementEVMDevnetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement Testnet',
   chainId: '30732',
-  chainIcon:
-      "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg",
+  chainIcon: movementIcon,
   currency: 'MOVE',
   rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
   explorerUrl: 'https://explorer.devnet.imola.movementlabs.xyz',
 );
-final movementChain =
-//
-// movementMainNetChain;
-    movementDevnetChain;
-
-final aptosRpcUrl = movementProtoTestNetRpcUrl;
+final movementEVMChain = movementEVMDevnetChain;
 
 class BlockChainUtils {
   static Future<ReownAppKitModal> initializewm3Service(
@@ -257,7 +273,7 @@ Stream<FilterEvent> _getContractEventStream({
     fromBlock: const BlockNum.current(),
     toBlock: const BlockNum.current(),
   );
-  final movementClient = evmClientByChainId(movementChain.chainId);
+  final movementClient = evmClientByChainId(movementEVMChain.chainId);
   Stream<FilterEvent> eventStream = movementClient.events(filter);
   return eventStream;
 }

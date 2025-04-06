@@ -5,11 +5,14 @@
 *.swp
 .DS_Store
 .atom/
+.build/
 .buildlog/
 .history
 .svn/
+.swiftpm/
 migrate_working_dir/
 /aptos/
+private_keys
 
 # IntelliJ related
 *.iml
@@ -35,7 +38,7 @@ android/app/**/*.json
 .pub-cache/
 .pub/
 /build/
-
+/ios/GoogleService-Info.plist
 # Symbolication related
 app.*.symbols
 

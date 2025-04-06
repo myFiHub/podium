@@ -1,3 +1,4 @@
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:web3auth_flutter/enums.dart';
 
@@ -38,6 +39,10 @@ Provider loginTypeStringToWeb3AuthProvider(String loginType) {
       return Provider.linkedin;
     case LoginType.email:
       return Provider.email_passwordless;
+    case 'email_passwordless':
+      return Provider.email_passwordless;
+    case 'twitter':
+      return Provider.twitter;
     default:
       return Provider.google;
   }

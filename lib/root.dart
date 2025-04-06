@@ -18,9 +18,7 @@ class Root extends StatelessWidget {
         Column(
           children: [
             Expanded(
-              child: AnimatedBgbWrapper(
-                child: child,
-              ),
+              child: child,
             ),
             const PodiumNavbar(),
           ],
@@ -28,6 +26,18 @@ class Root extends StatelessWidget {
         // InternetConnectionChecker(),
         // ConnectedNetworks(),
       ],
+    );
+  }
+}
+
+class PageWrapper extends StatelessWidget {
+  final Widget child;
+  const PageWrapper({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBgbWrapper(
+      child: child,
     );
   }
 }
@@ -45,7 +55,7 @@ class InternetConnectionChecker extends GetView<GlobalController> {
           : Positioned(
               child: Material(
                 child: Container(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withAlpha(77),
                   child: Row(
                     children: [
                       Text(
@@ -79,9 +89,8 @@ class AnimatedBgbWrapper extends GetView<GlobalController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final loggedIn = controller.loggedIn.value;
-      return AnimatedContainer(
+      return Container(
           child: child,
-          duration: const Duration(seconds: 1),
           decoration: BoxDecoration(
             gradient: RadialGradient(
               center: loggedIn
@@ -100,10 +109,10 @@ final _linearColors = [
   ColorName.pageBgGradientEnd,
 ];
 final _cirularColors = [
-  ColorName.pageBgGradientStart.withOpacity(0.6),
-  ColorName.pageBgGradientStart.withOpacity(0.5),
-  ColorName.pageBgGradientStart.withOpacity(0.4),
-  ColorName.pageBgGradientStart.withOpacity(0.3),
-  ColorName.pageBgGradientStart.withOpacity(0.2),
-  // ColorName.pageBgGradientStart.withOpacity(0.1),
+  ColorName.pageBgGradientStart.withAlpha(153),
+  ColorName.pageBgGradientStart.withAlpha(128),
+  ColorName.pageBgGradientStart.withAlpha(102),
+  ColorName.pageBgGradientStart.withAlpha(77),
+  ColorName.pageBgGradientStart.withAlpha(51),
+  // ColorName.pageBgGradientStart.withAlpha(26),
 ];

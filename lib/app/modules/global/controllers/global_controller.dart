@@ -3,29 +3,27 @@ import 'dart:io';
 
 import 'package:alarm/alarm.dart';
 import 'package:aptos/aptos.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
-import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
-import 'package:podium/app/modules/groupDetail/controllers/group_detail_controller.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/constants/constantKeys.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/services/websocket/client.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
@@ -52,23 +50,24 @@ PairingMetadata _pairingMetadata = const PairingMetadata(
 final _checkOptions = [
   // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
   // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
-  InternetCheckOption(uri: Uri.parse(movementChain.rpcUrl))
+  // InternetCheckOption(uri: Uri.parse('https://8.8.8.8'))
+  InternetCheckOption(uri: Uri.parse(Env.jitsiServerUrl)),
 ];
 
 class GlobalUpdateIds {
-  static const showArchivedGroups = 'showArchivedGroups';
+  static const showArchivedOutposts = 'showArchivedOutposts';
   static const ticker = 'ticker';
 }
 
 class GlobalController extends GetxController {
   static final storage = GetStorage();
+
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
   final connectedWalletAddress = "".obs;
-  final jitsiServerAddress = '';
-  final firebaseUserCredential = Rxn<UserCredential>();
-  final firebaseUser = Rxn<User>();
-  final currentUserInfo = Rxn<UserInfoModel>();
+  String jitsiServerAddress = '';
+
+  final myUserInfo = Rxn<UserModel>();
   final activeRoute = AppPages.INITIAL.obs;
   final isAutoLoggingIn = true.obs;
   final isConnectedToInternet = true.obs;
@@ -79,13 +78,20 @@ class GlobalController extends GetxController {
   final isLoggingOut = false.obs;
   final isFirebaseInitialized = false.obs;
   final ticker = 0.obs;
-  final showArchivedGroups =
-      RxBool(storage.read(StorageKeys.showArchivedGroups) ?? false);
+  final showArchivedOutposts =
+      RxBool(storage.read(StorageKeys.showArchivedOutposts) ?? true);
+  late PodiumAppMetadata appMetadata;
+  late ReownAppKitModalNetworkInfo movementAptosNetwork;
+  late String movementAptosPodiumProtocolAddress;
+  late String movementAptosCheerBooAddress;
+
   final deepLinkRoute = ''.obs;
 
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
           Env.initialExternalWalletChainId));
+
+  WebSocketService? ws_client;
 
   ReownAppKitModalNetworkInfo? get externalWalletChain {
     final chain = ReownAppKitModalNetworks.getNetworkById(
@@ -105,33 +111,17 @@ class GlobalController extends GetxController {
   void onInit() async {
     super.onInit();
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
+
     try {
-      ReownAppKitModalNetworks.addSupportedNetworks(
-        Env.chainNamespace,
-        [movementMainNetChain, movementDevnetChain],
-      );
-    } catch (e) {
-      l.e("error ReownAppKitModalNetworks app $e");
-    }
-    try {
-      await Future.wait([
+      await Future.wait<void>([
         initializeWeb3Auth(),
+        _getAndSetMetadata(),
         FirebaseInit.init(),
       ]);
     } catch (e) {
       l.e("error initializing app $e");
     }
-    FirebaseDatabase.instance.setPersistenceEnabled(false);
-
-    // final firebaseUserDbReference =
-    //     FirebaseDatabase.instance.ref(FireBaseConstants.usersRef);
-    // final users = firebaseUserDbReference.once().then((event) {
-    //   final data = event.snapshot.value as dynamic;
-    //   if (data != null) {
-    //     final numberOfUsers = data.length;
-    //     l.f("number of users: $numberOfUsers");
-    //   }
-    // });
+    await _addCustomNetworks();
 
     startTicker();
     isFirebaseInitialized.value = true;
@@ -158,6 +148,43 @@ class GlobalController extends GetxController {
     super.onClose();
   }
 
+  _getAndSetMetadata() async {
+    final metadata = await HttpApis.podium.appMetadata();
+    appMetadata = metadata;
+    jitsiServerAddress = appMetadata.va;
+  }
+
+  _addCustomNetworks() async {
+    final movementAptosMetadata = appMetadata.movement_aptos_metadata;
+    movementAptosNetwork = ReownAppKitModalNetworkInfo(
+      name: movementAptosMetadata.name,
+      chainId: movementAptosMetadata.chain_id,
+      chainIcon: movementIcon,
+      currency: 'MOVE',
+      rpcUrl: movementAptosMetadata.rpc_url,
+      explorerUrl: 'https://explorer.movementlabs.xyz',
+    );
+    movementAptosPodiumProtocolAddress =
+        movementAptosMetadata.podium_protocol_address;
+    movementAptosCheerBooAddress = movementAptosMetadata.cheer_boo_address;
+
+    try {
+      ReownAppKitModalNetworks.addSupportedNetworks(
+        Env.chainNamespace,
+        [
+          movementEVMMainNetChain,
+          movementEVMDevnetChain,
+          movementAptosNetwork,
+          movementAptosBardokChain,
+          if (movementAptosNetwork.chainId != movementTestnet.chainId)
+            movementTestnet,
+        ],
+      );
+    } catch (e) {
+      l.e("error ReownAppKitModalNetworks app $e");
+    }
+  }
+
   Future<void> initializeApp() async {
     checkLogin();
     initializeW3MService();
@@ -173,10 +200,10 @@ class GlobalController extends GetxController {
     });
   }
 
-  Future<void> toggleShowArchivedGroups() async {
-    showArchivedGroups.value = !showArchivedGroups.value;
-    storage.write(StorageKeys.showArchivedGroups, showArchivedGroups.value);
-    update([GlobalUpdateIds.showArchivedGroups]);
+  Future<void> toggleShowArchivedOutposts() async {
+    showArchivedOutposts.value = !showArchivedOutposts.value;
+    storage.write(StorageKeys.showArchivedOutposts, showArchivedOutposts.value);
+    update([GlobalUpdateIds.showArchivedOutposts]);
   }
 
   Future<bool> switchExternalWalletChain(String chainId) async {
@@ -254,14 +281,9 @@ class GlobalController extends GetxController {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
           l.i("Internet connected");
-          final (versionResolved, serverAddress) = await (
-            checkVersion(),
-            getJitsiServerAddress(),
-          ).wait;
+          final versionResolved = await checkVersion();
 
-          if (versionResolved &&
-              serverAddress != null &&
-              !initializedOnce.value) {
+          if (versionResolved && !initializedOnce.value) {
             await initializeApp();
           }
 
@@ -277,7 +299,7 @@ class GlobalController extends GetxController {
   Future<void> listenToWalletAddressChange() async {
     connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
-      if (newAddress != '' && currentUserInfo.value != null) {
+      if (newAddress != '' && myUserInfo.value != null) {
         _saveExternalWalletAddress(newAddress);
       }
     });
@@ -286,8 +308,8 @@ class GlobalController extends GetxController {
   Future<void> _saveExternalWalletAddress(String address) async {
     try {
       await saveUserWalletAddressOnFirebase(address);
-      currentUserInfo.value!.evm_externalWalletAddress = address;
-      currentUserInfo.refresh();
+      myUserInfo.value!.external_wallet_address = address;
+      myUserInfo.refresh();
     } catch (e) {
       l.e("error saving wallet address $e");
       Toast.error(message: "Error saving wallet address, try again");
@@ -295,38 +317,29 @@ class GlobalController extends GetxController {
   }
 
   saveUserWalletAddressOnFirebase(String walletAddress) async {
-    // final user = FirebaseAuth.instance.currentUser;
-    final userId = myId;
-    final firebaseUserDbReference = FirebaseDatabase.instance
-        .ref(FireBaseConstants.usersRef)
-        .child(userId)
-        .child(UserInfoModel.evm_externalWalletAddressKey);
-    final savedWalletAddress = await firebaseUserDbReference.get();
-    if (savedWalletAddress.value == walletAddress || walletAddress.isEmpty) {
-      return;
-    }
-
-    await firebaseUserDbReference.set(walletAddress);
+    await HttpApis.podium.updateMyUserData({
+      "external_wallet_address": walletAddress,
+    });
     l.d("new wallet address SAVED $walletAddress");
     return;
   }
 
   Future<void> openDeepLinkGroup(String route) async {
-    if (route.contains(Routes.GROUP_DETAIL)) {
+    if (route.contains(Routes.OUTPOST_DETAIL)) {
       Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
-      final splited = route.split(Routes.GROUP_DETAIL);
+      final splited = route.split(Routes.OUTPOST_DETAIL);
       if (splited.length < 2) {
         l.f("splited: $splited");
         return;
       }
       final groupId = splited[1];
-      final groupsController = Get.put(GroupsController());
-      Get.put(GroupDetailController());
-      groupsController.joinGroupAndOpenGroupDetailPage(
-        groupId: groupId,
+      final groupsController = Get.put(OutpostsController());
+      Get.put(OutpostDetailController());
+      groupsController.joinOutpostAndOpenOutpostDetailPage(
+        outpostId: groupId,
         joiningByLink: true,
       );
       deepLinkRoute.value = '';
@@ -339,7 +352,7 @@ class GlobalController extends GetxController {
     deepLinkRoute.value = route;
     if (loggedIn.value) {
       l.e("logged in, opening deep link $route");
-      if (route.contains(Routes.GROUP_DETAIL)) {
+      if (route.contains(Routes.OUTPOST_DETAIL)) {
         openDeepLinkGroup(route);
       } else {
         l.e("deep link not handled");
@@ -365,75 +378,43 @@ class GlobalController extends GetxController {
     );
   }
 
-  Future<bool> removeUserWalletAddressOnFirebase() async {
-    try {
-      final firebaseUserDbReference = FirebaseDatabase.instance
-          .ref(FireBaseConstants.usersRef)
-          .child(myId + '/' + UserInfoModel.evm_externalWalletAddressKey);
-      await firebaseUserDbReference.set('');
-      return true;
-    } catch (e) {
-      l.e("error removing wallet address $e");
-      return false;
-    }
-  }
-
   cleanStorage() {
     final storage = GetStorage();
-    storage.erase();
-  }
+    final sawProfileIntro =
+        storage.read<bool?>(IntroStorageKeys.viewedMyProfile);
+    final sawCreateGroupIntro =
+        storage.read<bool?>(IntroStorageKeys.viewedCreateOutpost);
+    final sawOngoingCallIntro =
+        storage.read<bool?>(IntroStorageKeys.viewedOngiongCall);
 
-  Future<String?> getJitsiServerAddress() {
-    final completer = Completer<String?>();
-    final serverAddressRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.jitsiServerAddressRef);
-    serverAddressRef.get().then((event) {
-      final data = event.value as dynamic;
-      final serverAddress = data as String?;
-      if (serverAddress == null) {
-        l.e('server address not found');
-        return completer.complete(null);
-      }
-      completer.complete(serverAddress);
-    });
-    return completer.future;
+    storage.erase();
+
+    storage.write(IntroStorageKeys.viewedMyProfile, sawProfileIntro);
+    storage.write(IntroStorageKeys.viewedCreateOutpost, sawCreateGroupIntro);
+    storage.write(IntroStorageKeys.viewedOngiongCall, sawOngoingCallIntro);
   }
 
   Future<bool> checkVersion() async {
     final storage = GetStorage();
     final ignoredOrAcceptedVersion =
         storage.read<String>(StorageKeys.ignoredOrAcceptedVersion) ?? '';
-    final versionRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.versionRef);
-    final shouldCheckVersionRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.versionCheckRef);
-    final forceUpdateRef =
-        FirebaseDatabase.instance.ref(FireBaseConstants.forceUpdate);
+
     final (
-      shouldCheckVersionEvent,
-      forceUpdateEvent,
-      versionEvent,
-    ) = await (
-      shouldCheckVersionRef.get(),
-      forceUpdateRef.get(),
-      versionRef.get()
-    ).wait;
-    bool forcetToUpdate = false;
-    if (forceUpdateEvent.value is bool) {
-      forcetToUpdate = forceUpdateEvent.value as bool;
-    }
-    final shouldCheckVersion = shouldCheckVersionEvent.value as dynamic;
+      shouldCheckVersion,
+      forcetToUpdate,
+      version,
+    ) = (
+      appMetadata.version_check,
+      appMetadata.force_update,
+      appMetadata.version
+    );
+
     if (shouldCheckVersion == false) {
       l.d('version check disabled');
       return true;
     }
     // listen to version changes
-    final data = versionEvent.value as dynamic;
-    final version = data as String?;
-    if (version == null) {
-      l.e('version not found');
-      return (true);
-    }
+
     final currentVersion = Env.VERSION.split('+')[0];
     final numberedLocalVersion = int.parse(currentVersion.replaceAll('.', ''));
     final numberedRemoteVersion = int.parse(version.replaceAll('.', ''));
@@ -509,7 +490,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  void setLoggedIn(bool value) {
+  void setLoggedIn(bool value) async {
     loggedIn.value = value;
     if (value == false) {
       l.f("logging out");
@@ -517,11 +498,11 @@ class GlobalController extends GetxController {
       analytics.logEvent(
         name: 'logout',
         parameters: {
-          'user_id': currentUserInfo.value?.id ?? '',
+          'user_id': myUserInfo.value?.uuid ?? '',
         },
       );
     } else {
-      Navigate.to(
+      await Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
@@ -530,7 +511,15 @@ class GlobalController extends GetxController {
         openDeepLinkGroup(route.value);
         return;
       }
+      isAutoLoggingIn.value = false;
     }
+  }
+
+  Future<bool> initializeWebSocket({
+    required String token,
+  }) async {
+    ws_client = WebSocketService.instance;
+    return await ws_client?.connect(token) ?? false;
   }
 
   String? _extractReferrerId(String route) {
@@ -552,6 +541,7 @@ class GlobalController extends GetxController {
       l.e(e);
       isLoggingOut.value = false;
     }
+
     cleanStorage();
     try {
       await web3ModalService.disconnect();
@@ -573,35 +563,15 @@ class GlobalController extends GetxController {
         parameters: {
           if (referrerId.isNotEmpty) LoginParametersKeys.referrerId: referrerId,
         });
-    firebaseUserCredential.value = null;
-    try {
-      await FirebaseAuth.instance.signOut();
-      isLoggingOut.value = false;
-    } catch (e) {
-      l.e("error signing out from firebase $e");
-      isLoggingOut.value = false;
-    }
+
+    ws_client?.close();
+    ws_client = null;
+    isLoggingOut.value = false;
   }
 
   void setIsMyUserOver18(bool value) {
-    currentUserInfo.value!.isOver18 = value;
-    currentUserInfo.refresh();
-  }
-
-  Future<UserInfoModel?> getUserInfoById(String userId) async {
-    Completer<UserInfoModel> completer = Completer();
-    final firebaseUserDbReference =
-        FirebaseDatabase.instance.ref(FireBaseConstants.usersRef).child(userId);
-    firebaseUserDbReference.get().then((event) {
-      final data = event.value as dynamic;
-      if (data != null) {
-        final user = singleUserParser(data);
-        completer.complete(user);
-      } else {
-        completer.completeError("User not found");
-      }
-    });
-    return completer.future;
+    myUserInfo.value!.is_over_18 = value;
+    myUserInfo.refresh();
   }
 
   Future<ReownAppKitModal?> initializeW3MService() async {
@@ -664,8 +634,9 @@ class GlobalController extends GetxController {
   }
 
   Future<void> disconnect() async {
-    final removed = await removeUserWalletAddressOnFirebase();
-    if (removed) {
+    final removed = await HttpApis.podium
+        .updateMyUserData({'external_wallet_address': null});
+    if (removed != null) {
       try {
         web3ModalService.disconnect();
       } catch (e) {

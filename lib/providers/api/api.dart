@@ -1,13 +1,26 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:podium/providers/api/models/starsArenaUser.dart';
-import 'package:podium/utils/logger.dart';
+import 'package:podium/providers/api/arena/arena.dart';
+import 'package:podium/providers/api/luma/luma.dart';
+import 'package:podium/providers/api/podium/podium.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
-Dio dio = Dio();
+const defaultHeaders = {
+  'accept': 'application/json',
+  'content-type': 'application/json',
+};
+
+final Dio dio = Dio();
 
 class HttpApis {
-  static String baseUrl = 'https://api.starsarena.com/';
+  static final HttpApis _instance = HttpApis._internal();
+  factory HttpApis() => _instance;
+  HttpApis._internal() {}
+
+  static LumaApi lumaApi = LumaApi(dio);
+  static ArenaApi arenaApi = ArenaApi(dio);
+  static PodiumApi podium = PodiumApi(dio);
+
   static configure() {
     dio.interceptors.add(
       PrettyDioLogger(
@@ -26,45 +39,5 @@ class HttpApis {
         },
       ),
     );
-  }
-
-  static Future<StarsArenaUser?> getUserFromStarsArenaByHandle(
-      String handle) async {
-    try {
-      final String url = baseUrl + 'user/handle?handle=$handle';
-      // request with dio
-      final response = await dio.get(url);
-      if (response.statusCode == 200) {
-        final userInformation = StarsArenaUser.fromJson(response.data['user']);
-        return userInformation;
-      } else {
-        // Failed to get the response
-        print('Failed to fetch data: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
-  }
-
-  static Future<StarsArenaUser?> getUserFromStarsArenaById(
-      String handle) async {
-    try {
-      final String url = baseUrl + 'user/id?userId=$handle';
-      // request with dio
-      final response = await dio.get(url);
-      if (response.statusCode == 200) {
-        final userInformation = StarsArenaUser.fromJson(response.data['user']);
-        return userInformation;
-      } else {
-        // Failed to get the response
-        print('Failed to fetch data: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
   }
 }

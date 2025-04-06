@@ -2,14 +2,12 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/groups_controller.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
-import 'package:podium/app/modules/global/utils/usersParser.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/models/cheerBooEvent.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
@@ -30,9 +28,9 @@ class Payments {
 }
 
 class ProfileController extends GetxController {
-  final userInfo = Rxn<UserInfoModel>();
+  final userInfo = Rxn<UserModel>();
   final globalController = Get.find<GlobalController>();
-  final groupsController = Get.find<GroupsController>();
+  final groupsController = Get.find<OutpostsController>();
   final connectedWallet = ''.obs;
   final isGettingTicketPrice = false.obs;
   final isBuyingArenaTicket = false.obs;
@@ -57,8 +55,18 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     final stringedUserInfo = Get.parameters[UserProfileParamsKeys.userInfo]!;
-    userInfo.value = singleUserParser(jsonDecode(stringedUserInfo));
-    Future.wait<void>([getPrices(), _getPayments()]);
+    userInfo.value = UserModel.fromJson(jsonDecode(stringedUserInfo));
+
+    payments.value = Payments(
+      numberOfCheersReceived: userInfo.value!.received_cheer_count,
+      numberOfBoosReceived: userInfo.value!.received_boo_count,
+      numberOfCheersSent: userInfo.value!.sent_cheer_count,
+      numberOfBoosSent: userInfo.value!.sent_boo_count,
+    );
+
+    Future.wait<void>([
+      getPrices(),
+    ]);
   }
 
   @override
@@ -71,40 +79,17 @@ class ProfileController extends GetxController {
     super.onClose();
   }
 
-  _getPayments() async {
-    isGettingPayments.value = true;
-    final (received, paid) = await (
-      getReceivedPayments(
-        userId: userInfo.value!.id,
-      ),
-      getInitiatedPayments(
-        userId: userInfo.value!.id,
-      )
-    ).wait;
-    final _payments = Payments(
-      numberOfCheersReceived: 0,
-      numberOfBoosReceived: 0,
-      numberOfCheersSent: 0,
-      numberOfBoosSent: 0,
-    );
-
-    received.forEach((element) {
-      if (element.type == PaymentTypes.cheer) {
-        _payments.numberOfCheersReceived++;
-      } else if (element.type == PaymentTypes.boo) {
-        _payments.numberOfBoosReceived++;
-      }
-    });
-    paid.forEach((element) {
-      if (element.type == PaymentTypes.cheer) {
-        _payments.numberOfCheersSent++;
-      } else if (element.type == PaymentTypes.boo) {
-        _payments.numberOfBoosSent++;
-      }
-    });
-    isGettingPayments.value = false;
-    payments.value = _payments;
-    payments.refresh();
+  getUserInfo() async {
+    final info = await HttpApis.podium.getUserData(userInfo.value!.uuid);
+    if (info != null) {
+      userInfo.value = info;
+      payments.value = Payments(
+        numberOfCheersReceived: info.received_cheer_count,
+        numberOfBoosReceived: info.received_boo_count,
+        numberOfCheersSent: info.sent_cheer_count,
+        numberOfBoosSent: info.sent_boo_count,
+      );
+    }
   }
 
   getPrices() async {
@@ -133,12 +118,12 @@ class ProfileController extends GetxController {
     }
     final (activeWallets, myShares) = await (
       internal_friendTech_getActiveUserWallets(
-        internalWalletAddress: userInfo.value!.evmInternalWalletAddress,
+        internalWalletAddress: userInfo.value!.address,
         chainId: baseChainId,
       ),
       internal_getUserShares_friendTech(
         defaultWallet: userInfo.value!.defaultWalletAddress,
-        internalWallet: userInfo.value!.evmInternalWalletAddress,
+        internalWallet: userInfo.value!.address,
         chainId: baseChainId,
       )
     ).wait;
@@ -199,15 +184,15 @@ class ProfileController extends GetxController {
     }
     final (price, sellPrice, podiumPassShares) = await (
       AptosMovement.getTicketPriceForPodiumPass(
-        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        sellerAddress: userInfo.value!.aptos_address!,
         numberOfTickets: 1,
       ),
       AptosMovement.getTicketSellPriceForPodiumPass(
-        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        sellerAddress: userInfo.value!.aptos_address!,
         numberOfTickets: 1,
       ),
       AptosMovement.getMyBalanceOnPodiumPass(
-        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        sellerAddress: userInfo.value!.aptos_address!,
       )
     ).wait;
     if (podiumPassShares != null) {
@@ -240,7 +225,7 @@ class ProfileController extends GetxController {
   _sellPodiumPass() async {
     try {
       final sold = await AptosMovement.sellTicketOnPodiumPass(
-        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        sellerAddress: userInfo.value!.aptos_address!,
         numberOfTickets: 1,
       );
       if (sold == null) {
@@ -261,7 +246,7 @@ class ProfileController extends GetxController {
   _buyPodiumPass() async {
     try {
       final price = await AptosMovement.getTicketPriceForPodiumPass(
-        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
+        sellerAddress: userInfo.value!.aptos_address!,
         numberOfTickets: 1,
       );
       if (price == null) {
@@ -270,8 +255,8 @@ class ProfileController extends GetxController {
       }
       podiumPassPrice.value = price;
       final success = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
-        sellerAddress: userInfo.value!.aptosInternalWalletAddress,
-        sellerName: userInfo.value!.fullName,
+        sellerAddress: userInfo.value!.aptos_address!,
+        sellerName: userInfo.value!.name ?? '',
         numberOfTickets: 1,
       );
       if (success == null) {
@@ -305,13 +290,13 @@ class ProfileController extends GetxController {
         bought = await internal_buyFriendTechTicket(
           sharesSubject: preferedAddress,
           chainId: baseChainId,
-          targetUserId: userInfo.value!.id,
+          targetUserId: userInfo.value!.uuid,
         );
       } else {
         bought = await ext_buyFirendtechTicket(
           sharesSubject: preferedAddress,
           chainId: baseChainId,
-          targetUserId: userInfo.value!.id,
+          targetUserId: userInfo.value!.uuid,
         );
       }
       if (bought) {
@@ -345,13 +330,13 @@ class ProfileController extends GetxController {
         bought = await internal_buySharesWithReferrer(
           sharesSubject: userInfo.value!.defaultWalletAddress,
           chainId: avalancheChainId,
-          targetUserId: userInfo.value!.id,
+          targetUserId: userInfo.value!.uuid,
         );
       } else {
         bought = await ext_buySharesWithReferrer(
           sharesSubject: userInfo.value!.defaultWalletAddress,
           chainId: avalancheChainId,
-          targetUserId: userInfo.value!.id,
+          targetUserId: userInfo.value!.uuid,
         );
       }
       if (bought) {

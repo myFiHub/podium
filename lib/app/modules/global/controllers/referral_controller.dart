@@ -1,32 +1,29 @@
 import 'dart:async';
 
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/mixins/firebase.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
-import 'package:podium/models/referral/referral.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 
 class ReferalController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
-  final myReferals = Rx<Map<String, Referral>>({});
-  StreamSubscription<DatabaseEvent>? myReferalsStream = null;
-
+  final myProfile = Rxn<UserModel>();
+  StreamSubscription<bool>? loggedInListener;
   @override
   void onInit() {
     super.onInit();
-    globalController.loggedIn.listen((loggedIn) async {
+    loggedInListener = globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
-        myReferalsStream = startListeningToMyReferals((referals) {
-          myReferals.value = referals;
-        });
-      } else {
-        myReferals.value = {};
-        myReferalsStream?.cancel();
-      }
+        final profile = await HttpApis.podium
+            .getMyUserData(additionalData: AdditionalDataForLogin());
+
+        myProfile.value = profile;
+      } else {}
     });
   }
 
@@ -38,13 +35,7 @@ class ReferalController extends GetxController {
   @override
   void onClose() {
     super.onClose();
-    myReferalsStream?.cancel();
-  }
-
-  Future<Map<String, Referral>> getAllTheReferals(
-      {required String userId}) async {
-    final referals = await getAllTheUserReferals(userId: userId);
-    return referals;
+    loggedInListener?.cancel();
   }
 
   referButtonClicked() async {

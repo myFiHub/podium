@@ -4,7 +4,6 @@ import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
 import "package:device_preview/device_preview.dart";
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -32,7 +31,6 @@ late AppLinks _appLinks;
 
 Future<void> initDeepLinks() async {
   _appLinks = AppLinks();
-
   // Handle links
   final initialLink = await _appLinks.getInitialLink();
   l.f('initial link: $initialLink');
@@ -50,6 +48,18 @@ _extractLinkForAndroid(String link) {
   deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
   deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
   return deepLinkedPage;
+}
+
+_setSystemUIOverlayStyle() {
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarIconBrightness: Brightness.light,
+      statusBarColor: ColorName.systemTrayBackground,
+      systemNavigationBarColor:
+          ColorName.navbarBackground, // Color de la barra de navegación
+      statusBarIconBrightness: Brightness.light, // Iconos claros en la
+    ),
+  );
 }
 
 _extractLinkForIOS(String link) {
@@ -103,8 +113,13 @@ processLink(String? link) async {
 }
 
 void main() async {
-  await dotenv.load(
-      fileName: "env/${kReleaseMode ? PRODUCTION : DEVELOPMENT}.env");
+  // final environment = read from dart-define
+  final environment = const String.fromEnvironment(
+    'ENVIRONMENT',
+    defaultValue: 'development',
+  );
+  print("ENVIRONMENT: $environment");
+  await dotenv.load(fileName: "env/$environment.env");
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,
     DeviceOrientation.portraitUp,
@@ -117,6 +132,7 @@ void main() async {
       statusBarIconBrightness: Brightness.light, // Iconos claros en la
     ),
   );
+
   await GetStorage.init();
   HttpApis.configure();
   // runApp(const MyApp());
@@ -153,6 +169,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _setSystemUIOverlayStyle();
     initDeepLinks();
 
     l.i(SchedulerBinding.instance.lifecycleState);

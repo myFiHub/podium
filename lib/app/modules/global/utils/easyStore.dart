@@ -1,20 +1,26 @@
 import 'package:aptos/aptos.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/services/websocket/client.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
-UserInfoModel get myUser {
+UserModel get myUser {
   final GlobalController globalController = Get.find();
-  return globalController.currentUserInfo.value!;
+  return globalController.myUserInfo.value!;
 }
 
 String get myId {
-  if (myUser.id == '') {
+  if (myUser.uuid == '') {
     l.f('****************************myId is empty************************');
   }
-  return myUser.id;
+  return myUser.uuid;
+}
+
+WebSocketService get wsClient {
+  final globalController = Get.find<GlobalController>();
+  return globalController.ws_client!;
 }
 
 ReownAppKitModal get web3ModalService {
@@ -39,4 +45,19 @@ String? get externalWalletAddress {
 String get externalWalletChianId {
   final GlobalController globalController = Get.find();
   return globalController.externalWalletChainId.value;
+}
+
+ReownAppKitModalNetworkInfo get movementAptosNetwork {
+  final GlobalController globalController = Get.find();
+  return globalController.movementAptosNetwork;
+}
+
+String get movementAptosPodiumProtocolAddress {
+  final GlobalController globalController = Get.find();
+  return globalController.movementAptosPodiumProtocolAddress;
+}
+
+String get movementAptosCheerBooAddress {
+  final GlobalController globalController = Get.find();
+  return globalController.movementAptosCheerBooAddress;
 }

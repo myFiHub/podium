@@ -3,14 +3,14 @@ import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/env.dart';
-import 'package:podium/models/firebase_group_model.dart';
-import 'package:podium/models/user_info_model.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
 
 class MeetingConstants {
   static Map<String, Object?> featureFlags(
-      {required bool allowedToSpeak, required FirebaseGroup group}) {
-    final creatorId = group.creator.id;
+      {required bool allowedToSpeak, required OutpostModel outpost}) {
+    final creatorId = outpost.creator_user_uuid;
     final iAmCreator = creatorId == myId;
     return {
       FeatureFlags.unsafeRoomWarningEnabled: false,
@@ -34,41 +34,41 @@ class MeetingConstants {
     };
   }
 
-  static Map<String, Object?> configOverrides(FirebaseGroup g) {
+  static Map<String, Object?> configOverrides(OutpostModel outpost) {
     return {
       "startWithAudioMuted": true,
       "startWithVideoMuted": true,
-      "subject": g.name,
-      "localSubject": g.name,
+      "subject": outpost.name,
+      "localSubject": outpost.name,
     };
   }
 
   static JitsiMeetConferenceOptions buildMeetOptions({
-    required FirebaseGroup group,
-    required UserInfoModel myUser,
+    required OutpostModel outpost,
+    required UserModel myUser,
     required bool allowedToSpeak,
   }) {
     final globalController = Get.find<GlobalController>();
     final sa = globalController.jitsiServerAddress;
-    String avatar = myUser.avatar;
+    String avatar = myUser.image ?? '';
     // ignore: unnecessary_null_comparison
     if (avatar == null || avatar.isEmpty || avatar == defaultAvatar) {
-      avatar = avatarPlaceHolder(myUser.fullName);
+      avatar = avatarPlaceHolder(myUser.name);
     }
     return JitsiMeetConferenceOptions(
       serverURL: sa != '' ? sa : Env.jitsiServerUrl,
-      room: group.id,
-      configOverrides: configOverrides(group),
+      room: outpost.uuid,
+      configOverrides: configOverrides(outpost),
       featureFlags: featureFlags(
-        group: group,
+        outpost: outpost,
         allowedToSpeak: allowedToSpeak,
       ),
       userInfo: JitsiMeetUserInfo(
-        displayName: myUser.fullName,
+        displayName: myUser.name ?? '',
         // this is crucial for us to pass the email like this,
         // since cheering and booing listeners return email,
         // we use that email to determine who is being cheered/booed
-        email: transformIdToEmailLike(myUser.id),
+        email: transformIdToEmailLike(myUser.uuid),
         avatar: avatar,
       ),
     );

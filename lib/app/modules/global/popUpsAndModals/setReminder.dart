@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:alarm/alarm.dart';
+import 'package:alarm/model/volume_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -11,6 +12,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:alarm/model/volume_settings.dart';
 
 Future<bool> createCalendarEventForScheduledGroup({
   String? eventUrl,
@@ -35,8 +37,11 @@ Future<bool> createCalendarEventForScheduledGroup({
       emailInvites: [], // on Android, you can add invite emails to your event.
     ),
   );
-  final added = await Add2Calendar.addEvent2Cal(event);
-  return added;
+  if (Platform.isAndroid) {
+    return await Add2Calendar.addEvent2Cal(event);
+  }
+  Add2Calendar.addEvent2Cal(event);
+  return true;
 }
 
 List<Map<String, Object>> defaultTimeList({required int endsAt}) {
@@ -154,8 +159,12 @@ Future<int?> setReminder({
       assetAudioPath: 'assets/alarm.mp3',
       loopAudio: true,
       vibrate: true,
-      volume: 0.8,
-      fadeDuration: 3.0,
+      volumeSettings: VolumeSettings.fromJson(
+        const {
+          'volume': 0.8,
+          'fadeDuration': 3.0,
+        },
+      ),
       notificationSettings: NotificationSettings(
         title: 'Podium',
         body: alarmMeBefore == 0

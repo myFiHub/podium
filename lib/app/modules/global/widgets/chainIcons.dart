@@ -26,7 +26,7 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
             externalChain.chainIcon ?? Assets.images.movementLogo.path;
       }
       if (externalChainNetworkIcon == '') {
-        externalChainNetworkIcon = movementChain.chainIcon ?? '';
+        externalChainNetworkIcon = movementEVMChain.chainIcon ?? '';
       }
       if (connectedExternalWalletAddress == '' || externalChain == null) {
         return const SizedBox();

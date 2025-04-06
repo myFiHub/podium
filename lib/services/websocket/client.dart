@@ -111,42 +111,12 @@ class WebSocketService {
         _channel = null;
       }
 
-      // Check if the server is reachable before attempting to connect
+      // Connect to the WebSocket server
       final uri = Uri.parse('${Env.websocketAddress}?token=$token');
       l.d("Connecting to WebSocket at ${uri.toString().replaceAll(token, '***')}");
 
-      // Create a connection with timeout
-      final connectionCompleter = Completer<WebSocketChannel>();
-
-      // Start the connection
-      final channel = WebSocketChannel.connect(uri);
-
-      // Set up a timeout
-      Timer(const Duration(seconds: 10), () {
-        if (!connectionCompleter.isCompleted) {
-          l.e("Connection attempt timed out after 10 seconds");
-          connectionCompleter
-              .completeError(TimeoutException('Connection timed out'));
-        }
-      });
-
-      // Try to establish the connection
-      try {
-        l.d("Waiting for channel to be ready...");
-        await channel.ready;
-        l.d("Channel is ready, completing connection");
-        connectionCompleter.complete(channel);
-      } catch (e) {
-        l.e("Error establishing connection: $e");
-        if (!connectionCompleter.isCompleted) {
-          connectionCompleter.completeError(e);
-        }
-      }
-
-      // Wait for the connection to complete or timeout
-      l.d("Waiting for connection to complete or timeout");
-      _channel = await connectionCompleter.future;
-      l.d("Connection established successfully");
+      _channel = WebSocketChannel.connect(uri);
+      await _channel!.ready;
 
       _isConnecting = false;
       connected = true;
@@ -392,67 +362,31 @@ class WebSocketService {
       }
 
       l.w("Cannot send message: WebSocket not connected, attempting to reconnect");
-
-      // Try to reconnect first
       await reconnect();
-
-      // Wait a bit for the reconnection to complete
-      int attempts = 0;
-      while (!connected && attempts < 5) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        attempts++;
-      }
 
       // Check if reconnection was successful
       if (!connected || _channel == null) {
         l.e("Failed to reconnect, cannot send message");
         return false;
       }
-
-      l.d("Reconnected successfully, now sending message");
     }
 
     // Send the message
     try {
-      return await _sendMessage(message);
+      final jsoned = message.toJson();
+      if (jsoned['data'] == null) {
+        jsoned['data'] = {};
+      }
+      final stringified = jsonEncode(jsoned);
+      l.d('Sending message: $stringified');
+      _channel?.sink.add(stringified);
+      return true;
     } catch (e) {
       l.e("Error sending message: $e");
       connected = false;
-
-      // Try to reconnect and retry sending once
-      await reconnect();
-
-      // Wait a bit for the reconnection to complete
-      int attempts = 0;
-      while (!connected && attempts < 5) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        attempts++;
-      }
-
-      if (connected && _channel != null) {
-        try {
-          return await _sendMessage(message, isRetry: true);
-        } catch (e) {
-          l.e("Error sending message after reconnection: $e");
-          return false;
-        }
-      }
-
+      reconnect();
       return false;
     }
-  }
-
-  /// Helper method to send a message
-  Future<bool> _sendMessage(WsOutgoingMessage message,
-      {bool isRetry = false}) async {
-    final jsoned = message.toJson();
-    if (jsoned['data'] == null) {
-      jsoned['data'] = {};
-    }
-    final stringified = jsonEncode(jsoned);
-    l.d('${isRetry ? "Retrying to send" : "Sending"} message: $stringified');
-    _channel?.sink.add(stringified);
-    return true;
   }
 
   /// Sends a pong message to keep the connection alive
@@ -465,27 +399,12 @@ class WebSocketService {
         } catch (e) {
           l.e("Error sending pong: $e");
           connected = false;
-          // Use a microtask to avoid stack overflow with recursive calls
-          Future.microtask(() => reconnect());
+          reconnect();
         }
       } else {
         l.w("Not connected, attempting to reconnect before sending pong");
-        // Use a microtask to avoid stack overflow with recursive calls
-        Future.microtask(() => reconnect()).then((_) {
-          // After reconnection attempt, try to send pong if connected
-          if (connected && _channel != null) {
-            try {
-              _channel?.sink.add(List<int>.from([0x8A]));
-              l.d("Sent pong after reconnection");
-            } catch (e) {
-              l.e("Error sending pong after reconnection: $e");
-              connected = false;
-            }
-          }
-        });
+        reconnect();
       }
-    } else {
-      l.w("Not sending pong because connecting or token is empty");
     }
   }
 
@@ -504,11 +423,6 @@ class WebSocketService {
 
     // Use a lock to prevent multiple simultaneous reconnection attempts
     return _connectionLock.synchronized(() async {
-      // if (_isConnecting) {
-      //   l.d("Already attempting to reconnect, skipping");
-      //   return;
-      // }
-
       l.w("WebSocket closed, reconnecting...");
       connected = false;
       _isConnecting = true;
@@ -537,16 +451,14 @@ class WebSocketService {
             // If connection failed, schedule another reconnect attempt
             l.w("Connection attempt #$_reconnectAttempts failed, will try again");
             _isConnecting = false;
-            // Use a microtask to avoid stack overflow with recursive calls
-            Future.microtask(() => reconnect());
+            reconnect();
           } else {
             l.d("Reconnection attempt #$_reconnectAttempts succeeded");
           }
         } catch (e) {
           l.e("Error during reconnection attempt #$_reconnectAttempts: $e");
           _isConnecting = false;
-          // Use a microtask to avoid stack overflow with recursive calls
-          Future.microtask(() => reconnect());
+          reconnect();
         }
       });
     });

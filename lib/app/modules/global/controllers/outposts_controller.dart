@@ -543,10 +543,7 @@ class OutpostsController extends GetxController {
     if (isAlreadyRegistered) {
       Get.delete<OutpostDetailController>();
     }
-    sendOutpostEvent(
-      outpostId: outpost.uuid,
-      eventType: OutgoingMessageTypeEnums.join,
-    );
+
     Navigate.to(
         type: NavigationTypes.toNamed,
         route: Routes.OUTPOST_DETAIL,

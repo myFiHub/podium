@@ -307,6 +307,10 @@ class OutpostCallController extends GetxController {
           outpost: outpostToJoin,
         ),
       );
+      sendOutpostEvent(
+        outpostId: outpost.value!.uuid,
+        eventType: OutgoingMessageTypeEnums.join,
+      );
       analytics.logEvent(
         name: 'joined_group_call',
         parameters: {

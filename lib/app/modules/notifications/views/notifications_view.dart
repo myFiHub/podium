@@ -30,10 +30,12 @@ class NotificationsView extends GetView<NotificationsController> {
                       return const EmptyNotificationsWidget();
                     }
                     return ListView.builder(
+                      key: const PageStorageKey('notifications_list'),
                       itemCount: notifications.length,
                       itemBuilder: (context, index) {
                         final notif = notifications[index];
                         return NotificationCard(
+                          key: ValueKey(notif.uuid),
                           notification: notif,
                           controller: controller,
                         );
@@ -122,6 +124,7 @@ class NotificationCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 NotificationHeader(
+                  key: ValueKey('${imageSrc}_${alt}'),
                   imageSrc: imageSrc,
                   alt: alt,
                   title: title,
@@ -129,9 +132,13 @@ class NotificationCard extends StatelessWidget {
                   isRead: notification.is_read,
                 ),
                 space5,
-                NotificationMessage(message: notification.message),
+                NotificationMessage(
+                  key: ValueKey('message_${notification.uuid}'),
+                  message: notification.message,
+                ),
                 space5,
                 NotificationIdSection(
+                  key: ValueKey('${notifierId}_${notification.uuid}'),
                   idPrefix: idPrefix,
                   notifierId: notifierId,
                   isInvite: isInvite,
@@ -140,6 +147,7 @@ class NotificationCard extends StatelessWidget {
                 ),
                 space5,
                 NotificationActions(
+                  key: ValueKey('actions_${notification.uuid}'),
                   notification: notification,
                   controller: controller,
                 ),
@@ -173,6 +181,7 @@ class NotificationHeader extends StatelessWidget {
     return Row(
       children: [
         Img(
+          key: ValueKey('img_${imageSrc}'),
           src: imageSrc,
           alt: alt,
           width: 24,
@@ -181,15 +190,20 @@ class NotificationHeader extends StatelessWidget {
         space10,
         if (isInvite && !isRead)
           Shimmer.fromColors(
+            key: ValueKey('shimmer_${title}'),
             loop: 5,
             baseColor: Colors.white,
             highlightColor: Colors.blueAccent,
             child: NotifTitleWidget(
+              key: ValueKey('title_${title}'),
               title: title,
             ),
           )
         else
-          NotifTitleWidget(title: title),
+          NotifTitleWidget(
+            key: ValueKey('title_${title}'),
+            title: title,
+          ),
       ],
     );
   }
@@ -262,6 +276,7 @@ class NotificationIdSection extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               RichText(
+                key: ValueKey('richText_${notifierId}'),
                 text: TextSpan(
                   style: const TextStyle(
                     fontSize: 12,
@@ -343,6 +358,7 @@ class NotificationActions extends StatelessWidget {
             () {
               final loadingInviteId = controller.loadingInviteId.value;
               return Button(
+                key: ValueKey('read_${notification.uuid}'),
                 loading: loadingInviteId == notification.uuid + 'read',
                 size: ButtonSize.SMALL,
                 onPressed: () {
@@ -361,6 +377,7 @@ class NotificationActions extends StatelessWidget {
                 () {
                   final loadingInviteId = controller.loadingInviteId.value;
                   return Button(
+                    key: ValueKey('reject_${notification.uuid}'),
                     loading: loadingInviteId == notification.uuid + 'reject',
                     size: ButtonSize.SMALL,
                     onPressed: () {
@@ -380,6 +397,7 @@ class NotificationActions extends StatelessWidget {
                 () {
                   final loadingInviteId = controller.loadingInviteId.value;
                   return Button(
+                    key: ValueKey('accept_${notification.uuid}'),
                     loading: loadingInviteId == notification.uuid + 'accept',
                     size: ButtonSize.SMALL,
                     onPressed: () {

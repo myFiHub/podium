@@ -59,7 +59,7 @@ class ProfileView extends GetView<ProfileController> {
 }
 
 class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
-  const _BuyOrSellPodiumPass({super.key});
+  const _BuyOrSellPodiumPass();
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +146,7 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
 }
 
 class _Statistics extends GetWidget<ProfileController> {
-  const _Statistics({super.key});
+  const _Statistics();
 
   @override
   Widget build(BuildContext context) {

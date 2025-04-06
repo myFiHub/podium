@@ -59,7 +59,7 @@ class NotificationsController extends GetxController {
     loadingInviteId.value = id + 'read';
     final success = await HttpApis.podium.markNotificationAsRead(id: id);
     if (success) {
-      getNotifications();
+      await getNotifications();
     }
     loadingInviteId.value = '';
   }

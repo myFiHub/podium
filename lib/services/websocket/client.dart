@@ -224,7 +224,7 @@ class WebSocketService {
           return;
         }
         final outpostCallController = Get.find<OutpostCallController>();
-        // TODO: moved to jitsiMeet.dart
+        // NOTE: also in jitsiMeet.dart
         joinOrLeftDebounce.debounce(() {
           outpostCallController.fetchLiveData();
         });

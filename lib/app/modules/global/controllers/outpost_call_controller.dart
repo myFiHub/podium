@@ -218,8 +218,6 @@ class OutpostCallController extends GetxController {
     final membersList = [...members.value];
     final memberIndex = membersList.indexWhere((m) => m.address == address);
     if (memberIndex != -1) {
-      membersList[memberIndex].last_speaked_at_timestamp =
-          DateTime.now().millisecondsSinceEpoch ~/ 1000;
       membersList[memberIndex].remaining_time = newTime;
       members.value = membersList;
     }

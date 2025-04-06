@@ -29,49 +29,41 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
-// detect presence time (groups that were active this milliseconds ago will be considered active)
-int dpt = 0;
+/// Sends an outpost event to the WebSocket server
+///
+/// [outpostId] - The UUID of the outpost
+/// [eventType] - The type of event to send
+/// [requestId] - Optional request ID for tracking
+/// [eventData] - Optional data to send with the event
+///
+/// Returns a Future that completes when the message is sent
+/// Throws [OutpostEventException] if the message fails to send
+Future<void> sendOutpostEvent({
+  required String outpostId,
+  required OutgoingMessageTypeEnums eventType,
+  String? requestId,
+  WsOutgoingMessageData? eventData,
+}) async {
+  try {
+    // Validate inputs
+    if (outpostId.isEmpty) {
+      throw ArgumentError('outpostId cannot be empty');
+    }
 
-Future<void> sendOutpostEvent(
-    {required String outpostId,
-    String? requestId,
-    required OutgoingMessageTypeEnums eventType,
-    WsOutgoingMessageData? eventData}) async {
-  if (eventType == OutgoingMessageTypeEnums.leave) {
-    await wsClient.send(WsOutgoingMessage(
-      message_type: OutgoingMessageTypeEnums.leave,
-      outpost_uuid: outpostId,
-      request_id: requestId,
-    ));
-    // channel.presence.leave(groupId);
-    return;
-  }
-  if (eventType == OutgoingMessageTypeEnums.start_speaking ||
-      eventType == OutgoingMessageTypeEnums.stop_speaking) {
-    await wsClient.send(WsOutgoingMessage(
-      message_type: eventType,
-      outpost_uuid: outpostId,
-      request_id: requestId,
-    ));
-    return;
-  } else if (eventType == OutgoingMessageTypeEnums.like ||
-      eventType == OutgoingMessageTypeEnums.dislike ||
-      eventType == OutgoingMessageTypeEnums.cheer ||
-      eventType == OutgoingMessageTypeEnums.boo) {
-    await wsClient.send(WsOutgoingMessage(
+    // Create the base message
+    final message = WsOutgoingMessage(
       message_type: eventType,
       outpost_uuid: outpostId,
       data: eventData,
-    ));
-    return;
-  }
-  if (eventType == OutgoingMessageTypeEnums.join) {
-    await wsClient.send(WsOutgoingMessage(
-      message_type: eventType,
-      outpost_uuid: outpostId,
-      request_id: requestId,
-    ));
-    return;
+    );
+
+    // Send the message
+    await wsClient.send(message);
+
+    // Log successful send
+    l.d('Sent outpost event: ${eventType.name} for outpost: $outpostId, ');
+  } catch (e) {
+    l.e('Failed to send outpost event: ${eventType.name} for outpost: $outpostId - $e');
   }
 }
 

@@ -48,15 +48,18 @@ class OutpostsList extends GetView<OutpostsController> {
         List<OutpostModel> listToShow = outpostsList!;
 
         listWidget = ListView.builder(
+          key: const PageStorageKey('outposts_list'),
           controller: scrollController,
           itemCount: listToShow.length,
           itemBuilder: (context, index) {
             final outpost = listToShow[index];
-            return _SingleOutpost(
-              key: Key(outpost.uuid),
-              controller: controller,
-              amICreator: outpost.creator_user_uuid == myId,
-              outpost: outpost,
+            return RepaintBoundary(
+              child: _SingleOutpost(
+                key: ValueKey(outpost.uuid),
+                controller: controller,
+                amICreator: outpost.creator_user_uuid == myId,
+                outpost: outpost,
+              ),
             );
           },
         );
@@ -66,6 +69,7 @@ class OutpostsList extends GetView<OutpostsController> {
             : myOutposts.values.toList();
 
         listWidget = EnhancedPaginatedView(
+          key: const PageStorageKey('paginated_outposts_list'),
           hasReachedMax: listPage == ListPage.all
               ? lastPageReachedForAllOutposts
               : lastPageReachedForMyOutposts,
@@ -94,18 +98,22 @@ class OutpostsList extends GetView<OutpostsController> {
           ),
           builder: (items, physics, reverse, shrinkWrap) {
             return ListView.builder(
+              key: const PageStorageKey('paginated_outposts_list_items'),
               controller: scrollController,
               itemCount: items.length,
               physics: physics,
               reverse: reverse,
               shrinkWrap: shrinkWrap,
+              cacheExtent: 1000,
               itemBuilder: (context, index) {
                 final outpost = items[index];
-                return _SingleOutpost(
-                  key: Key(outpost.uuid),
-                  controller: controller,
-                  amICreator: outpost.creator_user_uuid == myId,
-                  outpost: outpost,
+                return RepaintBoundary(
+                  child: _SingleOutpost(
+                    key: ValueKey(outpost.uuid),
+                    controller: controller,
+                    amICreator: outpost.creator_user_uuid == myId,
+                    outpost: outpost,
+                  ),
                 );
               },
             );
@@ -199,6 +207,7 @@ class _SingleOutpost extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
+                                  key: ValueKey('outpost_name_${outpost.uuid}'),
                                   constraints: const BoxConstraints(
                                     maxWidth: 270,
                                   ),
@@ -213,6 +222,8 @@ class _SingleOutpost extends StatelessWidget {
                                   ),
                                 ),
                                 Container(
+                                    key: ValueKey(
+                                        'outpost_creator_${outpost.uuid}'),
                                     constraints: const BoxConstraints(
                                       maxWidth: 270,
                                     ),
@@ -246,7 +257,10 @@ class _SingleOutpost extends StatelessWidget {
                                         ),
                                         space5,
                                         Img(
+                                          key: ValueKey(
+                                              'outpost_creator_image_${outpost.uuid}'),
                                           src: outpost.creator_user_image,
+                                          alt: outpost.creator_user_name,
                                           size: 12,
                                         )
                                       ],

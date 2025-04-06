@@ -41,6 +41,7 @@ class UsersInOutpostList extends StatelessWidget {
     return shouldShowIntro
         ? const IntroUser()
         : ListView.builder(
+            key: const PageStorageKey('users_in_outpost_list'),
             itemCount: usersList.length,
             itemBuilder: (context, index) {
               final user = usersList[index];
@@ -51,14 +52,16 @@ class UsersInOutpostList extends StatelessWidget {
               }
               final userId = user.uuid;
               final isItME = userId == myId;
-              return _SingleUserInOutpost(
-                key: Key(user.uuid + 'singleUserCard'),
-                isItME: isItME,
-                userId: userId,
-                user: user,
-                name: name,
-                avatar: avatar,
-                groupId: outpostId,
+              return RepaintBoundary(
+                child: _SingleUserInOutpost(
+                  key: ValueKey(user.uuid),
+                  isItME: isItME,
+                  userId: userId,
+                  user: user,
+                  name: name,
+                  avatar: avatar,
+                  groupId: outpostId,
+                ),
               );
             },
           );
@@ -71,16 +74,20 @@ class IntroUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+        key: const PageStorageKey('intro_user_list'),
         itemCount: 1,
         itemBuilder: (context, index) {
-          return const _SingleUserCard(
-            isItME: false,
-            name: 'Intro User',
-            address: 'intro',
-            avatar: Constants.defaultProfilePic,
-            outpostId: 'intro',
-            id: 'intro',
-            isIntroUser: true,
+          return const RepaintBoundary(
+            child: _SingleUserCard(
+              key: ValueKey('intro_user'),
+              isItME: false,
+              name: 'Intro User',
+              address: 'intro',
+              avatar: Constants.defaultProfilePic,
+              outpostId: 'intro',
+              id: 'intro',
+              isIntroUser: true,
+            ),
           );
         });
   }
@@ -106,26 +113,30 @@ class _SingleUserInOutpost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        final usersController = Get.find<UsersController>();
-        if (isItME) {
-          Navigate.to(
-            type: NavigationTypes.toNamed,
-            route: Routes.MY_PROFILE,
-          );
-          return;
-        }
-        usersController.openUserProfile(userId);
-      },
-      child: _SingleUserCard(
-        id: user.uuid,
-        address: user.address,
-        isItME: isItME,
-        name: name,
-        avatar: avatar,
-        outpostId: groupId,
-        isIntroUser: false,
+    return RepaintBoundary(
+      child: GestureDetector(
+        key: ValueKey('gesture_$userId'),
+        onTap: () {
+          final usersController = Get.find<UsersController>();
+          if (isItME) {
+            Navigate.to(
+              type: NavigationTypes.toNamed,
+              route: Routes.MY_PROFILE,
+            );
+            return;
+          }
+          usersController.openUserProfile(userId);
+        },
+        child: _SingleUserCard(
+          key: ValueKey('card_$userId'),
+          id: user.uuid,
+          address: user.address,
+          isItME: isItME,
+          name: name,
+          avatar: avatar,
+          outpostId: groupId,
+          isIntroUser: false,
+        ),
       ),
     );
   }
@@ -142,6 +153,7 @@ class _SingleUserCard extends StatelessWidget {
     required this.address,
     required this.isIntroUser,
   });
+
   final String id;
   final String address;
   final bool isItME;
@@ -152,110 +164,124 @@ class _SingleUserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-              color: ColorName.cardBackground,
-              border: Border.all(color: ColorName.cardBorder),
-              borderRadius: const BorderRadius.all(const Radius.circular(8))),
-          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          padding: const EdgeInsets.all(8),
-          key: Key(id),
-          child: Stack(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          constraints: const BoxConstraints(
-                            maxWidth: 180,
-                          ),
-                          child: Text(
-                            isItME ? "You" : name,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              overflow: TextOverflow.ellipsis,
-                              color:
-                                  isItME ? Colors.green[200] : ColorName.white,
+    return RepaintBoundary(
+      child: Stack(
+        key: ValueKey('stack_$id'),
+        children: [
+          Container(
+            key: ValueKey('container_$id'),
+            decoration: BoxDecoration(
+                color: ColorName.cardBackground,
+                border: Border.all(color: ColorName.cardBorder),
+                borderRadius: const BorderRadius.all(const Radius.circular(8))),
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            padding: const EdgeInsets.all(8),
+            child: Stack(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      key: ValueKey('user_info_$id'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            key: ValueKey('name_$id'),
+                            constraints: const BoxConstraints(
+                              maxWidth: 180,
                             ),
-                          ),
-                        ),
-                        space5,
-                        Row(
-                          children: [
-                            Img(
-                              src: avatar,
-                              alt: name,
-                            ),
-                            space5,
-                            Container(
-                              width: 80,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    truncate(id, length: 10),
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w400,
-                                      color: ColorName.greyText,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  space5,
-                                  Text(
-                                    name,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: ColorName.greyText,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  RemainingTime(
-                                    userId: id,
-                                    key: Key(id),
-                                  ),
-                                ],
+                            child: Text(
+                              isItME ? "You" : name,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                overflow: TextOverflow.ellipsis,
+                                color: isItME
+                                    ? Colors.green[200]
+                                    : ColorName.white,
                               ),
-                            )
-                          ],
-                        )
-                      ],
+                            ),
+                          ),
+                          space5,
+                          Row(
+                            key: ValueKey('user_details_$id'),
+                            children: [
+                              Img(
+                                key: ValueKey('avatar_$id'),
+                                src: avatar,
+                                alt: name,
+                              ),
+                              space5,
+                              Container(
+                                key: ValueKey('user_meta_$id'),
+                                width: 80,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      truncate(id, length: 10),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w400,
+                                        color: ColorName.greyText,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    space5,
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: ColorName.greyText,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    RemainingTime(
+                                      key: ValueKey('time_$id'),
+                                      userId: id,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                  Actions(
-                    userId: id,
-                    isIntroUser: isIntroUser,
-                  ),
-                ],
-              ),
-              Positioned(
-                top: -5,
-                right: 0,
-                child: _TalkingIndicator(
-                  userId: id,
-                  key: Key(id + 'talking'),
+                    Actions(
+                      key: ValueKey('actions_$id'),
+                      userId: id,
+                      isIntroUser: isIntroUser,
+                    ),
+                  ],
                 ),
-              ),
-              Positioned(
-                bottom: -5,
-                right: 0,
-                child: _Reactions(address: address),
-              ),
-            ],
+                Positioned(
+                  top: -5,
+                  right: 0,
+                  child: _TalkingIndicator(
+                    key: ValueKey('talking_$id'),
+                    userId: id,
+                  ),
+                ),
+                Positioned(
+                  bottom: -5,
+                  right: 0,
+                  child: _Reactions(
+                    key: ValueKey('reactions_$id'),
+                    address: address,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        _ConfettiDetector(
-          userId: id,
-        ),
-      ],
+          _ConfettiDetector(
+            key: ValueKey('confetti_$id'),
+            userId: id,
+          ),
+        ],
+      ),
     );
   }
 }

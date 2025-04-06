@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   downloadsfolder
   file_selector_windows
+  firebase_auth
   firebase_core
   firebase_storage
   flutter_timezone

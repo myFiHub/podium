@@ -12,6 +12,7 @@ import connectivity_plus
 import downloadsfolder
 import file_selector_macos
 import firebase_analytics
+import firebase_auth
 import firebase_core
 import firebase_storage
 import flutter_timezone
@@ -34,6 +35,7 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   DownloadsfolderPlugin.register(with: registry.registrar(forPlugin: "DownloadsfolderPlugin"))
   FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   FLTFirebaseAnalyticsPlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseAnalyticsPlugin"))
+  FLTFirebaseAuthPlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseAuthPlugin"))
   FLTFirebaseCorePlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseCorePlugin"))
   FLTFirebaseStoragePlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseStoragePlugin"))
   FlutterTimezonePlugin.register(with: registry.registrar(forPlugin: "FlutterTimezonePlugin"))

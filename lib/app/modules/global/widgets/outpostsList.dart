@@ -12,6 +12,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/styles.dart';
@@ -162,6 +163,10 @@ class _SingleOutpost extends StatelessWidget {
       child: GestureDetector(
         key: Key(outpost.uuid + "OutpostCard"),
         onTap: () async {
+          if (!wsClient.connected) {
+            await HttpApis.podium.connectToWebSocket();
+          }
+
           controller.joinOutpostAndOpenOutpostDetailPage(
             outpostId: outpost.uuid,
           );

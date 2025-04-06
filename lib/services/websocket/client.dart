@@ -38,7 +38,7 @@ class WebSocketService {
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 20;
   static const Duration _initialReconnectDelay = Duration(seconds: 1);
-  static const Duration _maxReconnectDelay = Duration(seconds: 10);
+  static const Duration _maxReconnectDelay = Duration(seconds: 5);
 
   // Synchronization
   final _connectionLock = Lock();
@@ -85,48 +85,9 @@ class WebSocketService {
     } catch (e) {
       l.w("Error closing channel during cleanup: $e");
     }
-
+    _isConnecting = false;
     _channel = null;
     connected = false;
-  }
-
-  /// Attempts to reconnect to the WebSocket server
-  Future<void> reconnect() async {
-    if (token.isEmpty) {
-      l.w("Cannot reconnect: token is empty");
-      return;
-    }
-
-    // Use a lock to prevent multiple simultaneous reconnection attempts
-    return _connectionLock.synchronized(() async {
-      if (_isConnecting) {
-        l.d("Already attempting to reconnect, skipping");
-        return;
-      }
-
-      l.w("WebSocket closed, reconnecting...");
-      connected = false;
-      _isConnecting = true;
-      _cleanup();
-
-      if (_reconnectAttempts >= _maxReconnectAttempts) {
-        l.e("Max reconnection attempts reached. Please check your connection.");
-        _isConnecting = false;
-        return;
-      }
-
-      final delay = _getReconnectDelay();
-      l.d("Attempting to reconnect in ${delay.inSeconds} seconds (attempt ${_reconnectAttempts + 1}/$_maxReconnectAttempts)");
-
-      _reconnectTimer = Timer(delay, () async {
-        _reconnectAttempts++;
-        final success = await _connect();
-        if (!success) {
-          // Reset _isConnecting if connection failed to allow future reconnection attempts
-          _isConnecting = false;
-        }
-      });
-    });
   }
 
   /// Establishes a connection to the WebSocket server
@@ -138,6 +99,7 @@ class WebSocketService {
 
     try {
       _isConnecting = true;
+      l.d("Starting connection attempt #${_reconnectAttempts + 1}");
 
       // Close any existing connection first
       if (_channel != null) {
@@ -149,12 +111,43 @@ class WebSocketService {
         _channel = null;
       }
 
-      l.d("Connecting to WebSocket at ${Env.websocketAddress}?token=***");
-      _channel = WebSocketChannel.connect(
-        Uri.parse('${Env.websocketAddress}?token=$token'),
-      );
+      // Check if the server is reachable before attempting to connect
+      final uri = Uri.parse('${Env.websocketAddress}?token=$token');
+      l.d("Connecting to WebSocket at ${uri.toString().replaceAll(token, '***')}");
 
-      await _channel!.ready;
+      // Create a connection with timeout
+      final connectionCompleter = Completer<WebSocketChannel>();
+
+      // Start the connection
+      final channel = WebSocketChannel.connect(uri);
+
+      // Set up a timeout
+      Timer(const Duration(seconds: 10), () {
+        if (!connectionCompleter.isCompleted) {
+          l.e("Connection attempt timed out after 10 seconds");
+          connectionCompleter
+              .completeError(TimeoutException('Connection timed out'));
+        }
+      });
+
+      // Try to establish the connection
+      try {
+        l.d("Waiting for channel to be ready...");
+        await channel.ready;
+        l.d("Channel is ready, completing connection");
+        connectionCompleter.complete(channel);
+      } catch (e) {
+        l.e("Error establishing connection: $e");
+        if (!connectionCompleter.isCompleted) {
+          connectionCompleter.completeError(e);
+        }
+      }
+
+      // Wait for the connection to complete or timeout
+      l.d("Waiting for connection to complete or timeout");
+      _channel = await connectionCompleter.future;
+      l.d("Connection established successfully");
+
       _isConnecting = false;
       connected = true;
       _reconnectAttempts = 0; // Reset attempts on successful connection
@@ -167,7 +160,6 @@ class WebSocketService {
     } catch (e) {
       l.e("Error connecting to websocket: $e");
       _isConnecting = false;
-      reconnect();
       return false;
     }
   }
@@ -183,17 +175,28 @@ class WebSocketService {
 
   /// Sets up the message listener to handle incoming messages
   void _setupMessageListener() {
+    subscription?.cancel(); // Cancel any existing subscription
+
+    l.d("Setting up message listener");
     subscription = _channel!.stream.listen(
-      (dynamic message) => _handleIncomingMessageString(message as String),
+      (dynamic message) {
+        l.d("Received message: ${message.toString().substring(0, message.toString().length > 100 ? 100 : message.toString().length)}...");
+        _handleIncomingMessageString(message as String);
+      },
       onError: (error) {
         l.e("WebSocket Error: $error");
-        reconnect();
+        connected = false;
+        // Use a microtask to avoid stack overflow with recursive calls
+        Future.microtask(() => reconnect());
       },
       onDone: () {
         l.w("WebSocket connection closed");
-        reconnect();
+        connected = false;
+        // Use a microtask to avoid stack overflow with recursive calls
+        Future.microtask(() => reconnect());
       },
     );
+    l.d("Message listener set up successfully");
   }
 
   /// Handles incoming message strings by parsing and processing them
@@ -393,6 +396,13 @@ class WebSocketService {
       // Try to reconnect first
       await reconnect();
 
+      // Wait a bit for the reconnection to complete
+      int attempts = 0;
+      while (!connected && attempts < 5) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        attempts++;
+      }
+
       // Check if reconnection was successful
       if (!connected || _channel == null) {
         l.e("Failed to reconnect, cannot send message");
@@ -407,9 +417,17 @@ class WebSocketService {
       return await _sendMessage(message);
     } catch (e) {
       l.e("Error sending message: $e");
+      connected = false;
 
       // Try to reconnect and retry sending once
       await reconnect();
+
+      // Wait a bit for the reconnection to complete
+      int attempts = 0;
+      while (!connected && attempts < 5) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        attempts++;
+      }
 
       if (connected && _channel != null) {
         try {
@@ -446,11 +464,14 @@ class WebSocketService {
           l.d("Sent pong");
         } catch (e) {
           l.e("Error sending pong: $e");
-          reconnect();
+          connected = false;
+          // Use a microtask to avoid stack overflow with recursive calls
+          Future.microtask(() => reconnect());
         }
       } else {
         l.w("Not connected, attempting to reconnect before sending pong");
-        reconnect().then((_) {
+        // Use a microtask to avoid stack overflow with recursive calls
+        Future.microtask(() => reconnect()).then((_) {
           // After reconnection attempt, try to send pong if connected
           if (connected && _channel != null) {
             try {
@@ -458,6 +479,7 @@ class WebSocketService {
               l.d("Sent pong after reconnection");
             } catch (e) {
               l.e("Error sending pong after reconnection: $e");
+              connected = false;
             }
           }
         });
@@ -471,6 +493,63 @@ class WebSocketService {
   void close() {
     token = '';
     _cleanup();
+  }
+
+  /// Attempts to reconnect to the WebSocket server
+  Future<void> reconnect() async {
+    if (token.isEmpty) {
+      l.w("Cannot reconnect: token is empty");
+      return;
+    }
+
+    // Use a lock to prevent multiple simultaneous reconnection attempts
+    return _connectionLock.synchronized(() async {
+      // if (_isConnecting) {
+      //   l.d("Already attempting to reconnect, skipping");
+      //   return;
+      // }
+
+      l.w("WebSocket closed, reconnecting...");
+      connected = false;
+      _isConnecting = true;
+      _cleanup();
+
+      if (_reconnectAttempts >= _maxReconnectAttempts) {
+        l.e("Max reconnection attempts reached. Please check your connection.");
+        _isConnecting = false;
+        return;
+      }
+
+      final delay = _getReconnectDelay();
+      l.d("Attempting to reconnect in ${delay.inSeconds} seconds (attempt ${_reconnectAttempts + 1}/$_maxReconnectAttempts)");
+
+      // Cancel any existing reconnect timer
+      _reconnectTimer?.cancel();
+
+      // Create a new reconnect timer
+      _reconnectTimer = Timer(delay, () async {
+        try {
+          _reconnectAttempts++;
+          l.d("Starting reconnection attempt #$_reconnectAttempts");
+          final success = await _connect();
+
+          if (!success) {
+            // If connection failed, schedule another reconnect attempt
+            l.w("Connection attempt #$_reconnectAttempts failed, will try again");
+            _isConnecting = false;
+            // Use a microtask to avoid stack overflow with recursive calls
+            Future.microtask(() => reconnect());
+          } else {
+            l.d("Reconnection attempt #$_reconnectAttempts succeeded");
+          }
+        } catch (e) {
+          l.e("Error during reconnection attempt #$_reconnectAttempts: $e");
+          _isConnecting = false;
+          // Use a microtask to avoid stack overflow with recursive calls
+          Future.microtask(() => reconnect());
+        }
+      });
+    });
   }
 }
 

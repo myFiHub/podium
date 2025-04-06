@@ -700,6 +700,7 @@ class OngoingOutpostCallController extends GetxController {
       }
       sendOutpostEvent(
         outpostId: outpostId,
+        requestId: outpostId,
         eventType: OutgoingMessageTypeEnums.start_speaking,
       );
       amIMuted.value = false;

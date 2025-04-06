@@ -18,10 +18,15 @@ enum OutgoingMessageTypeEnums {
 class WsOutgoingMessage {
   final OutgoingMessageTypeEnums message_type;
   final String outpost_uuid;
+  final String? request_id;
   final WsOutgoingMessageData? data;
 
-  WsOutgoingMessage(
-      {required this.message_type, required this.outpost_uuid, this.data});
+  WsOutgoingMessage({
+    required this.message_type,
+    required this.outpost_uuid,
+    this.request_id,
+    this.data,
+  });
 
   factory WsOutgoingMessage.fromJson(Map<String, dynamic> json) =>
       _$WsOutgoingMessageFromJson(json);

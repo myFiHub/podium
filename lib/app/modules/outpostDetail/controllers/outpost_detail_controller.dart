@@ -131,11 +131,9 @@ class OutpostDetailController extends GetxController {
         !outpostData.creator_joined &&
         // if the creator is not me
         outpostData.creator_user_uuid != myId) {
-      wsClient.send(
-        WsOutgoingMessage(
-          message_type: OutgoingMessageTypeEnums.wait_for_creator,
-          outpost_uuid: outpostData.uuid,
-        ),
+      sendOutpostEvent(
+        outpostId: outpostData.uuid,
+        eventType: OutgoingMessageTypeEnums.wait_for_creator,
       );
     }
     super.onReady();

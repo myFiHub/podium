@@ -32,47 +32,46 @@ import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 // detect presence time (groups that were active this milliseconds ago will be considered active)
 int dpt = 0;
 
-sendOutpostEvent(
+Future<void> sendOutpostEvent(
     {required String outpostId,
+    String? requestId,
     required OutgoingMessageTypeEnums eventType,
     WsOutgoingMessageData? eventData}) async {
-  try {
-    if (eventType == OutgoingMessageTypeEnums.leave) {
-      wsClient.send(WsOutgoingMessage(
-        message_type: OutgoingMessageTypeEnums.leave,
-        outpost_uuid: outpostId,
-      ));
-      // channel.presence.leave(groupId);
-      return;
-    }
-    if (eventType == OutgoingMessageTypeEnums.start_speaking ||
-        eventType == OutgoingMessageTypeEnums.stop_speaking) {
-      wsClient.send(WsOutgoingMessage(
-        message_type: eventType,
-        outpost_uuid: outpostId,
-      ));
-      return;
-    } else if (eventType == OutgoingMessageTypeEnums.like ||
-        eventType == OutgoingMessageTypeEnums.dislike ||
-        eventType == OutgoingMessageTypeEnums.cheer ||
-        eventType == OutgoingMessageTypeEnums.boo) {
-      wsClient.send(WsOutgoingMessage(
-        message_type: eventType,
-        outpost_uuid: outpostId,
-        data: eventData,
-      ));
-      return;
-    }
-    if (eventType == OutgoingMessageTypeEnums.join) {
-      wsClient.send(WsOutgoingMessage(
-        message_type: eventType,
-        outpost_uuid: outpostId,
-      ));
-      return;
-    }
-  } catch (e) {
-    l.f(e);
-    analytics.logEvent(name: "send_group_presence_event_failed");
+  if (eventType == OutgoingMessageTypeEnums.leave) {
+    await wsClient.send(WsOutgoingMessage(
+      message_type: OutgoingMessageTypeEnums.leave,
+      outpost_uuid: outpostId,
+      request_id: requestId,
+    ));
+    // channel.presence.leave(groupId);
+    return;
+  }
+  if (eventType == OutgoingMessageTypeEnums.start_speaking ||
+      eventType == OutgoingMessageTypeEnums.stop_speaking) {
+    await wsClient.send(WsOutgoingMessage(
+      message_type: eventType,
+      outpost_uuid: outpostId,
+      request_id: requestId,
+    ));
+    return;
+  } else if (eventType == OutgoingMessageTypeEnums.like ||
+      eventType == OutgoingMessageTypeEnums.dislike ||
+      eventType == OutgoingMessageTypeEnums.cheer ||
+      eventType == OutgoingMessageTypeEnums.boo) {
+    await wsClient.send(WsOutgoingMessage(
+      message_type: eventType,
+      outpost_uuid: outpostId,
+      data: eventData,
+    ));
+    return;
+  }
+  if (eventType == OutgoingMessageTypeEnums.join) {
+    await wsClient.send(WsOutgoingMessage(
+      message_type: eventType,
+      outpost_uuid: outpostId,
+      request_id: requestId,
+    ));
+    return;
   }
 }
 
@@ -552,7 +551,10 @@ class OutpostsController extends GetxController {
     if (isAlreadyRegistered) {
       Get.delete<OutpostDetailController>();
     }
-
+    sendOutpostEvent(
+      outpostId: outpost.uuid,
+      eventType: OutgoingMessageTypeEnums.join,
+    );
     Navigate.to(
         type: NavigationTypes.toNamed,
         route: Routes.OUTPOST_DETAIL,

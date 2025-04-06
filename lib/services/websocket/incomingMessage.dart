@@ -37,8 +37,9 @@ enum IncomingMessageType {
 class IncomingMessage {
   final IncomingMessageType name;
   final IncomingMessageData data;
+  final String? request_id;
 
-  IncomingMessage({required this.name, required this.data});
+  IncomingMessage({required this.name, required this.data, this.request_id});
 
   factory IncomingMessage.fromJson(Map<String, dynamic> json) =>
       _$IncomingMessageFromJson(json);

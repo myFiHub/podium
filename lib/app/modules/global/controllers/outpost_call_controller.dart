@@ -82,11 +82,9 @@ class OutpostCallController extends GetxController {
     outpostListener = outpost.listen((activeOutpost) async {
       members.value = [];
       if (activeOutpost != null) {
-        wsClient.send(
-          WsOutgoingMessage(
-            message_type: OutgoingMessageTypeEnums.join,
-            outpost_uuid: outpost.value!.uuid,
-          ),
+        sendOutpostEvent(
+          outpostId: activeOutpost.uuid,
+          eventType: OutgoingMessageTypeEnums.join,
         );
       }
     });
@@ -248,12 +246,6 @@ class OutpostCallController extends GetxController {
     jitsiMembers.value = [];
     jitsiMeet.hangUp();
     members.value = [];
-    wsClient.send(
-      WsOutgoingMessage(
-        message_type: OutgoingMessageTypeEnums.leave,
-        outpost_uuid: outpost.value!.uuid,
-      ),
-    );
     searchedValueInMeet.value = '';
     final outpostId = outpost.value?.uuid;
     if (outpostId != null) {

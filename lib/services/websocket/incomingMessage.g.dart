@@ -10,12 +10,14 @@ IncomingMessage _$IncomingMessageFromJson(Map<String, dynamic> json) =>
     IncomingMessage(
       name: $enumDecode(_$IncomingMessageTypeEnumMap, json['name']),
       data: IncomingMessageData.fromJson(json['data'] as Map<String, dynamic>),
+      request_id: json['request_id'] as String?,
     );
 
 Map<String, dynamic> _$IncomingMessageToJson(IncomingMessage instance) =>
     <String, dynamic>{
       'name': _$IncomingMessageTypeEnumMap[instance.name]!,
       'data': instance.data,
+      'request_id': instance.request_id,
     };
 
 const _$IncomingMessageTypeEnumMap = {

@@ -11,6 +11,7 @@ WsOutgoingMessage _$WsOutgoingMessageFromJson(Map<String, dynamic> json) =>
       message_type:
           $enumDecode(_$OutgoingMessageTypeEnumsEnumMap, json['message_type']),
       outpost_uuid: json['outpost_uuid'] as String,
+      request_id: json['request_id'] as String?,
       data: json['data'] == null
           ? null
           : WsOutgoingMessageData.fromJson(
@@ -21,6 +22,7 @@ Map<String, dynamic> _$WsOutgoingMessageToJson(WsOutgoingMessage instance) =>
     <String, dynamic>{
       'message_type': _$OutgoingMessageTypeEnumsEnumMap[instance.message_type]!,
       'outpost_uuid': instance.outpost_uuid,
+      'request_id': instance.request_id,
       'data': instance.data,
     };
 

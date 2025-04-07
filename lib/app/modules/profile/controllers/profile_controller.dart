@@ -225,12 +225,12 @@ class ProfileController extends GetxController {
       if (sold == true) {
         Toast.success(title: 'Success', message: 'Podium pass sold');
         mySharesOfPodiumPassFromThisUser.value--;
+        getPodiumPassPriceAndMyShares(delay: 5);
       }
     } catch (e) {
       l.e(e);
     } finally {
       isSellingPodiumPass.value = false;
-      getPodiumPassPriceAndMyShares(delay: 5);
     }
   }
 

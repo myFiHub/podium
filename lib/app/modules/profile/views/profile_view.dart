@@ -132,13 +132,33 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
             children: [
               Row(
                 children: [
-                  Text(
-                    numberOfBoughtTicketsByMe > 0
-                        ? 'Manage Podium Pass'
-                        : 'Buy Podium Pass ${podiumPassPrice.toString()} ${chainInfoByChainId(movementAptosNetwork.chainId).currency}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: numberOfBoughtTicketsByMe > 0
+                              ? 'Manage Podium Pass '
+                              : 'Buy Podium Pass, ',
+                        ),
+                        if (numberOfBoughtTicketsByMe == 0)
+                          TextSpan(
+                            text: '${podiumPassPrice.toString()} ',
+                            style: const TextStyle(
+                              color: Colors.yellow,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        if (numberOfBoughtTicketsByMe == 0)
+                          TextSpan(
+                            text:
+                                ' ${chainInfoByChainId(movementAptosNetwork.chainId).currency}',
+                          ),
+                      ],
                     ),
                   ),
                   if (isGettingPodiumPassPrice)
@@ -169,7 +189,7 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
                         ),
                       ),
                       const TextSpan(
-                        text: ' Podium Pass',
+                        text: ' Podium Pass from this user',
                         style: TextStyle(
                           color: Colors.yellow,
                         ),

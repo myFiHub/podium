@@ -36,6 +36,7 @@ class ProfileController extends GetxController {
   final isBuyingArenaTicket = false.obs;
   final isBuyingFriendTechTicket = false.obs;
   final isBuyingPodiumPass = false.obs;
+  final isSellingPodiumPass = false.obs;
   final isFriendTechActive = false.obs;
   final friendTechPrice = 0.0.obs;
   final arenaTicketPrice = 0.0.obs;
@@ -211,18 +212,8 @@ class ProfileController extends GetxController {
     }
   }
 
-  buyOrSellPodiumPass() async {
-    isBuyingPodiumPass.value = true;
-    final myShares = mySharesOfPodiumPassFromThisUser.value;
-    if (myShares > 0) {
-      // _sellPodiumPass();
-      _buyPodiumPass();
-    } else {
-      _buyPodiumPass();
-    }
-  }
-
-  _sellPodiumPass() async {
+  sellPodiumPass() async {
+    isSellingPodiumPass.value = true;
     try {
       final sold = await AptosMovement.sellTicketOnPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
@@ -238,12 +229,13 @@ class ProfileController extends GetxController {
     } catch (e) {
       l.e(e);
     } finally {
-      isBuyingPodiumPass.value = false;
+      isSellingPodiumPass.value = false;
       getPodiumPassPriceAndMyShares(delay: 5);
     }
   }
 
-  _buyPodiumPass() async {
+  buyPodiumPass() async {
+    isBuyingPodiumPass.value = true;
     try {
       final price = await AptosMovement.getTicketPriceForPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,

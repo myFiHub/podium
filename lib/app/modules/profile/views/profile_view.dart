@@ -6,12 +6,46 @@ import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 
 import '../controllers/profile_controller.dart';
+
+/// Shows a dialog with options for managing podium passes
+void showPodiumPassOptionsDialog(
+    int numberOfPasses, ProfileController controller) {
+  Get.dialog(
+    AlertDialog(
+      backgroundColor: ColorName.cardBackground,
+      title: const Text('Podium Pass Options'),
+      content: Text(
+          'You already have $numberOfPasses podium pass${numberOfPasses > 1 ? 'es' : ''}. What would you like to do?'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Get.close();
+            controller.buyPodiumPass();
+          },
+          child: const Text('Buy Another Pass'),
+        ),
+        TextButton(
+          onPressed: () {
+            Get.close();
+            controller.sellPodiumPass();
+          },
+          child: const Text('Sell 1 Pass'),
+        ),
+        TextButton(
+          onPressed: () => Get.close(),
+          child: const Text('Cancel'),
+        ),
+      ],
+    ),
+  );
+}
 
 class ProfileView extends GetView<ProfileController> {
   const ProfileView({Key? key}) : super(key: key);
@@ -68,6 +102,7 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
         final user = controller.userInfo.value;
         final isGettingPrice = controller.isGettingTicketPrice.value;
         final isBuyingPodiumPass = controller.isBuyingPodiumPass.value;
+        final isSellingPodiumPass = controller.isSellingPodiumPass.value;
         final podiumPassPrice = controller.podiumPassPrice.value;
         final isGettingPodiumPassPrice =
             controller.loadingPodiumPassPrice.value;
@@ -77,12 +112,20 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
           return Container();
         }
         return Button(
-          loading: isGettingPrice || isBuyingPodiumPass,
-          onPressed: (isGettingPrice || isBuyingPodiumPass)
-              ? null
-              : () {
-                  controller.buyOrSellPodiumPass();
-                },
+          loading: isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass,
+          onPressed:
+              (isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass)
+                  ? null
+                  : () {
+                      if (numberOfBoughtTicketsByMe > 0) {
+                        // Show confirmation dialog when user already has a pass
+                        showPodiumPassOptionsDialog(
+                            numberOfBoughtTicketsByMe, controller);
+                      } else {
+                        // Original functionality for users without a pass
+                        controller.buyPodiumPass();
+                      }
+                    },
           type: ButtonType.gradient,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -90,7 +133,9 @@ class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
               Row(
                 children: [
                   Text(
-                    'Buy Podium Pass ${podiumPassPrice.toString()} ${chainInfoByChainId(movementAptosNetwork.chainId).currency}',
+                    numberOfBoughtTicketsByMe > 0
+                        ? 'Manage Podium Pass'
+                        : 'Buy Podium Pass ${podiumPassPrice.toString()} ${chainInfoByChainId(movementAptosNetwork.chainId).currency}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

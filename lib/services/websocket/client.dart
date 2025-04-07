@@ -511,6 +511,8 @@ class WebSocketService {
   }
 
   /// Asynchronously joins an outpost and returns a future that completes when the join is confirmed
+  // NOTE: this is for testing purposes, to join the outpost when the user is in the outpost call screen
+  // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
   Future<bool> asyncJoinOutpost(String outpostId) async {
     final isRegistered = Get.isRegistered<OngoingOutpostCallController>();
     if (isRegistered) {

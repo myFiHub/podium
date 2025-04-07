@@ -17,7 +17,7 @@ plugins {
 android {
     namespace = "com.web3podium"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "26.1.10909125" // flutter.ndkVersion
+    ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -38,6 +38,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+        }
     }
     signingConfigs {
         release {

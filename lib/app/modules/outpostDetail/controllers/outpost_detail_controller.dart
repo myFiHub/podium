@@ -237,15 +237,14 @@ class OutpostDetailController extends GetxController {
         outpostData.scheduled_for < DateTime.now().millisecondsSinceEpoch;
     if (isScheduled) {
       if (passedScheduledTime) {
+        final creatorJoined = outpostData.creator_joined;
         if (amICreator && jointButtonContentProps.value.text != 'Start') {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Start');
-        } else if (outpostData.creator_joined &&
-            jointButtonContentProps.value.text != 'Join') {
+        } else if (creatorJoined) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Join');
-        } else if (jointButtonContentProps.value.text !=
-            'Waiting for creator') {
+        } else if (!creatorJoined) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }

@@ -245,10 +245,17 @@ class ProfileController extends GetxController {
         Toast.error(title: 'Error', message: 'Error getting podium pass price');
         return;
       }
-      podiumPassPrice.value = price;
+      final myReferrerUuid = userInfo.value!.referrer_user_uuid;
+      String referrer = '';
+      if (myReferrerUuid != null) {
+        final myReferrer = await HttpApis.podium.getUserData(myReferrerUuid);
+        referrer = myReferrer?.aptos_address ?? '';
+      }
+
       final success = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
         sellerName: userInfo.value!.name ?? '',
+        referrer: referrer,
         numberOfTickets: 1,
       );
       if (success == null) {

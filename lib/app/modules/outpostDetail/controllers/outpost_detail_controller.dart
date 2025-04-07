@@ -238,7 +238,7 @@ class OutpostDetailController extends GetxController {
     if (isScheduled) {
       if (passedScheduledTime) {
         final creatorJoined = outpostData.creator_joined;
-        if (amICreator && jointButtonContentProps.value.text != 'Start') {
+        if (amICreator) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Start');
         } else if (creatorJoined) {

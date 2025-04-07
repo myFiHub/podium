@@ -16,32 +16,91 @@ import '../controllers/profile_controller.dart';
 
 /// Shows a dialog with options for managing podium passes
 void showPodiumPassOptionsDialog(
-    int numberOfPasses, ProfileController controller) {
+  int numberOfPasses,
+  ProfileController controller,
+) {
   Get.dialog(
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
-      title: const Text('Podium Pass Options'),
-      content: Text(
-          'You already have $numberOfPasses podium pass${numberOfPasses > 1 ? 'es' : ''}. What would you like to do?'),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: const Text(
+        'Podium Pass Options',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'You already have $numberOfPasses podium pass${numberOfPasses > 1 ? 'es' : ''}.',
+            style: const TextStyle(fontSize: 16),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'What would you like to do?',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
       actions: [
-        TextButton(
-          onPressed: () {
-            Get.close();
-            controller.buyPodiumPass();
-          },
-          child: const Text('Buy Another Pass'),
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Button(
+            onPressed: () {
+              Get.close();
+              controller.buyPodiumPass();
+            },
+            type: ButtonType.gradient,
+            child: const Text(
+              'Buy Another Pass',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            blockButton: true,
+          ),
         ),
-        TextButton(
-          onPressed: () {
-            Get.close();
-            controller.sellPodiumPass();
-          },
-          child: const Text('Sell 1 Pass'),
+        const SizedBox(height: 12), // Add spacing between buttons
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Button(
+            onPressed: () {
+              Get.close();
+              controller.sellPodiumPass();
+            },
+            type: ButtonType.outline,
+            borderSide: const BorderSide(color: Colors.red),
+            textColor: Colors.red,
+            child: const Text(
+              'Sell 1 Pass',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            blockButton: true,
+          ),
         ),
-        TextButton(
-          onPressed: () => Get.close(),
-          child: const Text('Cancel'),
+        const SizedBox(height: 12), // Add spacing between buttons
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Button(
+            onPressed: () => Get.close(),
+            type: ButtonType.transparent,
+            child: const Text(
+              'Cancel',
+              style: TextStyle(fontSize: 16),
+            ),
+            blockButton: true,
+          ),
         ),
+        const SizedBox(height: 8),
       ],
     ),
   );

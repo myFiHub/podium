@@ -10,6 +10,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
+import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 
 import '../controllers/profile_controller.dart';
@@ -114,33 +115,15 @@ class ProfileView extends GetView<ProfileController> {
       child: Scaffold(
         body: SingleChildScrollView(
           child: Container(
-            padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
+            padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
             width: double.infinity,
-            child: Column(
+            child: const Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                const UserInfo(),
-                Obx(() {
-                  final followedByMe =
-                      controller.userInfo.value!.followed_by_me ?? false;
-                  return FollowButton(
-                    fullWidth: true,
-                    uuid: controller.userInfo.value!.uuid,
-                    followed_by_me: followedByMe,
-                    onFollowStatusChanged: () {
-                      controller.getUserInfo();
-                    },
-                  );
-                }),
+                _ProfileHeader(),
                 space10,
-                const _BuyOrSellPodiumPass(),
-                // space10,
-                // const _BuyArenaTicketButton(),
-                // space10,
-                // const _BuyFriendTechTicket(),
-                space10,
-                const _Statistics(),
+                _Statistics(),
                 space10,
               ],
             ),
@@ -151,121 +134,203 @@ class ProfileView extends GetView<ProfileController> {
   }
 }
 
-class _BuyOrSellPodiumPass extends GetWidget<ProfileController> {
-  const _BuyOrSellPodiumPass();
+class _ProfileHeader extends GetWidget<ProfileController> {
+  const _ProfileHeader();
+
+  static const _profileHeroTagPrefix = 'profile_avatar_';
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final user = controller.userInfo.value;
-        final isGettingPrice = controller.isGettingTicketPrice.value;
-        final isBuyingPodiumPass = controller.isBuyingPodiumPass.value;
-        final isSellingPodiumPass = controller.isSellingPodiumPass.value;
-        final podiumPassPrice = controller.podiumPassPrice.value;
-        final isGettingPodiumPassPrice =
-            controller.loadingPodiumPassPrice.value;
-        final numberOfBoughtTicketsByMe =
-            controller.mySharesOfPodiumPassFromThisUser.value;
-        if (user == null) {
-          return Container();
-        }
-        return Button(
-          loading: isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass,
-          onPressed:
-              (isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass)
-                  ? null
-                  : () {
-                      if (numberOfBoughtTicketsByMe > 0) {
-                        // Show confirmation dialog when user already has a pass
-                        showPodiumPassOptionsDialog(
-                            numberOfBoughtTicketsByMe, controller);
-                      } else {
-                        // Original functionality for users without a pass
-                        controller.buyPodiumPass();
-                      }
-                    },
-          type: ButtonType.gradient,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: numberOfBoughtTicketsByMe > 0
-                              ? 'Manage Podium Pass '
-                              : 'Buy Podium Pass, ',
+    return Obx(() {
+      final user = controller.userInfo.value;
+      if (user == null) {
+        return const SizedBox(
+          height: 150,
+          width: double.infinity,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      String avatar = user.image ?? '';
+      if (avatar == defaultAvatar) {
+        avatar = avatarPlaceHolder(user.name ?? '');
+      }
+
+      // Get wallet address from user object
+      final walletAddress = user.aptos_address!;
+      final shortWalletAddress = truncate(walletAddress, length: 18);
+
+      final followedByMe = user.followed_by_me ?? false;
+
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Profile Image
+                Hero(
+                  tag: '${_profileHeroTagPrefix}${user.uuid}',
+                  child: Img(
+                    src: avatar,
+                    alt: user.name ?? '',
+                    size: 60,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Profile info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name
+                      Text(
+                        user.name ?? '',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        if (numberOfBoughtTicketsByMe == 0)
-                          TextSpan(
-                            text: '${podiumPassPrice.toString()} ',
+                      ),
+                      const SizedBox(height: 4),
+                      // Wallet address with copy button
+                      Row(
+                        children: [
+                          Text(
+                            shortWalletAddress,
                             style: const TextStyle(
-                              color: Colors.yellow,
-                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                              color: Colors.grey,
                             ),
                           ),
-                        if (numberOfBoughtTicketsByMe == 0)
-                          TextSpan(
-                            text:
-                                ' ${chainInfoByChainId(movementAptosNetwork.chainId).currency}',
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.copy,
+                                size: 16, color: Colors.grey),
+                            onPressed: () {
+                              // Copy wallet address
+                            },
                           ),
-                      ],
-                    ),
-                  ),
-                  if (isGettingPodiumPassPrice)
-                    const SizedBox(
-                      width: 10,
-                      height: 10,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 10, height: 10),
-                ],
-              ),
-              if (numberOfBoughtTicketsByMe > 0)
-                RichText(
-                  text: TextSpan(
-                    text: 'You own ',
-                    style: const TextStyle(
-                      color: Colors.yellow,
-                      fontSize: 14,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: '$numberOfBoughtTicketsByMe',
-                        style: const TextStyle(
-                          color: Colors.red,
-                        ),
-                      ),
-                      const TextSpan(
-                        text: ' Podium Pass from this user',
-                        style: TextStyle(
-                          color: Colors.yellow,
-                        ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-            ],
-          ),
-          blockButton: true,
-          icon: Img(
-              src: chainInfoByChainId(movementAptosNetwork.chainId).chainIcon ??
-                  Assets.images.movementLogo.path,
-              size: 20),
-        );
-      },
-    );
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Action buttons
+            Row(
+              children: [
+                // Buy Ticket Button
+                Expanded(
+                  flex: 2,
+                  child: _TicketButton(),
+                ),
+                const SizedBox(width: 8),
+                // Follow Button
+                Expanded(
+                  flex: 1,
+                  child: FollowButton(
+                    uuid: user.uuid,
+                    followed_by_me: followedByMe,
+                    fullWidth: true,
+                    onFollowStatusChanged: () {
+                      controller.getUserInfo();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class _TicketButton extends GetWidget<ProfileController> {
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isGettingPrice = controller.isGettingTicketPrice.value;
+      final isBuyingPodiumPass = controller.isBuyingPodiumPass.value;
+      final isSellingPodiumPass = controller.isSellingPodiumPass.value;
+      final podiumPassPrice = controller.podiumPassPrice.value;
+      final isGettingPodiumPassPrice = controller.loadingPodiumPassPrice.value;
+      final numberOfBoughtTicketsByMe =
+          controller.mySharesOfPodiumPassFromThisUser.value;
+
+      return Button(
+        loading: isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass,
+        onPressed: (isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass)
+            ? null
+            : () {
+                if (numberOfBoughtTicketsByMe > 0) {
+                  // Show confirmation dialog when user already has a pass
+                  showPodiumPassOptionsDialog(
+                      numberOfBoughtTicketsByMe, controller);
+                } else {
+                  // Original functionality for users without a pass
+                  controller.buyPodiumPass();
+                }
+              },
+        type: ButtonType.gradient,
+        blockButton: true,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Img(
+                src: chainInfoByChainId(movementAptosNetwork.chainId)
+                        .chainIcon ??
+                    Assets.images.movementLogo.path,
+                size: 20),
+            const SizedBox(width: 8),
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                children: [
+                  TextSpan(
+                    text: numberOfBoughtTicketsByMe > 0
+                        ? "Manage Podium Pass"
+                        : "Buy Ticket",
+                  ),
+                  if (numberOfBoughtTicketsByMe == 0)
+                    TextSpan(
+                      text: " ${podiumPassPrice.toString()} MOV",
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (isGettingPodiumPassPrice)
+              const Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -556,49 +621,6 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
           src: chainInfoByChainId(baseChainId).chainIcon ??
               Assets.images.movementLogo.path,
           size: 20,
-        ),
-      );
-    });
-  }
-}
-
-class UserInfo extends GetWidget<ProfileController> {
-  const UserInfo({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final user = controller.userInfo.value;
-      if (user == null) {
-        return Container();
-      }
-      String avatar = user.image ?? '';
-      if (avatar == defaultAvatar) {
-        avatar = avatarPlaceHolder(user.name ?? '');
-      }
-      return Container(
-        padding: const EdgeInsets.only(top: 12),
-        child: Column(
-          children: [
-            Img(
-              src: avatar,
-              alt: user.name ?? '',
-              size: 100,
-            ),
-            space10,
-            Text(
-              user.name ?? '',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            // space10,
-            // FollowerBadge(
-            //   followerCount: user.followers_count ?? 0,
-            // ),
-            space10,
-          ],
         ),
       );
     });

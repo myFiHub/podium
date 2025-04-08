@@ -183,9 +183,12 @@ class _SingleUser extends GetView<UsersController> {
                                 SizedBox(
                                   width: 40,
                                   height: 40,
-                                  child: Img(
-                                    src: avatar,
-                                    alt: name,
+                                  child: Hero(
+                                    tag: 'profile_avatar_$uuid',
+                                    child: Img(
+                                      src: avatar,
+                                      alt: name,
+                                    ),
                                   ),
                                 ),
                                 space10,

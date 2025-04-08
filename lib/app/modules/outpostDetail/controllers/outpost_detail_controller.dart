@@ -78,7 +78,7 @@ class OutpostDetailController extends GetxController {
   StreamSubscription<int>? tickerListener;
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
     final params = [
       GroupDetailsParametersKeys.outpostInfo,

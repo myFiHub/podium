@@ -473,11 +473,13 @@ class SearchInRoom extends GetView<OutpostCallController> {
           () {
             final members = controller.sortedMembers.value;
             final searchedValue = controller.searchedValueInMeet.value;
-            final filteredMembers = members.where((element) {
-              return element.name
-                  .toLowerCase()
-                  .contains(searchedValue.toLowerCase());
-            }).toList();
+            final filteredMembers = members.where(
+              (element) {
+                return element.name.toLowerCase().contains(
+                      searchedValue.toLowerCase(),
+                    );
+              },
+            ).toList();
             return Expanded(
               child: UsersInOutpostList(
                 shouldShowIntro: false,

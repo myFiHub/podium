@@ -41,7 +41,7 @@ void showPodiumPassOptionsDialog(
             'You already have $numberOfPasses podium pass${numberOfPasses > 1 ? 'es' : ''}.',
             style: const TextStyle(fontSize: 16),
           ),
-          const SizedBox(height: 16),
+          space16,
           const Text(
             'What would you like to do?',
             style: TextStyle(
@@ -68,7 +68,7 @@ void showPodiumPassOptionsDialog(
             blockButton: true,
           ),
         ),
-        const SizedBox(height: 12), // Add spacing between buttons
+        space12, // Add spacing between buttons
         Container(
           width: double.infinity,
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -87,7 +87,7 @@ void showPodiumPassOptionsDialog(
             blockButton: true,
           ),
         ),
-        const SizedBox(height: 12), // Add spacing between buttons
+        space12, // Add spacing between buttons
         Container(
           width: double.infinity,
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -101,7 +101,7 @@ void showPodiumPassOptionsDialog(
             blockButton: true,
           ),
         ),
-        const SizedBox(height: 8),
+        space8,
       ],
     ),
   );
@@ -178,10 +178,10 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                   child: Img(
                     src: avatar,
                     alt: user.name ?? '',
-                    size: 60,
+                    size: 90,
                   ),
                 ),
-                const SizedBox(width: 16),
+                space16,
                 // Profile info
                 Expanded(
                   child: Column(
@@ -196,7 +196,7 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      space5,
                       // Wallet address with copy button
                       Row(
                         children: [
@@ -223,7 +223,7 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            space16,
             // Action buttons
             Row(
               children: [
@@ -232,7 +232,7 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                   flex: 2,
                   child: _TicketButton(),
                 ),
-                const SizedBox(width: 8),
+                space8,
                 // Follow Button
                 Expanded(
                   flex: 1,
@@ -320,7 +320,7 @@ class _TicketButtonContent extends StatelessWidget {
                         .chainIcon ??
                     Assets.images.movementLogo.path,
                 size: 20),
-            const SizedBox(width: 8),
+            space8,
             Flexible(
               child: RichText(
                 textAlign: TextAlign.center,

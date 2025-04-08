@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
@@ -48,7 +49,7 @@ class GroupByIdLandingScreen extends GetView<OutpostDetailController> {
     controller.getOutpostInfo(id: id!);
     return Container(
       child: const Center(
-        child: CircularProgressIndicator(),
+        child: LoadingWidget(),
       ),
     );
   }

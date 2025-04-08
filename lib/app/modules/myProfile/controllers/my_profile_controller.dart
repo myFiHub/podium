@@ -13,6 +13,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
@@ -588,11 +589,7 @@ class DeactivationForm extends GetView<MyProfileController> {
                     foregroundColor: Colors.white,
                   ),
                   child: isDeactivatingAccount
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(),
-                        )
+                      ? const LoadingWidget()
                       : const Text('Delete Account'),
                 ));
               }),

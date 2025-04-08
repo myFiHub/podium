@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -148,7 +149,7 @@ class _ProfileHeader extends GetWidget<ProfileController> {
           height: 150,
           width: double.infinity,
           child: Center(
-            child: CircularProgressIndicator(),
+            child: LoadingWidget(),
           ),
         );
       }
@@ -351,14 +352,7 @@ class _TicketButtonContent extends StatelessWidget {
             if (isLoading)
               const Padding(
                 padding: EdgeInsets.only(left: 8),
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
+                child: LoadingWidget(),
               ),
           ],
         ),
@@ -541,8 +535,8 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
                   const SizedBox(
                     width: 10,
                     height: 10,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                    child: LoadingWidget(
+                      size: 10,
                     ),
                   )
                 else
@@ -637,8 +631,8 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
                         const SizedBox(
                           width: 10,
                           height: 10,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
+                          child: LoadingWidget(
+                            size: 10,
                           ),
                         )
                       else

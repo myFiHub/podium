@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/home/widgets/addOutpostButton.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -104,7 +105,7 @@ class _MyOutpostsList extends GetWidget<OutpostsController> {
         List<OutpostModel> outposts = myOutposts.values.toList();
         if (outposts.isEmpty && isGettingMyOutposts) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: LoadingWidget(),
           );
         }
 

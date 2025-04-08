@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
@@ -326,9 +327,8 @@ class NotificationIdSection extends StatelessWidget {
                   child: SizedBox(
                     width: 12,
                     height: 12,
-                    child: CircularProgressIndicator(
-                      color: ColorName.primaryBlue,
-                      strokeWidth: 1.5,
+                    child: LoadingWidget(
+                      color: Colors.blue,
                     ),
                   ))
               : const SizedBox.shrink();

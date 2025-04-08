@@ -4,6 +4,7 @@ import 'package:podium/app/modules/createOutpost/controllers/create_outpost_cont
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
@@ -35,7 +36,7 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                 return Container(
                   width: Get.width,
                   height: Get.height - 110,
-                  child: const Center(child: CircularProgressIndicator()),
+                  child: const Center(child: LoadingWidget()),
                 );
               }
               final iAmOwner = outpost.creator_user_uuid == myId;
@@ -181,7 +182,7 @@ class MembersList extends GetView<OutpostDetailController> {
       if (members.length == 0) {
         return const Expanded(
           child: const Center(
-            child: const CircularProgressIndicator(),
+            child: const LoadingWidget(),
           ),
         );
       }
@@ -215,7 +216,7 @@ class _LumaIconButton extends GetView<OutpostDetailController> {
             ? const SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(),
+                child: LoadingWidget(),
               )
             : Assets.images.lumaPng.image(width: 24, height: 24),
       );

@@ -9,6 +9,7 @@ import 'package:podium/app/modules/global/controllers/outpost_call_controller.da
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/likePath.dart';
@@ -661,22 +662,14 @@ class CheerBoo extends GetView<OngoingOutpostCallController> {
         padding: const EdgeInsets.only(top: 8, left: 8),
         icon: cheer
             ? isCheerLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(),
-                  )
+                ? const LoadingWidget()
                 : Assets.images.cheer.image(
                     width: 30,
                     height: 30,
                     color: Colors.green,
                   )
             : isBooLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(),
-                  )
+                ? const LoadingWidget()
                 : Assets.images.boo.image(
                     width: 30,
                     height: 30,

@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -63,7 +64,7 @@ class OutpostsList extends GetView<OutpostsController> {
                 ),
               ),
               child: const Center(
-                child: CircularProgressIndicator(),
+                child: LoadingWidget(),
               ),
             );
           },

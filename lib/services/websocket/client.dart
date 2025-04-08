@@ -435,7 +435,6 @@ class WebSocketService {
       if (connected && _channel != null) {
         try {
           _channel?.sink.add(List<int>.from([0x8A]));
-          l.d("Sent pong");
         } catch (e) {
           l.e("Error sending pong: $e");
           connected = false;

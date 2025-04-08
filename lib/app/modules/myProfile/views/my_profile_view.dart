@@ -10,7 +10,6 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
-import 'package:podium/app/modules/global/widgets/follower_badge.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -892,10 +891,13 @@ class UserInfo extends GetView<GlobalController> {
         padding: const EdgeInsets.only(top: 12),
         child: Column(
           children: [
-            Img(
-              src: avatar,
-              size: 100,
-              alt: myUser.name,
+            Hero(
+              tag: 'profile_avatar_${myUser.uuid}',
+              child: Img(
+                src: avatar,
+                size: 100,
+                alt: myUser.name,
+              ),
             ),
             space10,
             Text(

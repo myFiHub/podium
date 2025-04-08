@@ -282,8 +282,38 @@ class _TicketButton extends GetWidget<ProfileController> {
               },
         type: ButtonType.gradient,
         blockButton: true,
-        child: Row(
+        child: _TicketButtonContent(
+          numberOfPasses: numberOfBoughtTicketsByMe,
+          podiumPassPrice: podiumPassPrice,
+          isLoading: isGettingPodiumPassPrice,
+        ),
+      );
+    });
+  }
+}
+
+class _TicketButtonContent extends StatelessWidget {
+  const _TicketButtonContent({
+    Key? key,
+    required this.numberOfPasses,
+    required this.podiumPassPrice,
+    required this.isLoading,
+  }) : super(key: key);
+
+  final int numberOfPasses;
+  final double podiumPassPrice;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Img(
                 src: chainInfoByChainId(movementAptosNetwork.chainId)
@@ -291,31 +321,34 @@ class _TicketButton extends GetWidget<ProfileController> {
                     Assets.images.movementLogo.path,
                 size: 20),
             const SizedBox(width: 8),
-            RichText(
-              text: TextSpan(
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                children: [
-                  TextSpan(
-                    text: numberOfBoughtTicketsByMe > 0
-                        ? "Manage Podium Pass"
-                        : "Buy Ticket",
+            Flexible(
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  if (numberOfBoughtTicketsByMe == 0)
+                  children: [
                     TextSpan(
-                      text: " ${podiumPassPrice.toString()} MOV",
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      text: numberOfPasses > 0
+                          ? "Manage Podium Pass"
+                          : "Buy Pass",
                     ),
-                ],
+                    if (numberOfPasses == 0)
+                      TextSpan(
+                        text: " ${podiumPassPrice.toString()} MOV",
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-            if (isGettingPodiumPassPrice)
+            if (isLoading)
               const Padding(
                 padding: EdgeInsets.only(left: 8),
                 child: SizedBox(
@@ -329,8 +362,30 @@ class _TicketButton extends GetWidget<ProfileController> {
               ),
           ],
         ),
-      );
-    });
+        if (numberOfPasses > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.yellow,
+                ),
+                children: [
+                  const TextSpan(text: "You own "),
+                  TextSpan(
+                    text: numberOfPasses.toString(),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  TextSpan(text: " pass${numberOfPasses > 1 ? 'es' : ''}"),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 

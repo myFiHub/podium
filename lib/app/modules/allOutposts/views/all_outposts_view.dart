@@ -2,6 +2,7 @@ import 'package:animated_icon/animated_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/root.dart';
@@ -188,7 +189,7 @@ class AllOutpostsList extends GetWidget<OutpostsController> {
       final isGettingAllOutposts = controller.isGettingAllOutposts.value;
       if (isGettingAllOutposts) {
         return const Center(
-          child: CircularProgressIndicator(),
+          child: LoadingWidget(),
         );
       }
       return GestureDetector(

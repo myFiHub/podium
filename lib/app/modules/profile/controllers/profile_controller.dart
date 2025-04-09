@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -36,6 +37,7 @@ class ProfileController extends GetxController {
   final isBuyingArenaTicket = false.obs;
   final isBuyingFriendTechTicket = false.obs;
   final isBuyingPodiumPass = false.obs;
+  final isSellingPodiumPass = false.obs;
   final isFriendTechActive = false.obs;
   final friendTechPrice = 0.0.obs;
   final arenaTicketPrice = 0.0.obs;
@@ -48,6 +50,10 @@ class ProfileController extends GetxController {
   final mySharesOfFriendTechFromThisUser = 0.obs;
   final mySharesOfArenaFromThisUser = 0.obs;
   final mySharesOfPodiumPassFromThisUser = 0.obs;
+  final followers = Rx<List<FollowerModel>>([]);
+  final followings = Rx<List<FollowerModel>>([]);
+  final isGettingFollowers = false.obs;
+  final isGettingFollowings = false.obs;
   final isGettingPayments = false.obs;
   final payments = Rx(Payments());
 
@@ -56,7 +62,6 @@ class ProfileController extends GetxController {
     super.onInit();
     final stringedUserInfo = Get.parameters[UserProfileParamsKeys.userInfo]!;
     userInfo.value = UserModel.fromJson(jsonDecode(stringedUserInfo));
-
     payments.value = Payments(
       numberOfCheersReceived: userInfo.value!.received_cheer_count,
       numberOfBoosReceived: userInfo.value!.received_boo_count,
@@ -64,9 +69,7 @@ class ProfileController extends GetxController {
       numberOfBoosSent: userInfo.value!.sent_boo_count,
     );
 
-    Future.wait<void>([
-      getPrices(),
-    ]);
+    Future.wait<void>([getPrices(), getFollowers(), getFollowings()]);
   }
 
   @override
@@ -77,6 +80,32 @@ class ProfileController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  getFollowers({bool silent = false}) async {
+    if (!silent) {
+      isGettingFollowers.value = true;
+    }
+    final followersList = await HttpApis.podium.getFollowersOfUser(
+      uuid: userInfo.value!.uuid,
+    );
+    followers.value = followersList;
+    if (!silent) {
+      isGettingFollowers.value = false;
+    }
+  }
+
+  getFollowings({bool silent = false}) async {
+    if (!silent) {
+      isGettingFollowings.value = true;
+    }
+    final followingsList = await HttpApis.podium.getFollowingsOfUser(
+      uuid: userInfo.value!.uuid,
+    );
+    followings.value = followingsList;
+    if (!silent) {
+      isGettingFollowings.value = false;
+    }
   }
 
   getUserInfo() async {
@@ -99,8 +128,8 @@ class ProfileController extends GetxController {
       }
       isGettingTicketPrice.value = true;
       await Future.wait<void>([
-        getFriendTechPriceAndMyShare(),
-        getArenaPriceAndMyShares(),
+        // getFriendTechPriceAndMyShare(),
+        // getArenaPriceAndMyShares(),
         getPodiumPassPriceAndMyShares(),
       ]);
       //
@@ -211,18 +240,8 @@ class ProfileController extends GetxController {
     }
   }
 
-  buyOrSellPodiumPass() async {
-    isBuyingPodiumPass.value = true;
-    final myShares = mySharesOfPodiumPassFromThisUser.value;
-    if (myShares > 0) {
-      // _sellPodiumPass();
-      _buyPodiumPass();
-    } else {
-      _buyPodiumPass();
-    }
-  }
-
-  _sellPodiumPass() async {
+  sellPodiumPass() async {
+    isSellingPodiumPass.value = true;
     try {
       final sold = await AptosMovement.sellTicketOnPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
@@ -234,16 +253,17 @@ class ProfileController extends GetxController {
       if (sold == true) {
         Toast.success(title: 'Success', message: 'Podium pass sold');
         mySharesOfPodiumPassFromThisUser.value--;
+        getPodiumPassPriceAndMyShares(delay: 5);
       }
     } catch (e) {
       l.e(e);
     } finally {
-      isBuyingPodiumPass.value = false;
-      getPodiumPassPriceAndMyShares(delay: 5);
+      isSellingPodiumPass.value = false;
     }
   }
 
-  _buyPodiumPass() async {
+  buyPodiumPass() async {
+    isBuyingPodiumPass.value = true;
     try {
       final price = await AptosMovement.getTicketPriceForPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
@@ -253,10 +273,17 @@ class ProfileController extends GetxController {
         Toast.error(title: 'Error', message: 'Error getting podium pass price');
         return;
       }
-      podiumPassPrice.value = price;
+      final myReferrerUuid = userInfo.value!.referrer_user_uuid;
+      String referrer = '';
+      if (myReferrerUuid != null) {
+        final myReferrer = await HttpApis.podium.getUserData(myReferrerUuid);
+        referrer = myReferrer?.aptos_address ?? '';
+      }
+
       final success = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
         sellerName: userInfo.value!.name ?? '',
+        referrer: referrer,
         numberOfTickets: 1,
       );
       if (success == null) {

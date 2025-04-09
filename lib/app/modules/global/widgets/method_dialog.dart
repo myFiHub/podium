@@ -2,6 +2,7 @@ import 'dart:convert';
 
 // import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/utils/constants.dart';
 
 class MethodDialog extends StatefulWidget {
@@ -59,7 +60,7 @@ class MethodDialogState extends State<MethodDialog> {
               width: StyleConstants.linear48,
               height: StyleConstants.linear48,
               child: Center(
-                child: CircularProgressIndicator(),
+                child: LoadingWidget(),
               ),
             );
           }

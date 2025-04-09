@@ -20,8 +20,11 @@ class WsOutgoingMessage {
   final String outpost_uuid;
   final WsOutgoingMessageData? data;
 
-  WsOutgoingMessage(
-      {required this.message_type, required this.outpost_uuid, this.data});
+  WsOutgoingMessage({
+    required this.message_type,
+    required this.outpost_uuid,
+    this.data,
+  });
 
   factory WsOutgoingMessage.fromJson(Map<String, dynamic> json) =>
       _$WsOutgoingMessageFromJson(json);

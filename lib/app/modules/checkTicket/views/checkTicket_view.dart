@@ -5,6 +5,7 @@ import 'package:podium/app/modules/createOutpost/controllers/create_outpost_cont
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/styles.dart';
@@ -34,7 +35,7 @@ class CheckTicketView extends GetWidget<CheckticketController> {
                     final allUsersList =
                         allUsersToBuyTicketFrom.values.toList();
                     return isLoading
-                        ? const CircularProgressIndicator()
+                        ? const LoadingWidget()
                         : Container(
                             height: Get.height - 190,
                             child: Scrollbar(
@@ -376,8 +377,9 @@ class Actions extends StatelessWidget {
 
     return Container(
       child: checking || buying
-          ? const SizedBox(
-              child: CircularProgressIndicator(), width: 20, height: 20)
+          ? const LoadingWidget(
+              size: 20,
+            )
           : alreadyBoughtRequiredTickets
               ? const Icon(Icons.check, color: Colors.green)
               : Tooltip(

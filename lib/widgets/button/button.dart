@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/gen/colors.gen.dart';
 
 /// [ButtonType] is used to change the type of widgets
@@ -315,7 +316,9 @@ class _ButtonState extends State<Button> {
     child = (widget.text != null && widget.loading == false)
         ? Text(widget.text!)
         : widget.loading == true
-            ? _loader20
+            ? const LoadingWidget(
+                size: 12,
+              )
             : widget.child;
     icon = widget.icon;
     onPressed = widget.onPressed;
@@ -395,7 +398,9 @@ class _ButtonState extends State<Button> {
     child = (widget.text != null && widget.loading == false)
         ? Text(widget.text!)
         : widget.loading == true
-            ? _loader20
+            ? const LoadingWidget(
+                size: 12,
+              )
             : widget.child;
     icon = widget.icon;
     onPressed = widget.onPressed;
@@ -871,13 +876,3 @@ class _RenderInputPadding extends RenderShiftedBox {
     throw Exception('child property cannot be null');
   }
 }
-
-final _loader20 = Container(
-  height: 20,
-  width: 20,
-  child: const CircularProgressIndicator(
-    valueColor: AlwaysStoppedAnimation<Color>(
-      ColorName.white,
-    ),
-  ),
-);

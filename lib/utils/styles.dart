@@ -60,9 +60,14 @@ final defaultAppBar = AppBar(
   backgroundColor: ColorName.pageBackground,
 );
 
-const vSpace10 = const SizedBox(height: 10);
 const space10 = const Gap(
   10,
+);
+const space12 = const Gap(
+  12,
+);
+const space8 = const Gap(
+  8,
 );
 const space14 = const Gap(
   14,

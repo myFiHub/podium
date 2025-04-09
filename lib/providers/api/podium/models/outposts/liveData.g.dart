@@ -11,7 +11,7 @@ abstract class _$LiveMemberCWProxy {
 
   LiveMember can_speak(bool can_speak);
 
-  LiveMember feedbacks(List<Feedback> feedbacks);
+  LiveMember feedbacks(List<FeedbackModel> feedbacks);
 
   LiveMember image(String image);
 
@@ -44,7 +44,7 @@ abstract class _$LiveMemberCWProxy {
   LiveMember call({
     String address,
     bool can_speak,
-    List<Feedback> feedbacks,
+    List<FeedbackModel> feedbacks,
     String image,
     bool is_present,
     bool is_speaking,
@@ -72,7 +72,8 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
   LiveMember can_speak(bool can_speak) => this(can_speak: can_speak);
 
   @override
-  LiveMember feedbacks(List<Feedback> feedbacks) => this(feedbacks: feedbacks);
+  LiveMember feedbacks(List<FeedbackModel> feedbacks) =>
+      this(feedbacks: feedbacks);
 
   @override
   LiveMember image(String image) => this(image: image);
@@ -149,7 +150,7 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
       feedbacks: feedbacks == const $CopyWithPlaceholder()
           ? _value.feedbacks
           // ignore: cast_nullable_to_non_nullable
-          : feedbacks as List<Feedback>,
+          : feedbacks as List<FeedbackModel>,
       image: image == const $CopyWithPlaceholder()
           ? _value.image
           // ignore: cast_nullable_to_non_nullable
@@ -226,7 +227,7 @@ LiveMember _$LiveMemberFromJson(Map<String, dynamic> json) => LiveMember(
       address: json['address'] as String,
       can_speak: json['can_speak'] as bool,
       feedbacks: (json['feedbacks'] as List<dynamic>?)
-              ?.map((e) => Feedback.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => FeedbackModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
       image: json['image'] as String,
@@ -264,13 +265,15 @@ Map<String, dynamic> _$LiveMemberToJson(LiveMember instance) =>
       'followed_by_me': instance.followed_by_me,
     };
 
-Feedback _$FeedbackFromJson(Map<String, dynamic> json) => Feedback(
+FeedbackModel _$FeedbackModelFromJson(Map<String, dynamic> json) =>
+    FeedbackModel(
       feedback_type: json['feedback_type'] as String,
       time: json['time'] as String,
       user_address: json['user_address'] as String,
     );
 
-Map<String, dynamic> _$FeedbackToJson(Feedback instance) => <String, dynamic>{
+Map<String, dynamic> _$FeedbackModelToJson(FeedbackModel instance) =>
+    <String, dynamic>{
       'feedback_type': instance.feedback_type,
       'time': instance.time,
       'user_address': instance.user_address,

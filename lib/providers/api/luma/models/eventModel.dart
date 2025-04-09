@@ -48,7 +48,7 @@ class Luma_EventDetailsModel {
   final String end_at;
   final String url;
   final String timezone;
-  final String event_type;
+  String? event_type;
   final String visibility;
   final String meeting_url;
 
@@ -63,7 +63,7 @@ class Luma_EventDetailsModel {
     required this.end_at,
     required this.url,
     required this.timezone,
-    required this.event_type,
+    this.event_type,
     required this.visibility,
     required this.meeting_url,
   });

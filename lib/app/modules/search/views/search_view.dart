@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -70,15 +71,7 @@ class SearchView extends GetView<SearchPageController> {
                                 right: isSearching ? 12 : 0,
                                 top: isSearching ? 10 : -4,
                                 child: (isSearching)
-                                    ? Container(
-                                        width: 20,
-                                        height: 20,
-                                        child: const CircularProgressIndicator(
-                                          valueColor: AlwaysStoppedAnimation<
-                                                  Color>(
-                                              ColorName.pageBgGradientStart),
-                                        ),
-                                      )
+                                    ? const LoadingWidget()
                                     : (searchValue.isNotEmpty)
                                         ? IconButton(
                                             color: ColorName.primaryBlue,
@@ -211,16 +204,7 @@ class SearchView extends GetView<SearchPageController> {
                                   Text(tag.name),
                                   space10,
                                   if (loadingName == tag.name)
-                                    Container(
-                                      margin: const EdgeInsets.only(left: 10),
-                                      width: 20,
-                                      height: 20,
-                                      child: const CircularProgressIndicator(
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                ColorName.primaryBlue),
-                                      ),
-                                    ),
+                                    const LoadingWidget(),
                                 ],
                               ),
                             ),

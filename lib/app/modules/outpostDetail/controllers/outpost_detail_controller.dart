@@ -78,7 +78,7 @@ class OutpostDetailController extends GetxController {
   StreamSubscription<int>? tickerListener;
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
     final params = [
       GroupDetailsParametersKeys.outpostInfo,
@@ -131,11 +131,9 @@ class OutpostDetailController extends GetxController {
         !outpostData.creator_joined &&
         // if the creator is not me
         outpostData.creator_user_uuid != myId) {
-      wsClient.send(
-        WsOutgoingMessage(
-          message_type: OutgoingMessageTypeEnums.wait_for_creator,
-          outpost_uuid: outpostData.uuid,
-        ),
+      sendOutpostEvent(
+        outpostId: outpostData.uuid,
+        eventType: OutgoingMessageTypeEnums.wait_for_creator,
       );
     }
     super.onReady();
@@ -239,15 +237,14 @@ class OutpostDetailController extends GetxController {
         outpostData.scheduled_for < DateTime.now().millisecondsSinceEpoch;
     if (isScheduled) {
       if (passedScheduledTime) {
-        if (amICreator && jointButtonContentProps.value.text != 'Start') {
+        final creatorJoined = outpostData.creator_joined;
+        if (amICreator) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Start');
-        } else if (outpostData.creator_joined &&
-            jointButtonContentProps.value.text != 'Join') {
+        } else if (creatorJoined) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Join');
-        } else if (jointButtonContentProps.value.text !=
-            'Waiting for creator') {
+        } else if (!creatorJoined) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }

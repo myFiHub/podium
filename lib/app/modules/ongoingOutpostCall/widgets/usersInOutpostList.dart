@@ -9,6 +9,7 @@ import 'package:podium/app/modules/global/controllers/outpost_call_controller.da
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/likePath.dart';
@@ -21,6 +22,7 @@ import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -286,6 +288,7 @@ class _SingleUserCard extends StatelessWidget {
   }
 }
 
+// FIXME: this is not showing up
 class _Reactions extends GetView<OutpostCallController> {
   final String address;
   const _Reactions({super.key, required this.address});
@@ -295,7 +298,7 @@ class _Reactions extends GetView<OutpostCallController> {
     return Obx(() {
       final reactions = controller.reactionsMap.value[address];
       if (reactions == null) return const SizedBox();
-
+      l.d(reactions);
       return Container(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -575,7 +578,9 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final roomCreator =
+      final exists = Get.isRegistered<OngoingOutpostCallController>();
+      if (!exists) return const SizedBox();
+      final outpostCreator =
           controller.outpostCallController.outpost.value!.creator_user_uuid;
       final users =
           controller.members.value.where((m) => m.uuid == userId).toList();
@@ -583,7 +588,7 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
         return const SizedBox();
       }
       final remainingTime = users[0].remaining_time;
-      if (userId == roomCreator) {
+      if (userId == outpostCreator) {
         return Text('Creator',
             style: TextStyle(fontSize: 10, color: Colors.green[200]));
       }
@@ -659,22 +664,14 @@ class CheerBoo extends GetView<OngoingOutpostCallController> {
         padding: const EdgeInsets.only(top: 8, left: 8),
         icon: cheer
             ? isCheerLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(),
-                  )
+                ? const LoadingWidget()
                 : Assets.images.cheer.image(
                     width: 30,
                     height: 30,
                     color: Colors.green,
                   )
             : isBooLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(),
-                  )
+                ? const LoadingWidget()
                 : Assets.images.boo.image(
                     width: 30,
                     height: 30,

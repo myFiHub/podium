@@ -1,0 +1,306 @@
+PODS:
+  - app_links (1.0.0):
+    - FlutterMacOS
+  - app_settings (5.1.1):
+    - FlutterMacOS
+  - audio_session (0.0.1):
+    - FlutterMacOS
+  - connectivity_plus (0.0.1):
+    - FlutterMacOS
+  - downloadsfolder (0.0.1):
+    - FlutterMacOS
+  - file_selector_macos (0.0.1):
+    - FlutterMacOS
+  - Firebase/Analytics (11.10.0):
+    - Firebase/Core
+  - Firebase/Auth (11.10.0):
+    - Firebase/CoreOnly
+    - FirebaseAuth (~> 11.10.0)
+  - Firebase/Core (11.10.0):
+    - Firebase/CoreOnly
+    - FirebaseAnalytics (~> 11.10.0)
+  - Firebase/CoreOnly (11.10.0):
+    - FirebaseCore (~> 11.10.0)
+  - Firebase/Storage (11.10.0):
+    - Firebase/CoreOnly
+    - FirebaseStorage (~> 11.10.0)
+  - firebase_analytics (11.4.5):
+    - Firebase/Analytics (= 11.10.0)
+    - firebase_core
+    - FlutterMacOS
+  - firebase_auth (5.5.2):
+    - Firebase/Auth (~> 11.10.0)
+    - Firebase/CoreOnly (~> 11.10.0)
+    - firebase_core
+    - FlutterMacOS
+  - firebase_core (3.13.0):
+    - Firebase/CoreOnly (~> 11.10.0)
+    - FlutterMacOS
+  - firebase_storage (12.4.5):
+    - Firebase/CoreOnly (~> 11.10.0)
+    - Firebase/Storage (~> 11.10.0)
+    - firebase_core
+    - FlutterMacOS
+  - FirebaseAnalytics (11.10.0):
+    - FirebaseAnalytics/AdIdSupport (= 11.10.0)
+    - FirebaseCore (~> 11.10.0)
+    - FirebaseInstallations (~> 11.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - FirebaseAnalytics/AdIdSupport (11.10.0):
+    - FirebaseCore (~> 11.10.0)
+    - FirebaseInstallations (~> 11.0)
+    - GoogleAppMeasurement (= 11.10.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - FirebaseAppCheckInterop (11.11.0)
+  - FirebaseAuth (11.10.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseAuthInterop (~> 11.0)
+    - FirebaseCore (~> 11.10.0)
+    - FirebaseCoreExtension (~> 11.10.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
+    - RecaptchaInterop (~> 101.0)
+  - FirebaseAuthInterop (11.11.0)
+  - FirebaseCore (11.10.0):
+    - FirebaseCoreInternal (~> 11.10.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/Logger (~> 8.0)
+  - FirebaseCoreExtension (11.10.0):
+    - FirebaseCore (~> 11.10.0)
+  - FirebaseCoreInternal (11.10.0):
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+  - FirebaseInstallations (11.10.0):
+    - FirebaseCore (~> 11.10.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - PromisesObjC (~> 2.4)
+  - FirebaseStorage (11.10.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseAuthInterop (~> 11.0)
+    - FirebaseCore (~> 11.10.0)
+    - FirebaseCoreExtension (~> 11.10.0)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
+  - flutter_timezone (0.1.0):
+    - FlutterMacOS
+  - FlutterMacOS (1.0.0)
+  - GoogleAppMeasurement (11.10.0):
+    - GoogleAppMeasurement/AdIdSupport (= 11.10.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - GoogleAppMeasurement/AdIdSupport (11.10.0):
+    - GoogleAppMeasurement/WithoutAdIdSupport (= 11.10.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - GoogleAppMeasurement/WithoutAdIdSupport (11.10.0):
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
+    - GoogleUtilities/MethodSwizzler (~> 8.0)
+    - GoogleUtilities/Network (~> 8.0)
+    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+    - nanopb (~> 3.30910.0)
+  - GoogleUtilities/AppDelegateSwizzler (8.0.2):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Network
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Environment (8.0.2):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.0.2):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/MethodSwizzler (8.0.2):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Network (8.0.2):
+    - GoogleUtilities/Logger
+    - "GoogleUtilities/NSData+zlib"
+    - GoogleUtilities/Privacy
+    - GoogleUtilities/Reachability
+  - "GoogleUtilities/NSData+zlib (8.0.2)":
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.0.2)
+  - GoogleUtilities/Reachability (8.0.2):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/UserDefaults (8.0.2):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GTMSessionFetcher/Core (4.4.0)
+  - just_audio (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - just_waveform (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - nanopb (3.30910.0):
+    - nanopb/decode (= 3.30910.0)
+    - nanopb/encode (= 3.30910.0)
+  - nanopb/decode (3.30910.0)
+  - nanopb/encode (3.30910.0)
+  - package_info_plus (0.0.1):
+    - FlutterMacOS
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - PromisesObjC (2.4.0)
+  - record_macos (1.0.0):
+    - FlutterMacOS
+  - share_plus (0.0.1):
+    - FlutterMacOS
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - sqflite (0.0.3):
+    - Flutter
+    - FlutterMacOS
+  - url_launcher_macos (0.0.1):
+    - FlutterMacOS
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - app_links (from `Flutter/ephemeral/.symlinks/plugins/app_links/macos`)
+  - app_settings (from `Flutter/ephemeral/.symlinks/plugins/app_settings/macos`)
+  - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
+  - connectivity_plus (from `Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos`)
+  - downloadsfolder (from `Flutter/ephemeral/.symlinks/plugins/downloadsfolder/macos`)
+  - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
+  - firebase_analytics (from `Flutter/ephemeral/.symlinks/plugins/firebase_analytics/macos`)
+  - firebase_auth (from `Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos`)
+  - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
+  - firebase_storage (from `Flutter/ephemeral/.symlinks/plugins/firebase_storage/macos`)
+  - flutter_timezone (from `Flutter/ephemeral/.symlinks/plugins/flutter_timezone/macos`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - just_audio (from `Flutter/ephemeral/.symlinks/plugins/just_audio/darwin`)
+  - just_waveform (from `Flutter/ephemeral/.symlinks/plugins/just_waveform/darwin`)
+  - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
+  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - record_macos (from `Flutter/ephemeral/.symlinks/plugins/record_macos/macos`)
+  - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
+  - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - sqflite (from `Flutter/ephemeral/.symlinks/plugins/sqflite/darwin`)
+  - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
+  - webview_flutter_wkwebview (from `Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin`)
+
+SPEC REPOS:
+  trunk:
+    - Firebase
+    - FirebaseAnalytics
+    - FirebaseAppCheckInterop
+    - FirebaseAuth
+    - FirebaseAuthInterop
+    - FirebaseCore
+    - FirebaseCoreExtension
+    - FirebaseCoreInternal
+    - FirebaseInstallations
+    - FirebaseStorage
+    - GoogleAppMeasurement
+    - GoogleUtilities
+    - GTMSessionFetcher
+    - nanopb
+    - PromisesObjC
+
+EXTERNAL SOURCES:
+  app_links:
+    :path: Flutter/ephemeral/.symlinks/plugins/app_links/macos
+  app_settings:
+    :path: Flutter/ephemeral/.symlinks/plugins/app_settings/macos
+  audio_session:
+    :path: Flutter/ephemeral/.symlinks/plugins/audio_session/macos
+  connectivity_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos
+  downloadsfolder:
+    :path: Flutter/ephemeral/.symlinks/plugins/downloadsfolder/macos
+  file_selector_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
+  firebase_analytics:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_analytics/macos
+  firebase_auth:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos
+  firebase_core:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_core/macos
+  firebase_storage:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_storage/macos
+  flutter_timezone:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_timezone/macos
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  just_audio:
+    :path: Flutter/ephemeral/.symlinks/plugins/just_audio/darwin
+  just_waveform:
+    :path: Flutter/ephemeral/.symlinks/plugins/just_waveform/darwin
+  package_info_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
+  path_provider_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
+  record_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/record_macos/macos
+  share_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/share_plus/macos
+  shared_preferences_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
+  sqflite:
+    :path: Flutter/ephemeral/.symlinks/plugins/sqflite/darwin
+  url_launcher_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
+  webview_flutter_wkwebview:
+    :path: Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin
+
+SPEC CHECKSUMS:
+  app_links: afe860c55c7ef176cea7fb630a2b7d7736de591d
+  app_settings: cd21e176b56f8172043640ade81322a98896bff4
+  audio_session: eaca2512cf2b39212d724f35d11f46180ad3a33e
+  connectivity_plus: 4adf20a405e25b42b9c9f87feff8f4b6fde18a4e
+  downloadsfolder: 9a9a5fb6eee0abe38756e788bb248d1c21490a6e
+  file_selector_macos: 585232b688707857504f9cb5f985a7c97fe4dd30
+  Firebase: 1fe1c0a7d9aaea32efe01fbea5f0ebd8d70e53a2
+  firebase_analytics: 5f4b20b5f700bcae2f800c69a63e79d937d0daa9
+  firebase_auth: 22945027646e71960caae1b9f2b2498d7a52a4c7
+  firebase_core: efd50ad8177dc489af1b9163a560359cf1b30597
+  firebase_storage: ec466c44a880a69f779c5db5838d36de861515b2
+  FirebaseAnalytics: 4e42333f02cf78ed93703a5c36f36dd518aebdef
+  FirebaseAppCheckInterop: f23709c9ce92d810aa53ff4ce12ad3e666a3c7be
+  FirebaseAuth: c4146bdfdc87329f9962babd24dae89373f49a32
+  FirebaseAuthInterop: ac22ed402c2f4e3a8c63ebd3278af9a06073c1be
+  FirebaseCore: 8344daef5e2661eb004b177488d6f9f0f24251b7
+  FirebaseCoreExtension: 6f357679327f3614e995dc7cf3f2d600bdc774ac
+  FirebaseCoreInternal: ef4505d2afb1d0ebbc33162cb3795382904b5679
+  FirebaseInstallations: 9980995bdd06ec8081dfb6ab364162bdd64245c3
+  FirebaseStorage: e83d1b9c8a5318d46ccfb2955f0d98095e0bf598
+  flutter_timezone: d59eea86178cbd7943cd2431cc2eaa9850f935d8
+  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+  GoogleAppMeasurement: 36684bfb3ee034e2b42b4321eb19da3a1b81e65d
+  GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
+  GTMSessionFetcher: 75b671f9e551e4c49153d4c4f8659ef4f559b970
+  just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
+  just_waveform: be2cb6dec86096cb972bf8b73c893fe16bf1cff4
+  nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  package_info_plus: f0052d280d17aa382b932f399edf32507174e870
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  record_macos: 295d70bd5fb47145df78df7b80e6697cd18403c0
+  share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc
+  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
+  sqflite: c35dad70033b8862124f8337cc994a809fcd9fa3
+  url_launcher_macos: de10e46d8d8b9e3a7b8a133e8de92b104379f05e
+  webview_flutter_wkwebview: 44d4dee7d7056d5ad185d25b38404436d56c547c
+
+PODFILE CHECKSUM: 9ebaf0ce3d369aaa26a9ea0e159195ed94724cf3
+
+COCOAPODS: 1.16.2

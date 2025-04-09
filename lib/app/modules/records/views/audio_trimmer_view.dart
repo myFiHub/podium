@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:just_waveform/just_waveform.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 
 class AudioTrimmerView extends StatefulWidget {
   final File audioFile;
@@ -68,7 +69,7 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: LoadingWidget());
     }
 
     return Column(

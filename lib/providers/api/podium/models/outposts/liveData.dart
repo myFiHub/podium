@@ -54,7 +54,7 @@ class OutpostLiveData {
 class LiveMember {
   final String address;
   final bool can_speak;
-  final List<Feedback> feedbacks;
+  final List<FeedbackModel> feedbacks;
   final String image;
   final bool is_present;
   bool is_speaking;
@@ -90,19 +90,19 @@ class LiveMember {
 }
 
 @JsonSerializable()
-class Feedback {
+class FeedbackModel {
   final String feedback_type;
   final String time;
   final String user_address;
 
-  Feedback(
+  FeedbackModel(
       {required this.feedback_type,
       required this.time,
       required this.user_address});
 
-  factory Feedback.fromJson(Map<String, dynamic> json) =>
-      _$FeedbackFromJson(json);
-  Map<String, dynamic> toJson() => _$FeedbackToJson(this);
+  factory FeedbackModel.fromJson(Map<String, dynamic> json) =>
+      _$FeedbackModelFromJson(json);
+  Map<String, dynamic> toJson() => _$FeedbackModelToJson(this);
 }
 
 @JsonSerializable()

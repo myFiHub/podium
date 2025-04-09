@@ -237,6 +237,7 @@ DEPENDENCIES:
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - downloadsfolder (from `.symlinks/plugins/downloadsfolder/ios`)
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
+  - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
@@ -269,6 +270,7 @@ SPEC REPOS:
     - Firebase
     - FirebaseAnalytics
     - FirebaseAppCheckInterop
+    - FirebaseAuth
     - FirebaseAuthInterop
     - FirebaseCore
     - FirebaseCoreExtension
@@ -285,6 +287,7 @@ SPEC REPOS:
     - libwebp
     - nanopb
     - PromisesObjC
+    - RecaptchaInterop
     - TorusSessionManager
     - Web3Auth
 
@@ -309,6 +312,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/downloadsfolder/ios"
   firebase_analytics:
     :path: ".symlinks/plugins/firebase_analytics/ios"
+  firebase_auth:
+    :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
   firebase_storage:

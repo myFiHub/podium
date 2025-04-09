@@ -5,6 +5,7 @@ import 'package:glow_container/glow_container.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
@@ -183,9 +184,12 @@ class _SingleUser extends GetView<UsersController> {
                                 SizedBox(
                                   width: 40,
                                   height: 40,
-                                  child: Img(
-                                    src: avatar,
-                                    alt: name,
+                                  child: Hero(
+                                    tag: 'profile_avatar_$uuid',
+                                    child: Img(
+                                      src: avatar,
+                                      alt: name,
+                                    ),
                                   ),
                                 ),
                                 space10,
@@ -284,13 +288,9 @@ class FollowButton extends GetView<UsersController> {
             color: isFollowing ? Colors.red : Colors.green,
           ),  */
           child: isLoading
-              ? const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+              ? const Center(
+                  child: LoadingWidget(
+                    size: 12,
                   ),
                 )
               : Row(

@@ -50,7 +50,7 @@ Luma_EventDetailsModel _$Luma_EventDetailsModelFromJson(
       end_at: json['end_at'] as String,
       url: json['url'] as String,
       timezone: json['timezone'] as String,
-      event_type: json['event_type'] as String,
+      event_type: json['event_type'] as String?,
       visibility: json['visibility'] as String,
       meeting_url: json['meeting_url'] as String,
     );

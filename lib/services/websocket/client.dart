@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
@@ -11,6 +12,7 @@ import 'package:podium/env.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// WebSocketService manages the WebSocket connection for the application.
@@ -18,6 +20,12 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class WebSocketService {
   // Singleton instance
   static WebSocketService? _instance;
+  final _joinSubject = PublishSubject<String>();
+  Stream<String> get joinStream => _joinSubject.stream;
+
+  // Join request tracking
+  final _joinRequests = <String, Completer<bool>>{};
+
   static WebSocketService get instance {
     _instance ??= WebSocketService._();
     return _instance!;
@@ -38,7 +46,7 @@ class WebSocketService {
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 20;
   static const Duration _initialReconnectDelay = Duration(seconds: 1);
-  static const Duration _maxReconnectDelay = Duration(seconds: 10);
+  static const Duration _maxReconnectDelay = Duration(seconds: 5);
 
   // Synchronization
   final _connectionLock = Lock();
@@ -85,48 +93,17 @@ class WebSocketService {
     } catch (e) {
       l.w("Error closing channel during cleanup: $e");
     }
-
+    _isConnecting = false;
     _channel = null;
     connected = false;
-  }
 
-  /// Attempts to reconnect to the WebSocket server
-  Future<void> reconnect() async {
-    if (token.isEmpty) {
-      l.w("Cannot reconnect: token is empty");
-      return;
+    // Clean up pending join requests
+    for (final completer in _joinRequests.values) {
+      if (!completer.isCompleted) {
+        completer.complete(false);
+      }
     }
-
-    // Use a lock to prevent multiple simultaneous reconnection attempts
-    return _connectionLock.synchronized(() async {
-      if (_isConnecting) {
-        l.d("Already attempting to reconnect, skipping");
-        return;
-      }
-
-      l.w("WebSocket closed, reconnecting...");
-      connected = false;
-      _isConnecting = true;
-      _cleanup();
-
-      if (_reconnectAttempts >= _maxReconnectAttempts) {
-        l.e("Max reconnection attempts reached. Please check your connection.");
-        _isConnecting = false;
-        return;
-      }
-
-      final delay = _getReconnectDelay();
-      l.d("Attempting to reconnect in ${delay.inSeconds} seconds (attempt ${_reconnectAttempts + 1}/$_maxReconnectAttempts)");
-
-      _reconnectTimer = Timer(delay, () async {
-        _reconnectAttempts++;
-        final success = await _connect();
-        if (!success) {
-          // Reset _isConnecting if connection failed to allow future reconnection attempts
-          _isConnecting = false;
-        }
-      });
-    });
+    _joinRequests.clear();
   }
 
   /// Establishes a connection to the WebSocket server
@@ -138,6 +115,7 @@ class WebSocketService {
 
     try {
       _isConnecting = true;
+      l.d("Starting connection attempt #${_reconnectAttempts + 1}");
 
       // Close any existing connection first
       if (_channel != null) {
@@ -149,12 +127,13 @@ class WebSocketService {
         _channel = null;
       }
 
-      l.d("Connecting to WebSocket at ${Env.websocketAddress}?token=***");
-      _channel = WebSocketChannel.connect(
-        Uri.parse('${Env.websocketAddress}?token=$token'),
-      );
+      // Connect to the WebSocket server
+      final uri = Uri.parse('${Env.websocketAddress}?token=$token');
+      l.d("Connecting to WebSocket at ${uri.toString().replaceAll(token, '***')}");
 
+      _channel = WebSocketChannel.connect(uri);
       await _channel!.ready;
+
       _isConnecting = false;
       connected = true;
       _reconnectAttempts = 0; // Reset attempts on successful connection
@@ -167,7 +146,6 @@ class WebSocketService {
     } catch (e) {
       l.e("Error connecting to websocket: $e");
       _isConnecting = false;
-      reconnect();
       return false;
     }
   }
@@ -183,17 +161,28 @@ class WebSocketService {
 
   /// Sets up the message listener to handle incoming messages
   void _setupMessageListener() {
+    subscription?.cancel(); // Cancel any existing subscription
+
+    l.d("Setting up message listener");
     subscription = _channel!.stream.listen(
-      (dynamic message) => _handleIncomingMessageString(message as String),
+      (dynamic message) {
+        l.d("Received message: ${message.toString().substring(0, message.toString().length > 100 ? 100 : message.toString().length)}...");
+        _handleIncomingMessageString(message as String);
+      },
       onError: (error) {
         l.e("WebSocket Error: $error");
-        reconnect();
+        connected = false;
+        // Use a microtask to avoid stack overflow with recursive calls
+        Future.microtask(() => reconnect());
       },
       onDone: () {
         l.w("WebSocket connection closed");
-        reconnect();
+        connected = false;
+        // Use a microtask to avoid stack overflow with recursive calls
+        Future.microtask(() => reconnect());
       },
     );
+    l.d("Message listener set up successfully");
   }
 
   /// Handles incoming message strings by parsing and processing them
@@ -218,9 +207,33 @@ class WebSocketService {
     // Process message based on type
     switch (incomingMessage.name) {
       case IncomingMessageType.userJoined:
+        if (incomingMessage.data.address == myUser.address) {
+          final joinId = _generateMyUser_UID();
+          l.d("User joined joinId: $joinId");
+          // Add to join stream
+          _joinSubject.add(joinId);
+          // Complete any pending join request
+          if (_joinRequests.containsKey(joinId)) {
+            l.d("Completing join request for: $joinId");
+            _joinRequests[joinId]!.complete(true);
+            _joinRequests.remove(joinId);
+          }
+        }
+
+        if (!Get.isRegistered<OutpostCallController>()) {
+          l.w("OutpostCallController not registered, cannot process userJoined");
+          return;
+        }
+        final outpostCallController = Get.find<OutpostCallController>();
+        // NOTE: also in jitsiMeet.dart
+        joinOrLeftDebounce.debounce(() {
+          outpostCallController.fetchLiveData();
+        });
+        break;
+
       case IncomingMessageType.userLeft:
         if (!Get.isRegistered<OutpostCallController>()) {
-          l.w("OutpostCallController not registered, cannot process userJoined or userLeft");
+          l.w("OutpostCallController not registered, cannot process userLeft");
           return;
         }
         final outpostCallController = Get.find<OutpostCallController>();
@@ -347,8 +360,8 @@ class WebSocketService {
       IncomingMessage message,
       OngoingOutpostCallController ongoingController,
       OutpostCallController outpostController) {
-    ongoingController.handleIncomingReaction(message);
     outpostController.updateReactionsMapByWsEvent(message);
+    ongoingController.handleIncomingReaction(message);
   }
 
   /// Handles time is up messages
@@ -389,8 +402,6 @@ class WebSocketService {
       }
 
       l.w("Cannot send message: WebSocket not connected, attempting to reconnect");
-
-      // Try to reconnect first
       await reconnect();
 
       // Check if reconnection was successful
@@ -398,43 +409,24 @@ class WebSocketService {
         l.e("Failed to reconnect, cannot send message");
         return false;
       }
-
-      l.d("Reconnected successfully, now sending message");
     }
 
     // Send the message
     try {
-      return await _sendMessage(message);
+      final jsoned = message.toJson();
+      if (jsoned['data'] == null) {
+        jsoned['data'] = {};
+      }
+      final stringified = jsonEncode(jsoned);
+      l.d('Sending message: $stringified');
+      _channel?.sink.add(stringified);
+      return true;
     } catch (e) {
       l.e("Error sending message: $e");
-
-      // Try to reconnect and retry sending once
-      await reconnect();
-
-      if (connected && _channel != null) {
-        try {
-          return await _sendMessage(message, isRetry: true);
-        } catch (e) {
-          l.e("Error sending message after reconnection: $e");
-          return false;
-        }
-      }
-
+      connected = false;
+      reconnect();
       return false;
     }
-  }
-
-  /// Helper method to send a message
-  Future<bool> _sendMessage(WsOutgoingMessage message,
-      {bool isRetry = false}) async {
-    final jsoned = message.toJson();
-    if (jsoned['data'] == null) {
-      jsoned['data'] = {};
-    }
-    final stringified = jsonEncode(jsoned);
-    l.d('${isRetry ? "Retrying to send" : "Sending"} message: $stringified');
-    _channel?.sink.add(stringified);
-    return true;
   }
 
   /// Sends a pong message to keep the connection alive
@@ -443,27 +435,15 @@ class WebSocketService {
       if (connected && _channel != null) {
         try {
           _channel?.sink.add(List<int>.from([0x8A]));
-          l.d("Sent pong");
         } catch (e) {
           l.e("Error sending pong: $e");
+          connected = false;
           reconnect();
         }
       } else {
         l.w("Not connected, attempting to reconnect before sending pong");
-        reconnect().then((_) {
-          // After reconnection attempt, try to send pong if connected
-          if (connected && _channel != null) {
-            try {
-              _channel?.sink.add(List<int>.from([0x8A]));
-              l.d("Sent pong after reconnection");
-            } catch (e) {
-              l.e("Error sending pong after reconnection: $e");
-            }
-          }
-        });
+        reconnect();
       }
-    } else {
-      l.w("Not sending pong because connecting or token is empty");
     }
   }
 
@@ -471,6 +451,115 @@ class WebSocketService {
   void close() {
     token = '';
     _cleanup();
+    _joinSubject.close();
+  }
+
+  /// Attempts to reconnect to the WebSocket server
+  Future<void> reconnect() async {
+    if (token.isEmpty) {
+      l.w("Cannot reconnect: token is empty");
+      return;
+    }
+
+    // Use a lock to prevent multiple simultaneous reconnection attempts
+    return _connectionLock.synchronized(() async {
+      l.w("WebSocket closed, reconnecting...");
+      connected = false;
+      _isConnecting = true;
+      _cleanup();
+
+      if (_reconnectAttempts >= _maxReconnectAttempts) {
+        l.e("Max reconnection attempts reached. Please check your connection.");
+        _isConnecting = false;
+        return;
+      }
+
+      final delay = _getReconnectDelay();
+      l.d("Attempting to reconnect in ${delay.inSeconds} seconds (attempt ${_reconnectAttempts + 1}/$_maxReconnectAttempts)");
+
+      // Cancel any existing reconnect timer
+      _reconnectTimer?.cancel();
+
+      // Create a new reconnect timer
+      _reconnectTimer = Timer(delay, () async {
+        try {
+          _reconnectAttempts++;
+          l.d("Starting reconnection attempt #$_reconnectAttempts");
+          final success = await _connect();
+
+          if (!success) {
+            // If connection failed, schedule another reconnect attempt
+            l.w("Connection attempt #$_reconnectAttempts failed, will try again");
+            _isConnecting = false;
+            reconnect();
+          } else {
+            l.d("Reconnection attempt #$_reconnectAttempts succeeded");
+          }
+        } catch (e) {
+          l.e("Error during reconnection attempt #$_reconnectAttempts: $e");
+          _isConnecting = false;
+          reconnect();
+        }
+      });
+    });
+  }
+
+  /// Generates a unique ID for a join request
+  String _generateMyUser_UID() {
+    return 'join-${myUser.address}';
+  }
+
+  /// Asynchronously joins an outpost and returns a future that completes when the join is confirmed
+  // NOTE: this is for testing purposes, to join the outpost when the user is in the outpost call screen
+  // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
+  Future<bool> asyncJoinOutpost(String outpostId) async {
+    final isRegistered = Get.isRegistered<OngoingOutpostCallController>();
+    if (isRegistered) {
+      final currentOutpost = Get.find<OngoingOutpostCallController>()
+          .outpostCallController
+          .outpost
+          .value;
+      if (currentOutpost != null && currentOutpost.uuid == outpostId) {
+        l.d("Already joined outpost: $outpostId");
+        return true;
+      }
+    }
+    final generatedId = _generateMyUser_UID();
+    l.d("Starting async join for outpost: $outpostId, joinId: $generatedId");
+
+    // Create a completer to track this join request
+    final completer = Completer<bool>();
+    _joinRequests[generatedId] = completer;
+
+    // Set a timeout for the join request
+    final timeout = Timer(const Duration(seconds: 2), () {
+      if (_joinRequests.containsKey(generatedId)) {
+        l.w("Join request timed out for outpost: $outpostId");
+        _joinRequests[generatedId]!.complete(false);
+        _joinRequests.remove(generatedId);
+      }
+    });
+
+    // Send the join message
+    final success = await send(WsOutgoingMessage(
+      message_type: OutgoingMessageTypeEnums.join,
+      outpost_uuid: outpostId,
+    ));
+
+    if (!success) {
+      l.e("Failed to send join message for outpost: $outpostId");
+      timeout.cancel();
+      _joinRequests.remove(generatedId);
+      return false;
+    }
+
+    l.d("Join message sent successfully, waiting for confirmation");
+
+    // Return the future that will complete when the join is confirmed
+    return completer.future.then((result) {
+      timeout.cancel();
+      return result;
+    });
   }
 }
 

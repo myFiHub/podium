@@ -162,7 +162,7 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   handleIncomingReaction(IncomingMessage incomingMessage) {
-    final members = outpostCallController.members.value;
+    final members = [...outpostCallController.members.value];
     final targetUserIndex = members.indexWhere(
         (item) => item.address == incomingMessage.data.react_to_user_address);
     final initiatorUserIndex = members
@@ -509,12 +509,14 @@ class OngoingOutpostCallController extends GetxController {
         final liveMembers = liveData.members.where((m) => m.is_present == true);
         final liveMemberIds = liveMembers.map((e) => e.uuid).toList();
         if (liveMemberIds.length < 2) {
-          Toast.error(
-            title: "Error",
-            message: "why are you cheering yourself? for who? t p t . . . why?",
-          );
-          _removeLoadingCheerBoo(userId: userId, cheer: cheer);
-          return;
+          // REVIEW: if there is only one user in the session, cheer goes to to fihub account, and time is added to the user's talk time
+          aptosReceiverAddresses.add(Env.fihubAddress_Aptos);
+          // Toast.error(
+          //   title: "Error",
+          //   message: "why are you cheering yourself? for who? t p t . . . why?",
+          // );
+          // _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+          // return;
         }
 
         if (user.uuid == myId) {
@@ -700,6 +702,7 @@ class OngoingOutpostCallController extends GetxController {
       }
       sendOutpostEvent(
         outpostId: outpostId,
+        requestId: outpostId,
         eventType: OutgoingMessageTypeEnums.start_speaking,
       );
       amIMuted.value = false;

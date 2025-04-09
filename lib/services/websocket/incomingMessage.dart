@@ -38,7 +38,10 @@ class IncomingMessage {
   final IncomingMessageType name;
   final IncomingMessageData data;
 
-  IncomingMessage({required this.name, required this.data});
+  IncomingMessage({
+    required this.name,
+    required this.data,
+  });
 
   factory IncomingMessage.fromJson(Map<String, dynamic> json) =>
       _$IncomingMessageFromJson(json);

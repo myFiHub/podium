@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
+import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -173,7 +174,7 @@ class LoginView extends GetView<LoginController> {
                                       ),
                                     ),
                                     space10,
-                                    const CircularProgressIndicator(),
+                                    const LoadingWidget(),
                                     space10,
                                     const Text('Please wait...'),
                                   ],

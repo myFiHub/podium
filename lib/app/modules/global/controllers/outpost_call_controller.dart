@@ -59,6 +59,7 @@ class OutpostCallController extends GetxController {
   StreamSubscription<OutpostModel?>? outpostListener;
   StreamSubscription<int>? tickerListener;
 
+  bool gotMembersOnce = false;
   @override
   void onInit() {
     super.onInit();
@@ -75,8 +76,12 @@ class OutpostCallController extends GetxController {
       talkingUsers.value = talking;
     });
     membersListener = members.listen((listOfUsers) {
+      l.d(members.value.length);
       final sorted = sortMembers(members: listOfUsers);
-      _updateReactionsMap(listOfUsers);
+      if (!gotMembersOnce) {
+        _updateReactionsMap(listOfUsers);
+        gotMembersOnce = true;
+      }
       sortedMembers.value = sorted;
     });
     outpostListener = outpost.listen((activeOutpost) async {
@@ -100,6 +105,7 @@ class OutpostCallController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+    gotMembersOnce = false;
     reactionsMap.value = {};
     membersListener?.cancel();
     sortedMembersListener?.cancel();
@@ -118,6 +124,15 @@ class OutpostCallController extends GetxController {
   ///////////////////////////////////////////////////////////////
 
   void updateReactionsMapByWsEvent(IncomingMessage incomingMessage) {
+    final members = [...sortedMembers.value];
+    final targetUserIndex = members.indexWhere(
+        (item) => item.address == incomingMessage.data.react_to_user_address);
+    final initiatorUserIndex = members
+        .indexWhere((item) => item.address == incomingMessage.data.address);
+    if (targetUserIndex == -1 || initiatorUserIndex == -1) return;
+    final targetUser = members[targetUserIndex];
+    final initiatorUser = members[initiatorUserIndex];
+
     final reactionTypes = {
       IncomingMessageType.userLiked: OutgoingMessageTypeEnums.like,
       IncomingMessageType.userDisliked: OutgoingMessageTypeEnums.dislike,
@@ -128,9 +143,11 @@ class OutpostCallController extends GetxController {
     final reactionType = reactionTypes[incomingMessage.name];
     if (reactionType == null) return;
 
-    final userAddress = incomingMessage.data.address;
+    final userAddress = incomingMessage.data.react_to_user_address;
     if (userAddress == null) return;
-
+    if (reactionsMap.value[userAddress] == null) {
+      reactionsMap.value[userAddress] = {};
+    }
     reactionsMap.value[userAddress]![reactionType] =
         (reactionsMap.value[userAddress]![reactionType] ?? 0) + 1;
 
@@ -151,7 +168,7 @@ class OutpostCallController extends GetxController {
     };
 
     for (final user in listOfUsers) {
-      for (final feedback in user.feedbacks ?? []) {
+      for (final FeedbackModel feedback in user.feedbacks) {
         final reactionType = feedbackTypes[feedback.feedback_type];
         if (reactionType != null) {
           _updateReactionCount(tmp, feedback.user_address, reactionType);
@@ -159,7 +176,7 @@ class OutpostCallController extends GetxController {
       }
 
       // Process reactions (cheers and boos)
-      for (final reaction in user.reactions ?? []) {
+      for (final UserReaction reaction in user.reactions) {
         final reactionType = reactionTypes[reaction.reaction_type];
         if (reactionType != null) {
           _updateReactionCount(tmp, reaction.user_address, reactionType);
@@ -174,6 +191,9 @@ class OutpostCallController extends GetxController {
     String userAddress,
     OutgoingMessageTypeEnums type,
   ) {
+    if (reactions[userAddress] == null) {
+      reactions[userAddress] = {};
+    }
     reactions[userAddress]![type] = (reactions[userAddress]![type] ?? 0) + 1;
   }
 

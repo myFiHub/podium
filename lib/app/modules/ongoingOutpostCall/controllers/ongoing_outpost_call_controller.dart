@@ -162,7 +162,7 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   handleIncomingReaction(IncomingMessage incomingMessage) {
-    final members = outpostCallController.members.value;
+    final members = [...outpostCallController.members.value];
     final targetUserIndex = members.indexWhere(
         (item) => item.address == incomingMessage.data.react_to_user_address);
     final initiatorUserIndex = members

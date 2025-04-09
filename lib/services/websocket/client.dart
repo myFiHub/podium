@@ -360,8 +360,8 @@ class WebSocketService {
       IncomingMessage message,
       OngoingOutpostCallController ongoingController,
       OutpostCallController outpostController) {
-    ongoingController.handleIncomingReaction(message);
     outpostController.updateReactionsMapByWsEvent(message);
+    ongoingController.handleIncomingReaction(message);
   }
 
   /// Handles time is up messages

@@ -5,6 +5,7 @@ import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
@@ -232,6 +233,90 @@ class PodiumApi {
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  Future<List<FollowerModel>> getFollowersOfUser({
+    required String uuid,
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/users/followers',
+          queryParameters: {
+            'uuid': uuid,
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => FollowerModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
+    }
+  }
+
+  Future<List<FollowerModel>> getFollowingsOfUser({
+    required String uuid,
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/users/followings',
+          queryParameters: {
+            'uuid': uuid,
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => FollowerModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
+    }
+  }
+
+  Future<List<FollowerModel>> getMyFollowers({
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/users/followers',
+          queryParameters: {
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => FollowerModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
+    }
+  }
+
+  Future<List<FollowerModel>> getMyFollowings({
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/users/followings',
+          queryParameters: {
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => FollowerModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
     }
   }
 

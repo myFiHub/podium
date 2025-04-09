@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -49,6 +50,10 @@ class ProfileController extends GetxController {
   final mySharesOfFriendTechFromThisUser = 0.obs;
   final mySharesOfArenaFromThisUser = 0.obs;
   final mySharesOfPodiumPassFromThisUser = 0.obs;
+  final followers = Rx<List<FollowerModel>>([]);
+  final followings = Rx<List<FollowerModel>>([]);
+  final isGettingFollowers = false.obs;
+  final isGettingFollowings = false.obs;
   final isGettingPayments = false.obs;
   final payments = Rx(Payments());
 
@@ -57,7 +62,6 @@ class ProfileController extends GetxController {
     super.onInit();
     final stringedUserInfo = Get.parameters[UserProfileParamsKeys.userInfo]!;
     userInfo.value = UserModel.fromJson(jsonDecode(stringedUserInfo));
-
     payments.value = Payments(
       numberOfCheersReceived: userInfo.value!.received_cheer_count,
       numberOfBoosReceived: userInfo.value!.received_boo_count,
@@ -65,9 +69,7 @@ class ProfileController extends GetxController {
       numberOfBoosSent: userInfo.value!.sent_boo_count,
     );
 
-    Future.wait<void>([
-      getPrices(),
-    ]);
+    Future.wait<void>([getPrices(), getFollowers(), getFollowings()]);
   }
 
   @override
@@ -78,6 +80,32 @@ class ProfileController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  getFollowers({bool silent = false}) async {
+    if (!silent) {
+      isGettingFollowers.value = true;
+    }
+    final followersList = await HttpApis.podium.getFollowersOfUser(
+      uuid: userInfo.value!.uuid,
+    );
+    followers.value = followersList;
+    if (!silent) {
+      isGettingFollowers.value = false;
+    }
+  }
+
+  getFollowings({bool silent = false}) async {
+    if (!silent) {
+      isGettingFollowings.value = true;
+    }
+    final followingsList = await HttpApis.podium.getFollowingsOfUser(
+      uuid: userInfo.value!.uuid,
+    );
+    followings.value = followingsList;
+    if (!silent) {
+      isGettingFollowings.value = false;
+    }
   }
 
   getUserInfo() async {
@@ -100,8 +128,8 @@ class ProfileController extends GetxController {
       }
       isGettingTicketPrice.value = true;
       await Future.wait<void>([
-        getFriendTechPriceAndMyShare(),
-        getArenaPriceAndMyShares(),
+        // getFriendTechPriceAndMyShare(),
+        // getArenaPriceAndMyShares(),
         getPodiumPassPriceAndMyShares(),
       ]);
       //

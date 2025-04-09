@@ -8,6 +8,7 @@ import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
@@ -114,20 +115,20 @@ class ProfileView extends GetView<ProfileController> {
   Widget build(BuildContext context) {
     return PageWrapper(
       child: Scaffold(
-        body: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
-            width: double.infinity,
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                _ProfileHeader(),
-                space10,
-                _Statistics(),
-                space10,
-              ],
-            ),
+        body: Container(
+          padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
+          width: double.infinity,
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              _ProfileHeader(),
+              space5,
+              _Statistics(),
+              space5,
+              _SocialStats(),
+              space5,
+            ],
           ),
         ),
       ),
@@ -243,6 +244,8 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                     fullWidth: true,
                     onFollowStatusChanged: () {
                       controller.getUserInfo();
+                      controller.getFollowers(silent: true);
+                      controller.getFollowings(silent: true);
                     },
                   ),
                 ),
@@ -379,6 +382,200 @@ class _TicketButtonContent extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// A component that displays the social statistics for a user profile
+/// including followers and following counts in a tab layout
+class _SocialStats extends GetWidget<ProfileController> {
+  const _SocialStats();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final user = controller.userInfo.value;
+      if (user == null) {
+        return const SizedBox(height: 80);
+      }
+
+      // Get the counts from the controller
+
+      return Expanded(
+        child: DefaultTabController(
+          length: 2,
+          initialIndex: 0, // Start with Followers tab
+          child: Column(
+            children: [
+              TabBar(
+                indicatorColor: Colors.cyan,
+                indicatorWeight: 4,
+                labelColor: Colors.cyan,
+                unselectedLabelColor: Colors.white,
+                tabs: [
+                  Obx(() {
+                    final followersCount = controller.followers.value.length;
+                    final appendix =
+                        followersCount > 0 ? ' ($followersCount)' : '';
+                    return Tab(text: 'Followers$appendix');
+                  }),
+                  Obx(() {
+                    final followingCount = controller.followings.value.length;
+                    final appendix =
+                        followingCount > 0 ? ' ($followingCount)' : '';
+                    return Tab(text: 'Following$appendix');
+                  }),
+                ],
+              ),
+              const Expanded(
+                child: TabBarView(
+                  physics: NeverScrollableScrollPhysics(), // Prevent swiping
+                  children: [
+                    // Followers tab content
+                    FollowersTab(),
+
+                    // Following tab content
+                    FollowingTab(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class FollowersTab extends GetWidget<ProfileController> {
+  const FollowersTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      if (controller.isGettingFollowers.value) {
+        return const Center(child: LoadingWidget());
+      }
+
+      final followers = controller.followers.value;
+      if (followers.isEmpty) {
+        return const Center(
+          child: Text(
+            'No followers yet',
+            style: TextStyle(color: Colors.white70),
+          ),
+        );
+      }
+
+      return ListView.builder(
+        itemCount: followers.length,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemBuilder: (context, index) {
+          return UserListItem(user: followers[index]);
+        },
+      );
+    });
+  }
+}
+
+class FollowingTab extends GetWidget<ProfileController> {
+  const FollowingTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      if (controller.isGettingFollowings.value) {
+        return const Center(child: LoadingWidget());
+      }
+
+      final followings = controller.followings.value;
+      if (followings.isEmpty) {
+        return const Center(
+          child: Text(
+            'Not following anyone yet',
+            style: TextStyle(color: Colors.white70),
+          ),
+        );
+      }
+
+      return ListView.builder(
+        itemCount: followings.length,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemBuilder: (context, index) {
+          return UserListItem(user: followings[index]);
+        },
+      );
+    });
+  }
+}
+
+/// A single user item for followers/following lists
+class UserListItem extends StatelessWidget {
+  const UserListItem({
+    Key? key,
+    required this.user,
+  }) : super(key: key);
+
+  final FollowerModel user;
+
+  @override
+  Widget build(BuildContext context) {
+    final String name = user.name;
+    final String avatar = user.image;
+    final String uuid = user.uuid;
+    final bool followedByMe = user.followed_by_me;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          // User avatar
+          Img(
+            src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
+            alt: name,
+            size: 40,
+          ),
+          const SizedBox(width: 12),
+          // User name
+          Expanded(
+            child: Text(
+              name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          // Follow button
+          if (uuid != myId)
+            SizedBox(
+              height: 32,
+              child: FollowButton(
+                uuid: uuid,
+                followed_by_me: followedByMe,
+                onFollowStatusChanged: () {
+                  final profileController = Get.find<ProfileController>();
+                  profileController.getFollowers(silent: true);
+                  profileController.getFollowings(silent: true);
+                },
+              ),
+            )
+          else
+            const SizedBox(
+              height: 32,
+              child: Text(
+                'You',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -598,6 +795,12 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
         return Container();
       }
       return Button(
+        blockButton: true,
+        icon: Img(
+          src: chainInfoByChainId(baseChainId).chainIcon ??
+              Assets.images.movementLogo.path,
+          size: 20,
+        ),
         loading: isGettingPrice || isBuyingFriendTechTicket,
         onPressed:
             (!isFriendTechActive || isGettingPrice || isBuyingFriendTechTicket)
@@ -664,12 +867,6 @@ class _BuyFriendTechTicket extends GetWidget<ProfileController> {
                 ),
               ),
           ],
-        ),
-        blockButton: true,
-        icon: Img(
-          src: chainInfoByChainId(baseChainId).chainIcon ??
-              Assets.images.movementLogo.path,
-          size: 20,
         ),
       );
     });

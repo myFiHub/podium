@@ -63,9 +63,9 @@ class OngoingOutpostCallController extends GetxController {
   final talkingIds = Rx<List<String>>([]);
   final reportReasonController = TextEditingController();
   final reportReason = Rx<String>('');
-  final creatorIsRecording = false.obs;
-
   final isRecording = false.obs;
+  final recorderUserId = Rx<String>('');
+  final isStartingToRecord = false.obs;
   StreamSubscription<bool>? recordingListeners;
   final loadingWalletAddressForUser = RxList<String>([]);
 
@@ -82,6 +82,7 @@ class OngoingOutpostCallController extends GetxController {
       isRecording.value = recording;
     });
     final ongoingOutpost = outpostCallController.outpost.value!;
+
     final myUser = globalController.myUserInfo.value!;
     if (myUser.uuid == ongoingOutpost.creator_user_uuid) {
       amIAdmin.value = true;
@@ -96,6 +97,12 @@ class OngoingOutpostCallController extends GetxController {
       members.value = [...listOfMembers];
       final my_user =
           listOfMembers.where((m) => m.uuid == myUser.uuid).toList();
+      for (var member in listOfMembers) {
+        if (member.is_recording) {
+          recorderUserId.value = member.uuid;
+          break;
+        }
+      }
       if (my_user.length == 0) return;
       mySession.value = (my_user[0]);
       mySession.refresh();
@@ -140,11 +147,17 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   onUserStartedRecording(IncomingMessage incomingMessage) {
-    creatorIsRecording.value = true;
+    final recorderUser = members.value
+        .firstWhere((e) => e.address == incomingMessage.data.address!);
+    recorderUserId.value = recorderUser.uuid;
   }
 
   onUserStoppedRecording(IncomingMessage incomingMessage) {
-    creatorIsRecording.value = false;
+    final recorderUser = members.value
+        .firstWhere((e) => e.address == incomingMessage.data.address!);
+    if (recorderUser.uuid == recorderUserId.value) {
+      recorderUserId.value = '';
+    }
   }
 
   updateUserRemainingTime(
@@ -385,10 +398,12 @@ class OngoingOutpostCallController extends GetxController {
     }
     if (recorderController.hasPermission) {
       if (recording) {
+        isStartingToRecord.value = true;
         await recorderController.startRecording(
           true,
           prefix: outpostCallController.outpost.value!.name,
         );
+        isStartingToRecord.value = false;
         sendOutpostEvent(
           outpostId: outpostCallController.outpost.value!.uuid,
           eventType: OutgoingMessageTypeEnums.start_recording,

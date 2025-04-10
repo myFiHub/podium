@@ -63,6 +63,7 @@ class OngoingOutpostCallController extends GetxController {
   final talkingIds = Rx<List<String>>([]);
   final reportReasonController = TextEditingController();
   final reportReason = Rx<String>('');
+  final creatorIsRecording = false.obs;
 
   final isRecording = false.obs;
   StreamSubscription<bool>? recordingListeners;
@@ -136,6 +137,14 @@ class OngoingOutpostCallController extends GetxController {
       reportReason.value = '';
       reportReasonController.clear();
     }
+  }
+
+  onUserStartedRecording(IncomingMessage incomingMessage) {
+    creatorIsRecording.value = true;
+  }
+
+  onUserStoppedRecording(IncomingMessage incomingMessage) {
+    creatorIsRecording.value = false;
   }
 
   updateUserRemainingTime(
@@ -380,10 +389,18 @@ class OngoingOutpostCallController extends GetxController {
           true,
           prefix: outpostCallController.outpost.value!.name,
         );
+        sendOutpostEvent(
+          outpostId: outpostCallController.outpost.value!.uuid,
+          eventType: OutgoingMessageTypeEnums.start_recording,
+        );
       } else {
         await recorderController.startRecording(
           false,
           prefix: outpostCallController.outpost.value!.name,
+        );
+        sendOutpostEvent(
+          outpostId: outpostCallController.outpost.value!.uuid,
+          eventType: OutgoingMessageTypeEnums.stop_recording,
         );
         final path = await recorderController.lastRecordedPath;
         if (path != null) {

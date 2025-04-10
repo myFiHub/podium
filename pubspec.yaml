@@ -59,7 +59,7 @@ dependencies:
   # jitsi_meet_flutter_sdk: ^10.3.0
   jitsi_meet_flutter_sdk:
     path: ./jitsi-meet-flutter-sdk
-  web3auth_flutter: ^5.0.4 #6.2.0 version is not working as intended, don't change until next update
+  web3auth_flutter: ^5.0.4 #6.2.0 version is not working as intended for android, don't change until next update
   web3dart: ^2.7.3
   aptos:
     # path: ./aptos

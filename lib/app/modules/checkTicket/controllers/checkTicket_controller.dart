@@ -11,6 +11,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
@@ -553,11 +554,24 @@ class CheckticketController extends GetxController {
       }
     }
 
-    bought = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+    final (success, hash) =
+        await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
       sellerAddress: ticketSeller.userInfo.aptos_address!,
       sellerName: ticketSeller.userInfo.name!,
       referrer: referrer,
     );
+    bought = success;
+    if (success == true) {
+      await HttpApis.podium.buySellPodiumPass(
+        BuySellPodiumPassRequest(
+          count: 1,
+          podium_pass_owner_address: ticketSeller.userInfo.aptos_address!,
+          podium_pass_owner_uuid: ticketSeller.userInfo.uuid,
+          trade_type: TradeType.buy,
+          tx_hash: hash!,
+        ),
+      );
+    }
     if (bought == null) {
       return false;
     }

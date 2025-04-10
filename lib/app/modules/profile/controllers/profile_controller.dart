@@ -8,6 +8,8 @@ import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
+import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
+import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -52,8 +54,10 @@ class ProfileController extends GetxController {
   final mySharesOfPodiumPassFromThisUser = 0.obs;
   final followers = Rx<List<FollowerModel>>([]);
   final followings = Rx<List<FollowerModel>>([]);
+  final podiumPassBuyers = Rx<List<PodiumPassBuyerModel>>([]);
   final isGettingFollowers = false.obs;
   final isGettingFollowings = false.obs;
+  final isGettingPassBuyers = false.obs;
   final isGettingPayments = false.obs;
   final payments = Rx(Payments());
 
@@ -69,7 +73,8 @@ class ProfileController extends GetxController {
       numberOfBoosSent: userInfo.value!.sent_boo_count,
     );
 
-    Future.wait<void>([getPrices(), getFollowers(), getFollowings()]);
+    Future.wait<void>(
+        [getPrices(), getFollowers(), getFollowings(), getPassBuyers()]);
   }
 
   @override
@@ -243,7 +248,7 @@ class ProfileController extends GetxController {
   sellPodiumPass() async {
     isSellingPodiumPass.value = true;
     try {
-      final sold = await AptosMovement.sellTicketOnPodiumPass(
+      final (sold, hash) = await AptosMovement.sellTicketOnPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
         numberOfTickets: 1,
       );
@@ -253,6 +258,18 @@ class ProfileController extends GetxController {
       if (sold == true) {
         Toast.success(title: 'Success', message: 'Podium pass sold');
         mySharesOfPodiumPassFromThisUser.value--;
+        final request = BuySellPodiumPassRequest(
+          count: 1,
+          podium_pass_owner_address: userInfo.value!.aptos_address!,
+          podium_pass_owner_uuid: userInfo.value!.uuid,
+          trade_type: TradeType.sell,
+          tx_hash: hash!,
+        );
+        final success = await HttpApis.podium.buySellPodiumPass(request);
+        getPassBuyers();
+        if (!success) {
+          l.e('error saving on db');
+        }
         getPodiumPassPriceAndMyShares(delay: 5);
       }
     } catch (e) {
@@ -280,7 +297,8 @@ class ProfileController extends GetxController {
         referrer = myReferrer?.aptos_address ?? '';
       }
 
-      final success = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+      final (success, hash) =
+          await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
         sellerName: userInfo.value!.name ?? '',
         referrer: referrer,
@@ -292,6 +310,18 @@ class ProfileController extends GetxController {
       if (success == true) {
         Toast.success(title: 'Success', message: 'Podium pass bought');
         mySharesOfPodiumPassFromThisUser.value++;
+        final request = BuySellPodiumPassRequest(
+          count: 1,
+          podium_pass_owner_address: userInfo.value!.aptos_address!,
+          podium_pass_owner_uuid: userInfo.value!.uuid,
+          trade_type: TradeType.buy,
+          tx_hash: hash!,
+        );
+        final success = await HttpApis.podium.buySellPodiumPass(request);
+        getPassBuyers();
+        if (!success) {
+          l.e('error saving on db');
+        }
         getPodiumPassPriceAndMyShares(delay: 5);
       } else {
         Toast.error(title: 'Error', message: 'Error buying podium pass');
@@ -377,5 +407,14 @@ class ProfileController extends GetxController {
     } finally {
       isBuyingArenaTicket.value = false;
     }
+  }
+
+  getPassBuyers() async {
+    isGettingPassBuyers.value = true;
+    final buyers = await HttpApis.podium.podiumPassBuyers(
+      uuid: userInfo.value!.uuid,
+    );
+    podiumPassBuyers.value = buyers;
+    isGettingPassBuyers.value = false;
   }
 }

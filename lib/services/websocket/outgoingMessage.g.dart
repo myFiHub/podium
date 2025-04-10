@@ -34,6 +34,8 @@ const _$OutgoingMessageTypeEnumsEnumMap = {
   OutgoingMessageTypeEnums.start_speaking: 'start_speaking',
   OutgoingMessageTypeEnums.stop_speaking: 'stop_speaking',
   OutgoingMessageTypeEnums.wait_for_creator: 'wait_for_creator',
+  OutgoingMessageTypeEnums.start_recording: 'start_recording',
+  OutgoingMessageTypeEnums.stop_recording: 'stop_recording',
 };
 
 WsOutgoingMessageData _$WsOutgoingMessageDataFromJson(

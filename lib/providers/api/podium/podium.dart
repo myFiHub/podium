@@ -14,6 +14,8 @@ import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
+import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
+import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -638,6 +640,39 @@ class PodiumApi {
     } catch (e) {
       l.e(e);
       return null;
+    }
+  }
+
+  Future<bool> buySellPodiumPass(BuySellPodiumPassRequest request) async {
+    try {
+      final response = await dio.post('$_baseUrl/trades/create',
+          data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<List<PodiumPassBuyerModel>> podiumPassBuyers({
+    required String uuid,
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/trades/recent-buyers',
+          queryParameters: {
+            'uuid': uuid,
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => PodiumPassBuyerModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
     }
   }
 }

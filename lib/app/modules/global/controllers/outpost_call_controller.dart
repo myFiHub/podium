@@ -76,7 +76,6 @@ class OutpostCallController extends GetxController {
       talkingUsers.value = talking;
     });
     membersListener = members.listen((listOfUsers) {
-      l.d(members.value.length);
       final sorted = sortMembers(members: listOfUsers);
       if (!gotMembersOnce) {
         _updateReactionsMap(listOfUsers);
@@ -124,15 +123,6 @@ class OutpostCallController extends GetxController {
   ///////////////////////////////////////////////////////////////
 
   void updateReactionsMapByWsEvent(IncomingMessage incomingMessage) {
-    final members = [...sortedMembers.value];
-    final targetUserIndex = members.indexWhere(
-        (item) => item.address == incomingMessage.data.react_to_user_address);
-    final initiatorUserIndex = members
-        .indexWhere((item) => item.address == incomingMessage.data.address);
-    if (targetUserIndex == -1 || initiatorUserIndex == -1) return;
-    final targetUser = members[targetUserIndex];
-    final initiatorUser = members[initiatorUserIndex];
-
     final reactionTypes = {
       IncomingMessageType.userLiked: OutgoingMessageTypeEnums.like,
       IncomingMessageType.userDisliked: OutgoingMessageTypeEnums.dislike,

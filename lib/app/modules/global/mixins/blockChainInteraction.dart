@@ -32,7 +32,7 @@ Future<bool> ext_cheerOrBoo({
   final service = web3ModalService;
   if (externalWalletChianId != chainId) {
     final chain =
-        ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId);
+        ReownAppKitModalNetworks.getNetworkInfo(Env.chainNamespace, chainId);
     try {
       if (chain == null) {
         return false;

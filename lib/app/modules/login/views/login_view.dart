@@ -515,7 +515,7 @@ class ReferralInput extends GetView<LoginController> {
     return Obx(() {
       final isLoggingIn = controller.isLoggingIn.value ||
           controller.globalController.isAutoLoggingIn.value;
-      if (isLoggingIn) return const SizedBox.shrink();
+      if (isLoggingIn) return emptySpace;
       return InkWell(
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,

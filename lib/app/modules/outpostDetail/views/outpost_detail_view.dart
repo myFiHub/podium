@@ -188,7 +188,7 @@ class _NameAndImageWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = TextPainter(
       text: TextSpan(
-        text: name,
+        text: name + '  ',
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
@@ -280,8 +280,7 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                                     ),
                                   )
                                 else
-                                  const SizedBox
-                                      .shrink(), // Evita espacio residual
+                                  emptySpace,
                                 if (iAmOwner)
                                   Text(
                                     "Access Type: ${parseAccessType(outpost.enter_type)}",

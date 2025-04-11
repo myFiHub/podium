@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/utils/styles.dart';
 import 'package:shimmer/shimmer.dart';
 
 class AddOutpostButton extends StatefulWidget {
@@ -135,7 +136,7 @@ class _AddOutpostButtonState extends State<AddOutpostButton>
                               maxLines: 1,
                             ),
                           )
-                        : const SizedBox.shrink(),
+                        : emptySpace,
                   ),
                 ),
                 if (_showText) const SizedBox(width: 8),

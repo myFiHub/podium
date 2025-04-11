@@ -81,3 +81,4 @@ const space24 = const Gap(
 const space5 = const Gap(
   5,
 );
+const emptySpace = const SizedBox.shrink();

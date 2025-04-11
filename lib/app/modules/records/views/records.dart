@@ -4,6 +4,7 @@ import 'package:just_waveform/just_waveform.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/utils/styles.dart';
 import 'package:siri_wave/siri_wave.dart';
 
 class BottomSheetBody extends GetView<RecordsController> {
@@ -12,10 +13,9 @@ class BottomSheetBody extends GetView<RecordsController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isPlaying = controller.isPlaying.value;
       final file = controller.selectedFile.value;
       if (file == null) {
-        return const SizedBox.shrink();
+        return emptySpace;
       }
       return Container(
         padding: const EdgeInsets.all(16),

@@ -376,7 +376,7 @@ class _AddLumaEventCheckboxAndButtons extends GetView<CreateOutpostController> {
         final hosts = controller.lumaHosts.value;
         final guests = controller.lumaGuests.value;
         if (!isScheduled || scheduledFor == 0) {
-          return const SizedBox.shrink();
+          return emptySpace;
         }
         return Container(
           padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),

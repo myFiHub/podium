@@ -379,7 +379,7 @@ class _ReferralStatus extends GetView<LoginController> {
       final referrer = controller.referrer.value;
       final noReferrer = referrer == null;
       if (noReferrer) {
-        return const SizedBox.shrink();
+        return emptySpace;
       }
       return Container(
         width: Get.width - 20,

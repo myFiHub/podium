@@ -445,6 +445,7 @@ class OutpostsController extends GetxController {
     bool? openTheRoomAfterJoining,
     bool? joiningByLink,
   }) async {
+    outpostId = outpostId.replaceAll('/', '');
     if (outpostId.isEmpty) return;
     if (joiningOutpostId != '') {
       return;
@@ -484,7 +485,9 @@ class OutpostsController extends GetxController {
       }
 
       if (!outpost.i_am_member) {
-        final added = await HttpApis.podium.addMeAsMember(outpostId: outpostId);
+        final added = await HttpApis.podium.addMeAsMember(
+          outpostId: outpost.uuid,
+        );
         if (!added) {
           Toast.error(
             title: "Error",

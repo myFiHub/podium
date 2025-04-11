@@ -25,7 +25,7 @@ class RecordingIndicator extends GetView<OngoingOutpostCallController> {
   Widget build(BuildContext context) {
     return Obx(() {
       if (controller.recorderUserId.value.isEmpty) {
-        return const SizedBox.shrink();
+        return emptySpace;
       }
 
       return const Positioned(
@@ -214,7 +214,7 @@ class ContextSaver extends GetView<OngoingOutpostCallController> {
   @override
   Widget build(BuildContext context) {
     controller.contextForIntro = context;
-    return const SizedBox.shrink();
+    return emptySpace;
   }
 }
 
@@ -263,7 +263,7 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
         }
         final remainingTimeInSeconds = mySession!.remaining_time;
         if (isAdmin) {
-          return const SizedBox.shrink();
+          return emptySpace;
         }
         final list = formatDuration(remainingTimeInSeconds);
         final remainingTime = list.join(":");

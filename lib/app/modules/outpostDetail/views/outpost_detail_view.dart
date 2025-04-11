@@ -20,6 +20,100 @@ import 'package:podium/widgets/textField/textFieldRounded.dart';
 
 import '../controllers/outpost_detail_controller.dart';
 
+class OutpostImage extends GetView<OutpostDetailController> {
+  const OutpostImage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final outpost = controller.outpost.value;
+      if (outpost == null) return const SizedBox();
+
+      final imageUrl =
+          outpost.image.isEmpty ? Constants.logoUrl : outpost.image;
+
+      return GestureDetector(
+        onTap: () {
+          Get.dialog(
+            const Dialog(
+              backgroundColor: Colors.transparent,
+              child: _OpenImageDialogContent(),
+            ),
+          );
+        },
+        child: Img(
+          src: imageUrl,
+          size: 40,
+          alt: outpost.name,
+        ),
+      );
+    });
+  }
+}
+
+class _OpenImageDialogContent extends GetView<OutpostDetailController> {
+  const _OpenImageDialogContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        final outpost = controller.outpost.value;
+        if (outpost == null) return const SizedBox();
+        final imageUrl =
+            outpost.image.isEmpty ? Constants.logoUrl : outpost.image;
+        final iAmOwner = outpost.creator_user_uuid == myId;
+        final isUploadingImage = controller.isUploadingImage.value;
+        return Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: ColorName.cardBackground,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.only(top: 65, left: 24, right: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Img(
+                    src: imageUrl,
+                    size: 300,
+                    alt: outpost.name,
+                  ),
+                  if (iAmOwner) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                        width: 140,
+                        child: Button(
+                          blockButton: true,
+                          loading: isUploadingImage,
+                          type: ButtonType.outline,
+                          size: ButtonSize.MEDIUM,
+                          onPressed: () {
+                            // Get.close();
+                            controller.pickImage();
+                          },
+                          child: const Text('Change Image'),
+                        )),
+                  ],
+                ],
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Get.close(),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class GroupDetailView extends GetView<OutpostDetailController> {
   const GroupDetailView({Key? key}) : super(key: key);
   @override
@@ -82,13 +176,8 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                                         overflow: TextOverflow.visible,
                                       ),
                                     ),
-                                    Img(
-                                      src: (outpost.image.isEmpty)
-                                          ? Constants.logoUrl
-                                          : outpost.image,
-                                      size: 40,
-                                      alt: outpost.name,
-                                    ),
+                                    space8,
+                                    const OutpostImage(),
                                   ],
                                 ),
                                 if (outpost.subject.trim().isNotEmpty)

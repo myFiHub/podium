@@ -565,6 +565,23 @@ class OutpostsController extends GetxController {
     );
   }
 
+  updateOutpost(OutpostModel outpost) {
+    final outpostIndex = outposts.value.values
+        .toList()
+        .indexWhere((element) => element.uuid == outpost.uuid);
+    if (outpostIndex != -1) {
+      outposts.value[outpost.uuid] = outpost;
+      outposts.refresh();
+      final myOutpostIndex = myOutposts.value.values
+          .toList()
+          .indexWhere((element) => element.uuid == outpost.uuid);
+      if (myOutpostIndex != -1) {
+        myOutposts.value[outpost.uuid] = outpost;
+        myOutposts.refresh();
+      }
+    }
+  }
+
   Future<GroupAccesses?> _checkLumaAccess(
       {required OutpostModel outpost}) async {
     try {

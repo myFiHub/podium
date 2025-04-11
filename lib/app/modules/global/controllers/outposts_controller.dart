@@ -307,15 +307,18 @@ class OutpostsController extends GetxController {
     required List<AddGuestModel> lumaGuests,
   }) async {
     try {
-      final isoDate =
-          DateTime.fromMillisecondsSinceEpoch(scheduledFor).toIso8601String();
+      final isoDate = DateTime.fromMillisecondsSinceEpoch(scheduledFor)
+          .toUtc()
+          .toIso8601String();
       final oneHourAfter =
           DateTime.fromMillisecondsSinceEpoch(scheduledFor + 60 * 60 * 1000)
+              .toUtc()
               .toIso8601String();
       final lumaEvent = Luma_CreateEvent(
         name: outpostName,
         start_at: isoDate,
         end_at: oneHourAfter,
+        timezone: 'UTC',
         meeting_url: generateOutpostShareUrl(outpostId: outpostId),
       );
       final createdEvent = await HttpApis.lumaApi.createEvent(event: lumaEvent);

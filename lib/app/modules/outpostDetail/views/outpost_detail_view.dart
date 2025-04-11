@@ -41,124 +41,136 @@ class GroupDetailView extends GetView<OutpostDetailController> {
               }
               final iAmOwner = outpost.creator_user_uuid == myId;
               return Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    space16,
-                    SizedBox(
-                      width: Get.width,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Stack(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        space16,
+                        SizedBox(
+                          width: Get.width,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  "Joining:",
+                                const Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Joining:",
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        overflow: TextOverflow.visible,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                space5,
+                                Text(
+                                  outpost.name,
                                   textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 24,
+                                  style: const TextStyle(
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     overflow: TextOverflow.visible,
                                   ),
                                 ),
-                                if (outpost.luma_event_id != null)
-                                  _LumaIconButton()
-                              ],
-                            ),
-                            space5,
-                            Text(
-                              outpost.name,
-                              textAlign: TextAlign.left,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                overflow: TextOverflow.visible,
-                              ),
-                            ),
-                            if (outpost.subject.trim().isNotEmpty)
-                              Text(
-                                outpost.subject,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                ),
-                              )
-                            else
-                              const SizedBox.shrink(), // Evita espacio residual
-                            if (iAmOwner)
-                              Text(
-                                "Access Type: ${parseAccessType(outpost.enter_type)}",
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey[400],
-                                ),
-                              ),
-                            Row(
-                              children: [
-                                Text(
-                                  "Speakers: ${parseSpeakerType(outpost.speak_type)}",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[400],
+                                if (outpost.subject.trim().isNotEmpty)
+                                  Text(
+                                    outpost.subject,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  )
+                                else
+                                  const SizedBox
+                                      .shrink(), // Evita espacio residual
+                                if (iAmOwner)
+                                  Text(
+                                    "Access Type: ${parseAccessType(outpost.enter_type)}",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[400],
+                                    ),
                                   ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "Speakers: ${parseSpeakerType(outpost.speak_type)}",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    // AnimateIcon(
+                                    //   key: UniqueKey(),
+                                    //   onTap: () async {
+                                    //     await controller.getMembers(outpost);
+                                    //   },
+                                    //   color: Colors.blueAccent,
+                                    //   iconType: IconType.animatedOnTap,
+                                    //   height: 20,
+                                    //   width: 20,
+                                    //   animateIcon: AnimateIcons.refresh,
+                                    // ),
+                                  ],
                                 ),
-                                const Spacer(),
-                                // AnimateIcon(
-                                //   key: UniqueKey(),
-                                //   onTap: () async {
-                                //     await controller.getMembers(outpost);
-                                //   },
-                                //   color: Colors.blueAccent,
-                                //   iconType: IconType.animatedOnTap,
-                                //   height: 20,
-                                //   width: 20,
-                                //   animateIcon: AnimateIcons.refresh,
-                                // ),
                               ],
+                            ),
+                          ),
+                        ),
+                        space10,
+                        const MembersList(),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            if (canInvite(
+                              outpost: outpost,
+                              currentUserId: myId,
+                            ))
+                              Container(
+                                width: (Get.width / 2) - 20,
+                                child: Button(
+                                  type: ButtonType.outline,
+                                  onPressed: () {
+                                    openInviteBottomSheet(
+                                        canInviteToSpeak: canInviteToSpeak(
+                                      outpost: outpost,
+                                      currentUserId: myId,
+                                    ));
+                                  },
+                                  child: const Text('Invite users'),
+                                ),
+                              ),
+                            Container(
+                              width: (Get.width / 2) - 20,
+                              child: const JoinTheRoomButton(),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    space10,
-                    const MembersList(),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        if (canInvite(
-                          outpost: outpost,
-                          currentUserId: myId,
-                        ))
-                          Container(
-                            width: (Get.width / 2) - 20,
-                            child: Button(
-                              type: ButtonType.outline,
-                              onPressed: () {
-                                openInviteBottomSheet(
-                                    canInviteToSpeak: canInviteToSpeak(
-                                  outpost: outpost,
-                                  currentUserId: myId,
-                                ));
-                              },
-                              child: const Text('Invite users'),
-                            ),
-                          ),
-                        Container(
-                          width: (Get.width / 2) - 20,
-                          child: const JoinTheRoomButton(),
-                        ),
+                        space10,
+                        space10,
+                        if (outpost.scheduled_for != 0)
+                          const SetReminderButton(),
+                        // if (group.scheduledFor != 0 && iAmOwner) ...[
+                        //   space10,
+                        //   const ChangeScheduleButton()
+                        // ],
                       ],
                     ),
-                    space10,
-                    space10,
-                    if (outpost.scheduled_for != 0) const SetReminderButton(),
-                    // if (group.scheduledFor != 0 && iAmOwner) ...[
-                    //   space10,
-                    //   const ChangeScheduleButton()
-                    // ],
+                    if (outpost.luma_event_id != null)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: _LumaIconButton(),
+                      )
                   ],
                 ),
               );
@@ -207,6 +219,8 @@ class _LumaIconButton extends GetView<OutpostDetailController> {
           controller.isGettingLumaEventDetails.value;
       final isGettingLumaEventGuests =
           controller.isGettingLumaEventGuests.value;
+      final lumaEventDetails = controller.lumaEventDetails.value;
+      final image = lumaEventDetails?.event.cover_url;
       return IconButton(
         onPressed: () {
           if (isGettingLumaEventDetails || isGettingLumaEventGuests) return;
@@ -214,11 +228,19 @@ class _LumaIconButton extends GetView<OutpostDetailController> {
         },
         icon: isGettingLumaEventDetails || isGettingLumaEventGuests
             ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: LoadingWidget(),
+                width: 80,
+                height: 80,
+                child: LoadingWidget(
+                  size: 14,
+                ),
               )
-            : Assets.images.lumaPng.image(width: 24, height: 24),
+            : image != null
+                ? Img(
+                    src: image,
+                    size: 80,
+                    alt: 'luma event',
+                  )
+                : Assets.images.lumaPng.image(width: 80, height: 80),
       );
     });
   }

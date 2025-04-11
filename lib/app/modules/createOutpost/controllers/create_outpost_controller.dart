@@ -747,6 +747,7 @@ class CreateOutpostController extends GetxController {
           // return;
         }
       }
+
       // preventing from creating the same name if controller is not deleted
       _resetAllFields();
       outpostsController.joinOutpostAndOpenOutpostDetailPage(

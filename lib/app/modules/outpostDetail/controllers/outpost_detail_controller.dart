@@ -187,7 +187,7 @@ class OutpostDetailController extends GetxController {
         outpost.value = outpost.value?.copyWith(image: downloadUrl);
         try {
           final outpostsController = Get.find<OutpostsController>();
-          outpostsController.updateOutpost(outpost.value!);
+          outpostsController.updateOutpost_local(outpost.value!);
         } catch (e) {
           l.e(e);
         }

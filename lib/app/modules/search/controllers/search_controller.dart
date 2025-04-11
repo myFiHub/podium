@@ -85,6 +85,16 @@ class SearchPageController extends GetxController {
     textFieldController.text = value;
   }
 
+  updateOutpost_local(OutpostModel outpost) {
+    final outpostIndex = searchedOutposts.value.values
+        .toList()
+        .indexWhere((element) => element.uuid == outpost.uuid);
+    if (outpostIndex != -1) {
+      searchedOutposts.value[outpost.uuid] = outpost;
+      searchedOutposts.refresh();
+    }
+  }
+
   updateUserFollow(String id) async {
     final foundUser = await HttpApis.podium.getUserData(id);
     final user = searchedUsers.value[id];

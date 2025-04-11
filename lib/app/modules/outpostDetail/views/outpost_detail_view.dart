@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:marquee/marquee.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -114,6 +115,105 @@ class _OpenImageDialogContent extends GetView<OutpostDetailController> {
   }
 }
 
+class _OutpostName extends StatelessWidget {
+  final String name;
+  const _OutpostName({required this.name});
+
+  bool _isTextOverflowing(String text, double maxWidth) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return textPainter.width > maxWidth;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isOverflowing = _isTextOverflowing(name, constraints.maxWidth);
+
+          return SizedBox(
+            width: constraints.maxWidth,
+            height: 24,
+            child: isOverflowing
+                ? Marquee(
+                    text: name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    scrollAxis: Axis.horizontal,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    blankSpace: 20.0,
+                    velocity: 50.0,
+                    pauseAfterRound: const Duration(seconds: 1),
+                    startPadding: 10.0,
+                    accelerationDuration: const Duration(seconds: 1),
+                    accelerationCurve: Curves.linear,
+                    decelerationDuration: const Duration(milliseconds: 500),
+                    decelerationCurve: Curves.easeOut,
+                  )
+                : Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _NameAndImageWrapper extends StatelessWidget {
+  final String name;
+  final bool hasLumaEvent;
+  const _NameAndImageWrapper({
+    required this.name,
+    required this.hasLumaEvent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final label = TextPainter(
+      text: TextSpan(
+        text: name,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final labelWidth = label.width + 60;
+    final isLarge = labelWidth > (Get.width - (hasLumaEvent ? 110 : 0));
+
+    return SizedBox(
+      width: isLarge ? Get.width - (hasLumaEvent ? 110 : 0) : labelWidth,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          _OutpostName(name: name),
+          space8,
+          const OutpostImage(),
+        ],
+      ),
+    );
+  }
+}
+
 class GroupDetailView extends GetView<OutpostDetailController> {
   const GroupDetailView({Key? key}) : super(key: key);
   @override
@@ -135,6 +235,9 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                 );
               }
               final iAmOwner = outpost.creator_user_uuid == myId;
+              final lumaEventId = outpost.luma_event_id;
+              final hasLumaEvent =
+                  lumaEventId != null && lumaEventId.isNotEmpty;
               return Expanded(
                 child: Stack(
                   children: [
@@ -165,26 +268,9 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                                   ],
                                 ),
                                 space5,
-                                SizedBox(
-                                  width: Get.width - 110,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          outpost.name,
-                                          textAlign: TextAlign.left,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                      space8,
-                                      const OutpostImage(),
-                                    ],
-                                  ),
+                                _NameAndImageWrapper(
+                                  name: outpost.name,
+                                  hasLumaEvent: hasLumaEvent,
                                 ),
                                 if (outpost.subject.trim().isNotEmpty)
                                   Text(

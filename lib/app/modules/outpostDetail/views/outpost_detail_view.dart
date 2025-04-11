@@ -165,20 +165,26 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                                   ],
                                 ),
                                 space5,
-                                Row(
-                                  children: [
-                                    Text(
-                                      outpost.name,
-                                      textAlign: TextAlign.left,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        overflow: TextOverflow.visible,
+                                SizedBox(
+                                  width: Get.width - 110,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          outpost.name,
+                                          textAlign: TextAlign.left,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    space8,
-                                    const OutpostImage(),
-                                  ],
+                                      space8,
+                                      const OutpostImage(),
+                                    ],
+                                  ),
                                 ),
                                 if (outpost.subject.trim().isNotEmpty)
                                   Text(

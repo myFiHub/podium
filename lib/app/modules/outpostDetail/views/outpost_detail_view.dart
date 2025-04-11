@@ -12,6 +12,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/root.dart';
+import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -56,8 +57,7 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     Text(
                                       "Joining:",
@@ -71,14 +71,25 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                                   ],
                                 ),
                                 space5,
-                                Text(
-                                  outpost.name,
-                                  textAlign: TextAlign.left,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    overflow: TextOverflow.visible,
-                                  ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      outpost.name,
+                                      textAlign: TextAlign.left,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        overflow: TextOverflow.visible,
+                                      ),
+                                    ),
+                                    Img(
+                                      src: (outpost.image.isEmpty)
+                                          ? Constants.logoUrl
+                                          : outpost.image,
+                                      size: 40,
+                                      alt: outpost.name,
+                                    ),
+                                  ],
                                 ),
                                 if (outpost.subject.trim().isNotEmpty)
                                   Text(

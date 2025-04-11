@@ -44,7 +44,7 @@ class CreateGroupView extends GetView<CreateOutpostController> {
                     _SelectPicture(
                       key: controller.intro_selectImageKey,
                     ),
-                    _RoomNameInput(
+                    _OutpostNameInput(
                       key: controller.intro_outpostNameKey,
                     ),
                     space5,
@@ -303,8 +303,8 @@ class _TitleBar extends GetWidget<CreateOutpostController> {
   }
 }
 
-class _RoomNameInput extends GetWidget<CreateOutpostController> {
-  const _RoomNameInput({
+class _OutpostNameInput extends GetWidget<CreateOutpostController> {
+  const _OutpostNameInput({
     super.key,
   });
 
@@ -314,6 +314,7 @@ class _RoomNameInput extends GetWidget<CreateOutpostController> {
       height: 55,
       child: Input(
         hintText: 'Outpost Name',
+        initialValue: controller.outpostName.value,
         onChanged: (value) => controller.outpostName.value = value,
         marginvertical: 0,
         paddinghorizontal: 0,

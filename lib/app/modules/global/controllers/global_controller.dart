@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:podium/app/modules/global/controllers/oneSignal_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
@@ -61,6 +62,8 @@ class GlobalUpdateIds {
 
 class GlobalController extends GetxController {
   static final storage = GetStorage();
+  final oneSignalController =
+      Get.put<OneSignalController>(OneSignalController());
 
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
@@ -94,7 +97,7 @@ class GlobalController extends GetxController {
   WebSocketService? ws_client;
 
   ReownAppKitModalNetworkInfo? get externalWalletChain {
-    final chain = ReownAppKitModalNetworks.getNetworkById(
+    final chain = ReownAppKitModalNetworks.getNetworkInfo(
       Env.chainNamespace,
       externalWalletChainId.value,
     );
@@ -208,7 +211,7 @@ class GlobalController extends GetxController {
 
   Future<bool> switchExternalWalletChain(String chainId) async {
     bool success = false;
-    final chain = ReownAppKitModalNetworks.getNetworkById(
+    final chain = ReownAppKitModalNetworks.getNetworkInfo(
       Env.chainNamespace,
       chainId,
     );
@@ -502,10 +505,13 @@ class GlobalController extends GetxController {
         },
       );
     } else {
+      oneSignalController.login(myUserInfo.value?.uuid ?? '');
+
       await Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
+
       if (deepLinkRoute.value.isNotEmpty) {
         final route = deepLinkRoute;
         openDeepLinkGroup(route.value);
@@ -535,6 +541,7 @@ class GlobalController extends GetxController {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
     web3AuthAddress = '';
+    oneSignalController.dismiss();
     try {
       await Web3AuthFlutter.logout();
     } catch (e) {

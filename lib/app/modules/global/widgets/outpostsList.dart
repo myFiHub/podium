@@ -657,13 +657,12 @@ class _ScheduledBanner extends StatelessWidget {
           final isStarted =
               outpost.scheduled_for < DateTime.now().millisecondsSinceEpoch;
           final size = 55;
-          final numberOfDays = remaining.split('d,').length;
-
+          final numberOfDays = int.tryParse(remaining.split('d,')[0]) ?? 0;
           final remainingText = remaining.contains('d,')
               ? remaining
                   .split('d,')
                   .join('d\n')
-                  .replaceAll('d', 'day${(numberOfDays - 1) > 1 ? 's' : ''}')
+                  .replaceAll('d', 'day${numberOfDays > 1 ? 's' : ''}')
               : remaining;
           return Positioned(
             right: 1,

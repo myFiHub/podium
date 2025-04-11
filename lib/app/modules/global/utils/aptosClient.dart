@@ -322,7 +322,7 @@ class AptosMovement {
       );
 
       if (!confirmed) {
-        return (false, 'Cancelled');
+        return (null, 'Cancelled');
       }
       final payload = EntryFunctionPayload(
         functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",

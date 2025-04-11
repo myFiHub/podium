@@ -727,7 +727,7 @@ class CreateOutpostController extends GetxController {
         return;
       }
       outpostName.value = "";
-
+      final scheduleTime = scheduledFor.value;
       if (scheduledFor.value != 0) {
         final setFor = await setReminder(
           alarmId: response.alarm_id,
@@ -751,8 +751,8 @@ class CreateOutpostController extends GetxController {
       _resetAllFields();
       outpostsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: response.uuid,
-        openTheRoomAfterJoining: scheduledFor == 0 ||
-            scheduledFor < DateTime.now().millisecondsSinceEpoch,
+        openTheRoomAfterJoining: scheduleTime == 0 ||
+            scheduleTime < DateTime.now().millisecondsSinceEpoch,
       );
     } catch (e) {
       l.e(e);

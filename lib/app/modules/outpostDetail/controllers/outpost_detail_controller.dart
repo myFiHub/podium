@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -19,6 +22,7 @@ import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
@@ -73,6 +77,12 @@ class OutpostDetailController extends GetxController {
   final lumaEventGuests = Rx<List<GuestDataModel>>([]);
   final lumaHosts = Rx<List<Luma_HostModel>>([]);
 
+// image
+  final fileLocalAddress = ''.obs;
+  final ImagePicker _picker = ImagePicker();
+  File? selectedFile;
+  final isUploadingImage = false.obs;
+  //end
   // end of luma event
 
   StreamSubscription<int>? tickerListener;
@@ -143,6 +153,76 @@ class OutpostDetailController extends GetxController {
   void onClose() {
     tickerListener?.cancel();
     super.onClose();
+  }
+
+  pickImage() async {
+    isUploadingImage.value = true;
+    try {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        final f = File(pickedFile
+            .path); // Use this to store the image in the database or cloud storage
+
+        // check if file is less than 2mb
+        final fileSize = f.lengthSync();
+        if (fileSize > 2 * 1024 * 1024) {
+          Toast.error(message: 'Image size must be less than 2MB');
+          selectedFile = null;
+          return;
+        }
+        selectedFile = f;
+        fileLocalAddress.value = pickedFile.path;
+        final downloadUrl = await uploadFile(outpostId: outpost.value!.uuid);
+        if (downloadUrl == null || downloadUrl.isEmpty) return;
+        final updated = await HttpApis.podium.updateOutpost(
+          request: UpdateOutpostRequest(
+            image: downloadUrl,
+            uuid: outpost.value!.uuid,
+          ),
+        );
+        if (!updated) {
+          Toast.error(message: 'Failed to update outpost image');
+          return;
+        }
+        outpost.value = outpost.value?.copyWith(image: downloadUrl);
+        try {
+          final outpostsController = Get.find<OutpostsController>();
+          outpostsController.updateOutpost(outpost.value!);
+        } catch (e) {
+          l.e(e);
+        }
+      } else {
+        l.e('No image selected.');
+      }
+    } catch (e) {
+      l.e(e);
+    } finally {
+      isUploadingImage.value = false;
+    }
+  }
+
+  Future<String?> uploadFile({required outpostId}) async {
+    final storageRef =
+        FirebaseStorage.instance.ref().child('outposts/$outpostId');
+
+    if (selectedFile == null) {
+      return "";
+    }
+    // check if file is less than 2mb
+    final fileSize = selectedFile!.lengthSync();
+    if (fileSize > 2 * 1024 * 1024) {
+      Toast.error(message: 'Image size must be less than 2MB');
+      return null;
+    }
+    // Upload the image to Firebase Storage
+    final uploadTask = storageRef.putFile(selectedFile!);
+
+    // Wait for the upload to complete
+    final snapshot = await uploadTask.whenComplete(() {});
+
+    // Get the download URL of the uploaded image
+    final downloadUrl = await snapshot.ref.getDownloadURL();
+    return downloadUrl;
   }
 
   onCreatorJoined(IncomingMessage incomingMessage) {

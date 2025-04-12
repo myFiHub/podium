@@ -82,7 +82,6 @@ class OngoingOutpostCallController extends GetxController {
       isRecording.value = recording;
     });
     final ongoingOutpost = outpostCallController.outpost.value!;
-
     final myUser = globalController.myUserInfo.value!;
     if (myUser.uuid == ongoingOutpost.creator_user_uuid) {
       amIAdmin.value = true;
@@ -712,12 +711,18 @@ class OngoingOutpostCallController extends GetxController {
     l.d(
       "audoi mute:$muted",
     );
+
     if (muted) {
+      // REVIEW: it's important not to set amIMuted to true first
+      // because on app start, jitsi fires the muted event
+      // and an unwanted stop speaking event is sent
+      if (!amIMuted.value) {
+        sendOutpostEvent(
+          outpostId: outpostId,
+          eventType: OutgoingMessageTypeEnums.stop_speaking,
+        );
+      }
       amIMuted.value = true;
-      sendOutpostEvent(
-        outpostId: outpostId,
-        eventType: OutgoingMessageTypeEnums.stop_speaking,
-      );
     } else {
       final outpostCreator =
           outpostCallController.outpost.value!.creator_user_uuid;

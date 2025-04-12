@@ -371,11 +371,8 @@ class PodiumApi {
       final tags = (response.data['data'] as List)
           .map((e) => TagModel.fromJson(e))
           .toList();
-      final Map<String, TagModel> tagsMap = {};
-      tags.forEach((tag) {
-        tagsMap[tag.id.toString()] = tag;
-      });
-      return tagsMap;
+      return Map.fromEntries(
+          tags.map((tag) => MapEntry(tag.id.toString(), tag)));
     } catch (e) {
       l.e(e);
       return {};

@@ -243,9 +243,8 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                     followed_by_me: followedByMe,
                     fullWidth: true,
                     onFollowStatusChanged: () {
-                      controller.getUserInfo();
-                      controller.getFollowers(silent: true);
-                      controller.getFollowings(silent: true);
+                      controller.updateMyFollowState(user);
+                      //  controller.getFollowers(silent: true);
                     },
                   ),
                 ),
@@ -668,9 +667,7 @@ class UserListItem extends GetView<ProfileController> {
                       uuid: uuid,
                       followed_by_me: followedByMe,
                       onFollowStatusChanged: () {
-                        final profileController = Get.find<ProfileController>();
-                        profileController.getFollowers(silent: true);
-                        profileController.getFollowings(silent: true);
+                        controller.updateFollowState(user);
                       },
                     ),
                   );

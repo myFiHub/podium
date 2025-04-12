@@ -268,22 +268,9 @@ class OutpostsController extends GetxController {
       message: "Outpost ${archive ? "archived" : "is available again"}",
     );
 
-    // set is archived for outpost in allOutpostsPagingController
-    final outpostIndex = outposts.value.values
-        .toList()
-        .indexWhere((element) => element.uuid == outpost.uuid);
-    if (outpostIndex != -1) {
-      outposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
-      outposts.refresh();
-    }
-    // set is archived for outpost in myOutpostsPagingController
-    final myOutpostIndex = myOutposts.value.values
-        .toList()
-        .indexWhere((element) => element.uuid == outpost.uuid);
-    if (myOutpostIndex != -1) {
-      myOutposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
-      myOutposts.refresh();
-    }
+    final updatedOutpost = outpost.copyWith.is_archived(archive);
+    updateOutpost_local(updatedOutpost);
+
     analytics.logEvent(
       name: "group_archive_toggled",
       parameters: {
@@ -574,19 +561,19 @@ class OutpostsController extends GetxController {
     if (outpostIndex != -1) {
       outposts.value[outpost.uuid] = outpost;
       outposts.refresh();
-      final myOutpostIndex = myOutposts.value.values
-          .toList()
-          .indexWhere((element) => element.uuid == outpost.uuid);
-      if (myOutpostIndex != -1) {
-        myOutposts.value[outpost.uuid] = outpost;
-        myOutposts.refresh();
-      }
+    }
+    final myOutpostIndex = myOutposts.value.values
+        .toList()
+        .indexWhere((element) => element.uuid == outpost.uuid);
+    if (myOutpostIndex != -1) {
+      myOutposts.value[outpost.uuid] = outpost;
+      myOutposts.refresh();
+    }
 
-      final isSearchRegistered = Get.isRegistered<SearchPageController>();
-      if (isSearchRegistered) {
-        final searchController = Get.find<SearchPageController>();
-        searchController.updateOutpost_local(outpost);
-      }
+    final isSearchRegistered = Get.isRegistered<SearchPageController>();
+    if (isSearchRegistered) {
+      final searchController = Get.find<SearchPageController>();
+      searchController.updateOutpost_local(outpost);
     }
   }
 

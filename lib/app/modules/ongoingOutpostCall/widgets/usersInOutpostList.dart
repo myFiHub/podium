@@ -14,7 +14,6 @@ import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpos
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/likePath.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/widgetWithTimer/widgetWrapper.dart';
-import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
@@ -23,7 +22,6 @@ import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:pulsator/pulsator.dart';
@@ -120,13 +118,6 @@ class _SingleUserInOutpost extends StatelessWidget {
         key: ValueKey('gesture_$userId'),
         onTap: () {
           final usersController = Get.find<UsersController>();
-          if (isItME) {
-            Navigate.to(
-              type: NavigationTypes.toNamed,
-              route: Routes.MY_PROFILE,
-            );
-            return;
-          }
           usersController.openUserProfile(userId);
         },
         child: _SingleUserCard(

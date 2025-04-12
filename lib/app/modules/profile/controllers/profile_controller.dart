@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/contracts/chainIds.dart';
@@ -60,6 +61,7 @@ class ProfileController extends GetxController {
   final isGettingPassBuyers = false.obs;
   final isGettingPayments = false.obs;
   final payments = Rx(Payments());
+  final loadingUserID = ''.obs;
 
   @override
   void onInit() {
@@ -124,6 +126,16 @@ class ProfileController extends GetxController {
         numberOfBoosSent: info.sent_boo_count,
       );
     }
+  }
+
+  openUserProfilePage({required String uuid}) async {
+    if (uuid == userInfo.value!.uuid || loadingUserID != '') {
+      return;
+    }
+    loadingUserID.value = uuid;
+    final UsersController usersController = Get.find<UsersController>();
+    await usersController.openUserProfile(uuid);
+    loadingUserID.value = '';
   }
 
   getPrices() async {

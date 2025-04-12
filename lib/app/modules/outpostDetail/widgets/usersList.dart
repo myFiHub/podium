@@ -130,13 +130,6 @@ class _SingleUser extends GetView<UsersController> {
     return GestureDetector(
       onTap: () {
         final usersController = Get.find<UsersController>();
-        if (isItME) {
-          Navigate.to(
-            type: NavigationTypes.toNamed,
-            route: Routes.MY_PROFILE,
-          );
-          return;
-        }
         usersController.openUserProfile(uuid);
       },
       child: Stack(

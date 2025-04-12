@@ -298,6 +298,7 @@ class LoginView extends GetView<LoginController> {
                                           icon: Assets.images.facebook.image(
                                             color: ColorName.white,
                                             height: 25,
+                                            width: 25,
                                           )),
                                     ),
                                     Container(

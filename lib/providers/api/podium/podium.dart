@@ -66,9 +66,12 @@ class PodiumApi {
     required LoginRequest request,
     required AdditionalDataForLogin additionalData,
   }) async {
+    LoginRequest loginRequest = request;
+    loginRequest.referrer_user_uuid =
+        loginRequest.referrer_user_uuid?.replaceAll('/', '');
     try {
       final response =
-          await dio.post('$_baseUrl/auth/login', data: request.toJson());
+          await dio.post('$_baseUrl/auth/login', data: loginRequest.toJson());
       if (response.statusCode == 200) {
         _token = response.data['data']['token'];
         await connectToWebSocket();

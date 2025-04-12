@@ -607,7 +607,7 @@ class FollowingTab extends GetWidget<ProfileController> {
 }
 
 /// A single user item for followers/following lists
-class UserListItem extends StatelessWidget {
+class UserListItem extends GetView<ProfileController> {
   const UserListItem({
     Key? key,
     required this.user,
@@ -622,56 +622,61 @@ class UserListItem extends StatelessWidget {
     final String uuid = user.uuid;
     final bool followedByMe = user.followed_by_me;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          // User avatar
-          Img(
-            src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
-            alt: name,
-            size: 40,
-          ),
-          const SizedBox(width: 12),
-          // User name
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      onTap: () {
+        // controller.openUserProfilePage(uuid: uuid); // needs fix
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            // User avatar
+            Img(
+              src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
+              alt: name,
+              size: 40,
             ),
-          ),
-          // Follow button
-          if (uuid != myId)
-            SizedBox(
-              height: 32,
-              child: FollowButton(
-                uuid: uuid,
-                followed_by_me: followedByMe,
-                onFollowStatusChanged: () {
-                  final profileController = Get.find<ProfileController>();
-                  profileController.getFollowers(silent: true);
-                  profileController.getFollowings(silent: true);
-                },
-              ),
-            )
-          else
-            const SizedBox(
-              height: 32,
+            const SizedBox(width: 12),
+            // User name
+            Expanded(
               child: Text(
-                'You',
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // Follow button
+            if (uuid != myId)
+              SizedBox(
+                height: 32,
+                child: FollowButton(
+                  uuid: uuid,
+                  followed_by_me: followedByMe,
+                  onFollowStatusChanged: () {
+                    final profileController = Get.find<ProfileController>();
+                    profileController.getFollowers(silent: true);
+                    profileController.getFollowings(silent: true);
+                  },
+                ),
+              )
+            else
+              const SizedBox(
+                height: 32,
+                child: Text(
+                  'You',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

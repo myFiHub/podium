@@ -13,7 +13,7 @@ dependencies:
   path_provider: ^2.1.5
   just_audio: ^0.9.46
   just_waveform: ^0.0.7
-
+  flutter_slidable: ^4.0.0
   reown_appkit: ^1.4.2
   record: ^6.0.0
   flutter_dotenv: ^5.2.1

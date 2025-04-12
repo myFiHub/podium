@@ -4,9 +4,5 @@ import '../controllers/profile_controller.dart';
 
 class ProfileBinding extends Binding {
   @override
-  dependencies() => [
-        Bind.lazyPut<ProfileController>(
-          () => ProfileController(),
-        )
-      ];
+  dependencies() => [Bind.put<ProfileController>(ProfileController())];
 }

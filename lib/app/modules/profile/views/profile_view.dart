@@ -624,7 +624,7 @@ class UserListItem extends GetView<ProfileController> {
 
     return GestureDetector(
       onTap: () {
-        // controller.openUserProfilePage(uuid: uuid); // needs fix
+        controller.openUserProfilePage(uuid: uuid);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -651,17 +651,30 @@ class UserListItem extends GetView<ProfileController> {
             ),
             // Follow button
             if (uuid != myId)
-              SizedBox(
-                height: 32,
-                child: FollowButton(
-                  uuid: uuid,
-                  followed_by_me: followedByMe,
-                  onFollowStatusChanged: () {
-                    final profileController = Get.find<ProfileController>();
-                    profileController.getFollowers(silent: true);
-                    profileController.getFollowings(silent: true);
-                  },
-                ),
+              Obx(
+                () {
+                  final lodinguserId = controller.loadingUserID.value;
+                  if (lodinguserId == uuid) {
+                    return const SizedBox(
+                      height: 32,
+                      child: LoadingWidget(
+                        size: 16,
+                      ),
+                    );
+                  }
+                  return SizedBox(
+                    height: 32,
+                    child: FollowButton(
+                      uuid: uuid,
+                      followed_by_me: followedByMe,
+                      onFollowStatusChanged: () {
+                        final profileController = Get.find<ProfileController>();
+                        profileController.getFollowers(silent: true);
+                        profileController.getFollowings(silent: true);
+                      },
+                    ),
+                  );
+                },
               )
             else
               const SizedBox(

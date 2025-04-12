@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
@@ -14,6 +15,7 @@ import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 
 class UserProfileParamsKeys {
   static const userInfo = 'userInfo';
@@ -74,9 +76,7 @@ class ProfileController extends GetxController {
       numberOfCheersSent: userInfo.value!.sent_cheer_count,
       numberOfBoosSent: userInfo.value!.sent_boo_count,
     );
-
-    Future.wait<void>(
-        [getPrices(), getFollowers(), getFollowings(), getPassBuyers()]);
+    updateTheData();
   }
 
   @override
@@ -87,6 +87,15 @@ class ProfileController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  updateTheData() async {
+    await Future.wait<void>([
+      getPrices(),
+      getFollowers(),
+      getFollowings(),
+      getPassBuyers(),
+    ]);
   }
 
   getFollowers({bool silent = false}) async {
@@ -133,8 +142,20 @@ class ProfileController extends GetxController {
       return;
     }
     loadingUserID.value = uuid;
-    final UsersController usersController = Get.find<UsersController>();
-    await usersController.openUserProfile(uuid);
+    final isMyUser = uuid == myId;
+    if (isMyUser) {
+      Navigate.to(
+        type: NavigationTypes.toNamed,
+        route: Routes.MY_PROFILE,
+      );
+      return;
+    }
+    final user = await HttpApis.podium.getUserData(uuid);
+    if (user != null) {
+      userInfo.value = user;
+      await updateTheData();
+    }
+
     loadingUserID.value = '';
   }
 

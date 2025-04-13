@@ -9,7 +9,7 @@ class LoginRequest {
   final String aptos_address;
   final bool has_ticket;
   final String login_type_identifier;
-  final String? referrer_user_uuid;
+  String? referrer_user_uuid;
 
   LoginRequest({
     required this.signature,

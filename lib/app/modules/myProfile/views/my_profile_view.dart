@@ -111,7 +111,7 @@ class ContextSaver extends GetView<MyProfileController> {
   Widget build(BuildContext context) {
     controller.contextForIntro = context;
 
-    return const SizedBox.shrink();
+    return emptySpace;
   }
 }
 

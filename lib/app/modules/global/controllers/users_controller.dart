@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/providers/api/api.dart';
@@ -85,6 +86,15 @@ class UsersController extends GetxController {
 
   Future<void> openUserProfile(String userId) async {
     try {
+      final isMyUser = userId == myId;
+      if (isMyUser) {
+        Navigate.to(
+          type: NavigationTypes.toNamed,
+          route: Routes.MY_PROFILE,
+        );
+        return;
+      }
+
       gettingUserInfo_uuid.value = userId;
       final user = await HttpApis.podium.getUserData(userId);
       if (user != null) {

@@ -6,12 +6,10 @@ import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
-import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -130,13 +128,6 @@ class _SingleUser extends GetView<UsersController> {
     return GestureDetector(
       onTap: () {
         final usersController = Get.find<UsersController>();
-        if (isItME) {
-          Navigate.to(
-            type: NavigationTypes.toNamed,
-            route: Routes.MY_PROFILE,
-          );
-          return;
-        }
         usersController.openUserProfile(uuid);
       },
       child: Stack(
@@ -276,8 +267,10 @@ class FollowButton extends GetView<UsersController> {
           size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
           onPressed: () async {
             final isFollowing = followed_by_me ?? false;
-            await controller.followUnfollow(uuid, !isFollowing);
-            onFollowStatusChanged?.call();
+            final success = await controller.followUnfollow(uuid, !isFollowing);
+            if (success) {
+              onFollowStatusChanged?.call();
+            }
           },
           type: isFollowing ? ButtonType.outline : ButtonType.solid,
           shape: ButtonShape.pills,

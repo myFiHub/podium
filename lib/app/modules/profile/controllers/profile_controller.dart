@@ -5,6 +5,9 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
@@ -13,6 +16,7 @@ import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 
 class UserProfileParamsKeys {
   static const userInfo = 'userInfo';
@@ -60,6 +64,7 @@ class ProfileController extends GetxController {
   final isGettingPassBuyers = false.obs;
   final isGettingPayments = false.obs;
   final payments = Rx(Payments());
+  final loadingUserID = ''.obs;
 
   @override
   void onInit() {
@@ -72,9 +77,7 @@ class ProfileController extends GetxController {
       numberOfCheersSent: userInfo.value!.sent_cheer_count,
       numberOfBoosSent: userInfo.value!.sent_boo_count,
     );
-
-    Future.wait<void>(
-        [getPrices(), getFollowers(), getFollowings(), getPassBuyers()]);
+    updateTheData();
   }
 
   @override
@@ -85,6 +88,15 @@ class ProfileController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  updateTheData() async {
+    await Future.wait<void>([
+      getPrices(),
+      getFollowers(),
+      getFollowings(),
+      getPassBuyers(),
+    ]);
   }
 
   getFollowers({bool silent = false}) async {
@@ -124,6 +136,103 @@ class ProfileController extends GetxController {
         numberOfBoosSent: info.sent_boo_count,
       );
     }
+  }
+
+  openUserProfilePage({required String uuid}) async {
+    if (uuid == userInfo.value!.uuid || loadingUserID != '') {
+      return;
+    }
+    loadingUserID.value = uuid;
+    final isMyUser = uuid == myId;
+    if (isMyUser) {
+      Navigate.to(
+        type: NavigationTypes.toNamed,
+        route: Routes.MY_PROFILE,
+      );
+      return;
+    }
+    final user = await HttpApis.podium.getUserData(uuid);
+    if (user != null) {
+      userInfo.value = user;
+      await updateTheData();
+    }
+
+    loadingUserID.value = '';
+  }
+
+  updateMyFollowState(UserModel user) {
+    final opposite = user.followed_by_me != null ? !user.followed_by_me! : true;
+
+    userInfo.value = userInfo.value!.copyWith.followed_by_me(opposite);
+    final doIExistInFollowersList = followers.value.firstWhereOrNull(
+      (element) => element.uuid == myId,
+    );
+    if (doIExistInFollowersList == null) {
+      // add me on top of followers list
+      followers.value = [
+        FollowerModel(
+            address: myUser.address,
+            followed_by_me: opposite,
+            image: myUser.image!,
+            name: myUser.name!,
+            uuid: myId),
+        ...followers.value
+      ];
+    } else {
+      // remove me from List of followers
+      followers.value =
+          followers.value.where((element) => element.uuid != myId).toList();
+    }
+    alsoUpdateOutpostListMembersIfExists(user.uuid);
+    // is outpostDetails page  registered
+  }
+
+  alsoUpdateOutpostListMembersIfExists(String uuid) {
+    if (Get.isRegistered<OutpostDetailController>()) {
+      final outpostDetailController = Get.find<OutpostDetailController>();
+      outpostDetailController.updatedFollowDataForMember(uuid);
+    }
+  }
+
+  updateFollowState(FollowerModel user) {
+    if (user.uuid == userInfo.value!.uuid) {
+      userInfo.value = userInfo.value!.copyWith.followed_by_me(
+        !user.followed_by_me,
+      );
+    }
+    final indexOfUserInListOfFollowers = followers.value.indexWhere(
+      (element) => element.uuid == user.uuid,
+    );
+    if (indexOfUserInListOfFollowers != -1) {
+      followers.value[indexOfUserInListOfFollowers] =
+          followers.value[indexOfUserInListOfFollowers].copyWith.followed_by_me(
+        !user.followed_by_me,
+      );
+    }
+    final indexOfUserInListOfFollowings = followings.value.indexWhere(
+      (element) => element.uuid == user.uuid,
+    );
+    if (indexOfUserInListOfFollowings != -1) {
+      followings.value[indexOfUserInListOfFollowings] = followings
+          .value[indexOfUserInListOfFollowings].copyWith
+          .followed_by_me(
+        !user.followed_by_me,
+      );
+    }
+    final indexOfUserInListOfPassBuyers = podiumPassBuyers.value.indexWhere(
+      (element) => element.uuid == user.uuid,
+    );
+    if (indexOfUserInListOfPassBuyers != -1) {
+      podiumPassBuyers.value[indexOfUserInListOfPassBuyers] = podiumPassBuyers
+          .value[indexOfUserInListOfPassBuyers].copyWith
+          .followed_by_me(
+        !user.followed_by_me,
+      );
+    }
+    followers.refresh();
+    followings.refresh();
+    podiumPassBuyers.refresh();
+    alsoUpdateOutpostListMembersIfExists(user.uuid);
   }
 
   getPrices() async {

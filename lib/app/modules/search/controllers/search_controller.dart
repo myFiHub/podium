@@ -85,14 +85,31 @@ class SearchPageController extends GetxController {
     textFieldController.text = value;
   }
 
+  updateOutpost_local(OutpostModel outpost) {
+    final outpostIndex = searchedOutposts.value.values
+        .toList()
+        .indexWhere((element) => element.uuid == outpost.uuid);
+    if (outpostIndex != -1) {
+      searchedOutposts.value[outpost.uuid] = outpost;
+      searchedOutposts.refresh();
+    }
+  }
+
   updateUserFollow(String id) async {
-    final foundUser = await HttpApis.podium.getUserData(id);
     final user = searchedUsers.value[id];
-    if (user != null && foundUser != null) {
-      searchedUsers.value[id] = searchedUsers.value[id]!.copyWith
-          .followed_by_me(foundUser.followed_by_me);
+    if (user != null) {
+      final opposite =
+          user.followed_by_me != null ? !user.followed_by_me! : true;
+      searchedUsers.value[id] = user.copyWith.followed_by_me(opposite);
       searchedUsers.refresh();
     }
+    // final foundUser = await HttpApis.podium.getUserData(id);
+    // final user = searchedUsers.value[id];
+    // if (user != null && foundUser != null) {
+    //   searchedUsers.value[id] = searchedUsers.value[id]!.copyWith
+    //       .followed_by_me(foundUser.followed_by_me);
+    //   searchedUsers.refresh();
+    // }
   }
 
   Future<Map<String, OutpostModel>> filterOutpostName(String name) async {

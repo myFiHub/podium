@@ -11,6 +11,7 @@ import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart'
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/constants.dart';
@@ -188,7 +189,7 @@ class _NameAndImageWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = TextPainter(
       text: TextSpan(
-        text: name,
+        text: name + '  ',
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
@@ -280,8 +281,7 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                                     ),
                                   )
                                 else
-                                  const SizedBox
-                                      .shrink(), // Evita espacio residual
+                                  emptySpace,
                                 if (iAmOwner)
                                   Text(
                                     "Access Type: ${parseAccessType(outpost.enter_type)}",
@@ -381,6 +381,19 @@ class MembersList extends GetView<OutpostDetailController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final members = controller.membersList.value;
+      final doIExistInTheList = members.any((element) => element.uuid == myId);
+      if (!doIExistInTheList) {
+        members.insert(
+          0,
+          LiveMember(
+              address: myUser.address,
+              can_speak: true,
+              image: myUser.image!,
+              name: myUser.name!,
+              uuid: myUser.uuid,
+              aptos_address: myUser.aptos_address!),
+        );
+      }
       // add my user to the top if it doesn't exist in the list
 
       if (members.length == 0) {

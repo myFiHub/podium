@@ -331,7 +331,7 @@ class NotificationIdSection extends StatelessWidget {
                       color: Colors.blue,
                     ),
                   ))
-              : const SizedBox.shrink();
+              : emptySpace;
         })
       ]),
     );

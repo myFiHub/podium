@@ -187,7 +187,7 @@ class OutpostDetailController extends GetxController {
         outpost.value = outpost.value?.copyWith(image: downloadUrl);
         try {
           final outpostsController = Get.find<OutpostsController>();
-          outpostsController.updateOutpost(outpost.value!);
+          outpostsController.updateOutpost_local(outpost.value!);
         } catch (e) {
           l.e(e);
         }
@@ -238,16 +238,14 @@ class OutpostDetailController extends GetxController {
   }
 
   updatedFollowDataForMember(String uuid) async {
-    final userData = await HttpApis.podium.getUserData(uuid);
-    if (userData == null) return;
-    final outpostData = outpost.value;
-    if (outpostData == null) return;
-    final followed_by_me = userData.followed_by_me;
     final userIndex =
         membersList.value.indexWhere((element) => element.uuid == uuid);
     if (userIndex != -1) {
+      final userData = membersList.value[userIndex];
+      final followed_by_me = userData.followed_by_me;
+      final opposite = followed_by_me != null ? !followed_by_me : true;
       membersList.value[userIndex] =
-          membersList.value[userIndex].copyWith(followed_by_me: followed_by_me);
+          membersList.value[userIndex].copyWith.followed_by_me(opposite);
       outpost.value = outpost.value?.copyWith(members: membersList.value);
       membersList.refresh();
       outpost.refresh();

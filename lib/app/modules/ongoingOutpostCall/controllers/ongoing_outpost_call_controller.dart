@@ -82,7 +82,6 @@ class OngoingOutpostCallController extends GetxController {
       isRecording.value = recording;
     });
     final ongoingOutpost = outpostCallController.outpost.value!;
-
     final myUser = globalController.myUserInfo.value!;
     if (myUser.uuid == ongoingOutpost.creator_user_uuid) {
       amIAdmin.value = true;
@@ -150,6 +149,9 @@ class OngoingOutpostCallController extends GetxController {
     final recorderUser = members.value
         .firstWhere((e) => e.address == incomingMessage.data.address!);
     recorderUserId.value = recorderUser.uuid;
+    if (recorderUser.uuid == myId) {
+      isRecording.value = true;
+    }
   }
 
   onUserStoppedRecording(IncomingMessage incomingMessage) {
@@ -157,6 +159,9 @@ class OngoingOutpostCallController extends GetxController {
         .firstWhere((e) => e.address == incomingMessage.data.address!);
     if (recorderUser.uuid == recorderUserId.value) {
       recorderUserId.value = '';
+    }
+    if (recorderUser.uuid == myId) {
+      isRecording.value = false;
     }
   }
 
@@ -712,12 +717,18 @@ class OngoingOutpostCallController extends GetxController {
     l.d(
       "audoi mute:$muted",
     );
+
     if (muted) {
-      amIMuted.value = true;
-      sendOutpostEvent(
-        outpostId: outpostId,
-        eventType: OutgoingMessageTypeEnums.stop_speaking,
-      );
+      // REVIEW: it's important not to set amIMuted to true first
+      // because on page load, jitsi fires the muted event
+      // and an unwanted stop speaking event is sent
+      if (!amIMuted.value) {
+        sendOutpostEvent(
+          outpostId: outpostId,
+          eventType: OutgoingMessageTypeEnums.stop_speaking,
+        );
+        amIMuted.value = true;
+      }
     } else {
       final outpostCreator =
           outpostCallController.outpost.value!.creator_user_uuid;

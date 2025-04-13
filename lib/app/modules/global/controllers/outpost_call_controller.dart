@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -238,15 +239,9 @@ class OutpostCallController extends GetxController {
   List<LiveMember> sortMembers({required List<LiveMember> members}) {
     final sorted = [...members];
     if (sortType.value == SortTypes.recentlyTalked) {
-      sorted.sort((a, b) {
-        return (b.last_speaked_at_timestamp ?? 0)
-            .compareTo(a.last_speaked_at_timestamp ?? 0);
-      });
+      sorted.sortedByDescending((a) => a.last_speaked_at_timestamp ?? 0);
     } else if (sortType.value == SortTypes.timeJoined) {
-      sorted.sort((a, b) {
-        return (b.last_speaked_at_timestamp ?? 0)
-            .compareTo(a.last_speaked_at_timestamp ?? 0);
-      });
+      sorted.sortedByDescending((a) => a.last_speaked_at_timestamp ?? 0);
     }
     return sorted;
   }
@@ -258,6 +253,7 @@ class OutpostCallController extends GetxController {
     members.value = [];
     searchedValueInMeet.value = '';
     final outpostId = outpost.value?.uuid;
+    reactionsMap.value = {};
     if (outpostId != null) {
       sendOutpostEvent(
         outpostId: outpostId,

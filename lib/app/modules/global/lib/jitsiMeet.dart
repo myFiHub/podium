@@ -91,9 +91,11 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
         eventType: OutgoingMessageTypeEnums.leave,
       );
       outpostCallController.cleanupAfterCall();
-      if (Get.isRegistered<OngoingOutpostCallController>()) {
-        Get.delete<OngoingOutpostCallController>();
-      }
+      Future.delayed(const Duration(seconds: 1), () {
+        if (Get.isRegistered<OngoingOutpostCallController>()) {
+          Get.delete<OngoingOutpostCallController>();
+        }
+      });
     },
     // like: (idWithAddedAtSign, participantId) async {
     //   final OngoingGroupCallController ongoingGroupCallController =

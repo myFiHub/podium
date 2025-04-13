@@ -285,7 +285,6 @@ class GlobalController extends GetxController {
           isConnectedToInternet.value = true;
           l.i("Internet connected");
           final versionResolved = await checkVersion();
-
           if (versionResolved && !initializedOnce.value) {
             await initializeApp();
           }
@@ -327,7 +326,7 @@ class GlobalController extends GetxController {
     return;
   }
 
-  Future<void> openDeepLinkGroup(String route) async {
+  Future<void> openDeepLinkOutpost(String route) async {
     if (route.contains(Routes.OUTPOST_DETAIL)) {
       Navigate.to(
         type: NavigationTypes.offAllNamed,
@@ -338,11 +337,11 @@ class GlobalController extends GetxController {
         l.f("splited: $splited");
         return;
       }
-      final groupId = splited[1];
-      final groupsController = Get.put(OutpostsController());
+      final outpostId = splited[1];
+      final outpostsController = Get.put(OutpostsController());
       Get.put(OutpostDetailController());
-      groupsController.joinOutpostAndOpenOutpostDetailPage(
-        outpostId: groupId,
+      outpostsController.joinOutpostAndOpenOutpostDetailPage(
+        outpostId: outpostId,
         joiningByLink: true,
       );
       deepLinkRoute.value = '';
@@ -356,7 +355,7 @@ class GlobalController extends GetxController {
     if (loggedIn.value) {
       l.e("logged in, opening deep link $route");
       if (route.contains(Routes.OUTPOST_DETAIL)) {
-        openDeepLinkGroup(route);
+        openDeepLinkOutpost(route);
       } else {
         l.e("deep link not handled");
       }
@@ -514,7 +513,7 @@ class GlobalController extends GetxController {
 
       if (deepLinkRoute.value.isNotEmpty) {
         final route = deepLinkRoute;
-        openDeepLinkGroup(route.value);
+        openDeepLinkOutpost(route.value);
         return;
       }
       isAutoLoggingIn.value = false;

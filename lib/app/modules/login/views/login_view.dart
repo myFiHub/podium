@@ -517,20 +517,18 @@ class ReferralInput extends GetView<LoginController> {
       final isLoggingIn = controller.isLoggingIn.value ||
           controller.globalController.isAutoLoggingIn.value;
       if (isLoggingIn) return emptySpace;
-      return InkWell(
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        onTap: _showReferralDialog,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(
-            textAlign: TextAlign.center,
-            'Referred by someone? Enter the ID',
-            style: TextStyle(
-              color: ColorName.greyText,
-              decoration: TextDecoration.underline,
-            ),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+        child: OutlinedButton.icon(
+          icon: const Icon(Icons.group_add_outlined, size: 18),
+          label: const Text('Have a Referral ID?'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: ColorName.primaryBlue,
+            side: const BorderSide(color: ColorName.primaryBlue),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            textStyle: const TextStyle(fontWeight: FontWeight.w500),
           ),
+          onPressed: _showReferralDialog,
         ),
       );
     });

@@ -720,15 +720,15 @@ class OngoingOutpostCallController extends GetxController {
 
     if (muted) {
       // REVIEW: it's important not to set amIMuted to true first
-      // because on app start, jitsi fires the muted event
+      // because on page load, jitsi fires the muted event
       // and an unwanted stop speaking event is sent
       if (!amIMuted.value) {
         sendOutpostEvent(
           outpostId: outpostId,
           eventType: OutgoingMessageTypeEnums.stop_speaking,
         );
+        amIMuted.value = true;
       }
-      amIMuted.value = true;
     } else {
       final outpostCreator =
           outpostCallController.outpost.value!.creator_user_uuid;

@@ -17,6 +17,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -144,16 +145,25 @@ class LoginController extends GetxController {
     loadingBuyTicketId.value = user.uuid;
     bool? bought;
     try {
-      bought = await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+      final (success, hash) =
+          await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
         sellerAddress: user.aptos_address!,
         sellerName: user.name!,
       );
+      bought = success;
       if (bought != null && bought) {
         Toast.success(
           message: 'Pass bought successfully, log in again',
         );
-        boughtPodiumDefinedEntryTicket.value = true;
-        _continueLogin(hasTicket: true);
+        HttpApis.podium.buySellPodiumPass(
+          BuySellPodiumPassRequest(
+            count: 1,
+            podium_pass_owner_address: user.aptos_address!,
+            podium_pass_owner_uuid: user.uuid,
+            trade_type: TradeType.buy,
+            tx_hash: hash!,
+          ),
+        );
       }
     } catch (e) {
       l.e('Error buying Pass: $e');

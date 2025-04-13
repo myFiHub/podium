@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+
 part 'incomingMessage.g.dart';
 
 @JsonEnum(fieldRename: FieldRename.snake)
@@ -31,6 +32,10 @@ enum IncomingMessageType {
   waitlistUpdated,
   @JsonValue("creator.joined")
   creatorJoined,
+  @JsonValue("user.started_recording")
+  userStartedRecording,
+  @JsonValue("user.stopped_recording")
+  userStoppedRecording,
 }
 
 @JsonSerializable()

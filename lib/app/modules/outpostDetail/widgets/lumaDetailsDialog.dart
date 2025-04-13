@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -8,7 +9,6 @@ import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -75,8 +75,68 @@ class LumaDetailsDialog extends GetView<OutpostDetailController> {
   }
 }
 
-class _Info extends GetView<OutpostDetailController> {
+class _Info extends StatefulWidget {
   const _Info({super.key});
+
+  @override
+  State<_Info> createState() => _InfoState();
+}
+
+class _InfoState extends State<_Info> {
+  late final ScrollController eventNameController;
+  late final ScrollController descriptionController;
+  final OutpostDetailController controller =
+      Get.find<OutpostDetailController>();
+
+  @override
+  void initState() {
+    super.initState();
+    eventNameController = ScrollController();
+    descriptionController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    eventNameController.dispose();
+    descriptionController.dispose();
+    super.dispose();
+  }
+
+  void startAutoScroll(ScrollController controller) {
+    if (!mounted) return;
+
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      if (controller.hasClients) {
+        final maxScroll = controller.position.maxScrollExtent;
+        if (maxScroll > 0) {
+          controller
+              .animateTo(
+            maxScroll,
+            duration: const Duration(seconds: 3),
+            curve: Curves.linear,
+          )
+              .then((_) {
+            if (!mounted) return;
+            Future.delayed(const Duration(seconds: 1), () {
+              if (!mounted) return;
+              controller
+                  .animateTo(
+                0,
+                duration: const Duration(seconds: 3),
+                curve: Curves.linear,
+              )
+                  .then((_) {
+                if (mounted) {
+                  startAutoScroll(controller);
+                }
+              });
+            });
+          });
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +156,13 @@ class _Info extends GetView<OutpostDetailController> {
         final eventStartAt = controller.lumaEventDetails.value?.event.start_at;
         final isStarted = DateTime.parse(mycurrentIsoTime)
             .isAfter(DateTime.parse(eventStartAt ?? ''));
+
+        // Start auto-scrolling when the widget is built
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          startAutoScroll(eventNameController);
+          startAutoScroll(descriptionController);
+        });
+
         return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,21 +171,27 @@ class _Info extends GetView<OutpostDetailController> {
               children: [
                 const Text(
                   'Event Name:',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                   ),
                 ),
                 space10,
-                Text(
-                  event?.event.name ?? '',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: eventNameController,
+                    scrollDirection: Axis.horizontal,
+                    child: Text(
+                      event?.event.name ?? '',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-            if (outpost?.subject?.isNotEmpty ?? false) ...[
+            if (outpost?.subject.isNotEmpty ?? false) ...[
               space10,
               Row(
                 children: [
@@ -129,11 +202,17 @@ class _Info extends GetView<OutpostDetailController> {
                     ),
                   ),
                   space10,
-                  Text(
-                    outpost?.subject ?? '',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: descriptionController,
+                      scrollDirection: Axis.horizontal,
+                      child: Text(
+                        outpost?.subject ?? '',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],

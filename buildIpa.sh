@@ -11,7 +11,7 @@ if [ -z "$VERSION" ]; then
 fi
 
 if [ -z "$ENVIRONMENT_PARAM" ]; then
-    ENVIRONMENT_PARAM="development"
+    ENVIRONMENT_PARAM="production"
 fi
 
 echo "ENVIRONMENT_PARAM: $ENVIRONMENT_PARAM"

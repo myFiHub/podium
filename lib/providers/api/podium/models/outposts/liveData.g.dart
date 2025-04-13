@@ -35,6 +35,10 @@ abstract class _$LiveMemberCWProxy {
 
   LiveMember followed_by_me(bool? followed_by_me);
 
+  LiveMember is_recording(bool is_recording);
+
+  LiveMember joined_at(int joined_at);
+
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `LiveMember(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
   /// Usage
@@ -56,6 +60,8 @@ abstract class _$LiveMemberCWProxy {
     String aptos_address,
     String? external_wallet_address,
     bool? followed_by_me,
+    bool is_recording,
+    int joined_at,
   });
 }
 
@@ -115,6 +121,13 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
       this(followed_by_me: followed_by_me);
 
   @override
+  LiveMember is_recording(bool is_recording) =>
+      this(is_recording: is_recording);
+
+  @override
+  LiveMember joined_at(int joined_at) => this(joined_at: joined_at);
+
+  @override
 
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `LiveMember(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
@@ -137,6 +150,8 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
     Object? aptos_address = const $CopyWithPlaceholder(),
     Object? external_wallet_address = const $CopyWithPlaceholder(),
     Object? followed_by_me = const $CopyWithPlaceholder(),
+    Object? is_recording = const $CopyWithPlaceholder(),
+    Object? joined_at = const $CopyWithPlaceholder(),
   }) {
     return LiveMember(
       address: address == const $CopyWithPlaceholder()
@@ -197,6 +212,14 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
           ? _value.followed_by_me
           // ignore: cast_nullable_to_non_nullable
           : followed_by_me as bool?,
+      is_recording: is_recording == const $CopyWithPlaceholder()
+          ? _value.is_recording
+          // ignore: cast_nullable_to_non_nullable
+          : is_recording as bool,
+      joined_at: joined_at == const $CopyWithPlaceholder()
+          ? _value.joined_at
+          // ignore: cast_nullable_to_non_nullable
+          : joined_at as int,
     );
   }
 }
@@ -245,6 +268,8 @@ LiveMember _$LiveMemberFromJson(Map<String, dynamic> json) => LiveMember(
       aptos_address: json['aptos_address'] as String,
       external_wallet_address: json['external_wallet_address'] as String?,
       followed_by_me: json['followed_by_me'] as bool?,
+      is_recording: json['is_recording'] as bool? ?? false,
+      joined_at: (json['joined_at'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$LiveMemberToJson(LiveMember instance) =>
@@ -263,6 +288,8 @@ Map<String, dynamic> _$LiveMemberToJson(LiveMember instance) =>
       'external_wallet_address': instance.external_wallet_address,
       'uuid': instance.uuid,
       'followed_by_me': instance.followed_by_me,
+      'is_recording': instance.is_recording,
+      'joined_at': instance.joined_at,
     };
 
 FeedbackModel _$FeedbackModelFromJson(Map<String, dynamic> json) =>

@@ -33,6 +33,8 @@ const _$IncomingMessageTypeEnumMap = {
   IncomingMessageType.invite: 'user.invited',
   IncomingMessageType.waitlistUpdated: 'waitlist.updated',
   IncomingMessageType.creatorJoined: 'creator.joined',
+  IncomingMessageType.userStartedRecording: 'user.started_recording',
+  IncomingMessageType.userStoppedRecording: 'user.stopped_recording',
 };
 
 IncomingMessageData _$IncomingMessageDataFromJson(Map<String, dynamic> json) =>

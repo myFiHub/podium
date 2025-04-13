@@ -66,6 +66,8 @@ class LiveMember {
   final String? external_wallet_address;
   final String uuid;
   final bool? followed_by_me;
+  final bool is_recording;
+  final int joined_at;
 
   LiveMember({
     required this.address,
@@ -82,6 +84,8 @@ class LiveMember {
     required this.aptos_address,
     this.external_wallet_address,
     this.followed_by_me,
+    this.is_recording = false,
+    this.joined_at = 0,
   });
 
   factory LiveMember.fromJson(Map<String, dynamic> json) =>

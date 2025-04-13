@@ -14,6 +14,8 @@ import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
+import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
+import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -64,9 +66,12 @@ class PodiumApi {
     required LoginRequest request,
     required AdditionalDataForLogin additionalData,
   }) async {
+    LoginRequest loginRequest = request;
+    loginRequest.referrer_user_uuid =
+        loginRequest.referrer_user_uuid?.replaceAll('/', '');
     try {
       final response =
-          await dio.post('$_baseUrl/auth/login', data: request.toJson());
+          await dio.post('$_baseUrl/auth/login', data: loginRequest.toJson());
       if (response.statusCode == 200) {
         _token = response.data['data']['token'];
         await connectToWebSocket();
@@ -366,11 +371,8 @@ class PodiumApi {
       final tags = (response.data['data'] as List)
           .map((e) => TagModel.fromJson(e))
           .toList();
-      final Map<String, TagModel> tagsMap = {};
-      tags.forEach((tag) {
-        tagsMap[tag.id.toString()] = tag;
-      });
-      return tagsMap;
+      return Map.fromEntries(
+          tags.map((tag) => MapEntry(tag.id.toString(), tag)));
     } catch (e) {
       l.e(e);
       return {};
@@ -638,6 +640,59 @@ class PodiumApi {
     } catch (e) {
       l.e(e);
       return null;
+    }
+  }
+
+  Future<bool> buySellPodiumPass(BuySellPodiumPassRequest request) async {
+    try {
+      final response = await dio.post('$_baseUrl/podium-passes/trade',
+          data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<List<PodiumPassBuyerModel>> myPodiumPasses({
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/podium-passes/my-passes',
+          queryParameters: {
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => PodiumPassBuyerModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
+    }
+  }
+
+  Future<List<PodiumPassBuyerModel>> podiumPassBuyers({
+    required String uuid,
+    int? page,
+    int? page_size,
+  }) async {
+    try {
+      final response = await dio.get('$_baseUrl/podium-passes/recent-holders',
+          queryParameters: {
+            'uuid': uuid,
+            if (page != null) 'page': page,
+            if (page_size != null) 'page_size': page_size,
+          },
+          options: Options(headers: _headers));
+      return (response.data['data'] as List)
+          .map((e) => PodiumPassBuyerModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      l.e(e);
+      return [];
     }
   }
 }

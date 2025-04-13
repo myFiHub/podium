@@ -325,7 +325,35 @@ class WebSocketService {
         _handleCreatorJoined(incomingMessage, outpostDetailController,
             outpostDetailControllerExists);
         break;
+
+      case IncomingMessageType.userStartedRecording:
+        if (!Get.isRegistered<OngoingOutpostCallController>()) {
+          l.w("OngoingOutpostCallController not registered, cannot process userStartedRecording");
+          return;
+        }
+        _handleUserStartedRecording(
+            incomingMessage, Get.find<OngoingOutpostCallController>());
+        break;
+
+      case IncomingMessageType.userStoppedRecording:
+        if (!Get.isRegistered<OngoingOutpostCallController>()) {
+          l.w("OngoingOutpostCallController not registered, cannot process userStoppedRecording");
+          return;
+        }
+        _handleUserStoppedRecording(
+            incomingMessage, Get.find<OngoingOutpostCallController>());
+        break;
     }
+  }
+
+  void _handleUserStartedRecording(IncomingMessage incomingMessage,
+      OngoingOutpostCallController controller) {
+    controller.onUserStartedRecording(incomingMessage);
+  }
+
+  void _handleUserStoppedRecording(IncomingMessage incomingMessage,
+      OngoingOutpostCallController controller) {
+    controller.onUserStoppedRecording(incomingMessage);
   }
 
   /// Handles remaining time updated messages

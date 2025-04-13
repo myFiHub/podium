@@ -55,7 +55,6 @@ void showPodiumPassOptionsDialog(
       ),
       actions: [
         Container(
-          width: double.infinity,
           margin: const EdgeInsets.symmetric(horizontal: 16),
           child: Button(
             onPressed: () {
@@ -70,9 +69,10 @@ void showPodiumPassOptionsDialog(
             blockButton: true,
           ),
         ),
-        space12, // Add spacing between buttons
+        const SizedBox(
+          height: 16,
+        ),
         Container(
-          width: double.infinity,
           margin: const EdgeInsets.symmetric(horizontal: 16),
           child: Button(
             onPressed: () {
@@ -89,9 +89,10 @@ void showPodiumPassOptionsDialog(
             blockButton: true,
           ),
         ),
-        space12, // Add spacing between buttons
+        const SizedBox(
+          height: 16,
+        ),
         Container(
-          width: double.infinity,
           margin: const EdgeInsets.symmetric(horizontal: 16),
           child: Button(
             onPressed: () => Get.close(),
@@ -103,7 +104,6 @@ void showPodiumPassOptionsDialog(
             blockButton: true,
           ),
         ),
-        space8,
       ],
     ),
   );
@@ -243,9 +243,8 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                     followed_by_me: followedByMe,
                     fullWidth: true,
                     onFollowStatusChanged: () {
-                      controller.getUserInfo();
-                      controller.getFollowers(silent: true);
-                      controller.getFollowings(silent: true);
+                      controller.updateMyFollowState(user);
+                      //  controller.getFollowers(silent: true);
                     },
                   ),
                 ),
@@ -355,7 +354,9 @@ class _TicketButtonContent extends StatelessWidget {
             if (isLoading)
               const Padding(
                 padding: EdgeInsets.only(left: 8),
-                child: LoadingWidget(),
+                child: LoadingWidget(
+                  size: 12,
+                ),
               ),
           ],
         ),
@@ -403,16 +404,26 @@ class _SocialStats extends GetWidget<ProfileController> {
 
       return Expanded(
         child: DefaultTabController(
-          length: 2,
+          length: 3,
           initialIndex: 0, // Start with Followers tab
           child: Column(
             children: [
               TabBar(
                 indicatorColor: Colors.cyan,
-                indicatorWeight: 4,
+                // indicatorWeight: 4,
                 labelColor: Colors.cyan,
                 unselectedLabelColor: Colors.white,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelPadding: const EdgeInsets.only(right: 0),
                 tabs: [
+                  Obx(() {
+                    final buyersCount =
+                        controller.podiumPassBuyers.value.length;
+                    final appendix = buyersCount > 0 ? ' ($buyersCount)' : '';
+                    return Tab(
+                      text: 'Pass Holders$appendix',
+                    );
+                  }),
                   Obx(() {
                     final followersCount = controller.followers.value.length;
                     final appendix =
@@ -431,6 +442,8 @@ class _SocialStats extends GetWidget<ProfileController> {
                 child: TabBarView(
                   physics: NeverScrollableScrollPhysics(), // Prevent swiping
                   children: [
+                    PassHoldersTab(),
+
                     // Followers tab content
                     FollowersTab(),
 
@@ -478,6 +491,89 @@ class FollowersTab extends GetWidget<ProfileController> {
   }
 }
 
+class PassHoldersTab extends GetWidget<ProfileController> {
+  const PassHoldersTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final passHolders = controller.podiumPassBuyers.value;
+      final isLoading = controller.isGettingPassBuyers.value;
+      if (isLoading) {
+        return const Center(child: LoadingWidget());
+      }
+      if (passHolders.isEmpty) {
+        return const Center(
+          child: Text(
+            'No pass holders yet',
+            style: TextStyle(color: Colors.white70),
+          ),
+        );
+      }
+
+      return ListView.builder(
+        itemCount: passHolders.length,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemBuilder: (context, index) {
+          final holder = passHolders[index];
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                // User avatar
+                Img(
+                  src: holder.image == defaultAvatar
+                      ? avatarPlaceHolder(holder.name)
+                      : holder.image,
+                  alt: holder.name,
+                  size: 40,
+                ),
+                const SizedBox(width: 12),
+                // User name
+                Expanded(
+                  child: Text(
+                    holder.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                // Follow button
+                if (holder.uuid != myId)
+                  SizedBox(
+                    height: 32,
+                    child: FollowButton(
+                      uuid: holder.uuid,
+                      followed_by_me: holder.followed_by_me,
+                      onFollowStatusChanged: () {
+                        controller.getPassBuyers();
+                      },
+                    ),
+                  )
+                else
+                  const SizedBox(
+                    height: 32,
+                    child: Text(
+                      'You',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    });
+  }
+}
+
 class FollowingTab extends GetWidget<ProfileController> {
   const FollowingTab();
 
@@ -510,7 +606,7 @@ class FollowingTab extends GetWidget<ProfileController> {
 }
 
 /// A single user item for followers/following lists
-class UserListItem extends StatelessWidget {
+class UserListItem extends GetView<ProfileController> {
   const UserListItem({
     Key? key,
     required this.user,
@@ -525,56 +621,72 @@ class UserListItem extends StatelessWidget {
     final String uuid = user.uuid;
     final bool followedByMe = user.followed_by_me;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          // User avatar
-          Img(
-            src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
-            alt: name,
-            size: 40,
-          ),
-          const SizedBox(width: 12),
-          // User name
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      onTap: () {
+        controller.openUserProfilePage(uuid: uuid);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            // User avatar
+            Img(
+              src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
+              alt: name,
+              size: 40,
             ),
-          ),
-          // Follow button
-          if (uuid != myId)
-            SizedBox(
-              height: 32,
-              child: FollowButton(
-                uuid: uuid,
-                followed_by_me: followedByMe,
-                onFollowStatusChanged: () {
-                  final profileController = Get.find<ProfileController>();
-                  profileController.getFollowers(silent: true);
-                  profileController.getFollowings(silent: true);
-                },
-              ),
-            )
-          else
-            const SizedBox(
-              height: 32,
+            const SizedBox(width: 12),
+            // User name
+            Expanded(
               child: Text(
-                'You',
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // Follow button
+            if (uuid != myId)
+              Obx(
+                () {
+                  final lodinguserId = controller.loadingUserID.value;
+                  if (lodinguserId == uuid) {
+                    return const SizedBox(
+                      height: 32,
+                      child: LoadingWidget(
+                        size: 16,
+                      ),
+                    );
+                  }
+                  return SizedBox(
+                    height: 32,
+                    child: FollowButton(
+                      uuid: uuid,
+                      followed_by_me: followedByMe,
+                      onFollowStatusChanged: () {
+                        controller.updateFollowState(user);
+                      },
+                    ),
+                  );
+                },
+              )
+            else
+              const SizedBox(
+                height: 32,
+                child: Text(
+                  'You',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

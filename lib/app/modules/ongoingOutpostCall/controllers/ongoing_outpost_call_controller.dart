@@ -63,8 +63,9 @@ class OngoingOutpostCallController extends GetxController {
   final talkingIds = Rx<List<String>>([]);
   final reportReasonController = TextEditingController();
   final reportReason = Rx<String>('');
-
   final isRecording = false.obs;
+  final recorderUserId = Rx<String>('');
+  final isStartingToRecord = false.obs;
   StreamSubscription<bool>? recordingListeners;
   final loadingWalletAddressForUser = RxList<String>([]);
 
@@ -95,6 +96,12 @@ class OngoingOutpostCallController extends GetxController {
       members.value = [...listOfMembers];
       final my_user =
           listOfMembers.where((m) => m.uuid == myUser.uuid).toList();
+      for (var member in listOfMembers) {
+        if (member.is_recording) {
+          recorderUserId.value = member.uuid;
+          break;
+        }
+      }
       if (my_user.length == 0) return;
       mySession.value = (my_user[0]);
       mySession.refresh();
@@ -135,6 +142,26 @@ class OngoingOutpostCallController extends GetxController {
       );
       reportReason.value = '';
       reportReasonController.clear();
+    }
+  }
+
+  onUserStartedRecording(IncomingMessage incomingMessage) {
+    final recorderUser = members.value
+        .firstWhere((e) => e.address == incomingMessage.data.address!);
+    recorderUserId.value = recorderUser.uuid;
+    if (recorderUser.uuid == myId) {
+      isRecording.value = true;
+    }
+  }
+
+  onUserStoppedRecording(IncomingMessage incomingMessage) {
+    final recorderUser = members.value
+        .firstWhere((e) => e.address == incomingMessage.data.address!);
+    if (recorderUser.uuid == recorderUserId.value) {
+      recorderUserId.value = '';
+    }
+    if (recorderUser.uuid == myId) {
+      isRecording.value = false;
     }
   }
 
@@ -376,14 +403,24 @@ class OngoingOutpostCallController extends GetxController {
     }
     if (recorderController.hasPermission) {
       if (recording) {
+        isStartingToRecord.value = true;
         await recorderController.startRecording(
           true,
           prefix: outpostCallController.outpost.value!.name,
+        );
+        isStartingToRecord.value = false;
+        sendOutpostEvent(
+          outpostId: outpostCallController.outpost.value!.uuid,
+          eventType: OutgoingMessageTypeEnums.start_recording,
         );
       } else {
         await recorderController.startRecording(
           false,
           prefix: outpostCallController.outpost.value!.name,
+        );
+        sendOutpostEvent(
+          outpostId: outpostCallController.outpost.value!.uuid,
+          eventType: OutgoingMessageTypeEnums.stop_recording,
         );
         final path = await recorderController.lastRecordedPath;
         if (path != null) {
@@ -680,12 +717,18 @@ class OngoingOutpostCallController extends GetxController {
     l.d(
       "audoi mute:$muted",
     );
+
     if (muted) {
-      amIMuted.value = true;
-      sendOutpostEvent(
-        outpostId: outpostId,
-        eventType: OutgoingMessageTypeEnums.stop_speaking,
-      );
+      // REVIEW: it's important not to set amIMuted to true first
+      // because on page load, jitsi fires the muted event
+      // and an unwanted stop speaking event is sent
+      if (!amIMuted.value) {
+        sendOutpostEvent(
+          outpostId: outpostId,
+          eventType: OutgoingMessageTypeEnums.stop_speaking,
+        );
+        amIMuted.value = true;
+      }
     } else {
       final outpostCreator =
           outpostCallController.outpost.value!.creator_user_uuid;

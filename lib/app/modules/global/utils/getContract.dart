@@ -60,7 +60,7 @@ DeployedContract? getDeployedContract(
 
 String chainNameById(String chainId) {
   final name =
-      ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId)
+      ReownAppKitModalNetworks.getNetworkInfo(Env.chainNamespace, chainId)
           ?.name;
   if (name == null) {
     return "Movement";
@@ -80,7 +80,7 @@ ReownAppKitModalNetworkInfo chainInfoByChainId(String chainId) {
     id = '126';
   }
 
-  final chain = ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, id);
+  final chain = ReownAppKitModalNetworks.getNetworkInfo(Env.chainNamespace, id);
   if (chain == null) {
     return movementEVMChain;
   }

@@ -12,6 +12,7 @@ import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
+import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
@@ -236,15 +237,8 @@ class OutpostsController extends GetxController {
           final updatedOutpost = outpost.copyWith.i_am_member(false);
           outposts.value[outpost.uuid] = updatedOutpost;
           outposts.refresh();
+          fetchMyOutpostsPage(0);
 
-          // update existing outpost in my outposts page controller and set i_am_member to false
-          final myOutpostIndex = myOutposts.value.values
-              .toList()
-              .indexWhere((element) => element.uuid == updatedOutpost.uuid);
-          if (myOutpostIndex != -1) {
-            myOutposts.value.remove(updatedOutpost.uuid);
-            myOutposts.refresh();
-          }
           Toast.success(
             title: "Success",
             message: "You have left the outpost",
@@ -274,22 +268,9 @@ class OutpostsController extends GetxController {
       message: "Outpost ${archive ? "archived" : "is available again"}",
     );
 
-    // set is archived for outpost in allOutpostsPagingController
-    final outpostIndex = outposts.value.values
-        .toList()
-        .indexWhere((element) => element.uuid == outpost.uuid);
-    if (outpostIndex != -1) {
-      outposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
-      outposts.refresh();
-    }
-    // set is archived for outpost in myOutpostsPagingController
-    final myOutpostIndex = myOutposts.value.values
-        .toList()
-        .indexWhere((element) => element.uuid == outpost.uuid);
-    if (myOutpostIndex != -1) {
-      myOutposts.value[outpost.uuid] = outpost.copyWith.is_archived(archive);
-      myOutposts.refresh();
-    }
+    final updatedOutpost = outpost.copyWith.is_archived(archive);
+    updateOutpost_local(updatedOutpost);
+
     analytics.logEvent(
       name: "group_archive_toggled",
       parameters: {
@@ -307,15 +288,18 @@ class OutpostsController extends GetxController {
     required List<AddGuestModel> lumaGuests,
   }) async {
     try {
-      final isoDate =
-          DateTime.fromMillisecondsSinceEpoch(scheduledFor).toIso8601String();
+      final isoDate = DateTime.fromMillisecondsSinceEpoch(scheduledFor)
+          .toUtc()
+          .toIso8601String();
       final oneHourAfter =
           DateTime.fromMillisecondsSinceEpoch(scheduledFor + 60 * 60 * 1000)
+              .toUtc()
               .toIso8601String();
       final lumaEvent = Luma_CreateEvent(
         name: outpostName,
         start_at: isoDate,
         end_at: oneHourAfter,
+        timezone: 'UTC',
         meeting_url: generateOutpostShareUrl(outpostId: outpostId),
       );
       final createdEvent = await HttpApis.lumaApi.createEvent(event: lumaEvent);
@@ -421,11 +405,8 @@ class OutpostsController extends GetxController {
             }
           }
         }
-        // add outpost to the top of lists of my outposts and all outposts
-        myOutposts.value[response.uuid] = response;
-        myOutposts.refresh();
-        outposts.value[response.uuid] = response;
-        outposts.refresh();
+        fetchMyOutpostsPage(0);
+        fetchAllOutpostsPage(0);
       }
       return response;
     } catch (e) {
@@ -442,6 +423,7 @@ class OutpostsController extends GetxController {
     bool? openTheRoomAfterJoining,
     bool? joiningByLink,
   }) async {
+    outpostId = outpostId.replaceAll('/', '');
     if (outpostId.isEmpty) return;
     if (joiningOutpostId != '') {
       return;
@@ -479,9 +461,11 @@ class OutpostsController extends GetxController {
         joiningOutpostId.value = '';
         return;
       }
-
-      if (!outpost.i_am_member) {
-        final added = await HttpApis.podium.addMeAsMember(outpostId: outpostId);
+      final isAlreadyMember = outpost.i_am_member;
+      if (!isAlreadyMember) {
+        final added = await HttpApis.podium.addMeAsMember(
+          outpostId: outpost.uuid,
+        );
         if (!added) {
           Toast.error(
             title: "Error",
@@ -512,6 +496,7 @@ class OutpostsController extends GetxController {
           outpost: outpost,
           openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
           accesses: accesses,
+          isAlreadyMember: isAlreadyMember,
         );
       } else {
         l.d("Already a member");
@@ -519,6 +504,7 @@ class OutpostsController extends GetxController {
           outpost: outpost,
           openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
           accesses: accesses,
+          isAlreadyMember: isAlreadyMember,
         );
       }
     } catch (e) {
@@ -538,6 +524,7 @@ class OutpostsController extends GetxController {
     required OutpostModel outpost,
     required bool openTheRoomAfterJoining,
     required GroupAccesses accesses,
+    bool? isAlreadyMember,
   }) async {
     final isAlreadyRegistered = Get.isRegistered<OutpostDetailController>();
     if (isAlreadyRegistered) {
@@ -554,12 +541,40 @@ class OutpostsController extends GetxController {
               openTheRoomAfterJoining.toString(),
           GroupDetailsParametersKeys.outpostInfo: jsonEncode(outpost.toJson()),
         });
+    if (isAlreadyMember == false) {
+      fetchMyOutpostsPage(0);
+    }
     analytics.logEvent(
       name: "outpost_opened",
       parameters: {
         "outpost_id": outpost.uuid,
       },
     );
+  }
+
+  /// updates the outpost in the local list of outposts and my outposts and searched outposts, the new outpost is not fetched from the server,
+  /// edits most be done before calling this function, then pass the edited outpost to this function
+  updateOutpost_local(OutpostModel outpost) {
+    final outpostIndex = outposts.value.values
+        .toList()
+        .indexWhere((element) => element.uuid == outpost.uuid);
+    if (outpostIndex != -1) {
+      outposts.value[outpost.uuid] = outpost;
+      outposts.refresh();
+    }
+    final myOutpostIndex = myOutposts.value.values
+        .toList()
+        .indexWhere((element) => element.uuid == outpost.uuid);
+    if (myOutpostIndex != -1) {
+      myOutposts.value[outpost.uuid] = outpost;
+      myOutposts.refresh();
+    }
+
+    final isSearchRegistered = Get.isRegistered<SearchPageController>();
+    if (isSearchRegistered) {
+      final searchController = Get.find<SearchPageController>();
+      searchController.updateOutpost_local(outpost);
+    }
   }
 
   Future<GroupAccesses?> _checkLumaAccess(

@@ -206,4 +206,32 @@ class RecordsController extends GetxController {
       print('Error sharing selected portion: $e');
     }
   }
+
+  Future<void> deleteRecording(RecordingFile file) async {
+    try {
+      // Stop playback if the file being deleted is currently playing
+      if (selectedFile.value?.path == file.path && isPlaying.value) {
+        await stopPlayback();
+      }
+
+      // Delete the file
+      final fileToDelete = File(file.path);
+      if (await fileToDelete.exists()) {
+        await fileToDelete.delete();
+      }
+
+      // Remove from the list
+      recordings.removeWhere((recording) => recording.path == file.path);
+      loadRecordings();
+
+      // Clear selection if the deleted file was selected
+      if (selectedFile.value?.path == file.path) {
+        selectedFile.value = null;
+      }
+
+      Toast.success(message: 'Recording deleted successfully');
+    } catch (e) {
+      Toast.error(message: 'Failed to delete recording: $e');
+    }
+  }
 }

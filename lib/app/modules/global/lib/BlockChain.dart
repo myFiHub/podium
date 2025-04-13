@@ -178,7 +178,7 @@ class BlockChainUtils {
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
         await _w3mService.selectChain(
-          ReownAppKitModalNetworks.getNetworkById(Env.chainNamespace, chainId),
+          ReownAppKitModalNetworks.getNetworkInfo(Env.chainNamespace, chainId),
           switchChain: true,
         );
         _w3mService.loadAccountData().then((_) {

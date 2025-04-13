@@ -276,7 +276,7 @@ class AptosMovement {
     });
   }
 
-  static Future<bool?> buyTicketFromTicketSellerOnPodiumPass({
+  static Future<(bool?, String?)> buyTicketFromTicketSellerOnPodiumPass({
     required String sellerAddress,
     required String sellerName,
     String referrer = '',
@@ -291,7 +291,7 @@ class AptosMovement {
         numberOfTickets: numberOfTickets,
       );
       if (price == null) {
-        return false;
+        return (false, 'Error fetching price');
       }
       final parsedPrice = price;
       final confirmed = await showConfirmPopup(
@@ -322,7 +322,7 @@ class AptosMovement {
       );
 
       if (!confirmed) {
-        return null;
+        return (null, 'Cancelled');
       }
       final payload = EntryFunctionPayload(
         functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
@@ -348,9 +348,9 @@ class AptosMovement {
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
-      final hash = res['hash'];
+      final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
-      return true;
+      return (true, hash);
     } catch (e, stackTrace) {
       l.e(e, stackTrace: stackTrace);
       final isCopyableError = e.toString().contains('Waiting for transaction');
@@ -368,7 +368,7 @@ class AptosMovement {
                 child: const Text('Copy Error'),
               ),
       );
-      return false;
+      return (false, e.toString());
     }
   }
 
@@ -390,7 +390,7 @@ class AptosMovement {
     }
   }
 
-  static Future<bool?> sellTicketOnPodiumPass({
+  static Future<(bool?, String?)> sellTicketOnPodiumPass({
     required String sellerAddress,
     required int numberOfTickets,
   }) async {
@@ -400,7 +400,7 @@ class AptosMovement {
         numberOfTickets: numberOfTickets,
       );
       if (price == null) {
-        return null;
+        return (false, 'Error fetching price');
       }
       final parsedPrice = bigIntCoinToMoveOnAptos(price);
       final confirmed = await showConfirmPopup(
@@ -425,7 +425,7 @@ class AptosMovement {
         confirmText: 'Confirm',
       );
       if (!confirmed) {
-        return null;
+        return (false, 'Cancelled');
       }
       final payload = EntryFunctionPayload(
         functionId: "${podiumProtocolAddress}::$_podiumProtocolName::sell_pass",
@@ -439,13 +439,13 @@ class AptosMovement {
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
-      final hash = res['hash'];
+      final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
-      return true;
+      return (true, hash);
     } catch (e) {
       l.e(e);
       Toast.error(message: 'Error submitting transaction');
-      return false;
+      return (false, e.toString());
     }
   }
 }

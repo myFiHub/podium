@@ -16,6 +16,46 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+import 'package:pulsator/pulsator.dart';
+
+class RecordingIndicator extends GetView<OngoingOutpostCallController> {
+  const RecordingIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      if (controller.recorderUserId.value.isEmpty) {
+        return emptySpace;
+      }
+
+      return const Positioned(
+        top: 16,
+        right: 16,
+        child: Tooltip(
+          message: 'creator is recording',
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: Pulsator(
+              style: PulseStyle(color: Colors.red),
+              duration: Duration(seconds: 2),
+              count: 2,
+              repeat: 0,
+              startFromScratch: false,
+              autoStart: true,
+              fit: PulseFit.contain,
+              child: Icon(
+                Icons.circle,
+                color: Colors.red,
+                size: 6,
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
 
 class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
@@ -73,6 +113,7 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
                   ),
                 ),
               ),
+              const RecordingIndicator(),
             ],
           ),
         ),
@@ -100,6 +141,7 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
           final isMuted = controller.amIMuted.value;
           final amICreator = outpost.creator_user_uuid == myId;
           final isRecording = controller.isRecording.value;
+          final isStartingToRecord = controller.isStartingToRecord.value;
           final recordable = outpost.is_recordable;
           if (!canITalk) {
             return FloatingActionButton(
@@ -136,17 +178,23 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
                   heroTag: 'record',
                   backgroundColor: Colors.white,
                   onPressed: () {
-                    controller.isRecording.value
-                        ? controller.stopRecording()
-                        : controller.startRecording();
+                    isStartingToRecord
+                        ? null
+                        : isRecording
+                            ? controller.stopRecording()
+                            : controller.startRecording();
                   },
                   tooltip: 'Record',
-                  child: Icon(
-                    controller.isRecording.value
-                        ? Icons.stop
-                        : Icons.fiber_manual_record,
-                    color: Colors.red,
-                  ),
+                  child: isStartingToRecord
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(),
+                        )
+                      : Icon(
+                          isRecording ? Icons.stop : Icons.fiber_manual_record,
+                          color: Colors.red,
+                        ),
                 ),
             ],
           );
@@ -166,7 +214,7 @@ class ContextSaver extends GetView<OngoingOutpostCallController> {
   @override
   Widget build(BuildContext context) {
     controller.contextForIntro = context;
-    return const SizedBox.shrink();
+    return emptySpace;
   }
 }
 
@@ -215,12 +263,7 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
         }
         final remainingTimeInSeconds = mySession!.remaining_time;
         if (isAdmin) {
-          return Container(
-            key: controller.timerKey,
-            child: const Center(
-              child: Text('presenting as admin'),
-            ),
-          );
+          return emptySpace;
         }
         final list = formatDuration(remainingTimeInSeconds);
         final remainingTime = list.join(":");
@@ -281,6 +324,7 @@ class GroupInfo extends GetView<OutpostCallController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final outpost = controller.outpost.value;
+      final iAmCreator = outpost?.creator_user_uuid == myId;
       return outpost != null
           ? Container(
               padding: const EdgeInsets.only(top: 10),
@@ -292,7 +336,9 @@ class GroupInfo extends GetView<OutpostCallController> {
                       color: Colors.white,
                     ),
                   ),
-                  Text(" by ${outpost.creator_user_name}"),
+                  if (iAmCreator) const Text("created by you"),
+                  if (!iAmCreator)
+                    Text("created by ${outpost.creator_user_name}"),
                 ],
               ),
             )

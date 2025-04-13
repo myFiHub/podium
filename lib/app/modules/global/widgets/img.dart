@@ -11,7 +11,7 @@ class Img extends StatelessWidget {
   final double? height;
   final String? alt;
   final String? ifEmpty;
-
+  final BorderRadius? borderRadius;
   const Img({
     super.key,
     required this.src,
@@ -20,6 +20,7 @@ class Img extends StatelessWidget {
     this.height,
     this.alt,
     this.ifEmpty,
+    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
   });
 
   @override
@@ -29,6 +30,9 @@ class Img extends StatelessWidget {
     return Container(
       width: size ?? width ?? 70,
       height: size ?? height ?? 70,
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+      ),
       child: isEmptyAndHasIfEmpty
           ? Image.asset(
               ifEmpty!,
@@ -44,11 +48,9 @@ class Img extends StatelessWidget {
                 child: Container(
                   width: size ?? width ?? 70,
                   height: size ?? height ?? 70,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: ColorName.cardBorder,
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(8),
-                    ),
+                    borderRadius: borderRadius,
                     shape: BoxShape.rectangle,
                   ),
                 ),
@@ -57,9 +59,7 @@ class Img extends StatelessWidget {
                 width: size ?? width ?? 70,
                 height: size ?? height ?? 70,
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(
-                    const Radius.circular(8),
-                  ),
+                  borderRadius: borderRadius,
                   shape: BoxShape.rectangle,
                   image: DecorationImage(
                     image: NetworkImage(
@@ -74,9 +74,7 @@ class Img extends StatelessWidget {
                 height: size ?? height ?? 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.rectangle,
-                  borderRadius: const BorderRadius.all(
-                    const Radius.circular(8),
-                  ),
+                  borderRadius: borderRadius,
                   image: DecorationImage(
                     image: imageProvider,
                     fit: BoxFit.cover,

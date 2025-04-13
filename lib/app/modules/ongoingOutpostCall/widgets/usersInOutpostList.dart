@@ -647,6 +647,8 @@ class CheerBoo extends GetView<OngoingOutpostCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      if (!Get.isRegistered<OngoingOutpostCallController>())
+        return const SizedBox();
       final loadingUsers = controller.loadingWalletAddressForUser.value;
       final isCheerLoading = loadingUsers.contains("$userId-cheer");
       final isBooLoading = loadingUsers.contains("$userId-boo");

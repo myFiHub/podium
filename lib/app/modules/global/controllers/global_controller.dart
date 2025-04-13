@@ -285,7 +285,6 @@ class GlobalController extends GetxController {
           isConnectedToInternet.value = true;
           l.i("Internet connected");
           final versionResolved = await checkVersion();
-
           if (versionResolved && !initializedOnce.value) {
             await initializeApp();
           }

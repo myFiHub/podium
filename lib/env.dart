@@ -1,8 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/contracts/chainIds.dart';
 
 class Env {
+  static final oneSignalApiKey = dotenv.env['ONESIGNAL_API_KEY']!;
   static final initialExternalWalletChainId =
       dotenv.env['INITIAL_EXTERNAL_WALLET_CHAIN_ID']!;
 

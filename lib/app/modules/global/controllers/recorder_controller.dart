@@ -13,10 +13,13 @@ class RecorderController extends GetxController {
   final _lastRecordedPath = RxnString();
   final _isPlaying = false.obs;
   final _hasPermission = false.obs;
+  final _isInitialized = false.obs;
+  final _isBusy = false.obs;
 
   String? get lastRecordedPath => _lastRecordedPath.value;
   bool get isPlaying => _isPlaying.value;
   bool get hasPermission => _hasPermission.value;
+
   @override
   void onInit() {
     super.onInit();
@@ -24,13 +27,49 @@ class RecorderController extends GetxController {
   }
 
   Future<bool> initializeRecorder() async {
-    final hasPermission = await _audioRecorder.hasPermission();
-    _hasPermission.value = hasPermission;
-    if (!hasPermission) {
-      // Request permission if not granted
-      await _audioRecorder.hasPermission();
+    if (_isBusy.value) return false;
+    _isBusy.value = true;
+
+    try {
+      if (_isInitialized.value) {
+        _isBusy.value = false;
+        return true;
+      }
+
+      print('Initializing recorder...');
+
+      // First check if we have permission
+      final hasPermission = await _audioRecorder.hasPermission();
+      print('Initial permission check: $hasPermission');
+
+      if (!hasPermission) {
+        print('Requesting permission...');
+        // Request permission explicitly
+        final permissionGranted = await _audioRecorder.hasPermission();
+        print('Permission request result: $permissionGranted');
+
+        if (!permissionGranted) {
+          print('Permission denied');
+          _hasPermission.value = false;
+          _isInitialized.value = false;
+          _isBusy.value = false;
+          return false;
+        }
+      }
+
+      _hasPermission.value = true;
+      _isInitialized.value = true;
+      print('Recorder initialized successfully');
+      return true;
+    } catch (e, stackTrace) {
+      print('Error initializing recorder: $e');
+      print('Stack trace: $stackTrace');
+      _hasPermission.value = false;
+      _isInitialized.value = false;
+      return false;
+    } finally {
+      _isBusy.value = false;
     }
-    return hasPermission;
   }
 
   void _setupAudioPlayer() {
@@ -42,21 +81,26 @@ class RecorderController extends GetxController {
   }
 
   Future<void> startRecording(bool start, {String? prefix}) async {
+    if (_isBusy.value) return;
+    _isBusy.value = true;
+
     try {
       if (start) {
-        // Check and request permission if needed
-        if (!_hasPermission.value) {
-          final hasPermission = await _audioRecorder.hasPermission();
-          _hasPermission.value = hasPermission;
-          if (!hasPermission) {
-            Toast.error(message: 'Microphone permission denied');
+        // Ensure recorder is initialized
+        if (!_isInitialized.value) {
+          final initialized = await initializeRecorder();
+          if (!initialized) {
+            Toast.error(message: 'Failed to initialize recorder');
             return;
           }
         }
 
         // Get downloads directory
         final directory = await getDownloadsDirectory();
-        if (directory == null) return;
+        if (directory == null) {
+          Toast.error(message: 'Failed to access storage');
+          return;
+        }
 
         // Create the directory if it doesn't exist
         if (!await directory.exists()) {
@@ -70,6 +114,9 @@ class RecorderController extends GetxController {
 
         print('Starting recording to: $filePath');
 
+        // Add a small delay before starting to ensure previous operations are complete
+        await Future.delayed(const Duration(milliseconds: 200));
+
         // Configure high quality audio settings
         await _audioRecorder.start(
           const RecordConfig(
@@ -81,10 +128,22 @@ class RecorderController extends GetxController {
         );
 
         isRecording.value = true;
+        print('Recording started, isRecording: ${isRecording.value}');
       } else {
+        // Only stop if we're actually recording
+        if (isRecording.value == false) {
+          print('Not currently recording, nothing to stop');
+          _lastRecordedPath.value = null;
+          _isBusy.value = false;
+          return;
+        }
+
         // Stop recording
+        print('Stopping recording...');
+        isRecording.value =
+            false; // Set to false before stopping to prevent race conditions
         final path = await _audioRecorder.stop();
-        isRecording.value = false;
+
         if (path != null) {
           print('Audio saved to: $path');
           _lastRecordedPath.value = path;
@@ -97,10 +156,20 @@ class RecorderController extends GetxController {
             print('File does not exist after recording!');
           }
         }
+
+        print('Recording stopped, isRecording: ${isRecording.value}');
+
+        // Add a small delay after stopping to ensure cleanup
+        await Future.delayed(const Duration(milliseconds: 200));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error during recording: $e');
+      print('Stack trace: $stackTrace');
       isRecording.value = false;
+      _isInitialized.value = false;
+      Toast.error(message: 'Recording failed: ${e.toString()}');
+    } finally {
+      _isBusy.value = false;
     }
   }
 

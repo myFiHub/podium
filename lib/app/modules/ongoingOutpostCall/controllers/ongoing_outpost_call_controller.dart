@@ -149,6 +149,9 @@ class OngoingOutpostCallController extends GetxController {
     final recorderUser = members.value
         .firstWhere((e) => e.address == incomingMessage.data.address!);
     recorderUserId.value = recorderUser.uuid;
+    if (recorderUser.uuid == myId) {
+      isRecording.value = true;
+    }
   }
 
   onUserStoppedRecording(IncomingMessage incomingMessage) {
@@ -156,6 +159,9 @@ class OngoingOutpostCallController extends GetxController {
         .firstWhere((e) => e.address == incomingMessage.data.address!);
     if (recorderUser.uuid == recorderUserId.value) {
       recorderUserId.value = '';
+    }
+    if (recorderUser.uuid == myId) {
+      isRecording.value = false;
     }
   }
 

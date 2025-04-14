@@ -17,7 +17,6 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
-import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -435,7 +434,8 @@ class LoginController extends GetxController {
 
     storage.remove(StorageKeys.referrerId);
     l.d('request: ${request.toJson()}');
-    final (userLoginResponse, errorMessage) = await HttpApis.podium.login(
+    final (userLoginResponse, errorMessage, responseCode) =
+        await HttpApis.podium.login(
       request: request,
       additionalData: temporaryAdditionalData!,
     );
@@ -454,7 +454,9 @@ class LoginController extends GetxController {
         removeLogingInState();
         return;
       }
-      if (errorMessage?.toLowerCase().contains('nor bought ticket') ?? false) {
+      if ((errorMessage?.toLowerCase().contains('nor bought ticket') ??
+              false) ||
+          responseCode == 428) {
         _redirectToBuyTicketPage();
       } else {
         Toast.error(

@@ -246,6 +246,29 @@ class OutpostsController extends GetxController {
     }
   }
 
+  Future<String?> uploadOutpostImage(
+      OutpostModel outpost, String newImageUrl) async {
+    try {
+      final updated = await HttpApis.podium.updateOutpost(
+        request: UpdateOutpostRequest(
+          image: newImageUrl,
+          uuid: outpost.uuid,
+        ),
+      );
+      if (!updated) {
+        Toast.error(message: 'Failed to update outpost image');
+        return null;
+      }
+      final updatedOutpost = outpost.copyWith.image(newImageUrl);
+      updateOutpost_local(updatedOutpost);
+      return newImageUrl;
+    } catch (e) {
+      l.e("Error updating OutpostsController: $e");
+      Toast.error(message: 'Failed to update outpost image');
+      return null;
+    }
+  }
+
   Future<void> toggleArchive({required OutpostModel outpost}) async {
     final canContinue = await _showModalToToggleArchiveGroup(outpost: outpost);
     if (canContinue == null || canContinue == false) return;

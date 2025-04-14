@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/outpostImage.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -301,17 +302,20 @@ class _OutpostCard extends StatelessWidget {
               right: 1,
               top: 2,
               bottom: 4,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: joiningOutpostId == outpost.uuid ? 1.0 : 0.0,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(128),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: LoadingWidget(
-                      size: 24,
+              child: IgnorePointer(
+                ignoring: joiningOutpostId != outpost.uuid,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: joiningOutpostId == outpost.uuid ? 1.0 : 0.0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(128),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: LoadingWidget(
+                        size: 24,
+                      ),
                     ),
                   ),
                 ),
@@ -449,11 +453,18 @@ class _OutpostDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Img(
-          src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
-          alt: outpost.name,
-          ifEmpty: Assets.images.logo.path,
-        ),
+        GestureDetector(
+            onTap: () {
+              openOutpostImageDialog(
+                outpost: outpost,
+                onComplete: (downloadUrl) async {},
+              );
+            },
+            child: Img(
+              src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
+              alt: outpost.name,
+              ifEmpty: Assets.images.logo.path,
+            )),
         space10,
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

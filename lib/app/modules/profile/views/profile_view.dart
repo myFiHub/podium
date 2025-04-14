@@ -22,6 +22,8 @@ void showPodiumPassOptionsDialog(
   int numberOfPasses,
   ProfileController controller,
 ) {
+  final buyPrice = controller.podiumPassBuyPrice.value;
+  final sellPrice = controller.podiumPassSellPrice.value;
   Get.dialog(
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
@@ -62,9 +64,9 @@ void showPodiumPassOptionsDialog(
               controller.buyPodiumPass();
             },
             type: ButtonType.gradient,
-            child: const Text(
-              'Buy Another Pass',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            child: Text(
+              'Buy Another Pass: ${buyPrice.toString()} MOV',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             blockButton: true,
           ),
@@ -82,9 +84,9 @@ void showPodiumPassOptionsDialog(
             type: ButtonType.outline,
             borderSide: const BorderSide(color: Colors.red),
             textColor: Colors.red,
-            child: const Text(
-              'Sell 1 Pass',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            child: Text(
+              'Sell 1 Pass: ${sellPrice.toString()} MOV',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             blockButton: true,
           ),
@@ -264,7 +266,8 @@ class _TicketButton extends GetWidget<ProfileController> {
       final isGettingPrice = controller.isGettingTicketPrice.value;
       final isBuyingPodiumPass = controller.isBuyingPodiumPass.value;
       final isSellingPodiumPass = controller.isSellingPodiumPass.value;
-      final podiumPassPrice = controller.podiumPassPrice.value;
+      final podiumPassBuyPrice = controller.podiumPassBuyPrice.value;
+      final podiumPassSellPrice = controller.podiumPassSellPrice.value;
       final isGettingPodiumPassPrice = controller.loadingPodiumPassPrice.value;
       final numberOfBoughtTicketsByMe =
           controller.mySharesOfPodiumPassFromThisUser.value;
@@ -287,7 +290,8 @@ class _TicketButton extends GetWidget<ProfileController> {
         blockButton: true,
         child: _TicketButtonContent(
           numberOfPasses: numberOfBoughtTicketsByMe,
-          podiumPassPrice: podiumPassPrice,
+          podiumPassBuyPrice: podiumPassBuyPrice,
+          podiumPassSellPrice: podiumPassSellPrice,
           isLoading: isGettingPodiumPassPrice,
         ),
       );
@@ -299,12 +303,14 @@ class _TicketButtonContent extends StatelessWidget {
   const _TicketButtonContent({
     Key? key,
     required this.numberOfPasses,
-    required this.podiumPassPrice,
+    required this.podiumPassBuyPrice,
+    required this.podiumPassSellPrice,
     required this.isLoading,
   }) : super(key: key);
 
   final int numberOfPasses;
-  final double podiumPassPrice;
+  final double podiumPassBuyPrice;
+  final double podiumPassSellPrice;
   final bool isLoading;
 
   @override
@@ -341,7 +347,7 @@ class _TicketButtonContent extends StatelessWidget {
                     ),
                     if (numberOfPasses == 0)
                       TextSpan(
-                        text: " ${podiumPassPrice.toString()} MOV",
+                        text: " ${podiumPassBuyPrice.toString()} MOV",
                         style: const TextStyle(
                           color: Colors.amber,
                           fontWeight: FontWeight.bold,

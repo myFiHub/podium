@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
@@ -27,10 +26,6 @@ class LumaApi {
     required Luma_CreateEvent event,
   }) async {
     try {
-      if (event.timezone == null) {
-        final currentTimeZone = await FlutterTimezone.getLocalTimezone();
-        event.timezone = currentTimeZone;
-      }
       if (event.end_at == null) {
         final currentTime = DateTime.now();
         final endTime = currentTime.add(const Duration(hours: 1));

@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 
 class OneSignalController extends GetxController {
-  static String _oneSignalAppId = 'b7178608-0cc2-4a32-972e-f779fcaa3a21';
+  static String _oneSignalAppId = Env.oneSignalApiKey;
   bool _isInitialized = false;
 
   @override

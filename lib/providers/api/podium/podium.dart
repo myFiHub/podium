@@ -62,7 +62,7 @@ class PodiumApi {
     }
   }
 
-  Future<(UserModel?, String?)> login({
+  Future<(UserModel?, String?, int?)> login({
     required LoginRequest request,
     required AdditionalDataForLogin additionalData,
   }) async {
@@ -79,16 +79,16 @@ class PodiumApi {
           additionalData: additionalData,
         );
 
-        return (myUserData, null);
+        return (myUserData, null, response.statusCode);
       } else {
-        return (null, 'User not found');
+        return (null, 'User not found', response.statusCode);
       }
     } on DioException catch (e) {
       l.d('e: ${e.response}');
       final String? message = e.response?.data['message'];
-      return (null, message);
+      return (null, message, e.response?.statusCode);
     } catch (e) {
-      return (null, 'User not found');
+      return (null, 'User not found', null);
     }
   }
 

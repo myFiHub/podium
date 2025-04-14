@@ -16,6 +16,7 @@ void openOutpostImageDialog({
 }) {
   Get.dialog(
     Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 0.0),
       backgroundColor: Colors.transparent,
       child: _OpenImageDialogContent(
         outpost: outpost,
@@ -71,12 +72,13 @@ class ImageDialogStack extends StatelessWidget {
     return Stack(
       children: [
         Container(
+          width: Get.width - 12,
           decoration: BoxDecoration(
             color: ColorName.cardBackground,
             borderRadius: BorderRadius.circular(16),
           ),
           padding:
-              const EdgeInsets.only(top: 65, left: 24, right: 24, bottom: 20),
+              const EdgeInsets.only(top: 65, left: 12, right: 12, bottom: 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -154,7 +156,7 @@ class _EditableImageState extends State<EditableImage> {
         Img(
           // Use state variable for image source
           src: _currentImageSrc,
-          size: 300,
+          size: Get.width - 24,
           alt: widget.imageAlt,
         ),
         if (widget.iAmOwner) ...[

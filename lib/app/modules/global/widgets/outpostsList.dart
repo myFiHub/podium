@@ -454,10 +454,9 @@ class _OutpostDetails extends StatelessWidget {
     return Row(
       children: [
         GestureDetector(
-            onTap: () {
+            onTap: () async {
               openOutpostImageDialog(
                 outpost: outpost,
-                onComplete: (downloadUrl) async {},
               );
             },
             child: Img(

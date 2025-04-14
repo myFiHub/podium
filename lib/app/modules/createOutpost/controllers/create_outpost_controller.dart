@@ -13,6 +13,7 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
+import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
@@ -699,10 +700,24 @@ class CreateOutpostController extends GetxController {
     if (selectedFile != null) {
       final res = await uploadFile(outpostId: id);
       if (res == null) {
-        isCreatingNewOutpost.value = false;
-        return;
+        final result = await showConfirmPopup(
+          title: 'Image Upload Failed',
+          message: 'you can set it later in the outpost detail page',
+          cancelText: 'Cancel Outpost Creation',
+          confirmText: 'Continue',
+          isDangerous: true,
+          cancelColor: Colors.red,
+          confirmColor: Colors.green,
+          titleColor: Colors.orange,
+        );
+        if (result == false) {
+          isCreatingNewOutpost.value = false;
+          return;
+        }
       }
-      imageUrl = res;
+      if (res != null) {
+        imageUrl = res;
+      }
     }
 
     try {

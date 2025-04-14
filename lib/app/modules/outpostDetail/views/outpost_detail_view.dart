@@ -37,12 +37,8 @@ class OutpostImage extends GetView<OutpostDetailController> {
 
       return GestureDetector(
         onTap: () {
-          // Call the new function
           openOutpostImageDialog(
             outpost: outpost,
-            onComplete: (downloadUrl) async {
-              await controller.updateOutpostImage(downloadUrl);
-            },
           );
         },
         child: Img(

@@ -12,7 +12,7 @@ import 'package:podium/widgets/button/button.dart';
 
 void openOutpostImageDialog({
   required OutpostModel outpost,
-  required Future<void> Function(String downloadUrl) onComplete,
+  Future<void> Function(String downloadUrl)? onComplete,
 }) {
   Get.dialog(
     Dialog(
@@ -28,12 +28,12 @@ void openOutpostImageDialog({
 
 class _OpenImageDialogContent extends StatelessWidget {
   final OutpostModel outpost;
-  final Future<void> Function(String downloadUrl) onComplete;
+  final Future<void> Function(String downloadUrl)? onComplete;
 
   const _OpenImageDialogContent({
     super.key,
     required this.outpost,
-    required this.onComplete,
+    this.onComplete,
   });
 
   @override
@@ -56,7 +56,7 @@ class ImageDialogStack extends StatelessWidget {
   final String imageAlt;
   final bool iAmOwner;
   final String outpostId;
-  final Future<void> Function(String downloadUrl) onUploadComplete;
+  final Future<void> Function(String downloadUrl)? onUploadComplete;
 
   const ImageDialogStack({
     super.key,
@@ -64,7 +64,7 @@ class ImageDialogStack extends StatelessWidget {
     required this.imageAlt,
     required this.iAmOwner,
     required this.outpostId,
-    required this.onUploadComplete,
+    this.onUploadComplete,
   });
 
   @override
@@ -111,7 +111,7 @@ class EditableImage extends StatefulWidget {
   final String imageAlt;
   final bool iAmOwner;
   final String outpostId;
-  final Future<void> Function(String downloadUrl) onUploadComplete;
+  final Future<void> Function(String downloadUrl)? onUploadComplete;
 
   EditableImage({
     super.key,
@@ -119,7 +119,7 @@ class EditableImage extends StatefulWidget {
     required this.imageAlt,
     required this.iAmOwner,
     required this.outpostId,
-    required this.onUploadComplete,
+    this.onUploadComplete,
   });
 
   @override
@@ -178,8 +178,10 @@ class _EditableImageState extends State<EditableImage> {
                     setState(() {
                       _currentImageSrc = downloadUrl;
                     });
-                    // Then call the provided callback
-                    await widget.onUploadComplete(downloadUrl);
+                    // Then call the provided callback if it exists
+                    if (widget.onUploadComplete != null) {
+                      await widget.onUploadComplete!(downloadUrl);
+                    }
                   }
                 },
                 child: const Text('Change Image'),

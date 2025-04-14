@@ -20,7 +20,7 @@ class ReferralInput extends GetView<LoginController> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Enter Referrer ID',
+                'Enter the Referrer ID',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -35,7 +35,7 @@ class ReferralInput extends GetView<LoginController> {
                       child: TextField(
                         controller: controller.textController,
                         decoration: InputDecoration(
-                          hintText: 'Enter referrer ID',
+                          hintText: 'Enter the Referrer ID',
                           border: const OutlineInputBorder(),
                           errorText: referrerNotFound ? 'User not found' : null,
                           errorStyle: const TextStyle(
@@ -94,7 +94,7 @@ class ReferralInput extends GetView<LoginController> {
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 32.0),
         child: OutlinedButton.icon(
           icon: const Icon(Icons.group_add_outlined, size: 18),
-          label: const Text('Have a Referral ID?'),
+          label: const Text('Have a Referrer ID?'),
           style: OutlinedButton.styleFrom(
             foregroundColor: ColorName.primaryBlue,
             side: const BorderSide(color: ColorName.primaryBlue),

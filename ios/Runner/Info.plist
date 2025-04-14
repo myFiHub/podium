@@ -128,5 +128,8 @@
 		
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Microphone access is required for audio during audio conferencing.</string>
+		
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>This allows us to send you more relevant notifications based on your location.</string>
 	</dict>
 </plist>

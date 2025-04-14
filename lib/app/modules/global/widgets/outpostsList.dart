@@ -454,16 +454,17 @@ class _OutpostDetails extends StatelessWidget {
     return Row(
       children: [
         GestureDetector(
-            onTap: () async {
-              openOutpostImageDialog(
-                outpost: outpost,
-              );
-            },
-            child: Img(
-              src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
-              alt: outpost.name,
-              ifEmpty: Assets.images.logo.path,
-            )),
+          onTap: () async {
+            openOutpostImageDialog(
+              outpost: outpost,
+            );
+          },
+          child: Img(
+            src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
+            alt: outpost.name,
+            ifEmpty: Assets.images.logo.path,
+          ),
+        ),
         space10,
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

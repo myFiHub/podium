@@ -388,10 +388,12 @@ class GlobalController extends GetxController {
         storage.read<bool?>(IntroStorageKeys.viewedCreateOutpost);
     final sawOngoingCallIntro =
         storage.read<bool?>(IntroStorageKeys.viewedOngiongCall);
-
+    final showArchivedOutposts =
+        storage.read<bool?>(StorageKeys.showArchivedOutposts);
     storage.erase();
 
     storage.write(IntroStorageKeys.viewedMyProfile, sawProfileIntro);
+    storage.write(StorageKeys.showArchivedOutposts, showArchivedOutposts);
     storage.write(IntroStorageKeys.viewedCreateOutpost, sawCreateGroupIntro);
     storage.write(IntroStorageKeys.viewedOngiongCall, sawOngoingCallIntro);
   }

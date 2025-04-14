@@ -47,7 +47,7 @@ class ProfileController extends GetxController {
   final isFriendTechActive = false.obs;
   final friendTechPrice = 0.0.obs;
   final arenaTicketPrice = 0.0.obs;
-  final podiumPassPrice = 0.0.obs;
+  final podiumPassBuyPrice = 0.0.obs;
   final podiumPassSellPrice = 0.0.obs;
   final activeFriendTechWallets = Rxn<UserActiveWalletOnFriendtech>();
   final loadingArenaPrice = false.obs;
@@ -91,6 +91,7 @@ class ProfileController extends GetxController {
   }
 
   updateTheData() async {
+    mySharesOfPodiumPassFromThisUser.value = 0;
     await Future.wait<void>([
       getPrices(),
       getFollowers(),
@@ -325,7 +326,7 @@ class ProfileController extends GetxController {
     if (delay > 0) {
       await Future.delayed(Duration(seconds: delay));
     }
-    final (price, sellPrice, podiumPassShares) = await (
+    final (buyPrice, sellPrice, podiumPassShares) = await (
       AptosMovement.getTicketPriceForPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
         numberOfTickets: 1,
@@ -344,9 +345,9 @@ class ProfileController extends GetxController {
       }
     }
     loadingPodiumPassPrice.value = false;
-    if (price != null && price != BigInt.zero) {
+    if (buyPrice != null && buyPrice != BigInt.zero) {
       //  price in aptos move
-      podiumPassPrice.value = price;
+      podiumPassBuyPrice.value = buyPrice;
     }
     if (sellPrice != null && sellPrice != BigInt.zero) {
       //  price in aptos move

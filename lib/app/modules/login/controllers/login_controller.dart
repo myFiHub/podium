@@ -154,11 +154,11 @@ class LoginController extends GetxController {
         sellerName: user.name!,
       );
       bought = success;
-      if (bought != null && bought) {
+      if (bought == true) {
         Toast.success(
-          message: 'Pass bought successfully, log in again',
+          message: 'Pass bought successfully',
         );
-        HttpApis.podium.buySellPodiumPass(
+        await HttpApis.podium.buySellPodiumPass(
           BuySellPodiumPassRequest(
             count: 1,
             podium_pass_owner_address: user.aptos_address!,
@@ -167,6 +167,7 @@ class LoginController extends GetxController {
             tx_hash: hash!,
           ),
         );
+        _continueLogin(hasTicket: true);
       }
     } catch (e) {
       l.e('Error buying Pass: $e');

@@ -75,6 +75,9 @@ class LoginController extends GetxController {
       final text = data!.text!.trim();
       textController.text = text;
       referrerId = text;
+      if (temporaryLoginRequest != null) {
+        temporaryLoginRequest!.referrer_user_uuid = referrerId;
+      }
       initializeReferral(text);
     }
   }
@@ -186,12 +189,23 @@ class LoginController extends GetxController {
       if (referrerId.isNotEmpty) {
         referrer.value = await HttpApis.podium.getUserData(referrerId);
         storage.write(StorageKeys.referrerId, referrerId);
+
         if (referrer.value?.remaining_referrals_count == 0) {
           referrerIsFul.value = true;
-        }
-        if (referrer.value == null) {
+          Toast.error(message: 'Referrer has reached its limit');
+        } else if (referrer.value == null) {
           referrerNotFound.value = true;
           Toast.error(message: 'Referrer not found');
+        } else {
+          Toast.success(message: 'use ${referrer.value?.name} as referrer');
+
+          if (temporaryLoginRequest != null) {
+            isLoggingIn.value = true;
+            _continueLogin(
+              hasTicket: false,
+              forcedReferrerID: referrerId,
+            );
+          }
         }
       }
     });
@@ -411,6 +425,7 @@ class LoginController extends GetxController {
 
   _continueLogin({
     required bool hasTicket,
+    String? forcedReferrerID,
   }) async {
     final storageReferreId = storage.read<String>(StorageKeys.referrerId);
     final request = LoginRequest(
@@ -419,7 +434,10 @@ class LoginController extends GetxController {
       aptos_address: temporaryLoginRequest!.aptos_address,
       has_ticket: hasTicket,
       login_type_identifier: temporaryLoginRequest!.login_type_identifier,
-      referrer_user_uuid: storageReferreId,
+      referrer_user_uuid: forcedReferrerID ??
+          storageReferreId ??
+          (referrerId.isEmpty ? null : referrerId) ??
+          temporaryLoginRequest?.referrer_user_uuid,
     );
 
     storage.remove(StorageKeys.referrerId);
@@ -434,20 +452,23 @@ class LoginController extends GetxController {
         Toast.error(
           message: 'All the referral codes of the referrer have been used',
         );
+        removeLogingInState();
       }
       if (errorMessage?.toLowerCase().contains('deactivated') ?? false) {
         Toast.error(
           message: 'Account has been deleted',
         );
+        removeLogingInState();
         return;
       }
-      if (errorMessage == 'user neither reffered nor bought ticket') {
+      if (errorMessage?.toLowerCase().contains('nor bought ticket') ?? false) {
         _redirectToBuyTicketPage();
       } else {
         Toast.error(
           title: 'Error logging in',
           message: errorMessage,
         );
+        removeLogingInState();
       }
       return;
     }

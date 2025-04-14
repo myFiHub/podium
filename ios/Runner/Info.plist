@@ -121,5 +121,12 @@
 		
 		<key>NSUserNotificationUsageDescription</key>
 		<string>We need to send you notifications for important updates and messages.</string>
+		
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
+		
+		
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Microphone access is required for audio during audio conferencing.</string>
 	</dict>
 </plist>

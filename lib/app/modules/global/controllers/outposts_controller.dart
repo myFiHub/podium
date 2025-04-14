@@ -229,24 +229,43 @@ class OutpostsController extends GetxController {
       final success = await HttpApis.podium.leaveOutpost(outpost.uuid);
       if (success) {
         //  update existing outpost in all outposts page controller and set i_am_member to false
-        final outpostIndex = outposts.value.values
-            .toList()
-            .indexWhere((element) => element.uuid == outpost.uuid);
-        if (outpostIndex != -1) {
-          final outpost = outposts.value.values.toList()[outpostIndex];
-          final updatedOutpost = outpost.copyWith.i_am_member(false);
-          outposts.value[outpost.uuid] = updatedOutpost;
-          outposts.refresh();
-          fetchMyOutpostsPage(0);
+        OutpostModel updatedOutpost = outpost.copyWith.i_am_member(false);
+        final numberOfMembers = outpost.members_count ?? 1;
+        updatedOutpost =
+            updatedOutpost.copyWith.members_count(numberOfMembers - 1);
+        updateOutpost_local(updatedOutpost);
+        fetchMyOutpostsPage(0);
 
-          Toast.success(
-            title: "Success",
-            message: "You have left the outpost",
-          );
-        }
+        Toast.success(
+          title: "Success",
+          message: "You have left the outpost",
+        );
       }
     } catch (e) {
       l.e(e);
+    }
+  }
+
+  Future<String?> uploadOutpostImage(
+      OutpostModel outpost, String newImageUrl) async {
+    try {
+      final updated = await HttpApis.podium.updateOutpost(
+        request: UpdateOutpostRequest(
+          image: newImageUrl,
+          uuid: outpost.uuid,
+        ),
+      );
+      if (!updated) {
+        Toast.error(message: 'Failed to update outpost image');
+        return null;
+      }
+      final updatedOutpost = outpost.copyWith.image(newImageUrl);
+      updateOutpost_local(updatedOutpost);
+      return newImageUrl;
+    } catch (e) {
+      l.e("Error updating OutpostsController: $e");
+      Toast.error(message: 'Failed to update outpost image');
+      return null;
     }
   }
 
@@ -473,25 +492,12 @@ class OutpostsController extends GetxController {
           );
           return;
         }
-        // update outposts list in allOutpostsPagingController
-        final outpostIndex = outposts.value.values
-            .toList()
-            .indexWhere((element) => element.uuid == outpost.uuid);
-        if (outpostIndex != -1) {
-          final outpost = outposts.value.values.toList()[outpostIndex];
-          final updatedOutpost = outpost.copyWith.i_am_member(true);
-          outposts.value[updatedOutpost.uuid] = updatedOutpost;
-          outposts.refresh();
 
-          // add to top of my outposts if it doesn't exist
-          if (myOutposts.value.values
-                  .toList()
-                  .any((element) => element.uuid == updatedOutpost.uuid) ==
-              false) {
-            myOutposts.value[updatedOutpost.uuid] = updatedOutpost;
-            myOutposts.refresh();
-          }
-        }
+        OutpostModel updatedOutpost = outpost.copyWith.i_am_member(true);
+        final numberOfMembers = outpost.members_count ?? 0;
+        updatedOutpost =
+            updatedOutpost.copyWith.members_count(numberOfMembers + 1);
+        updateOutpost_local(updatedOutpost);
         _openOutpost(
           outpost: outpost,
           openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,

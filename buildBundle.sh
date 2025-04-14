@@ -19,6 +19,12 @@ echo "ENVIRONMENT_PARAM: $ENVIRONMENT_PARAM"
 # Path to production.env
 ENV_FILE="env/$ENVIRONMENT_PARAM.env"
 
+# throw error if the environment file doesn't exist
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Error: $ENV_FILE file not found"
+    exit 1
+fi
+
 # Update development.env
 if [ -f "$ENV_FILE" ]; then
     # Check if VERSION already exists in the file

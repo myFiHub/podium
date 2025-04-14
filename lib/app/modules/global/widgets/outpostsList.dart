@@ -1,10 +1,10 @@
 import 'package:enhanced_paginated_view/enhanced_paginated_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:glow_container/glow_container.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/outpostImage.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
@@ -50,10 +50,13 @@ class OutpostsList extends GetView<OutpostsController> {
           (listPage == ListPage.my && myOutposts.isEmpty)) {
         return ListView.builder(
           controller: scrollController,
-          itemCount: 5, // Show 5 placeholder items
+          itemCount: 3, // Reduced from 5 to 3
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: false,
+          cacheExtent: 200,
           itemBuilder: (context, index) {
             return Container(
-              height: 180, // Fixed height for outpost cards
+              height: 180,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: ColorName.cardBackground,
@@ -78,15 +81,16 @@ class OutpostsList extends GetView<OutpostsController> {
         listWidget = ListView.builder(
           controller: scrollController,
           itemCount: listToShow.length,
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: false,
+          cacheExtent: 200,
           itemBuilder: (context, index) {
             final outpost = listToShow[index];
-            return RepaintBoundary(
-              child: _SingleOutpost(
-                key: ValueKey(outpost.uuid),
-                controller: controller,
-                amICreator: outpost.creator_user_uuid == myId,
-                outpost: outpost,
-              ),
+            return _SingleOutpost(
+              key: ValueKey(outpost.uuid),
+              controller: controller,
+              amICreator: outpost.creator_user_uuid == myId,
+              outpost: outpost,
             );
           },
         );
@@ -129,16 +133,16 @@ class OutpostsList extends GetView<OutpostsController> {
               physics: physics,
               reverse: reverse,
               shrinkWrap: shrinkWrap,
-              cacheExtent: 1000,
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: false,
+              cacheExtent: 200,
               itemBuilder: (context, index) {
                 final outpost = items[index];
-                return RepaintBoundary(
-                  child: _SingleOutpost(
-                    key: ValueKey(outpost.uuid),
-                    controller: controller,
-                    amICreator: outpost.creator_user_uuid == myId,
-                    outpost: outpost,
-                  ),
+                return _SingleOutpost(
+                  key: ValueKey(outpost.uuid),
+                  controller: controller,
+                  amICreator: outpost.creator_user_uuid == myId,
+                  outpost: outpost,
                 );
               },
             );
@@ -177,47 +181,48 @@ class _SingleOutpost extends StatelessWidget {
       key: Key('outpost_${outpost.uuid}'),
       onVisibilityChanged: (info) {
         if (info.visibleFraction == 0) {
-          // When the outpost is not visible, remove it from view
           controller.removeOutpostFromView(outpost.uuid);
         } else {
-          // When the outpost becomes visible, add it to view
           controller.addOutpostToView(outpost.uuid);
         }
       },
-      child: GestureDetector(
-        key: Key(outpost.uuid + "OutpostCard"),
-        onTap: () async {
-          if (!wsClient.connected) {
-            await HttpApis.podium.connectToWebSocket();
-          }
+      child: Stack(
+        children: [
+          GestureDetector(
+            key: Key(outpost.uuid + "OutpostCard"),
+            behavior: HitTestBehavior.opaque,
+            onTap: () async {
+              if (!wsClient.connected) {
+                await HttpApis.podium.connectToWebSocket();
+              }
 
-          controller.joinOutpostAndOpenOutpostDetailPage(
-            outpostId: outpost.uuid,
-          );
-        },
-        child: Stack(
-          children: [
-            space16,
-            _OutpostCard(
+              controller.joinOutpostAndOpenOutpostDetailPage(
+                outpostId: outpost.uuid,
+              );
+            },
+            child: _OutpostCard(
               outpost: outpost,
               amICreator: amICreator,
               controller: controller,
             ),
-            if (isScheduled)
-              _ScheduledBanner(
+          ),
+          if (isScheduled)
+            _ScheduledBanner(
+              outpost: outpost,
+              key: Key(outpost.uuid + 'scheduledBanner'),
+            ),
+          Positioned(
+            right: 8,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: _OutpostActions(
                 outpost: outpost,
-                key: Key(outpost.uuid + 'scheduledBanner'),
+                controller: controller,
               ),
-            Positioned(
-              child: _NumberOfActiveUsers(
-                outpost: outpost,
-                key: Key(outpost.uuid + 'numberOfActiveUsers'),
-              ),
-              left: -8,
-              top: -6,
-            )
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -236,65 +241,97 @@ class _OutpostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final joiningOutpostId = controller.joiningOutpostId.value;
-        return GlowContainer(
-          glowRadius: 4,
-          gradientColors: const [
-            ColorName.primaryBlue,
-            ColorName.secondaryBlue
-          ],
-          rotationDuration: const Duration(seconds: 1),
-          glowLocation: GlowLocation.outerOnly,
-          containerOptions: ContainerOptions(
-            width: Get.width - 2,
-            borderRadius: 8,
-            margin: const EdgeInsets.only(left: 1, bottom: 8, top: 2),
-            backgroundColor: ColorName.cardBackground,
-            borderSide: const BorderSide(
-              width: 1.0,
-              color: ColorName.cardBackground,
-            ),
-          ),
-          transitionDuration: const Duration(milliseconds: 200),
-          showAnimatedBorder: joiningOutpostId == outpost.uuid,
-          child: Container(
-            decoration: const BoxDecoration(
+    return Obx(() {
+      final joiningOutpostId = controller.joiningOutpostId.value;
+      return GestureDetector(
+        key: Key(outpost.uuid + "OutpostCard"),
+        behavior: HitTestBehavior.opaque,
+        onTap: () async {
+          if (!wsClient.connected) {
+            await HttpApis.podium.connectToWebSocket();
+          }
+          controller.joinOutpostAndOpenOutpostDetailPage(
+            outpostId: outpost.uuid,
+          );
+        },
+        child: Stack(
+          children: [
+            Container(
+              width: Get.width - 2,
+              margin: const EdgeInsets.only(left: 1, bottom: 4, top: 2),
+              decoration: BoxDecoration(
                 color: ColorName.cardBackground,
-                borderRadius: BorderRadius.all(Radius.circular(8))),
-            margin: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
-            padding: const EdgeInsets.all(8),
-            child: Stack(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  width: 1.0,
+                  color: ColorName.cardBackground,
+                ),
+              ),
+              child: Container(
+                decoration: const BoxDecoration(
+                    color: ColorName.cardBackground,
+                    borderRadius: BorderRadius.all(Radius.circular(8))),
+                padding: EdgeInsets.only(
+                  left: 8,
+                  right: 8,
+                  top: 8,
+                  bottom: outpost.tags.isNotEmpty ? 40 : 8,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _OutpostInfo(
                       outpost: outpost,
                       amICreator: amICreator,
                     ),
-                    _OutpostActions(
-                      outpost: outpost,
-                      controller: controller,
-                    ),
                   ],
                 ),
-                if (outpost.has_adult_content)
-                  Positioned(
-                    child: Assets.images.ageRestricted.image(
-                      width: 24,
-                      height: 24,
-                    ),
-                    left: 0,
-                    bottom: outpost.tags.isEmpty ? 0 : 30,
-                  ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
-    );
+            if (outpost.has_adult_content)
+              Positioned(
+                child: Assets.images.ageRestricted.image(
+                  width: 24,
+                  height: 24,
+                ),
+                left: 12,
+                bottom: outpost.tags.isEmpty ? 16 : 48,
+              ),
+            Positioned(
+              left: 1,
+              right: 1,
+              top: 2,
+              bottom: 4,
+              child: IgnorePointer(
+                ignoring: joiningOutpostId != outpost.uuid,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: joiningOutpostId == outpost.uuid ? 1.0 : 0.0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(128),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: LoadingWidget(
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (outpost.tags.isNotEmpty)
+              Positioned(
+                left: 8,
+                right: 8,
+                bottom: 8,
+                child: TagsWrapper(outpost: outpost),
+              ),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -319,7 +356,6 @@ class _OutpostInfo extends StatelessWidget {
         ),
         space10,
         _OutpostDetails(outpost: outpost),
-        if (outpost.tags.isNotEmpty) TagsWrapper(outpost: outpost),
       ],
     );
   }
@@ -336,8 +372,8 @@ class _OutpostName extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: ValueKey('outpost_name_${outpost.uuid}'),
-      constraints: const BoxConstraints(
-        maxWidth: 270,
+      constraints: BoxConstraints(
+        maxWidth: Get.width - 75,
       ),
       child: Text(
         outpost.name,
@@ -364,12 +400,13 @@ class _OutpostCreator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: ValueKey('outpost_creator_${outpost.uuid}'),
-      constraints: const BoxConstraints(
-        maxWidth: 270,
+      constraints: BoxConstraints(
+        maxWidth: Get.width - 75,
       ),
       child: Row(
         children: [
-          RichText(
+          Flexible(
+              child: RichText(
             overflow: TextOverflow.ellipsis,
             text: TextSpan(
               children: [
@@ -385,12 +422,13 @@ class _OutpostCreator extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
+                    overflow: TextOverflow.ellipsis,
                     color: amICreator ? Colors.green[200] : Colors.blue[200],
                   ),
                 ),
               ],
             ),
-          ),
+          )),
           space5,
           Img(
             key: ValueKey('outpost_creator_image_${outpost.uuid}'),
@@ -415,10 +453,17 @@ class _OutpostDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Img(
-          src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
-          alt: outpost.name,
-          ifEmpty: Assets.images.logo.path,
+        GestureDetector(
+          onTap: () async {
+            openOutpostImageDialog(
+              outpost: outpost,
+            );
+          },
+          child: Img(
+            src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
+            alt: outpost.name,
+            ifEmpty: Assets.images.logo.path,
+          ),
         ),
         space10,
         Column(
@@ -459,9 +504,17 @@ class _OutpostDetails extends StatelessWidget {
               text: parseSpeakerType(outpost.speak_type),
             ),
             space5,
-            _OutpostDetailRow(
-              icon: Icons.group,
-              text: "${outpost.members_count ?? 0} Members",
+            Row(
+              children: [
+                _OutpostDetailRow(
+                  icon: Icons.group,
+                  text: "${outpost.members_count ?? 0} Members",
+                ),
+                _NumberOfActiveUsers(
+                  outpost: outpost,
+                  key: Key(outpost.uuid + 'numberOfActiveUsers'),
+                ),
+              ],
             ),
             if (outpost.luma_event_id != null) ...[
               space5,
@@ -510,8 +563,8 @@ class _OutpostDetailRow extends StatelessWidget {
         ),
         space5,
         Container(
-          constraints: const BoxConstraints(
-            maxWidth: 180,
+          constraints: BoxConstraints(
+            maxWidth: Get.width - 170,
           ),
           child: Text(
             " $text",
@@ -539,47 +592,70 @@ class _OutpostActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (canShareOutpostUrl(outpost: outpost))
-          IconButton(
-            onPressed: () {
-              analytics.logEvent(
-                name: "share_group",
-                parameters: {
-                  "outpost_id": outpost.uuid,
-                  "outpost_name": outpost.name,
-                },
-              );
-              Share.share(generateOutpostShareUrl(outpostId: outpost.uuid));
-            },
-            icon: const Icon(
-              Icons.share,
-              color: ColorName.greyText,
+    return Obx(() {
+      final isJoining = controller.joiningOutpostId.value == outpost.uuid;
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (canShareOutpostUrl(outpost: outpost))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: IconButton(
+                onPressed: isJoining
+                    ? null
+                    : () {
+                        analytics.logEvent(
+                          name: "share_group",
+                          parameters: {
+                            "outpost_id": outpost.uuid,
+                            "outpost_name": outpost.name,
+                          },
+                        );
+                        Share.share(
+                            generateOutpostShareUrl(outpostId: outpost.uuid));
+                      },
+                icon: Icon(
+                  Icons.share,
+                  color: isJoining
+                      ? ColorName.greyText.withOpacity(0.5)
+                      : ColorName.greyText,
+                ),
+              ),
             ),
-          ),
-        if (canLeaveOutpost(outpost: outpost))
-          IconButton(
-            onPressed: () {
-              controller.leaveOutpost(outpost: outpost);
-            },
-            icon: const Icon(
-              Icons.exit_to_app,
-              color: Colors.red,
+          if (canLeaveOutpost(outpost: outpost))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: IconButton(
+                onPressed: isJoining
+                    ? null
+                    : () {
+                        controller.leaveOutpost(outpost: outpost);
+                      },
+                icon: Icon(
+                  Icons.exit_to_app,
+                  color: isJoining ? Colors.red.withOpacity(0.5) : Colors.red,
+                ),
+              ),
             ),
-          ),
-        if (canArchiveOutpost(outpost: outpost))
-          IconButton(
-            onPressed: () {
-              controller.toggleArchive(outpost: outpost);
-            },
-            icon: Icon(
-              outpost.is_archived ? Icons.unarchive : Icons.archive,
-              color: outpost.is_archived ? ColorName.greyText : Colors.red,
-            ),
-          )
-      ],
-    );
+          if (canArchiveOutpost(outpost: outpost))
+            IconButton(
+              onPressed: isJoining
+                  ? null
+                  : () {
+                      controller.toggleArchive(outpost: outpost);
+                    },
+              icon: Icon(
+                outpost.is_archived ? Icons.unarchive : Icons.archive,
+                color: isJoining
+                    ? (outpost.is_archived
+                        ? ColorName.greyText.withOpacity(0.5)
+                        : Colors.red.withOpacity(0.5))
+                    : (outpost.is_archived ? ColorName.greyText : Colors.red),
+              ),
+            )
+        ],
+      );
+    });
   }
 }
 
@@ -592,40 +668,50 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final numberOfActiveUsers = outpost.online_users_count ?? 0;
-        final liveNumberOfActiveUsers =
-            controller.mapOfOnlineUsersInOutposts.value[outpost.uuid];
-        return (liveNumberOfActiveUsers ?? 0) == 0 && numberOfActiveUsers == 0
-            ? const SizedBox()
-            : Container(
-                width: 40,
-                height: 40,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Pulsator(
-                        style: const PulseStyle(color: Colors.red),
-                        duration: const Duration(seconds: 2),
-                        count: 5,
-                        repeat: 0,
-                        startFromScratch: false,
-                        autoStart: true,
-                        fit: PulseFit.contain,
-                        child: Text(
-                          "${liveNumberOfActiveUsers ?? numberOfActiveUsers}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        )),
-                  ],
+    return Obx(() {
+      final numberOfActiveUsers = outpost.online_users_count ?? 0;
+      final liveNumberOfActiveUsers =
+          controller.mapOfOnlineUsersInOutposts.value[outpost.uuid];
+
+      if ((liveNumberOfActiveUsers ?? 0) == 0 && numberOfActiveUsers == 0) {
+        return const SizedBox();
+      }
+
+      final count = liveNumberOfActiveUsers ?? numberOfActiveUsers;
+      return Container(
+        width: 25,
+        height: 25,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Pulsator(
+              style: const PulseStyle(color: Colors.red),
+              duration: const Duration(seconds: 2),
+              count: 3, // Reduced from 5 to 3
+              repeat: 0,
+              startFromScratch: false,
+              autoStart: true,
+              fit: PulseFit.contain,
+              child: SizedBox(
+                width: 25,
+                height: 25,
+                child: Center(
+                  child: Text(
+                    "$count",
+                    style: const TextStyle(
+                      height: 0.8,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              );
-      },
-    );
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -716,17 +802,24 @@ class TagsWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      width: Get.width - 100,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: outpost.tags
-              .map((e) => SingleTag(
-                    tagName: e,
-                  ))
-              .toList(),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragStart: (_) {},
+      onHorizontalDragUpdate: (_) {},
+      onHorizontalDragEnd: (_) {},
+      child: Container(
+        height: 24,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: outpost.tags
+                .map((e) => SingleTag(
+                      tagName: e,
+                    ))
+                .toList(),
+          ),
         ),
       ),
     );

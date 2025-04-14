@@ -109,8 +109,6 @@ PODS:
     - Flutter
     - flutter_sound_core (= 9.28.0)
   - flutter_sound_core (9.28.0)
-  - flutter_timezone (0.0.1):
-    - Flutter
   - Giphy (2.2.12):
     - libwebp
   - GoogleAppMeasurement (11.10.0):
@@ -293,7 +291,6 @@ DEPENDENCIES:
   - flutter_fgbg (from `.symlinks/plugins/flutter_fgbg/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
-  - flutter_timezone (from `.symlinks/plugins/flutter_timezone/ios`)
   - Giphy (= 2.2.12)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - jitsi_meet_flutter_sdk (from `.symlinks/plugins/jitsi_meet_flutter_sdk/ios`)
@@ -377,8 +374,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
   flutter_sound:
     :path: ".symlinks/plugins/flutter_sound/ios"
-  flutter_timezone:
-    :path: ".symlinks/plugins/flutter_timezone/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   jitsi_meet_flutter_sdk:
@@ -442,7 +437,6 @@ SPEC CHECKSUMS:
   flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
   flutter_sound: b9236a5875299aaa4cef1690afd2f01d52a3f890
   flutter_sound_core: 427465f72d07ab8c3edbe8ffdde709ddacd3763c
-  flutter_timezone: 7c838e17ffd4645d261e87037e5bebf6d38fe544
   Giphy: 83628960ed04e1c3428ff1b4fb2b027f65e82f50
   GoogleAppMeasurement: 36684bfb3ee034e2b42b4321eb19da3a1b81e65d
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d

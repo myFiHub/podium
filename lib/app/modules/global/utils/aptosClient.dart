@@ -16,6 +16,8 @@ import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
 import 'package:podium/env.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 // import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -279,6 +281,7 @@ class AptosMovement {
   static Future<(bool?, String?)> buyTicketFromTicketSellerOnPodiumPass({
     required String sellerAddress,
     required String sellerName,
+    required String sellerUuid,
     String referrer = '',
     int numberOfTickets = 1,
   }) async {
@@ -319,6 +322,7 @@ class AptosMovement {
         ),
         cancelText: 'Cancel',
         confirmText: 'Confirm',
+        confirmColor: Colors.green,
       );
 
       if (!confirmed) {
@@ -350,6 +354,16 @@ class AptosMovement {
       final res = await client.submitSignedBCSTransaction(signedTransaction);
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
+
+      await HttpApis.podium.buySellPodiumPass(
+        BuySellPodiumPassRequest(
+          count: numberOfTickets,
+          podium_pass_owner_address: sellerAddress,
+          podium_pass_owner_uuid: sellerUuid,
+          trade_type: TradeType.buy,
+          tx_hash: hash,
+        ),
+      );
       return (true, hash);
     } catch (e, stackTrace) {
       l.e(e, stackTrace: stackTrace);
@@ -392,6 +406,7 @@ class AptosMovement {
 
   static Future<(bool?, String?)> sellTicketOnPodiumPass({
     required String sellerAddress,
+    required String sellerUuid,
     required int numberOfTickets,
   }) async {
     try {
@@ -423,6 +438,7 @@ class AptosMovement {
         ),
         cancelText: 'Cancel',
         confirmText: 'Confirm',
+        confirmColor: Colors.red,
       );
       if (!confirmed) {
         return (false, 'Cancelled');
@@ -441,6 +457,15 @@ class AptosMovement {
       final res = await client.submitSignedBCSTransaction(signedTransaction);
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
+      await HttpApis.podium.buySellPodiumPass(
+        BuySellPodiumPassRequest(
+          count: numberOfTickets,
+          podium_pass_owner_address: sellerAddress,
+          podium_pass_owner_uuid: sellerUuid,
+          trade_type: TradeType.sell,
+          tx_hash: hash,
+        ),
+      );
       return (true, hash);
     } catch (e) {
       l.e(e);

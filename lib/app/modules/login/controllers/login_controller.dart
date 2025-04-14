@@ -17,7 +17,6 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
-import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -75,6 +74,9 @@ class LoginController extends GetxController {
       final text = data!.text!.trim();
       textController.text = text;
       referrerId = text;
+      if (temporaryLoginRequest != null) {
+        temporaryLoginRequest!.referrer_user_uuid = referrerId;
+      }
       initializeReferral(text);
     }
   }
@@ -149,21 +151,14 @@ class LoginController extends GetxController {
           await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
         sellerAddress: user.aptos_address!,
         sellerName: user.name!,
+        sellerUuid: user.uuid,
       );
       bought = success;
-      if (bought != null && bought) {
+      if (bought == true) {
         Toast.success(
-          message: 'Pass bought successfully, log in again',
+          message: 'Pass bought successfully',
         );
-        HttpApis.podium.buySellPodiumPass(
-          BuySellPodiumPassRequest(
-            count: 1,
-            podium_pass_owner_address: user.aptos_address!,
-            podium_pass_owner_uuid: user.uuid,
-            trade_type: TradeType.buy,
-            tx_hash: hash!,
-          ),
-        );
+        _continueLogin(hasTicket: true);
       }
     } catch (e) {
       l.e('Error buying Pass: $e');
@@ -186,12 +181,23 @@ class LoginController extends GetxController {
       if (referrerId.isNotEmpty) {
         referrer.value = await HttpApis.podium.getUserData(referrerId);
         storage.write(StorageKeys.referrerId, referrerId);
+
         if (referrer.value?.remaining_referrals_count == 0) {
           referrerIsFul.value = true;
-        }
-        if (referrer.value == null) {
+          Toast.error(message: 'Referrer has reached its limit');
+        } else if (referrer.value == null) {
           referrerNotFound.value = true;
           Toast.error(message: 'Referrer not found');
+        } else {
+          Toast.success(message: 'use ${referrer.value?.name} as referrer');
+
+          if (temporaryLoginRequest != null) {
+            isLoggingIn.value = true;
+            _continueLogin(
+              hasTicket: false,
+              forcedReferrerID: referrerId,
+            );
+          }
         }
       }
     });
@@ -411,6 +417,7 @@ class LoginController extends GetxController {
 
   _continueLogin({
     required bool hasTicket,
+    String? forcedReferrerID,
   }) async {
     final storageReferreId = storage.read<String>(StorageKeys.referrerId);
     final request = LoginRequest(
@@ -419,12 +426,16 @@ class LoginController extends GetxController {
       aptos_address: temporaryLoginRequest!.aptos_address,
       has_ticket: hasTicket,
       login_type_identifier: temporaryLoginRequest!.login_type_identifier,
-      referrer_user_uuid: storageReferreId,
+      referrer_user_uuid: forcedReferrerID ??
+          storageReferreId ??
+          (referrerId.isEmpty ? null : referrerId) ??
+          temporaryLoginRequest?.referrer_user_uuid,
     );
 
     storage.remove(StorageKeys.referrerId);
     l.d('request: ${request.toJson()}');
-    final (userLoginResponse, errorMessage) = await HttpApis.podium.login(
+    final (userLoginResponse, errorMessage, responseCode) =
+        await HttpApis.podium.login(
       request: request,
       additionalData: temporaryAdditionalData!,
     );
@@ -434,20 +445,25 @@ class LoginController extends GetxController {
         Toast.error(
           message: 'All the referral codes of the referrer have been used',
         );
+        removeLogingInState();
       }
       if (errorMessage?.toLowerCase().contains('deactivated') ?? false) {
         Toast.error(
           message: 'Account has been deleted',
         );
+        removeLogingInState();
         return;
       }
-      if (errorMessage == 'user neither reffered nor bought ticket') {
+      if ((errorMessage?.toLowerCase().contains('nor bought ticket') ??
+              false) ||
+          responseCode == 428) {
         _redirectToBuyTicketPage();
       } else {
         Toast.error(
           title: 'Error logging in',
           message: errorMessage,
         );
+        removeLogingInState();
       }
       return;
     }

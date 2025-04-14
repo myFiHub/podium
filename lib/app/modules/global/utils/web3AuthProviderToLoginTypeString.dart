@@ -1,4 +1,3 @@
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:web3auth_flutter/enums.dart';
 

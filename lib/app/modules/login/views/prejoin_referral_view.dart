@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/app/modules/login/widgets/referral_input.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/root.dart';
@@ -65,7 +66,13 @@ class PrejoinReferralView extends GetView<LoginController> {
               space5,
               // const _ExternalWalletConnectButton(),
               const _ReferralStatus(),
-              space10,
+              ReferralInput(
+                afterSubmit: (referrerId) {
+                  controller.isLoggingIn.value = true;
+                  Get.back();
+                },
+              ),
+              space5,
               const _AccessUsingTicket(),
             ],
           ),
@@ -238,7 +245,7 @@ class _ProfileCard extends GetView<LoginController> {
     // final valueToShow = bigIntWeiToDouble(binIntKeyPrice).toString();
     return Container(
       padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: ColorName.cardBackground,
         borderRadius: BorderRadius.circular(12),

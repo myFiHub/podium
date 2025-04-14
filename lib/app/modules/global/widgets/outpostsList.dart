@@ -259,7 +259,8 @@ class _OutpostCard extends StatelessWidget {
                   color: ColorName.cardBackground,
                   borderRadius: BorderRadius.all(Radius.circular(8))),
               padding: const EdgeInsets.all(8),
-              child: Stack(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _OutpostInfo(
                     outpost: outpost,
@@ -556,54 +557,70 @@ class _OutpostActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (canShareOutpostUrl(outpost: outpost))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: IconButton(
-              onPressed: () {
-                analytics.logEvent(
-                  name: "share_group",
-                  parameters: {
-                    "outpost_id": outpost.uuid,
-                    "outpost_name": outpost.name,
-                  },
-                );
-                Share.share(generateOutpostShareUrl(outpostId: outpost.uuid));
-              },
-              icon: const Icon(
-                Icons.share,
-                color: ColorName.greyText,
+    return Obx(() {
+      final isJoining = controller.joiningOutpostId.value == outpost.uuid;
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (canShareOutpostUrl(outpost: outpost))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: IconButton(
+                onPressed: isJoining
+                    ? null
+                    : () {
+                        analytics.logEvent(
+                          name: "share_group",
+                          parameters: {
+                            "outpost_id": outpost.uuid,
+                            "outpost_name": outpost.name,
+                          },
+                        );
+                        Share.share(
+                            generateOutpostShareUrl(outpostId: outpost.uuid));
+                      },
+                icon: Icon(
+                  Icons.share,
+                  color: isJoining
+                      ? ColorName.greyText.withOpacity(0.5)
+                      : ColorName.greyText,
+                ),
               ),
             ),
-          ),
-        if (canLeaveOutpost(outpost: outpost))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: IconButton(
-              onPressed: () {
-                controller.leaveOutpost(outpost: outpost);
-              },
-              icon: const Icon(
-                Icons.exit_to_app,
-                color: Colors.red,
+          if (canLeaveOutpost(outpost: outpost))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: IconButton(
+                onPressed: isJoining
+                    ? null
+                    : () {
+                        controller.leaveOutpost(outpost: outpost);
+                      },
+                icon: Icon(
+                  Icons.exit_to_app,
+                  color: isJoining ? Colors.red.withOpacity(0.5) : Colors.red,
+                ),
               ),
             ),
-          ),
-        if (canArchiveOutpost(outpost: outpost))
-          IconButton(
-            onPressed: () {
-              controller.toggleArchive(outpost: outpost);
-            },
-            icon: Icon(
-              outpost.is_archived ? Icons.unarchive : Icons.archive,
-              color: outpost.is_archived ? ColorName.greyText : Colors.red,
-            ),
-          )
-      ],
-    );
+          if (canArchiveOutpost(outpost: outpost))
+            IconButton(
+              onPressed: isJoining
+                  ? null
+                  : () {
+                      controller.toggleArchive(outpost: outpost);
+                    },
+              icon: Icon(
+                outpost.is_archived ? Icons.unarchive : Icons.archive,
+                color: isJoining
+                    ? (outpost.is_archived
+                        ? ColorName.greyText.withOpacity(0.5)
+                        : Colors.red.withOpacity(0.5))
+                    : (outpost.is_archived ? ColorName.greyText : Colors.red),
+              ),
+            )
+        ],
+      );
+    });
   }
 }
 
@@ -752,15 +769,22 @@ class TagsWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      width: Get.width - 100,
+      height: 24,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Row(
-          children: outpost.tags
-              .map((e) => SingleTag(
-                    tagName: e,
-                  ))
-              .toList(),
+        physics: const BouncingScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: Get.width - 100,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: outpost.tags
+                .map((e) => SingleTag(
+                      tagName: e,
+                    ))
+                .toList(),
+          ),
         ),
       ),
     );

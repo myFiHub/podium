@@ -1,7 +1,6 @@
 import 'package:enhanced_paginated_view/enhanced_paginated_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:glow_container/glow_container.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -37,124 +36,130 @@ class OutpostsList extends GetView<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final allOutposts = controller.outposts.value;
-      final myOutposts = controller.myOutposts.value;
-      final lastPageReachedForAllOutposts =
-          controller.lastPageReachedForAllOutposts.value;
-      final lastPageReachedForMyOutposts =
-          controller.lastPageReachedForMyOutposts.value;
+    return GetBuilder<OutpostsController>(
+        id: 'outposts_list_${listPage.name}',
+        builder: (controller) {
+          final allOutposts = controller.outposts.value;
+          final myOutposts = controller.myOutposts.value;
+          final lastPageReachedForAllOutposts =
+              controller.lastPageReachedForAllOutposts.value;
+          final lastPageReachedForMyOutposts =
+              controller.lastPageReachedForMyOutposts.value;
 
-      // Show loading placeholders if no data is available yet
-      if ((listPage == ListPage.all && allOutposts.isEmpty) ||
-          (listPage == ListPage.my && myOutposts.isEmpty)) {
-        return ListView.builder(
-          controller: scrollController,
-          itemCount: 5, // Show 5 placeholder items
-          itemBuilder: (context, index) {
-            return Container(
-              height: 180, // Fixed height for outpost cards
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: ColorName.cardBackground,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: ColorName.cardBackground,
-                  width: 1.0,
-                ),
-              ),
-              child: const Center(
-                child: LoadingWidget(),
-              ),
-            );
-          },
-        );
-      }
-
-      Widget listWidget;
-      if (outpostsList != null) {
-        List<OutpostModel> listToShow = outpostsList!;
-
-        listWidget = ListView.builder(
-          controller: scrollController,
-          itemCount: listToShow.length,
-          itemBuilder: (context, index) {
-            final outpost = listToShow[index];
-            return RepaintBoundary(
-              child: _SingleOutpost(
-                key: ValueKey(outpost.uuid),
-                controller: controller,
-                amICreator: outpost.creator_user_uuid == myId,
-                outpost: outpost,
-              ),
-            );
-          },
-        );
-      } else {
-        List<OutpostModel> listToShow = listPage == ListPage.all
-            ? allOutposts.values.toList()
-            : myOutposts.values.toList();
-
-        listWidget = EnhancedPaginatedView(
-          hasReachedMax: listPage == ListPage.all
-              ? lastPageReachedForAllOutposts
-              : lastPageReachedForMyOutposts,
-          onLoadMore: (int page) {
-            listPage == ListPage.all
-                ? controller.fetchAllOutpostsPage(page - 1)
-                : controller.fetchMyOutpostsPage(page - 1);
-          },
-          onRefresh: () async {
-            listPage == ListPage.all
-                ? controller.fetchAllOutpostsPage(0)
-                : controller.fetchMyOutpostsPage(0);
-          },
-          refreshBuilder: (context, onRefresh, child) {
-            return RefreshIndicator(
-              color: Colors.white,
-              backgroundColor: ColorName.primaryBlue,
-              onRefresh: onRefresh,
-              child: child,
-            );
-          },
-          itemsPerPage: numberOfOutpostsPerPage,
-          delegate: EnhancedDelegate(
-            listOfData: listToShow,
-            status: EnhancedStatus.loaded,
-          ),
-          builder: (items, physics, reverse, shrinkWrap) {
+          // Show loading placeholders if no data is available yet
+          if ((listPage == ListPage.all && allOutposts.isEmpty) ||
+              (listPage == ListPage.my && myOutposts.isEmpty)) {
             return ListView.builder(
               controller: scrollController,
-              itemCount: items.length,
-              physics: physics,
-              reverse: reverse,
-              shrinkWrap: shrinkWrap,
-              cacheExtent: 1000,
+              itemCount: 3, // Reduced from 5 to 3
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: false,
+              cacheExtent: 200,
               itemBuilder: (context, index) {
-                final outpost = items[index];
-                return RepaintBoundary(
-                  child: _SingleOutpost(
-                    key: ValueKey(outpost.uuid),
-                    controller: controller,
-                    amICreator: outpost.creator_user_uuid == myId,
-                    outpost: outpost,
+                return Container(
+                  height: 180,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: ColorName.cardBackground,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: ColorName.cardBackground,
+                      width: 1.0,
+                    ),
+                  ),
+                  child: const Center(
+                    child: LoadingWidget(),
                   ),
                 );
               },
             );
-          },
-        );
-      }
+          }
 
-      return RawScrollbar(
-        thumbColor: ColorName.secondaryBlue.withAlpha(128),
-        trackColor: ColorName.cardBackground,
-        radius: const Radius.circular(4),
-        thickness: 4,
-        controller: scrollController,
-        child: listWidget,
-      );
-    });
+          Widget listWidget;
+          if (outpostsList != null) {
+            List<OutpostModel> listToShow = outpostsList!;
+
+            listWidget = ListView.builder(
+              controller: scrollController,
+              itemCount: listToShow.length,
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: false,
+              cacheExtent: 200,
+              itemBuilder: (context, index) {
+                final outpost = listToShow[index];
+                return _SingleOutpost(
+                  key: ValueKey(outpost.uuid),
+                  controller: controller,
+                  amICreator: outpost.creator_user_uuid == myId,
+                  outpost: outpost,
+                );
+              },
+            );
+          } else {
+            List<OutpostModel> listToShow = listPage == ListPage.all
+                ? allOutposts.values.toList()
+                : myOutposts.values.toList();
+
+            listWidget = EnhancedPaginatedView(
+              hasReachedMax: listPage == ListPage.all
+                  ? lastPageReachedForAllOutposts
+                  : lastPageReachedForMyOutposts,
+              onLoadMore: (int page) {
+                listPage == ListPage.all
+                    ? controller.fetchAllOutpostsPage(page - 1)
+                    : controller.fetchMyOutpostsPage(page - 1);
+              },
+              onRefresh: () async {
+                listPage == ListPage.all
+                    ? controller.fetchAllOutpostsPage(0)
+                    : controller.fetchMyOutpostsPage(0);
+              },
+              refreshBuilder: (context, onRefresh, child) {
+                return RefreshIndicator(
+                  color: Colors.white,
+                  backgroundColor: ColorName.primaryBlue,
+                  onRefresh: onRefresh,
+                  child: child,
+                );
+              },
+              itemsPerPage: numberOfOutpostsPerPage,
+              delegate: EnhancedDelegate(
+                listOfData: listToShow,
+                status: EnhancedStatus.loaded,
+              ),
+              builder: (items, physics, reverse, shrinkWrap) {
+                return ListView.builder(
+                  controller: scrollController,
+                  itemCount: items.length,
+                  physics: physics,
+                  reverse: reverse,
+                  shrinkWrap: shrinkWrap,
+                  addAutomaticKeepAlives: false,
+                  addRepaintBoundaries: false,
+                  cacheExtent: 200,
+                  itemBuilder: (context, index) {
+                    final outpost = items[index];
+                    return _SingleOutpost(
+                      key: ValueKey(outpost.uuid),
+                      controller: controller,
+                      amICreator: outpost.creator_user_uuid == myId,
+                      outpost: outpost,
+                    );
+                  },
+                );
+              },
+            );
+          }
+
+          return RawScrollbar(
+            thumbColor: ColorName.secondaryBlue.withAlpha(128),
+            trackColor: ColorName.cardBackground,
+            radius: const Radius.circular(4),
+            thickness: 4,
+            controller: scrollController,
+            child: listWidget,
+          );
+        });
   }
 }
 
@@ -177,10 +182,8 @@ class _SingleOutpost extends StatelessWidget {
       key: Key('outpost_${outpost.uuid}'),
       onVisibilityChanged: (info) {
         if (info.visibleFraction == 0) {
-          // When the outpost is not visible, remove it from view
           controller.removeOutpostFromView(outpost.uuid);
         } else {
-          // When the outpost becomes visible, add it to view
           controller.addOutpostToView(outpost.uuid);
         }
       },
@@ -208,14 +211,6 @@ class _SingleOutpost extends StatelessWidget {
                 outpost: outpost,
                 key: Key(outpost.uuid + 'scheduledBanner'),
               ),
-            Positioned(
-              child: _NumberOfActiveUsers(
-                outpost: outpost,
-                key: Key(outpost.uuid + 'numberOfActiveUsers'),
-              ),
-              left: -8,
-              top: -6,
-            )
           ],
         ),
       ),
@@ -236,65 +231,72 @@ class _OutpostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final joiningOutpostId = controller.joiningOutpostId.value;
-        return GlowContainer(
-          glowRadius: 4,
-          gradientColors: const [
-            ColorName.primaryBlue,
-            ColorName.secondaryBlue
-          ],
-          rotationDuration: const Duration(seconds: 1),
-          glowLocation: GlowLocation.outerOnly,
-          containerOptions: ContainerOptions(
+    return Obx(() {
+      final joiningOutpostId = controller.joiningOutpostId.value;
+      return Stack(
+        children: [
+          Container(
             width: Get.width - 2,
-            borderRadius: 8,
-            margin: const EdgeInsets.only(left: 1, bottom: 8, top: 2),
-            backgroundColor: ColorName.cardBackground,
-            borderSide: const BorderSide(
-              width: 1.0,
+            margin: const EdgeInsets.only(left: 1, bottom: 4, top: 2),
+            decoration: BoxDecoration(
               color: ColorName.cardBackground,
-            ),
-          ),
-          transitionDuration: const Duration(milliseconds: 200),
-          showAnimatedBorder: joiningOutpostId == outpost.uuid,
-          child: Container(
-            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                width: 1.0,
                 color: ColorName.cardBackground,
-                borderRadius: BorderRadius.all(Radius.circular(8))),
-            margin: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
-            padding: const EdgeInsets.all(8),
-            child: Stack(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _OutpostInfo(
-                      outpost: outpost,
-                      amICreator: amICreator,
-                    ),
-                    _OutpostActions(
-                      outpost: outpost,
-                      controller: controller,
-                    ),
-                  ],
-                ),
-                if (outpost.has_adult_content)
-                  Positioned(
-                    child: Assets.images.ageRestricted.image(
-                      width: 24,
-                      height: 24,
-                    ),
-                    left: 0,
-                    bottom: outpost.tags.isEmpty ? 0 : 30,
+              ),
+            ),
+            child: Container(
+              decoration: const BoxDecoration(
+                  color: ColorName.cardBackground,
+                  borderRadius: BorderRadius.all(Radius.circular(8))),
+              padding: const EdgeInsets.all(8),
+              child: Stack(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _OutpostInfo(
+                        outpost: outpost,
+                        amICreator: amICreator,
+                      ),
+                      _OutpostActions(
+                        outpost: outpost,
+                        controller: controller,
+                      ),
+                    ],
                   ),
-              ],
+                  if (outpost.has_adult_content)
+                    Positioned(
+                      child: Assets.images.ageRestricted.image(
+                        width: 24,
+                        height: 24,
+                      ),
+                      left: 0,
+                      bottom: outpost.tags.isEmpty ? 0 : 30,
+                    ),
+                ],
+              ),
             ),
           ),
-        );
-      },
-    );
+          if (joiningOutpostId == outpost.uuid)
+            Positioned.fill(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(128),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: LoadingWidget(
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    });
   }
 }
 
@@ -459,9 +461,17 @@ class _OutpostDetails extends StatelessWidget {
               text: parseSpeakerType(outpost.speak_type),
             ),
             space5,
-            _OutpostDetailRow(
-              icon: Icons.group,
-              text: "${outpost.members_count ?? 0} Members",
+            Row(
+              children: [
+                _OutpostDetailRow(
+                  icon: Icons.group,
+                  text: "${outpost.members_count ?? 0} Members",
+                ),
+                _NumberOfActiveUsers(
+                  outpost: outpost,
+                  key: Key(outpost.uuid + 'numberOfActiveUsers'),
+                ),
+              ],
             ),
             if (outpost.luma_event_id != null) ...[
               space5,
@@ -592,40 +602,52 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final numberOfActiveUsers = outpost.online_users_count ?? 0;
-        final liveNumberOfActiveUsers =
-            controller.mapOfOnlineUsersInOutposts.value[outpost.uuid];
-        return (liveNumberOfActiveUsers ?? 0) == 0 && numberOfActiveUsers == 0
-            ? const SizedBox()
-            : Container(
-                width: 40,
-                height: 40,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Pulsator(
-                        style: const PulseStyle(color: Colors.red),
-                        duration: const Duration(seconds: 2),
-                        count: 5,
-                        repeat: 0,
-                        startFromScratch: false,
-                        autoStart: true,
-                        fit: PulseFit.contain,
-                        child: Text(
-                          "${liveNumberOfActiveUsers ?? numberOfActiveUsers}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        )),
-                  ],
+    return GetBuilder<OutpostsController>(
+        id: 'active_users_${outpost.uuid}',
+        builder: (controller) {
+          final numberOfActiveUsers = outpost.online_users_count ?? 0;
+          final liveNumberOfActiveUsers =
+              controller.mapOfOnlineUsersInOutposts.value[outpost.uuid];
+
+          if ((liveNumberOfActiveUsers ?? 0) == 0 && numberOfActiveUsers == 0) {
+            return const SizedBox();
+          }
+
+          final count = liveNumberOfActiveUsers ?? numberOfActiveUsers;
+          return Container(
+            width: 25,
+            height: 25,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Pulsator(
+                  style: const PulseStyle(color: Colors.red),
+                  duration: const Duration(seconds: 2),
+                  count: 3, // Reduced from 5 to 3
+                  repeat: 0,
+                  startFromScratch: false,
+                  autoStart: true,
+                  fit: PulseFit.contain,
+                  child: SizedBox(
+                    width: 25,
+                    height: 25,
+                    child: Center(
+                      child: Text(
+                        "$count",
+                        style: const TextStyle(
+                          height: 0.8,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              );
-      },
-    );
+              ],
+            ),
+          );
+        });
   }
 }
 

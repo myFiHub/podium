@@ -283,19 +283,19 @@ class _OutpostCard extends StatelessWidget {
                       outpost: outpost,
                       amICreator: amICreator,
                     ),
-                    if (outpost.has_adult_content)
-                      Positioned(
-                        child: Assets.images.ageRestricted.image(
-                          width: 24,
-                          height: 24,
-                        ),
-                        left: 0,
-                        bottom: outpost.tags.isEmpty ? 0 : 30,
-                      ),
                   ],
                 ),
               ),
             ),
+            if (outpost.has_adult_content)
+              Positioned(
+                child: Assets.images.ageRestricted.image(
+                  width: 24,
+                  height: 24,
+                ),
+                left: 12,
+                bottom: outpost.tags.isEmpty ? 16 : 48,
+              ),
             Positioned(
               left: 1,
               right: 1,

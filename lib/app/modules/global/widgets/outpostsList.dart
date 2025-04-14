@@ -343,8 +343,8 @@ class _OutpostName extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: ValueKey('outpost_name_${outpost.uuid}'),
-      constraints: const BoxConstraints(
-        maxWidth: 270,
+      constraints: BoxConstraints(
+        maxWidth: Get.width - 75,
       ),
       child: Text(
         outpost.name,
@@ -371,12 +371,13 @@ class _OutpostCreator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: ValueKey('outpost_creator_${outpost.uuid}'),
-      constraints: const BoxConstraints(
-        maxWidth: 270,
+      constraints: BoxConstraints(
+        maxWidth: Get.width - 75,
       ),
       child: Row(
         children: [
-          RichText(
+          Flexible(
+              child: RichText(
             overflow: TextOverflow.ellipsis,
             text: TextSpan(
               children: [
@@ -392,12 +393,13 @@ class _OutpostCreator extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
+                    overflow: TextOverflow.ellipsis,
                     color: amICreator ? Colors.green[200] : Colors.blue[200],
                   ),
                 ),
               ],
             ),
-          ),
+          )),
           space5,
           Img(
             key: ValueKey('outpost_creator_image_${outpost.uuid}'),
@@ -525,8 +527,8 @@ class _OutpostDetailRow extends StatelessWidget {
         ),
         space5,
         Container(
-          constraints: const BoxConstraints(
-            maxWidth: 180,
+          constraints: BoxConstraints(
+            maxWidth: Get.width - 170,
           ),
           child: Text(
             " $text",

@@ -189,6 +189,7 @@ class _SingleOutpost extends StatelessWidget {
         children: [
           GestureDetector(
             key: Key(outpost.uuid + "OutpostCard"),
+            behavior: HitTestBehavior.opaque,
             onTap: () async {
               if (!wsClient.connected) {
                 await HttpApis.podium.connectToWebSocket();
@@ -241,66 +242,90 @@ class _OutpostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final joiningOutpostId = controller.joiningOutpostId.value;
-      return Stack(
-        children: [
-          Container(
-            width: Get.width - 2,
-            margin: const EdgeInsets.only(left: 1, bottom: 4, top: 2),
-            decoration: BoxDecoration(
-              color: ColorName.cardBackground,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                width: 1.0,
+      return GestureDetector(
+        key: Key(outpost.uuid + "OutpostCard"),
+        behavior: HitTestBehavior.opaque,
+        onTap: () async {
+          if (!wsClient.connected) {
+            await HttpApis.podium.connectToWebSocket();
+          }
+          controller.joinOutpostAndOpenOutpostDetailPage(
+            outpostId: outpost.uuid,
+          );
+        },
+        child: Stack(
+          children: [
+            Container(
+              width: Get.width - 2,
+              margin: const EdgeInsets.only(left: 1, bottom: 4, top: 2),
+              decoration: BoxDecoration(
                 color: ColorName.cardBackground,
-              ),
-            ),
-            child: Container(
-              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  width: 1.0,
                   color: ColorName.cardBackground,
-                  borderRadius: BorderRadius.all(Radius.circular(8))),
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _OutpostInfo(
-                    outpost: outpost,
-                    amICreator: amICreator,
-                  ),
-                  if (outpost.has_adult_content)
-                    Positioned(
-                      child: Assets.images.ageRestricted.image(
-                        width: 24,
-                        height: 24,
-                      ),
-                      left: 0,
-                      bottom: outpost.tags.isEmpty ? 0 : 30,
-                    ),
-                ],
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            left: 1,
-            right: 1,
-            top: 2,
-            bottom: 4,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: joiningOutpostId == outpost.uuid ? 1.0 : 0.0,
               child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(128),
-                  borderRadius: BorderRadius.circular(8),
+                decoration: const BoxDecoration(
+                    color: ColorName.cardBackground,
+                    borderRadius: BorderRadius.all(Radius.circular(8))),
+                padding: EdgeInsets.only(
+                  left: 8,
+                  right: 8,
+                  top: 8,
+                  bottom: outpost.tags.isNotEmpty ? 40 : 8,
                 ),
-                child: const Center(
-                  child: LoadingWidget(
-                    size: 24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _OutpostInfo(
+                      outpost: outpost,
+                      amICreator: amICreator,
+                    ),
+                    if (outpost.has_adult_content)
+                      Positioned(
+                        child: Assets.images.ageRestricted.image(
+                          width: 24,
+                          height: 24,
+                        ),
+                        left: 0,
+                        bottom: outpost.tags.isEmpty ? 0 : 30,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 1,
+              right: 1,
+              top: 2,
+              bottom: 4,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: joiningOutpostId == outpost.uuid ? 1.0 : 0.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha(128),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: LoadingWidget(
+                      size: 24,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+            if (outpost.tags.isNotEmpty)
+              Positioned(
+                left: 8,
+                right: 8,
+                bottom: 8,
+                child: TagsWrapper(outpost: outpost),
+              ),
+          ],
+        ),
       );
     });
   }
@@ -327,7 +352,6 @@ class _OutpostInfo extends StatelessWidget {
         ),
         space10,
         _OutpostDetails(outpost: outpost),
-        if (outpost.tags.isNotEmpty) TagsWrapper(outpost: outpost),
       ],
     );
   }
@@ -767,16 +791,16 @@ class TagsWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      height: 24,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: Get.width - 100,
-          ),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragStart: (_) {},
+      onHorizontalDragUpdate: (_) {},
+      onHorizontalDragEnd: (_) {},
+      child: Container(
+        height: 24,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: outpost.tags

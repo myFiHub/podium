@@ -558,20 +558,11 @@ class CheckticketController extends GetxController {
         await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
       sellerAddress: ticketSeller.userInfo.aptos_address!,
       sellerName: ticketSeller.userInfo.name!,
+      sellerUuid: ticketSeller.userInfo.uuid,
       referrer: referrer,
     );
     bought = success;
-    if (success == true) {
-      await HttpApis.podium.buySellPodiumPass(
-        BuySellPodiumPassRequest(
-          count: 1,
-          podium_pass_owner_address: ticketSeller.userInfo.aptos_address!,
-          podium_pass_owner_uuid: ticketSeller.userInfo.uuid,
-          trade_type: TradeType.buy,
-          tx_hash: hash!,
-        ),
-      );
-    }
+
     if (bought == null) {
       return false;
     }

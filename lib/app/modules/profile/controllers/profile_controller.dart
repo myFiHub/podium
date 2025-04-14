@@ -11,7 +11,6 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
-import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -360,6 +359,7 @@ class ProfileController extends GetxController {
     try {
       final (sold, hash) = await AptosMovement.sellTicketOnPodiumPass(
         sellerAddress: userInfo.value!.aptos_address!,
+        sellerUuid: userInfo.value!.uuid,
         numberOfTickets: 1,
       );
       if (sold == null) {
@@ -368,18 +368,9 @@ class ProfileController extends GetxController {
       if (sold == true) {
         Toast.success(title: 'Success', message: 'Podium pass sold');
         mySharesOfPodiumPassFromThisUser.value--;
-        final request = BuySellPodiumPassRequest(
-          count: 1,
-          podium_pass_owner_address: userInfo.value!.aptos_address!,
-          podium_pass_owner_uuid: userInfo.value!.uuid,
-          trade_type: TradeType.sell,
-          tx_hash: hash!,
-        );
-        final success = await HttpApis.podium.buySellPodiumPass(request);
+
         getPassBuyers();
-        if (!success) {
-          l.e('error saving on db');
-        }
+
         getPodiumPassPriceAndMyShares(delay: 5);
       }
     } catch (e) {
@@ -413,6 +404,7 @@ class ProfileController extends GetxController {
         sellerName: userInfo.value!.name ?? '',
         referrer: referrer,
         numberOfTickets: 1,
+        sellerUuid: userInfo.value!.uuid,
       );
       if (success == null) {
         return;
@@ -420,18 +412,7 @@ class ProfileController extends GetxController {
       if (success == true) {
         Toast.success(title: 'Success', message: 'Podium pass bought');
         mySharesOfPodiumPassFromThisUser.value++;
-        final request = BuySellPodiumPassRequest(
-          count: 1,
-          podium_pass_owner_address: userInfo.value!.aptos_address!,
-          podium_pass_owner_uuid: userInfo.value!.uuid,
-          trade_type: TradeType.buy,
-          tx_hash: hash!,
-        );
-        final success = await HttpApis.podium.buySellPodiumPass(request);
         getPassBuyers();
-        if (!success) {
-          l.e('error saving on db');
-        }
         getPodiumPassPriceAndMyShares(delay: 5);
       } else {
         Toast.error(title: 'Error', message: 'Error buying podium pass');

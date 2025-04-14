@@ -152,20 +152,12 @@ class LoginController extends GetxController {
           await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
         sellerAddress: user.aptos_address!,
         sellerName: user.name!,
+        sellerUuid: user.uuid,
       );
       bought = success;
       if (bought == true) {
         Toast.success(
           message: 'Pass bought successfully',
-        );
-        await HttpApis.podium.buySellPodiumPass(
-          BuySellPodiumPassRequest(
-            count: 1,
-            podium_pass_owner_address: user.aptos_address!,
-            podium_pass_owner_uuid: user.uuid,
-            trade_type: TradeType.buy,
-            tx_hash: hash!,
-          ),
         );
         _continueLogin(hasTicket: true);
       }

@@ -8,10 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:podium/app/modules/global/controllers/oneSignal_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
+import 'package:podium/app/modules/global/services/oneSignal.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
@@ -62,8 +62,8 @@ class GlobalUpdateIds {
 
 class GlobalController extends GetxController {
   static final storage = GetStorage();
-  final oneSignalController =
-      Get.put<OneSignalController>(OneSignalController());
+  final oneSignalService =
+      Get.put<OneSignalService>(OneSignalService(), permanent: true);
 
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
@@ -506,8 +506,6 @@ class GlobalController extends GetxController {
         },
       );
     } else {
-      oneSignalController.login(myUserInfo.value?.uuid ?? '');
-
       await Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
@@ -516,9 +514,18 @@ class GlobalController extends GetxController {
       if (deepLinkRoute.value.isNotEmpty) {
         final route = deepLinkRoute;
         openDeepLinkOutpost(route.value);
-        return;
       }
       isAutoLoggingIn.value = false;
+
+      try {
+        await oneSignalService.initialize();
+        final initialized = oneSignalService.initialized;
+        if (initialized) {
+          await oneSignalService.login(myUserInfo.value?.uuid ?? '');
+        }
+      } catch (e) {
+        l.e("error initializing oneSignal $e");
+      }
     }
   }
 
@@ -542,7 +549,7 @@ class GlobalController extends GetxController {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
     web3AuthAddress = '';
-    oneSignalController.dismiss();
+    oneSignalService.dismiss();
     try {
       await Web3AuthFlutter.logout();
     } catch (e) {

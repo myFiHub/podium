@@ -177,15 +177,15 @@ internal_cheerOrBoo({
 ///  @param referrer: Optional parameter.
 /// Represents the address of the referrer (if any).
 /// If someone referred you to Stars Arena, you can pass their address here.
-/// If there’s no referrer, you can leave this parameter empty or set it to the zero address (0x0000000000000000000000000000000000000000).
+/// If there's no referrer, you can leave this parameter empty or set it to the zero address (0x0000000000000000000000000000000000000000).
 ///
 /// @param sharesSubject: Represents the address of the entity (user or contract) for whom you want to buy shares.
 /// In the context of Stars Arena, this would typically be the address of the user who intends to purchase shares.
-/// You’ll pass the Ethereum address (in hexadecimal format) as an argument when invoking this function.
+/// You'll pass the Ethereum address (in hexadecimal format) as an argument when invoking this function.
 ///
 /// @param amount: Specifies the number of shares you want to purchase.
-/// It’s an unsigned integer (non-negative whole number).
-/// You’ll provide the desired share quantity as an argument.
+/// It's an unsigned integer (non-negative whole number).
+/// You'll provide the desired share quantity as an argument.
 ///
 
 Future<BigInt?> ext_getBuyPrice({

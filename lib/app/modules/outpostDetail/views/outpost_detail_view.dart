@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:marquee/marquee.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/outpostImage.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
@@ -174,6 +176,7 @@ class GroupDetailView extends GetView<OutpostDetailController> {
               final lumaEventId = outpost.luma_event_id;
               final hasLumaEvent =
                   lumaEventId != null && lumaEventId.isNotEmpty;
+              final isScheduled = outpost.scheduled_for > 0;
               return Expanded(
                 child: Stack(
                   children: [
@@ -189,18 +192,20 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Row(
+                                Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      "Joining:",
-                                      textAlign: TextAlign.left,
-                                      style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        overflow: TextOverflow.visible,
-                                      ),
-                                    ),
+                                    isScheduled && iAmOwner
+                                        ? const ScheduledTimer()
+                                        : const Text(
+                                            "Joining:",
+                                            textAlign: TextAlign.left,
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              overflow: TextOverflow.visible,
+                                            ),
+                                          ),
                                   ],
                                 ),
                                 space5,
@@ -278,7 +283,7 @@ class GroupDetailView extends GetView<OutpostDetailController> {
                               ),
                             Container(
                               width: (Get.width / 2) - 20,
-                              child: const JoinTheRoomButton(),
+                              child: const JoinTheOutpostButton(),
                             ),
                           ],
                         ),
@@ -306,6 +311,94 @@ class GroupDetailView extends GetView<OutpostDetailController> {
         ),
       ),
     );
+  }
+}
+
+class ScheduledTimer extends GetView<OutpostDetailController> {
+  const ScheduledTimer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final scheduledTime = controller.outpost.value?.scheduled_for;
+      final openRescheduleOutpostDialog =
+          controller.openRescheduleOutpostDialog;
+      final isCreatorJoined = controller.outpost.value?.creator_joined ?? false;
+      if (scheduledTime == null) {
+        return const SizedBox();
+      }
+      return GetBuilder<GlobalController>(
+        init: GlobalController(),
+        id: GlobalUpdateIds.ticker,
+        builder: (controller) {
+          final hasTimePassed =
+              scheduledTime < DateTime.now().millisecondsSinceEpoch;
+          if (hasTimePassed) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(38),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.white.withAlpha(64),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                isCreatorJoined ? "Ready when you are! 😊" : "Join us! 👋",
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            );
+          }
+          final time = remainintTimeUntilMilSecondsFormated(
+            time: scheduledTime,
+          ).replaceAll('d,', 'day, ');
+          return GestureDetector(
+            onTap: openRescheduleOutpostDialog,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(38),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.white.withAlpha(64),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                      space8,
+                      Text(
+                        time,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    });
   }
 }
 
@@ -464,8 +557,8 @@ class SetReminderButton extends GetView<OutpostDetailController> {
   }
 }
 
-class JoinTheRoomButton extends GetView<OutpostDetailController> {
-  const JoinTheRoomButton({
+class JoinTheOutpostButton extends GetView<OutpostDetailController> {
+  const JoinTheOutpostButton({
     super.key,
   });
 

@@ -11,6 +11,7 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
+import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/meeting.dart';
 import 'package:podium/models/jitsi_member.dart';
@@ -262,6 +263,62 @@ class OutpostCallController extends GetxController {
     }
   }
 
+  Future<bool> _verifyOutpostSchedule(OutpostModel outpostToJoin) async {
+    final iAmCreator = outpostToJoin.creator_user_uuid == myId;
+    final isScheduled = outpostToJoin.scheduled_for > 0;
+    if (!iAmCreator && isScheduled) {
+      try {
+        final remoteOutpostData = await HttpApis.podium.getOutpost(
+          outpostToJoin.uuid,
+        );
+
+        if (remoteOutpostData == null) {
+          Toast.error(
+            title: 'Outpost Not Found',
+            message: 'This outpost is no longer available',
+          );
+          return false;
+        }
+        outpost.value = remoteOutpostData;
+        final outpostController = Get.find<OutpostsController>();
+        outpostController.updateOutpost_local(remoteOutpostData);
+
+        if (remoteOutpostData.is_archived) {
+          Toast.error(
+            title: 'Outpost Archived',
+            message: 'This outpost is no longer available',
+          );
+          return false;
+        }
+
+        final isPassed = remoteOutpostData.scheduled_for <
+            DateTime.now().millisecondsSinceEpoch;
+
+        if (!isPassed) {
+          final timeUntilStart = remainintTimeUntilMilSecondsFormated(
+            time: remoteOutpostData.scheduled_for,
+          );
+
+          Toast.warning(
+            title: 'Outpost Rescheduled',
+            message: 'This outpost will start in $timeUntilStart',
+          );
+          return false;
+        }
+
+        return true;
+      } catch (e) {
+        l.e('Error checking outpost schedule: $e');
+        Toast.error(
+          title: 'Connection Error',
+          message: 'Unable to verify outpost schedule',
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
   Future<void> startCall(
       {required OutpostModel outpostToJoin,
       GroupAccesses? accessOverRides}) async {
@@ -309,16 +366,16 @@ class OutpostCallController extends GetxController {
       allowedToSpeak: iAmAllowedToSpeak,
     );
     try {
+      // For non-creators, verify outpost availability and schedule
+      final canProceed = await _verifyOutpostSchedule(outpostToJoin);
+      if (!canProceed) return;
+
       await jitsiMeet.join(
         options,
         jitsiListeners(
           outpost: outpostToJoin,
         ),
       );
-      // sendOutpostEvent(
-      //   outpostId: outpost.value!.uuid,
-      //   eventType: OutgoingMessageTypeEnums.join,
-      // );
 
       analytics.logEvent(
         name: 'joined_group_call',

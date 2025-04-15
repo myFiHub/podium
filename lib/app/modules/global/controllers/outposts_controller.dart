@@ -581,6 +581,12 @@ class OutpostsController extends GetxController {
       final searchController = Get.find<SearchPageController>();
       searchController.updateOutpost_local(outpost);
     }
+    final isOutpostDetailRegistered =
+        Get.isRegistered<OutpostDetailController>();
+    if (isOutpostDetailRegistered) {
+      final outpostDetailController = Get.find<OutpostDetailController>();
+      outpostDetailController.outpost.value = outpost;
+    }
   }
 
   Future<GroupAccesses?> _checkLumaAccess(

@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/controllers/outpost_call_controller.da
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -19,6 +20,7 @@ import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
@@ -155,12 +157,83 @@ class OutpostDetailController extends GetxController {
     super.onClose();
   }
 
-  // Remove pickImage method
-  /*
-  pickImage() async {
-    // ... existing implementation ...
+  openRescheduleOutpostDialog() async {
+    final sure = await showConfirmPopup(
+      cancelText: 'Cancel',
+      confirmText: 'Confirm',
+      confirmColor: Colors.red,
+      cancelColor: Colors.white,
+      title: 'Reschedule The Outpost',
+      richMessage: RichText(
+        text: TextSpan(
+          children: [
+            const TextSpan(
+              text: 'Are you sure you want to reschedule the outpost?\n\n',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                height: 1.5,
+              ),
+            ),
+            TextSpan(
+              text: '⚠️ Important: ',
+              style: TextStyle(
+                color: Colors.orange[300],
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                height: 1.5,
+              ),
+            ),
+            const TextSpan(
+              text: 'The outpost will be rescheduled to the new time.\n\n',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            TextSpan(
+              text: 'All existing members will be notified of this change.',
+              style: TextStyle(
+                color: Colors.blue[200],
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (sure) {
+      DateTime? dateTime = await showOmniDateTimePicker(
+        context: Get.context!,
+        is24HourMode: true,
+        theme: ThemeData.dark(),
+        type: OmniDateTimePickerType.dateAndTime,
+        firstDate: DateTime.now().add(const Duration(minutes: 5)),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+        minutesInterval: 5,
+      );
+      if (dateTime != null) {
+        final newTime = dateTime.millisecondsSinceEpoch;
+        final res = await HttpApis.podium.updateOutpost(
+          request: UpdateOutpostRequest(
+            uuid: outpost.value!.uuid,
+            scheduled_for: newTime,
+          ),
+        );
+        if (res) {
+          outpost.value = outpost.value!.copyWith.scheduled_for(newTime);
+          final outpostsController = Get.find<OutpostsController>();
+          outpostsController.updateOutpost_local(outpost.value!);
+          Toast.success(message: 'Outpost rescheduled');
+        }
+      }
+    }
   }
-  */
 
   // Add updateOutpostImage method
   Future<void> updateOutpostImage(String downloadUrl) async {

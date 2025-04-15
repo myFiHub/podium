@@ -21,7 +21,6 @@ import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:pulsator/pulsator.dart';
@@ -289,7 +288,6 @@ class _Reactions extends GetView<OutpostCallController> {
     return Obx(() {
       final reactions = controller.reactionsMap.value[address];
       if (reactions == null) return const SizedBox();
-      l.d(reactions);
       return Container(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,

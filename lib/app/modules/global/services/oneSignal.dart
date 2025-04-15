@@ -2,11 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:podium/env.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 class OneSignalService extends GetxService {
   static String _oneSignalAppId = Env.oneSignalApiKey;
   bool _isInitialized = false;
+  bool get initialized => _isInitialized;
+  bool _isLoggedIn = false;
+  bool get loggedIn => _isLoggedIn;
 
   @override
   void onInit() {
@@ -65,6 +69,9 @@ class OneSignalService extends GetxService {
       }
 
       await OneSignal.login(userId);
+      _isLoggedIn = true;
+      l.d('onesignal: Logged in with user ID: $userId');
+
       return true;
     } catch (e) {
       l.e('Error logging in user: $e');
@@ -95,12 +102,14 @@ class OneSignalService extends GetxService {
           await OneSignal.Notifications.requestPermission(true);
       if (!hasPermission) {
         l.e('onesignal: Notification permission denied');
+        Toast.error(
+          title: 'Notifications Disabled',
+          message:
+              'You will miss important updates. You can enable notifications in your device settings.',
+        );
         return;
       }
       l.d('onesignal: Notification permission granted');
-
-      // Wait for permission to be fully processed
-      await Future.delayed(const Duration(seconds: 1));
 
       // Setup Live Activities
       OneSignal.LiveActivities.setupDefault();
@@ -183,12 +192,22 @@ class OneSignalService extends GetxService {
 
   Future<void> dismiss() async {
     try {
+      // Clear all notifications
       await OneSignal.Notifications.clearAll();
+
+      // Pause in-app messages
       await OneSignal.InAppMessages.paused(true);
+
+      // Logout user to clear any user data
       await OneSignal.logout();
+
+      // Clear any stored tags
       await OneSignal.User.removeTags(['*']);
+
+      _isInitialized = false;
+      l.d('onesignal: Dismissed successfully');
     } catch (e) {
-      l.e('Error dismissing OneSignal: $e');
+      l.e('onesignal: Error dismissing OneSignal: $e');
       rethrow;
     }
   }

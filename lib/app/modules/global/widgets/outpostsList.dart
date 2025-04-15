@@ -674,13 +674,15 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
           controller.mapOfOnlineUsersInOutposts.value[outpost.uuid];
 
       if ((liveNumberOfActiveUsers ?? 0) == 0 && numberOfActiveUsers == 0) {
-        return const SizedBox();
+        return const SizedBox(
+          height: 20,
+        );
       }
 
       final count = liveNumberOfActiveUsers ?? numberOfActiveUsers;
       return Container(
-        width: 25,
-        height: 25,
+        width: 20,
+        height: 20,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -693,8 +695,8 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
               autoStart: true,
               fit: PulseFit.contain,
               child: SizedBox(
-                width: 25,
-                height: 25,
+                width: 20,
+                height: 20,
                 child: Center(
                   child: Text(
                     "$count",

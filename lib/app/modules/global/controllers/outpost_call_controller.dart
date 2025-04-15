@@ -195,9 +195,14 @@ class OutpostCallController extends GetxController {
     talkingMembers.forEach((member) {
       final userIndex = members.value.indexWhere((m) => m.uuid == member.uuid);
       if (member.remaining_time > 0) {
-        members.value[userIndex].remaining_time--;
-        members.refresh();
+        if (outpost.value != null) {
+          if (outpost.value!.creator_user_uuid != member.uuid) {
+            members.value[userIndex].remaining_time--;
+            members.refresh();
+          }
+        }
       }
+      // REVIEW: the rest is handled in ongoing_outpost_call_controller.dart , listening to members list
     });
   }
 
@@ -234,6 +239,7 @@ class OutpostCallController extends GetxController {
     if (memberIndex != -1) {
       membersList[memberIndex].remaining_time = newTime;
       members.value = membersList;
+      members.refresh();
     }
   }
 

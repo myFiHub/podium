@@ -43,8 +43,10 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       outpostCallController.haveOngoingCall.value = true;
 
       // await Future.delayed(const Duration(seconds: 3));
-      // sendOutpostEvent(
-      //     outpostId: outpost.uuid, eventType: OutgoingMessageTypeEnums.join);
+      sendOutpostEvent(
+        outpostId: outpost.uuid,
+        eventType: OutgoingMessageTypeEnums.join,
+      );
 
       l.d("conferenceJoined: url: $url");
     },

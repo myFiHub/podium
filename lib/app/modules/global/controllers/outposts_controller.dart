@@ -725,29 +725,114 @@ class OutpostsController extends GetxController {
     final result = await Get.dialog(
       AlertDialog(
         backgroundColor: ColorName.cardBackground,
-        title: const Text("Are you over 18?"),
-        content: const Text(
-          "This group is for adults only, are you over 18?",
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
+              size: 28,
+            ),
+            SizedBox(width: 8),
+            Text(
+              "Age Verification Required",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Adult Content Warning",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: Colors.blue,
+                  size: 16,
+                ),
+                SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    "You must be 18+ to access this content",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withAlpha(26),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.orange.withAlpha(77),
+                ),
+              ),
+              child: const Text(
+                "By proceeding, you confirm that you are at least 18 years of age.",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.orange,
+                ),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(Get.overlayContext!).pop(false);
             },
-            child: const Text("No"),
+            child: const Text(
+              "No, I'm under 18",
+              style: TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               globalController.setIsMyUserOver18(true);
               HttpApis.podium.updateMyUserData({'is_over_18': true});
               Navigator.of(Get.overlayContext!).pop(true);
             },
-            child: const Text("Yes"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              "Yes, I'm 18 or older",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
     );
-    return result;
+    return result ?? false;
   }
 }
 
@@ -811,34 +896,87 @@ _showModalToLeaveGroup({required OutpostModel outpost}) async {
   final result = await Get.dialog(
     AlertDialog(
       backgroundColor: ColorName.cardBackground,
-      title: const Text("Leave The Outpost"),
-      content: RichText(
-        text: const TextSpan(
-          text: "Are you sure you want to",
-          children: [
-            const TextSpan(
-              text: " leave",
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: const Row(
+        children: [
+          Icon(
+            Icons.exit_to_app_rounded,
+            color: Colors.red,
+            size: 28,
+          ),
+          SizedBox(width: 8),
+          Text(
+            "Leave Outpost",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Are you sure you want to leave this outpost?",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red.withAlpha(26),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.red.withAlpha(77),
+              ),
+            ),
+            child: const Text(
+              "You can rejoin later if you have the required access.",
               style: TextStyle(
-                fontWeight: FontWeight.bold,
+                fontSize: 14,
                 color: Colors.red,
               ),
             ),
-            const TextSpan(text: " this Outpost?"),
-          ],
-        ),
+          ),
+        ],
       ),
       actions: [
         TextButton(
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(false);
           },
-          child: const Text("No"),
+          child: const Text(
+            "Cancel",
+            style: TextStyle(
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
-        TextButton(
+        ElevatedButton(
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(true);
           },
-          child: const Text("Yes"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            "Leave Outpost",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ],
     ),

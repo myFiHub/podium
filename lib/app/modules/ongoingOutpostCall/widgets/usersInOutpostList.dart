@@ -180,8 +180,8 @@ class _SingleUserCard extends StatelessWidget {
                         children: [
                           Container(
                             key: ValueKey('name_$id'),
-                            constraints: const BoxConstraints(
-                              maxWidth: 180,
+                            constraints: BoxConstraints(
+                              maxWidth: Get.width - 180,
                             ),
                             child: Text(
                               isItME ? "You" : name,
@@ -278,7 +278,7 @@ class _SingleUserCard extends StatelessWidget {
   }
 }
 
-// FIXME: this is not showing up
+// FIXME: this is not showing up at start, if there already are reactions
 class _Reactions extends GetView<OutpostCallController> {
   final String address;
   const _Reactions({super.key, required this.address});

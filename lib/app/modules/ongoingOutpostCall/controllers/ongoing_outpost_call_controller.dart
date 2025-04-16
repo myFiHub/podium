@@ -105,7 +105,8 @@ class OngoingOutpostCallController extends GetxController {
       if (my_user.length == 0) return;
       mySession.value = (my_user[0]);
       mySession.refresh();
-      if (mySession.value!.remaining_time <= 0) {
+      if (mySession.value!.remaining_time <= 0 &&
+          outpostCallController.outpost.value!.creator_user_uuid != myId) {
         jitsiMeet.setAudioMuted(true);
       }
     });
@@ -167,6 +168,7 @@ class OngoingOutpostCallController extends GetxController {
 
   updateUserRemainingTime(
       {required String address, required int newTimeInSeconds}) {
+    l.d('updateUserRemainingTime: $address, $newTimeInSeconds');
     outpostCallController.updateUserTime(
       address: address,
       newTime: newTimeInSeconds,

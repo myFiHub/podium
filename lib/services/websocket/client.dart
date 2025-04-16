@@ -280,9 +280,10 @@ class WebSocketService {
           return;
         }
         _handleUserReaction(
-            incomingMessage,
-            Get.find<OngoingOutpostCallController>(),
-            Get.find<OutpostCallController>());
+          incomingMessage,
+          Get.find<OngoingOutpostCallController>(),
+          Get.find<OutpostCallController>(),
+        );
         break;
 
       case IncomingMessageType.timeIsUp:
@@ -538,16 +539,17 @@ class WebSocketService {
   }
 
   /// Asynchronously joins an outpost and returns a future that completes when the join is confirmed
-  // NOTE: this is for testing purposes, to join the outpost when the user is in the outpost call screen
   // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
-  Future<bool> asyncJoinOutpost(String outpostId) async {
+  Future<bool> asyncJoinOutpost(String outpostId, {bool? force = false}) async {
     final isRegistered = Get.isRegistered<OngoingOutpostCallController>();
     if (isRegistered) {
       final currentOutpost = Get.find<OngoingOutpostCallController>()
           .outpostCallController
           .outpost
           .value;
-      if (currentOutpost != null && currentOutpost.uuid == outpostId) {
+      if (currentOutpost != null &&
+          currentOutpost.uuid == outpostId &&
+          force == false) {
         l.d("Already joined outpost: $outpostId");
         return true;
       }
@@ -588,6 +590,42 @@ class WebSocketService {
       timeout.cancel();
       return result;
     });
+  }
+
+  /// Attempts to join an outpost with up to 3 retries if the initial attempt fails.
+  /// Returns true if the join is successful within the retry attempts, false otherwise.
+  Future<bool> asyncJoinOutpostWithRetry(String outpostId) async {
+    const maxRetries = 3;
+    int attempts = 0;
+
+    while (attempts < maxRetries) {
+      attempts++;
+      l.d("Attempting to join outpost (attempt $attempts/$maxRetries): $outpostId");
+
+      try {
+        final result = await asyncJoinOutpost(outpostId);
+        if (result) {
+          l.d("Successfully joined outpost on attempt $attempts: $outpostId");
+          return true;
+        }
+
+        if (attempts < maxRetries) {
+          l.w("Failed to join outpost on attempt $attempts, retrying...");
+          // Wait for a short duration before retrying
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      } catch (e) {
+        l.e("Error joining outpost on attempt $attempts: $e");
+        if (attempts >= maxRetries) {
+          l.e("Max retry attempts reached, giving up");
+          return false;
+        }
+        await Future.delayed(const Duration(seconds: 1));
+      }
+    }
+
+    l.e("Failed to join outpost after $maxRetries attempts: $outpostId");
+    return false;
   }
 }
 

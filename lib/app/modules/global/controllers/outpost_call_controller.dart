@@ -90,10 +90,15 @@ class OutpostCallController extends GetxController {
       if (activeOutpost != null) {
         // NOTE: this should be the only place where this is used to join the outpost when the user is in the outpost call screen
         // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
-        sendOutpostEvent(
-          outpostId: activeOutpost.uuid,
-          eventType: OutgoingMessageTypeEnums.join,
-        );
+        final joined =
+            await wsClient.asyncJoinOutpostWithRetry(activeOutpost.uuid);
+        if (!joined) {
+          Toast.error(
+            title: 'please close the app and try again',
+            message: 'there was an error joining the outpost',
+          );
+          jitsiMeet.hangUp();
+        }
       }
     });
   }
@@ -190,23 +195,21 @@ class OutpostCallController extends GetxController {
   }
 
   void handleTimerTick() {
+    final creatorUuid = outpost.value?.creator_user_uuid;
     final talkingMembers =
         members.value.where((member) => member.is_speaking == true);
     talkingMembers.forEach((member) {
       final userIndex = members.value.indexWhere((m) => m.uuid == member.uuid);
-      if (member.remaining_time > 0) {
-        if (outpost.value != null) {
-          if (outpost.value!.creator_user_uuid != member.uuid) {
-            members.value[userIndex].remaining_time--;
-            members.refresh();
-          }
-        }
+      if (member.remaining_time > 0 && member.uuid != creatorUuid) {
+        members.value[userIndex].remaining_time--;
+        members.refresh();
       }
       // REVIEW: the rest is handled in ongoing_outpost_call_controller.dart , listening to members list
     });
   }
 
-  void fetchLiveData() async {
+  /// don't use withRetry, use withJoin only, if needed
+  void fetchLiveData({bool? withRetry = true, bool? withJoin = false}) async {
     if (outpost.value == null) return;
 
     final liveData =
@@ -218,6 +221,33 @@ class OutpostCallController extends GetxController {
           element.last_speaked_at_timestamp = -1 * (index);
         }
       });
+      if (withJoin == true) {
+        // do i exist and is present?
+        final iExistAndPresent = tmp.any((member) => member.uuid == myId) &&
+            tmp.any((member) => member.is_present == true);
+        if (!iExistAndPresent) {
+          bool joined = false;
+          try {
+            joined = await wsClient.asyncJoinOutpost(
+              outpost.value!.uuid,
+              force: true,
+            );
+            if (withRetry == true && joined == true) {
+              fetchLiveData(withRetry: false);
+              return;
+            }
+          } catch (e) {
+            l.e('Error joining outpost: $e');
+          }
+          if (!joined) {
+            Toast.error(
+              title: 'please close the app and try again',
+              message: 'there was an error joining the outpost',
+            );
+            jitsiMeet.hangUp();
+          }
+        }
+      }
       members.value = tmp.where((member) => member.is_present == true).toList();
     }
   }

@@ -229,7 +229,7 @@ class OngoingOutpostCallController extends GetxController {
             type: ButtonType.outline,
             color: Colors.red,
             onPressed: () {
-              saveIntroAsDone(true);
+              introFinished(true);
             },
             child: const Text("Finish"),
           ),

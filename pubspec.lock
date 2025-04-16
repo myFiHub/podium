@@ -2091,10 +2091,10 @@ packages:
     dependency: "direct main"
     description:
       name: tutorial_coach_mark
-      sha256: "2c77c0b00bbe7d5b8a6d31cb9e03d44bf77dfe7ba6514cc2b546886d024a9945"
+      sha256: "9cdb721165d1cfb6e9b1910a1af1b3570fa6caa5059cf1506fcbd00bf7102abf"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.13"
+    version: "1.3.0"
   typed_data:
     dependency: transitive
     description:
@@ -2259,10 +2259,10 @@ packages:
     dependency: "direct main"
     description:
       name: web3auth_flutter
-      sha256: "6590bf131dc773fda6a07ec6ee5ac2f63aa7bdaf36977fa3335b84f3083089d2"
+      sha256: "251b228262a350f130a39a35ac4f8df60505983c5e3a55687b2c8c106e0d549d"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.4"
+    version: "6.2.0"
   web3dart:
     dependency: "direct main"
     description:

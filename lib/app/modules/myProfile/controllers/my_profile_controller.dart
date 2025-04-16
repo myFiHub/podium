@@ -121,7 +121,7 @@ class MyProfileController extends GetxController {
           type: ButtonType.outline,
           color: Colors.red,
           onPressed: () {
-            saveIntroAsDone(true);
+            introFinished(true);
           },
           child: const Text("Finish"),
         ),
@@ -310,7 +310,12 @@ class MyProfileController extends GetxController {
     saveIntroAsDone(setAsFinished);
     try {
       tutorialCoachMark.finish();
-    } catch (e) {}
+      saveIntroAsDone(true);
+      Get.back();
+    } catch (e) {
+      l.e('Error finishing tutorial: $e');
+      Get.back();
+    }
   }
 
   _getBalances() async {

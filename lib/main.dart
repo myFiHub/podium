@@ -13,6 +13,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/login/bindings/login_binding.dart';
+import 'package:podium/app/modules/login/views/login_view.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -270,6 +272,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         initialRoute: AppPages.INITIAL,
         getPages: AppPages.routes,
+        unknownRoute: GetPage(
+          name: Routes.LOGIN,
+          page: () => const LoginView(),
+          binding: LoginBinding(),
+        ),
       ),
     );
   }

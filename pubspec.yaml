@@ -106,6 +106,7 @@ dependencies:
 
   flutter:
     sdk: flutter
+  firebase_messaging: ^15.2.5
 
 dependency_overrides:
   intl: ^0.19.0

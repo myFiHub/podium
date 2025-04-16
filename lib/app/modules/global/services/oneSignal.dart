@@ -58,19 +58,28 @@ class OneSignalService extends GetxService {
   /// Login a user with your app's user ID
   Future<bool> login(String userId) async {
     try {
-      if (!_isInitialized) {
-        l.e('OneSignal not initialized');
-        return false;
-      }
-
       if (userId.isEmpty) {
         l.e('Cannot login with empty user ID');
         return false;
       }
 
+      // Initialize OneSignal if not already initialized
+      if (!_isInitialized) {
+        await initialize();
+      }
+
+      // Login the user
       await OneSignal.login(userId);
       _isLoggedIn = true;
       l.d('onesignal: Logged in with user ID: $userId');
+
+      // Ensure subscription is active after login
+      await OneSignal.User.pushSubscription.optIn();
+      l.d('onesignal: Ensured push subscription is active');
+      final token = OneSignal.User.pushSubscription.token;
+      final id = OneSignal.User.pushSubscription.id;
+      l.d('onesignal: Push subscription token: $token');
+      l.d('onesignal: Push id: $id');
 
       return true;
     } catch (e) {
@@ -121,6 +130,12 @@ class OneSignalService extends GetxService {
       // Add observers for push subscription
       OneSignal.User.pushSubscription.addObserver((state) async {
         l.d('onesignal: Push Subscription State: ${state.current.jsonRepresentation()}');
+
+        // Log detailed subscription information
+        final subscriptionState = state.current;
+        l.d('onesignal: Detailed Subscription Info:');
+        l.d('onesignal: - State: ${subscriptionState.toString()}');
+        l.d('onesignal: - JSON: ${subscriptionState.jsonRepresentation()}');
 
         // Handle offline state
         if (state.current.toString().contains('offline')) {

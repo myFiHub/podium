@@ -567,10 +567,13 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      // ignore:  invalid_null_aware_operator
+      final _nonImportant = controller?.amIAdmin;
+      // ignore:  invalid_null_aware_operator
+      final outpost = controller?.outpostCallController?.outpost?.value;
       final exists = Get.isRegistered<OngoingOutpostCallController>();
       if (!exists) return const SizedBox();
-      final outpostCreator =
-          controller.outpostCallController.outpost.value!.creator_user_uuid;
+      final outpostCreator = outpost?.creator_user_uuid;
       final users =
           controller.members.value.where((m) => m.uuid == userId).toList();
       if (users.length == 0) {

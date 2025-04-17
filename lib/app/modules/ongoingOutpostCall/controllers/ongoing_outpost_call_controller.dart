@@ -503,6 +503,8 @@ class OngoingOutpostCallController extends GetxController {
 
   cheerBoo(
       {required String userId, required bool cheer, bool? fromMeetPage}) async {
+    final isSelfReaction = userId == myId;
+    final isBoo = !cheer;
     // sendOutpostEvent(
     //   outpostId: outpostCallController.outpost.value!.uuid,
     //   eventType:
@@ -538,7 +540,7 @@ class OngoingOutpostCallController extends GetxController {
       final myUser = globalController.myUserInfo.value!;
       if (myUser.external_wallet_address == targetAddress ||
           (myUser.address == targetAddress) ||
-          !cheer) {
+          isBoo) {
         final liveData = await HttpApis.podium.getLatestLiveData(
           outpostId: outpostCallController.outpost.value!.uuid,
         );
@@ -553,7 +555,7 @@ class OngoingOutpostCallController extends GetxController {
           aptosReceiverAddresses.add(Env.fihubAddress_Aptos);
         }
 
-        if (user.uuid == myId) {
+        if (isSelfReaction || isBoo) {
           final userAddressesExceptMe = liveMembers
               .where((m) => m.uuid != myUser.uuid)
               .map((e) => e.address)
@@ -568,7 +570,9 @@ class OngoingOutpostCallController extends GetxController {
       } else {
         receiverAddresses = [targetAddress ?? myUser.address];
       }
-      if (receiverAddresses.length == 0) {
+      if (receiverAddresses.length == 0 &&
+          aptosReceiverAddresses.length == 0 &&
+          (isSelfReaction || isBoo)) {
         l.e("No Users found in session");
         Toast.error(
           title: "Error",

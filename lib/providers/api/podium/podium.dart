@@ -56,7 +56,7 @@ class PodiumApi {
         ),
         referrals_enabled: true,
         va: "https://outposts.myfihub.com",
-        version: "1.1.7",
+        version: "1.2.6",
         version_check: true,
       );
     }

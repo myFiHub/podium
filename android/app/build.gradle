@@ -16,7 +16,7 @@ plugins {
 
 android {
     namespace = "com.web3podium"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = "26.1.10909125"
 
     compileOptions {

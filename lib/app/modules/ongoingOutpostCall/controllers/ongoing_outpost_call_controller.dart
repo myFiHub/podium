@@ -537,7 +537,8 @@ class OngoingOutpostCallController extends GetxController {
       List<String> aptosReceiverAddresses = [];
       final myUser = globalController.myUserInfo.value!;
       if (myUser.external_wallet_address == targetAddress ||
-          (myUser.address == targetAddress)) {
+          (myUser.address == targetAddress) ||
+          !cheer) {
         final liveData = await HttpApis.podium.getLatestLiveData(
           outpostId: outpostCallController.outpost.value!.uuid,
         );
@@ -550,12 +551,6 @@ class OngoingOutpostCallController extends GetxController {
         if (liveMemberIds.length < 2) {
           // REVIEW: if there is only one user in the session, cheer goes to to fihub account, and time is added to the user's talk time
           aptosReceiverAddresses.add(Env.fihubAddress_Aptos);
-          // Toast.error(
-          //   title: "Error",
-          //   message: "why are you cheering yourself? for who? t p t . . . why?",
-          // );
-          // _removeLoadingCheerBoo(userId: userId, cheer: cheer);
-          // return;
         }
 
         if (user.uuid == myId) {

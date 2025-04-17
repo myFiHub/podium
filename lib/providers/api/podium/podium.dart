@@ -73,13 +73,21 @@ class PodiumApi {
       final response =
           await dio.post('$_baseUrl/auth/login', data: loginRequest.toJson());
       if (response.statusCode == 200) {
-        _token = response.data['data']['token'];
-        await connectToWebSocket();
-        final myUserData = await getMyUserData(
-          additionalData: additionalData,
-        );
+        try {
+          _token = response.data['data']['token'];
+          await connectToWebSocket();
+          final myUserData = await getMyUserData(
+            additionalData: additionalData,
+          );
 
-        return (myUserData, null, response.statusCode);
+          return (myUserData, null, response.statusCode);
+        } catch (e) {
+          return (
+            null,
+            'Login error, try again in a few minutes',
+            response.statusCode
+          );
+        }
       } else {
         return (null, 'User not found', response.statusCode);
       }

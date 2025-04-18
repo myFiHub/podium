@@ -4,7 +4,6 @@ import 'package:marquee/marquee.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/outpostImage.dart';
-import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
@@ -507,6 +506,7 @@ class SetReminderButton extends GetView<OutpostDetailController> {
 
     return Obx(() {
       final reminderTime = controller.reminderTime.value;
+      final isSettingReminder = controller.isSettingReminder.value;
       if (outpost == null) {
         return Container();
       }
@@ -533,15 +533,12 @@ class SetReminderButton extends GetView<OutpostDetailController> {
       }
 
       return Button(
+        loading: isSettingReminder,
         type: ButtonType.outline,
         color: ColorName.primaryBlue,
         blockButton: true,
         onPressed: () {
-          setReminder(
-            uuid: outpost.uuid,
-            scheduledFor: outpost.scheduled_for,
-            timesList: defaultTimeList(endsAt: outpost.scheduled_for),
-          );
+          controller.setReminderForOutpost();
         },
         child: Text(
           text,

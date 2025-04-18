@@ -54,6 +54,7 @@ class OutpostDetailController extends GetxController {
   final membersList = Rx<List<LiveMember>>([]);
   final reminderTime = Rx<DateTime?>(null);
   final isGettingGroupInfo = false.obs;
+  final isSettingReminder = false.obs;
   final jointButtonContentProps =
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
   bool gotOutpostInfo = false;
@@ -155,6 +156,19 @@ class OutpostDetailController extends GetxController {
   void onClose() {
     tickerListener?.cancel();
     super.onClose();
+  }
+
+  Future<void> setReminderForOutpost() async {
+    if (isSettingReminder.value) return;
+    isSettingReminder.value = true;
+    final outpostData = outpost.value;
+    if (outpostData == null) return;
+    await setReminder(
+      uuid: outpostData.uuid,
+      scheduledFor: outpostData.scheduled_for,
+      timesList: defaultTimeList(endsAt: outpostData.scheduled_for),
+    );
+    isSettingReminder.value = false;
   }
 
   openRescheduleOutpostDialog() async {

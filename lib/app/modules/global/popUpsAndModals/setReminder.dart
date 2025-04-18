@@ -1,18 +1,17 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:add_2_calendar/add_2_calendar.dart';
-import 'package:alarm/alarm.dart';
-import 'package:alarm/model/volume_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
-import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/setReminder.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:alarm/model/volume_settings.dart';
 
 Future<bool> createCalendarEventForScheduledGroup({
   String? eventUrl,
@@ -60,22 +59,14 @@ List<Map<String, Object>> defaultTimeList({required int endsAt}) {
   return filteredTimes;
 }
 
-Future<bool> isReminderAlreadySet(int alarmId) async {
-  final alreadySetAlarm = await Alarm.getAlarm(alarmId);
-  return alreadySetAlarm != null;
-}
-
-Future<DateTime?> getReminderTime(int alarmId) async {
-  final alreadtSetAlarm = await isReminderAlreadySet(alarmId);
-  if (alreadtSetAlarm) {
-    final alarm = await Alarm.getAlarm(alarmId);
-    if (alarm != null) return alarm.dateTime;
-  }
-  return null;
+Future<bool> isReminderAlreadySet(OutpostModel outpost) async {
+  final isSet = outpost.reminder_minutes_before != null &&
+      outpost.reminder_minutes_before! > 0;
+  return isSet;
 }
 
 Future<int?> setReminder({
-  required int alarmId,
+  required String uuid,
   List<Map<String, Object>> timesList = const [
     {'time': 30, 'text': '30 minutes before'},
     {'time': 10, 'text': '10 minutes before'},
@@ -83,11 +74,8 @@ Future<int?> setReminder({
     {"time": 0, "text": "when Event starts"},
   ],
   required int scheduledFor,
-  required String eventName,
-  String? subject,
   String? eventUrl,
 }) async {
-  int id = alarmId == 0 ? Random().nextInt(1000000) : alarmId;
   final hasNotificationPermission =
       await getPermission(Permission.notification);
   if (!hasNotificationPermission) {
@@ -97,9 +85,12 @@ Future<int?> setReminder({
     return null;
   }
 
-  final alreadtSetAlarm = await isReminderAlreadySet(alarmId);
-  if (alreadtSetAlarm) {
-    Alarm.stop(id);
+  final outpost = await HttpApis.podium.getOutpost(uuid);
+  if (outpost == null) {
+    Toast.error(
+      message: 'Outpost not found',
+    );
+    return null;
   }
 
   final int? alarmMeBefore = await Get.dialog<int>(AlertDialog(
@@ -112,22 +103,21 @@ Future<int?> setReminder({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (Platform.isAndroid)
-              for (var i = 0; i < timesList.length; i++)
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(Get.context!, timesList[i]['time']);
-                  },
-                  child: Text(timesList[i]['text'] as String,
-                      style: TextStyle(color: Colors.red[i * 100])),
-                ),
+            for (var i = 0; i < timesList.length; i++)
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(Get.context!, timesList[i]['time']);
+                },
+                child: Text(timesList[i]['text'] as String,
+                    style: TextStyle(color: Colors.red[i * 100])),
+              ),
             TextButton(
               onPressed: () async {
                 await createCalendarEventForScheduledGroup(
                   eventUrl: eventUrl,
                   scheduledFor: scheduledFor,
-                  title: eventName,
-                  subject: subject,
+                  title: outpost.name,
+                  subject: outpost.subject,
                 );
                 Navigator.pop<int>(Get.context!, -1);
               },
@@ -149,36 +139,41 @@ Future<int?> setReminder({
       )
     ],
   ));
-  if (alarmMeBefore == null || alarmMeBefore < 0) {
-    l.d(' local alarm not set');
+  if (alarmMeBefore == -2) {
+    final request = SetOrRemoveReminderRequest(
+      uuid: uuid,
+    );
+    final success = await HttpApis.podium.setOrRemoveReminder(request);
+    if (success) {
+      Toast.success(message: 'Reminder removed');
+      final updatedOutpost = outpost.copyWith.reminder_minutes_before(null);
+      final OutpostsController outpostsController = Get.find();
+      outpostsController.updateOutpost_local(updatedOutpost);
+    } else {
+      Toast.error(message: 'Failed to remove reminder');
+    }
+  } else if (alarmMeBefore == null || alarmMeBefore < 0) {
+    l.d(' reminder not set');
   } else {
-    final alarmSettings = AlarmSettings(
-      id: id,
-      dateTime: DateTime.fromMillisecondsSinceEpoch(scheduledFor)
-          .subtract(Duration(minutes: alarmMeBefore)),
-      assetAudioPath: 'assets/alarm.mp3',
-      loopAudio: true,
-      vibrate: true,
-      volumeSettings: VolumeSettings.fromJson(
-        const {
-          'volume': 0.8,
-          'fadeDuration': 3.0,
-        },
-      ),
-      notificationSettings: NotificationSettings(
-        title: 'Podium',
-        body: alarmMeBefore == 0
-            ? "${eventName} Started"
-            : '${eventName} will start in $alarmMeBefore minutes',
-        icon: Assets.images.logo.path,
-        stopButton: 'Stop',
-      ),
+    final request = SetOrRemoveReminderRequest(
+      uuid: uuid,
+      minutes_before: alarmMeBefore,
     );
-    await Alarm.set(alarmSettings: alarmSettings);
-    Toast.success(
-      message:
-          'You will be reminded ${alarmMeBefore == 0 ? "when Event is started" : "${alarmMeBefore} minutes before the event"}',
-    );
+    final isSet = await HttpApis.podium.setOrRemoveReminder(request);
+    if (isSet) {
+      Toast.success(
+        message:
+            'You will be reminded ${alarmMeBefore == 0 ? "when Event is started" : "${alarmMeBefore} minutes before the event"}',
+      );
+      final updatedOutpost =
+          outpost.copyWith.reminder_minutes_before(alarmMeBefore);
+      final OutpostsController outpostsController = Get.find();
+      outpostsController.updateOutpost_local(updatedOutpost);
+    } else {
+      Toast.error(
+        message: 'Failed to set reminder',
+      );
+    }
   }
   return alarmMeBefore;
 }

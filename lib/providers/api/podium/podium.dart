@@ -13,6 +13,7 @@ import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.d
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
+import 'package:podium/providers/api/podium/models/outposts/setReminder.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/pass/buyer.dart';
@@ -701,6 +702,17 @@ class PodiumApi {
     } catch (e) {
       l.e(e);
       return [];
+    }
+  }
+
+  Future<bool> setOrRemoveReminder(SetOrRemoveReminderRequest request) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/set-reminder',
+          data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
     }
   }
 }

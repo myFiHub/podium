@@ -7,7 +7,6 @@ part 'outpost.g.dart';
 @JsonSerializable()
 @CopyWith()
 class OutpostModel {
-  final int alarm_id;
   final String uuid;
   final int created_at;
   final bool creator_joined;
@@ -33,9 +32,9 @@ class OutpostModel {
   final List<_TicketToSpeakModel>? tickets_to_speak;
   final int? online_users_count;
   bool i_am_member;
+  final int? reminder_minutes_before;
 
   OutpostModel({
-    required this.alarm_id,
     required this.uuid,
     required this.created_at,
     required this.creator_joined,
@@ -61,6 +60,7 @@ class OutpostModel {
     this.luma_event_id,
     required this.i_am_member,
     required this.online_users_count,
+    required this.reminder_minutes_before,
   });
 
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>

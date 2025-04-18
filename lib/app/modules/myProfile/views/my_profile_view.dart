@@ -457,6 +457,8 @@ class InternalWallet extends GetView<GlobalController> {
               const EvmAddressAndBalances(),
               space10,
               const AptosAddressAndBalance(),
+              space10,
+              const PrivateKeyButton(),
             ],
           ),
           // FriendTeckActivationButton()
@@ -858,6 +860,87 @@ class LogoutButton extends GetView<GlobalController> {
 class UserInfo extends GetView<GlobalController> {
   const UserInfo({super.key});
 
+  void _showPrivateKeyWarning(BuildContext context, String privateKey) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: ColorName.systemTrayBackground,
+        title: const Text(
+          '⚠️ WARNING: Private Key Access',
+          style: TextStyle(
+            color: Colors.red,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'IMPORTANT: Your private key is the key to your account. Anyone with access to it can control your account and steal your assets.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '⚠️ NEVER share your private key with anyone',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '⚠️ NEVER enter it on any website',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '⚠️ NEVER store it in plain text',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: privateKey));
+              Toast.success(
+                title: 'Copied',
+                message: 'Private key copied to clipboard',
+              );
+              Navigator.pop(context);
+            },
+            child: const Text('Copy Private Key'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String emailValue = controller.myUserInfo.value?.email as String;
@@ -918,10 +1001,6 @@ class UserInfo extends GetView<GlobalController> {
                 color: ColorName.greyText,
               ),
             ),
-            // space10,
-            // FollowerBadge(
-            //   followerCount: myUser.followers_count ?? 0,
-            // ),
             space10,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -961,11 +1040,42 @@ class UserInfo extends GetView<GlobalController> {
                       color: Colors.grey,
                     ))
               ],
-            )
+            ),
+            space10,
           ],
         ),
       );
     });
+  }
+}
+
+class PrivateKeyButton extends GetView<MyProfileController> {
+  const PrivateKeyButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: () => controller.showPrivateKeyWarning(),
+      type: ButtonType.outline,
+      color: ButtonColors.DANGER,
+      borderSide: const BorderSide(color: Colors.red),
+      blockButton: true,
+      textColor: Colors.red,
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.key, color: Colors.red),
+          SizedBox(width: 8),
+          Text(
+            'Copy Private Key',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

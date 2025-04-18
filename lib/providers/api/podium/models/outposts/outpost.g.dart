@@ -7,8 +7,6 @@ part of 'outpost.dart';
 // **************************************************************************
 
 abstract class _$OutpostModelCWProxy {
-  OutpostModel alarm_id(int alarm_id);
-
   OutpostModel uuid(String uuid);
 
   OutpostModel created_at(int created_at);
@@ -59,6 +57,8 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel online_users_count(int? online_users_count);
 
+  OutpostModel reminder_minutes_before(int? reminder_minutes_before);
+
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OutpostModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
   /// Usage
@@ -66,7 +66,6 @@ abstract class _$OutpostModelCWProxy {
   /// OutpostModel(...).copyWith(id: 12, name: "My name")
   /// ````
   OutpostModel call({
-    int alarm_id,
     String uuid,
     int created_at,
     bool creator_joined,
@@ -92,6 +91,7 @@ abstract class _$OutpostModelCWProxy {
     String? luma_event_id,
     bool i_am_member,
     int? online_users_count,
+    int? reminder_minutes_before,
   });
 }
 
@@ -100,9 +100,6 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
   const _$OutpostModelCWProxyImpl(this._value);
 
   final OutpostModel _value;
-
-  @override
-  OutpostModel alarm_id(int alarm_id) => this(alarm_id: alarm_id);
 
   @override
   OutpostModel uuid(String uuid) => this(uuid: uuid);
@@ -193,6 +190,10 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       this(online_users_count: online_users_count);
 
   @override
+  OutpostModel reminder_minutes_before(int? reminder_minutes_before) =>
+      this(reminder_minutes_before: reminder_minutes_before);
+
+  @override
 
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OutpostModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
@@ -201,7 +202,6 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
   /// OutpostModel(...).copyWith(id: 12, name: "My name")
   /// ````
   OutpostModel call({
-    Object? alarm_id = const $CopyWithPlaceholder(),
     Object? uuid = const $CopyWithPlaceholder(),
     Object? created_at = const $CopyWithPlaceholder(),
     Object? creator_joined = const $CopyWithPlaceholder(),
@@ -227,12 +227,9 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
     Object? luma_event_id = const $CopyWithPlaceholder(),
     Object? i_am_member = const $CopyWithPlaceholder(),
     Object? online_users_count = const $CopyWithPlaceholder(),
+    Object? reminder_minutes_before = const $CopyWithPlaceholder(),
   }) {
     return OutpostModel(
-      alarm_id: alarm_id == const $CopyWithPlaceholder()
-          ? _value.alarm_id
-          // ignore: cast_nullable_to_non_nullable
-          : alarm_id as int,
       uuid: uuid == const $CopyWithPlaceholder()
           ? _value.uuid
           // ignore: cast_nullable_to_non_nullable
@@ -333,6 +330,11 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
           ? _value.online_users_count
           // ignore: cast_nullable_to_non_nullable
           : online_users_count as int?,
+      reminder_minutes_before:
+          reminder_minutes_before == const $CopyWithPlaceholder()
+              ? _value.reminder_minutes_before
+              // ignore: cast_nullable_to_non_nullable
+              : reminder_minutes_before as int?,
     );
   }
 }
@@ -348,7 +350,6 @@ extension $OutpostModelCopyWith on OutpostModel {
 // **************************************************************************
 
 OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
-      alarm_id: (json['alarm_id'] as num).toInt(),
       uuid: json['uuid'] as String,
       created_at: (json['created_at'] as num).toInt(),
       creator_joined: json['creator_joined'] as bool,
@@ -382,11 +383,12 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       luma_event_id: json['luma_event_id'] as String?,
       i_am_member: json['i_am_member'] as bool,
       online_users_count: (json['online_users_count'] as num?)?.toInt(),
+      reminder_minutes_before:
+          (json['reminder_minutes_before'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
     <String, dynamic>{
-      'alarm_id': instance.alarm_id,
       'uuid': instance.uuid,
       'created_at': instance.created_at,
       'creator_joined': instance.creator_joined,
@@ -412,6 +414,7 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'tickets_to_speak': instance.tickets_to_speak,
       'online_users_count': instance.online_users_count,
       'i_am_member': instance.i_am_member,
+      'reminder_minutes_before': instance.reminder_minutes_before,
     };
 
 _TicketToEnterModel _$TicketToEnterModelFromJson(Map<String, dynamic> json) =>

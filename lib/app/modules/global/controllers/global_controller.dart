@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:alarm/alarm.dart';
 import 'package:aptos/aptos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -192,7 +191,6 @@ class GlobalController extends GetxController {
     checkLogin();
     initializeW3MService();
     listenToWalletAddressChange();
-    Alarm.init();
     initializedOnce.value = true;
   }
 

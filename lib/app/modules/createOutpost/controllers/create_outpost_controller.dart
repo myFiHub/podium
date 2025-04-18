@@ -745,9 +745,8 @@ class CreateOutpostController extends GetxController {
       final scheduleTime = scheduledFor.value;
       if (scheduledFor.value != 0) {
         final setFor = await setReminder(
-          alarmId: response.alarm_id,
+          uuid: response.uuid,
           scheduledFor: scheduledFor.value,
-          eventName: outpostName.value,
           timesList: defaultTimeList(
             endsAt: scheduledFor.value,
           ),

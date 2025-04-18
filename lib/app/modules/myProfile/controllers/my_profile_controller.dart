@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -25,6 +26,7 @@ import 'package:podium/widgets/button/button.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class Payments {
   int numberOfCheersReceived = 0;
@@ -498,6 +500,97 @@ class MyProfileController extends GetxController {
           padding: const EdgeInsets.all(16.0),
           child: DeactivationForm(),
         ),
+      ),
+    );
+  }
+
+  void showPrivateKeyWarning() async {
+    String privateKey = '';
+    try {
+      privateKey = await Web3AuthFlutter.getPrivKey();
+    } catch (e) {
+      Toast.error(
+        title: 'Error',
+        message: 'Private key not found',
+      );
+      return;
+    }
+
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: ColorName.cardBackground,
+        title: const Text(
+          '⚠️ WARNING: Private Key Access',
+          style: TextStyle(
+            color: Colors.red,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'IMPORTANT: Your private key is the key to your account. Anyone with access to it can control your account and steal your assets.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '⚠️ NEVER share your private key with anyone',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '⚠️ NEVER enter it on any website',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '⚠️ NEVER store it in plain text',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.close(),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: privateKey));
+              Toast.success(
+                title: 'Copied',
+                message: 'Private key copied to clipboard',
+              );
+              Navigator.pop(Get.context!);
+            },
+            child: const Text('Copy Private Key'),
+          ),
+        ],
       ),
     );
   }

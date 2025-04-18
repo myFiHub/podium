@@ -343,9 +343,10 @@ class OutpostDetailController extends GetxController {
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }
       } else {
-        final reminderT = await getReminderTime(outpostData.alarm_id);
+        final reminderT = outpostData.reminder_minutes_before;
         if (reminderT != null) {
-          reminderTime.value = reminderT;
+          reminderTime.value = DateTime.fromMillisecondsSinceEpoch(
+              outpostData.scheduled_for - reminderT * 60 * 1000);
         }
         if (amICreator) {
           jointButtonContentProps.value =

@@ -18,7 +18,6 @@ import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -532,21 +531,17 @@ class SetReminderButton extends GetView<OutpostDetailController> {
       if (isPassed) {
         return const SizedBox();
       }
-      if (outpost.alarm_id == 0) {
-        return const SizedBox();
-      }
+
       return Button(
         type: ButtonType.outline,
         color: ColorName.primaryBlue,
         blockButton: true,
-        onPressed: () async {
-          final newDateInSeconds = await setReminder(
-            alarmId: outpost.alarm_id,
+        onPressed: () {
+          setReminder(
+            uuid: outpost.uuid,
             scheduledFor: outpost.scheduled_for,
-            eventName: outpost.name,
             timesList: defaultTimeList(endsAt: outpost.scheduled_for),
           );
-          l.d('newDateInSeconds: $newDateInSeconds');
         },
         child: Text(
           text,

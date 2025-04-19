@@ -747,9 +747,6 @@ class CreateOutpostController extends GetxController {
         final setFor = await setReminder(
           uuid: response.uuid,
           scheduledFor: scheduledFor.value,
-          timesList: defaultTimeList(
-            endsAt: scheduledFor.value,
-          ),
         );
         if (setFor == -1) {
           // means use calendar

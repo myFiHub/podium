@@ -560,32 +560,32 @@ class OutpostsController extends GetxController {
 
   /// updates the outpost in the local list of outposts and my outposts and searched outposts, the new outpost is not fetched from the server,
   /// edits most be done before calling this function, then pass the edited outpost to this function
-  updateOutpost_local(OutpostModel outpost) {
+  updateOutpost_local(OutpostModel updatedOutpost) {
     final outpostIndex = outposts.value.values
         .toList()
-        .indexWhere((element) => element.uuid == outpost.uuid);
+        .indexWhere((element) => element.uuid == updatedOutpost.uuid);
     if (outpostIndex != -1) {
-      outposts.value[outpost.uuid] = outpost;
+      outposts.value[updatedOutpost.uuid] = updatedOutpost;
       outposts.refresh();
     }
     final myOutpostIndex = myOutposts.value.values
         .toList()
-        .indexWhere((element) => element.uuid == outpost.uuid);
+        .indexWhere((element) => element.uuid == updatedOutpost.uuid);
     if (myOutpostIndex != -1) {
-      myOutposts.value[outpost.uuid] = outpost;
+      myOutposts.value[updatedOutpost.uuid] = updatedOutpost;
       myOutposts.refresh();
     }
 
     final isSearchRegistered = Get.isRegistered<SearchPageController>();
     if (isSearchRegistered) {
       final searchController = Get.find<SearchPageController>();
-      searchController.updateOutpost_local(outpost);
+      searchController.updateOutpost_local(updatedOutpost);
     }
     final isOutpostDetailRegistered =
         Get.isRegistered<OutpostDetailController>();
     if (isOutpostDetailRegistered) {
       final outpostDetailController = Get.find<OutpostDetailController>();
-      outpostDetailController.outpost.value = outpost;
+      outpostDetailController.outpost.value = updatedOutpost;
     }
   }
 

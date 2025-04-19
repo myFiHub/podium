@@ -5,11 +5,11 @@ part 'setReminder.g.dart';
 @JsonSerializable()
 class SetOrRemoveReminderRequest {
   final String uuid;
-  final int? minutes_before;
+  final int? reminder_offset_minutes;
 
   SetOrRemoveReminderRequest({
     required this.uuid,
-    this.minutes_before,
+    this.reminder_offset_minutes,
   });
 
   factory SetOrRemoveReminderRequest.fromJson(Map<String, dynamic> json) =>

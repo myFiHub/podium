@@ -57,7 +57,7 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel online_users_count(int? online_users_count);
 
-  OutpostModel reminder_minutes_before(int? reminder_minutes_before);
+  OutpostModel reminder_offset_minutes(int? reminder_offset_minutes);
 
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OutpostModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
@@ -91,7 +91,7 @@ abstract class _$OutpostModelCWProxy {
     String? luma_event_id,
     bool i_am_member,
     int? online_users_count,
-    int? reminder_minutes_before,
+    int? reminder_offset_minutes,
   });
 }
 
@@ -190,8 +190,8 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       this(online_users_count: online_users_count);
 
   @override
-  OutpostModel reminder_minutes_before(int? reminder_minutes_before) =>
-      this(reminder_minutes_before: reminder_minutes_before);
+  OutpostModel reminder_offset_minutes(int? reminder_offset_minutes) =>
+      this(reminder_offset_minutes: reminder_offset_minutes);
 
   @override
 
@@ -227,7 +227,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
     Object? luma_event_id = const $CopyWithPlaceholder(),
     Object? i_am_member = const $CopyWithPlaceholder(),
     Object? online_users_count = const $CopyWithPlaceholder(),
-    Object? reminder_minutes_before = const $CopyWithPlaceholder(),
+    Object? reminder_offset_minutes = const $CopyWithPlaceholder(),
   }) {
     return OutpostModel(
       uuid: uuid == const $CopyWithPlaceholder()
@@ -330,11 +330,11 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
           ? _value.online_users_count
           // ignore: cast_nullable_to_non_nullable
           : online_users_count as int?,
-      reminder_minutes_before:
-          reminder_minutes_before == const $CopyWithPlaceholder()
-              ? _value.reminder_minutes_before
+      reminder_offset_minutes:
+          reminder_offset_minutes == const $CopyWithPlaceholder()
+              ? _value.reminder_offset_minutes
               // ignore: cast_nullable_to_non_nullable
-              : reminder_minutes_before as int?,
+              : reminder_offset_minutes as int?,
     );
   }
 }
@@ -383,8 +383,8 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       luma_event_id: json['luma_event_id'] as String?,
       i_am_member: json['i_am_member'] as bool,
       online_users_count: (json['online_users_count'] as num?)?.toInt(),
-      reminder_minutes_before:
-          (json['reminder_minutes_before'] as num?)?.toInt(),
+      reminder_offset_minutes:
+          (json['reminder_offset_minutes'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
@@ -414,7 +414,7 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'tickets_to_speak': instance.tickets_to_speak,
       'online_users_count': instance.online_users_count,
       'i_am_member': instance.i_am_member,
-      'reminder_minutes_before': instance.reminder_minutes_before,
+      'reminder_offset_minutes': instance.reminder_offset_minutes,
     };
 
 _TicketToEnterModel _$TicketToEnterModelFromJson(Map<String, dynamic> json) =>

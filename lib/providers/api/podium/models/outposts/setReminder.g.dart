@@ -10,12 +10,13 @@ SetOrRemoveReminderRequest _$SetOrRemoveReminderRequestFromJson(
         Map<String, dynamic> json) =>
     SetOrRemoveReminderRequest(
       uuid: json['uuid'] as String,
-      minutes_before: (json['minutes_before'] as num?)?.toInt(),
+      reminder_offset_minutes:
+          (json['reminder_offset_minutes'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$SetOrRemoveReminderRequestToJson(
         SetOrRemoveReminderRequest instance) =>
     <String, dynamic>{
       'uuid': instance.uuid,
-      'minutes_before': instance.minutes_before,
+      'reminder_offset_minutes': instance.reminder_offset_minutes,
     };

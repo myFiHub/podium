@@ -60,22 +60,20 @@ List<Map<String, Object>> defaultTimeList({required int endsAt}) {
 }
 
 Future<bool> isReminderAlreadySet(OutpostModel outpost) async {
-  final isSet = outpost.reminder_minutes_before != null &&
-      outpost.reminder_minutes_before! > 0;
+  final isSet = outpost.reminder_offset_minutes != null &&
+      outpost.reminder_offset_minutes! > 0;
   return isSet;
 }
 
 Future<int?> setReminder({
   required String uuid,
-  List<Map<String, Object>> timesList = const [
-    {'time': 30, 'text': '30 minutes before'},
-    {'time': 10, 'text': '10 minutes before'},
-    {'time': 5, 'text': '5 minutes before'},
-    {"time": 0, "text": "when Event starts"},
-  ],
+  List<Map<String, Object>>? timesList,
   required int scheduledFor,
   String? eventUrl,
 }) async {
+  if (timesList == null) {
+    timesList = defaultTimeList(endsAt: scheduledFor);
+  }
   final hasNotificationPermission =
       await getPermission(Permission.notification);
   if (!hasNotificationPermission) {
@@ -95,7 +93,7 @@ Future<int?> setReminder({
 
   final int? alarmMeBefore = await Get.dialog<int>(AlertDialog(
     backgroundColor: ColorName.pageBackground,
-    title: const Text('Set an Alarm?'),
+    title: const Text('Set a Reminder?'),
     content: const Text('Do you want Podium to remind you for this event?'),
     actionsAlignment: MainAxisAlignment.center,
     actions: [
@@ -106,7 +104,7 @@ Future<int?> setReminder({
             for (var i = 0; i < timesList.length; i++)
               TextButton(
                 onPressed: () {
-                  Navigator.pop(Get.context!, timesList[i]['time']);
+                  Navigator.pop(Get.context!, timesList![i]['time']);
                 },
                 child: Text(timesList[i]['text'] as String,
                     style: TextStyle(color: Colors.red[i * 100])),
@@ -139,25 +137,30 @@ Future<int?> setReminder({
       )
     ],
   ));
+  // -2 means remove reminder
   if (alarmMeBefore == -2) {
-    final request = SetOrRemoveReminderRequest(
-      uuid: uuid,
-    );
-    final success = await HttpApis.podium.setOrRemoveReminder(request);
-    if (success) {
-      Toast.success(message: 'Reminder removed');
-      final updatedOutpost = outpost.copyWith.reminder_minutes_before(null);
-      final OutpostsController outpostsController = Get.find();
-      outpostsController.updateOutpost_local(updatedOutpost);
-    } else {
-      Toast.error(message: 'Failed to remove reminder');
+    if (outpost.reminder_offset_minutes != null) {
+      final request = SetOrRemoveReminderRequest(
+        uuid: uuid,
+      );
+      final success = await HttpApis.podium.setOrRemoveReminder(request);
+      if (success) {
+        Toast.success(message: 'Reminder removed');
+        final updatedOutpost = outpost.copyWith.reminder_offset_minutes(null);
+        final OutpostsController outpostsController = Get.find();
+        outpostsController.updateOutpost_local(updatedOutpost);
+      } else {
+        Toast.error(message: 'Failed to remove reminder');
+      }
     }
-  } else if (alarmMeBefore == null || alarmMeBefore < 0) {
+  }
+  // -1 means I might use my calendar instead. null means no reminder
+  else if (alarmMeBefore == null || alarmMeBefore < 0) {
     l.d(' reminder not set');
   } else {
     final request = SetOrRemoveReminderRequest(
       uuid: uuid,
-      minutes_before: alarmMeBefore,
+      reminder_offset_minutes: alarmMeBefore,
     );
     final isSet = await HttpApis.podium.setOrRemoveReminder(request);
     if (isSet) {
@@ -166,7 +169,7 @@ Future<int?> setReminder({
             'You will be reminded ${alarmMeBefore == 0 ? "when Event is started" : "${alarmMeBefore} minutes before the event"}',
       );
       final updatedOutpost =
-          outpost.copyWith.reminder_minutes_before(alarmMeBefore);
+          outpost.copyWith.reminder_offset_minutes(alarmMeBefore);
       final OutpostsController outpostsController = Get.find();
       outpostsController.updateOutpost_local(updatedOutpost);
     } else {

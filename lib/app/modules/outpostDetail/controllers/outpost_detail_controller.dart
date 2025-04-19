@@ -48,11 +48,9 @@ class OutpostDetailController extends GetxController {
   final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;
-  final forceUpdateIndicator = false.obs;
   final outpost = Rxn<OutpostModel>();
   final outpostAccesses = Rxn<GroupAccesses>();
   final membersList = Rx<List<LiveMember>>([]);
-  final reminderTime = Rx<DateTime?>(null);
   final isGettingGroupInfo = false.obs;
   final isSettingReminder = false.obs;
   final jointButtonContentProps =
@@ -166,7 +164,6 @@ class OutpostDetailController extends GetxController {
     await setReminder(
       uuid: outpostData.uuid,
       scheduledFor: outpostData.scheduled_for,
-      timesList: defaultTimeList(endsAt: outpostData.scheduled_for),
     );
     isSettingReminder.value = false;
   }
@@ -319,10 +316,6 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  void forceUpdate() {
-    forceUpdateIndicator.value = !forceUpdateIndicator.value;
-  }
-
   reselectScheduleTime() async {
     DateTime? dateTime = await showOmniDateTimePicker(
       context: Get.context!,
@@ -357,11 +350,6 @@ class OutpostDetailController extends GetxController {
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }
       } else {
-        final reminderT = outpostData.reminder_minutes_before;
-        if (reminderT != null) {
-          reminderTime.value = DateTime.fromMillisecondsSinceEpoch(
-              outpostData.scheduled_for - reminderT * 60 * 1000);
-        }
         if (amICreator) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Enter the Outpost');

@@ -32,7 +32,7 @@ class OutpostModel {
   final List<_TicketToSpeakModel>? tickets_to_speak;
   final int? online_users_count;
   bool i_am_member;
-  final int? reminder_minutes_before;
+  final int? reminder_offset_minutes;
 
   OutpostModel({
     required this.uuid,
@@ -60,7 +60,7 @@ class OutpostModel {
     this.luma_event_id,
     required this.i_am_member,
     required this.online_users_count,
-    required this.reminder_minutes_before,
+    required this.reminder_offset_minutes,
   });
 
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>

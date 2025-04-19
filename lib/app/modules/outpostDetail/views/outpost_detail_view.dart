@@ -502,22 +502,16 @@ class SetReminderButton extends GetView<OutpostDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    final outpost = controller.outpost.value;
-
     return Obx(() {
-      final reminderTime = controller.reminderTime.value;
+      final outpost = controller.outpost.value;
+      final remindMeBefore = outpost?.reminder_offset_minutes;
       final isSettingReminder = controller.isSettingReminder.value;
       if (outpost == null) {
         return Container();
       }
-      controller.forceUpdateIndicator.value;
       int? reminderIsSetForInMinotes = null;
-      if (reminderTime != null) {
-        final reminder = reminderTime
-            .difference(
-                DateTime.fromMillisecondsSinceEpoch(outpost.scheduled_for))
-            .inMinutes;
-        reminderIsSetForInMinotes = reminder;
+      if (remindMeBefore != null) {
+        reminderIsSetForInMinotes = remindMeBefore;
       }
 
       String text = reminderIsSetForInMinotes != null

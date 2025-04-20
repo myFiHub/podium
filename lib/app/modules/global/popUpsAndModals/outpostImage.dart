@@ -141,7 +141,7 @@ class _EditableImageState extends State<EditableImage> {
   @override
   void didUpdateWidget(covariant EditableImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.imageSrc != oldWidget.imageSrc) {
+    if (widget.imageSrc != oldWidget.imageSrc && mounted) {
       setState(() {
         _currentImageSrc = widget.imageSrc;
       });
@@ -173,7 +173,7 @@ class _EditableImageState extends State<EditableImage> {
                   final downloadUrl = await imageService.pickAndUploadImage(
                     outpostId: widget.outpostId,
                   );
-                  if (downloadUrl != null) {
+                  if (downloadUrl != null && mounted) {
                     // Update local state first
                     setState(() {
                       _currentImageSrc = downloadUrl;

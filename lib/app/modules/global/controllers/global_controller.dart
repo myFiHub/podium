@@ -415,22 +415,45 @@ class GlobalController extends GetxController {
       l.d('version check disabled');
       return true;
     }
-    // listen to version changes
 
     final currentVersion = Env.VERSION.split('+')[0];
-    final numberedLocalVersion = int.parse(currentVersion.replaceAll('.', ''));
-    final numberedRemoteVersion = int.parse(version.replaceAll('.', ''));
-    final isRemoteVersionGreater = numberedRemoteVersion > numberedLocalVersion;
-    if (version != currentVersion &&
-        ignoredOrAcceptedVersion != version &&
-        isRemoteVersionGreater) {
-      l.e('New version available');
+
+    // Skip if already ignored/accepted this version
+    if (ignoredOrAcceptedVersion == version) {
+      l.d('version already ignored/accepted');
+      return true;
+    }
+
+    // Compare versions using semantic versioning
+    final currentParts = currentVersion.split('.').map(int.parse).toList();
+    final remoteParts = version.split('.').map(int.parse).toList();
+
+    // Pad shorter version with zeros
+    while (currentParts.length < remoteParts.length) {
+      currentParts.add(0);
+    }
+    while (remoteParts.length < currentParts.length) {
+      remoteParts.add(0);
+    }
+
+    bool isRemoteVersionGreater = false;
+    for (int i = 0; i < currentParts.length; i++) {
+      if (remoteParts[i] > currentParts[i]) {
+        isRemoteVersionGreater = true;
+        break;
+      } else if (remoteParts[i] < currentParts[i]) {
+        break;
+      }
+    }
+
+    if (isRemoteVersionGreater) {
+      l.e('New version available: $version (current: $currentVersion)');
       Get.dialog(
         barrierDismissible: false,
         AlertDialog(
           title: const Text('New version available'),
-          content: const Text('A new version of Podium is available',
-              style: TextStyle(color: ColorName.black)),
+          content: Text('A new version of Podium ($version) is available',
+              style: const TextStyle(color: ColorName.black)),
           titleTextStyle: const TextStyle(
             color: ColorName.black,
           ),

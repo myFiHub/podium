@@ -607,6 +607,7 @@ class OngoingOutpostCallController extends GetxController {
       }
 
       bool? success;
+      String? txHash;
       final selectedWallet = WalletNames.internal_Aptos;
       // await choseAWallet(
       //   chainId: movementEVMChain.chainId,
@@ -632,7 +633,7 @@ class OngoingOutpostCallController extends GetxController {
           chainId: movementEVMChain.chainId,
         );
       } else if (selectedWallet == WalletNames.internal_Aptos) {
-        success = await AptosMovement.cheerBoo(
+        (success, txHash) = await AptosMovement.cheerBoo(
           outpostId: outpostCallController.outpost.value!.uuid,
           target: user.aptos_address!,
           receiverAddresses: aptosReceiverAddresses,
@@ -664,6 +665,7 @@ class OngoingOutpostCallController extends GetxController {
             chain_id: int.parse(
               globalController.appMetadata.movement_aptos_metadata.chain_id,
             ),
+            tx_hash: txHash,
           ),
         );
         analytics.logEvent(name: 'cheerBoo', parameters: {

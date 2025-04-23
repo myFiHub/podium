@@ -131,7 +131,7 @@ class AptosMovement {
     return CoinClient(client);
   }
 
-  static Future<bool?> cheerBoo({
+  static Future<(bool?, String?)> cheerBoo({
     required String target,
     required List<String> receiverAddresses,
     required num amount,
@@ -163,7 +163,7 @@ class AptosMovement {
             ),
           ),
         );
-        return null;
+        return (false, 'Insufficient balance');
       }
 
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
@@ -199,13 +199,13 @@ class AptosMovement {
       final signedTransaction =
           await client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
-      final hash = res['hash'];
+      final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
-      return true;
+      return (true, hash);
     } catch (e) {
       l.e(e);
       Toast.error(message: 'Error submitting transaction');
-      return false;
+      return (false, e.toString());
     }
   }
 

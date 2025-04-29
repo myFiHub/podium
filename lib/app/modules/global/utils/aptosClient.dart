@@ -39,7 +39,7 @@ class AptosMovement {
   }
 
   static const _podiumProtocolName = 'PodiumProtocol';
-  static const _cheerBooName = 'CheerOrBoo';
+  static const _cheerBooName = 'CheerOrBooPodium';
 
   static get podiumProtocolAddress {
     return movementAptosPodiumProtocolAddress;
@@ -78,10 +78,8 @@ class AptosMovement {
           current_fungible_asset_balances(
             where: {
               owner_address: {_eq: \$address},
-              asset_type: {_eq: "0x1::aptos_coin::AptosCoin"}
-            }
-            limit: 1
-          ) {
+             }
+           ) {
             amount
           }
         }
@@ -100,7 +98,10 @@ class AptosMovement {
         final data = jsonDecode(response.body);
         final balances = data['data']['current_fungible_asset_balances'];
         if (balances != null && balances.isNotEmpty) {
-          return BigInt.parse(balances[0]['amount'].toString());
+          final sum = balances.fold(BigInt.zero, (sum, balance) {
+            return sum + BigInt.parse(balance['amount'].toString());
+          });
+          return sum;
         }
       }
       return BigInt.zero;
@@ -167,15 +168,20 @@ class AptosMovement {
       }
 
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
-      final isSelfReaction =
-          target == myUser.aptos_address && receiverAddresses.length > 0;
+      final isSelfReaction = !receiverAddresses.contains(target);
       final isBoo = !cheer;
-      int percentage = 100;
+      int percentage = 50;
       if (isSelfReaction) {
         percentage = 0;
       }
       if (isBoo && !isSelfReaction) {
-        percentage = 50;
+        percentage = 30;
+      }
+      if (receiverAddresses.length == 1 && isSelfReaction) {
+        percentage = 100;
+      }
+      if (receiverAddresses.length == 2 && !isSelfReaction) {
+        percentage = 100;
       }
 
       final PercentageString = percentage.toString();

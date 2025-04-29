@@ -18,6 +18,7 @@ abstract class Routes {
   static const WALLET = _Paths.WALLET;
   static const PROFILE = _Paths.PROFILE;
   static const MY_PROFILE = _Paths.MY_PROFILE;
+  static const CONNECTED_ACCOUNTS = _Paths.CONNECTED_ACCOUNTS;
   static const SEARCH = _Paths.SEARCH;
   static const NOTIFICATIONS = _Paths.NOTIFICATIONS;
   static const ALL_OUTPOSTS = _Paths.ALL_OUTPOSTS;
@@ -42,6 +43,7 @@ abstract class _Paths {
   static const WALLET = '/wallet';
   static const PROFILE = '/profile';
   static const MY_PROFILE = '/my-profile';
+  static const CONNECTED_ACCOUNTS = '/connected-accounts';
   static const RECORDS = '/records';
   static const SEARCH = '/search';
   static const NOTIFICATIONS = '/notifications';

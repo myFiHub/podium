@@ -48,6 +48,8 @@ class MyProfileView extends GetView<MyProfileController> {
               children: <Widget>[
                 const ContextSaver(),
                 const UserInfo(),
+                const ConnectedAccountsButton(),
+                space10,
                 ReferalSystem(
                   key: controller.referalSystemKey,
                 ),
@@ -1336,6 +1338,39 @@ class _PriceSkeleton extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
+      ),
+    );
+  }
+}
+
+class ConnectedAccountsButton extends GetView<MyProfileController> {
+  const ConnectedAccountsButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: () {
+        Navigate.to(
+          type: NavigationTypes.toNamed,
+          route: Routes.CONNECTED_ACCOUNTS,
+        );
+      },
+      blockButton: true,
+      type: ButtonType.outline,
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.account_circle, color: Colors.white),
+          SizedBox(width: 8),
+          Text(
+            'Connected Accounts',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

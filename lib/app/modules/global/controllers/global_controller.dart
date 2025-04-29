@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:aptos/aptos.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
@@ -168,7 +166,8 @@ class GlobalController extends GetxController {
     );
     movementAptosPodiumProtocolAddress =
         movementAptosMetadata.podium_protocol_address;
-    movementAptosCheerBooAddress = movementAptosMetadata.cheer_boo_address;
+    movementAptosCheerBooAddress =
+        '0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa'; // movementAptosMetadata.cheer_boo_address;
 
     try {
       ReownAppKitModalNetworks.addSupportedNetworks(
@@ -403,7 +402,7 @@ class GlobalController extends GetxController {
 
     final (
       shouldCheckVersion,
-      forcetToUpdate,
+      forceUpdate,
       version,
     ) = (
       appMetadata.version_check,
@@ -458,11 +457,11 @@ class GlobalController extends GetxController {
             color: ColorName.black,
           ),
           actions: [
-            if (!forcetToUpdate)
+            if (!forceUpdate)
               TextButton(
                 onPressed: () {
                   storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                  Get.backLegacy();
+                  Get.close();
                 },
                 child: const Text(
                   'Later',
@@ -470,15 +469,19 @@ class GlobalController extends GetxController {
                 ),
               ),
             TextButton(
-              onPressed: () {
-                storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                launchUrl(
-                  Uri.parse(
-                    Env.appStoreUrl,
-                  ),
-                );
-                SystemNavigator.pop();
-                exit(0);
+              onPressed: () async {
+                if (!forceUpdate) {
+                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
+                }
+                try {
+                  await launchUrl(
+                    Uri.parse(
+                      Env.appStoreUrl,
+                    ),
+                  );
+                } catch (e) {
+                  l.e("error launching url $e");
+                }
               },
               child: const Text('Update'),
             ),

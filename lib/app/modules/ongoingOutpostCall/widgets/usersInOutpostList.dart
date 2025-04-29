@@ -673,7 +673,7 @@ class CheerBoo extends GetView<OngoingOutpostCallController> {
                   ),
         onPressed: () {
           controller.cheerBoo(
-            userId: userId,
+            targetUserUuid: userId,
             cheer: cheer,
           );
         },

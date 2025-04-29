@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
+import 'package:podium/app/modules/myProfile/views/connected_accounts_view.dart';
 import 'package:podium/app/modules/outpostDetail/views/outpost_by_id_landing.dart';
 import 'package:podium/app/modules/records/bindings/records_binding.dart';
 import 'package:podium/app/modules/records/views/records_view.dart';
@@ -117,6 +118,11 @@ class AppPages {
     GetPage(
       name: _Paths.MY_PROFILE,
       page: () => const MyProfileView(),
+      binding: MyProfileBinding(),
+    ),
+    GetPage(
+      name: _Paths.CONNECTED_ACCOUNTS,
+      page: () => const ConnectedAccountsView(),
       binding: MyProfileBinding(),
     ),
     GetPage(

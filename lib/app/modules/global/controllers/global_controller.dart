@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:aptos/aptos.dart';
+import 'package:dartx/dartx_io.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,10 +10,12 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/services/oneSignal.dart';
-import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
+import 'package:podium/app/modules/login/utils/signAndVerify.dart';
+import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
@@ -31,6 +34,7 @@ import 'package:reown_appkit/reown_appkit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 PairingMetadata _pairingMetadata = const PairingMetadata(
@@ -74,9 +78,10 @@ class GlobalController extends GetxController {
   late ReownAppKitModal web3ModalService;
   AptosAccount? aptosAccount;
   final loggedIn = false.obs;
+  final isAddingAccount = false.obs;
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
-  final isFirebaseInitialized = false.obs;
+  bool isFirebaseInitialized = false;
   final ticker = 0.obs;
   final showArchivedOutposts =
       RxBool(storage.read(StorageKeys.showArchivedOutposts) ?? true);
@@ -124,7 +129,7 @@ class GlobalController extends GetxController {
     await _addCustomNetworks();
 
     startTicker();
-    isFirebaseInitialized.value = true;
+    isFirebaseInitialized = true;
     final res = await analytics.getSessionId();
 
     l.d('analytics session id: $res');
@@ -146,6 +151,10 @@ class GlobalController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+  }
+
+  void setIsAddingAccount(bool value) {
+    isAddingAccount.value = value;
   }
 
   _getAndSetMetadata() async {
@@ -572,7 +581,6 @@ class GlobalController extends GetxController {
   Future<void> _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
-    web3AuthAddress = '';
     oneSignalService.dismiss();
     try {
       await Web3AuthFlutter.logout();
@@ -688,5 +696,83 @@ class GlobalController extends GetxController {
     analytics.logEvent(
       name: 'wallet_disconnected',
     );
+  }
+
+  addAccount(Provider provider) async {
+    try {
+      final currentPrivateKey = await Web3AuthFlutter.getPrivKey();
+      final currentPublicKey = privateKeyToPublicKey(currentPrivateKey);
+      setIsAddingAccount(true);
+      String? email;
+      if (provider == Provider.email_passwordless) {
+        email = await showDialogToGetTheEmail();
+        if (email.isNullOrEmpty) {
+          setIsAddingAccount(false);
+          return;
+        }
+      }
+      Web3AuthResponse? res;
+
+      if (email.isNotNullOrEmpty) {
+        res = await Web3AuthFlutter.login(
+          LoginParams(
+            loginProvider: provider,
+            mfaLevel: MFALevel.DEFAULT,
+            extraLoginOptions: ExtraLoginOptions(
+              login_hint: email,
+            ),
+          ),
+        );
+      } else {
+        res = await Web3AuthFlutter.login(
+          LoginParams(
+            loginProvider: provider,
+            mfaLevel: MFALevel.DEFAULT,
+          ),
+        );
+      }
+      if (res.ed25519PrivKey != null) {
+        final thisAccountPrivateKey = await Web3AuthFlutter.getPrivKey();
+
+        final signedPrivateKey = signMessage(
+          currentPublicKey,
+          thisAccountPrivateKey,
+        );
+
+        // aptos account
+        final generatedAptosAccount =
+            AptosAccount.fromPrivateKey(thisAccountPrivateKey);
+        aptosAccount = generatedAptosAccount;
+        final aptosAddress = generatedAptosAccount.address;
+// end aptos account
+        final loginType = web3AuthProviderToLoginTypeString(provider);
+        final publicAddress = privateKeyToPublicKey(currentPublicKey);
+        final name = res.userInfo?.name;
+        final image = res.userInfo?.profileImage;
+        final evmAddress = publicAddress;
+
+        UserModel updatedUser = myUser.copyWith.name(name ?? '');
+        updatedUser = updatedUser.copyWith.image(image ?? '');
+        updatedUser = updatedUser.copyWith.address(evmAddress);
+        updatedUser = updatedUser.copyWith.aptos_address(aptosAddress);
+        updatedUser = updatedUser.copyWith.login_type(loginType);
+        updatedUser = updatedUser.copyWith
+            .login_type_identifier(res.userInfo?.verifierId);
+        updatedUser = updatedUser.copyWith.email(res.userInfo?.email ?? '');
+        myUserInfo.value = updatedUser;
+        final isRegistered = Get.isRegistered<MyProfileController>();
+        if (isRegistered) {
+          final myProfileController = Get.find<MyProfileController>();
+          myProfileController.getBalances();
+        }
+        l.d(res);
+      }
+    } on UserCancelledException catch (e) {
+      l.e(e);
+    } catch (e) {
+      l.e(e);
+    } finally {
+      setIsAddingAccount(false);
+    }
   }
 }

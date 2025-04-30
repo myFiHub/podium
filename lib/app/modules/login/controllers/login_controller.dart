@@ -38,7 +38,7 @@ class LoginParametersKeys {
   static const referrerId = 'referrerId';
 }
 
-addressToUuid(String address) {
+_addressToUuid(String address) {
   final uuid = const Uuid();
   final uid = uuid.v5(Namespace.url.value, address);
   return uid;
@@ -125,12 +125,23 @@ class LoginController extends GetxController {
 
   @override
   void onReady() {
+    super.onReady();
+    // final isAddingAccount = globalController.isAddingAccount;
+    // if (isAddingAccount) {
+    //   Toast.success(
+    //     title: 'Account added',
+    //   );
+    //   Navigate.to(
+    //     route: Routes.CONNECTED_ACCOUNTS,
+    //     type: NavigationTypes.offAllNamed,
+    //   );
+    //   return;
+    // }
     globalController.deepLinkRoute.listen((v) {
       if (v.isNotEmpty) {
         initializeReferral(null);
       }
     });
-    super.onReady();
   }
 
   @override
@@ -233,7 +244,7 @@ class LoginController extends GetxController {
         Web3AuthFlutter.getUserInfo(),
         Web3AuthFlutter.getPrivKey()
       ).wait;
-      _continueSocialLoginWithUserInfoAndPrivateKey(
+      continueSocialLoginWithUserInfoAndPrivateKey(
         privateKey: privateKey,
         userInfo: userInfo,
         loginMethod: loginMethod,
@@ -291,7 +302,7 @@ class LoginController extends GetxController {
         final privateKey = res.privKey!;
         final userInfo = res.userInfo!;
 
-        await _continueSocialLoginWithUserInfoAndPrivateKey(
+        await continueSocialLoginWithUserInfoAndPrivateKey(
           privateKey: privateKey,
           userInfo: userInfo,
           loginMethod: loginMethod,
@@ -307,7 +318,7 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<void> _continueSocialLoginWithUserInfoAndPrivateKey({
+  Future<void> continueSocialLoginWithUserInfoAndPrivateKey({
     required String privateKey,
     required TorusUserInfo userInfo,
     required Provider loginMethod,
@@ -320,7 +331,6 @@ class LoginController extends GetxController {
       return;
     }
 
-    final uid = addressToUuid(publicAddress);
 // aptos account
     final aptosAccount = AptosAccount.fromPrivateKey(privateKey);
     globalController.aptosAccount = aptosAccount;
@@ -330,7 +340,6 @@ class LoginController extends GetxController {
     internalWalletAddress.value = aptosAddress;
 
     await _socialLogin(
-      id: uid,
       name: userInfo.name ?? '',
       email: userInfo.email ?? '',
       avatar: userInfo.profileImage ?? '',
@@ -368,7 +377,6 @@ class LoginController extends GetxController {
   }
 
   Future<void> _socialLogin({
-    required String id,
     required String name,
     required String email,
     required String avatar,

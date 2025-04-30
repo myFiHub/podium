@@ -157,113 +157,7 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
 
   void _showConnectConfirmationDialog(Provider provider, String title) {
     Get.dialog(
-      AlertDialog(
-        backgroundColor: ColorName.cardBackground,
-        title: const Text(
-          'Account Connection',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'In process of merging accounts:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            space10,
-            RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                children: [
-                  TextSpan(text: '• You will be '),
-                  TextSpan(
-                    text: 'logged out',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(text: ' from your currently connected account'),
-                ],
-              ),
-            ),
-            space10,
-            RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                children: [
-                  TextSpan(text: '• You will be '),
-                  TextSpan(
-                    text: 'logged in',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(text: ' with the new account'),
-                ],
-              ),
-            ),
-            space10,
-            RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                children: [
-                  TextSpan(text: '• Later, you can '),
-                  TextSpan(
-                    text: 'log in',
-                    style: TextStyle(
-                      color: ColorName.primaryBlue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(text: ' with your main account'),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.close(),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Get.close();
-              // TODO: Implement the actual connection logic here
-            },
-            child: const Text(
-              'Continue',
-              style: TextStyle(
-                color: ColorName.primaryBlue,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
+      ConnectConfirmationDialog(provider: provider, title: title),
     );
   }
 
@@ -286,5 +180,124 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
       default:
         return loginType;
     }
+  }
+}
+
+class ConnectConfirmationDialog extends GetView<MyProfileController> {
+  const ConnectConfirmationDialog(
+      {super.key, required this.provider, required this.title});
+
+  final Provider provider;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: ColorName.cardBackground,
+      title: const Text(
+        'Account Connection',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'In process of merging accounts:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          space10,
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              children: [
+                TextSpan(text: '• You will be '),
+                TextSpan(
+                  text: 'logged out',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(text: ' from your currently connected account'),
+              ],
+            ),
+          ),
+          space10,
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              children: [
+                TextSpan(text: '• You will be '),
+                TextSpan(
+                  text: 'logged in',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(text: ' with the new account'),
+              ],
+            ),
+          ),
+          space10,
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              children: [
+                TextSpan(text: '• Later, you can '),
+                TextSpan(
+                  text: 'log in',
+                  style: TextStyle(
+                    color: ColorName.primaryBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(text: ' with your main account'),
+              ],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Get.close(),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Get.close();
+            controller.addAccount(provider);
+          },
+          child: const Text(
+            'Continue',
+            style: TextStyle(
+              color: ColorName.primaryBlue,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

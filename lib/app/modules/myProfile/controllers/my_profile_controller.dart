@@ -26,6 +26,7 @@ import 'package:podium/widgets/button/button.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class Payments {
@@ -101,7 +102,7 @@ class MyProfileController extends GetxController {
       }
     });
     _getMyProfile();
-    _getBalances();
+    getBalances();
   }
 
   @override
@@ -311,16 +312,14 @@ class MyProfileController extends GetxController {
   void introFinished(bool? setAsFinished) {
     saveIntroAsDone(setAsFinished);
     try {
-      tutorialCoachMark.finish();
       saveIntroAsDone(true);
-      Get.back();
+      tutorialCoachMark.finish();
     } catch (e) {
-      l.e('Error finishing tutorial: $e');
-      Get.back();
+      l.e(e);
     }
   }
 
-  _getBalances() async {
+  getBalances() async {
     try {
       isGettingBalances.value = true;
       final baseClient = evmClientByChainId(baseChainId);
@@ -593,6 +592,10 @@ class MyProfileController extends GetxController {
         ],
       ),
     );
+  }
+
+  void addAccount(Provider provider) {
+    globalController.addAccount(provider);
   }
 }
 

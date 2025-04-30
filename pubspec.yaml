@@ -32,7 +32,7 @@ dependencies:
   animated_icon: ^0.0.9
 
   # Audio & Media
-  just_audio: ^0.9.46
+  just_audio: ^0.10.1
   just_waveform: ^0.0.7
   record: ^6.0.0
   flutter_sound: ^9.28.0
@@ -47,7 +47,6 @@ dependencies:
   # Firebase Services
   firebase_core: ^3.13.0
   firebase_analytics: ^11.4.5
-  firebase_auth: ^5.5.2
 
   # Forms & Input
   flutter_form_builder: ^10.0.1
@@ -90,7 +89,7 @@ dependencies:
   reown_appkit: ^1.4.2
 
   # Sharing & Links
-  share_plus: ^10.1.4
+  share_plus: ^11.0.0
   app_links: ^6.4.0
   url_launcher: ^6.3.1
   add_2_calendar: ^3.0.1

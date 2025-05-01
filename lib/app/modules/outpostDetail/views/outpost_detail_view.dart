@@ -9,17 +9,21 @@ import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../controllers/outpost_detail_controller.dart';
 
@@ -554,20 +558,57 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
       final accesses = controller.outpostAccesses.value;
       final outpost = controller.outpost.value;
       final joinButtonContent = controller.jointButtonContentProps.value;
+      final isRegistered = Get.isRegistered<OngoingOutpostCallController>();
+      if (isRegistered) {
+        joinButtonContent.enabled = true;
+        joinButtonContent.text = 'Return to Outpost';
+      }
       if (accesses == null || outpost == null) {
         return Container();
       }
 
       return Button(
-        type: ButtonType.gradient,
+        type: isRegistered ? ButtonType.outline : ButtonType.gradient,
+        borderSide:
+            BorderSide(color: isRegistered ? Colors.green : Colors.transparent),
         onPressed: joinButtonContent.enabled
             ? () {
-                controller.startTheCall(accesses: accesses);
+                if (isRegistered) {
+                  Navigate.to(
+                    type: NavigationTypes.toNamed,
+                    route: Routes.ONGOING_OUTPOST_CALL,
+                  );
+                } else {
+                  controller.startTheCall(accesses: accesses);
+                }
               }
             : null,
-        child: Text(
-          joinButtonContent.text,
-          textAlign: TextAlign.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            isRegistered
+                ? Shimmer.fromColors(
+                    baseColor: Colors.white,
+                    highlightColor: Colors.green,
+                    child: Text(
+                      joinButtonContent.text,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.green,
+                      ),
+                    ),
+                  )
+                : Text(
+                    joinButtonContent.text,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+            space8,
+            if (isRegistered)
+              const Icon(Icons.arrow_forward, color: Colors.green),
+          ],
         ),
       );
     });

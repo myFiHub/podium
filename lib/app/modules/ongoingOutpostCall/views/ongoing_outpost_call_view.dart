@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:animated_icon/animated_icon.dart';
 import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
@@ -410,6 +412,9 @@ class MembersList extends GetView<OutpostCallController> {
                     ),
                   ),
                   body: TabBarView(
+                    physics: Platform.isIOS
+                        ? const NeverScrollableScrollPhysics()
+                        : null,
                     children: [
                       Obx(
                         () {

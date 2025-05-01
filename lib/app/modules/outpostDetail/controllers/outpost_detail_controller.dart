@@ -31,8 +31,8 @@ import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class JoinButtonProps {
-  final bool enabled;
-  final String text;
+  bool enabled;
+  String text;
   JoinButtonProps({required this.enabled, required this.text});
 }
 

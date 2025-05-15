@@ -30,6 +30,7 @@ bool verifySignature(String signature, String message, String signer) {
 }
 
 String privateKeyToPublicKey(String privateKey) {
-  final publicKey = EthPrivateKey.fromHex(privateKey).publicKey;
-  return publicKey.toString();
+  final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
+  final publicAddress = ethereumKeyPair.address.hex;
+  return publicAddress;
 }

@@ -154,8 +154,8 @@ class _NameAndImageWrapper extends StatelessWidget {
   }
 }
 
-class GroupDetailView extends GetView<OutpostDetailController> {
-  const GroupDetailView({Key? key}) : super(key: key);
+class OutpostDetailView extends GetView<OutpostDetailController> {
+  const OutpostDetailView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -615,8 +615,8 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
   }
 }
 
-openInviteBottomSheet({required bool canInviteToSpeak}) {
-  Get.dialog(
+void openInviteBottomSheet({required bool canInviteToSpeak}) {
+  Get.dialog<void>(
     UserInvitationBottomSheetContent(
       canInviteToSpeak: canInviteToSpeak,
     ),

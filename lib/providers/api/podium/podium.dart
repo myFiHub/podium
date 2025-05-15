@@ -18,6 +18,7 @@ import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
+import 'package:podium/providers/api/podium/models/users/connect_new_account_request.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
@@ -709,6 +710,28 @@ class PodiumApi {
     try {
       final response = await dio.post('$_baseUrl/outposts/set-reminder',
           data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> connectNewAccount(ConnectNewAccountRequest request) async {
+    try {
+      final response = await dio.post('$_baseUrl/users/accounts/connect',
+          data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> setAccountAsPrimary({required String address}) async {
+    try {
+      final response = await dio.post('$_baseUrl/users/accounts/set-primary',
+          data: {'address': address}, options: Options(headers: _headers));
       return response.statusCode == 200;
     } catch (e) {
       l.e(e);

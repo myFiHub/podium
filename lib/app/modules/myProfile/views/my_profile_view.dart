@@ -862,105 +862,22 @@ class LogoutButton extends GetView<GlobalController> {
 class UserInfo extends GetView<GlobalController> {
   const UserInfo({super.key});
 
-  void _showPrivateKeyWarning(BuildContext context, String privateKey) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: ColorName.systemTrayBackground,
-        title: const Text(
-          '⚠️ WARNING: Private Key Access',
-          style: TextStyle(
-            color: Colors.red,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'IMPORTANT: Your private key is the key to your account. Anyone with access to it can control your account and steal your assets.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              '⚠️ NEVER share your private key with anyone',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '⚠️ NEVER enter it on any website',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '⚠️ NEVER store it in plain text',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: privateKey));
-              Toast.success(
-                title: 'Copied',
-                message: 'Private key copied to clipboard',
-              );
-              Navigator.pop(context);
-            },
-            child: const Text('Copy Private Key'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    String emailValue = controller.myUserInfo.value?.email as String;
+    String identifier =
+        controller.myUserInfo.value?.login_type_identifier as String;
     final loginType = GetStorage().read(StorageKeys.loginType);
-    if (loginType == LoginType.x) {
-      emailValue = 'Logged in with X platform';
-    }
-    if (loginType == LoginType.facebook) {
-      emailValue = 'Logged in with Facebook';
-    }
-    if (loginType == LoginType.linkedin) {
-      emailValue = 'Logged in with LinkedIn';
-    }
-    if (loginType == LoginType.apple) {
-      emailValue = 'Logged in with Apple';
-    }
-    if (loginType == LoginType.github) {
-      emailValue = 'Logged in with Github';
+
+    final loginTypes = {
+      LoginType.x: 'Logged in with X platform',
+      LoginType.facebook: 'Logged in with Facebook',
+      LoginType.linkedin: 'Logged in with LinkedIn',
+      LoginType.apple: 'Logged in with Apple',
+      LoginType.github: 'Logged in with Github'
+    };
+
+    if (loginTypes.containsKey(loginType)) {
+      identifier = loginTypes[loginType]!;
     }
 
     return Obx(() {
@@ -996,7 +913,7 @@ class UserInfo extends GetView<GlobalController> {
             ),
             space10,
             Text(
-              emailValue,
+              identifier,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,

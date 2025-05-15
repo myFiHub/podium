@@ -57,6 +57,8 @@ abstract class _$UserModelCWProxy {
 
   UserModel sent_cheer_count(int sent_cheer_count);
 
+  UserModel accounts(List<ConnectedAccount> accounts);
+
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UserModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
   /// Usage
@@ -89,6 +91,7 @@ abstract class _$UserModelCWProxy {
     int sent_boo_count,
     double sent_cheer_amount,
     int sent_cheer_count,
+    List<ConnectedAccount> accounts,
   });
 }
 
@@ -191,6 +194,10 @@ class _$UserModelCWProxyImpl implements _$UserModelCWProxy {
       this(sent_cheer_count: sent_cheer_count);
 
   @override
+  UserModel accounts(List<ConnectedAccount> accounts) =>
+      this(accounts: accounts);
+
+  @override
 
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UserModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
@@ -224,6 +231,7 @@ class _$UserModelCWProxyImpl implements _$UserModelCWProxy {
     Object? sent_boo_count = const $CopyWithPlaceholder(),
     Object? sent_cheer_amount = const $CopyWithPlaceholder(),
     Object? sent_cheer_count = const $CopyWithPlaceholder(),
+    Object? accounts = const $CopyWithPlaceholder(),
   }) {
     return UserModel(
       address: address == const $CopyWithPlaceholder()
@@ -330,6 +338,10 @@ class _$UserModelCWProxyImpl implements _$UserModelCWProxy {
           ? _value.sent_cheer_count
           // ignore: cast_nullable_to_non_nullable
           : sent_cheer_count as int,
+      accounts: accounts == const $CopyWithPlaceholder()
+          ? _value.accounts
+          // ignore: cast_nullable_to_non_nullable
+          : accounts as List<ConnectedAccount>,
     );
   }
 }
@@ -376,6 +388,10 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       sent_boo_count: (json['sent_boo_count'] as num?)?.toInt() ?? 0,
       sent_cheer_amount: (json['sent_cheer_amount'] as num?)?.toDouble() ?? 0.0,
       sent_cheer_count: (json['sent_cheer_count'] as num?)?.toInt() ?? 0,
+      accounts: (json['accounts'] as List<dynamic>?)
+              ?.map((e) => ConnectedAccount.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
@@ -404,4 +420,27 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
       'sent_boo_count': instance.sent_boo_count,
       'sent_cheer_amount': instance.sent_cheer_amount,
       'sent_cheer_count': instance.sent_cheer_count,
+      'accounts': instance.accounts,
+    };
+
+ConnectedAccount _$ConnectedAccountFromJson(Map<String, dynamic> json) =>
+    ConnectedAccount(
+      address: json['address'] as String,
+      aptos_address: json['aptos_address'] as String,
+      image: json['image'] as String,
+      is_primary: json['is_primary'] as bool,
+      login_type: json['login_type'] as String,
+      login_type_identifier: json['login_type_identifier'] as String,
+      uuid: json['uuid'] as String,
+    );
+
+Map<String, dynamic> _$ConnectedAccountToJson(ConnectedAccount instance) =>
+    <String, dynamic>{
+      'address': instance.address,
+      'aptos_address': instance.aptos_address,
+      'image': instance.image,
+      'is_primary': instance.is_primary,
+      'login_type': instance.login_type,
+      'login_type_identifier': instance.login_type_identifier,
+      'uuid': instance.uuid,
     };

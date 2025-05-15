@@ -10,18 +10,17 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/services/oneSignal.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
-import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
+import 'package:podium/providers/api/podium/models/users/connect_new_account_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/client.dart';
@@ -527,7 +526,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  void setLoggedIn(bool value) async {
+  Future<void> setLoggedIn(bool value) async {
     loggedIn.value = value;
     if (value == false) {
       l.f("logging out");
@@ -701,7 +700,7 @@ class GlobalController extends GetxController {
   addAccount(Provider provider) async {
     try {
       final currentPrivateKey = await Web3AuthFlutter.getPrivKey();
-      final currentPublicKey = privateKeyToPublicKey(currentPrivateKey);
+      final currentAccountAddress = privateKeyToPublicKey(currentPrivateKey);
       setIsAddingAccount(true);
       String? email;
       if (provider == Provider.email_passwordless) {
@@ -732,40 +731,40 @@ class GlobalController extends GetxController {
         );
       }
       if (res.ed25519PrivKey != null) {
-        final thisAccountPrivateKey = await Web3AuthFlutter.getPrivKey();
+        final newAccountPrivateKey = await Web3AuthFlutter.getPrivKey();
+        final newAccountAddress = privateKeyToPublicKey(newAccountPrivateKey);
 
-        final signedPrivateKey = signMessage(
-          currentPublicKey,
-          thisAccountPrivateKey,
-        );
+        final currentAccountAddressSignedByNewAccount =
+            signMessage(newAccountPrivateKey, currentAccountAddress)!;
+        final newAccountAddressSignedByCurrentAccount =
+            signMessage(currentPrivateKey, newAccountAddress)!;
 
         // aptos account
         final generatedAptosAccount =
-            AptosAccount.fromPrivateKey(thisAccountPrivateKey);
+            AptosAccount.fromPrivateKey(newAccountPrivateKey);
         aptosAccount = generatedAptosAccount;
-        final aptosAddress = generatedAptosAccount.address;
-// end aptos account
-        final loginType = web3AuthProviderToLoginTypeString(provider);
-        final publicAddress = privateKeyToPublicKey(currentPublicKey);
-        final name = res.userInfo?.name;
-        final image = res.userInfo?.profileImage;
-        final evmAddress = publicAddress;
-
-        UserModel updatedUser = myUser.copyWith.name(name ?? '');
-        updatedUser = updatedUser.copyWith.image(image ?? '');
-        updatedUser = updatedUser.copyWith.address(evmAddress);
-        updatedUser = updatedUser.copyWith.aptos_address(aptosAddress);
-        updatedUser = updatedUser.copyWith.login_type(loginType);
-        updatedUser = updatedUser.copyWith
-            .login_type_identifier(res.userInfo?.verifierId);
-        updatedUser = updatedUser.copyWith.email(res.userInfo?.email ?? '');
-        myUserInfo.value = updatedUser;
-        final isRegistered = Get.isRegistered<MyProfileController>();
-        if (isRegistered) {
-          final myProfileController = Get.find<MyProfileController>();
-          myProfileController.getBalances();
+        final newAccountAptosAddress = generatedAptosAccount.address;
+        final newAccountLoginType = web3AuthProviderToLoginTypeString(provider);
+        final newAccountImage = res.userInfo?.profileImage;
+        final request = ConnectNewAccountRequest(
+          aptos_address: newAccountAptosAddress,
+          current_address_signature: currentAccountAddressSignedByNewAccount,
+          image: newAccountImage ?? '',
+          login_type: newAccountLoginType,
+          login_type_identifier: res.userInfo?.verifierId ?? '',
+          new_address: newAccountAddress,
+          new_address_signature: newAccountAddressSignedByCurrentAccount,
+        );
+        final connected = await HttpApis.podium.connectNewAccount(request);
+        if (connected) {
+          await setLoggedIn(false);
+          final loginController = Get.put(LoginController());
+          await loginController.continueSocialLoginWithUserInfoAndPrivateKey(
+            privateKey: newAccountPrivateKey,
+            userInfo: res.userInfo!,
+            loginMethod: loginTypeStringToWeb3AuthProvider(newAccountLoginType),
+          );
         }
-        l.d(res);
       }
     } on UserCancelledException catch (e) {
       l.e(e);

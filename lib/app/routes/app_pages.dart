@@ -79,7 +79,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.OUTPOST_DETAIL,
-      page: () => const GroupDetailView(),
+      page: () => const OutpostDetailView(),
       binding: GroupDetailBinding(),
       children: [
         GetPage(

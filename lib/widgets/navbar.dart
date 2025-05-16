@@ -52,6 +52,7 @@ final List<NavbarItem> navbarItems = [
     route: Routes.MY_PROFILE,
     icon: Icons.person_outline,
     label: 'Profile',
+    overlay: const ProfileBadge(),
   ),
 ];
 
@@ -175,6 +176,43 @@ Widget _buildNavItem({
       ],
     ),
   );
+}
+
+class ProfileBadge extends GetView<GlobalController> {
+  const ProfileBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final currentUser = controller.myUserInfo.value;
+      if (currentUser == null) {
+        return const SizedBox.shrink();
+      }
+      final accounts = currentUser.accounts;
+      final primaryAccount = accounts.firstWhere(
+        (account) => account.is_primary,
+        orElse: () => accounts.first,
+      );
+
+      final isThisAccountPrimary =
+          primaryAccount.address == currentUser.address;
+      return !isThisAccountPrimary
+          ? Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                  width: 10,
+                  height: 10,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const SizedBox()),
+            )
+          : Container();
+    });
+  }
 }
 
 class NotificationBadge extends GetWidget<NotificationsController> {

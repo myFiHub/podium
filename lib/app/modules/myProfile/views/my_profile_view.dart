@@ -47,6 +47,7 @@ class MyProfileView extends GetView<MyProfileController> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 const ContextSaver(),
+                const NonPrimaryAccountWarning(),
                 const UserInfo(),
                 const ConnectedAccountsButton(),
                 space10,
@@ -1265,6 +1266,12 @@ class ConnectedAccountsButton extends GetView<MyProfileController> {
 
   @override
   Widget build(BuildContext context) {
+    final myAccounts = myUser.accounts;
+    final accountCount = myAccounts.length;
+    final buttonText = accountCount <= 1
+        ? 'Connect Accounts'
+        : 'Connected Accounts ($accountCount)';
+
     return Button(
       onPressed: () {
         Navigate.to(
@@ -1274,14 +1281,14 @@ class ConnectedAccountsButton extends GetView<MyProfileController> {
       },
       blockButton: true,
       type: ButtonType.outline,
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.account_circle, color: Colors.white),
-          SizedBox(width: 8),
+          const Icon(Icons.account_circle, color: Colors.white),
+          const SizedBox(width: 8),
           Text(
-            'Connected Accounts',
-            style: TextStyle(
+            buttonText,
+            style: const TextStyle(
               fontSize: 18,
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -1289,6 +1296,83 @@ class ConnectedAccountsButton extends GetView<MyProfileController> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class NonPrimaryAccountWarning extends GetView<GlobalController> {
+  const NonPrimaryAccountWarning({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        final myUser = controller.myUserInfo.value;
+        if (myUser == null) {
+          return const SizedBox.shrink();
+        }
+        final accounts = myUser.accounts;
+        final primaryAccount = accounts.firstWhere(
+          (account) => account.is_primary,
+          orElse: () => accounts.first,
+        );
+        final isThisAccountPrimary = primaryAccount.address == myUser.address;
+        return !isThisAccountPrimary
+            ? Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: Colors.red.withAlpha(26),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.red.withAlpha(77),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withAlpha(51),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.red,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Secondary Account',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'This is a secondary account. Only the primary account can perform certain actions.',
+                            style: TextStyle(
+                              color: Colors.red.withAlpha(204),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : const SizedBox.shrink();
+      },
     );
   }
 }

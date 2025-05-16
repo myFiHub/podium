@@ -352,6 +352,125 @@ extension $UserModelCopyWith on UserModel {
   _$UserModelCWProxy get copyWith => _$UserModelCWProxyImpl(this);
 }
 
+abstract class _$ConnectedAccountCWProxy {
+  ConnectedAccount address(String address);
+
+  ConnectedAccount aptos_address(String aptos_address);
+
+  ConnectedAccount image(String image);
+
+  ConnectedAccount is_primary(bool is_primary);
+
+  ConnectedAccount login_type(String login_type);
+
+  ConnectedAccount login_type_identifier(String login_type_identifier);
+
+  ConnectedAccount uuid(String uuid);
+
+  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ConnectedAccount(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  ///
+  /// Usage
+  /// ```dart
+  /// ConnectedAccount(...).copyWith(id: 12, name: "My name")
+  /// ````
+  ConnectedAccount call({
+    String address,
+    String aptos_address,
+    String image,
+    bool is_primary,
+    String login_type,
+    String login_type_identifier,
+    String uuid,
+  });
+}
+
+/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfConnectedAccount.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfConnectedAccount.copyWith.fieldName(...)`
+class _$ConnectedAccountCWProxyImpl implements _$ConnectedAccountCWProxy {
+  const _$ConnectedAccountCWProxyImpl(this._value);
+
+  final ConnectedAccount _value;
+
+  @override
+  ConnectedAccount address(String address) => this(address: address);
+
+  @override
+  ConnectedAccount aptos_address(String aptos_address) =>
+      this(aptos_address: aptos_address);
+
+  @override
+  ConnectedAccount image(String image) => this(image: image);
+
+  @override
+  ConnectedAccount is_primary(bool is_primary) => this(is_primary: is_primary);
+
+  @override
+  ConnectedAccount login_type(String login_type) =>
+      this(login_type: login_type);
+
+  @override
+  ConnectedAccount login_type_identifier(String login_type_identifier) =>
+      this(login_type_identifier: login_type_identifier);
+
+  @override
+  ConnectedAccount uuid(String uuid) => this(uuid: uuid);
+
+  @override
+
+  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ConnectedAccount(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  ///
+  /// Usage
+  /// ```dart
+  /// ConnectedAccount(...).copyWith(id: 12, name: "My name")
+  /// ````
+  ConnectedAccount call({
+    Object? address = const $CopyWithPlaceholder(),
+    Object? aptos_address = const $CopyWithPlaceholder(),
+    Object? image = const $CopyWithPlaceholder(),
+    Object? is_primary = const $CopyWithPlaceholder(),
+    Object? login_type = const $CopyWithPlaceholder(),
+    Object? login_type_identifier = const $CopyWithPlaceholder(),
+    Object? uuid = const $CopyWithPlaceholder(),
+  }) {
+    return ConnectedAccount(
+      address: address == const $CopyWithPlaceholder()
+          ? _value.address
+          // ignore: cast_nullable_to_non_nullable
+          : address as String,
+      aptos_address: aptos_address == const $CopyWithPlaceholder()
+          ? _value.aptos_address
+          // ignore: cast_nullable_to_non_nullable
+          : aptos_address as String,
+      image: image == const $CopyWithPlaceholder()
+          ? _value.image
+          // ignore: cast_nullable_to_non_nullable
+          : image as String,
+      is_primary: is_primary == const $CopyWithPlaceholder()
+          ? _value.is_primary
+          // ignore: cast_nullable_to_non_nullable
+          : is_primary as bool,
+      login_type: login_type == const $CopyWithPlaceholder()
+          ? _value.login_type
+          // ignore: cast_nullable_to_non_nullable
+          : login_type as String,
+      login_type_identifier:
+          login_type_identifier == const $CopyWithPlaceholder()
+              ? _value.login_type_identifier
+              // ignore: cast_nullable_to_non_nullable
+              : login_type_identifier as String,
+      uuid: uuid == const $CopyWithPlaceholder()
+          ? _value.uuid
+          // ignore: cast_nullable_to_non_nullable
+          : uuid as String,
+    );
+  }
+}
+
+extension $ConnectedAccountCopyWith on ConnectedAccount {
+  /// Returns a callable class that can be used as follows: `instanceOfConnectedAccount.copyWith(...)` or like so:`instanceOfConnectedAccount.copyWith.fieldName(...)`.
+  // ignore: library_private_types_in_public_api
+  _$ConnectedAccountCWProxy get copyWith => _$ConnectedAccountCWProxyImpl(this);
+}
+
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************

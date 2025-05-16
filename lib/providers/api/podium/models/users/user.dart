@@ -70,11 +70,12 @@ class UserModel {
 }
 
 @JsonSerializable()
+@CopyWith()
 class ConnectedAccount {
   final String address;
   final String aptos_address;
   final String image;
-  final bool is_primary;
+  bool is_primary;
   final String login_type;
   final String login_type_identifier;
   final String uuid;

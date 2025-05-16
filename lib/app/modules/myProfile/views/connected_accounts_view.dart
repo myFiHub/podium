@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
+import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:web3auth_flutter/enums.dart';
 
@@ -26,7 +28,7 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: ColorName.black.withOpacity(0.1),
+                    color: ColorName.black.withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -47,49 +49,49 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
                 ),
                 space24,
               ],
-              _buildLoginOption(
+              LoginOption(
                 provider: Provider.twitter,
                 icon: Assets.images.xPlatform,
                 title: 'X (Twitter)',
                 isConnected: currentLoginType == 'twitter',
               ),
               space10,
-              _buildLoginOption(
+              LoginOption(
                 provider: Provider.apple,
                 icon: Assets.images.apple,
                 title: 'Apple',
                 isConnected: currentLoginType == 'apple',
               ),
               space10,
-              _buildLoginOption(
+              LoginOption(
                 provider: Provider.google,
                 icon: Assets.images.gIcon,
                 title: 'Google',
                 isConnected: currentLoginType == 'google',
               ),
               space10,
-              _buildLoginOption(
+              LoginOption(
                 provider: Provider.email_passwordless,
                 icon: null,
                 title: 'Email',
                 isConnected: currentLoginType == 'email',
               ),
               space10,
-              _buildLoginOption(
+              LoginOption(
                 provider: Provider.facebook,
                 icon: Assets.images.facebook,
                 title: 'Facebook',
                 isConnected: currentLoginType == 'facebook',
               ),
               space10,
-              _buildLoginOption(
+              LoginOption(
                 provider: Provider.linkedin,
                 icon: Assets.images.linkedin,
                 title: 'LinkedIn',
                 isConnected: currentLoginType == 'linkedin',
               ),
               space10,
-              _buildLoginOption(
+              LoginOption(
                 provider: Provider.github,
                 icon: Assets.images.github,
                 title: 'GitHub',
@@ -102,16 +104,48 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
     );
   }
 
-  Widget _buildLoginOption({
-    required Provider provider,
-    required dynamic icon,
-    required String title,
-    required bool isConnected,
-  }) {
+  String _getLoginTypeDisplayName(String loginType) {
+    switch (loginType) {
+      case 'twitter':
+        return 'X (Twitter)';
+      case 'apple':
+        return 'Apple';
+      case 'google':
+        return 'Google';
+      case 'email':
+        return 'Email';
+      case 'facebook':
+        return 'Facebook';
+      case 'linkedin':
+        return 'LinkedIn';
+      case 'github':
+        return 'GitHub';
+      default:
+        return loginType;
+    }
+  }
+}
+
+class LoginOption extends GetView<GlobalController> {
+  const LoginOption({
+    super.key,
+    required this.provider,
+    required this.icon,
+    required this.title,
+    required this.isConnected,
+  });
+
+  final Provider provider;
+  final dynamic icon;
+  final String title;
+  final bool isConnected;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ColorName.black.withOpacity(0.05),
+        color: ColorName.black.withAlpha(13),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isConnected ? Colors.green : Colors.transparent,
@@ -139,17 +173,85 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
             ),
           ),
           if (isConnected)
+            Obx(() {
+              final accounts = controller.myUserInfo.value?.accounts;
+              final isPrimary = accounts?.any(
+                    (account) =>
+                        account.address ==
+                            controller.myUserInfo.value?.address &&
+                        account.is_primary,
+                  ) ??
+                  false;
+              return !isPrimary
+                  ? Row(
+                      children: [
+                        MakePrimaryButton(
+                          address: controller.myUserInfo.value?.address ?? '',
+                        ),
+                        space12,
+                      ],
+                    )
+                  : const SizedBox.shrink();
+            }),
+          if (isConnected)
             const Icon(Icons.check_circle, color: Colors.green)
           else
-            Button(
-              text: 'Connect',
-              size: ButtonSize.SMALL,
-              type: ButtonType.solid,
-              color: ColorName.black,
-              onPressed: () {
-                _showConnectConfirmationDialog(provider, title);
-              },
-            ),
+            Obx(() {
+              final accounts = controller.myUserInfo.value?.accounts;
+              final thisTypeExistOnAccounts = accounts?.any((account) {
+                    final isEmail = account.login_type == 'email';
+                    final isEmailPasswordless =
+                        provider == Provider.email_passwordless && isEmail;
+                    return (account.login_type == provider ||
+                        isEmailPasswordless);
+                  }) ??
+                  false;
+
+              if (thisTypeExistOnAccounts) {
+                final existingAccount = accounts?.firstWhere((account) {
+                  final isEmail = account.login_type == 'email';
+                  final isEmailPasswordless =
+                      provider == Provider.email_passwordless && isEmail;
+                  return (account.login_type == provider ||
+                      isEmailPasswordless);
+                });
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      existingAccount?.login_type_identifier != null
+                          ? truncate(existingAccount!.login_type_identifier)
+                          : '',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.indigo,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Button(
+                      text: 'Switch',
+                      size: ButtonSize.SMALL,
+                      type: ButtonType.solid,
+                      color: ColorName.black,
+                      onPressed: () {
+                        _showConnectConfirmationDialog(provider, title);
+                      },
+                    ),
+                  ],
+                );
+              }
+
+              return Button(
+                text: 'Connect',
+                size: ButtonSize.SMALL,
+                type: ButtonType.solid,
+                color: ColorName.black,
+                onPressed: () {
+                  _showConnectConfirmationDialog(provider, title);
+                },
+              );
+            }),
         ],
       ),
     );
@@ -160,26 +262,32 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
       ConnectConfirmationDialog(provider: provider, title: title),
     );
   }
+}
 
-  String _getLoginTypeDisplayName(String loginType) {
-    switch (loginType) {
-      case 'twitter':
-        return 'X (Twitter)';
-      case 'apple':
-        return 'Apple';
-      case 'google':
-        return 'Google';
-      case 'email':
-        return 'Email';
-      case 'facebook':
-        return 'Facebook';
-      case 'linkedin':
-        return 'LinkedIn';
-      case 'github':
-        return 'GitHub';
-      default:
-        return loginType;
-    }
+class MakePrimaryButton extends GetView<MyProfileController> {
+  const MakePrimaryButton({super.key, required this.address});
+
+  final String address;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isLoading = controller.isSettingAccountAsPrimary.value;
+      return SizedBox(
+        width: 100,
+        height: 30,
+        child: Button(
+          loading: isLoading,
+          text: 'Make primary',
+          size: ButtonSize.SMALL,
+          type: ButtonType.solid,
+          color: ColorName.secondaryBlue,
+          onPressed: () {
+            controller.setAccountAsPrimary(address);
+          },
+        ),
+      );
+    });
   }
 }
 

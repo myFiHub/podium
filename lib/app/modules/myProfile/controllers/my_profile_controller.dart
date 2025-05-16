@@ -19,6 +19,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -75,6 +76,9 @@ class MyProfileController extends GetxController {
   final isGettingPayments = false.obs;
   final isGettingBalances = false.obs;
   final isDeactivatingAccount = false.obs;
+
+  final isSettingAccountAsPrimary = false.obs;
+
   final balances = Rx(
     Balances(
       Base: '0.0',
@@ -596,6 +600,31 @@ class MyProfileController extends GetxController {
 
   void addAccount(Provider provider) {
     globalController.addAccount(provider);
+  }
+
+  Future<void> setAccountAsPrimary(String address) async {
+    isSettingAccountAsPrimary.value = true;
+    try {
+      final res = await HttpApis.podium.setAccountAsPrimary(address: address);
+      if (res) {
+        final myAccounts = globalController.myUserInfo.value?.accounts ?? [];
+        final updatedAccounts = myAccounts.map((account) {
+          if (account.address == address) {
+            return account.copyWith(is_primary: true);
+          }
+          return account.copyWith(is_primary: false);
+        }).toList();
+        final updatedUser = globalController.myUserInfo.value?.copyWith(
+          accounts: updatedAccounts,
+        );
+        globalController.myUserInfo.value = updatedUser;
+        Toast.success(message: 'Account is set as primary');
+      }
+    } catch (e) {
+      Toast.error(message: 'Error setting account as primary');
+    } finally {
+      isSettingAccountAsPrimary.value = false;
+    }
   }
 }
 

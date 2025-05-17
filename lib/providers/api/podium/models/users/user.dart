@@ -74,9 +74,9 @@ class UserModel {
 class ConnectedAccount {
   final String address;
   final String aptos_address;
-  final String image;
+  final String? image;
   bool is_primary;
-  final String login_type;
+  final String? login_type;
   final String login_type_identifier;
   final String uuid;
 

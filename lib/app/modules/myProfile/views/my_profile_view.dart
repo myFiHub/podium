@@ -17,6 +17,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
@@ -1261,42 +1262,47 @@ class _PriceSkeleton extends StatelessWidget {
   }
 }
 
-class ConnectedAccountsButton extends GetView<MyProfileController> {
+class ConnectedAccountsButton extends GetView<GlobalController> {
   const ConnectedAccountsButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final myAccounts = myUser.accounts;
-    final accountCount = myAccounts.length;
-    final buttonText = accountCount <= 1
-        ? 'Connect Accounts'
-        : 'Connected Accounts ($accountCount)';
-
-    return Button(
-      onPressed: () {
-        Navigate.to(
-          type: NavigationTypes.toNamed,
-          route: Routes.CONNECTED_ACCOUNTS,
-        );
-      },
-      blockButton: true,
-      type: ButtonType.outline,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.account_circle, color: Colors.white),
-          const SizedBox(width: 8),
-          Text(
-            buttonText,
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
+    return Obx(() {
+      final myUser = controller.myUserInfo.value;
+      if (myUser == null) {
+        return const SizedBox.shrink();
+      }
+      final myAccounts = myUser.accounts;
+      final accountCount = myAccounts.length;
+      final buttonText = accountCount <= 1
+          ? 'Connect Accounts'
+          : 'Connected Accounts ($accountCount)';
+      return Button(
+        onPressed: () {
+          Navigate.to(
+            type: NavigationTypes.toNamed,
+            route: Routes.CONNECTED_ACCOUNTS,
+          );
+        },
+        blockButton: true,
+        type: ButtonType.outline,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.account_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              buttonText,
+              style: const TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -1314,7 +1320,14 @@ class NonPrimaryAccountWarning extends GetView<GlobalController> {
         final accounts = myUser.accounts;
         final primaryAccount = accounts.firstWhere(
           (account) => account.is_primary,
-          orElse: () => accounts.first,
+          orElse: () => ConnectedAccount(
+              address: myUser.address,
+              aptos_address: myUser.aptos_address!,
+              image: myUser.image,
+              is_primary: true,
+              login_type: myUser.login_type,
+              login_type_identifier: myUser.login_type_identifier ?? '',
+              uuid: myUser.uuid),
         );
         final isThisAccountPrimary = primaryAccount.address == myUser.address;
         return !isThisAccountPrimary

@@ -14,11 +14,14 @@ import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeStrin
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
+import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
+import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
 import 'package:podium/providers/api/podium/models/users/connect_new_account_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -77,7 +80,8 @@ class GlobalController extends GetxController {
   late ReownAppKitModal web3ModalService;
   AptosAccount? aptosAccount;
   final loggedIn = false.obs;
-  final isAddingAccount = false.obs;
+  final addingAccount_provider = Rxn<Provider>();
+
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
   bool isFirebaseInitialized = false;
@@ -150,10 +154,6 @@ class GlobalController extends GetxController {
   @override
   void onClose() {
     super.onClose();
-  }
-
-  void setIsAddingAccount(bool value) {
-    isAddingAccount.value = value;
   }
 
   _getAndSetMetadata() async {
@@ -548,16 +548,19 @@ class GlobalController extends GetxController {
         openDeepLinkOutpost(route.value);
       }
       isAutoLoggingIn.value = false;
+      await _initializeOneSignal(myUserId: myUserInfo.value?.uuid ?? '');
+    }
+  }
 
-      try {
-        await oneSignalService.initialize();
-        final initialized = oneSignalService.initialized;
-        if (initialized) {
-          await oneSignalService.login(myUserInfo.value?.uuid ?? '');
-        }
-      } catch (e) {
-        l.e("error initializing oneSignal $e");
+  Future<void> _initializeOneSignal({required String myUserId}) async {
+    try {
+      await oneSignalService.initialize();
+      final initialized = oneSignalService.initialized;
+      if (initialized) {
+        await oneSignalService.login(myUserId);
       }
+    } catch (e) {
+      l.e("error initializing oneSignal $e");
     }
   }
 
@@ -701,12 +704,12 @@ class GlobalController extends GetxController {
     try {
       final currentPrivateKey = await Web3AuthFlutter.getPrivKey();
       final currentAccountAddress = privateKeyToPublicKey(currentPrivateKey);
-      setIsAddingAccount(true);
+      addingAccount_provider.value = provider;
       String? email;
       if (provider == Provider.email_passwordless) {
         email = await showDialogToGetTheEmail();
         if (email.isNullOrEmpty) {
-          setIsAddingAccount(false);
+          addingAccount_provider.value = null;
           return;
         }
       }
@@ -734,6 +737,9 @@ class GlobalController extends GetxController {
         final newAccountPrivateKey = await Web3AuthFlutter.getPrivKey();
         final newAccountAddress = privateKeyToPublicKey(newAccountPrivateKey);
 
+        final accountAlreadyExists = myUserInfo.value!.accounts
+            .any((account) => account.address == newAccountAddress);
+
         final currentAccountAddressSignedByNewAccount =
             signMessage(newAccountPrivateKey, currentAccountAddress)!;
         final newAccountAddressSignedByCurrentAccount =
@@ -757,13 +763,17 @@ class GlobalController extends GetxController {
         );
         final connected = await HttpApis.podium.connectNewAccount(request);
         if (connected) {
-          await setLoggedIn(false);
-          final loginController = Get.put(LoginController());
-          await loginController.continueSocialLoginWithUserInfoAndPrivateKey(
-            privateKey: newAccountPrivateKey,
-            userInfo: res.userInfo!,
-            loginMethod: loginTypeStringToWeb3AuthProvider(newAccountLoginType),
+          final signature =
+              signMessage(newAccountPrivateKey, newAccountAddress)!;
+          await _switchToAccount(
+            username: newAccountAddress,
+            newWeb3AuthUserInfo: res.userInfo!,
+            selfSignedNewWalletAddress: signature,
+            newAptosAddress: newAccountAptosAddress,
           );
+          Toast.success(
+              message:
+                  'Account ${accountAlreadyExists ? 'switched' : 'connected'} successfully');
         }
       }
     } on UserCancelledException catch (e) {
@@ -771,7 +781,49 @@ class GlobalController extends GetxController {
     } catch (e) {
       l.e(e);
     } finally {
-      setIsAddingAccount(false);
+      addingAccount_provider.value = null;
     }
+  }
+
+  Future<UserModel?> _switchToAccount({
+    required TorusUserInfo newWeb3AuthUserInfo,
+    required String selfSignedNewWalletAddress,
+    required String newAptosAddress,
+    required String username,
+  }) async {
+    await oneSignalService.dismiss();
+    web3ModalService.disconnect();
+    ws_client?.close();
+    ws_client = null;
+    final request = LoginRequest(
+      signature: selfSignedNewWalletAddress,
+      username: username,
+      aptos_address: newAptosAddress,
+      has_ticket: false,
+      login_type_identifier: newWeb3AuthUserInfo.verifierId ?? '',
+      referrer_user_uuid: null,
+    );
+    final (loginResponse, error, statusCode) = await HttpApis.podium.login(
+      request: request,
+      additionalData: AdditionalDataForLogin(),
+    );
+    if (loginResponse != null) {
+      myUserInfo.value = loginResponse;
+      await _initializeOneSignal(myUserId: loginResponse.uuid);
+      final outpostsController = Get.find<OutpostsController>();
+      final isProfileRegistered = Get.isRegistered<MyProfileController>();
+      final callArray = <Future<void>>[];
+      if (isProfileRegistered) {
+        final myProfileController = Get.find<MyProfileController>();
+        callArray.add(myProfileController.getMyProfile());
+        callArray.add(myProfileController.getBalances());
+      }
+      await Future.wait<void>([
+        ...callArray,
+        outpostsController.fetchAllOutpostsPage(0),
+        outpostsController.fetchMyOutpostsPage(0)
+      ]);
+    }
+    return loginResponse;
   }
 }

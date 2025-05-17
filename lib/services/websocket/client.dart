@@ -120,7 +120,7 @@ class WebSocketService {
       // Close any existing connection first
       if (_channel != null) {
         try {
-          _channel!.sink.close();
+          await _channel!.sink.close();
         } catch (e) {
           l.w("Error closing existing channel: $e");
         }

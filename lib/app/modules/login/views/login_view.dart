@@ -148,9 +148,7 @@ class LoginView extends GetView<LoginController> {
                           Obx(() {
                             final isLoggingIn = controller.isLoggingIn.value ||
                                 controller
-                                    .globalController.isAutoLoggingIn.value ||
-                                controller
-                                    .globalController.isAddingAccount.value;
+                                    .globalController.isAutoLoggingIn.value;
                             if (isLoggingIn) {
                               return Center(
                                 child: Column(

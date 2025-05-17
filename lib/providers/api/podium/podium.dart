@@ -98,6 +98,7 @@ class PodiumApi {
       final String? message = e.response?.data['message'];
       return (null, message, e.response?.statusCode);
     } catch (e) {
+      l.e(e);
       return (null, 'User not found', null);
     }
   }
@@ -131,6 +132,7 @@ class PodiumApi {
 
       return myUser;
     } catch (e) {
+      l.e(e);
       return null;
     }
   }
@@ -188,9 +190,14 @@ class PodiumApi {
   Future<UserModel?> updateMyUserData(
     Map<String, dynamic> patchJson,
   ) async {
-    final response = await dio.post('$_baseUrl/users/update-profile',
-        data: patchJson, options: Options(headers: _headers));
-    return UserModel.fromJson(response.data['data']);
+    try {
+      final response = await dio.post('$_baseUrl/users/update-profile',
+          data: patchJson, options: Options(headers: _headers));
+      return UserModel.fromJson(response.data['data']);
+    } catch (e) {
+      l.e(e);
+      return null;
+    }
   }
 
   Future<UserModel?> getUserData(String id) async {

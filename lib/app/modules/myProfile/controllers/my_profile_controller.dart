@@ -105,7 +105,7 @@ class MyProfileController extends GetxController {
         checkExternalWalletActivation();
       }
     });
-    _getMyProfile();
+    getMyProfile();
     getBalances();
   }
 
@@ -228,7 +228,7 @@ class MyProfileController extends GetxController {
     super.onClose();
   }
 
-  _getMyProfile() async {
+  getMyProfile() async {
     final profile = await HttpApis.podium
         .getMyUserData(additionalData: AdditionalDataForLogin());
     if (profile == null) {

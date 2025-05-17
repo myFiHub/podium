@@ -493,8 +493,21 @@ class LoginController extends GetxController {
     // end force to add name if field is empty
 
     if (savedName != null) {
-      userLoginResponse.name = savedName;
-      globalController.myUserInfo.value = userLoginResponse;
+      // userLoginResponse.name = savedName;
+      final updatedUser = userLoginResponse.copyWith.name(savedName);
+      if (updatedUser.accounts.length == 0) {
+        final newAccount = ConnectedAccount(
+          address: updatedUser.address,
+          aptos_address: updatedUser.aptos_address!,
+          image: updatedUser.image,
+          is_primary: true,
+          login_type: updatedUser.login_type,
+          login_type_identifier: updatedUser.login_type_identifier ?? '',
+          uuid: updatedUser.uuid,
+        );
+        updatedUser.accounts.add(newAccount);
+      }
+      globalController.myUserInfo.value = updatedUser;
       globalController.myUserInfo.refresh();
 
       LoginTypeService.setLoginType(temporaryAdditionalData?.loginType ?? '');

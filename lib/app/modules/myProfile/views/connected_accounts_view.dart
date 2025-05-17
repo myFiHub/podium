@@ -136,14 +136,15 @@ class LoginOption extends GetView<GlobalController> {
   });
 
   final Provider provider;
-  final dynamic icon;
+  final AssetGenImage? icon;
   final String title;
   final bool isConnected;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      height: 70,
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: ColorName.black.withAlpha(13),
         borderRadius: BorderRadius.circular(12),
@@ -155,7 +156,7 @@ class LoginOption extends GetView<GlobalController> {
       child: Row(
         children: [
           if (icon != null)
-            icon.image(
+            icon!.image(
               width: 24.0,
               height: 24.0,
               color: ColorName.black,
@@ -197,7 +198,17 @@ class LoginOption extends GetView<GlobalController> {
             const Icon(Icons.check_circle, color: Colors.green)
           else
             Obx(() {
+              final isAddingAccount_provider =
+                  controller.addingAccount_provider.value;
+              final isLoading = isAddingAccount_provider == provider;
               final accounts = controller.myUserInfo.value?.accounts;
+              final thisAccount = accounts?.firstWhereOrNull((account) {
+                return (account.login_type_identifier == provider) ||
+                    (account.login_type == 'email' &&
+                        provider == Provider.email_passwordless);
+              });
+              final isPrimary = thisAccount?.is_primary ?? false;
+
               final thisTypeExistOnAccounts = accounts?.any((account) {
                     final isEmail = account.login_type == 'email';
                     final isEmailPasswordless =
@@ -228,8 +239,15 @@ class LoginOption extends GetView<GlobalController> {
                         color: Colors.indigo,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    if (!isPrimary) ...[
+                      space8,
+                      MakePrimaryButton(
+                        address: existingAccount?.address ?? '',
+                      ),
+                    ],
+                    space8,
                     Button(
+                      loading: isLoading,
                       text: 'Switch',
                       size: ButtonSize.SMALL,
                       type: ButtonType.solid,
@@ -243,6 +261,7 @@ class LoginOption extends GetView<GlobalController> {
               }
 
               return Button(
+                loading: isLoading,
                 text: 'Connect',
                 size: ButtonSize.SMALL,
                 type: ButtonType.solid,
@@ -280,8 +299,9 @@ class MakePrimaryButton extends GetView<MyProfileController> {
           loading: isLoading,
           text: 'Make primary',
           size: ButtonSize.SMALL,
-          type: ButtonType.solid,
-          color: ColorName.secondaryBlue,
+          type: ButtonType.outline,
+          color: Colors.orange,
+          textColor: Colors.orange,
           onPressed: () {
             controller.setAccountAsPrimary(address);
           },

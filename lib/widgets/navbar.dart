@@ -5,6 +5,7 @@ import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
 const navbarHeight = 60.0;
@@ -191,7 +192,14 @@ class ProfileBadge extends GetView<GlobalController> {
       final accounts = currentUser.accounts;
       final primaryAccount = accounts.firstWhere(
         (account) => account.is_primary,
-        orElse: () => accounts.first,
+        orElse: () => ConnectedAccount(
+            address: currentUser.address,
+            aptos_address: currentUser.aptos_address!,
+            image: currentUser.image,
+            is_primary: true,
+            login_type: currentUser.login_type,
+            login_type_identifier: currentUser.login_type_identifier ?? '',
+            uuid: currentUser.uuid),
       );
 
       final isThisAccountPrimary =

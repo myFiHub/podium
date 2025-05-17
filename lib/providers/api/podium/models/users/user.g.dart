@@ -357,11 +357,11 @@ abstract class _$ConnectedAccountCWProxy {
 
   ConnectedAccount aptos_address(String aptos_address);
 
-  ConnectedAccount image(String image);
+  ConnectedAccount image(String? image);
 
   ConnectedAccount is_primary(bool is_primary);
 
-  ConnectedAccount login_type(String login_type);
+  ConnectedAccount login_type(String? login_type);
 
   ConnectedAccount login_type_identifier(String login_type_identifier);
 
@@ -376,9 +376,9 @@ abstract class _$ConnectedAccountCWProxy {
   ConnectedAccount call({
     String address,
     String aptos_address,
-    String image,
+    String? image,
     bool is_primary,
-    String login_type,
+    String? login_type,
     String login_type_identifier,
     String uuid,
   });
@@ -398,13 +398,13 @@ class _$ConnectedAccountCWProxyImpl implements _$ConnectedAccountCWProxy {
       this(aptos_address: aptos_address);
 
   @override
-  ConnectedAccount image(String image) => this(image: image);
+  ConnectedAccount image(String? image) => this(image: image);
 
   @override
   ConnectedAccount is_primary(bool is_primary) => this(is_primary: is_primary);
 
   @override
-  ConnectedAccount login_type(String login_type) =>
+  ConnectedAccount login_type(String? login_type) =>
       this(login_type: login_type);
 
   @override
@@ -443,7 +443,7 @@ class _$ConnectedAccountCWProxyImpl implements _$ConnectedAccountCWProxy {
       image: image == const $CopyWithPlaceholder()
           ? _value.image
           // ignore: cast_nullable_to_non_nullable
-          : image as String,
+          : image as String?,
       is_primary: is_primary == const $CopyWithPlaceholder()
           ? _value.is_primary
           // ignore: cast_nullable_to_non_nullable
@@ -451,7 +451,7 @@ class _$ConnectedAccountCWProxyImpl implements _$ConnectedAccountCWProxy {
       login_type: login_type == const $CopyWithPlaceholder()
           ? _value.login_type
           // ignore: cast_nullable_to_non_nullable
-          : login_type as String,
+          : login_type as String?,
       login_type_identifier:
           login_type_identifier == const $CopyWithPlaceholder()
               ? _value.login_type_identifier
@@ -546,9 +546,9 @@ ConnectedAccount _$ConnectedAccountFromJson(Map<String, dynamic> json) =>
     ConnectedAccount(
       address: json['address'] as String,
       aptos_address: json['aptos_address'] as String,
-      image: json['image'] as String,
+      image: json['image'] as String?,
       is_primary: json['is_primary'] as bool,
-      login_type: json['login_type'] as String,
+      login_type: json['login_type'] as String?,
       login_type_identifier: json['login_type_identifier'] as String,
       uuid: json['uuid'] as String,
     );

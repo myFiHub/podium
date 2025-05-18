@@ -700,14 +700,15 @@ class GlobalController extends GetxController {
     );
   }
 
-  addAccount(Provider provider) async {
+  addAccount(Provider provider, {String? email}) async {
     try {
       final currentPrivateKey = await Web3AuthFlutter.getPrivKey();
       final currentAccountAddress = privateKeyToPublicKey(currentPrivateKey);
       addingAccount_provider.value = provider;
-      String? email;
       if (provider == Provider.email_passwordless) {
-        email = await showDialogToGetTheEmail();
+        if (email == null) {
+          email = await showDialogToGetTheEmail();
+        }
         if (email.isNullOrEmpty) {
           addingAccount_provider.value = null;
           return;

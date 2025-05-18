@@ -77,7 +77,7 @@ class MyProfileController extends GetxController {
   final isGettingBalances = false.obs;
   final isDeactivatingAccount = false.obs;
 
-  final isSettingAccountAsPrimary = false.obs;
+  final addressThatIsBeningMadePrimary = Rxn<String>();
 
   final balances = Rx(
     Balances(
@@ -598,12 +598,12 @@ class MyProfileController extends GetxController {
     );
   }
 
-  void addAccount(Provider provider) {
-    globalController.addAccount(provider);
+  void addAccount(Provider provider, {String? email}) {
+    globalController.addAccount(provider, email: email);
   }
 
   Future<void> setAccountAsPrimary(String address) async {
-    isSettingAccountAsPrimary.value = true;
+    addressThatIsBeningMadePrimary.value = address;
     try {
       final res = await HttpApis.podium.setAccountAsPrimary(address: address);
       if (res) {
@@ -623,7 +623,7 @@ class MyProfileController extends GetxController {
     } catch (e) {
       Toast.error(message: 'Error setting account as primary');
     } finally {
-      isSettingAccountAsPrimary.value = false;
+      addressThatIsBeningMadePrimary.value = null;
     }
   }
 }

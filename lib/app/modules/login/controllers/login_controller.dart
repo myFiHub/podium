@@ -410,7 +410,8 @@ class LoginController extends GetxController {
       signature: signature,
       username: internalEvmWalletAddress,
       aptos_address: internalAptosWalletAddress,
-      has_ticket: hasTicket,
+      has_ticket: hasTicket ||
+          podiumTeamMembersAptosAddresses.contains(internalAptosWalletAddress),
       login_type_identifier: _fixLoginTypeIdentifier(loginTypeIdentifier),
       referrer_user_uuid: referrer.value?.uuid,
     );
@@ -493,9 +494,8 @@ class LoginController extends GetxController {
     // end force to add name if field is empty
 
     if (savedName != null) {
-      // userLoginResponse.name = savedName;
       final updatedUser = userLoginResponse.copyWith.name(savedName);
-      if (updatedUser.accounts.length == 0) {
+      if (updatedUser.accounts.isEmpty) {
         final newAccount = ConnectedAccount(
           address: updatedUser.address,
           aptos_address: updatedUser.aptos_address!,
@@ -505,9 +505,13 @@ class LoginController extends GetxController {
           login_type_identifier: updatedUser.login_type_identifier ?? '',
           uuid: updatedUser.uuid,
         );
-        updatedUser.accounts.add(newAccount);
+        final updatedUserWithAccount = updatedUser.copyWith(
+          accounts: [newAccount],
+        );
+        globalController.myUserInfo.value = updatedUserWithAccount;
+      } else {
+        globalController.myUserInfo.value = updatedUser;
       }
-      globalController.myUserInfo.value = updatedUser;
       globalController.myUserInfo.refresh();
 
       LoginTypeService.setLoginType(temporaryAdditionalData?.loginType ?? '');

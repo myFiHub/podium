@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/root.dart';
+import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -37,7 +39,7 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
                       space12,
                       Expanded(
                         child: Text(
-                          'Currently connected with ${_getLoginTypeDisplayName(currentLoginType)}',
+                          'Currently connected with ${loginTypeToDisplayName(currentLoginType)}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -52,77 +54,56 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
               LoginOption(
                 provider: Provider.twitter,
                 icon: Assets.images.xPlatform,
-                title: 'X (Twitter)',
-                isConnected: currentLoginType == 'twitter',
+                title: LoginTypeDisplayName.x,
+                isConnected: currentLoginType == LoginType.x,
               ),
               space10,
               LoginOption(
                 provider: Provider.apple,
                 icon: Assets.images.apple,
-                title: 'Apple',
-                isConnected: currentLoginType == 'apple',
+                title: LoginTypeDisplayName.apple,
+                isConnected: currentLoginType == LoginType.apple,
               ),
               space10,
               LoginOption(
                 provider: Provider.google,
                 icon: Assets.images.gIcon,
-                title: 'Google',
-                isConnected: currentLoginType == 'google',
+                title: LoginTypeDisplayName.google,
+                isConnected: currentLoginType == LoginType.google,
               ),
               space10,
               LoginOption(
                 provider: Provider.email_passwordless,
                 icon: null,
-                title: 'Email',
-                isConnected: currentLoginType == 'email',
+                title: LoginTypeDisplayName.email,
+                isConnected: currentLoginType == LoginType.email,
               ),
               space10,
               LoginOption(
                 provider: Provider.facebook,
                 icon: Assets.images.facebook,
-                title: 'Facebook',
-                isConnected: currentLoginType == 'facebook',
+                title: LoginTypeDisplayName.facebook,
+                isConnected: currentLoginType == LoginType.facebook,
               ),
               space10,
               LoginOption(
                 provider: Provider.linkedin,
                 icon: Assets.images.linkedin,
-                title: 'LinkedIn',
-                isConnected: currentLoginType == 'linkedin',
+                title: LoginTypeDisplayName.linkedin,
+                isConnected: currentLoginType == LoginType.linkedin,
               ),
               space10,
               LoginOption(
                 provider: Provider.github,
                 icon: Assets.images.github,
-                title: 'GitHub',
-                isConnected: currentLoginType == 'github',
+                title: LoginTypeDisplayName.github,
+                isConnected: currentLoginType == LoginType.github,
               ),
             ],
           );
         }),
       ),
     );
-  }
-
-  String _getLoginTypeDisplayName(String loginType) {
-    switch (loginType) {
-      case 'twitter':
-        return 'X (Twitter)';
-      case 'apple':
-        return 'Apple';
-      case 'google':
-        return 'Google';
-      case 'email':
-        return 'Email';
-      case 'facebook':
-        return 'Facebook';
-      case 'linkedin':
-        return 'LinkedIn';
-      case 'github':
-        return 'GitHub';
-      default:
-        return loginType;
-    }
   }
 }
 
@@ -139,6 +120,8 @@ class LoginOption extends GetView<GlobalController> {
   final AssetGenImage? icon;
   final String title;
   final bool isConnected;
+
+  String get _loginType => web3AuthProviderToLoginTypeString(provider);
 
   @override
   Widget build(BuildContext context) {
@@ -173,112 +156,131 @@ class LoginOption extends GetView<GlobalController> {
               ),
             ),
           ),
-          if (isConnected)
-            Obx(() {
-              final accounts = controller.myUserInfo.value?.accounts;
-              final isPrimary = accounts?.any(
-                    (account) =>
-                        account.address ==
-                            controller.myUserInfo.value?.address &&
-                        account.is_primary,
-                  ) ??
-                  false;
-              return !isPrimary
-                  ? Row(
-                      children: [
-                        MakePrimaryButton(
-                          address: controller.myUserInfo.value?.address ?? '',
-                        ),
-                        space12,
-                      ],
-                    )
-                  : const SizedBox.shrink();
-            }),
-          if (isConnected)
-            const Icon(Icons.check_circle, color: Colors.green)
-          else
-            Obx(() {
-              final isAddingAccount_provider =
-                  controller.addingAccount_provider.value;
-              final isLoading = isAddingAccount_provider == provider;
-              final accounts = controller.myUserInfo.value?.accounts;
-              final thisAccount = accounts?.firstWhereOrNull((account) {
-                return (account.login_type_identifier == provider) ||
-                    (account.login_type == 'email' &&
-                        provider == Provider.email_passwordless);
-              });
-              final isPrimary = thisAccount?.is_primary ?? false;
-
-              final thisTypeExistOnAccounts = accounts?.any((account) {
-                    final isEmail = account.login_type == 'email';
-                    final isEmailPasswordless =
-                        provider == Provider.email_passwordless && isEmail;
-                    return (account.login_type == provider ||
-                        isEmailPasswordless);
-                  }) ??
-                  false;
-
-              if (thisTypeExistOnAccounts) {
-                final existingAccount = accounts?.firstWhere((account) {
-                  final isEmail = account.login_type == 'email';
-                  final isEmailPasswordless =
-                      provider == Provider.email_passwordless && isEmail;
-                  return (account.login_type == provider ||
-                      isEmailPasswordless);
-                });
-
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      existingAccount?.login_type_identifier != null
-                          ? truncate(existingAccount!.login_type_identifier)
-                          : '',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.indigo,
-                      ),
-                    ),
-                    if (!isPrimary) ...[
-                      space8,
-                      MakePrimaryButton(
-                        address: existingAccount?.address ?? '',
-                      ),
-                    ],
-                    space8,
-                    Button(
-                      loading: isLoading,
-                      text: 'Switch',
-                      size: ButtonSize.SMALL,
-                      type: ButtonType.solid,
-                      color: ColorName.black,
-                      onPressed: () {
-                        _showConnectConfirmationDialog(provider, title);
-                      },
-                    ),
-                  ],
-                );
-              }
-
-              return Button(
-                loading: isLoading,
-                text: 'Connect',
-                size: ButtonSize.SMALL,
-                type: ButtonType.solid,
-                color: ColorName.black,
-                onPressed: () {
-                  _showConnectConfirmationDialog(provider, title);
-                },
-              );
-            }),
+          if (isConnected) _buildConnectedState() else _buildConnectButton(),
         ],
       ),
     );
   }
 
-  void _showConnectConfirmationDialog(Provider provider, String title) {
+  Widget _buildConnectedState() {
+    return Obx(() {
+      final accounts = controller.myUserInfo.value?.accounts;
+      final isPrimary = accounts?.any(
+            (account) =>
+                account.address == controller.myUserInfo.value?.address &&
+                account.is_primary,
+          ) ??
+          false;
+      return !isPrimary
+          ? Row(
+              children: [
+                MakePrimaryButton(
+                  address: controller.myUserInfo.value?.address ?? '',
+                ),
+                space12,
+              ],
+            )
+          : const Row(
+              children: [
+                Button(
+                  onPressed: null,
+                  text: 'Primary Account',
+                  size: ButtonSize.SMALL,
+                  type: ButtonType.outline,
+                  color: Colors.green,
+                ),
+                space12,
+              ],
+            );
+    });
+  }
+
+  Widget _buildConnectButton() {
+    return Obx(() {
+      final isAddingAccount_provider = controller.addingAccount_provider.value;
+      final isLoading = isAddingAccount_provider == provider;
+      final accounts = controller.myUserInfo.value?.accounts;
+      final thisAccount = accounts?.firstWhereOrNull((account) {
+        return (account.login_type == _loginType) ||
+            (account.login_type == 'email' &&
+                provider == Provider.email_passwordless);
+      });
+      final isPrimary = thisAccount?.is_primary ?? false;
+
+      final thisTypeExistOnAccounts =
+          accounts?.any((account) => account.login_type == _loginType) ?? false;
+
+      if (thisTypeExistOnAccounts) {
+        final existingAccount =
+            accounts?.firstWhere((account) => account.login_type == _loginType);
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              existingAccount?.login_type_identifier != null
+                  ? truncate(existingAccount!.login_type_identifier)
+                  : '',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.indigo,
+              ),
+            ),
+            if (!isPrimary) ...[
+              space5,
+              MakePrimaryButton(
+                address: existingAccount?.address ?? '',
+              ),
+            ],
+            if (isPrimary) ...[
+              space5,
+              const Button(
+                onPressed: null,
+                text: 'Primary',
+                size: ButtonSize.SMALL,
+                type: ButtonType.outline,
+                color: Colors.green,
+              ),
+            ],
+            space5,
+            Button(
+              loading: isLoading,
+              text: 'Switch',
+              size: ButtonSize.SMALL,
+              type: ButtonType.solid,
+              color: ColorName.black,
+              onPressed: () => _showConnectConfirmationDialog(
+                provider,
+                title,
+                email: thisAccount?.login_type_identifier,
+              ),
+            ),
+          ],
+        );
+      }
+
+      return Button(
+        loading: isLoading,
+        text: 'Connect',
+        size: ButtonSize.SMALL,
+        type: ButtonType.solid,
+        color: ColorName.black,
+        onPressed: () => _showConnectConfirmationDialog(
+          provider,
+          title,
+          email: thisAccount?.login_type_identifier,
+        ),
+      );
+    });
+  }
+
+  void _showConnectConfirmationDialog(
+    Provider provider,
+    String title, {
+    String? email,
+  }) {
     Get.dialog(
-      ConnectConfirmationDialog(provider: provider, title: title),
+      ConnectConfirmationDialog(provider: provider, title: title, email: email),
     );
   }
 }
@@ -291,7 +293,8 @@ class MakePrimaryButton extends GetView<MyProfileController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isLoading = controller.isSettingAccountAsPrimary.value;
+      final isLoading =
+          controller.addressThatIsBeningMadePrimary.value == address;
       return SizedBox(
         width: 100,
         height: 30,
@@ -312,11 +315,16 @@ class MakePrimaryButton extends GetView<MyProfileController> {
 }
 
 class ConnectConfirmationDialog extends GetView<MyProfileController> {
-  const ConnectConfirmationDialog(
-      {super.key, required this.provider, required this.title});
+  const ConnectConfirmationDialog({
+    super.key,
+    required this.provider,
+    required this.title,
+    this.email,
+  });
 
   final Provider provider;
   final String title;
+  final String? email;
 
   @override
   Widget build(BuildContext context) {
@@ -343,64 +351,25 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
             ),
           ),
           space10,
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              children: [
-                TextSpan(text: '• You will be '),
-                TextSpan(
-                  text: 'logged out',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextSpan(text: ' from your currently connected account'),
-              ],
-            ),
+          _buildInfoText(
+            prefix: 'You will be ',
+            highlighted: 'logged out',
+            suffix: ' from your currently connected account',
+            highlightColor: Colors.red,
           ),
           space10,
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              children: [
-                TextSpan(text: '• You will be '),
-                TextSpan(
-                  text: 'logged in',
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextSpan(text: ' with the new account'),
-              ],
-            ),
+          _buildInfoText(
+            prefix: 'You will be ',
+            highlighted: 'logged in',
+            suffix: ' with the new account',
+            highlightColor: Colors.green,
           ),
           space10,
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              children: [
-                TextSpan(text: '• Later, you can '),
-                TextSpan(
-                  text: 'log in',
-                  style: TextStyle(
-                    color: ColorName.primaryBlue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextSpan(text: ' with your main account'),
-              ],
-            ),
+          _buildInfoText(
+            prefix: 'Later, you can ',
+            highlighted: 'log in',
+            suffix: ' with your main account',
+            highlightColor: ColorName.primaryBlue,
           ),
         ],
       ),
@@ -415,7 +384,11 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
         TextButton(
           onPressed: () {
             Get.close();
-            controller.addAccount(provider);
+            if (provider == Provider.email_passwordless) {
+              controller.addAccount(provider, email: email);
+            } else {
+              controller.addAccount(provider);
+            }
           },
           child: const Text(
             'Continue',
@@ -426,6 +399,33 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildInfoText({
+    required String prefix,
+    required String highlighted,
+    required String suffix,
+    required Color highlightColor,
+  }) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        children: [
+          TextSpan(text: prefix),
+          TextSpan(
+            text: highlighted,
+            style: TextStyle(
+              color: highlightColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          TextSpan(text: suffix),
+        ],
+      ),
     );
   }
 }

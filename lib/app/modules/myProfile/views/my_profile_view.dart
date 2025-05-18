@@ -5,8 +5,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/referral_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
-import 'package:podium/app/modules/global/utils/aptosClient.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
@@ -21,7 +19,6 @@ import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
@@ -472,16 +469,22 @@ class InternalWallet extends GetView<GlobalController> {
   }
 }
 
-class AptosAddressAndBalance extends StatelessWidget {
+class AptosAddressAndBalance extends GetView<GlobalController> {
   const AptosAddressAndBalance({super.key});
   @override
   Widget build(BuildContext context) {
-    final aptosWalletAddress = myUser.aptos_address;
-    return AddressAndBalanceWidget(
-      address: aptosWalletAddress ?? '',
-      balanceWidget: const AptosBalance(),
-      addressPrefix: 'Movement: ',
-    );
+    return Obx(() {
+      final myUser = controller.myUserInfo.value;
+      if (myUser == null) {
+        return const SizedBox.shrink();
+      }
+      final aptosWalletAddress = myUser.aptos_address!;
+      return AddressAndBalanceWidget(
+        address: aptosWalletAddress,
+        balanceWidget: const AptosBalance(),
+        addressPrefix: 'Movement: ',
+      );
+    });
   }
 }
 
@@ -512,9 +515,6 @@ class AddressAndBalanceWidget extends StatelessWidget {
           space10,
           GestureDetector(
             onTap: () async {
-              final balance = await AptosMovement.getAddressBalance(
-                  '0x0e9583e041326faa8b549ad4b3deeb3ee935120fba63b093a46996a2f907b9f2');
-              l.d('balance: $balance');
               await Clipboard.setData(
                 ClipboardData(
                   text: address,
@@ -560,17 +560,23 @@ class AddressAndBalanceWidget extends StatelessWidget {
   }
 }
 
-class EvmAddressAndBalances extends StatelessWidget {
+class EvmAddressAndBalances extends GetView<GlobalController> {
   const EvmAddressAndBalances({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final walletAddress = myUser.address;
-    return AddressAndBalanceWidget(
-      address: walletAddress,
-      balanceWidget: const EvmBalances(),
-      addressPrefix: 'EVM: ',
-    );
+    return Obx(() {
+      final myUser = controller.myUserInfo.value;
+      if (myUser == null) {
+        return const SizedBox.shrink();
+      }
+      final walletAddress = myUser.address;
+      return AddressAndBalanceWidget(
+        address: walletAddress,
+        balanceWidget: const EvmBalances(),
+        addressPrefix: 'EVM: ',
+      );
+    });
   }
 }
 
@@ -1334,7 +1340,7 @@ class NonPrimaryAccountWarning extends GetView<GlobalController> {
             ? Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                margin: const EdgeInsets.only(bottom: 10),
+                margin: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.red.withAlpha(26),
                   borderRadius: BorderRadius.circular(8),
@@ -1370,12 +1376,13 @@ class NonPrimaryAccountWarning extends GetView<GlobalController> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
-                            'This is a secondary account. Only the primary account can perform certain actions.',
+                            'This is not your primary account. Only the primary account can perform certain actions.',
                             style: TextStyle(
                               color: Colors.red.withAlpha(204),
                               fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],

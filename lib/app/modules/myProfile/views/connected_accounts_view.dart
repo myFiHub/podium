@@ -140,18 +140,18 @@ class LoginOption extends GetView<GlobalController> {
         children: [
           if (icon != null)
             icon!.image(
-              width: 24.0,
-              height: 24.0,
-              color: ColorName.black,
+              width: 20.0,
+              height: 20.0,
+              // color: ColorName.black,
             ),
           if (icon == null)
-            const Icon(Icons.email, size: 24, color: ColorName.black),
+            const Icon(Icons.email, size: 24, color: ColorName.white),
           space12,
           Expanded(
             child: Text(
               title,
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -197,7 +197,8 @@ class LoginOption extends GetView<GlobalController> {
 
   Widget _buildConnectButton() {
     return Obx(() {
-      final isAddingAccount_provider = controller.addingAccount_provider.value;
+      final isAddingAccount_provider =
+          controller.addingOrSwitchingAccount_provider.value;
       final isLoading = isAddingAccount_provider == provider;
       final accounts = controller.myUserInfo.value?.accounts;
       final thisAccount = accounts?.firstWhereOrNull((account) {
@@ -222,7 +223,7 @@ class LoginOption extends GetView<GlobalController> {
                   ? truncate(existingAccount!.login_type_identifier)
                   : '',
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 color: Colors.indigo,
               ),
             ),

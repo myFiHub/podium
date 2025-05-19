@@ -80,7 +80,7 @@ class GlobalController extends GetxController {
   late ReownAppKitModal web3ModalService;
   AptosAccount? aptosAccount;
   final loggedIn = false.obs;
-  final addingAccount_provider = Rxn<Provider>();
+  final addingOrSwitchingAccount_provider = Rxn<Provider>();
 
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
@@ -704,13 +704,13 @@ class GlobalController extends GetxController {
     try {
       final currentPrivateKey = await Web3AuthFlutter.getPrivKey();
       final currentAccountAddress = privateKeyToPublicKey(currentPrivateKey);
-      addingAccount_provider.value = provider;
+      addingOrSwitchingAccount_provider.value = provider;
       if (provider == Provider.email_passwordless) {
         if (email == null) {
           email = await showDialogToGetTheEmail();
         }
         if (email.isNullOrEmpty) {
-          addingAccount_provider.value = null;
+          addingOrSwitchingAccount_provider.value = null;
           return;
         }
       }
@@ -767,10 +767,11 @@ class GlobalController extends GetxController {
           final signature =
               signMessage(newAccountPrivateKey, newAccountAddress)!;
           await _switchToAccount(
-            username: newAccountAddress,
+            newAddress: newAccountAddress,
             newWeb3AuthUserInfo: res.userInfo!,
             selfSignedNewWalletAddress: signature,
             newAptosAddress: newAccountAptosAddress,
+            provider: provider,
           );
           Toast.success(
               message:
@@ -782,7 +783,7 @@ class GlobalController extends GetxController {
     } catch (e) {
       l.e(e);
     } finally {
-      addingAccount_provider.value = null;
+      addingOrSwitchingAccount_provider.value = null;
     }
   }
 
@@ -790,7 +791,8 @@ class GlobalController extends GetxController {
     required TorusUserInfo newWeb3AuthUserInfo,
     required String selfSignedNewWalletAddress,
     required String newAptosAddress,
-    required String username,
+    required String newAddress,
+    required Provider provider,
   }) async {
     await oneSignalService.dismiss();
     web3ModalService.disconnect();
@@ -798,7 +800,7 @@ class GlobalController extends GetxController {
     ws_client = null;
     final request = LoginRequest(
       signature: selfSignedNewWalletAddress,
-      username: username,
+      username: newAddress,
       aptos_address: newAptosAddress,
       has_ticket: false,
       login_type_identifier: newWeb3AuthUserInfo.verifierId ?? '',
@@ -806,7 +808,9 @@ class GlobalController extends GetxController {
     );
     final (loginResponse, error, statusCode) = await HttpApis.podium.login(
       request: request,
-      additionalData: AdditionalDataForLogin(),
+      additionalData: AdditionalDataForLogin(
+        loginType: web3AuthProviderToLoginTypeString(provider),
+      ),
     );
     if (loginResponse != null) {
       myUserInfo.value = loginResponse;

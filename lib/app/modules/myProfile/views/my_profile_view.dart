@@ -955,17 +955,18 @@ class UserInfo extends GetView<GlobalController> {
                 ),
                 space5,
                 IconButton(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: myUser.uuid));
-                      Toast.neutral(
-                        title: 'Copied',
-                        message: 'User ID copied to clipboard',
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.copy,
-                      color: Colors.grey,
-                    ))
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: myUser.uuid));
+                    Toast.neutral(
+                      title: 'Copied',
+                      message: 'ID copied to clipboard',
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.copy,
+                    color: Colors.grey,
+                  ),
+                )
               ],
             ),
             space10,

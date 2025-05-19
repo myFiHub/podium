@@ -38,12 +38,6 @@ class LoginParametersKeys {
   static const referrerId = 'referrerId';
 }
 
-_addressToUuid(String address) {
-  final uuid = const Uuid();
-  final uid = uuid.v5(Namespace.url.value, address);
-  return uid;
-}
-
 class LoginController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final storage = GetStorage();
@@ -61,11 +55,11 @@ class LoginController extends GetxController {
 
   final textController = TextEditingController();
 
-  toggleExpanded() {
+  void toggleExpandReferralInput() {
     isReferrerInputExpanded.value = !isReferrerInputExpanded.value;
   }
 
-  handlePaste() async {
+  Future<void> handlePaste() async {
     referrerNotFound.value = false;
     referrerIsFul.value = false;
     referrer.value = null;
@@ -112,6 +106,7 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
     referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
     l.i('deepLinkRoute: $referrerId');
     if (referrerId.isNotEmpty) {

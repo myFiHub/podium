@@ -598,8 +598,8 @@ class MyProfileController extends GetxController {
     );
   }
 
-  void addAccount(Provider provider, {String? email}) {
-    globalController.addAccount(provider, email: email);
+  void addOrSwitchAccount(Provider provider, {String? email}) {
+    globalController.addOrSwitchAccount(provider, email: email);
   }
 
   Future<void> setAccountAsPrimary(String address) async {

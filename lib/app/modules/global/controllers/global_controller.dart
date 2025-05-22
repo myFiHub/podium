@@ -15,6 +15,7 @@ import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
@@ -700,7 +701,7 @@ class GlobalController extends GetxController {
     );
   }
 
-  addAccount(Provider provider, {String? email}) async {
+  addOrSwitchAccount(Provider provider, {String? email}) async {
     try {
       final currentPrivateKey = await Web3AuthFlutter.getPrivKey();
       final currentAccountAddress = privateKeyToPublicKey(currentPrivateKey);
@@ -774,8 +775,9 @@ class GlobalController extends GetxController {
             provider: provider,
           );
           Toast.success(
-              message:
-                  'Account ${accountAlreadyExists ? 'switched' : 'connected'} successfully');
+            message:
+                'Account ${accountAlreadyExists ? 'switched' : 'connected'} successfully',
+          );
         }
       }
     } on UserCancelledException catch (e) {
@@ -815,9 +817,20 @@ class GlobalController extends GetxController {
     if (loginResponse != null) {
       myUserInfo.value = loginResponse;
       await _initializeOneSignal(myUserId: loginResponse.uuid);
+      final callArray = <Future<void>>[];
+
       final outpostsController = Get.find<OutpostsController>();
       final isProfileRegistered = Get.isRegistered<MyProfileController>();
-      final callArray = <Future<void>>[];
+
+      final isNotificationsRegistered =
+          Get.isRegistered<NotificationsController>();
+      if (isNotificationsRegistered) {
+        final notificationsController = Get.find<NotificationsController>();
+        notificationsController.notifications.clear();
+        notificationsController.numberOfUnreadNotifications.value = 0;
+        callArray.add(notificationsController.getNotifications());
+      }
+
       if (isProfileRegistered) {
         final myProfileController = Get.find<MyProfileController>();
         callArray.add(myProfileController.getMyProfile());

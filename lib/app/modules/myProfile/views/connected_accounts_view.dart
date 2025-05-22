@@ -386,9 +386,9 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
           onPressed: () {
             Get.close();
             if (provider == Provider.email_passwordless) {
-              controller.addAccount(provider, email: email);
+              controller.addOrSwitchAccount(provider, email: email);
             } else {
-              controller.addAccount(provider);
+              controller.addOrSwitchAccount(provider);
             }
           },
           child: const Text(

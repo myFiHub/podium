@@ -27,28 +27,7 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
             padding: const EdgeInsets.all(16),
             children: [
               if (currentLoginType != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: ColorName.black.withAlpha(26),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.check_circle, color: Colors.green),
-                      space12,
-                      Expanded(
-                        child: Text(
-                          'Currently connected with ${loginTypeToDisplayName(currentLoginType)}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                HeaderWidget(loginType: currentLoginType),
                 space24,
               ],
               LoginOption(
@@ -171,6 +150,7 @@ class LoginOption extends GetView<GlobalController> {
                 account.is_primary,
           ) ??
           false;
+      final identifier = controller.myUserInfo.value?.login_type_identifier;
       return !isPrimary
           ? Row(
               children: [
@@ -180,9 +160,11 @@ class LoginOption extends GetView<GlobalController> {
                 space12,
               ],
             )
-          : const Row(
+          : Row(
               children: [
-                Button(
+                IdentifierText(identifier: identifier),
+                space12,
+                const Button(
                   onPressed: null,
                   text: 'Primary Account',
                   size: ButtonSize.SMALL,
@@ -218,15 +200,7 @@ class LoginOption extends GetView<GlobalController> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              existingAccount?.login_type_identifier != null
-                  ? truncate(existingAccount!.login_type_identifier)
-                  : '',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.indigo,
-              ),
-            ),
+            IdentifierText(identifier: existingAccount?.login_type_identifier),
             if (!isPrimary) ...[
               space5,
               MakePrimaryButton(
@@ -425,6 +399,61 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
             ),
           ),
           TextSpan(text: suffix),
+        ],
+      ),
+    );
+  }
+}
+
+class IdentifierText extends StatelessWidget {
+  const IdentifierText({
+    super.key,
+    required this.identifier,
+  });
+
+  final String? identifier;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      identifier != null ? truncate(identifier!) : '',
+      style: const TextStyle(
+        fontSize: 10,
+        color: Colors.indigo,
+      ),
+    );
+  }
+}
+
+class HeaderWidget extends StatelessWidget {
+  const HeaderWidget({
+    super.key,
+    required this.loginType,
+  });
+
+  final String loginType;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ColorName.black.withAlpha(26),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: Colors.green),
+          space12,
+          Expanded(
+            child: Text(
+              'Currently Logged in with ${loginTypeToDisplayName(loginType)}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
       ),
     );

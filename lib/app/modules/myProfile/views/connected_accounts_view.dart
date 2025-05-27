@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
+import 'package:podium/app/modules/myProfile/constants/connected_accounts_constants.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/app/modules/myProfile/widgets/header_widget.dart';
+import 'package:podium/app/modules/myProfile/widgets/identifier_text.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/styles.dart';
-import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:web3auth_flutter/enums.dart';
 
@@ -23,13 +25,17 @@ class ConnectedAccountsView extends GetView<MyProfileController> {
           final currentLoginType =
               controller.globalController.myUserInfo.value?.login_type;
 
+          if (currentLoginType == null) {
+            return const Center(
+              child: Text('No account connected'),
+            );
+          }
+
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: ConnectedAccountsConstants.defaultPadding,
             children: [
-              if (currentLoginType != null) ...[
-                HeaderWidget(loginType: currentLoginType),
-                space24,
-              ],
+              HeaderWidget(loginType: currentLoginType),
+              space24,
               LoginOption(
                 provider: Provider.twitter,
                 icon: Assets.images.xPlatform,
@@ -109,9 +115,11 @@ class LoginOption extends GetView<GlobalController> {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: ColorName.black.withAlpha(13),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: ConnectedAccountsConstants.containerBorderRadius,
         border: Border.all(
-          color: isConnected ? Colors.green : Colors.transparent,
+          color: isConnected
+              ? ConnectedAccountsConstants.successColor
+              : Colors.transparent,
           width: 2,
         ),
       ),
@@ -119,12 +127,13 @@ class LoginOption extends GetView<GlobalController> {
         children: [
           if (icon != null)
             icon!.image(
-              width: 20.0,
-              height: 20.0,
-              // color: ColorName.black,
+              width: ConnectedAccountsConstants.iconSize,
+              height: ConnectedAccountsConstants.iconSize,
             ),
           if (icon == null)
-            const Icon(Icons.email, size: 24, color: ColorName.white),
+            const Icon(Icons.email,
+                size: ConnectedAccountsConstants.iconSize,
+                color: ColorName.white),
           space12,
           Expanded(
             child: Text(
@@ -144,13 +153,15 @@ class LoginOption extends GetView<GlobalController> {
   Widget _buildConnectedState() {
     return Obx(() {
       final accounts = controller.myUserInfo.value?.accounts;
-      final isPrimary = accounts?.any(
-            (account) =>
-                account.address == controller.myUserInfo.value?.address &&
-                account.is_primary,
-          ) ??
-          false;
+      if (accounts == null) return const SizedBox.shrink();
+
+      final isPrimary = accounts.any(
+        (account) =>
+            account.address == controller.myUserInfo.value?.address &&
+            account.is_primary,
+      );
       final identifier = controller.myUserInfo.value?.login_type_identifier;
+
       return !isPrimary
           ? Row(
               children: [
@@ -169,7 +180,7 @@ class LoginOption extends GetView<GlobalController> {
                   text: 'Primary Account',
                   size: ButtonSize.SMALL,
                   type: ButtonType.outline,
-                  color: Colors.green,
+                  color: ConnectedAccountsConstants.successColor,
                 ),
                 space12,
               ],
@@ -183,7 +194,10 @@ class LoginOption extends GetView<GlobalController> {
           controller.addingOrSwitchingAccount_provider.value;
       final isLoading = isAddingAccount_provider == provider;
       final accounts = controller.myUserInfo.value?.accounts;
-      final thisAccount = accounts?.firstWhereOrNull((account) {
+
+      if (accounts == null) return const SizedBox.shrink();
+
+      final thisAccount = accounts.firstWhereOrNull((account) {
         return (account.login_type == _loginType) ||
             (account.login_type == 'email' &&
                 provider == Provider.email_passwordless);
@@ -191,20 +205,20 @@ class LoginOption extends GetView<GlobalController> {
       final isPrimary = thisAccount?.is_primary ?? false;
 
       final thisTypeExistOnAccounts =
-          accounts?.any((account) => account.login_type == _loginType) ?? false;
+          accounts.any((account) => account.login_type == _loginType);
 
       if (thisTypeExistOnAccounts) {
         final existingAccount =
-            accounts?.firstWhere((account) => account.login_type == _loginType);
+            accounts.firstWhere((account) => account.login_type == _loginType);
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IdentifierText(identifier: existingAccount?.login_type_identifier),
+            IdentifierText(identifier: existingAccount.login_type_identifier),
             if (!isPrimary) ...[
               space5,
               MakePrimaryButton(
-                address: existingAccount?.address ?? '',
+                address: existingAccount.address ?? '',
               ),
             ],
             if (isPrimary) ...[
@@ -214,7 +228,7 @@ class LoginOption extends GetView<GlobalController> {
                 text: 'Primary',
                 size: ButtonSize.SMALL,
                 type: ButtonType.outline,
-                color: Colors.green,
+                color: ConnectedAccountsConstants.successColor,
               ),
             ],
             space5,
@@ -337,14 +351,14 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
             prefix: 'You will be ',
             highlighted: 'logged in',
             suffix: ' with the new account',
-            highlightColor: Colors.green,
+            highlightColor: ConnectedAccountsConstants.successColor,
           ),
           space10,
           _buildInfoText(
             prefix: 'Later, you can ',
             highlighted: 'log in',
             suffix: ' with your main account',
-            highlightColor: ColorName.primaryBlue,
+            highlightColor: ConnectedAccountsConstants.primaryBlue,
           ),
         ],
       ),
@@ -368,7 +382,7 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
           child: const Text(
             'Continue',
             style: TextStyle(
-              color: ColorName.primaryBlue,
+              color: ConnectedAccountsConstants.primaryBlue,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -399,61 +413,6 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
             ),
           ),
           TextSpan(text: suffix),
-        ],
-      ),
-    );
-  }
-}
-
-class IdentifierText extends StatelessWidget {
-  const IdentifierText({
-    super.key,
-    required this.identifier,
-  });
-
-  final String? identifier;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      identifier != null ? truncate(identifier!) : '',
-      style: const TextStyle(
-        fontSize: 10,
-        color: Colors.indigo,
-      ),
-    );
-  }
-}
-
-class HeaderWidget extends StatelessWidget {
-  const HeaderWidget({
-    super.key,
-    required this.loginType,
-  });
-
-  final String loginType;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: ColorName.black.withAlpha(26),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green),
-          space12,
-          Expanded(
-            child: Text(
-              'Currently Logged in with ${loginTypeToDisplayName(loginType)}',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
         ],
       ),
     );

@@ -21,6 +21,7 @@ import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/connect_new_account_request.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 class PodiumApi {
@@ -740,6 +741,12 @@ class PodiumApi {
       final response = await dio.post('$_baseUrl/users/accounts/set-primary',
           data: {'address': address}, options: Options(headers: _headers));
       return response.statusCode == 200;
+    } on DioException catch (e) {
+      l.e(e);
+      Toast.error(
+          message: e.response?.data['message'] ??
+              'Error setting account as primary');
+      return false;
     } catch (e) {
       l.e(e);
       return false;

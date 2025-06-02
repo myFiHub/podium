@@ -621,7 +621,8 @@ class MyProfileController extends GetxController {
         Toast.success(message: 'Account is set as primary');
       }
     } catch (e) {
-      Toast.error(message: 'Error setting account as primary');
+      // toast is handled in the api call
+      l.e(e);
     } finally {
       addressThatIsBeningMadePrimary.value = null;
     }

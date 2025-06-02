@@ -16,7 +16,6 @@ dependencies:
   visibility_detector: ^0.4.0+2
   flutter_slidable: ^4.0.0
   shimmer: ^3.0.0
-  skeletonizer: ^1.4.3
   flutter_confetti: ^0.5.1
   floating_draggable_widget: ^2.3.0
   dropdown_button2: ^2.3.9

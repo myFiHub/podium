@@ -25,7 +25,7 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:skeletonizer/skeletonizer.dart';
+import 'package:shimmer/shimmer.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
   const MyProfileView({Key? key}) : super(key: key);
@@ -357,7 +357,7 @@ class EvmBalances extends GetView<MyProfileController> {
                   ],
                 ),
                 _PriceSkeleton(
-                  enabled: loading,
+                  isLoading: loading,
                   price: balances.Base,
                 ),
               ],
@@ -380,7 +380,7 @@ class EvmBalances extends GetView<MyProfileController> {
                   ],
                 ),
                 _PriceSkeleton(
-                  enabled: loading,
+                  isLoading: loading,
                   price: balances.Avalanche,
                 ),
               ],
@@ -623,7 +623,7 @@ class AptosBalance extends GetView<MyProfileController> {
                   ],
                 ),
                 _PriceSkeleton(
-                  enabled: loading,
+                  isLoading: loading,
                   price: balances.movementAptos,
                 ),
               ],
@@ -1242,27 +1242,36 @@ class _Statistics extends GetWidget<MyProfileController> {
 class _PriceSkeleton extends StatelessWidget {
   const _PriceSkeleton({
     required this.price,
-    required this.enabled,
+    required this.isLoading,
   });
 
   final String price;
-  final bool enabled;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
-    return Skeletonizer(
-      enabled: enabled,
-      effect: ShimmerEffect(
-        baseColor: Colors.grey[900]!.withAlpha(70),
-        highlightColor: Colors.grey[700]!.withAlpha(50),
-        duration: const Duration(milliseconds: 500),
-      ),
-      child: Text(
-        enabled ? '000000' : price,
+    if (!isLoading) {
+      return Text(
+        price,
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
+        ),
+      );
+    }
+
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[900]!.withAlpha(70),
+      highlightColor: Colors.grey[100]!.withAlpha(50),
+      period: const Duration(milliseconds: 500),
+      child: Container(
+        margin: const EdgeInsets.only(top: 2),
+        width: 56,
+        height: 12,
+        decoration: BoxDecoration(
+          color: Colors.grey[900]!.withAlpha(70),
+          borderRadius: BorderRadius.circular(4),
         ),
       ),
     );

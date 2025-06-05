@@ -359,6 +359,7 @@ class OutpostCallController extends GetxController {
       {required OutpostModel outpostToJoin,
       GroupAccesses? accessOverRides}) async {
     final globalController = Get.find<GlobalController>();
+
     final iAmAllowedToSpeak = accessOverRides != null
         ? accessOverRides.canSpeak
         : canISpeakWithoutTicket(outpost: outpostToJoin);

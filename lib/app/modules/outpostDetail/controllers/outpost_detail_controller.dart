@@ -74,6 +74,8 @@ class OutpostDetailController extends GetxController {
   final lumaEventGuests = Rx<List<GuestDataModel>>([]);
   final lumaHosts = Rx<List<Luma_HostModel>>([]);
 
+  final isJoining = false.obs;
+
 // image
   // final ImagePicker _picker = ImagePicker();
   // final RxBool isUploadingImage = false.obs;
@@ -169,6 +171,19 @@ class OutpostDetailController extends GetxController {
   }
 
   openRescheduleOutpostDialog() async {
+    final scheduledTime = outpost.value?.scheduled_for;
+    if (scheduledTime == null) return;
+
+    final hasTimePassed = scheduledTime < DateTime.now().millisecondsSinceEpoch;
+    if (hasTimePassed) {
+      final numberOfOnlineUsersInOutpost =
+          await HttpApis.podium.getNumberOfOnlineMembers(outpost.value!.uuid);
+      if (numberOfOnlineUsersInOutpost > 0) {
+        Toast.error(message: 'The outpost is not empty');
+        return;
+      }
+    }
+
     final sure = await showConfirmPopup(
       cancelText: 'Cancel',
       confirmText: 'Confirm',
@@ -413,12 +428,22 @@ class OutpostDetailController extends GetxController {
     membersList.value = outpostData.members ?? [];
   }
 
-  startTheCall({required GroupAccesses accesses}) {
+  startTheCall({required GroupAccesses accesses}) async {
+    if (isJoining.value) return;
+
+    final isWsConnected = wsClient.connected;
+    if (!isWsConnected) {
+      Toast.error(message: "Please check your connection. or reopen the app");
+      return;
+    }
+
+    isJoining.value = true;
     final groupCallController = Get.find<OutpostCallController>();
-    groupCallController.startCall(
+    await groupCallController.startCall(
       outpostToJoin: outpost.value!,
       accessOverRides: accesses,
     );
+    isJoining.value = false;
   }
 
   searchUsers(String value) async {

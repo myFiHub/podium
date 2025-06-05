@@ -78,6 +78,7 @@ class OngoingOutpostCallController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
+
     recordingListeners = recorderController.isRecording.listen((recording) {
       isRecording.value = recording;
     });
@@ -91,7 +92,6 @@ class OngoingOutpostCallController extends GetxController {
   @override
   void onReady() async {
     super.onReady();
-
     membersListener = outpostCallController.members.listen((listOfMembers) {
       members.value = [...listOfMembers];
       final my_user =
@@ -706,9 +706,6 @@ class OngoingOutpostCallController extends GetxController {
       }
     }
     final outpostId = outpostCallController.outpost.value!.uuid;
-    l.d(
-      "audoi mute:$muted",
-    );
 
     if (muted) {
       // REVIEW: it's important not to set amIMuted to true first

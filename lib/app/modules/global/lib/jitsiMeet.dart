@@ -24,9 +24,8 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
   final outpostCallController = Get.find<OutpostCallController>();
   return JitsiMeetEventListener(
     conferenceJoined: (url) async {
-      joinOrLeftDebounce.debounce(() {
-        outpostCallController.fetchLiveData();
-      });
+      outpostCallController.fetchLiveData(withJoin: true);
+
       if (Platform.isIOS) {
         // jitsiMeet.enterPiP();
       }

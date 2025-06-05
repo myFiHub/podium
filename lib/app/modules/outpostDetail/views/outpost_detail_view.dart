@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:marquee/marquee.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
@@ -18,6 +19,7 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/root.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/styles.dart';
@@ -154,6 +156,27 @@ class _NameAndImageWrapper extends StatelessWidget {
   }
 }
 
+class ShareIconButton extends StatelessWidget {
+  final OutpostModel outpost;
+  const ShareIconButton({required this.outpost});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: () {
+        final url = generateOutpostShareUrl(outpostId: outpost.uuid);
+        // copy to clipboard and toast
+        Clipboard.setData(ClipboardData(text: url));
+        Toast.info(title: 'Copied!', message: 'URL copied to clipboard');
+      },
+      icon: const Icon(
+        Icons.share,
+        color: Colors.white,
+      ),
+    );
+  }
+}
+
 class OutpostDetailView extends GetView<OutpostDetailController> {
   const OutpostDetailView({Key? key}) : super(key: key);
   @override
@@ -208,6 +231,8 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
                                               overflow: TextOverflow.visible,
                                             ),
                                           ),
+                                    if (canShareOutpostUrl(outpost: outpost))
+                                      ShareIconButton(outpost: outpost),
                                   ],
                                 ),
                                 space5,
@@ -335,27 +360,6 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
         builder: (controller) {
           final hasTimePassed =
               scheduledTime < DateTime.now().millisecondsSinceEpoch;
-          if (hasTimePassed) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(38),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.white.withAlpha(64),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                isCreatorJoined ? "Ready when you are! 😊" : "Join us! 👋",
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            );
-          }
           final time = remainintTimeUntilMilSecondsFormated(
             time: scheduledTime,
           ).replaceAll('d,', 'day, ');
@@ -384,14 +388,24 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
                         color: Colors.white,
                       ),
                       space8,
-                      Text(
-                        time,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                      if (hasTimePassed)
+                        const Text(
+                          "Reschedule?",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        )
+                      else
+                        Text(
+                          time,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -558,6 +572,7 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
       final accesses = controller.outpostAccesses.value;
       final outpost = controller.outpost.value;
       final joinButtonContent = controller.jointButtonContentProps.value;
+      final isJoining = controller.isJoining.value;
       final isRegistered = Get.isRegistered<OngoingOutpostCallController>();
       if (isRegistered) {
         joinButtonContent.enabled = true;
@@ -568,12 +583,14 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
       }
 
       return Button(
+        loading: isJoining,
         type: isRegistered ? ButtonType.outline : ButtonType.gradient,
         borderSide:
             BorderSide(color: isRegistered ? Colors.green : Colors.transparent),
         onPressed: joinButtonContent.enabled
             ? () {
-                if (isRegistered) {
+                if (isRegistered &&
+                    Get.isRegistered<OutpostDetailController>()) {
                   Navigate.to(
                     type: NavigationTypes.toNamed,
                     route: Routes.ONGOING_OUTPOST_CALL,

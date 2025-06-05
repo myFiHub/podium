@@ -78,6 +78,12 @@ class AptosMovement {
           current_fungible_asset_balances(
             where: {
               owner_address: {_eq: \$address},
+              asset_type: {
+                _in: [
+                  "0x1::aptos_coin::AptosCoin",
+                  "0x000000000000000000000000000000000000000000000000000000000000000a"
+                ]
+              }
              }
            ) {
             amount

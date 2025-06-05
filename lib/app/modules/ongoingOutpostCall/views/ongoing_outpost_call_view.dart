@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/views/report_form.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/usersInOutpostList.dart';
@@ -233,7 +234,7 @@ class GroupCall extends GetView<OutpostCallController> {
       child: Column(
         children: [
           const ContextSaver(),
-          const GroupInfo(),
+          const OutpostInfo(),
           const SessionInfo(),
           MembersList(
             shouldShowIntro: shouldShowIntro,
@@ -319,8 +320,8 @@ class SessionInfo extends GetView<OngoingOutpostCallController> {
   }
 }
 
-class GroupInfo extends GetView<OutpostCallController> {
-  const GroupInfo({super.key});
+class OutpostInfo extends GetView<OutpostCallController> {
+  const OutpostInfo({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -332,11 +333,18 @@ class GroupInfo extends GetView<OutpostCallController> {
               padding: const EdgeInsets.only(top: 10),
               child: Column(
                 children: [
-                  Text(
-                    outpost.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        outpost.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                      if (canShareOutpostUrl(outpost: outpost))
+                        ShareIconButton(outpost: outpost),
+                    ],
                   ),
                   if (iAmCreator) const Text("created by you"),
                   if (!iAmCreator)
@@ -380,23 +388,25 @@ class MembersList extends GetView<OutpostCallController> {
                       unselectedLabelColor: Colors.grey,
                       tabs: [
                         Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text("Live"),
-                              space5,
-                              AnimateIcon(
-                                key: UniqueKey(),
-                                onTap: () async {
-                                  controller.fetchLiveData(withJoin: true);
-                                },
-                                color: Colors.blueAccent,
-                                iconType: IconType.animatedOnTap,
-                                height: 20,
-                                width: 20,
-                                animateIcon: AnimateIcons.refresh,
-                              ),
-                            ],
+                          child: ExcludeSemantics(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text("Live"),
+                                space5,
+                                AnimateIcon(
+                                  key: UniqueKey(),
+                                  onTap: () async {
+                                    controller.fetchLiveData(withJoin: true);
+                                  },
+                                  color: Colors.blueAccent,
+                                  iconType: IconType.animatedOnTap,
+                                  height: 20,
+                                  width: 20,
+                                  animateIcon: AnimateIcons.refresh,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const Tab(

@@ -9,6 +9,7 @@ import 'package:podium/app/modules/notifications/controllers/notifications_contr
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/env.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
@@ -238,9 +239,9 @@ class WebSocketService {
         }
         final outpostCallController = Get.find<OutpostCallController>();
         // NOTE: also in jitsiMeet.dart
-        joinOrLeftDebounce.debounce(() {
+        if (incomingMessage.data.address != myUser.address) {
           outpostCallController.fetchLiveData();
-        });
+        }
         break;
 
       case IncomingMessageType.remainingTimeUpdated:
@@ -499,6 +500,7 @@ class WebSocketService {
 
       if (_reconnectAttempts >= _maxReconnectAttempts) {
         l.e("Max reconnection attempts reached. Please check your connection.");
+        Toast.error(message: "Please check your connection.");
         _isConnecting = false;
         return;
       }

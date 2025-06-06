@@ -512,12 +512,22 @@ class OngoingOutpostCallController extends GetxController {
     loadingWalletAddressForUser
         .add("$targetUserUuid-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final user = await HttpApis.podium.getUserData(targetUserUuid);
-    if (user == null) {
-      l.e("user is null");
+    final liveData = await HttpApis.podium.getLatestLiveData(
+      outpostId: outpostCallController.outpost.value!.uuid,
+    );
+    if (liveData == null) {
+      l.e("live data is null");
       return;
     }
-    String aptosTargetAddress = user.aptos_address!;
+    final user = liveData.members.firstWhere((m) => m.uuid == targetUserUuid);
+
+    String aptosTargetAddress =
+        user.primary_aptos_address ?? user.aptos_address;
+
+    final myPrimaryAddress = liveData.members
+        .firstWhere((m) => m.uuid == myId)
+        .primary_aptos_address!;
+
     if (user.external_wallet_address != '' &&
         user.external_wallet_address != null) {
       targetAddress = user.external_wallet_address;
@@ -537,13 +547,6 @@ class OngoingOutpostCallController extends GetxController {
        */
       List<String> aptosReceiverAddresses = [];
       final myUser = globalController.myUserInfo.value!;
-      final liveData = await HttpApis.podium.getLatestLiveData(
-        outpostId: outpostCallController.outpost.value!.uuid,
-      );
-      if (liveData == null) {
-        l.e("live data is null");
-        return;
-      }
       final liveMembers = liveData.members.where((m) => m.is_present == true);
       final liveMemberIds = liveMembers.map((e) => e.uuid).toList();
       if (liveMemberIds.length < 2) {
@@ -551,12 +554,14 @@ class OngoingOutpostCallController extends GetxController {
         aptosTargetAddress = Env.fihubAddress_Aptos;
         aptosReceiverAddresses.add(Env.fihubAddress_Aptos);
       }
-      final liveAptosAddresses =
-          liveMembers.map((e) => e.aptos_address).toList();
+      final liveAptosAddresses = liveMembers
+          .map((e) => e.primary_aptos_address ?? e.aptos_address)
+          .toList();
       aptosReceiverAddresses.addAll(liveAptosAddresses);
       if (isSelfReaction && cheer) {
         // remove my aptos address from the list, ^^  - If target is NOT in aptosReceiverAddresses list = self-cheer
         aptosReceiverAddresses.remove(myUser.aptos_address);
+        aptosReceiverAddresses.add(myPrimaryAddress);
       }
 
       if (receiverAddresses.length == 0 &&

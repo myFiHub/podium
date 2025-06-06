@@ -175,7 +175,8 @@ class OneSignalService extends GetxService {
 
       // Add observer for user state changes
       OneSignal.User.addObserver((state) {
-        l.d('onesignal: User State Changed: ${state.jsonRepresentation()}');
+        // Log only the essential information
+        l.d('onesignal: User State Changed - ${state.jsonRepresentation()}');
       });
 
       // Add permission observer

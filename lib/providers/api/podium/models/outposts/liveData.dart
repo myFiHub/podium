@@ -1,38 +1,3 @@
-/*
-
-{
-    "members": [
-      {
-        "address": "string",
-        "can_speak": true,
-        "feedbacks": [
-          {
-            "feedback_type": "like",
-            "time": "2025-03-21T13:48:58.145Z",
-            "user_address": "string"
-          }
-        ],
-        "image": "string",
-        "is_present": true,
-        "is_speaking": true,
-        "name": "string",
-        "reactions": [
-          {
-            "amount": 0.1,
-            "reaction_type": "boo",
-            "time": "2025-03-21T13:48:58.145Z",
-            "user_address": "string"
-          }
-        ],
-        "remaining_time": 9007199254740991,
-        "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-      }
-    ]
-  }
-
-
- */
-
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 

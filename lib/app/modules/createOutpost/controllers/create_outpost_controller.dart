@@ -336,27 +336,32 @@ class CreateOutpostController extends GetxController {
   }
 
   Future<String?> uploadFile({required outpostId}) async {
-    final storageRef =
-        FirebaseStorage.instance.ref().child('outposts/$outpostId');
+    try {
+      final storageRef =
+          FirebaseStorage.instance.ref().child('outposts/$outpostId');
 
-    if (selectedFile == null) {
-      return "";
-    }
-    // check if file is less than 2mb
-    final fileSize = selectedFile!.lengthSync();
-    if (fileSize > 2 * 1024 * 1024) {
-      Toast.error(message: 'Image size must be less than 2MB');
+      if (selectedFile == null) {
+        return "";
+      }
+      // check if file is less than 2mb
+      final fileSize = selectedFile!.lengthSync();
+      if (fileSize > 2 * 1024 * 1024) {
+        Toast.error(message: 'Image size must be less than 2MB');
+        return null;
+      }
+      // Upload the image to Firebase Storage
+      final uploadTask = storageRef.putFile(selectedFile!);
+
+      // Wait for the upload to complete
+      final snapshot = await uploadTask.whenComplete(() {});
+
+      // Get the download URL of the uploaded image
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      l.e(e);
       return null;
     }
-    // Upload the image to Firebase Storage
-    final uploadTask = storageRef.putFile(selectedFile!);
-
-    // Wait for the upload to complete
-    final snapshot = await uploadTask.whenComplete(() {});
-
-    // Get the download URL of the uploaded image
-    final downloadUrl = await snapshot.ref.getDownloadURL();
-    return downloadUrl;
   }
 
   toggleScheduled() {
@@ -1361,7 +1366,7 @@ class BuyableTicketTypes {
 class FreeOutpostAccessTypes {
   static const public = 'everyone';
   static const onlyLink = 'having_link';
-  static const invitees = 'invited_users';
+  static const invited_users = 'invited_users';
 }
 
 class TicketPermissionType {
@@ -1376,8 +1381,8 @@ class TicketTypes {
 }
 
 class FreeOutpostSpeakerTypes {
-  static const everyone = 'everyone';
-  static const invitees = 'invitees';
+  static const everyone = FreeOutpostAccessTypes.public;
+  static const invited_users = FreeOutpostAccessTypes.invited_users;
 }
 
 class SelectBoxOption {

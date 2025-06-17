@@ -290,9 +290,13 @@ class GlobalController extends GetxController {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
           l.i("Internet connected");
-          final versionResolved = await checkVersion();
-          if (versionResolved && !initializedOnce.value) {
-            await initializeApp();
+          try {
+            final versionResolved = await checkVersion();
+            if (versionResolved && !initializedOnce.value) {
+              await initializeApp();
+            }
+          } catch (e) {
+            l.e(e);
           }
 
           break;

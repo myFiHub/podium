@@ -862,7 +862,7 @@ String parseSpeakerType(String? speakerType) {
       return "Everyone";
     case FreeOutpostSpeakerTypes.everyone:
       return "Everyone";
-    case FreeOutpostSpeakerTypes.invitees:
+    case FreeOutpostSpeakerTypes.invited_users:
       return "Only Invited Users";
     case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";
@@ -884,7 +884,7 @@ String parseAccessType(String? accessType) {
       return "Public";
     case FreeOutpostAccessTypes.onlyLink:
       return "Only By Link";
-    case FreeOutpostAccessTypes.invitees:
+    case FreeOutpostAccessTypes.invited_users:
       return "Only Invited Users";
     case BuyableTicketTypes.onlyArenaTicketHolders:
       return "Only Arena Ticket Holders";

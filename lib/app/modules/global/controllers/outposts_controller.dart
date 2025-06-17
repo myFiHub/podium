@@ -671,7 +671,7 @@ class OutpostsController extends GetxController {
     }
 
     final invitedMembers = outpost.invites;
-    if (outpost.enter_type == FreeOutpostAccessTypes.invitees) {
+    if (outpost.enter_type == FreeOutpostAccessTypes.invited_users) {
       if (invitedMembers?.map((e) => e.invitee_uuid).contains(myUser.uuid) ==
           true) {
         return GroupAccesses(

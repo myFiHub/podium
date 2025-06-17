@@ -155,7 +155,7 @@ class LoginController extends GetxController {
     try {
       final (success, hash) =
           await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
-        sellerAddress: user.aptos_address!,
+        sellerAddress: user.address,
         sellerName: user.name!,
         sellerUuid: user.uuid,
       );

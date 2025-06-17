@@ -439,7 +439,7 @@ class OutpostCallController extends GetxController {
 bool canISpeakWithoutTicket({required OutpostModel outpost}) {
   final iAmTheCreator = outpost.creator_user_uuid == myId;
   if (iAmTheCreator) return true;
-  if (outpost.speak_type == FreeOutpostSpeakerTypes.invitees) {
+  if (outpost.speak_type == FreeOutpostSpeakerTypes.invited_users) {
     // check if I am invited and am invited to speak
     final invitedMember = (outpost.invites ?? [])
         .firstWhereOrNull((element) => element.invitee_uuid == myId);

@@ -11,7 +11,6 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
-import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
@@ -556,7 +555,7 @@ class CheckticketController extends GetxController {
 
     final (success, hash) =
         await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
-      sellerAddress: ticketSeller.userInfo.aptos_address!,
+      sellerAddress: ticketSeller.userInfo.address,
       sellerName: ticketSeller.userInfo.name!,
       sellerUuid: ticketSeller.userInfo.uuid,
       referrer: referrer,
@@ -875,7 +874,7 @@ canEnterWithoutATicket(OutpostModel group) {
   if (g.enter_type == FreeOutpostAccessTypes.onlyLink) {
     return cameHereByLink;
   }
-  if (g.enter_type == FreeOutpostAccessTypes.invitees) {
+  if (g.enter_type == FreeOutpostAccessTypes.invited_users) {
     return amIInvited;
   }
   if (g.enter_type == FreeOutpostAccessTypes.public) {

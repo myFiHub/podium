@@ -435,9 +435,7 @@ class LoginController extends GetxController {
           (referrerId.isEmpty ? null : referrerId) ??
           temporaryLoginRequest?.referrer_user_uuid,
     );
-
     storage.remove(StorageKeys.referrerId);
-    l.d('request: ${request.toJson()}');
     final (userLoginResponse, errorMessage, responseCode) =
         await HttpApis.podium.login(
       request: request,

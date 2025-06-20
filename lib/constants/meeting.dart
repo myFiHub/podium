@@ -76,13 +76,13 @@ class MeetingConstants {
 }
 
 // transform 054dfc78-c174-49dc-a620-0f0da86d0400 to 054dfc78c17449dca6200f0da86d0400@gmail.com
-transformIdToEmailLike(String id) {
+String transformIdToEmailLike(String id) {
   final rawId = id.replaceAll('-', '');
   return '$rawId@gmail.com';
 }
 
 // transform 054dfc78c17449dca6200f0da86d0400@gmail.com to 054dfc78-c174-49dc-a620-0f0da86d0400
-transformEmailLikeToId(String email) {
+String transformEmailLikeToId(String email) {
   final parts = email.split('@');
   final id = parts[0];
   final idParts = id.split('');

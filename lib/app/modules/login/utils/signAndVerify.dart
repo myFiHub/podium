@@ -16,6 +16,23 @@ String? signMessage(String signer, String message) {
   }
 }
 
+(String signature, int timestamp) signMessageWithTimestamp(
+    String signer, String message) {
+  final timestamp = DateTime.now().millisecondsSinceEpoch;
+  final signature = signMessage(signer, '$message-$timestamp');
+  return (signature!, timestamp);
+}
+
+bool verifySignatureWithTimestamp({
+  required String signature,
+  required String message,
+  required String signer,
+  required int timestamp,
+}) {
+  final messageWithTimestamp = '$message-$timestamp';
+  return verifySignature(signature, messageWithTimestamp, signer);
+}
+
 /// signer is the public key of the signer or the private key of the signer
 bool verifySignature(String signature, String message, String signer) {
   try {

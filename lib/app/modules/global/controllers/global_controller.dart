@@ -769,9 +769,10 @@ class GlobalController extends GetxController {
         );
         final connected = await HttpApis.podium.connectNewAccount(request);
         if (connected) {
-          final signature =
-              signMessage(newAccountPrivateKey, newAccountAddress)!;
+          final (signature, timestamp) =
+              signMessageWithTimestamp(newAccountPrivateKey, newAccountAddress);
           await _switchToAccount(
+            timestamp: timestamp,
             newAddress: newAccountAddress,
             newWeb3AuthUserInfo: res.userInfo!,
             selfSignedNewWalletAddress: signature,
@@ -799,6 +800,7 @@ class GlobalController extends GetxController {
     required String newAptosAddress,
     required String newAddress,
     required Provider provider,
+    required int timestamp,
   }) async {
     await oneSignalService.dismiss();
     web3ModalService.disconnect();
@@ -806,6 +808,7 @@ class GlobalController extends GetxController {
     ws_client = null;
     final request = LoginRequest(
       signature: selfSignedNewWalletAddress,
+      timestamp: timestamp,
       username: newAddress,
       aptos_address: newAptosAddress,
       has_ticket: false,

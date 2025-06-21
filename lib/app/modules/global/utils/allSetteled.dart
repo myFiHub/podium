@@ -1,4 +1,4 @@
-enum AllSettledStatus {
+enum SetteledStatus {
   fulfilled,
   rejected,
 }
@@ -11,12 +11,12 @@ Future<Map<String, dynamic>> allSettled(Map<String, Future> futures) async {
       try {
         final result = await futures[key];
         finalResults[key] = {
-          'status': AllSettledStatus.fulfilled,
+          'status': SetteledStatus.fulfilled,
           'value': result
         };
       } catch (error) {
         finalResults[key] = {
-          'status': AllSettledStatus.rejected,
+          'status': SetteledStatus.rejected,
           'reason': error
         };
       }

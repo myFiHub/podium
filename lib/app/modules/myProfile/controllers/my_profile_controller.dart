@@ -337,13 +337,12 @@ class MyProfileController extends GetxController {
         'movementAptos': AptosMovement.balance,
       };
       final results = await allSettled(callMap);
-      final baseBalance =
-          results['base']!['status'] == AllSettledStatus.fulfilled
-              ? results['base']!['value']
-              : EtherAmount.zero();
+      final baseBalance = results['base']!['status'] == SetteledStatus.fulfilled
+          ? results['base']!['value']
+          : EtherAmount.zero();
 
       final avalancheBalance =
-          results['avalanche']!['status'] == AllSettledStatus.fulfilled
+          results['avalanche']!['status'] == SetteledStatus.fulfilled
               ? results['avalanche']!['value']
               : EtherAmount.zero();
       // final movementBalance =
@@ -351,7 +350,7 @@ class MyProfileController extends GetxController {
       //         ? results['movement']!['value']
       //         : EtherAmount.zero();
       final movementAptosBalance =
-          results['movementAptos']!['status'] == AllSettledStatus.fulfilled
+          results['movementAptos']!['status'] == SetteledStatus.fulfilled
               ? results['movementAptos']!['value']
               : BigInt.zero;
       final reason = results['movementAptos']!['reason'];

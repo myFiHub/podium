@@ -1,7 +1,7 @@
 import 'package:uuid/uuid.dart';
 
-addressToUuid(String address) {
+String stringToUuid(String string) {
   final uuid = const Uuid();
-  final uid = uuid.v5(Namespace.url.value, address);
+  final uid = uuid.v5(Namespace.url.value, string);
   return uid;
 }

@@ -147,7 +147,7 @@ class OutpostsController extends GetxController {
       final Map<String, dynamic> results = await allSettled(calls);
       final Map<String, int> map = <String, int>{};
       for (String id in ids) {
-        if (results[id]?['status'] == AllSettledStatus.fulfilled &&
+        if (results[id]?['status'] == SetteledStatus.fulfilled &&
             results[id]?['value'] != 0) {
           map[id] = results[id]!['value'];
         }

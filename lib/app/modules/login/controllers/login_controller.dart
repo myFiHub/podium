@@ -319,11 +319,6 @@ class LoginController extends GetxController {
   }) async {
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
-    final signature = signMessage(privateKey, publicAddress);
-    if (signature == null) {
-      l.e('Signature is not valid');
-      return;
-    }
 
 // aptos account
     final aptosAccount = AptosAccount.fromPrivateKey(privateKey);
@@ -387,14 +382,8 @@ class LoginController extends GetxController {
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
     isBeforeLaunchUser = false;
     // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
-    final signature = signMessage(privateKey, internalEvmWalletAddress);
-    if (signature == null) {
-      l.e('Signature is not valid');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    }
+    final (signature, timestamp) =
+        signMessageWithTimestamp(privateKey, internalEvmWalletAddress);
 
     final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
       myAptosAddress: internalAptosWalletAddress,
@@ -402,6 +391,7 @@ class LoginController extends GetxController {
 
     temporaryLoginRequest = LoginRequest(
       signature: signature,
+      timestamp: timestamp,
       username: internalEvmWalletAddress,
       aptos_address: internalAptosWalletAddress,
       has_ticket: hasTicket ||
@@ -425,6 +415,7 @@ class LoginController extends GetxController {
     final storageReferreId = storage.read<String>(StorageKeys.referrerId);
     final request = LoginRequest(
       signature: temporaryLoginRequest!.signature,
+      timestamp: temporaryLoginRequest!.timestamp,
       username: temporaryLoginRequest!.username,
       aptos_address: temporaryLoginRequest!.aptos_address,
       has_ticket: hasTicket,

@@ -75,8 +75,6 @@ class OngoingOutpostCallController extends GetxController {
 
   StreamSubscription<List<LiveMember>>? membersListener;
 
-  Timer? lastResortTimer;
-
   @override
   void onInit() async {
     super.onInit();
@@ -116,13 +114,15 @@ class OngoingOutpostCallController extends GetxController {
       if (members.value.length == 0) {
         outpostCallController.fetchLiveData(withJoin: true);
       }
-      Future.delayed(const Duration(seconds: 5)).then((value) {
+      Future.delayed(const Duration(seconds: 3)).then((value) {
         if (members.value.length == 0) {
-          Toast.error(
-            title: 'try again please',
-            message: 'Failed to join the outpost',
-          );
-          outpostCallController.runHome();
+          if (Get.isRegistered<OngoingOutpostCallController>()) {
+            Toast.error(
+              title: 'try again please',
+              message: 'Failed to join the outpost',
+            );
+            outpostCallController.runHome();
+          }
         }
       });
     });
@@ -135,7 +135,6 @@ class OngoingOutpostCallController extends GetxController {
     recordingListeners?.cancel();
     membersListener?.cancel();
     sessionData.value = null;
-    lastResortTimer?.cancel();
     await jitsiMeet.hangUp();
   }
 

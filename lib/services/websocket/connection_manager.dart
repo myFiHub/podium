@@ -16,19 +16,20 @@ class ConnectionManager {
 
   int _reconnectAttempts = 0;
   Timer? _connectionTimeoutTimer;
-  final _connectionLock = Lock();
+  final Lock _connectionLock = Lock();
 
   Duration _getReconnectDelay() {
     if (_reconnectAttempts >= _maxReconnectAttempts) return _maxReconnectDelay;
 
-    final exponentialDelay = _initialReconnectDelay * (1 << _reconnectAttempts);
-    final jitter = Duration(
+    final Duration exponentialDelay =
+        _initialReconnectDelay * (1 << _reconnectAttempts);
+    final Duration jitter = Duration(
         milliseconds: (exponentialDelay.inMilliseconds *
                 0.1 *
                 (DateTime.now().millisecondsSinceEpoch % 10))
             .toInt());
 
-    final delay = exponentialDelay + jitter;
+    final Duration delay = exponentialDelay + jitter;
     return delay > _maxReconnectDelay ? _maxReconnectDelay : delay;
   }
 

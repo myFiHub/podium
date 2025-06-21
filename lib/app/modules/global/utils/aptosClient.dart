@@ -290,7 +290,7 @@ class AptosMovement {
     });
   }
 
-  static Future<(bool?, String?)> buyTicketFromTicketSellerOnPodiumPass({
+  static Future<(bool?, String?)> buyPodiumPassFromUser({
     required String sellerAddress,
     required String sellerName,
     required String sellerUuid,

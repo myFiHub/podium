@@ -553,9 +553,8 @@ class CheckticketController extends GetxController {
       }
     }
 
-    final (success, hash) =
-        await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
-      sellerAddress: ticketSeller.userInfo.address,
+    final (success, hash) = await AptosMovement.buyPodiumPassFromUser(
+      sellerAddress: ticketSeller.userInfo.aptos_address!,
       sellerName: ticketSeller.userInfo.name!,
       sellerUuid: ticketSeller.userInfo.uuid,
       referrer: referrer,

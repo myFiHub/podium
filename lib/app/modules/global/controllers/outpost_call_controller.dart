@@ -92,9 +92,18 @@ class OutpostCallController extends GetxController {
         // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
         final joined =
             await wsClient.asyncJoinOutpostWithRetry(activeOutpost.uuid);
+        final reconnecting = wsClient.isConnecting;
+        if (!joined && reconnecting) {
+          Toast.error(
+            title: 'stablishing connection',
+            message: 'please wait a bit, then try again',
+          );
+          return;
+        }
+
         if (!joined) {
           Toast.error(
-            title: 'please close the app and try again',
+            title: 'try again in a bit, fixing the issue',
             message: 'there was an error joining the outpost',
           );
           jitsiMeet.hangUp();
@@ -214,7 +223,18 @@ class OutpostCallController extends GetxController {
 
     final liveData =
         await HttpApis.podium.getLatestLiveData(outpostId: outpost.value!.uuid);
-    if (liveData != null) {
+    if (liveData == null) {
+      final isOutpostCallControllerRegistered =
+          Get.isRegistered<OutpostCallController>();
+      if (isOutpostCallControllerRegistered) {
+        final outpostCallController = Get.find<OutpostCallController>();
+        outpostCallController.runHome();
+        Toast.error(
+          title: 'there was an error joining the outpost',
+          message: 'please try again',
+        );
+      }
+    } else {
       final tmp = liveData.members;
       tmp.asMap().forEach((index, element) {
         if (element.last_speaked_at_timestamp == null) {
@@ -240,8 +260,16 @@ class OutpostCallController extends GetxController {
             l.e('Error joining outpost: $e');
           }
           if (!joined) {
+            final reconnecting = wsClient.isConnecting;
+            if (reconnecting) {
+              Toast.error(
+                title: 'stablishing connection',
+                message: 'please wait a bit, then try again',
+              );
+              return;
+            }
             Toast.error(
-              title: 'please close the app and try again',
+              title: 'try again',
               message: 'there was an error joining the outpost',
             );
             jitsiMeet.hangUp();

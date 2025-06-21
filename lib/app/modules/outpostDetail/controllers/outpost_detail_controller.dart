@@ -433,8 +433,11 @@ class OutpostDetailController extends GetxController {
 
     final isWsConnected = wsClient.connected;
     if (!isWsConnected) {
-      Toast.error(message: "Please check your connection. or reopen the app");
-      return;
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess) {
+        Toast.error(message: "Please check your connection. or reopen the app");
+        return;
+      }
     }
 
     isJoining.value = true;

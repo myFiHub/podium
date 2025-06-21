@@ -368,12 +368,16 @@ class OngoingOutpostCallController extends GetxController {
 
   setMutedState(bool muted) async {
     if (!wsClient.connected) {
-      await wsClient.reconnect();
-      if (!wsClient.connected) {
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess || !wsClient.connected) {
         Toast.warning(
           title: 'Connection Error',
           message: 'please check your internet connection',
         );
+        if (!muted) {
+          amIMuted.value = true;
+          jitsiMeet.setAudioMuted(true);
+        }
         return;
       }
     }
@@ -697,8 +701,8 @@ class OngoingOutpostCallController extends GetxController {
 
   audioMuteChanged({required bool muted}) async {
     if (!wsClient.connected) {
-      await wsClient.reconnect();
-      if (!wsClient.connected) {
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess || !wsClient.connected) {
         Toast.warning(
           title: 'Connection Error',
           message: 'please check your internet connection',

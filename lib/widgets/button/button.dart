@@ -523,7 +523,7 @@ class _ButtonState extends State<Button> {
     final Color? effectiveTextColor =
         WidgetStateProperty.resolveAs<Color?>(widget.textStyle?.color, _states);
     final Color themeColor =
-        Theme.of(context).colorScheme.onSurface.withOpacity(0.12);
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12);
     final BorderSide outlineBorder = BorderSide(
       color: widget.borderSide == null
           ? getBorderColor()
@@ -541,9 +541,6 @@ class _ButtonState extends State<Button> {
         minSize = const Size(48, 48);
         break;
       case MaterialTapTargetSize.shrinkWrap:
-        minSize = Size.zero;
-        break;
-      default:
         minSize = Size.zero;
         break;
     }

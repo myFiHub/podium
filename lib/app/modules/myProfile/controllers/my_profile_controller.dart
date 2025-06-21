@@ -328,34 +328,34 @@ class MyProfileController extends GetxController {
       isGettingBalances.value = true;
       final baseClient = evmClientByChainId(baseChainId);
       final avalancheClient = evmClientByChainId(avalancheChainId);
-      // final movementClient = evmClientByChainId(movementEVMChain.chainId);
       final myaddress = await web3AuthWalletAddress();
       final callMap = {
         'base': baseClient.getBalance(parseAddress(myaddress!)),
         'avalanche': avalancheClient.getBalance(parseAddress(myaddress)),
-        // 'movement': movementClient.getBalance(parseAddress(myaddress)),
         'movementAptos': AptosMovement.balance,
       };
-      final results = await allSettled(callMap);
-      final baseBalance = results['base']!['status'] == SetteledStatus.fulfilled
-          ? results['base']!['value']
-          : EtherAmount.zero();
+      final results = await allSettled(callMap, onProgress: (key, status) {
+        l.d('Balance fetch for $key: ${status.name}');
+      });
 
+      final baseBalance =
+          results['base']?.valueOr(EtherAmount.zero()) ?? EtherAmount.zero();
       final avalancheBalance =
-          results['avalanche']!['status'] == SetteledStatus.fulfilled
-              ? results['avalanche']!['value']
-              : EtherAmount.zero();
-      // final movementBalance =
-      //     results['movement']!['status'] == AllSettledStatus.fulfilled
-      //         ? results['movement']!['value']
-      //         : EtherAmount.zero();
+          results['avalanche']?.valueOr(EtherAmount.zero()) ??
+              EtherAmount.zero();
       final movementAptosBalance =
-          results['movementAptos']!['status'] == SetteledStatus.fulfilled
-              ? results['movementAptos']!['value']
-              : BigInt.zero;
-      final reason = results['movementAptos']!['reason'];
-      if (reason is DioException) {
-        l.e(reason.response?.data);
+          results['movementAptos']?.valueOr(BigInt.zero) ?? BigInt.zero;
+
+      // Log any errors for debugging
+      results['movementAptos']?.ifRejected((reason) {
+        if (reason is DioException) {
+          l.e(reason.response?.data);
+        }
+      });
+
+      // Log summary of results
+      if (results.hasRejected) {
+        l.w('Some balance fetches failed: ${results.rejectedCount}/${results.length} failed');
       }
 
       balances.value = Balances(

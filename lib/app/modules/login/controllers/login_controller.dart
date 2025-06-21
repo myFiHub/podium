@@ -382,9 +382,10 @@ class LoginController extends GetxController {
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
     isBeforeLaunchUser = false;
     // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
-    final (signature, timestamp) =
-        signMessageWithTimestamp(privateKey, internalEvmWalletAddress);
-
+    // final (signature, timestamp) =
+    //     signMessageWithTimestamp(privateKey, internalEvmWalletAddress);
+    final signature = signMessage(privateKey, internalEvmWalletAddress)!;
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
     final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
       myAptosAddress: internalAptosWalletAddress,
     );

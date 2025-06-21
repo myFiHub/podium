@@ -144,12 +144,12 @@ class OutpostsController extends GetxController {
       for (String id in ids) {
         calls[id] = HttpApis.podium.getNumberOfOnlineMembers(id);
       }
-      final Map<String, dynamic> results = await allSettled(calls);
+      final results = await allSettled(calls);
       final Map<String, int> map = <String, int>{};
       for (String id in ids) {
-        if (results[id]?['status'] == SetteledStatus.fulfilled &&
-            results[id]?['value'] != 0) {
-          map[id] = results[id]!['value'];
+        final result = results[id];
+        if (result?.isFulfilled == true && result?.value != 0) {
+          map[id] = result!.value!;
         }
       }
 

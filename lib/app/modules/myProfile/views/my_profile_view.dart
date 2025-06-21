@@ -455,9 +455,9 @@ class InternalWallet extends GetView<GlobalController> {
                 ],
               ),
               space10,
-              const EvmAddressAndBalances(),
-              space10,
               const AptosAddressAndBalance(),
+              space10,
+              const EvmAddressAndBalances(),
               space10,
               const PrivateKeyButton(),
             ],
@@ -609,8 +609,12 @@ class AptosBalance extends GetView<MyProfileController> {
               children: [
                 Row(
                   children: [
+                    _PriceSkeleton(
+                      isLoading: loading,
+                      price: balances.movementAptos,
+                    ),
                     const Text(
-                      'Aptos MOVE',
+                      ' MOVE',
                       style: const TextStyle(
                         fontSize: 12,
                       ),
@@ -621,10 +625,6 @@ class AptosBalance extends GetView<MyProfileController> {
                       size: 16,
                     ),
                   ],
-                ),
-                _PriceSkeleton(
-                  isLoading: loading,
-                  price: balances.movementAptos,
                 ),
               ],
             ),

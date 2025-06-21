@@ -450,11 +450,10 @@ class OutpostsController extends GetxController {
     try {
       joiningOutpostId.value = outpostId;
       final outpost = await HttpApis.podium.getOutpost(outpostId);
-      l.d("Outpost: $outpost");
       if (outpost == null) {
         Toast.error(
-          title: "Error",
-          message: "Failed to join the Outpost, Outpost not found",
+          title: "Error-455",
+          message: "Failed to join the Outpost",
         );
         Navigate.to(
           type: NavigationTypes.offAllNamed,

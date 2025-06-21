@@ -367,7 +367,7 @@ class AptosMovement {
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
 
-      await HttpApis.podium.buySellPodiumPass(
+      final success = await HttpApis.podium.buySellPodiumPass(
         BuySellPodiumPassRequest(
           count: numberOfTickets,
           podium_pass_owner_address: sellerAddress,
@@ -376,6 +376,7 @@ class AptosMovement {
           tx_hash: hash,
         ),
       );
+      l.d(success);
       return (true, hash);
     } catch (e, stackTrace) {
       l.e(e, stackTrace: stackTrace);

@@ -16,11 +16,11 @@ String? signMessage(String signer, String message) {
   }
 }
 
-(String signature, int timestamp) signMessageWithTimestamp(
+(String signature, int timestampInSeconds) signMessageWithTimestamp(
     String signer, String message) {
-  final timestamp = DateTime.now().millisecondsSinceEpoch;
-  final signature = signMessage(signer, '$message-$timestamp');
-  return (signature!, timestamp);
+  final timestampInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  final signature = signMessage(signer, '$message-$timestampInSeconds');
+  return (signature!, timestampInSeconds);
 }
 
 bool verifySignatureWithTimestamp({

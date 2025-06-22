@@ -57,7 +57,7 @@ class UsersInOutpostList extends StatelessWidget {
                   isItME: isItME,
                   userId: userId,
                   user: user,
-                  name: name,
+                  name: name ?? 'User',
                   avatar: avatar,
                   groupId: outpostId,
                 ),

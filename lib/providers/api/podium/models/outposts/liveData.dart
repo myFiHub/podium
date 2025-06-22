@@ -23,7 +23,7 @@ class LiveMember {
   final String image;
   final bool is_present;
   bool is_speaking;
-  final String name;
+  final String? name;
   final List<UserReaction> reactions;
   int remaining_time;
   int? last_speaked_at_timestamp;
@@ -42,7 +42,7 @@ class LiveMember {
     required this.image,
     this.is_present = false,
     this.is_speaking = false,
-    required this.name,
+    this.name = '',
     this.reactions = const [],
     this.remaining_time = 0,
     required this.uuid,

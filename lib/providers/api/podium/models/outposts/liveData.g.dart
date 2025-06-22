@@ -19,7 +19,7 @@ abstract class _$LiveMemberCWProxy {
 
   LiveMember is_speaking(bool is_speaking);
 
-  LiveMember name(String name);
+  LiveMember name(String? name);
 
   LiveMember reactions(List<UserReaction> reactions);
 
@@ -54,7 +54,7 @@ abstract class _$LiveMemberCWProxy {
     String image,
     bool is_present,
     bool is_speaking,
-    String name,
+    String? name,
     List<UserReaction> reactions,
     int remaining_time,
     String uuid,
@@ -94,7 +94,7 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
   LiveMember is_speaking(bool is_speaking) => this(is_speaking: is_speaking);
 
   @override
-  LiveMember name(String name) => this(name: name);
+  LiveMember name(String? name) => this(name: name);
 
   @override
   LiveMember reactions(List<UserReaction> reactions) =>
@@ -189,7 +189,7 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
       name: name == const $CopyWithPlaceholder()
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
-          : name as String,
+          : name as String?,
       reactions: reactions == const $CopyWithPlaceholder()
           ? _value.reactions
           // ignore: cast_nullable_to_non_nullable
@@ -269,7 +269,7 @@ LiveMember _$LiveMemberFromJson(Map<String, dynamic> json) => LiveMember(
       image: json['image'] as String,
       is_present: json['is_present'] as bool? ?? false,
       is_speaking: json['is_speaking'] as bool? ?? false,
-      name: json['name'] as String,
+      name: json['name'] as String? ?? '',
       reactions: (json['reactions'] as List<dynamic>?)
               ?.map((e) => UserReaction.fromJson(e as Map<String, dynamic>))
               .toList() ??

@@ -536,7 +536,7 @@ class SearchInRoom extends GetView<OutpostCallController> {
             final searchedValue = controller.searchedValueInMeet.value;
             final filteredMembers = members.where(
               (element) {
-                return element.name.toLowerCase().contains(
+                return (element.name ?? '').toLowerCase().contains(
                       searchedValue.toLowerCase(),
                     );
               },

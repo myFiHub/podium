@@ -769,11 +769,9 @@ class GlobalController extends GetxController {
         );
         final connected = await HttpApis.podium.connectNewAccount(request);
         if (connected) {
-          // final (signature, timestamp) =
-          //     signMessageWithTimestamp(newAccountPrivateKey, newAccountAddress);
-          final signature =
-              signMessage(newAccountPrivateKey, newAccountAddress)!;
-          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final (signature, timestamp) =
+              signMessageWithTimestamp(newAccountPrivateKey, newAccountAddress);
+
           await _switchToAccount(
             timestamp: timestamp,
             newAddress: newAccountAddress,

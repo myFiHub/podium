@@ -13,7 +13,7 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel creator_joined(bool creator_joined);
 
-  OutpostModel creator_user_name(String creator_user_name);
+  OutpostModel creator_user_name(String? creator_user_name);
 
   OutpostModel creator_user_uuid(String creator_user_uuid);
 
@@ -69,7 +69,7 @@ abstract class _$OutpostModelCWProxy {
     String uuid,
     int created_at,
     bool creator_joined,
-    String creator_user_name,
+    String? creator_user_name,
     String creator_user_uuid,
     String creator_user_image,
     String enter_type,
@@ -112,7 +112,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       this(creator_joined: creator_joined);
 
   @override
-  OutpostModel creator_user_name(String creator_user_name) =>
+  OutpostModel creator_user_name(String? creator_user_name) =>
       this(creator_user_name: creator_user_name);
 
   @override
@@ -245,7 +245,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       creator_user_name: creator_user_name == const $CopyWithPlaceholder()
           ? _value.creator_user_name
           // ignore: cast_nullable_to_non_nullable
-          : creator_user_name as String,
+          : creator_user_name as String?,
       creator_user_uuid: creator_user_uuid == const $CopyWithPlaceholder()
           ? _value.creator_user_uuid
           // ignore: cast_nullable_to_non_nullable
@@ -353,7 +353,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       uuid: json['uuid'] as String,
       created_at: (json['created_at'] as num).toInt(),
       creator_joined: json['creator_joined'] as bool,
-      creator_user_name: json['creator_user_name'] as String,
+      creator_user_name: json['creator_user_name'] as String? ?? '',
       creator_user_uuid: json['creator_user_uuid'] as String,
       creator_user_image: json['creator_user_image'] as String,
       enter_type: json['enter_type'] as String,

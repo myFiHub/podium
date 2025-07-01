@@ -385,7 +385,7 @@ class OutpostCallController extends GetxController {
 
   Future<void> startCall(
       {required OutpostModel outpostToJoin,
-      GroupAccesses? accessOverRides}) async {
+      OutpostAccesses? accessOverRides}) async {
     final globalController = Get.find<GlobalController>();
 
     final iAmAllowedToSpeak = accessOverRides != null

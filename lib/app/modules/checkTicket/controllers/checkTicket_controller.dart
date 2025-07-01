@@ -168,7 +168,7 @@ class CheckticketController extends GetxController {
     );
   }
 
-  Future<GroupAccesses> checkTickets() async {
+  Future<OutpostAccesses> checkTickets() async {
     allUsersToBuyTicketFrom.value = {};
     loadingUsers.value = true;
     final requiredTicketsToAccess = outpost.value!.tickets_to_enter ?? [];
@@ -420,7 +420,7 @@ class CheckticketController extends GetxController {
     return checkAccess();
   }
 
-  GroupAccesses checkAccess() {
+  OutpostAccesses checkAccess() {
     final canSpeak = allUsersToBuyTicketFrom.value.entries.any(
           (element) =>
               element.value.boughtTicketToSpeak == true &&
@@ -434,7 +434,7 @@ class CheckticketController extends GetxController {
               element.value.accessTicketType != null,
         ) ||
         canEnterWithoutTicket;
-    final accessResult = GroupAccesses(
+    final accessResult = OutpostAccesses(
       canEnter: isAccessBuyableByTicket ? canEnter : canEnterWithoutTicket,
       canSpeak: isSpeakBuyableByTicket ? canSpeak : canSpeakWithoutATicket,
     );
@@ -708,14 +708,14 @@ class CheckticketController extends GetxController {
     return canEnterWithoutATicket(g);
   }
 
-  Future<GroupAccesses> checkIfIveBoughtTheTicketFromUser(
+  Future<OutpostAccesses> checkIfIveBoughtTheTicketFromUser(
     UserModel user,
   ) async {
     final userId = user.uuid;
     final myUser = globalController.myUserInfo.value!;
     if (userId == myUser.uuid)
-      return GroupAccesses(canEnter: true, canSpeak: true);
-    GroupAccesses access = GroupAccesses(canEnter: false, canSpeak: false);
+      return OutpostAccesses(canEnter: true, canSpeak: true);
+    OutpostAccesses access = OutpostAccesses(canEnter: false, canSpeak: false);
 
     // check if user has access, using any ticket
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {

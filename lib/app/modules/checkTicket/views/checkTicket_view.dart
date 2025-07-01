@@ -105,7 +105,7 @@ class EnterButton extends GetView<CheckticketController> {
               onPressed: () {
                 Navigator.pop(
                   context,
-                  GroupAccesses(canEnter: true, canSpeak: canSpeak),
+                  OutpostAccesses(canEnter: true, canSpeak: canSpeak),
                 );
               },
               text: text,

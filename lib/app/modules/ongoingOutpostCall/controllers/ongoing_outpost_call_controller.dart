@@ -581,7 +581,7 @@ class OngoingOutpostCallController extends GetxController {
       if (isSelfReaction && cheer) {
         // remove my aptos address from the list, ^^  - If target is NOT in aptosReceiverAddresses list = self-cheer
         aptosReceiverAddresses.remove(myUser.aptos_address);
-        aptosReceiverAddresses.add(myPrimaryAddress);
+        aptosReceiverAddresses.remove(myPrimaryAddress);
       }
 
       if (receiverAddresses.length == 0 &&

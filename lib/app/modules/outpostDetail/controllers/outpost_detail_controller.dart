@@ -49,7 +49,7 @@ class OutpostDetailController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;
   final outpost = Rxn<OutpostModel>();
-  final outpostAccesses = Rxn<GroupAccesses>();
+  final outpostAccesses = Rxn<OutpostAccesses>();
   final membersList = Rx<List<LiveMember>>([]);
   final isGettingGroupInfo = false.obs;
   final isSettingReminder = false.obs;
@@ -113,7 +113,7 @@ class OutpostDetailController extends GetxController {
 
     final outpostInfo = OutpostModel.fromJson(jsonDecode(stringedOutpostInfo));
     membersList.value = outpostInfo.members ?? [];
-    outpostAccesses.value = GroupAccesses(
+    outpostAccesses.value = OutpostAccesses(
       canEnter: enterAccess == 'true',
       canSpeak: speakAccess == 'true',
     );
@@ -428,7 +428,7 @@ class OutpostDetailController extends GetxController {
     membersList.value = outpostData.members ?? [];
   }
 
-  startTheCall({required GroupAccesses accesses}) async {
+  startTheCall({required OutpostAccesses accesses}) async {
     if (isJoining.value) return;
 
     final isWsConnected = wsClient.connected;

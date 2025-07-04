@@ -49,6 +49,7 @@ class LoginController extends GetxController {
   final internalWalletAddress = ''.obs;
   final internalWalletBalance = ''.obs;
   Function? afterLogin = null;
+  String? _privateKeyFromWeb3Auth;
 
   final isReferrerInputExpanded = false.obs;
   final referrerNotFound = false.obs;
@@ -239,7 +240,6 @@ class LoginController extends GetxController {
         Web3AuthFlutter.getPrivKey()
       ).wait;
       continueSocialLoginWithUserInfoAndPrivateKey(
-        privateKey: privateKey,
         userInfo: userInfo,
         loginMethod: loginMethod,
       );
@@ -295,9 +295,8 @@ class LoginController extends GetxController {
         }
         final privateKey = res.privKey!;
         final userInfo = res.userInfo!;
-
+        _privateKeyFromWeb3Auth = privateKey;
         await continueSocialLoginWithUserInfoAndPrivateKey(
-          privateKey: privateKey,
           userInfo: userInfo,
           loginMethod: loginMethod,
         );
@@ -313,10 +312,11 @@ class LoginController extends GetxController {
   }
 
   Future<void> continueSocialLoginWithUserInfoAndPrivateKey({
-    required String privateKey,
     required TorusUserInfo userInfo,
     required Provider loginMethod,
   }) async {
+    final privateKey = _privateKeyFromWeb3Auth!;
+
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
 
@@ -413,9 +413,12 @@ class LoginController extends GetxController {
     String? forcedReferrerID,
   }) async {
     final storageReferreId = storage.read<String>(StorageKeys.referrerId);
+    final privateKey = _privateKeyFromWeb3Auth!;
+    final (signature, timestamp) =
+        signMessageWithTimestamp(privateKey, temporaryLoginRequest!.username);
     final request = LoginRequest(
-      signature: temporaryLoginRequest!.signature,
-      timestamp: temporaryLoginRequest!.timestamp,
+      signature: signature,
+      timestamp: timestamp,
       username: temporaryLoginRequest!.username,
       aptos_address: temporaryLoginRequest!.aptos_address,
       has_ticket: hasTicket,

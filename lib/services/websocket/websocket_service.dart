@@ -315,7 +315,7 @@ class WebSocketService {
 
   void _startPingTimer() {
     _pingTimer?.cancel();
-    _pingTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _pingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       if (isConnected) {
         try {
           _channel!.sink.add([0x8A]); // WebSocket ping frame

@@ -32,7 +32,7 @@ class UserModel {
   final int sent_boo_count;
   final double sent_cheer_amount;
   final int sent_cheer_count;
-
+  final List<ConnectedAccount> accounts;
   String get defaultWalletAddress => external_wallet_address ?? address;
 
   UserModel({
@@ -61,9 +61,36 @@ class UserModel {
     this.sent_boo_count = 0,
     this.sent_cheer_amount = 0.0,
     this.sent_cheer_count = 0,
+    this.accounts = const [],
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
       _$UserModelFromJson(json);
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
+}
+
+@JsonSerializable()
+@CopyWith()
+class ConnectedAccount {
+  final String address;
+  final String aptos_address;
+  final String? image;
+  bool is_primary;
+  final String? login_type;
+  final String login_type_identifier;
+  final String uuid;
+
+  ConnectedAccount({
+    required this.address,
+    required this.aptos_address,
+    required this.image,
+    required this.is_primary,
+    required this.login_type,
+    required this.login_type_identifier,
+    required this.uuid,
+  });
+
+  factory ConnectedAccount.fromJson(Map<String, dynamic> json) =>
+      _$ConnectedAccountFromJson(json);
+  Map<String, dynamic> toJson() => _$ConnectedAccountToJson(this);
 }

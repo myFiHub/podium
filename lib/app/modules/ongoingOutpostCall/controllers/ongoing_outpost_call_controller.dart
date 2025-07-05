@@ -78,6 +78,7 @@ class OngoingOutpostCallController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
+
     recordingListeners = recorderController.isRecording.listen((recording) {
       isRecording.value = recording;
     });
@@ -91,7 +92,6 @@ class OngoingOutpostCallController extends GetxController {
   @override
   void onReady() async {
     super.onReady();
-
     membersListener = outpostCallController.members.listen((listOfMembers) {
       members.value = [...listOfMembers];
       final my_user =
@@ -109,6 +109,22 @@ class OngoingOutpostCallController extends GetxController {
           outpostCallController.outpost.value!.creator_user_uuid != myId) {
         jitsiMeet.setAudioMuted(true);
       }
+    });
+    Future.delayed(const Duration(seconds: 10)).then((value) {
+      if (members.value.length == 0) {
+        outpostCallController.fetchLiveData(withJoin: true);
+      }
+      Future.delayed(const Duration(seconds: 3)).then((value) {
+        if (members.value.length == 0) {
+          if (Get.isRegistered<OngoingOutpostCallController>()) {
+            Toast.error(
+              title: 'try again please',
+              message: 'Failed to join the outpost',
+            );
+            outpostCallController.runHome();
+          }
+        }
+      });
     });
   }
 
@@ -368,12 +384,16 @@ class OngoingOutpostCallController extends GetxController {
 
   setMutedState(bool muted) async {
     if (!wsClient.connected) {
-      await wsClient.reconnect();
-      if (!wsClient.connected) {
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess || !wsClient.connected) {
         Toast.warning(
           title: 'Connection Error',
           message: 'please check your internet connection',
         );
+        if (!muted) {
+          amIMuted.value = true;
+          jitsiMeet.setAudioMuted(true);
+        }
         return;
       }
     }
@@ -502,30 +522,32 @@ class OngoingOutpostCallController extends GetxController {
   }
 
   cheerBoo(
-      {required String userId, required bool cheer, bool? fromMeetPage}) async {
-    final isSelfReaction = userId == myId;
+      {required String targetUserUuid,
+      required bool cheer,
+      bool? fromMeetPage}) async {
+    final isSelfReaction = targetUserUuid == myId;
     final isBoo = !cheer;
-    // sendOutpostEvent(
-    //   outpostId: outpostCallController.outpost.value!.uuid,
-    //   eventType:
-    //       cheer ? OutgoingMessageTypeEnums.cheer : OutgoingMessageTypeEnums.boo,
-    //   eventData: WsOutgoingMessageData(
-    //     amount: 0.1,
-    //     react_to_user_address: userId,
-    //     chain_id: int.parse(
-    //       globalController.appMetadata.movement_aptos_metadata.chain_id,
-    //     ),
-    //   ),
-    // );
-    // return;
+
     String? targetAddress;
-    loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
+    loadingWalletAddressForUser
+        .add("$targetUserUuid-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final user = await HttpApis.podium.getUserData(userId);
-    if (user == null) {
-      l.e("user is null");
+    final liveData = await HttpApis.podium.getLatestLiveData(
+      outpostId: outpostCallController.outpost.value!.uuid,
+    );
+    if (liveData == null) {
+      l.e("live data is null");
       return;
     }
+    final user = liveData.members.firstWhere((m) => m.uuid == targetUserUuid);
+
+    String aptosTargetAddress =
+        user.primary_aptos_address ?? user.aptos_address;
+
+    final myPrimaryAddress = liveData.members
+        .firstWhere((m) => m.uuid == myId)
+        .primary_aptos_address!;
+
     if (user.external_wallet_address != '' &&
         user.external_wallet_address != null) {
       targetAddress = user.external_wallet_address;
@@ -533,43 +555,35 @@ class OngoingOutpostCallController extends GetxController {
       targetAddress = user.address;
     }
 
-    l.d("target address is $targetAddress for user $userId");
+    l.d("target address is $targetAddress for user $targetUserUuid");
     if (targetAddress != '') {
       List<String> receiverAddresses = [];
+
+      /*
+      **aptosReceiverAddresses**: List of addresses that share in the distribution
+   - Important: The target's presence/absence in this list determines if it's a self-cheer
+   - If target is NOT in aptosReceiverAddresses list = self-cheer
+   - If target is in aptosReceiverAddresses list = regular cheer
+       */
       List<String> aptosReceiverAddresses = [];
       final myUser = globalController.myUserInfo.value!;
-      if (myUser.external_wallet_address == targetAddress ||
-          (myUser.address == targetAddress) ||
-          isBoo) {
-        final liveData = await HttpApis.podium.getLatestLiveData(
-          outpostId: outpostCallController.outpost.value!.uuid,
-        );
-        if (liveData == null) {
-          l.e("live data is null");
-          return;
-        }
-        final liveMembers = liveData.members.where((m) => m.is_present == true);
-        final liveMemberIds = liveMembers.map((e) => e.uuid).toList();
-        if (liveMemberIds.length < 2) {
-          // REVIEW: if there is only one user in the session, cheer goes to to fihub account, and time is added to the user's talk time
-          aptosReceiverAddresses.add(Env.fihubAddress_Aptos);
-        }
-
-        if (isSelfReaction || isBoo) {
-          final userAddressesExceptMe = liveMembers
-              .where((m) => m.uuid != myUser.uuid)
-              .map((e) => e.address)
-              .toList();
-          receiverAddresses.addAll(userAddressesExceptMe);
-          final aptosAddressesExceptMe = liveMembers
-              .where((m) => m.uuid != myUser.uuid)
-              .map((e) => e.aptos_address)
-              .toList();
-          aptosReceiverAddresses.addAll(aptosAddressesExceptMe);
-        }
-      } else {
-        receiverAddresses = [targetAddress ?? myUser.address];
+      final liveMembers = liveData.members.where((m) => m.is_present == true);
+      final liveMemberIds = liveMembers.map((e) => e.uuid).toList();
+      if (liveMemberIds.length < 2) {
+        // REVIEW: if there is only one user in the session, cheer goes to to fihub account, and time is added to the user's talk time
+        aptosTargetAddress = Env.fihubAddress_Aptos;
+        aptosReceiverAddresses.add(Env.fihubAddress_Aptos);
       }
+      final liveAptosAddresses = liveMembers
+          .map((e) => e.primary_aptos_address ?? e.aptos_address)
+          .toList();
+      aptosReceiverAddresses.addAll(liveAptosAddresses);
+      if (isSelfReaction && cheer) {
+        // remove my aptos address from the list, ^^  - If target is NOT in aptosReceiverAddresses list = self-cheer
+        aptosReceiverAddresses.remove(myUser.aptos_address);
+        aptosReceiverAddresses.remove(myPrimaryAddress);
+      }
+
       if (receiverAddresses.length == 0 &&
           aptosReceiverAddresses.length == 0 &&
           (isSelfReaction || isBoo)) {
@@ -579,7 +593,7 @@ class OngoingOutpostCallController extends GetxController {
           message: "No Users found in session",
         );
 
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
         return;
       }
       final String? amount = fromMeetPage == true
@@ -588,7 +602,7 @@ class OngoingOutpostCallController extends GetxController {
       if (amount == null) {
         l.e("Amount not selected");
 
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
         return;
       }
       late double parsedAmount;
@@ -602,7 +616,7 @@ class OngoingOutpostCallController extends GetxController {
           message: "Amount is not a number",
         );
 
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
         return;
       }
 
@@ -635,7 +649,7 @@ class OngoingOutpostCallController extends GetxController {
       } else if (selectedWallet == WalletNames.internal_Aptos) {
         (success, txHash) = await AptosMovement.cheerBoo(
           outpostId: outpostCallController.outpost.value!.uuid,
-          target: user.aptos_address!,
+          target: aptosTargetAddress,
           receiverAddresses: aptosReceiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
@@ -643,11 +657,11 @@ class OngoingOutpostCallController extends GetxController {
       }
       // success null means error is handled inside called function
       if (success == null) {
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
         return;
       }
       if (success) {
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
 
         Toast.success(
           title: "Success",
@@ -671,7 +685,7 @@ class OngoingOutpostCallController extends GetxController {
         analytics.logEvent(name: 'cheerBoo', parameters: {
           'cheer': cheer.toString(),
           'amount': amount,
-          'target': userId,
+          'target': targetUserUuid,
           'groupId': outpostCallController.outpost.value!.uuid,
           'fromUser': myUser.uuid,
         });
@@ -687,12 +701,12 @@ class OngoingOutpostCallController extends GetxController {
           title: "Error",
           message: "${cheer ? "Cheer" : "Boo"} failed",
         );
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
       }
       ///////////////////////
     } else if (targetAddress == '') {
       l.e("User has not connected wallet for some reason");
-      _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+      _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
       Toast.error(
         title: "Error",
         message: "User has not connected wallet for some reason",
@@ -703,8 +717,8 @@ class OngoingOutpostCallController extends GetxController {
 
   audioMuteChanged({required bool muted}) async {
     if (!wsClient.connected) {
-      await wsClient.reconnect();
-      if (!wsClient.connected) {
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess || !wsClient.connected) {
         Toast.warning(
           title: 'Connection Error',
           message: 'please check your internet connection',
@@ -717,9 +731,6 @@ class OngoingOutpostCallController extends GetxController {
       }
     }
     final outpostId = outpostCallController.outpost.value!.uuid;
-    l.d(
-      "audoi mute:$muted",
-    );
 
     if (muted) {
       // REVIEW: it's important not to set amIMuted to true first

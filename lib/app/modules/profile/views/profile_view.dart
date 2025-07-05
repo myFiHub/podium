@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
@@ -10,6 +11,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/root.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
@@ -218,6 +220,11 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                                 size: 16, color: Colors.grey),
                             onPressed: () {
                               // Copy wallet address
+                              Clipboard.setData(
+                                  ClipboardData(text: walletAddress));
+                              Toast.info(
+                                message: 'Wallet address copied to clipboard',
+                              );
                             },
                           ),
                         ],

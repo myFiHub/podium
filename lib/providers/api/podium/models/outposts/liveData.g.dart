@@ -19,7 +19,7 @@ abstract class _$LiveMemberCWProxy {
 
   LiveMember is_speaking(bool is_speaking);
 
-  LiveMember name(String name);
+  LiveMember name(String? name);
 
   LiveMember reactions(List<UserReaction> reactions);
 
@@ -39,6 +39,8 @@ abstract class _$LiveMemberCWProxy {
 
   LiveMember joined_at(int joined_at);
 
+  LiveMember primary_aptos_address(String? primary_aptos_address);
+
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `LiveMember(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
   /// Usage
@@ -52,7 +54,7 @@ abstract class _$LiveMemberCWProxy {
     String image,
     bool is_present,
     bool is_speaking,
-    String name,
+    String? name,
     List<UserReaction> reactions,
     int remaining_time,
     String uuid,
@@ -62,6 +64,7 @@ abstract class _$LiveMemberCWProxy {
     bool? followed_by_me,
     bool is_recording,
     int joined_at,
+    String? primary_aptos_address,
   });
 }
 
@@ -91,7 +94,7 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
   LiveMember is_speaking(bool is_speaking) => this(is_speaking: is_speaking);
 
   @override
-  LiveMember name(String name) => this(name: name);
+  LiveMember name(String? name) => this(name: name);
 
   @override
   LiveMember reactions(List<UserReaction> reactions) =>
@@ -128,6 +131,10 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
   LiveMember joined_at(int joined_at) => this(joined_at: joined_at);
 
   @override
+  LiveMember primary_aptos_address(String? primary_aptos_address) =>
+      this(primary_aptos_address: primary_aptos_address);
+
+  @override
 
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `LiveMember(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
@@ -152,6 +159,7 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
     Object? followed_by_me = const $CopyWithPlaceholder(),
     Object? is_recording = const $CopyWithPlaceholder(),
     Object? joined_at = const $CopyWithPlaceholder(),
+    Object? primary_aptos_address = const $CopyWithPlaceholder(),
   }) {
     return LiveMember(
       address: address == const $CopyWithPlaceholder()
@@ -181,7 +189,7 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
       name: name == const $CopyWithPlaceholder()
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
-          : name as String,
+          : name as String?,
       reactions: reactions == const $CopyWithPlaceholder()
           ? _value.reactions
           // ignore: cast_nullable_to_non_nullable
@@ -220,6 +228,11 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
           ? _value.joined_at
           // ignore: cast_nullable_to_non_nullable
           : joined_at as int,
+      primary_aptos_address:
+          primary_aptos_address == const $CopyWithPlaceholder()
+              ? _value.primary_aptos_address
+              // ignore: cast_nullable_to_non_nullable
+              : primary_aptos_address as String?,
     );
   }
 }
@@ -256,7 +269,7 @@ LiveMember _$LiveMemberFromJson(Map<String, dynamic> json) => LiveMember(
       image: json['image'] as String,
       is_present: json['is_present'] as bool? ?? false,
       is_speaking: json['is_speaking'] as bool? ?? false,
-      name: json['name'] as String,
+      name: json['name'] as String? ?? '',
       reactions: (json['reactions'] as List<dynamic>?)
               ?.map((e) => UserReaction.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -270,6 +283,7 @@ LiveMember _$LiveMemberFromJson(Map<String, dynamic> json) => LiveMember(
       followed_by_me: json['followed_by_me'] as bool?,
       is_recording: json['is_recording'] as bool? ?? false,
       joined_at: (json['joined_at'] as num?)?.toInt() ?? 0,
+      primary_aptos_address: json['primary_aptos_address'] as String?,
     );
 
 Map<String, dynamic> _$LiveMemberToJson(LiveMember instance) =>
@@ -290,6 +304,7 @@ Map<String, dynamic> _$LiveMemberToJson(LiveMember instance) =>
       'followed_by_me': instance.followed_by_me,
       'is_recording': instance.is_recording,
       'joined_at': instance.joined_at,
+      'primary_aptos_address': instance.primary_aptos_address,
     };
 
 FeedbackModel _$FeedbackModelFromJson(Map<String, dynamic> json) =>

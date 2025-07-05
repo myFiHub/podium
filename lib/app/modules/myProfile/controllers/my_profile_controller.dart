@@ -19,6 +19,7 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -26,6 +27,7 @@ import 'package:podium/widgets/button/button.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class Payments {
@@ -74,6 +76,9 @@ class MyProfileController extends GetxController {
   final isGettingPayments = false.obs;
   final isGettingBalances = false.obs;
   final isDeactivatingAccount = false.obs;
+
+  final addressThatIsBeningMadePrimary = Rxn<String>();
+
   final balances = Rx(
     Balances(
       Base: '0.0',
@@ -100,8 +105,8 @@ class MyProfileController extends GetxController {
         checkExternalWalletActivation();
       }
     });
-    _getMyProfile();
-    _getBalances();
+    getMyProfile();
+    getBalances();
   }
 
   @override
@@ -223,7 +228,7 @@ class MyProfileController extends GetxController {
     super.onClose();
   }
 
-  _getMyProfile() async {
+  getMyProfile() async {
     final profile = await HttpApis.podium
         .getMyUserData(additionalData: AdditionalDataForLogin());
     if (profile == null) {
@@ -311,49 +316,46 @@ class MyProfileController extends GetxController {
   void introFinished(bool? setAsFinished) {
     saveIntroAsDone(setAsFinished);
     try {
-      tutorialCoachMark.finish();
       saveIntroAsDone(true);
-      Get.back();
+      tutorialCoachMark.finish();
     } catch (e) {
-      l.e('Error finishing tutorial: $e');
-      Get.back();
+      l.e(e);
     }
   }
 
-  _getBalances() async {
+  getBalances() async {
     try {
       isGettingBalances.value = true;
       final baseClient = evmClientByChainId(baseChainId);
       final avalancheClient = evmClientByChainId(avalancheChainId);
-      // final movementClient = evmClientByChainId(movementEVMChain.chainId);
       final myaddress = await web3AuthWalletAddress();
       final callMap = {
         'base': baseClient.getBalance(parseAddress(myaddress!)),
         'avalanche': avalancheClient.getBalance(parseAddress(myaddress)),
-        // 'movement': movementClient.getBalance(parseAddress(myaddress)),
         'movementAptos': AptosMovement.balance,
       };
-      final results = await allSettled(callMap);
-      final baseBalance =
-          results['base']!['status'] == AllSettledStatus.fulfilled
-              ? results['base']!['value']
-              : EtherAmount.zero();
+      final results = await allSettled(callMap, onProgress: (key, status) {
+        l.d('Balance fetch for $key: ${status.name}');
+      });
 
+      final baseBalance =
+          results['base']?.valueOr(EtherAmount.zero()) ?? EtherAmount.zero();
       final avalancheBalance =
-          results['avalanche']!['status'] == AllSettledStatus.fulfilled
-              ? results['avalanche']!['value']
-              : EtherAmount.zero();
-      // final movementBalance =
-      //     results['movement']!['status'] == AllSettledStatus.fulfilled
-      //         ? results['movement']!['value']
-      //         : EtherAmount.zero();
+          results['avalanche']?.valueOr(EtherAmount.zero()) ??
+              EtherAmount.zero();
       final movementAptosBalance =
-          results['movementAptos']!['status'] == AllSettledStatus.fulfilled
-              ? results['movementAptos']!['value']
-              : BigInt.zero;
-      final reason = results['movementAptos']!['reason'];
-      if (reason is DioException) {
-        l.e(reason.response?.data);
+          results['movementAptos']?.valueOr(BigInt.zero) ?? BigInt.zero;
+
+      // Log any errors for debugging
+      results['movementAptos']?.ifRejected((reason) {
+        if (reason is DioException) {
+          l.e(reason.response?.data);
+        }
+      });
+
+      // Log summary of results
+      if (results.hasRejected) {
+        l.w('Some balance fetches failed: ${results.rejectedCount}/${results.length} failed');
       }
 
       balances.value = Balances(
@@ -593,6 +595,36 @@ class MyProfileController extends GetxController {
         ],
       ),
     );
+  }
+
+  void addOrSwitchAccount(Provider provider, {String? email}) {
+    globalController.addOrSwitchAccount(provider, email: email);
+  }
+
+  Future<void> setAccountAsPrimary(String address) async {
+    addressThatIsBeningMadePrimary.value = address;
+    try {
+      final res = await HttpApis.podium.setAccountAsPrimary(address: address);
+      if (res) {
+        final myAccounts = globalController.myUserInfo.value?.accounts ?? [];
+        final updatedAccounts = myAccounts.map((account) {
+          if (account.address == address) {
+            return account.copyWith(is_primary: true);
+          }
+          return account.copyWith(is_primary: false);
+        }).toList();
+        final updatedUser = globalController.myUserInfo.value?.copyWith(
+          accounts: updatedAccounts,
+        );
+        globalController.myUserInfo.value = updatedUser;
+        Toast.success(message: 'Account is set as primary');
+      }
+    } catch (e) {
+      // toast is handled in the api call
+      l.e(e);
+    } finally {
+      addressThatIsBeningMadePrimary.value = null;
+    }
   }
 }
 

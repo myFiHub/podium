@@ -601,7 +601,7 @@ class _SelectGroupSpeakerType extends GetWidget<CreateOutpostController> {
                       text: 'Everyone',
                     ),
                     DropDownItem(
-                      value: FreeOutpostSpeakerTypes.invitees,
+                      value: FreeOutpostSpeakerTypes.invited_users,
                       text: 'Only Invited Users',
                     ),
                     DropDownItem(
@@ -685,7 +685,7 @@ class _SelectGroupAccessType extends GetWidget<CreateOutpostController> {
                       text: 'Users having the Link',
                     ),
                     DropDownItem(
-                      value: FreeOutpostAccessTypes.invitees,
+                      value: FreeOutpostAccessTypes.invited_users,
                       text: 'Invited Users',
                     ),
                     DropDownItem(

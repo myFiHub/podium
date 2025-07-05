@@ -12,8 +12,7 @@ class Env {
       dotenv.env['STARS_ARENA_PROXY_ADDRESS_AVALANCHE_MAINNET']!;
   static final friendtechAddress_BaseChain_Mainnet =
       dotenv.env['FRIENDTECH_ADDRESS_BASECHAIN_MAINNET']!;
-  static final cheerBooAddress_Movement_Devnet =
-      dotenv.env['CHEERBOO_ADDRESS_MOVEMENT_DEVNET']!;
+
   static final minimumCheerBooAmount = dotenv.env['MINIMUM_CHEERBOO_AMOUNT']!;
   static final cheerBooTimeMultiplication =
       dotenv.env['CHEERBOO_TIME_MULTIPLICATION']!;

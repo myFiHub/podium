@@ -262,11 +262,11 @@ class FollowButton extends GetView<UsersController> {
     return Obx(() {
       final loadingIds = controller.followingsInProgress;
       final isLoading = loadingIds[uuid] != null;
-      final isFollowing = followed_by_me ?? false;
+      final isFollowing = followed_by_me;
       return Button(
           size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
           onPressed: () async {
-            final isFollowing = followed_by_me ?? false;
+            final isFollowing = followed_by_me;
             final success = await controller.followUnfollow(uuid, !isFollowing);
             if (success) {
               onFollowStatusChanged?.call();
@@ -284,6 +284,7 @@ class FollowButton extends GetView<UsersController> {
               ? const Center(
                   child: LoadingWidget(
                     size: 12,
+                    color: ColorName.secondaryBlue,
                   ),
                 )
               : Row(

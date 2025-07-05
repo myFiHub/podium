@@ -32,7 +32,7 @@ android {
     defaultConfig {
         applicationId = "com.web3podium"
         minSdk = 26
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

@@ -91,10 +91,19 @@ class OutpostCallController extends GetxController {
         // NOTE: this should be the only place where this is used to join the outpost when the user is in the outpost call screen
         // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
         final joined =
-            await wsClient.asyncJoinOutpostWithRetry(activeOutpost.uuid);
+            await wsClient.joinOutpost(activeOutpost.uuid, withRetry: true);
+        final reconnecting = wsClient.isConnecting;
+        if (!joined && reconnecting) {
+          Toast.error(
+            title: 'stablishing connection',
+            message: 'please wait a bit, then try again',
+          );
+          return;
+        }
+
         if (!joined) {
           Toast.error(
-            title: 'please close the app and try again',
+            title: 'try again in a bit, fixing the issue',
             message: 'there was an error joining the outpost',
           );
           jitsiMeet.hangUp();
@@ -214,7 +223,18 @@ class OutpostCallController extends GetxController {
 
     final liveData =
         await HttpApis.podium.getLatestLiveData(outpostId: outpost.value!.uuid);
-    if (liveData != null) {
+    if (liveData == null) {
+      final isOutpostCallControllerRegistered =
+          Get.isRegistered<OutpostCallController>();
+      if (isOutpostCallControllerRegistered) {
+        final outpostCallController = Get.find<OutpostCallController>();
+        outpostCallController.runHome();
+        Toast.error(
+          title: 'there was an error joining the outpost',
+          message: 'please try again',
+        );
+      }
+    } else {
       final tmp = liveData.members;
       tmp.asMap().forEach((index, element) {
         if (element.last_speaked_at_timestamp == null) {
@@ -228,10 +248,8 @@ class OutpostCallController extends GetxController {
         if (!iExistAndPresent) {
           bool joined = false;
           try {
-            joined = await wsClient.asyncJoinOutpost(
-              outpost.value!.uuid,
-              force: true,
-            );
+            joined = await wsClient.joinOutpost(outpost.value!.uuid,
+                force: true, withRetry: true);
             if (withRetry == true && joined == true) {
               fetchLiveData(withRetry: false);
               return;
@@ -240,8 +258,16 @@ class OutpostCallController extends GetxController {
             l.e('Error joining outpost: $e');
           }
           if (!joined) {
+            final reconnecting = wsClient.isConnecting;
+            if (reconnecting) {
+              Toast.error(
+                title: 'stablishing connection',
+                message: 'please wait a bit, then try again',
+              );
+              return;
+            }
             Toast.error(
-              title: 'please close the app and try again',
+              title: 'try again',
               message: 'there was an error joining the outpost',
             );
             jitsiMeet.hangUp();
@@ -357,8 +383,9 @@ class OutpostCallController extends GetxController {
 
   Future<void> startCall(
       {required OutpostModel outpostToJoin,
-      GroupAccesses? accessOverRides}) async {
+      OutpostAccesses? accessOverRides}) async {
     final globalController = Get.find<GlobalController>();
+
     final iAmAllowedToSpeak = accessOverRides != null
         ? accessOverRides.canSpeak
         : canISpeakWithoutTicket(outpost: outpostToJoin);
@@ -438,7 +465,7 @@ class OutpostCallController extends GetxController {
 bool canISpeakWithoutTicket({required OutpostModel outpost}) {
   final iAmTheCreator = outpost.creator_user_uuid == myId;
   if (iAmTheCreator) return true;
-  if (outpost.speak_type == FreeOutpostSpeakerTypes.invitees) {
+  if (outpost.speak_type == FreeOutpostSpeakerTypes.invited_users) {
     // check if I am invited and am invited to speak
     final invitedMember = (outpost.invites ?? [])
         .firstWhereOrNull((element) => element.invitee_uuid == myId);

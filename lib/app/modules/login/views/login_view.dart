@@ -2,9 +2,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/login/widgets/referral_input.dart';
+import 'package:podium/app/modules/myProfile/views/connected_accounts_view.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -22,6 +24,11 @@ class LoginView extends GetView<LoginController> {
   @override
   Widget build(BuildContext context) {
     final _formKey = GlobalKey<FormBuilderState>();
+    final addingOrSwitchingAccount_provider =
+        Get.find<GlobalController>().addingOrSwitchingAccount_provider.value;
+    if (addingOrSwitchingAccount_provider != null) {
+      return const ConnectedAccountsView();
+    }
     return PageWrapper(
       child: Scaffold(
         body: Stack(

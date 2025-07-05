@@ -11,7 +11,7 @@ const movementIcon =
 ////////// Aptos chains (these are just to format things and keep things in shape,
 /// they are not used for anything else since they are not supported by the appkit)
 
-final movementAptosBardokChain = ReownAppKitModalNetworkInfo(
+final movementAptosBardokChain = const ReownAppKitModalNetworkInfo(
   name: 'Movement Testnet',
   chainId: '250',
   chainIcon: movementIcon,
@@ -20,7 +20,7 @@ final movementAptosBardokChain = ReownAppKitModalNetworkInfo(
   explorerUrl: 'https://explorer.movementlabs.xyz',
 );
 
-final movementTestnet = ReownAppKitModalNetworkInfo(
+final movementTestnet = const ReownAppKitModalNetworkInfo(
   name: 'Movement Aptos Testnet',
   chainId: '177',
   chainIcon: movementIcon,
@@ -30,7 +30,7 @@ final movementTestnet = ReownAppKitModalNetworkInfo(
 );
 
 ///////////////////
-final movementEVMMainNetChain = ReownAppKitModalNetworkInfo(
+final movementEVMMainNetChain = const ReownAppKitModalNetworkInfo(
   name: 'Movement',
   chainId: '126',
   chainIcon: movementIcon,
@@ -39,7 +39,7 @@ final movementEVMMainNetChain = ReownAppKitModalNetworkInfo(
   explorerUrl: 'https://explorer.movementnetwork.xyz/?network=mainnet',
 );
 
-final movementEVMDevnetChain = ReownAppKitModalNetworkInfo(
+final movementEVMDevnetChain = const ReownAppKitModalNetworkInfo(
   name: 'Movement Testnet',
   chainId: '30732',
   chainIcon: movementIcon,

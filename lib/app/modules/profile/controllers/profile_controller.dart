@@ -398,8 +398,7 @@ class ProfileController extends GetxController {
         referrer = myReferrer?.aptos_address ?? '';
       }
 
-      final (success, hash) =
-          await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+      final (success, hash) = await AptosMovement.buyPodiumPassFromUser(
         sellerAddress: userInfo.value!.aptos_address!,
         sellerName: userInfo.value!.name ?? '',
         referrer: referrer,

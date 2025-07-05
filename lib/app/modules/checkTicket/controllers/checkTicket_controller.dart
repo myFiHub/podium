@@ -11,7 +11,6 @@ import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
-import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
@@ -169,7 +168,7 @@ class CheckticketController extends GetxController {
     );
   }
 
-  Future<GroupAccesses> checkTickets() async {
+  Future<OutpostAccesses> checkTickets() async {
     allUsersToBuyTicketFrom.value = {};
     loadingUsers.value = true;
     final requiredTicketsToAccess = outpost.value!.tickets_to_enter ?? [];
@@ -421,7 +420,7 @@ class CheckticketController extends GetxController {
     return checkAccess();
   }
 
-  GroupAccesses checkAccess() {
+  OutpostAccesses checkAccess() {
     final canSpeak = allUsersToBuyTicketFrom.value.entries.any(
           (element) =>
               element.value.boughtTicketToSpeak == true &&
@@ -435,7 +434,7 @@ class CheckticketController extends GetxController {
               element.value.accessTicketType != null,
         ) ||
         canEnterWithoutTicket;
-    final accessResult = GroupAccesses(
+    final accessResult = OutpostAccesses(
       canEnter: isAccessBuyableByTicket ? canEnter : canEnterWithoutTicket,
       canSpeak: isSpeakBuyableByTicket ? canSpeak : canSpeakWithoutATicket,
     );
@@ -554,8 +553,7 @@ class CheckticketController extends GetxController {
       }
     }
 
-    final (success, hash) =
-        await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+    final (success, hash) = await AptosMovement.buyPodiumPassFromUser(
       sellerAddress: ticketSeller.userInfo.aptos_address!,
       sellerName: ticketSeller.userInfo.name!,
       sellerUuid: ticketSeller.userInfo.uuid,
@@ -710,14 +708,14 @@ class CheckticketController extends GetxController {
     return canEnterWithoutATicket(g);
   }
 
-  Future<GroupAccesses> checkIfIveBoughtTheTicketFromUser(
+  Future<OutpostAccesses> checkIfIveBoughtTheTicketFromUser(
     UserModel user,
   ) async {
     final userId = user.uuid;
     final myUser = globalController.myUserInfo.value!;
     if (userId == myUser.uuid)
-      return GroupAccesses(canEnter: true, canSpeak: true);
-    GroupAccesses access = GroupAccesses(canEnter: false, canSpeak: false);
+      return OutpostAccesses(canEnter: true, canSpeak: true);
+    OutpostAccesses access = OutpostAccesses(canEnter: false, canSpeak: false);
 
     // check if user has access, using any ticket
     if (allUsersToBuyTicketFrom.value[userId]?.accessTicketType != null) {
@@ -875,7 +873,7 @@ canEnterWithoutATicket(OutpostModel group) {
   if (g.enter_type == FreeOutpostAccessTypes.onlyLink) {
     return cameHereByLink;
   }
-  if (g.enter_type == FreeOutpostAccessTypes.invitees) {
+  if (g.enter_type == FreeOutpostAccessTypes.invited_users) {
     return amIInvited;
   }
   if (g.enter_type == FreeOutpostAccessTypes.public) {

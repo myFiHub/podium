@@ -31,8 +31,8 @@ import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class JoinButtonProps {
-  final bool enabled;
-  final String text;
+  bool enabled;
+  String text;
   JoinButtonProps({required this.enabled, required this.text});
 }
 
@@ -49,7 +49,7 @@ class OutpostDetailController extends GetxController {
   final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;
   final outpost = Rxn<OutpostModel>();
-  final outpostAccesses = Rxn<GroupAccesses>();
+  final outpostAccesses = Rxn<OutpostAccesses>();
   final membersList = Rx<List<LiveMember>>([]);
   final isGettingGroupInfo = false.obs;
   final isSettingReminder = false.obs;
@@ -73,6 +73,8 @@ class OutpostDetailController extends GetxController {
   final isGettingLumaEventGuests = false.obs;
   final lumaEventGuests = Rx<List<GuestDataModel>>([]);
   final lumaHosts = Rx<List<Luma_HostModel>>([]);
+
+  final isJoining = false.obs;
 
 // image
   // final ImagePicker _picker = ImagePicker();
@@ -111,7 +113,7 @@ class OutpostDetailController extends GetxController {
 
     final outpostInfo = OutpostModel.fromJson(jsonDecode(stringedOutpostInfo));
     membersList.value = outpostInfo.members ?? [];
-    outpostAccesses.value = GroupAccesses(
+    outpostAccesses.value = OutpostAccesses(
       canEnter: enterAccess == 'true',
       canSpeak: speakAccess == 'true',
     );
@@ -169,6 +171,19 @@ class OutpostDetailController extends GetxController {
   }
 
   openRescheduleOutpostDialog() async {
+    final scheduledTime = outpost.value?.scheduled_for;
+    if (scheduledTime == null) return;
+
+    final hasTimePassed = scheduledTime < DateTime.now().millisecondsSinceEpoch;
+    if (hasTimePassed) {
+      final numberOfOnlineUsersInOutpost =
+          await HttpApis.podium.getNumberOfOnlineMembers(outpost.value!.uuid);
+      if (numberOfOnlineUsersInOutpost > 0) {
+        Toast.error(message: 'The outpost is not empty');
+        return;
+      }
+    }
+
     final sure = await showConfirmPopup(
       cancelText: 'Cancel',
       confirmText: 'Confirm',
@@ -413,12 +428,25 @@ class OutpostDetailController extends GetxController {
     membersList.value = outpostData.members ?? [];
   }
 
-  startTheCall({required GroupAccesses accesses}) {
+  startTheCall({required OutpostAccesses accesses}) async {
+    if (isJoining.value) return;
+
+    final isWsConnected = wsClient.connected;
+    if (!isWsConnected) {
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess) {
+        Toast.error(message: "Please check your connection. or reopen the app");
+        return;
+      }
+    }
+
+    isJoining.value = true;
     final groupCallController = Get.find<OutpostCallController>();
-    groupCallController.startCall(
+    await groupCallController.startCall(
       outpostToJoin: outpost.value!,
       accessOverRides: accesses,
     );
+    isJoining.value = false;
   }
 
   searchUsers(String value) async {

@@ -11,7 +11,7 @@ class OutpostModel {
   final int created_at;
   final bool creator_joined;
   String? luma_event_id;
-  final String creator_user_name;
+  final String? creator_user_name;
   final String creator_user_uuid;
   final String creator_user_image;
   final String enter_type;
@@ -38,7 +38,7 @@ class OutpostModel {
     required this.uuid,
     required this.created_at,
     required this.creator_joined,
-    required this.creator_user_name,
+    this.creator_user_name = '',
     required this.creator_user_uuid,
     required this.creator_user_image,
     required this.enter_type,

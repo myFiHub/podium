@@ -57,7 +57,7 @@ class UsersInOutpostList extends StatelessWidget {
                   isItME: isItME,
                   userId: userId,
                   user: user,
-                  name: name,
+                  name: name ?? 'User',
                   avatar: avatar,
                   groupId: outpostId,
                 ),
@@ -82,6 +82,7 @@ class IntroUser extends StatelessWidget {
               isItME: false,
               name: 'Intro User',
               address: 'intro',
+              aptosAddress: 'intro',
               avatar: Constants.defaultProfilePic,
               outpostId: 'intro',
               id: 'intro',
@@ -126,6 +127,7 @@ class _SingleUserInOutpost extends StatelessWidget {
           isItME: isItME,
           name: name,
           avatar: avatar,
+          aptosAddress: user.aptos_address,
           outpostId: groupId,
           isIntroUser: false,
         ),
@@ -143,6 +145,7 @@ class _SingleUserCard extends StatelessWidget {
     required this.outpostId,
     required this.id,
     required this.address,
+    required this.aptosAddress,
     required this.isIntroUser,
   });
 
@@ -153,7 +156,7 @@ class _SingleUserCard extends StatelessWidget {
   final String name;
   final String avatar;
   final String outpostId;
-
+  final String aptosAddress;
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
@@ -212,7 +215,7 @@ class _SingleUserCard extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      truncate(id, length: 10),
+                                      'ID: ' + truncate(id, length: 8),
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
@@ -222,7 +225,7 @@ class _SingleUserCard extends StatelessWidget {
                                     ),
                                     space5,
                                     Text(
-                                      name,
+                                      truncate(aptosAddress, length: 8),
                                       style: const TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
@@ -230,6 +233,7 @@ class _SingleUserCard extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
+                                    space5,
                                     RemainingTime(
                                       key: ValueKey('time_$id'),
                                       userId: id,
@@ -568,7 +572,9 @@ class RemainingTime extends GetView<OngoingOutpostCallController> {
   Widget build(BuildContext context) {
     return Obx(() {
       // ignore:  invalid_null_aware_operator
-      final _nonImportant = controller?.amIAdmin;
+      final isregistered = Get.isRegistered<OngoingOutpostCallController>();
+      if (!isregistered) return const SizedBox();
+      final _ = controller.amIAdmin;
       // ignore:  invalid_null_aware_operator
       final outpost = controller?.outpostCallController?.outpost?.value;
       final exists = Get.isRegistered<OngoingOutpostCallController>();
@@ -673,7 +679,7 @@ class CheerBoo extends GetView<OngoingOutpostCallController> {
                   ),
         onPressed: () {
           controller.cheerBoo(
-            userId: userId,
+            targetUserUuid: userId,
             cheer: cheer,
           );
         },

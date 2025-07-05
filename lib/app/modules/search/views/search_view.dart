@@ -12,25 +12,83 @@ import 'package:podium/utils/styles.dart';
 
 import '../controllers/search_controller.dart';
 
+class SearchTextField extends GetView<SearchPageController> {
+  const SearchTextField({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final textFieldController = controller.textFieldController;
+    return SizedBox(
+      height: 40,
+      child: Stack(
+        children: [
+          TextField(
+            controller: textFieldController,
+            decoration: InputDecoration(
+              hintText: "Search Outposts, Users or Tags",
+              hintStyle: const TextStyle(fontSize: 14),
+              prefixIcon: const Icon(Icons.search),
+              contentPadding: const EdgeInsets.all(10),
+              filled: true,
+              fillColor: Colors.grey[200],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black,
+            ),
+            onChanged: (value) {
+              controller.setSeachValue(value);
+            },
+          ),
+          Obx(() {
+            final searchValue = controller.searchValue.value;
+            final isSearching = controller.isSearching.value;
+            return Positioned(
+                right: isSearching ? 12 : 0,
+                top: isSearching ? 10 : -4,
+                child: (isSearching)
+                    ? const LoadingWidget(
+                        color: ColorName.secondaryBlue,
+                      )
+                    : (searchValue.isNotEmpty)
+                        ? IconButton(
+                            color: ColorName.primaryBlue,
+                            padding: EdgeInsets.zero,
+                            onPressed: () {
+                              controller.setSeachValue("");
+                            },
+                            icon: const Icon(Icons.close, color: Colors.black),
+                          )
+                        : const SizedBox());
+          })
+        ],
+      ),
+    );
+  }
+}
+
 class SearchView extends GetView<SearchPageController> {
   const SearchView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final textFieldController = controller.textFieldController;
     return Scaffold(
         body: PageWrapper(
       child: Column(
         children: [
-          Column(
+          const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               space10,
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Search",
                       style: TextStyle(
                         fontSize: 24,
@@ -38,55 +96,7 @@ class SearchView extends GetView<SearchPageController> {
                       ),
                     ),
                     space5,
-                    SizedBox(
-                      height: 40,
-                      child: Stack(
-                        children: [
-                          TextField(
-                            controller: textFieldController,
-                            decoration: InputDecoration(
-                              hintText: "Search Outposts, Users or Tags",
-                              hintStyle: const TextStyle(fontSize: 14),
-                              prefixIcon: const Icon(Icons.search),
-                              contentPadding: const EdgeInsets.all(10),
-                              filled: true,
-                              fillColor: Colors.grey[200],
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black,
-                            ),
-                            onChanged: (value) {
-                              controller.setSeachValue(value);
-                            },
-                          ),
-                          Obx(() {
-                            final searchValue = controller.searchValue.value;
-                            final isSearching = controller.isSearching.value;
-                            return Positioned(
-                                right: isSearching ? 12 : 0,
-                                top: isSearching ? 10 : -4,
-                                child: (isSearching)
-                                    ? const LoadingWidget()
-                                    : (searchValue.isNotEmpty)
-                                        ? IconButton(
-                                            color: ColorName.primaryBlue,
-                                            padding: EdgeInsets.zero,
-                                            onPressed: () {
-                                              controller.setSeachValue("");
-                                            },
-                                            icon: const Icon(Icons.close,
-                                                color: Colors.black),
-                                          )
-                                        : const SizedBox());
-                          })
-                        ],
-                      ),
-                    ),
+                    SearchTextField(),
                   ],
                 ),
               ),

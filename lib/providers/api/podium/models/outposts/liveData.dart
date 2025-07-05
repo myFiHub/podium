@@ -1,38 +1,3 @@
-/*
-
-{
-    "members": [
-      {
-        "address": "string",
-        "can_speak": true,
-        "feedbacks": [
-          {
-            "feedback_type": "like",
-            "time": "2025-03-21T13:48:58.145Z",
-            "user_address": "string"
-          }
-        ],
-        "image": "string",
-        "is_present": true,
-        "is_speaking": true,
-        "name": "string",
-        "reactions": [
-          {
-            "amount": 0.1,
-            "reaction_type": "boo",
-            "time": "2025-03-21T13:48:58.145Z",
-            "user_address": "string"
-          }
-        ],
-        "remaining_time": 9007199254740991,
-        "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-      }
-    ]
-  }
-
-
- */
-
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -58,7 +23,7 @@ class LiveMember {
   final String image;
   final bool is_present;
   bool is_speaking;
-  final String name;
+  final String? name;
   final List<UserReaction> reactions;
   int remaining_time;
   int? last_speaked_at_timestamp;
@@ -68,6 +33,7 @@ class LiveMember {
   final bool? followed_by_me;
   final bool is_recording;
   final int joined_at;
+  final String? primary_aptos_address;
 
   LiveMember({
     required this.address,
@@ -76,7 +42,7 @@ class LiveMember {
     required this.image,
     this.is_present = false,
     this.is_speaking = false,
-    required this.name,
+    this.name = '',
     this.reactions = const [],
     this.remaining_time = 0,
     required this.uuid,
@@ -86,6 +52,7 @@ class LiveMember {
     this.followed_by_me,
     this.is_recording = false,
     this.joined_at = 0,
+    this.primary_aptos_address,
   });
 
   factory LiveMember.fromJson(Map<String, dynamic> json) =>

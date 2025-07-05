@@ -13,6 +13,7 @@ import 'package:podium/env.dart' as Environment;
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -103,7 +104,7 @@ internal_cheerOrBoo({
   required num amount,
   required bool cheer,
   required String chainId,
-  required UserModel user,
+  required LiveMember user,
   required groupId,
 }) async {
   final myAddress = await web3AuthWalletAddress(); // Evm.getAddress();

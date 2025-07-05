@@ -144,12 +144,12 @@ class OutpostsController extends GetxController {
       for (String id in ids) {
         calls[id] = HttpApis.podium.getNumberOfOnlineMembers(id);
       }
-      final Map<String, dynamic> results = await allSettled(calls);
+      final results = await allSettled(calls);
       final Map<String, int> map = <String, int>{};
       for (String id in ids) {
-        if (results[id]?['status'] == AllSettledStatus.fulfilled &&
-            results[id]?['value'] != 0) {
-          map[id] = results[id]!['value'];
+        final result = results[id];
+        if (result?.isFulfilled == true && result?.value != 0) {
+          map[id] = result!.value!;
         }
       }
 
@@ -450,11 +450,10 @@ class OutpostsController extends GetxController {
     try {
       joiningOutpostId.value = outpostId;
       final outpost = await HttpApis.podium.getOutpost(outpostId);
-      l.d("Outpost: $outpost");
       if (outpost == null) {
         Toast.error(
-          title: "Error",
-          message: "Failed to join the Outpost, Outpost not found",
+          title: "Error-455",
+          message: "Failed to join the Outpost",
         );
         Navigate.to(
           type: NavigationTypes.offAllNamed,
@@ -529,7 +528,7 @@ class OutpostsController extends GetxController {
   _openOutpost({
     required OutpostModel outpost,
     required bool openTheRoomAfterJoining,
-    required GroupAccesses accesses,
+    required OutpostAccesses accesses,
     bool? isAlreadyMember,
   }) async {
     final isAlreadyRegistered = Get.isRegistered<OutpostDetailController>();
@@ -589,7 +588,7 @@ class OutpostsController extends GetxController {
     }
   }
 
-  Future<GroupAccesses?> _checkLumaAccess(
+  Future<OutpostAccesses?> _checkLumaAccess(
       {required OutpostModel outpost}) async {
     try {
       if (outpost.luma_event_id != null && outpost.luma_event_id!.isNotEmpty) {
@@ -608,7 +607,7 @@ class OutpostsController extends GetxController {
             final isGuest = guestEmails.contains(myEmail);
             final isHost = hostsEmails.contains(myEmail);
             if (isGuest || isHost) {
-              return GroupAccesses(canEnter: true, canSpeak: true);
+              return OutpostAccesses(canEnter: true, canSpeak: true);
             }
           }
         }
@@ -620,27 +619,27 @@ class OutpostsController extends GetxController {
     }
   }
 
-  Future<GroupAccesses> getOutpostAccesses(
+  Future<OutpostAccesses> getOutpostAccesses(
       {required OutpostModel outpost, bool? joiningByLink}) async {
-    final myUser = globalController.myUserInfo.value!;
-    final iAmGroupCreator = outpost.creator_user_uuid == myUser.uuid;
-    if (iAmGroupCreator) return GroupAccesses(canEnter: true, canSpeak: true);
+    final iAmOutpostCreator = outpost.creator_user_uuid == myUser.uuid;
+    if (iAmOutpostCreator)
+      return OutpostAccesses(canEnter: true, canSpeak: true);
     final lumaAccessResponse = await _checkLumaAccess(outpost: outpost);
     if (lumaAccessResponse != null) {
       return lumaAccessResponse;
     }
     if (accessIsBuyableByTicket(outpost) || speakIsBuyableByTicket(outpost)) {
-      final GroupAccesses? accesses = await checkTicket(outpost: outpost);
+      final OutpostAccesses? accesses = await checkTicket(outpost: outpost);
       if (accesses?.canEnter == false) {
         Toast.error(
           title: "Error",
           message: "You need a ticket to join this Outpost",
         );
-        return GroupAccesses(canEnter: false, canSpeak: false);
+        return OutpostAccesses(canEnter: false, canSpeak: false);
       } else {
         return accesses != null
             ? accesses
-            : GroupAccesses(canEnter: false, canSpeak: false);
+            : OutpostAccesses(canEnter: false, canSpeak: false);
       }
     }
 
@@ -649,32 +648,32 @@ class OutpostsController extends GetxController {
         title: "Error",
         message: "This Outpost is archived",
       );
-      return GroupAccesses(canEnter: false, canSpeak: false);
+      return OutpostAccesses(canEnter: false, canSpeak: false);
     }
     if (outpost.i_am_member)
-      return GroupAccesses(
+      return OutpostAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
     if (outpost.enter_type == FreeOutpostAccessTypes.public)
-      return GroupAccesses(
+      return OutpostAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
     if (outpost.enter_type == FreeOutpostAccessTypes.onlyLink) {
       if (joiningByLink == true) {
-        return GroupAccesses(
+        return OutpostAccesses(
             canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
       } else {
         Toast.error(
           title: "Error",
           message: "This is a private Outpost, you need an invite link to join",
         );
-        return GroupAccesses(canEnter: false, canSpeak: false);
+        return OutpostAccesses(canEnter: false, canSpeak: false);
       }
     }
 
     final invitedMembers = outpost.invites;
-    if (outpost.enter_type == FreeOutpostAccessTypes.invitees) {
+    if (outpost.enter_type == FreeOutpostAccessTypes.invited_users) {
       if (invitedMembers?.map((e) => e.invitee_uuid).contains(myUser.uuid) ==
           true) {
-        return GroupAccesses(
+        return OutpostAccesses(
           canEnter: true,
           canSpeak: canISpeakWithoutTicket(outpost: outpost),
         );
@@ -683,26 +682,26 @@ class OutpostsController extends GetxController {
           title: "Error",
           message: "You need an invite to join this Outpost",
         );
-        return GroupAccesses(canEnter: false, canSpeak: false);
+        return OutpostAccesses(canEnter: false, canSpeak: false);
       }
     }
 
-    return GroupAccesses(canEnter: false, canSpeak: false);
+    return OutpostAccesses(canEnter: false, canSpeak: false);
   }
 
-  Future<GroupAccesses?> checkTicket({required OutpostModel outpost}) async {
+  Future<OutpostAccesses?> checkTicket({required OutpostModel outpost}) async {
     joiningOutpostId.value = outpost.uuid;
     final checkTicketController = Get.put(CheckticketController());
     checkTicketController.outpost.value = outpost;
     final accesses = await checkTicketController.checkTickets();
     if (accesses.canEnter == true && accesses.canSpeak == true) {
       joiningOutpostId.value = '';
-      return GroupAccesses(
+      return OutpostAccesses(
         canEnter: accesses.canEnter,
         canSpeak: accesses.canSpeak,
       );
     } else {
-      final result = await Get.dialog<GroupAccesses?>(CheckTicketView());
+      final result = await Get.dialog<OutpostAccesses?>(CheckTicketView());
       l.d("Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
       Get.delete<CheckticketController>();
       joiningOutpostId.value = '';
@@ -984,12 +983,12 @@ _showModalToLeaveGroup({required OutpostModel outpost}) async {
   return result;
 }
 
-class GroupAccesses {
+class OutpostAccesses {
   bool canEnter;
   bool canSpeak;
   String? accessPriceFullString;
   String? speakPriceFullString;
-  GroupAccesses({
+  OutpostAccesses({
     required this.canEnter,
     required this.canSpeak,
     this.accessPriceFullString,

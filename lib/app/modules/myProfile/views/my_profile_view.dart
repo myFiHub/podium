@@ -5,8 +5,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/referral_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
-import 'package:podium/app/modules/global/utils/aptosClient.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
@@ -17,17 +15,17 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:skeletonizer/skeletonizer.dart';
+import 'package:shimmer/shimmer.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
   const MyProfileView({Key? key}) : super(key: key);
@@ -47,7 +45,10 @@ class MyProfileView extends GetView<MyProfileController> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 const ContextSaver(),
+                const NonPrimaryAccountWarning(),
                 const UserInfo(),
+                const ConnectedAccountsButton(),
+                space10,
                 ReferalSystem(
                   key: controller.referalSystemKey,
                 ),
@@ -356,7 +357,7 @@ class EvmBalances extends GetView<MyProfileController> {
                   ],
                 ),
                 _PriceSkeleton(
-                  enabled: loading,
+                  isLoading: loading,
                   price: balances.Base,
                 ),
               ],
@@ -379,7 +380,7 @@ class EvmBalances extends GetView<MyProfileController> {
                   ],
                 ),
                 _PriceSkeleton(
-                  enabled: loading,
+                  isLoading: loading,
                   price: balances.Avalanche,
                 ),
               ],
@@ -454,9 +455,9 @@ class InternalWallet extends GetView<GlobalController> {
                 ],
               ),
               space10,
-              const EvmAddressAndBalances(),
-              space10,
               const AptosAddressAndBalance(),
+              space10,
+              const EvmAddressAndBalances(),
               space10,
               const PrivateKeyButton(),
             ],
@@ -468,16 +469,22 @@ class InternalWallet extends GetView<GlobalController> {
   }
 }
 
-class AptosAddressAndBalance extends StatelessWidget {
+class AptosAddressAndBalance extends GetView<GlobalController> {
   const AptosAddressAndBalance({super.key});
   @override
   Widget build(BuildContext context) {
-    final aptosWalletAddress = myUser.aptos_address;
-    return AddressAndBalanceWidget(
-      address: aptosWalletAddress ?? '',
-      balanceWidget: const AptosBalance(),
-      addressPrefix: 'Movement: ',
-    );
+    return Obx(() {
+      final myUser = controller.myUserInfo.value;
+      if (myUser == null) {
+        return const SizedBox.shrink();
+      }
+      final aptosWalletAddress = myUser.aptos_address!;
+      return AddressAndBalanceWidget(
+        address: aptosWalletAddress,
+        balanceWidget: const AptosBalance(),
+        addressPrefix: 'Movement: ',
+      );
+    });
   }
 }
 
@@ -508,9 +515,6 @@ class AddressAndBalanceWidget extends StatelessWidget {
           space10,
           GestureDetector(
             onTap: () async {
-              final balance = await AptosMovement.getAddressBalance(
-                  '0x0e9583e041326faa8b549ad4b3deeb3ee935120fba63b093a46996a2f907b9f2');
-              l.d('balance: $balance');
               await Clipboard.setData(
                 ClipboardData(
                   text: address,
@@ -556,17 +560,23 @@ class AddressAndBalanceWidget extends StatelessWidget {
   }
 }
 
-class EvmAddressAndBalances extends StatelessWidget {
+class EvmAddressAndBalances extends GetView<GlobalController> {
   const EvmAddressAndBalances({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final walletAddress = myUser.address;
-    return AddressAndBalanceWidget(
-      address: walletAddress,
-      balanceWidget: const EvmBalances(),
-      addressPrefix: 'EVM: ',
-    );
+    return Obx(() {
+      final myUser = controller.myUserInfo.value;
+      if (myUser == null) {
+        return const SizedBox.shrink();
+      }
+      final walletAddress = myUser.address;
+      return AddressAndBalanceWidget(
+        address: walletAddress,
+        balanceWidget: const EvmBalances(),
+        addressPrefix: 'EVM: ',
+      );
+    });
   }
 }
 
@@ -599,8 +609,12 @@ class AptosBalance extends GetView<MyProfileController> {
               children: [
                 Row(
                   children: [
+                    _PriceSkeleton(
+                      isLoading: loading,
+                      price: balances.movementAptos,
+                    ),
                     const Text(
-                      'Aptos MOVE',
+                      ' MOVE',
                       style: const TextStyle(
                         fontSize: 12,
                       ),
@@ -611,10 +625,6 @@ class AptosBalance extends GetView<MyProfileController> {
                       size: 16,
                     ),
                   ],
-                ),
-                _PriceSkeleton(
-                  enabled: loading,
-                  price: balances.movementAptos,
                 ),
               ],
             ),
@@ -860,105 +870,22 @@ class LogoutButton extends GetView<GlobalController> {
 class UserInfo extends GetView<GlobalController> {
   const UserInfo({super.key});
 
-  void _showPrivateKeyWarning(BuildContext context, String privateKey) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: ColorName.systemTrayBackground,
-        title: const Text(
-          '⚠️ WARNING: Private Key Access',
-          style: TextStyle(
-            color: Colors.red,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'IMPORTANT: Your private key is the key to your account. Anyone with access to it can control your account and steal your assets.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              '⚠️ NEVER share your private key with anyone',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '⚠️ NEVER enter it on any website',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '⚠️ NEVER store it in plain text',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: privateKey));
-              Toast.success(
-                title: 'Copied',
-                message: 'Private key copied to clipboard',
-              );
-              Navigator.pop(context);
-            },
-            child: const Text('Copy Private Key'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    String emailValue = controller.myUserInfo.value?.email as String;
+    String identifier =
+        controller.myUserInfo.value?.login_type_identifier as String;
     final loginType = GetStorage().read(StorageKeys.loginType);
-    if (loginType == LoginType.x) {
-      emailValue = 'Logged in with X platform';
-    }
-    if (loginType == LoginType.facebook) {
-      emailValue = 'Logged in with Facebook';
-    }
-    if (loginType == LoginType.linkedin) {
-      emailValue = 'Logged in with LinkedIn';
-    }
-    if (loginType == LoginType.apple) {
-      emailValue = 'Logged in with Apple';
-    }
-    if (loginType == LoginType.github) {
-      emailValue = 'Logged in with Github';
+
+    final loginTypes = {
+      LoginType.x: 'Logged in with X platform',
+      LoginType.facebook: 'Logged in with Facebook',
+      LoginType.linkedin: 'Logged in with LinkedIn',
+      LoginType.apple: 'Logged in with Apple',
+      LoginType.github: 'Logged in with Github'
+    };
+
+    if (loginTypes.containsKey(loginType)) {
+      identifier = loginTypes[loginType]!;
     }
 
     return Obx(() {
@@ -994,7 +921,7 @@ class UserInfo extends GetView<GlobalController> {
             ),
             space10,
             Text(
-              emailValue,
+              identifier,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -1028,17 +955,18 @@ class UserInfo extends GetView<GlobalController> {
                 ),
                 space5,
                 IconButton(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: myUser.uuid));
-                      Toast.neutral(
-                        title: 'Copied',
-                        message: 'User ID copied to clipboard',
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.copy,
-                      color: Colors.grey,
-                    ))
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: myUser.uuid));
+                    Toast.neutral(
+                      title: 'Copied',
+                      message: 'ID copied to clipboard',
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.copy,
+                    color: Colors.grey,
+                  ),
+                )
               ],
             ),
             space10,
@@ -1314,29 +1242,167 @@ class _Statistics extends GetWidget<MyProfileController> {
 class _PriceSkeleton extends StatelessWidget {
   const _PriceSkeleton({
     required this.price,
-    required this.enabled,
+    required this.isLoading,
   });
 
   final String price;
-  final bool enabled;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
-    return Skeletonizer(
-      enabled: enabled,
-      effect: ShimmerEffect(
-        baseColor: Colors.grey[900]!.withAlpha(70),
-        highlightColor: Colors.grey[700]!.withAlpha(50),
-        duration: const Duration(milliseconds: 500),
-      ),
-      child: Text(
-        enabled ? '000000' : price,
+    if (!isLoading) {
+      return Text(
+        price,
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
+      );
+    }
+
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[900]!.withAlpha(70),
+      highlightColor: Colors.grey[100]!.withAlpha(50),
+      period: const Duration(milliseconds: 500),
+      child: Container(
+        margin: const EdgeInsets.only(top: 2),
+        width: 56,
+        height: 12,
+        decoration: BoxDecoration(
+          color: Colors.grey[900]!.withAlpha(70),
+          borderRadius: BorderRadius.circular(4),
+        ),
       ),
+    );
+  }
+}
+
+class ConnectedAccountsButton extends GetView<GlobalController> {
+  const ConnectedAccountsButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final myUser = controller.myUserInfo.value;
+      if (myUser == null) {
+        return const SizedBox.shrink();
+      }
+      final myAccounts = myUser.accounts;
+      final accountCount = myAccounts.length;
+      final buttonText = accountCount <= 1
+          ? 'Connect Accounts'
+          : 'Connected Accounts ($accountCount)';
+      return Button(
+        onPressed: () {
+          Navigate.to(
+            type: NavigationTypes.toNamed,
+            route: Routes.CONNECTED_ACCOUNTS,
+          );
+        },
+        blockButton: true,
+        type: ButtonType.outline,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.account_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              buttonText,
+              style: const TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class NonPrimaryAccountWarning extends GetView<GlobalController> {
+  const NonPrimaryAccountWarning({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        final myUser = controller.myUserInfo.value;
+        if (myUser == null) {
+          return const SizedBox.shrink();
+        }
+        final accounts = myUser.accounts;
+        final primaryAccount = accounts.firstWhere(
+          (account) => account.is_primary,
+          orElse: () => ConnectedAccount(
+              address: myUser.address,
+              aptos_address: myUser.aptos_address!,
+              image: myUser.image,
+              is_primary: true,
+              login_type: myUser.login_type,
+              login_type_identifier: myUser.login_type_identifier ?? '',
+              uuid: myUser.uuid),
+        );
+        final isThisAccountPrimary = primaryAccount.address == myUser.address;
+        return !isThisAccountPrimary
+            ? Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.red.withAlpha(26),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.red.withAlpha(77),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withAlpha(51),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.red,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Secondary Account',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'This is not your primary account. Only the primary account can perform certain actions.',
+                            style: TextStyle(
+                              color: Colors.red.withAlpha(204),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : const SizedBox.shrink();
+      },
     );
   }
 }

@@ -18,8 +18,10 @@ import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
+import 'package:podium/providers/api/podium/models/users/connect_new_account_request.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 class PodiumApi {
@@ -97,6 +99,7 @@ class PodiumApi {
       final String? message = e.response?.data['message'];
       return (null, message, e.response?.statusCode);
     } catch (e) {
+      l.e(e);
       return (null, 'User not found', null);
     }
   }
@@ -130,6 +133,7 @@ class PodiumApi {
 
       return myUser;
     } catch (e) {
+      l.e(e);
       return null;
     }
   }
@@ -187,9 +191,14 @@ class PodiumApi {
   Future<UserModel?> updateMyUserData(
     Map<String, dynamic> patchJson,
   ) async {
-    final response = await dio.post('$_baseUrl/users/update-profile',
-        data: patchJson, options: Options(headers: _headers));
-    return UserModel.fromJson(response.data['data']);
+    try {
+      final response = await dio.post('$_baseUrl/users/update-profile',
+          data: patchJson, options: Options(headers: _headers));
+      return UserModel.fromJson(response.data['data']);
+    } catch (e) {
+      l.e(e);
+      return null;
+    }
   }
 
   Future<UserModel?> getUserData(String id) async {
@@ -710,6 +719,34 @@ class PodiumApi {
       final response = await dio.post('$_baseUrl/outposts/set-reminder',
           data: request.toJson(), options: Options(headers: _headers));
       return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> connectNewAccount(ConnectNewAccountRequest request) async {
+    try {
+      final response = await dio.post('$_baseUrl/users/accounts/connect',
+          data: request.toJson(), options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> setAccountAsPrimary({required String address}) async {
+    try {
+      final response = await dio.post('$_baseUrl/users/accounts/set-primary',
+          data: {'address': address}, options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } on DioException catch (e) {
+      l.e(e);
+      Toast.error(
+          message: e.response?.data['message'] ??
+              'Error setting account as primary');
+      return false;
     } catch (e) {
       l.e(e);
       return false;

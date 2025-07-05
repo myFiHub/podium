@@ -38,12 +38,6 @@ class LoginParametersKeys {
   static const referrerId = 'referrerId';
 }
 
-addressToUuid(String address) {
-  final uuid = const Uuid();
-  final uid = uuid.v5(Namespace.url.value, address);
-  return uid;
-}
-
 class LoginController extends GetxController {
   final globalController = Get.find<GlobalController>();
   final storage = GetStorage();
@@ -55,17 +49,18 @@ class LoginController extends GetxController {
   final internalWalletAddress = ''.obs;
   final internalWalletBalance = ''.obs;
   Function? afterLogin = null;
+  String? _privateKeyFromWeb3Auth;
 
   final isReferrerInputExpanded = false.obs;
   final referrerNotFound = false.obs;
 
   final textController = TextEditingController();
 
-  toggleExpanded() {
+  void toggleExpandReferralInput() {
     isReferrerInputExpanded.value = !isReferrerInputExpanded.value;
   }
 
-  handlePaste() async {
+  Future<void> handlePaste() async {
     referrerNotFound.value = false;
     referrerIsFul.value = false;
     referrer.value = null;
@@ -112,6 +107,7 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
     referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
     l.i('deepLinkRoute: $referrerId');
     if (referrerId.isNotEmpty) {
@@ -125,12 +121,23 @@ class LoginController extends GetxController {
 
   @override
   void onReady() {
+    super.onReady();
+    // final isAddingAccount = globalController.isAddingAccount;
+    // if (isAddingAccount) {
+    //   Toast.success(
+    //     title: 'Account added',
+    //   );
+    //   Navigate.to(
+    //     route: Routes.CONNECTED_ACCOUNTS,
+    //     type: NavigationTypes.offAllNamed,
+    //   );
+    //   return;
+    // }
     globalController.deepLinkRoute.listen((v) {
       if (v.isNotEmpty) {
         initializeReferral(null);
       }
     });
-    super.onReady();
   }
 
   @override
@@ -147,8 +154,7 @@ class LoginController extends GetxController {
     loadingBuyTicketId.value = user.uuid;
     bool? bought;
     try {
-      final (success, hash) =
-          await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+      final (success, hash) = await AptosMovement.buyPodiumPassFromUser(
         sellerAddress: user.aptos_address!,
         sellerName: user.name!,
         sellerUuid: user.uuid,
@@ -233,8 +239,8 @@ class LoginController extends GetxController {
         Web3AuthFlutter.getUserInfo(),
         Web3AuthFlutter.getPrivKey()
       ).wait;
-      _continueSocialLoginWithUserInfoAndPrivateKey(
-        privateKey: privateKey,
+      _privateKeyFromWeb3Auth = privateKey;
+      continueSocialLoginWithUserInfoAndPrivateKey(
         userInfo: userInfo,
         loginMethod: loginMethod,
       );
@@ -290,9 +296,8 @@ class LoginController extends GetxController {
         }
         final privateKey = res.privKey!;
         final userInfo = res.userInfo!;
-
-        await _continueSocialLoginWithUserInfoAndPrivateKey(
-          privateKey: privateKey,
+        _privateKeyFromWeb3Auth = privateKey;
+        await continueSocialLoginWithUserInfoAndPrivateKey(
           userInfo: userInfo,
           loginMethod: loginMethod,
         );
@@ -307,20 +312,15 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<void> _continueSocialLoginWithUserInfoAndPrivateKey({
-    required String privateKey,
+  Future<void> continueSocialLoginWithUserInfoAndPrivateKey({
     required TorusUserInfo userInfo,
     required Provider loginMethod,
   }) async {
+    final privateKey = _privateKeyFromWeb3Auth!;
+
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
-    final signature = signMessage(privateKey, publicAddress);
-    if (signature == null) {
-      l.e('Signature is not valid');
-      return;
-    }
 
-    final uid = addressToUuid(publicAddress);
 // aptos account
     final aptosAccount = AptosAccount.fromPrivateKey(privateKey);
     globalController.aptosAccount = aptosAccount;
@@ -330,7 +330,6 @@ class LoginController extends GetxController {
     internalWalletAddress.value = aptosAddress;
 
     await _socialLogin(
-      id: uid,
       name: userInfo.name ?? '',
       email: userInfo.email ?? '',
       avatar: userInfo.profileImage ?? '',
@@ -368,7 +367,6 @@ class LoginController extends GetxController {
   }
 
   Future<void> _socialLogin({
-    required String id,
     required String name,
     required String email,
     required String avatar,
@@ -385,24 +383,20 @@ class LoginController extends GetxController {
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
     isBeforeLaunchUser = false;
     // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
-    final signature = signMessage(privateKey, internalEvmWalletAddress);
-    if (signature == null) {
-      l.e('Signature is not valid');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    }
 
     final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
       myAptosAddress: internalAptosWalletAddress,
     );
+    final (signature, timestamp) =
+        signMessageWithTimestamp(privateKey, internalEvmWalletAddress);
 
     temporaryLoginRequest = LoginRequest(
       signature: signature,
+      timestamp: timestamp,
       username: internalEvmWalletAddress,
       aptos_address: internalAptosWalletAddress,
-      has_ticket: hasTicket,
+      has_ticket: hasTicket ||
+          podiumTeamMembersAptosAddresses.contains(internalAptosWalletAddress),
       login_type_identifier: _fixLoginTypeIdentifier(loginTypeIdentifier),
       referrer_user_uuid: referrer.value?.uuid,
     );
@@ -420,8 +414,12 @@ class LoginController extends GetxController {
     String? forcedReferrerID,
   }) async {
     final storageReferreId = storage.read<String>(StorageKeys.referrerId);
+    final privateKey = _privateKeyFromWeb3Auth!;
+    final (signature, timestamp) =
+        signMessageWithTimestamp(privateKey, temporaryLoginRequest!.username);
     final request = LoginRequest(
-      signature: temporaryLoginRequest!.signature,
+      signature: signature,
+      timestamp: timestamp,
       username: temporaryLoginRequest!.username,
       aptos_address: temporaryLoginRequest!.aptos_address,
       has_ticket: hasTicket,
@@ -431,9 +429,7 @@ class LoginController extends GetxController {
           (referrerId.isEmpty ? null : referrerId) ??
           temporaryLoginRequest?.referrer_user_uuid,
     );
-
     storage.remove(StorageKeys.referrerId);
-    l.d('request: ${request.toJson()}');
     final (userLoginResponse, errorMessage, responseCode) =
         await HttpApis.podium.login(
       request: request,
@@ -485,8 +481,24 @@ class LoginController extends GetxController {
     // end force to add name if field is empty
 
     if (savedName != null) {
-      userLoginResponse.name = savedName;
-      globalController.myUserInfo.value = userLoginResponse;
+      final updatedUser = userLoginResponse.copyWith.name(savedName);
+      if (updatedUser.accounts.isEmpty) {
+        final newAccount = ConnectedAccount(
+          address: updatedUser.address,
+          aptos_address: updatedUser.aptos_address!,
+          image: updatedUser.image,
+          is_primary: true,
+          login_type: updatedUser.login_type,
+          login_type_identifier: updatedUser.login_type_identifier ?? '',
+          uuid: updatedUser.uuid,
+        );
+        final updatedUserWithAccount = updatedUser.copyWith(
+          accounts: [newAccount],
+        );
+        globalController.myUserInfo.value = updatedUserWithAccount;
+      } else {
+        globalController.myUserInfo.value = updatedUser;
+      }
       globalController.myUserInfo.refresh();
 
       LoginTypeService.setLoginType(temporaryAdditionalData?.loginType ?? '');

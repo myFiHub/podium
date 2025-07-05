@@ -239,6 +239,7 @@ class LoginController extends GetxController {
         Web3AuthFlutter.getUserInfo(),
         Web3AuthFlutter.getPrivKey()
       ).wait;
+      _privateKeyFromWeb3Auth = privateKey;
       continueSocialLoginWithUserInfoAndPrivateKey(
         userInfo: userInfo,
         loginMethod: loginMethod,

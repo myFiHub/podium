@@ -91,7 +91,7 @@ class OutpostCallController extends GetxController {
         // NOTE: this should be the only place where this is used to join the outpost when the user is in the outpost call screen
         // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
         final joined =
-            await wsClient.asyncJoinOutpostWithRetry(activeOutpost.uuid);
+            await wsClient.joinOutpost(activeOutpost.uuid, withRetry: true);
         final reconnecting = wsClient.isConnecting;
         if (!joined && reconnecting) {
           Toast.error(
@@ -248,10 +248,8 @@ class OutpostCallController extends GetxController {
         if (!iExistAndPresent) {
           bool joined = false;
           try {
-            joined = await wsClient.asyncJoinOutpost(
-              outpost.value!.uuid,
-              force: true,
-            );
+            joined = await wsClient.joinOutpost(outpost.value!.uuid,
+                force: true, withRetry: true);
             if (withRetry == true && joined == true) {
               fetchLiveData(withRetry: false);
               return;

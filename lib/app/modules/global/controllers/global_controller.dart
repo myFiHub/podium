@@ -27,7 +27,7 @@ import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
 import 'package:podium/providers/api/podium/models/users/connect_new_account_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
-import 'package:podium/services/websocket/client.dart';
+import 'package:podium/services/websocket/websocket_service.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';

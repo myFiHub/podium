@@ -350,7 +350,7 @@ class LoginView extends GetView<LoginController> {
                             );
                           }),
                           space10,
-                          const ReferralInput(),
+                          ReferralInput(),
                           space10,
                           Center(
                             child: Text(

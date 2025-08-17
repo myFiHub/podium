@@ -14,6 +14,7 @@ LoginRequest _$LoginRequestFromJson(Map<String, dynamic> json) => LoginRequest(
       timestamp: (json['timestamp'] as num).toInt(),
       login_type_identifier: json['login_type_identifier'] as String,
       referrer_user_uuid: json['referrer_user_uuid'] as String?,
+      login_type: json['login_type'] as String,
     );
 
 Map<String, dynamic> _$LoginRequestToJson(LoginRequest instance) =>
@@ -24,5 +25,6 @@ Map<String, dynamic> _$LoginRequestToJson(LoginRequest instance) =>
       'has_ticket': instance.has_ticket,
       'timestamp': instance.timestamp,
       'login_type_identifier': instance.login_type_identifier,
+      'login_type': instance.login_type,
       'referrer_user_uuid': instance.referrer_user_uuid,
     };

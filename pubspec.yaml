@@ -40,12 +40,12 @@ dependencies:
   # Storage & File Management
   path_provider: ^2.1.5
   downloadsfolder: ^1.2.0
-  firebase_storage: ^12.4.5
+  firebase_storage: ^13.0.0
   cached_network_image: ^3.4.1
 
   # Firebase Services
-  firebase_core: ^3.13.0
-  firebase_analytics: ^11.4.5
+  firebase_core: ^4.0.0
+  firebase_analytics: ^12.0.0
 
   # Forms & Input
   flutter_form_builder: ^10.0.1
@@ -76,7 +76,7 @@ dependencies:
   logger: ^2.5.0
   gap: ^3.0.1
   json_annotation: ^4.9.0
-  copy_with_extension_gen: ^6.0.1
+  copy_with_extension_gen: ^9.1.0
   enhanced_paginated_view: ^2.0.3
 
   permission_handler: ^12.0.0
@@ -84,7 +84,7 @@ dependencies:
   onesignal_flutter: ^5.3.0
 
   # Environment & Configuration
-  flutter_dotenv: ^5.2.1
+  flutter_dotenv: ^6.0.0
   reown_appkit: ^1.4.2
 
   # Sharing & Links
@@ -102,7 +102,7 @@ dependencies:
 
   flutter:
     sdk: flutter
-  firebase_messaging: ^15.2.5
+  firebase_messaging: ^16.0.0
 
 dependency_overrides:
   intl: ^0.19.0

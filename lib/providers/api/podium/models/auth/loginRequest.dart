@@ -10,6 +10,7 @@ class LoginRequest {
   final bool has_ticket;
   final int timestamp;
   final String login_type_identifier;
+  final String login_type;
   String? referrer_user_uuid;
 
   LoginRequest({
@@ -20,6 +21,7 @@ class LoginRequest {
     required this.timestamp,
     required this.login_type_identifier,
     required this.referrer_user_uuid,
+    required this.login_type,
   });
 
   factory LoginRequest.fromJson(Map<String, dynamic> json) =>

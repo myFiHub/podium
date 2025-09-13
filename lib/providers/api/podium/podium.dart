@@ -118,7 +118,6 @@ class PodiumApi {
         'email': (myUser.email, additionalData.email),
         'name': (myUser.name, additionalData.name),
         'image': (myUser.image, additionalData.image),
-        'login_type': (myUser.login_type, additionalData.loginType),
       };
 
       patchJson.addAll(Map.fromEntries(fieldsToUpdate.entries

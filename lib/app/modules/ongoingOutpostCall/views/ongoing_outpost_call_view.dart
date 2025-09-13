@@ -204,8 +204,8 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
         }),
         floatingWidgetHeight: canITalk ? 125 : 50,
         floatingWidgetWidth: 50,
-        dx: Get.width - 80,
-        dy: 50,
+        dx: Get.width - 70,
+        dy: 20,
       ),
     );
   }

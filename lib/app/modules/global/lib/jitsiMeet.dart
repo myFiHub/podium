@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/scoreOutpostPrompt.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -66,7 +67,8 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
     videoMutedChanged: (muted) {
       l.d("videoMutedChanged: $muted");
     },
-    conferenceTerminated: (url, error) {
+
+    conferenceTerminated: (url, error) async {
       l.f("conferenceTerminated: url: $url, error: $error");
     },
     participantsInfoRetrieved: (participantsInfo) {

@@ -118,7 +118,6 @@ class PodiumApi {
         'email': (myUser.email, additionalData.email),
         'name': (myUser.name, additionalData.name),
         'image': (myUser.image, additionalData.image),
-        'login_type': (myUser.login_type, additionalData.loginType),
       };
 
       patchJson.addAll(Map.fromEntries(fieldsToUpdate.entries
@@ -504,6 +503,21 @@ class PodiumApi {
     try {
       final response = await dio.post('$_baseUrl/outposts/report',
           data: {'uuid': outpostId, 'reasons': reasons},
+          options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
+  Future<bool> scoreOutpost({
+    required String outpostId,
+    required int score,
+  }) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/rate',
+          data: {'uuid': outpostId, 'rating': score},
           options: Options(headers: _headers));
       return response.statusCode == 200;
     } catch (e) {

@@ -56,7 +56,11 @@ class MeetingConstants {
       avatar = avatarPlaceHolder(myUser.name);
     }
     return JitsiMeetConferenceOptions(
-      serverURL: sa != '' ? sa : Env.jitsiServerUrl,
+      serverURL: outpost.outpost_host_url != null
+          ? outpost.outpost_host_url!
+          : sa != ''
+              ? sa
+              : Env.jitsiServerUrl,
       room: outpost.uuid,
       configOverrides: configOverrides(outpost),
       featureFlags: featureFlags(

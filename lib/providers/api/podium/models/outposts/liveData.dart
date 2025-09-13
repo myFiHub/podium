@@ -39,7 +39,7 @@ class LiveMember {
     required this.address,
     required this.can_speak,
     this.feedbacks = const [],
-    required this.image,
+    this.image = '',
     this.is_present = false,
     this.is_speaking = false,
     this.name = '',

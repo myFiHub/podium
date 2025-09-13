@@ -393,6 +393,7 @@ class LoginController extends GetxController {
     temporaryLoginRequest = LoginRequest(
       signature: signature,
       timestamp: timestamp,
+      login_type: loginType,
       username: internalEvmWalletAddress,
       aptos_address: internalAptosWalletAddress,
       has_ticket: hasTicket ||
@@ -404,7 +405,6 @@ class LoginController extends GetxController {
       email: email,
       name: name == email ? null : name,
       image: avatar,
-      loginType: loginType,
     );
     _continueLogin(hasTicket: hasTicket);
   }
@@ -423,6 +423,7 @@ class LoginController extends GetxController {
       username: temporaryLoginRequest!.username,
       aptos_address: temporaryLoginRequest!.aptos_address,
       has_ticket: hasTicket,
+      login_type: temporaryLoginRequest!.login_type,
       login_type_identifier: temporaryLoginRequest!.login_type_identifier,
       referrer_user_uuid: forcedReferrerID ??
           storageReferreId ??
@@ -501,7 +502,7 @@ class LoginController extends GetxController {
       }
       globalController.myUserInfo.refresh();
 
-      LoginTypeService.setLoginType(temporaryAdditionalData?.loginType ?? '');
+      LoginTypeService.setLoginType(temporaryLoginRequest!.login_type);
       globalController.setLoggedIn(true);
       // newx line is commented because loginController is cleared from memory (offAllNamed in global controller)
       // removeLogingInState();

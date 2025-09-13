@@ -813,14 +813,13 @@ class GlobalController extends GetxController {
       username: newAddress,
       aptos_address: newAptosAddress,
       has_ticket: false,
+      login_type: web3AuthProviderToLoginTypeString(provider),
       login_type_identifier: newWeb3AuthUserInfo.verifierId ?? '',
       referrer_user_uuid: null,
     );
     final (loginResponse, error, statusCode) = await HttpApis.podium.login(
       request: request,
-      additionalData: AdditionalDataForLogin(
-        loginType: web3AuthProviderToLoginTypeString(provider),
-      ),
+      additionalData: AdditionalDataForLogin(),
     );
     if (loginResponse != null) {
       myUserInfo.value = loginResponse;

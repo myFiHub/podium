@@ -17,12 +17,13 @@ abstract class _$PodiumPassBuyerModelCWProxy {
 
   PodiumPassBuyerModel uuid(String uuid);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `PodiumPassBuyerModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `PodiumPassBuyerModel(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// PodiumPassBuyerModel(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   PodiumPassBuyerModel call({
     String address,
     bool followed_by_me,
@@ -32,7 +33,8 @@ abstract class _$PodiumPassBuyerModelCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfPodiumPassBuyerModel.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfPodiumPassBuyerModel.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfPodiumPassBuyerModel.copyWith(...)` or call `instanceOfPodiumPassBuyerModel.copyWith.fieldName(value)` for a single field.
 class _$PodiumPassBuyerModelCWProxyImpl
     implements _$PodiumPassBuyerModelCWProxy {
   const _$PodiumPassBuyerModelCWProxyImpl(this._value);
@@ -40,29 +42,30 @@ class _$PodiumPassBuyerModelCWProxyImpl
   final PodiumPassBuyerModel _value;
 
   @override
-  PodiumPassBuyerModel address(String address) => this(address: address);
+  PodiumPassBuyerModel address(String address) => call(address: address);
 
   @override
   PodiumPassBuyerModel followed_by_me(bool followed_by_me) =>
-      this(followed_by_me: followed_by_me);
+      call(followed_by_me: followed_by_me);
 
   @override
-  PodiumPassBuyerModel image(String image) => this(image: image);
+  PodiumPassBuyerModel image(String image) => call(image: image);
 
   @override
-  PodiumPassBuyerModel name(String name) => this(name: name);
+  PodiumPassBuyerModel name(String name) => call(name: name);
 
   @override
-  PodiumPassBuyerModel uuid(String uuid) => this(uuid: uuid);
+  PodiumPassBuyerModel uuid(String uuid) => call(uuid: uuid);
 
   @override
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `PodiumPassBuyerModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `PodiumPassBuyerModel(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// PodiumPassBuyerModel(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   PodiumPassBuyerModel call({
     Object? address = const $CopyWithPlaceholder(),
     Object? followed_by_me = const $CopyWithPlaceholder(),
@@ -71,23 +74,24 @@ class _$PodiumPassBuyerModelCWProxyImpl
     Object? uuid = const $CopyWithPlaceholder(),
   }) {
     return PodiumPassBuyerModel(
-      address: address == const $CopyWithPlaceholder()
+      address: address == const $CopyWithPlaceholder() || address == null
           ? _value.address
           // ignore: cast_nullable_to_non_nullable
           : address as String,
-      followed_by_me: followed_by_me == const $CopyWithPlaceholder()
+      followed_by_me: followed_by_me == const $CopyWithPlaceholder() ||
+              followed_by_me == null
           ? _value.followed_by_me
           // ignore: cast_nullable_to_non_nullable
           : followed_by_me as bool,
-      image: image == const $CopyWithPlaceholder()
+      image: image == const $CopyWithPlaceholder() || image == null
           ? _value.image
           // ignore: cast_nullable_to_non_nullable
           : image as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      uuid: uuid == const $CopyWithPlaceholder()
+      uuid: uuid == const $CopyWithPlaceholder() || uuid == null
           ? _value.uuid
           // ignore: cast_nullable_to_non_nullable
           : uuid as String,
@@ -96,7 +100,8 @@ class _$PodiumPassBuyerModelCWProxyImpl
 }
 
 extension $PodiumPassBuyerModelCopyWith on PodiumPassBuyerModel {
-  /// Returns a callable class that can be used as follows: `instanceOfPodiumPassBuyerModel.copyWith(...)` or like so:`instanceOfPodiumPassBuyerModel.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfPodiumPassBuyerModel.copyWith(...)` or `instanceOfPodiumPassBuyerModel.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$PodiumPassBuyerModelCWProxy get copyWith =>
       _$PodiumPassBuyerModelCWProxyImpl(this);

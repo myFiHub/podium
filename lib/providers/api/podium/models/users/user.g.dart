@@ -59,12 +59,13 @@ abstract class _$UserModelCWProxy {
 
   UserModel accounts(List<ConnectedAccount> accounts);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UserModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `UserModel(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UserModel(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UserModel call({
     String address,
     String uuid,
@@ -95,116 +96,118 @@ abstract class _$UserModelCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfUserModel.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfUserModel.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfUserModel.copyWith(...)` or call `instanceOfUserModel.copyWith.fieldName(value)` for a single field.
 class _$UserModelCWProxyImpl implements _$UserModelCWProxy {
   const _$UserModelCWProxyImpl(this._value);
 
   final UserModel _value;
 
   @override
-  UserModel address(String address) => this(address: address);
+  UserModel address(String address) => call(address: address);
 
   @override
-  UserModel uuid(String uuid) => this(uuid: uuid);
+  UserModel uuid(String uuid) => call(uuid: uuid);
 
   @override
   UserModel aptos_address(String? aptos_address) =>
-      this(aptos_address: aptos_address);
+      call(aptos_address: aptos_address);
 
   @override
-  UserModel email(String? email) => this(email: email);
+  UserModel email(String? email) => call(email: email);
 
   @override
   UserModel external_wallet_address(String? external_wallet_address) =>
-      this(external_wallet_address: external_wallet_address);
+      call(external_wallet_address: external_wallet_address);
 
   @override
   UserModel followed_by_me(bool? followed_by_me) =>
-      this(followed_by_me: followed_by_me);
+      call(followed_by_me: followed_by_me);
 
   @override
   UserModel followers_count(int? followers_count) =>
-      this(followers_count: followers_count);
+      call(followers_count: followers_count);
 
   @override
   UserModel followings_count(int? followings_count) =>
-      this(followings_count: followings_count);
+      call(followings_count: followings_count);
 
   @override
-  UserModel image(String? image) => this(image: image);
+  UserModel image(String? image) => call(image: image);
 
   @override
-  UserModel login_type(String? login_type) => this(login_type: login_type);
+  UserModel login_type(String? login_type) => call(login_type: login_type);
 
   @override
   UserModel login_type_identifier(String? login_type_identifier) =>
-      this(login_type_identifier: login_type_identifier);
+      call(login_type_identifier: login_type_identifier);
 
   @override
-  UserModel name(String? name) => this(name: name);
+  UserModel name(String? name) => call(name: name);
 
   @override
-  UserModel is_over_18(bool? is_over_18) => this(is_over_18: is_over_18);
+  UserModel is_over_18(bool? is_over_18) => call(is_over_18: is_over_18);
 
   @override
   UserModel referrals_count(int? referrals_count) =>
-      this(referrals_count: referrals_count);
+      call(referrals_count: referrals_count);
 
   @override
   UserModel remaining_referrals_count(int remaining_referrals_count) =>
-      this(remaining_referrals_count: remaining_referrals_count);
+      call(remaining_referrals_count: remaining_referrals_count);
 
   @override
-  UserModel incomes(Map<String, double>? incomes) => this(incomes: incomes);
+  UserModel incomes(Map<String, double>? incomes) => call(incomes: incomes);
 
   @override
   UserModel received_boo_amount(double received_boo_amount) =>
-      this(received_boo_amount: received_boo_amount);
+      call(received_boo_amount: received_boo_amount);
 
   @override
   UserModel received_boo_count(int received_boo_count) =>
-      this(received_boo_count: received_boo_count);
+      call(received_boo_count: received_boo_count);
 
   @override
   UserModel received_cheer_amount(double received_cheer_amount) =>
-      this(received_cheer_amount: received_cheer_amount);
+      call(received_cheer_amount: received_cheer_amount);
 
   @override
   UserModel received_cheer_count(int received_cheer_count) =>
-      this(received_cheer_count: received_cheer_count);
+      call(received_cheer_count: received_cheer_count);
 
   @override
   UserModel referrer_user_uuid(String? referrer_user_uuid) =>
-      this(referrer_user_uuid: referrer_user_uuid);
+      call(referrer_user_uuid: referrer_user_uuid);
 
   @override
   UserModel sent_boo_amount(double sent_boo_amount) =>
-      this(sent_boo_amount: sent_boo_amount);
+      call(sent_boo_amount: sent_boo_amount);
 
   @override
   UserModel sent_boo_count(int sent_boo_count) =>
-      this(sent_boo_count: sent_boo_count);
+      call(sent_boo_count: sent_boo_count);
 
   @override
   UserModel sent_cheer_amount(double sent_cheer_amount) =>
-      this(sent_cheer_amount: sent_cheer_amount);
+      call(sent_cheer_amount: sent_cheer_amount);
 
   @override
   UserModel sent_cheer_count(int sent_cheer_count) =>
-      this(sent_cheer_count: sent_cheer_count);
+      call(sent_cheer_count: sent_cheer_count);
 
   @override
   UserModel accounts(List<ConnectedAccount> accounts) =>
-      this(accounts: accounts);
+      call(accounts: accounts);
 
   @override
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UserModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `UserModel(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UserModel(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UserModel call({
     Object? address = const $CopyWithPlaceholder(),
     Object? uuid = const $CopyWithPlaceholder(),
@@ -234,11 +237,11 @@ class _$UserModelCWProxyImpl implements _$UserModelCWProxy {
     Object? accounts = const $CopyWithPlaceholder(),
   }) {
     return UserModel(
-      address: address == const $CopyWithPlaceholder()
+      address: address == const $CopyWithPlaceholder() || address == null
           ? _value.address
           // ignore: cast_nullable_to_non_nullable
           : address as String,
-      uuid: uuid == const $CopyWithPlaceholder()
+      uuid: uuid == const $CopyWithPlaceholder() || uuid == null
           ? _value.uuid
           // ignore: cast_nullable_to_non_nullable
           : uuid as String,
@@ -293,7 +296,8 @@ class _$UserModelCWProxyImpl implements _$UserModelCWProxy {
           // ignore: cast_nullable_to_non_nullable
           : referrals_count as int?,
       remaining_referrals_count:
-          remaining_referrals_count == const $CopyWithPlaceholder()
+          remaining_referrals_count == const $CopyWithPlaceholder() ||
+                  remaining_referrals_count == null
               ? _value.remaining_referrals_count
               // ignore: cast_nullable_to_non_nullable
               : remaining_referrals_count as int,
@@ -301,44 +305,54 @@ class _$UserModelCWProxyImpl implements _$UserModelCWProxy {
           ? _value.incomes
           // ignore: cast_nullable_to_non_nullable
           : incomes as Map<String, double>?,
-      received_boo_amount: received_boo_amount == const $CopyWithPlaceholder()
-          ? _value.received_boo_amount
-          // ignore: cast_nullable_to_non_nullable
-          : received_boo_amount as double,
-      received_boo_count: received_boo_count == const $CopyWithPlaceholder()
+      received_boo_amount:
+          received_boo_amount == const $CopyWithPlaceholder() ||
+                  received_boo_amount == null
+              ? _value.received_boo_amount
+              // ignore: cast_nullable_to_non_nullable
+              : received_boo_amount as double,
+      received_boo_count: received_boo_count == const $CopyWithPlaceholder() ||
+              received_boo_count == null
           ? _value.received_boo_count
           // ignore: cast_nullable_to_non_nullable
           : received_boo_count as int,
       received_cheer_amount:
-          received_cheer_amount == const $CopyWithPlaceholder()
+          received_cheer_amount == const $CopyWithPlaceholder() ||
+                  received_cheer_amount == null
               ? _value.received_cheer_amount
               // ignore: cast_nullable_to_non_nullable
               : received_cheer_amount as double,
-      received_cheer_count: received_cheer_count == const $CopyWithPlaceholder()
-          ? _value.received_cheer_count
-          // ignore: cast_nullable_to_non_nullable
-          : received_cheer_count as int,
+      received_cheer_count:
+          received_cheer_count == const $CopyWithPlaceholder() ||
+                  received_cheer_count == null
+              ? _value.received_cheer_count
+              // ignore: cast_nullable_to_non_nullable
+              : received_cheer_count as int,
       referrer_user_uuid: referrer_user_uuid == const $CopyWithPlaceholder()
           ? _value.referrer_user_uuid
           // ignore: cast_nullable_to_non_nullable
           : referrer_user_uuid as String?,
-      sent_boo_amount: sent_boo_amount == const $CopyWithPlaceholder()
+      sent_boo_amount: sent_boo_amount == const $CopyWithPlaceholder() ||
+              sent_boo_amount == null
           ? _value.sent_boo_amount
           // ignore: cast_nullable_to_non_nullable
           : sent_boo_amount as double,
-      sent_boo_count: sent_boo_count == const $CopyWithPlaceholder()
+      sent_boo_count: sent_boo_count == const $CopyWithPlaceholder() ||
+              sent_boo_count == null
           ? _value.sent_boo_count
           // ignore: cast_nullable_to_non_nullable
           : sent_boo_count as int,
-      sent_cheer_amount: sent_cheer_amount == const $CopyWithPlaceholder()
+      sent_cheer_amount: sent_cheer_amount == const $CopyWithPlaceholder() ||
+              sent_cheer_amount == null
           ? _value.sent_cheer_amount
           // ignore: cast_nullable_to_non_nullable
           : sent_cheer_amount as double,
-      sent_cheer_count: sent_cheer_count == const $CopyWithPlaceholder()
+      sent_cheer_count: sent_cheer_count == const $CopyWithPlaceholder() ||
+              sent_cheer_count == null
           ? _value.sent_cheer_count
           // ignore: cast_nullable_to_non_nullable
           : sent_cheer_count as int,
-      accounts: accounts == const $CopyWithPlaceholder()
+      accounts: accounts == const $CopyWithPlaceholder() || accounts == null
           ? _value.accounts
           // ignore: cast_nullable_to_non_nullable
           : accounts as List<ConnectedAccount>,
@@ -347,7 +361,8 @@ class _$UserModelCWProxyImpl implements _$UserModelCWProxy {
 }
 
 extension $UserModelCopyWith on UserModel {
-  /// Returns a callable class that can be used as follows: `instanceOfUserModel.copyWith(...)` or like so:`instanceOfUserModel.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfUserModel.copyWith(...)` or `instanceOfUserModel.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$UserModelCWProxy get copyWith => _$UserModelCWProxyImpl(this);
 }
@@ -367,12 +382,13 @@ abstract class _$ConnectedAccountCWProxy {
 
   ConnectedAccount uuid(String uuid);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ConnectedAccount(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `ConnectedAccount(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ConnectedAccount(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ConnectedAccount call({
     String address,
     String aptos_address,
@@ -384,44 +400,46 @@ abstract class _$ConnectedAccountCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfConnectedAccount.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfConnectedAccount.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfConnectedAccount.copyWith(...)` or call `instanceOfConnectedAccount.copyWith.fieldName(value)` for a single field.
 class _$ConnectedAccountCWProxyImpl implements _$ConnectedAccountCWProxy {
   const _$ConnectedAccountCWProxyImpl(this._value);
 
   final ConnectedAccount _value;
 
   @override
-  ConnectedAccount address(String address) => this(address: address);
+  ConnectedAccount address(String address) => call(address: address);
 
   @override
   ConnectedAccount aptos_address(String aptos_address) =>
-      this(aptos_address: aptos_address);
+      call(aptos_address: aptos_address);
 
   @override
-  ConnectedAccount image(String? image) => this(image: image);
+  ConnectedAccount image(String? image) => call(image: image);
 
   @override
-  ConnectedAccount is_primary(bool is_primary) => this(is_primary: is_primary);
+  ConnectedAccount is_primary(bool is_primary) => call(is_primary: is_primary);
 
   @override
   ConnectedAccount login_type(String? login_type) =>
-      this(login_type: login_type);
+      call(login_type: login_type);
 
   @override
   ConnectedAccount login_type_identifier(String login_type_identifier) =>
-      this(login_type_identifier: login_type_identifier);
+      call(login_type_identifier: login_type_identifier);
 
   @override
-  ConnectedAccount uuid(String uuid) => this(uuid: uuid);
+  ConnectedAccount uuid(String uuid) => call(uuid: uuid);
 
   @override
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ConnectedAccount(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `ConnectedAccount(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ConnectedAccount(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ConnectedAccount call({
     Object? address = const $CopyWithPlaceholder(),
     Object? aptos_address = const $CopyWithPlaceholder(),
@@ -432,32 +450,35 @@ class _$ConnectedAccountCWProxyImpl implements _$ConnectedAccountCWProxy {
     Object? uuid = const $CopyWithPlaceholder(),
   }) {
     return ConnectedAccount(
-      address: address == const $CopyWithPlaceholder()
+      address: address == const $CopyWithPlaceholder() || address == null
           ? _value.address
           // ignore: cast_nullable_to_non_nullable
           : address as String,
-      aptos_address: aptos_address == const $CopyWithPlaceholder()
-          ? _value.aptos_address
-          // ignore: cast_nullable_to_non_nullable
-          : aptos_address as String,
+      aptos_address:
+          aptos_address == const $CopyWithPlaceholder() || aptos_address == null
+              ? _value.aptos_address
+              // ignore: cast_nullable_to_non_nullable
+              : aptos_address as String,
       image: image == const $CopyWithPlaceholder()
           ? _value.image
           // ignore: cast_nullable_to_non_nullable
           : image as String?,
-      is_primary: is_primary == const $CopyWithPlaceholder()
-          ? _value.is_primary
-          // ignore: cast_nullable_to_non_nullable
-          : is_primary as bool,
+      is_primary:
+          is_primary == const $CopyWithPlaceholder() || is_primary == null
+              ? _value.is_primary
+              // ignore: cast_nullable_to_non_nullable
+              : is_primary as bool,
       login_type: login_type == const $CopyWithPlaceholder()
           ? _value.login_type
           // ignore: cast_nullable_to_non_nullable
           : login_type as String?,
       login_type_identifier:
-          login_type_identifier == const $CopyWithPlaceholder()
+          login_type_identifier == const $CopyWithPlaceholder() ||
+                  login_type_identifier == null
               ? _value.login_type_identifier
               // ignore: cast_nullable_to_non_nullable
               : login_type_identifier as String,
-      uuid: uuid == const $CopyWithPlaceholder()
+      uuid: uuid == const $CopyWithPlaceholder() || uuid == null
           ? _value.uuid
           // ignore: cast_nullable_to_non_nullable
           : uuid as String,
@@ -466,7 +487,8 @@ class _$ConnectedAccountCWProxyImpl implements _$ConnectedAccountCWProxy {
 }
 
 extension $ConnectedAccountCopyWith on ConnectedAccount {
-  /// Returns a callable class that can be used as follows: `instanceOfConnectedAccount.copyWith(...)` or like so:`instanceOfConnectedAccount.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfConnectedAccount.copyWith(...)` or `instanceOfConnectedAccount.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ConnectedAccountCWProxy get copyWith => _$ConnectedAccountCWProxyImpl(this);
 }

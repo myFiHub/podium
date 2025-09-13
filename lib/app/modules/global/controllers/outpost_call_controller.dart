@@ -9,6 +9,7 @@ import 'package:podium/app/modules/createOutpost/controllers/create_outpost_cont
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/scoreOutpostPrompt.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
@@ -309,7 +310,7 @@ class OutpostCallController extends GetxController {
     return sorted;
   }
 
-  cleanupAfterCall() {
+  cleanupAfterCall() async {
     haveOngoingCall.value = false;
     jitsiMembers.value = [];
     jitsiMeet.hangUp();
@@ -322,6 +323,13 @@ class OutpostCallController extends GetxController {
         outpostId: outpostId,
         eventType: OutgoingMessageTypeEnums.leave,
       );
+      final score = await showScoreOutpostPrompt();
+      if (score != null) {
+        await HttpApis.podium.scoreOutpost(
+          outpostId: outpostId,
+          score: score,
+        );
+      }
     }
   }
 

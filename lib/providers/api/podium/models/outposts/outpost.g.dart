@@ -23,6 +23,8 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel has_adult_content(bool has_adult_content);
 
+  OutpostModel outpost_host_url(String? outpost_host_url);
+
   OutpostModel image(String image);
 
   OutpostModel invites(List<InviteModel>? invites);
@@ -59,12 +61,13 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel reminder_offset_minutes(int? reminder_offset_minutes);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OutpostModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `OutpostModel(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// OutpostModel(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   OutpostModel call({
     String uuid,
     int created_at,
@@ -74,6 +77,7 @@ abstract class _$OutpostModelCWProxy {
     String creator_user_image,
     String enter_type,
     bool has_adult_content,
+    String? outpost_host_url,
     String image,
     List<InviteModel>? invites,
     bool is_archived,
@@ -95,112 +99,118 @@ abstract class _$OutpostModelCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfOutpostModel.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfOutpostModel.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfOutpostModel.copyWith(...)` or call `instanceOfOutpostModel.copyWith.fieldName(value)` for a single field.
 class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
   const _$OutpostModelCWProxyImpl(this._value);
 
   final OutpostModel _value;
 
   @override
-  OutpostModel uuid(String uuid) => this(uuid: uuid);
+  OutpostModel uuid(String uuid) => call(uuid: uuid);
 
   @override
-  OutpostModel created_at(int created_at) => this(created_at: created_at);
+  OutpostModel created_at(int created_at) => call(created_at: created_at);
 
   @override
   OutpostModel creator_joined(bool creator_joined) =>
-      this(creator_joined: creator_joined);
+      call(creator_joined: creator_joined);
 
   @override
   OutpostModel creator_user_name(String? creator_user_name) =>
-      this(creator_user_name: creator_user_name);
+      call(creator_user_name: creator_user_name);
 
   @override
   OutpostModel creator_user_uuid(String creator_user_uuid) =>
-      this(creator_user_uuid: creator_user_uuid);
+      call(creator_user_uuid: creator_user_uuid);
 
   @override
   OutpostModel creator_user_image(String creator_user_image) =>
-      this(creator_user_image: creator_user_image);
+      call(creator_user_image: creator_user_image);
 
   @override
-  OutpostModel enter_type(String enter_type) => this(enter_type: enter_type);
+  OutpostModel enter_type(String enter_type) => call(enter_type: enter_type);
 
   @override
   OutpostModel has_adult_content(bool has_adult_content) =>
-      this(has_adult_content: has_adult_content);
+      call(has_adult_content: has_adult_content);
 
   @override
-  OutpostModel image(String image) => this(image: image);
+  OutpostModel outpost_host_url(String? outpost_host_url) =>
+      call(outpost_host_url: outpost_host_url);
 
   @override
-  OutpostModel invites(List<InviteModel>? invites) => this(invites: invites);
+  OutpostModel image(String image) => call(image: image);
 
   @override
-  OutpostModel is_archived(bool is_archived) => this(is_archived: is_archived);
+  OutpostModel invites(List<InviteModel>? invites) => call(invites: invites);
+
+  @override
+  OutpostModel is_archived(bool is_archived) => call(is_archived: is_archived);
 
   @override
   OutpostModel is_recordable(bool is_recordable) =>
-      this(is_recordable: is_recordable);
+      call(is_recordable: is_recordable);
 
   @override
   OutpostModel last_active_at(int last_active_at) =>
-      this(last_active_at: last_active_at);
+      call(last_active_at: last_active_at);
 
   @override
-  OutpostModel members(List<LiveMember>? members) => this(members: members);
+  OutpostModel members(List<LiveMember>? members) => call(members: members);
 
   @override
   OutpostModel members_count(int? members_count) =>
-      this(members_count: members_count);
+      call(members_count: members_count);
 
   @override
-  OutpostModel name(String name) => this(name: name);
+  OutpostModel name(String name) => call(name: name);
 
   @override
   OutpostModel scheduled_for(int scheduled_for) =>
-      this(scheduled_for: scheduled_for);
+      call(scheduled_for: scheduled_for);
 
   @override
-  OutpostModel speak_type(String speak_type) => this(speak_type: speak_type);
+  OutpostModel speak_type(String speak_type) => call(speak_type: speak_type);
 
   @override
-  OutpostModel subject(String subject) => this(subject: subject);
+  OutpostModel subject(String subject) => call(subject: subject);
 
   @override
-  OutpostModel tags(List<String> tags) => this(tags: tags);
+  OutpostModel tags(List<String> tags) => call(tags: tags);
 
   @override
   OutpostModel tickets_to_enter(List<_TicketToEnterModel>? tickets_to_enter) =>
-      this(tickets_to_enter: tickets_to_enter);
+      call(tickets_to_enter: tickets_to_enter);
 
   @override
   OutpostModel tickets_to_speak(List<_TicketToSpeakModel>? tickets_to_speak) =>
-      this(tickets_to_speak: tickets_to_speak);
+      call(tickets_to_speak: tickets_to_speak);
 
   @override
   OutpostModel luma_event_id(String? luma_event_id) =>
-      this(luma_event_id: luma_event_id);
+      call(luma_event_id: luma_event_id);
 
   @override
-  OutpostModel i_am_member(bool i_am_member) => this(i_am_member: i_am_member);
+  OutpostModel i_am_member(bool i_am_member) => call(i_am_member: i_am_member);
 
   @override
   OutpostModel online_users_count(int? online_users_count) =>
-      this(online_users_count: online_users_count);
+      call(online_users_count: online_users_count);
 
   @override
   OutpostModel reminder_offset_minutes(int? reminder_offset_minutes) =>
-      this(reminder_offset_minutes: reminder_offset_minutes);
+      call(reminder_offset_minutes: reminder_offset_minutes);
 
   @override
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OutpostModel(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `OutpostModel(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// OutpostModel(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   OutpostModel call({
     Object? uuid = const $CopyWithPlaceholder(),
     Object? created_at = const $CopyWithPlaceholder(),
@@ -210,6 +220,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
     Object? creator_user_image = const $CopyWithPlaceholder(),
     Object? enter_type = const $CopyWithPlaceholder(),
     Object? has_adult_content = const $CopyWithPlaceholder(),
+    Object? outpost_host_url = const $CopyWithPlaceholder(),
     Object? image = const $CopyWithPlaceholder(),
     Object? invites = const $CopyWithPlaceholder(),
     Object? is_archived = const $CopyWithPlaceholder(),
@@ -230,15 +241,17 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
     Object? reminder_offset_minutes = const $CopyWithPlaceholder(),
   }) {
     return OutpostModel(
-      uuid: uuid == const $CopyWithPlaceholder()
+      uuid: uuid == const $CopyWithPlaceholder() || uuid == null
           ? _value.uuid
           // ignore: cast_nullable_to_non_nullable
           : uuid as String,
-      created_at: created_at == const $CopyWithPlaceholder()
-          ? _value.created_at
-          // ignore: cast_nullable_to_non_nullable
-          : created_at as int,
-      creator_joined: creator_joined == const $CopyWithPlaceholder()
+      created_at:
+          created_at == const $CopyWithPlaceholder() || created_at == null
+              ? _value.created_at
+              // ignore: cast_nullable_to_non_nullable
+              : created_at as int,
+      creator_joined: creator_joined == const $CopyWithPlaceholder() ||
+              creator_joined == null
           ? _value.creator_joined
           // ignore: cast_nullable_to_non_nullable
           : creator_joined as bool,
@@ -246,23 +259,31 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
           ? _value.creator_user_name
           // ignore: cast_nullable_to_non_nullable
           : creator_user_name as String?,
-      creator_user_uuid: creator_user_uuid == const $CopyWithPlaceholder()
+      creator_user_uuid: creator_user_uuid == const $CopyWithPlaceholder() ||
+              creator_user_uuid == null
           ? _value.creator_user_uuid
           // ignore: cast_nullable_to_non_nullable
           : creator_user_uuid as String,
-      creator_user_image: creator_user_image == const $CopyWithPlaceholder()
+      creator_user_image: creator_user_image == const $CopyWithPlaceholder() ||
+              creator_user_image == null
           ? _value.creator_user_image
           // ignore: cast_nullable_to_non_nullable
           : creator_user_image as String,
-      enter_type: enter_type == const $CopyWithPlaceholder()
-          ? _value.enter_type
-          // ignore: cast_nullable_to_non_nullable
-          : enter_type as String,
-      has_adult_content: has_adult_content == const $CopyWithPlaceholder()
+      enter_type:
+          enter_type == const $CopyWithPlaceholder() || enter_type == null
+              ? _value.enter_type
+              // ignore: cast_nullable_to_non_nullable
+              : enter_type as String,
+      has_adult_content: has_adult_content == const $CopyWithPlaceholder() ||
+              has_adult_content == null
           ? _value.has_adult_content
           // ignore: cast_nullable_to_non_nullable
           : has_adult_content as bool,
-      image: image == const $CopyWithPlaceholder()
+      outpost_host_url: outpost_host_url == const $CopyWithPlaceholder()
+          ? _value.outpost_host_url
+          // ignore: cast_nullable_to_non_nullable
+          : outpost_host_url as String?,
+      image: image == const $CopyWithPlaceholder() || image == null
           ? _value.image
           // ignore: cast_nullable_to_non_nullable
           : image as String,
@@ -270,15 +291,18 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
           ? _value.invites
           // ignore: cast_nullable_to_non_nullable
           : invites as List<InviteModel>?,
-      is_archived: is_archived == const $CopyWithPlaceholder()
-          ? _value.is_archived
-          // ignore: cast_nullable_to_non_nullable
-          : is_archived as bool,
-      is_recordable: is_recordable == const $CopyWithPlaceholder()
-          ? _value.is_recordable
-          // ignore: cast_nullable_to_non_nullable
-          : is_recordable as bool,
-      last_active_at: last_active_at == const $CopyWithPlaceholder()
+      is_archived:
+          is_archived == const $CopyWithPlaceholder() || is_archived == null
+              ? _value.is_archived
+              // ignore: cast_nullable_to_non_nullable
+              : is_archived as bool,
+      is_recordable:
+          is_recordable == const $CopyWithPlaceholder() || is_recordable == null
+              ? _value.is_recordable
+              // ignore: cast_nullable_to_non_nullable
+              : is_recordable as bool,
+      last_active_at: last_active_at == const $CopyWithPlaceholder() ||
+              last_active_at == null
           ? _value.last_active_at
           // ignore: cast_nullable_to_non_nullable
           : last_active_at as int,
@@ -290,23 +314,25 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
           ? _value.members_count
           // ignore: cast_nullable_to_non_nullable
           : members_count as int?,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      scheduled_for: scheduled_for == const $CopyWithPlaceholder()
-          ? _value.scheduled_for
-          // ignore: cast_nullable_to_non_nullable
-          : scheduled_for as int,
-      speak_type: speak_type == const $CopyWithPlaceholder()
-          ? _value.speak_type
-          // ignore: cast_nullable_to_non_nullable
-          : speak_type as String,
-      subject: subject == const $CopyWithPlaceholder()
+      scheduled_for:
+          scheduled_for == const $CopyWithPlaceholder() || scheduled_for == null
+              ? _value.scheduled_for
+              // ignore: cast_nullable_to_non_nullable
+              : scheduled_for as int,
+      speak_type:
+          speak_type == const $CopyWithPlaceholder() || speak_type == null
+              ? _value.speak_type
+              // ignore: cast_nullable_to_non_nullable
+              : speak_type as String,
+      subject: subject == const $CopyWithPlaceholder() || subject == null
           ? _value.subject
           // ignore: cast_nullable_to_non_nullable
           : subject as String,
-      tags: tags == const $CopyWithPlaceholder()
+      tags: tags == const $CopyWithPlaceholder() || tags == null
           ? _value.tags
           // ignore: cast_nullable_to_non_nullable
           : tags as List<String>,
@@ -322,10 +348,11 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
           ? _value.luma_event_id
           // ignore: cast_nullable_to_non_nullable
           : luma_event_id as String?,
-      i_am_member: i_am_member == const $CopyWithPlaceholder()
-          ? _value.i_am_member
-          // ignore: cast_nullable_to_non_nullable
-          : i_am_member as bool,
+      i_am_member:
+          i_am_member == const $CopyWithPlaceholder() || i_am_member == null
+              ? _value.i_am_member
+              // ignore: cast_nullable_to_non_nullable
+              : i_am_member as bool,
       online_users_count: online_users_count == const $CopyWithPlaceholder()
           ? _value.online_users_count
           // ignore: cast_nullable_to_non_nullable
@@ -340,7 +367,8 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
 }
 
 extension $OutpostModelCopyWith on OutpostModel {
-  /// Returns a callable class that can be used as follows: `instanceOfOutpostModel.copyWith(...)` or like so:`instanceOfOutpostModel.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfOutpostModel.copyWith(...)` or `instanceOfOutpostModel.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$OutpostModelCWProxy get copyWith => _$OutpostModelCWProxyImpl(this);
 }
@@ -358,6 +386,7 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       creator_user_image: json['creator_user_image'] as String,
       enter_type: json['enter_type'] as String,
       has_adult_content: json['has_adult_content'] as bool,
+      outpost_host_url: json['outpost_host_url'] as String?,
       image: json['image'] as String,
       invites: (json['invites'] as List<dynamic>?)
           ?.map((e) => InviteModel.fromJson(e as Map<String, dynamic>))
@@ -398,6 +427,7 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'creator_user_image': instance.creator_user_image,
       'enter_type': instance.enter_type,
       'has_adult_content': instance.has_adult_content,
+      'outpost_host_url': instance.outpost_host_url,
       'image': instance.image,
       'invites': instance.invites,
       'is_archived': instance.is_archived,

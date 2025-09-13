@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
@@ -70,8 +71,10 @@ class WebSocketService {
 
     try {
       await _closeChannel();
+      final timeZoneString = await FlutterTimezone.getLocalTimezone();
 
-      final uri = Uri.parse('${Env.websocketAddress}?token=$token');
+      final uri = Uri.parse(
+          '${Env.websocketAddress}?token=$token&timezone=$timeZoneString');
       l.d('Connecting to WebSocket: ${uri.toString().replaceAll(token, '***')}');
 
       _channel = WebSocketChannel.connect(uri);

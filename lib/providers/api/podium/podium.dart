@@ -512,6 +512,21 @@ class PodiumApi {
     }
   }
 
+  Future<bool> scoreOutpost({
+    required String outpostId,
+    required int score,
+  }) async {
+    try {
+      final response = await dio.post('$_baseUrl/outposts/rate',
+          data: {'uuid': outpostId, 'rating': score},
+          options: Options(headers: _headers));
+      return response.statusCode == 200;
+    } catch (e) {
+      l.e(e);
+      return false;
+    }
+  }
+
   Future<bool> addMeAsMember({
     required String outpostId,
     String? inviterId,

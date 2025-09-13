@@ -16,6 +16,7 @@ class OutpostModel {
   final String creator_user_image;
   final String enter_type;
   final bool has_adult_content;
+  final String? outpost_host_url;
   final String image;
   final List<InviteModel>? invites;
   final bool is_archived;
@@ -43,6 +44,7 @@ class OutpostModel {
     required this.creator_user_image,
     required this.enter_type,
     required this.has_adult_content,
+    this.outpost_host_url,
     required this.image,
     this.invites,
     required this.is_archived,

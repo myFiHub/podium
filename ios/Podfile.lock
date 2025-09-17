@@ -167,8 +167,6 @@ PODS:
     - Flutter
   - jitsi_meet_flutter_sdk (11.5.1):
     - Flutter
-    - JitsiMeetSDK (= 11.5.1)
-  - JitsiMeetSDK (11.5.1):
     - Giphy (= 2.2.12)
     - JitsiWebRTC (~> 124.0)
   - JitsiWebRTC (124.0.2)
@@ -301,7 +299,6 @@ DEPENDENCIES:
   - Giphy (= 2.2.12)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - jitsi_meet_flutter_sdk (from `.symlinks/plugins/jitsi_meet_flutter_sdk/ios`)
-  - JitsiWebRTC
   - just_audio (from `.symlinks/plugins/just_audio/darwin`)
   - just_waveform (from `.symlinks/plugins/just_waveform/darwin`)
   - onesignal_flutter (from `.symlinks/plugins/onesignal_flutter/ios`)
@@ -338,7 +335,6 @@ SPEC REPOS:
     - GoogleDataTransport
     - GoogleUtilities
     - GTMSessionFetcher
-    - JitsiMeetSDK
     - JitsiWebRTC
     - KeychainSwift
     - libwebp
@@ -453,8 +449,7 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMSessionFetcher: 02d6e866e90bc236f48a703a041dfe43e6221a29
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
-  jitsi_meet_flutter_sdk: 5ad3ea63beb82fddffb53cf7289e945810fba068
-  JitsiMeetSDK: 8e64089e7832ffe3473e1edd8b2ec8e001689762
+  jitsi_meet_flutter_sdk: 7995895f7ba2cd3c33b3e73c76aa694944124a7d
   JitsiWebRTC: b47805ab5668be38e7ee60e2258f49badfe8e1d0
   just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   just_waveform: be2cb6dec86096cb972bf8b73c893fe16bf1cff4
@@ -477,6 +472,6 @@ SPEC CHECKSUMS:
   web3auth_flutter: ecf03bfbcb9ebf1ed8edb24642b5dac6d6b6a980
   webview_flutter_wkwebview: 44d4dee7d7056d5ad185d25b38404436d56c547c
 
-PODFILE CHECKSUM: 4cf70bdcd9e6bc2ce51e21cc8648d389e11ed295
+PODFILE CHECKSUM: bcd8c7c46a02cba662a118ffa8082f6f90570367
 
 COCOAPODS: 1.16.2

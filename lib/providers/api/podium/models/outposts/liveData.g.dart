@@ -13,7 +13,7 @@ abstract class _$LiveMemberCWProxy {
 
   LiveMember feedbacks(List<FeedbackModel> feedbacks);
 
-  LiveMember image(String image);
+  LiveMember image(String? image);
 
   LiveMember is_present(bool is_present);
 
@@ -52,7 +52,7 @@ abstract class _$LiveMemberCWProxy {
     String address,
     bool can_speak,
     List<FeedbackModel> feedbacks,
-    String image,
+    String? image,
     bool is_present,
     bool is_speaking,
     String? name,
@@ -87,7 +87,7 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
       call(feedbacks: feedbacks);
 
   @override
-  LiveMember image(String image) => call(image: image);
+  LiveMember image(String? image) => call(image: image);
 
   @override
   LiveMember is_present(bool is_present) => call(is_present: is_present);
@@ -177,10 +177,10 @@ class _$LiveMemberCWProxyImpl implements _$LiveMemberCWProxy {
           ? _value.feedbacks
           // ignore: cast_nullable_to_non_nullable
           : feedbacks as List<FeedbackModel>,
-      image: image == const $CopyWithPlaceholder() || image == null
+      image: image == const $CopyWithPlaceholder()
           ? _value.image
           // ignore: cast_nullable_to_non_nullable
-          : image as String,
+          : image as String?,
       is_present:
           is_present == const $CopyWithPlaceholder() || is_present == null
               ? _value.is_present
@@ -275,7 +275,7 @@ LiveMember _$LiveMemberFromJson(Map<String, dynamic> json) => LiveMember(
               ?.map((e) => FeedbackModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      image: json['image'] as String,
+      image: json['image'] as String? ?? '',
       is_present: json['is_present'] as bool? ?? false,
       is_speaking: json['is_speaking'] as bool? ?? false,
       name: json['name'] as String? ?? '',

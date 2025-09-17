@@ -34,7 +34,6 @@ target 'Runner' do
 
   pod 'Giphy', '2.2.12' 
 
-
   pod 'JitsiWebRTC'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))

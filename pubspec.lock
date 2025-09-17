@@ -1260,7 +1260,7 @@ packages:
       path: jitsi-meet-flutter-sdk
       relative: true
     source: path
-    version: "10.3.0"
+    version: "11.5.1"
   js:
     dependency: transitive
     description:

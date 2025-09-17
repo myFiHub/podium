@@ -20,7 +20,7 @@ class LiveMember {
   final String address;
   final bool can_speak;
   final List<FeedbackModel> feedbacks;
-  final String image;
+  final String? image;
   final bool is_present;
   bool is_speaking;
   final String? name;

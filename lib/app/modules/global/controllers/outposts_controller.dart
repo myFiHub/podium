@@ -630,6 +630,10 @@ class OutpostsController extends GetxController {
     if (lumaAccessResponse != null) {
       return lumaAccessResponse;
     }
+    final cohosts = outpost.cohost_user_uuids ?? [];
+    if (cohosts.contains(myUser.uuid)) {
+      return OutpostAccesses(canEnter: true, canSpeak: true);
+    }
     if (accessIsBuyableByTicket(outpost) || speakIsBuyableByTicket(outpost)) {
       final OutpostAccesses? accesses = await checkTicket(outpost: outpost);
       if (accesses?.canEnter == false) {

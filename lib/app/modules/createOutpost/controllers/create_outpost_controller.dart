@@ -742,7 +742,10 @@ class CreateOutpostController extends GetxController {
           requiredAddressesToSpeak: addressesToAddForSpeaking.value,
           scheduledFor: scheduledFor.value,
           shouldCreateLumaEvent: _shouldCreateLumaEvent,
-          cohosts: cohosts.value.map((e) => e.uuid).toList());
+          cohosts: cohosts.value
+              .map((e) => e.uuid)
+              .where((e) => e != myId)
+              .toList());
 
       if (response == null) {
         Toast.error(message: 'Failed to create outpost');
@@ -799,6 +802,7 @@ class CreateOutpostController extends GetxController {
     loadingAddresses.value = [];
     listOfSearchedUsersToBuyTicketFrom.value = [];
     isCreatingNewOutpost.value = false;
+    cohosts.value = [];
   }
 
   openSelectTicketBottomSheet({

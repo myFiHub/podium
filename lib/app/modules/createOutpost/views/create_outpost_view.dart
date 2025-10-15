@@ -7,10 +7,12 @@ import 'package:podium/app/modules/createOutpost/widgets/addGuestsPopup.dart';
 import 'package:podium/app/modules/createOutpost/widgets/addHostsPopup.dart';
 import 'package:podium/app/modules/createOutpost/widgets/groupType_dropDown.dart';
 import 'package:podium/app/modules/createOutpost/widgets/tags_input.dart';
+import 'package:podium/app/modules/global/widgets/cohosts_widget.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
 import 'package:podium/providers/api/luma/models/addHost.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
@@ -64,8 +66,8 @@ class CreateGroupView extends GetView<CreateOutpostController> {
                     _SelectSpeakerType(
                       key: controller.intro_outpostSpeakerTypeKey,
                     ),
-                    // space5,
-                    // _SelectCohosts(),
+                    space5,
+                    const _SelectCohosts(),
                     space5,
                     const _ScheduleToggle(),
                     space5,
@@ -784,6 +786,181 @@ class SelectorContent extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SelectCohosts extends GetView<CreateOutpostController> {
+  const _SelectCohosts({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final cohosts = controller.cohosts.value;
+      return Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: cohosts.isNotEmpty ? Colors.grey[700]! : Colors.transparent,
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Cohosts',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      'Add cohosts to help manage the outpost',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    if (cohosts.isNotEmpty)
+                      GestureDetector(
+                        onTap: () => _showCohostsDialog(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[600],
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            '${cohosts.length} cohost${cohosts.length > 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => _showAddCohostsBottomSheet(),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green[600],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _showCohostsDialog() {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: ColorName.cardBackground,
+        title: const Text(
+          'Selected Cohosts',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Obx(() {
+          final cohosts = controller.cohosts.value;
+          if (cohosts.isEmpty) {
+            return const Text(
+              'No cohosts selected',
+              style: TextStyle(color: Colors.grey),
+            );
+          }
+          return SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: cohosts.length,
+              itemBuilder: (context, index) {
+                final cohost = cohosts[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage:
+                        cohost.image != null && cohost.image!.isNotEmpty
+                            ? NetworkImage(cohost.image!)
+                            : null,
+                    child: cohost.image == null || cohost.image!.isEmpty
+                        ? const Icon(Icons.person)
+                        : null,
+                  ),
+                  title: Text(
+                    cohost.name ?? 'Unknown',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.remove_circle, color: Colors.red),
+                    onPressed: () {
+                      controller.cohosts.removeAt(index);
+                    },
+                  ),
+                );
+              },
+            ),
+          );
+        }),
+        actions: [
+          TextButton(
+            onPressed: () => Get.close(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddCohostsBottomSheet() {
+    Get.bottomSheet(
+      CohostsSearchBottomSheet(
+        initialCohostUuids:
+            controller.cohosts.value.map((u) => u.uuid).toList(),
+        isCreator: true, // Always true for create outpost
+        onConfirm: (cohostUuids) {
+          // Convert UUIDs back to UserModel objects
+          final currentCohosts = controller.cohosts.value;
+          final newCohosts = cohostUuids.map((uuid) {
+            return currentCohosts.firstWhere(
+              (user) => user.uuid == uuid,
+              orElse: () => UserModel(
+                uuid: uuid,
+                address: '',
+                name: 'Unknown User',
+              ),
+            );
+          }).toList();
+          controller.cohosts.value = newCohosts;
+        },
+      ),
+      isScrollControlled: true,
+      backgroundColor: ColorName.cardBackground,
     );
   }
 }

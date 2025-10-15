@@ -75,6 +75,7 @@ class OutpostDetailController extends GetxController {
   final lumaHosts = Rx<List<Luma_HostModel>>([]);
 
   final isJoining = false.obs;
+  final isLoadingCohosts = false.obs;
 
 // image
   // final ImagePicker _picker = ImagePicker();
@@ -123,6 +124,7 @@ class OutpostDetailController extends GetxController {
     fetchInvitedMembers();
     scheduleChecks();
     _getLumaData();
+    loadCohostsData();
 
     tickerListener = globalController.ticker.listen((event) {
       if (outpost.value != null) {
@@ -265,6 +267,47 @@ class OutpostDetailController extends GetxController {
   Future<void> updateOutpostImage(String downloadUrl) async {
     if (outpost.value == null) return;
     outpost.value = outpost.value?.copyWith.image(downloadUrl);
+  }
+
+  // Add updateCohosts method
+  Future<void> updateCohosts(List<String> cohostUuids) async {
+    if (outpost.value == null) return;
+
+    try {
+      final success = await HttpApis.podium.updateOutpost(
+        request: UpdateOutpostRequest(
+          uuid: outpost.value!.uuid,
+          cohost_user_uuids:
+              cohostUuids.where((element) => element != myId).toList(),
+        ),
+      );
+
+      if (success) {
+        outpost.value = outpost.value?.copyWith.cohost_user_uuids(cohostUuids);
+        final outpostsController = Get.find<OutpostsController>();
+        outpostsController.updateOutpost_local(outpost.value!);
+        Toast.success(message: 'Cohosts updated successfully');
+      } else {
+        Toast.error(message: 'Failed to update cohosts');
+      }
+    } catch (e) {
+      l.e(e);
+      Toast.error(message: 'Failed to update cohosts');
+    }
+  }
+
+  // Load cohosts data when outpost is first loaded
+  Future<void> loadCohostsData() async {
+    if (outpost.value?.cohost_user_uuids?.isNotEmpty ?? false) {
+      isLoadingCohosts.value = true;
+      try {
+        // Simulate loading time to show the loading state
+        await Future.delayed(const Duration(milliseconds: 500));
+        // The actual loading would happen in the CohostsSearchBottomSheet
+      } finally {
+        isLoadingCohosts.value = false;
+      }
+    }
   }
 
   onCreatorJoined(IncomingMessage incomingMessage) {

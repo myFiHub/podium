@@ -7,6 +7,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/outpostImage.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
+import 'package:podium/app/modules/global/widgets/cohosts_widget.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
@@ -285,8 +286,16 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
                           ),
                         ),
                         space10,
+                        if (outpost.cohost_user_uuids?.isNotEmpty ?? false)
+                          Obx(() => CohostsWidget(
+                                cohostUserUuids:
+                                    outpost.cohost_user_uuids ?? [],
+                                isCreator: outpost.creator_user_uuid == myId,
+                                isLoading: controller.isLoadingCohosts.value,
+                                onTap: () => _showCohostsBottomSheet(),
+                              )),
+                        space10,
                         const MembersList(),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
@@ -339,6 +348,25 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
       ),
     );
   }
+
+  void _showCohostsBottomSheet() {
+    final controller = Get.find<OutpostDetailController>();
+    final outpost = controller.outpost.value;
+    if (outpost == null) return;
+
+    Get.bottomSheet(
+      CohostsSearchBottomSheet(
+        initialCohostUuids: outpost.cohost_user_uuids ?? [],
+        outpostUuid: outpost.uuid,
+        isCreator: outpost.creator_user_uuid == myId,
+        onConfirm: (cohostUuids) {
+          controller.updateCohosts(cohostUuids);
+        },
+      ),
+      isScrollControlled: true,
+      backgroundColor: ColorName.cardBackground,
+    );
+  }
 }
 
 class ScheduledTimer extends GetView<OutpostDetailController> {
@@ -350,7 +378,7 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
       final scheduledTime = controller.outpost.value?.scheduled_for;
       final openRescheduleOutpostDialog =
           controller.openRescheduleOutpostDialog;
-      final isCreatorJoined = controller.outpost.value?.creator_joined ?? false;
+      final _ = controller.outpost.value?.creator_joined ?? false;
       if (scheduledTime == null) {
         return const SizedBox();
       }

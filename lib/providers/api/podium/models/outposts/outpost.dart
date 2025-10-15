@@ -34,6 +34,7 @@ class OutpostModel {
   final int? online_users_count;
   bool i_am_member;
   final int? reminder_offset_minutes;
+  final List<String>? cohost_user_uuids;
 
   OutpostModel({
     required this.uuid,
@@ -63,6 +64,7 @@ class OutpostModel {
     required this.i_am_member,
     required this.online_users_count,
     required this.reminder_offset_minutes,
+    this.cohost_user_uuids = const [],
   });
 
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>

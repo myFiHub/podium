@@ -57,13 +57,15 @@ class CreateGroupView extends GetView<CreateOutpostController> {
                     _TagsInput(
                       key: controller.intro_tagsKey,
                     ),
-                    _SelectGroupAccessType(
+                    _SelectAccessType(
                       key: controller.intro_outpostAccessTypeKey,
                     ),
                     space5,
-                    _SelectGroupSpeakerType(
+                    _SelectSpeakerType(
                       key: controller.intro_outpostSpeakerTypeKey,
                     ),
+                    // space5,
+                    // _SelectCohosts(),
                     space5,
                     const _ScheduleToggle(),
                     space5,
@@ -191,7 +193,7 @@ class _ScheduleToggle extends GetView<CreateOutpostController> {
                     onChanged: (value) {
                       controller.toggleScheduled();
                     },
-                    activeColor: Colors.lightGreen,
+                    activeThumbColor: Colors.lightGreen,
                     activeTrackColor: Colors.grey[200],
                   ),
                 ],
@@ -574,8 +576,8 @@ class _RecordableCheckbox extends GetView<CreateOutpostController> {
   }
 }
 
-class _SelectGroupSpeakerType extends GetWidget<CreateOutpostController> {
-  const _SelectGroupSpeakerType({
+class _SelectSpeakerType extends GetWidget<CreateOutpostController> {
+  const _SelectSpeakerType({
     super.key,
   });
 
@@ -651,8 +653,8 @@ class _SelectGroupSpeakerType extends GetWidget<CreateOutpostController> {
   }
 }
 
-class _SelectGroupAccessType extends GetWidget<CreateOutpostController> {
-  const _SelectGroupAccessType({
+class _SelectAccessType extends GetWidget<CreateOutpostController> {
+  const _SelectAccessType({
     super.key,
   });
 

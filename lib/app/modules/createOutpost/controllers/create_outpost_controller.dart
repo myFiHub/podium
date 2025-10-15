@@ -64,6 +64,7 @@ class CreateOutpostController extends GetxController {
   final addToLuma = false.obs;
   final lumaGuests = RxList<AddGuestModel>([]);
   final lumaHosts = RxList<AddHostModel>([]);
+  final cohosts = RxList<UserModel>([]);
 
   // luma related end
   final newOutpostIsRecorable = false.obs;
@@ -634,7 +635,6 @@ class CreateOutpostController extends GetxController {
     }
     // loadingAddresses.add(value);
     showLoadingOnSearchInput.value = true;
-    l.d(ticketType);
     _deb.debounce(() async {
       try {
         checkIfValueIsDirectAddress(value);
@@ -741,7 +741,9 @@ class CreateOutpostController extends GetxController {
           requiredAddressesToEnter: addressesToAddForEntering.value,
           requiredAddressesToSpeak: addressesToAddForSpeaking.value,
           scheduledFor: scheduledFor.value,
-          shouldCreateLumaEvent: _shouldCreateLumaEvent);
+          shouldCreateLumaEvent: _shouldCreateLumaEvent,
+          cohosts: cohosts.value.map((e) => e.uuid).toList());
+
       if (response == null) {
         Toast.error(message: 'Failed to create outpost');
         return;

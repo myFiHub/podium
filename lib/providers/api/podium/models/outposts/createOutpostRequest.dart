@@ -15,6 +15,7 @@ class CreateOutpostRequest {
   final List<String> tags;
   final List<String> tickets_to_enter;
   final List<String> tickets_to_speak;
+  final List<String> cohost_user_uuids;
 
   CreateOutpostRequest({
     required this.enter_type,
@@ -28,6 +29,7 @@ class CreateOutpostRequest {
     required this.tags,
     required this.tickets_to_enter,
     required this.tickets_to_speak,
+    required this.cohost_user_uuids,
   });
 
   factory CreateOutpostRequest.fromJson(Map<String, dynamic> json) =>

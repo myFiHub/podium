@@ -365,6 +365,7 @@ class OutpostsController extends GetxController {
     required List<String> requiredAddressesToSpeak,
     required List<String> tags,
     required int scheduledFor,
+    required List<String> cohosts,
     String? imageUrl,
     bool shouldCreateLumaEvent = false,
     List<AddHostModel> lumaHosts = const [],
@@ -391,6 +392,7 @@ class OutpostsController extends GetxController {
       tags: tags,
       tickets_to_enter: accessAddresses,
       tickets_to_speak: speakAddresses,
+      cohost_user_uuids: cohosts,
     );
     try {
       OutpostModel? response;

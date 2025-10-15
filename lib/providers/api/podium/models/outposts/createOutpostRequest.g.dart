@@ -24,6 +24,9 @@ CreateOutpostRequest _$CreateOutpostRequestFromJson(
       tickets_to_speak: (json['tickets_to_speak'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
+      cohost_user_uuids: (json['cohost_user_uuids'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
     );
 
 Map<String, dynamic> _$CreateOutpostRequestToJson(
@@ -40,4 +43,5 @@ Map<String, dynamic> _$CreateOutpostRequestToJson(
       'tags': instance.tags,
       'tickets_to_enter': instance.tickets_to_enter,
       'tickets_to_speak': instance.tickets_to_speak,
+      'cohost_user_uuids': instance.cohost_user_uuids,
     };

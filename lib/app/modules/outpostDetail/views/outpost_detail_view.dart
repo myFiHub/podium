@@ -286,13 +286,16 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
                           ),
                         ),
                         space10,
-                        if (outpost.cohost_user_uuids?.isNotEmpty ?? false)
+                        if ((outpost.cohost_user_uuids?.isNotEmpty ?? false) ||
+                            iAmOwner)
                           Obx(() => CohostsWidget(
                                 cohostUserUuids:
                                     outpost.cohost_user_uuids ?? [],
                                 isCreator: outpost.creator_user_uuid == myId,
                                 isLoading: controller.isLoadingCohosts.value,
-                                onTap: () => _showCohostsBottomSheet(),
+                                onTap: () {
+                                  _showCohostsBottomSheet();
+                                },
                               )),
                         space10,
                         const MembersList(),

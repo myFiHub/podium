@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 
 class CohostsWidget extends StatelessWidget {
@@ -27,7 +28,7 @@ class CohostsWidget extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: isCreator ? onTap : null,
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -374,7 +375,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                           style: const TextStyle(color: Colors.white),
                         ),
                         subtitle: Text(
-                          user.email ?? '',
+                          truncate(user.aptos_address ?? '') ?? '',
                           style: TextStyle(color: Colors.grey[400]),
                         ),
                         trailing: Checkbox(
@@ -436,69 +437,57 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
             Expanded(
               child: Obx(() {
                 if (_isLoadingInitialCohosts.value) {
-                  return Column(
-                    children: [
-                      Text(
-                        'Cohosts (${widget.initialCohostUuids.length})',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: widget.initialCohostUuids.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: Tooltip(
-                              message: 'Loading...',
-                              child: ListTile(
-                                leading: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.grey[700],
-                                  ),
-                                  child: const Center(
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                Colors.grey),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                title: Container(
+                  return ListView.builder(
+                    itemCount: widget.initialCohostUuids.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        height: 72, // Exact height to match ListTile
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Tooltip(
+                          message: 'Loading...',
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey[800]?.withOpacity(0.3),
+                              ),
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 16,
                                   height: 16,
-                                  width: 120,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[700],
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                                subtitle: Container(
-                                  height: 12,
-                                  width: 80,
-                                  margin: const EdgeInsets.only(top: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[600],
-                                    borderRadius: BorderRadius.circular(4),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.grey),
                                   ),
                                 ),
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    ],
+                            title: Container(
+                              height: 20, // Match title height
+                              width: 120,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[800]?.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            subtitle: Container(
+                              height: 16, // Match subtitle height
+                              width: 80,
+                              margin: const EdgeInsets.only(top: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[800]?.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 }
                 if (_selectedCohosts.isEmpty) {
@@ -513,25 +502,32 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                   itemCount: _selectedCohosts.length,
                   itemBuilder: (context, index) {
                     final cohost = _selectedCohosts[index];
-                    return Tooltip(
-                      message: cohost.name ?? 'Unknown User',
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage:
-                              cohost.image != null && cohost.image!.isNotEmpty
-                                  ? NetworkImage(cohost.image!)
-                                  : null,
-                          child: cohost.image == null || cohost.image!.isEmpty
-                              ? const Icon(Icons.person)
-                              : null,
-                        ),
-                        title: Text(
-                          cohost.name ?? 'Unknown',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        subtitle: Text(
-                          cohost.email ?? '',
-                          style: TextStyle(color: Colors.grey[400]),
+                    return Container(
+                      height: 72, // Exact height to match loading state
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Tooltip(
+                        message: cohost.name ?? 'Unknown User',
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          leading: CircleAvatar(
+                            backgroundImage:
+                                cohost.image != null && cohost.image!.isNotEmpty
+                                    ? NetworkImage(cohost.image!)
+                                    : null,
+                            child: cohost.image == null || cohost.image!.isEmpty
+                                ? const Icon(Icons.person)
+                                : null,
+                          ),
+                          title: Text(
+                            cohost.name ?? 'Unknown',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          subtitle: Text(
+                            truncate(cohost.aptos_address ?? '', length: 14) ??
+                                '',
+                            style: TextStyle(color: Colors.grey[400]),
+                          ),
                         ),
                       ),
                     );
@@ -543,12 +539,9 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
             // Close button for non-creators
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: Button(
+                type: ButtonType.outline,
                 onPressed: () => Get.close(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[600],
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                ),
                 child: const Text('Close'),
               ),
             ),

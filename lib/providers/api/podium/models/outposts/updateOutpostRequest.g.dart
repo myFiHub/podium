@@ -13,6 +13,9 @@ UpdateOutpostRequest _$UpdateOutpostRequestFromJson(
       scheduled_for: (json['scheduled_for'] as num?)?.toInt(),
       image: json['image'] as String?,
       uuid: json['uuid'] as String,
+      cohost_user_uuids: (json['cohost_user_uuids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
     );
 
 Map<String, dynamic> _$UpdateOutpostRequestToJson(
@@ -22,4 +25,5 @@ Map<String, dynamic> _$UpdateOutpostRequestToJson(
       'scheduled_for': instance.scheduled_for,
       'image': instance.image,
       'uuid': instance.uuid,
+      'cohost_user_uuids': instance.cohost_user_uuids,
     };

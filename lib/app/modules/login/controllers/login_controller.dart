@@ -228,6 +228,7 @@ class LoginController extends GetxController {
     ignoreIfNotLoggedIn = false,
   }) async {
     isLoggingIn.value = true;
+    await globalController.web3AuthReady;
     // in case user is backed from referral page(not auto logging in and clickes on a button in login page)
     if (!ignoreIfNotLoggedIn) {
       try {

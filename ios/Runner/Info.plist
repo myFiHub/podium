@@ -26,7 +26,6 @@
 		<string>public.app-category.productivity</string>
 		<key>LSApplicationDescription</key>
 		<string>where attention pays</string>
-		
 		<!-- Deep Linking Configuration -->
 		<key>CFBundleURLTypes</key>
 		<array>
@@ -41,66 +40,56 @@
 				</array>
 			</dict>
 		</array>
-		
 		<key>FlutterDeepLinkingEnabled</key>
 		<false/>
-		
 		<key>com.apple.developer.associated-domains</key>
 		<array>
 			<string>applinks:web3podium.page.link</string>
 			<string>applinks:web3podium.com</string>
 		</array>
-		
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
-		
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
-		
 		<key>NSFaceIDUsageDescription</key>
 		<string>We use Face ID for secure access to the app.</string>
-		
 		<key>NSCalendarsFullAccessUsageDescription</key>
 		<string>Calendar full access</string>
-		
 		<!-- Camera -->
 		<key>NSCameraUsageDescription</key>
 		<string>Camera access is required for video calling</string>
-		
 		<!-- Microphone -->
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Microphone access is required for voice calling</string>
-		
 		<!-- Photo Library -->
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Photo library access is required for sharing images during meetings</string>
-		
 		<!-- Calendar -->
 		<key>NSCalendarsUsageDescription</key>
 		<string>Calendar access is required for scheduling meetings</string>
-		
 		<!-- Contacts -->
 		<key>NSContactsUsageDescription</key>
 		<string>Contacts access helps you easily invite people to meetings</string>
-		
 		<!-- Bluetooth -->
 		<key>NSBluetoothPeripheralUsageDescription</key>
 		<string>Bluetooth access is required for connecting to wireless headsets</string>
-		
 		<!-- Local Network -->
 		<key>NSLocalNetworkUsageDescription</key>
 		<string>Local network access is required for optimal connection quality</string>
-		
+		<!-- Keeps the background Jitsi conference audio alive when the app is not in the foreground -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>audio</string>
+			<string>voip</string>
+		</array>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
-		
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
-		
 		<key>UISupportedInterfaceOrientations~ipad</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
@@ -108,27 +97,18 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
-		
-		
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
-		
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
-		
 		<key>UIStatusBarHidden</key>
 		<false/>
-		
 		<key>NSUserNotificationUsageDescription</key>
 		<string>We need to send you notifications for important updates and messages.</string>
-		
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
-		
-		
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Microphone access is required for audio during audio conferencing.</string>
-		
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This allows us to send you more relevant notifications based on your location.</string>
 	</dict>

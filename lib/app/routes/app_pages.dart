@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
 import 'package:podium/app/modules/myProfile/views/connected_accounts_view.dart';
@@ -21,7 +22,6 @@ import '../modules/myProfile/bindings/my_profile_binding.dart';
 import '../modules/myProfile/views/my_profile_view.dart';
 import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
-import '../modules/ongoingOutpostCall/bindings/ongoing_group_call_binding.dart';
 import '../modules/ongoingOutpostCall/views/ongoing_outpost_call_view.dart';
 import '../modules/outpostDetail/bindings/outpost_detail_binding.dart';
 import '../modules/outpostDetail/views/outpost_detail_view.dart';
@@ -46,6 +46,8 @@ class AppPages {
       name: _Paths.HOME,
       page: () => const HomeView(),
       binding: HomeBinding(),
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 450),
     ),
     GetPage(
       name: _Paths.LOGIN,
@@ -103,7 +105,6 @@ class AppPages {
     GetPage(
       name: _Paths.ONGOING_OUTPOST_CALL,
       page: () => const OngoingGroupCallView(),
-      binding: OngoingGroupCallBinding(),
     ),
     GetPage(
       name: _Paths.WALLET,
@@ -145,10 +146,11 @@ class AppPages {
       page: () => const AllOutpostsView(),
       binding: AllGroupsBinding(),
     ),
-    GetPage(
-      name: _Paths.PLAYGROUND,
-      page: () => const PlaygroundView(),
-      binding: PlaygroundBinding(),
-    ),
+    if (kDebugMode)
+      GetPage(
+        name: _Paths.PLAYGROUND,
+        page: () => const PlaygroundView(),
+        binding: PlaygroundBinding(),
+      ),
   ];
 }

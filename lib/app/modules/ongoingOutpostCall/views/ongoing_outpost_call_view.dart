@@ -1,72 +1,25 @@
-import 'dart:io';
-
-import 'package:animated_icon/animated_icon.dart';
-import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
-import 'package:podium/app/modules/ongoingOutpostCall/views/report_form.dart';
-import 'package:podium/app/modules/ongoingOutpostCall/widgets/usersInOutpostList.dart';
-import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_header.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/control_dock.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/poll_card.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/room_overlays.dart';
+import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/root.dart';
-import 'package:podium/utils/dateUtils.dart';
-import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/button/button.dart';
-import 'package:podium/widgets/textField/textFieldRounded.dart';
-import 'package:pulsator/pulsator.dart';
-
-class RecordingIndicator extends GetView<OngoingOutpostCallController> {
-  const RecordingIndicator({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      if (controller.recorderUserId.value.isEmpty) {
-        return emptySpace;
-      }
-
-      return const Positioned(
-        top: 16,
-        right: 16,
-        child: Tooltip(
-          message: 'creator is recording',
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: Pulsator(
-              style: PulseStyle(color: Colors.red),
-              duration: Duration(seconds: 2),
-              count: 2,
-              repeat: 0,
-              startFromScratch: false,
-              autoStart: true,
-              fit: PulseFit.contain,
-              child: Icon(
-                Icons.circle,
-                color: Colors.red,
-                size: 6,
-              ),
-            ),
-          ),
-        ),
-      );
-    });
-  }
-}
 
 class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    final groupCallController = Get.find<OutpostCallController>();
-    final canITalk = groupCallController.canTalk.value;
-
     if (controller.introStartCalled == false) {
       controller.introStartCalled = true;
       controller.startIntro();
@@ -79,133 +32,24 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
           controller.introFinished(false);
         }
       },
-      child: FloatingDraggableWidget(
-        mainScreenWidget: Scaffold(
-          body: Stack(
+      child: const Scaffold(
+        body: PageWrapper(
+          child: Column(
             children: [
-              Obx(() {
-                final shouldShowIntro = controller.shouldShowIntro.value;
-                return GroupCall(
-                  shouldShowIntro: shouldShowIntro,
-                );
-              }),
-              Positioned(
-                top: 16,
-                left: 16,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(100),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.flag,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      Get.dialog(
-                        Dialog(
-                          backgroundColor: ColorName.cardBackground,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: ReportForm(),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+              ContextSaver(),
+              SafeArea(bottom: false, child: CallTopBar()),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(child: _CallBody()),
+                    Positioned.fill(child: RoomOverlays()),
+                  ],
                 ),
               ),
-              const RecordingIndicator(),
+              ControlDock(),
             ],
           ),
         ),
-        floatingWidget: Obx(() {
-          final isGroupCallControllerRegistered =
-              Get.isRegistered<OutpostCallController>();
-          final isControllerRegistered =
-              Get.isRegistered<OngoingOutpostCallController>();
-
-          if (!isGroupCallControllerRegistered) {
-            return Container(
-              width: 0,
-              height: 0,
-            );
-          }
-          final outpostCallController = Get.find<OutpostCallController>();
-          final outpost = outpostCallController.outpost.value;
-
-          if (outpost == null || !isControllerRegistered) {
-            return Container(
-              width: 0,
-              height: 0,
-            );
-          }
-          final isMuted = controller.amIMuted.value;
-          final amICreator = outpost.creator_user_uuid == myId;
-          final isRecording = controller.isRecording.value;
-          final isStartingToRecord = controller.isStartingToRecord.value;
-          final recordable = outpost.is_recordable;
-          if (!canITalk) {
-            return FloatingActionButton(
-              key: controller.muteUnmuteKey,
-              backgroundColor: ColorName.greyText,
-              onPressed: () {},
-              tooltip: 'can not talk',
-              child: const SizedBox(
-                height: 70,
-                width: 70,
-                child: Icon(
-                  Icons.mic_off,
-                ),
-              ),
-            );
-          }
-          return Column(
-            children: [
-              FloatingActionButton(
-                heroTag: 'muteUnmute',
-                key: controller.muteUnmuteKey,
-                backgroundColor: isMuted ? Colors.red : Colors.green,
-                onPressed: () {
-                  controller.setMutedState(!isMuted);
-                },
-                tooltip: 'mute',
-                child: Icon(
-                  isMuted ? Icons.mic_off : Icons.mic,
-                ),
-              ),
-              if (amICreator && recordable) space10,
-              if (amICreator && recordable)
-                FloatingActionButton(
-                  heroTag: 'record',
-                  backgroundColor: Colors.white,
-                  onPressed: () {
-                    isStartingToRecord
-                        ? null
-                        : isRecording
-                            ? controller.stopRecording()
-                            : controller.startRecording();
-                  },
-                  tooltip: 'Record',
-                  child: isStartingToRecord
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(),
-                        )
-                      : Icon(
-                          isRecording ? Icons.stop : Icons.fiber_manual_record,
-                          color: Colors.red,
-                        ),
-                ),
-            ],
-          );
-        }),
-        floatingWidgetHeight: canITalk ? 125 : 50,
-        floatingWidgetWidth: 50,
-        dx: Get.width - 70,
-        dy: 20,
       ),
     );
   }
@@ -221,23 +65,196 @@ class ContextSaver extends GetView<OngoingOutpostCallController> {
   }
 }
 
-class GroupCall extends GetView<OutpostCallController> {
-  final bool shouldShowIntro;
-  const GroupCall({
-    super.key,
-    required this.shouldShowIntro,
+class _CallBody extends GetView<OutpostCallController> {
+  const _CallBody();
+
+  @override
+  Widget build(BuildContext context) {
+    final callController = Get.find<OngoingOutpostCallController>();
+    return Obx(() {
+      final showIntro = callController.shouldShowIntro.value;
+      final members = controller.sortedMembers.value;
+      final creatorId = controller.outpost.value?.creator_user_uuid;
+
+      final stage = <LiveMember>[];
+      final audience = <LiveMember>[];
+      for (final m in members) {
+        (isStageMember(m, creatorId: creatorId) ? stage : audience).add(m);
+      }
+      final orderedStage = [
+        ...stage.where((m) => m.is_speaking),
+        ...stage.where((m) => !m.is_speaking),
+      ];
+      final talkingCount = stage.where((m) => m.is_speaking).length;
+
+      return RefreshIndicator(
+        onRefresh: () async => controller.fetchLiveData(withJoin: true),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            const SliverToBoxAdapter(child: MyStatusCard()),
+            const SliverToBoxAdapter(child: RaisedHandsBanner()),
+            const SliverToBoxAdapter(child: PollCard()),
+            if (showIntro) const SliverToBoxAdapter(child: _IntroDemoCard()),
+            if (members.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: _JoiningPlaceholder(),
+              )
+            else ...[
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'On stage',
+                  count: orderedStage.length,
+                  extra: talkingCount > 0 ? '$talkingCount talking' : null,
+                ),
+              ),
+              _MemberGrid(
+                members: orderedStage,
+                creatorId: creatorId,
+                onStage: true,
+              ),
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'Listening',
+                  count: audience.length,
+                  onSeeAll: audience.isEmpty ? null : openParticipantsSheet,
+                ),
+              ),
+              if (audience.isEmpty)
+                const SliverToBoxAdapter(child: _EmptyAudience())
+              else
+                _MemberGrid(
+                  members: audience,
+                  creatorId: creatorId,
+                  onStage: false,
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: 96)),
+            ],
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class _MemberGrid extends StatelessWidget {
+  final List<LiveMember> members;
+  final String? creatorId;
+  final bool onStage;
+  const _MemberGrid({
+    required this.members,
+    required this.creatorId,
+    required this.onStage,
   });
 
   @override
   Widget build(BuildContext context) {
-    return PageWrapper(
-      child: Column(
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      sliver: SliverGrid.builder(
+        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: onStage ? 96 : 74,
+          mainAxisExtent: onStage ? 124 : 88,
+          crossAxisSpacing: 6,
+          mainAxisSpacing: 8,
+        ),
+        itemCount: members.length,
+        itemBuilder: (context, index) {
+          final member = members[index];
+          return RepaintBoundary(
+            child: MemberTile(
+              key: ValueKey(member.uuid),
+              member: member,
+              isCreator: member.uuid == creatorId,
+              onStage: onStage,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final int count;
+  final String? extra;
+  final VoidCallback? onSeeAll;
+  const _SectionHeader({
+    required this.title,
+    required this.count,
+    this.extra,
+    this.onSeeAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 8, 10),
+      child: Row(
         children: [
-          const ContextSaver(),
-          const OutpostInfo(),
-          const SessionInfo(),
-          MembersList(
-            shouldShowIntro: shouldShowIntro,
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 12,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w700,
+              color: ColorName.greyText,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$count',
+            style: const TextStyle(fontSize: 12, color: ColorName.greyText),
+          ),
+          if (extra != null) ...[
+            const SizedBox(width: 10),
+            const Icon(Icons.graphic_eq_rounded,
+                size: 14, color: callSpeakingColor),
+            const SizedBox(width: 3),
+            Text(
+              extra!,
+              style: const TextStyle(fontSize: 12, color: callSpeakingColor),
+            ),
+          ],
+          const Spacer(),
+          if (onSeeAll != null)
+            TextButton(
+              onPressed: onSeeAll,
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: ColorName.primaryBlue,
+              ),
+              child: const Text('See all', style: TextStyle(fontSize: 12)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyAudience extends StatelessWidget {
+  const _EmptyAudience();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorName.cardBorder),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.headphones_outlined, color: ColorName.greyText),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'No listeners yet. Share the outpost link from More to bring people in.',
+              style: TextStyle(fontSize: 12, color: ColorName.greyText),
+            ),
           ),
         ],
       ),
@@ -245,312 +262,109 @@ class GroupCall extends GetView<OutpostCallController> {
   }
 }
 
-class SessionInfo extends GetView<OngoingOutpostCallController> {
-  const SessionInfo({super.key});
+class _JoiningPlaceholder extends StatelessWidget {
+  const _JoiningPlaceholder();
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final mySession = controller.mySession.value;
-        final isAdmin = controller.amIAdmin.value;
-        if (controller.mySession.value == null) {
-          return const Text(
-            "loading...",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 36,
-            ),
-          );
-        }
-        final remainingTimeInSeconds = mySession!.remaining_time;
-        if (isAdmin) {
-          return emptySpace;
-        }
-        final list = formatDuration(remainingTimeInSeconds);
-        final remainingTime = list.join(":");
-        final isSmall = int.parse(list[0]) == 0 && int.parse(list[1]) < 2;
-        return remainingTimeInSeconds != 0
-            ? Row(
-                children: [
-                  // Button(onPressed: () {
-                  //   controller.handleIncomingReaction(
-                  //     IncomingMessage(
-                  //       name: IncomingMessageType.userBooed,
-                  //       data: IncomingMessageData(
-                  //         address: '0xf8b769e62e1752a43f9fe343bb37fc3d8cb168e2',
-                  //         react_to_user_address:
-                  //             '0xf8b769e62e1752a43f9fe343bb37fc3d8cb168e2',
-                  //       ),
-                  //     ),
-                  //   );
-                  // }),
-                  SizedBox(
-                    width: (Get.width / 3) - 12,
-                  ),
-                  Container(
-                    key: controller.timerKey,
-                    child: Text(
-                      remainingTime,
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        color: isSmall ? Colors.red : Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 36,
-                      ),
-                    ),
-                  )
-                ],
-              )
-            : Container(
-                child: const Center(
-                  child: Text(
-                    'time is up!',
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 36,
-                    ),
-                  ),
-                ),
-              );
-      },
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
+          SizedBox(height: 14),
+          Text(
+            'Getting everyone on stage…',
+            style: TextStyle(color: ColorName.greyText),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class OutpostInfo extends GetView<OutpostCallController> {
-  const OutpostInfo({super.key});
+/// Shown only during the coach-mark intro; carries the like/dislike and
+/// cheer/boo target keys.
+class _IntroDemoCard extends GetView<OngoingOutpostCallController> {
+  const _IntroDemoCard();
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final outpost = controller.outpost.value;
-      final iAmCreator = outpost?.creator_user_uuid == myId;
-      return outpost != null
-          ? Container(
-              padding: const EdgeInsets.only(top: 10),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        outpost.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                      if (canShareOutpostUrl(outpost: outpost))
-                        ShareIconButton(outpost: outpost),
-                    ],
-                  ),
-                  if (iAmCreator) const Text("created by you"),
-                  if (!iAmCreator)
-                    Text("created by ${outpost.creator_user_name}"),
-                ],
-              ),
-            )
-          : Container();
-    });
-  }
-}
-
-const spaceBetween = const SizedBox(width: 10);
-
-class MembersList extends GetView<OutpostCallController> {
-  final bool shouldShowIntro;
-  const MembersList({super.key, required this.shouldShowIntro});
-
-  @override
-  Widget build(BuildContext context) {
-    if (controller.outpost.value == null) {
-      return Container();
-    }
-
-    return Expanded(
-      // height: Get.height - 190,
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ColorName.cardBackground,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ColorName.cardBorder),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            child: Expanded(
-              child: DefaultTabController(
-                length: 3,
-                child: Scaffold(
-                  appBar: AppBar(
-                    backgroundColor: Colors.transparent,
-                    toolbarHeight: 0,
-                    bottom: TabBar(
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      indicatorColor: ColorName.primaryBlue,
-                      labelColor: ColorName.primaryBlue,
-                      unselectedLabelColor: Colors.grey,
-                      tabs: [
-                        Tab(
-                          child: ExcludeSemantics(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text("Live"),
-                                space5,
-                                AnimateIcon(
-                                  key: UniqueKey(),
-                                  onTap: () async {
-                                    controller.fetchLiveData(withJoin: true);
-                                  },
-                                  color: Colors.blueAccent,
-                                  iconType: IconType.animatedOnTap,
-                                  height: 20,
-                                  width: 20,
-                                  animateIcon: AnimateIcons.refresh,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const Tab(
-                          child: Text("Search"),
-                        ),
-                        Obx(() {
-                          final talkingMembers = controller.talkingUsers.value;
-                          return Tab(
-                            child: Text("Talking (${talkingMembers.length})"),
-                          );
-                        }),
-                      ],
+          const Text(
+            'Tap anyone on stage to react',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  key: controller.likeDislikeKey,
+                  children: const [
+                    Expanded(
+                      child: CallActionButton(
+                        icon: Icon(Icons.thumb_up_rounded,
+                            color: Colors.green, size: 22),
+                        label: 'Like',
+                        color: Colors.green,
+                      ),
                     ),
-                  ),
-                  body: TabBarView(
-                    physics: Platform.isIOS
-                        ? const NeverScrollableScrollPhysics()
-                        : null,
-                    children: [
-                      Obx(
-                        () {
-                          final members = controller.sortedMembers.value;
-                          //  sort the users based on the sort type, biggest to smallest
-                          return UsersInOutpostList(
-                            shouldShowIntro: shouldShowIntro,
-                            usersList: members,
-                            outpostId: controller.outpost.value!.uuid,
-                          );
-                        },
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: CallActionButton(
+                        icon: Icon(Icons.thumb_down_rounded,
+                            color: Colors.red, size: 22),
+                        label: 'Dislike',
+                        color: Colors.red,
                       ),
-                      Container(
-                        child: const SearchInRoom(),
-                      ),
-                      Obx(
-                        () {
-                          final members = controller.talkingUsers.value;
-                          return UsersInOutpostList(
-                            shouldShowIntro: false,
-                            usersList: members,
-                            outpostId: controller.outpost.value!.uuid,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ),
-          space5,
-          // const _StartIntroButton(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              if (canInvite(
-                outpost: controller.outpost.value!,
-                currentUserId: myUser.uuid,
-              ))
-                Container(
-                  width: (Get.width / 2) - 20,
-                  child: Button(
-                    type: ButtonType.outline,
-                    onPressed: () {
-                      openInviteBottomSheet(
-                        canInviteToSpeak: canInviteToSpeak(
-                          outpost: controller.outpost.value!,
-                          currentUserId: myUser.uuid,
-                        ),
-                      );
-                    },
-                    child: const Text('Invite users'),
-                  ),
-                ),
-              Container(
-                width: (Get.width / 2) - 20,
-                child: Button(
-                  onPressed: () {
-                    controller.runHome();
-                  },
-                  text: "Leave the Outpost",
-                  type: ButtonType.solid,
-                  color: ButtonColors.DANGER,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Row(
+                  key: controller.cheerBooKey,
+                  children: [
+                    Expanded(
+                      child: CallActionButton(
+                        icon: Assets.images.cheer
+                            .image(width: 24, height: 24, color: Colors.green),
+                        label: 'Cheer',
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: CallActionButton(
+                        icon: Assets.images.boo
+                            .image(width: 24, height: 24, color: Colors.red),
+                        label: 'Boo',
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StartIntroButton extends GetView<OngoingOutpostCallController> {
-  const _StartIntroButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-        text: 'Show Intro',
-        onPressed: () {
-          GetStorage().remove(IntroStorageKeys.viewedOngiongCall);
-          controller.shouldShowIntro.value = true;
-          controller.startIntro();
-        });
-  }
-}
-
-class SearchInRoom extends GetView<OutpostCallController> {
-  const SearchInRoom({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: 50,
-          child: Input(
-            hintText: "Search",
-            onChanged: (value) {
-              controller.searchedValueInMeet.value = value;
-            },
-          ),
-        ),
-        Obx(
-          () {
-            final members = controller.sortedMembers.value;
-            final searchedValue = controller.searchedValueInMeet.value;
-            final filteredMembers = members.where(
-              (element) {
-                return (element.name ?? '').toLowerCase().contains(
-                      searchedValue.toLowerCase(),
-                    );
-              },
-            ).toList();
-            return Expanded(
-              child: UsersInOutpostList(
-                shouldShowIntro: false,
-                usersList: filteredMembers,
-                outpostId: controller.outpost.value!.uuid,
-              ),
-            );
-          },
-        ),
-      ],
     );
   }
 }

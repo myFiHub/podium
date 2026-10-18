@@ -54,7 +54,7 @@ Future<int?> showScoreOutpostPrompt() async {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: Colors.transparent,

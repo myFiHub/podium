@@ -57,3 +57,9 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+# Local Jitsi SDK test app
+/jitsi_test_app/
+
+# Local secrets / logs (see README)
+ios/Runner/ParticleNetwork-Info.plist
+particleErrorLog.txt

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -41,7 +42,11 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
                   width: size.toDouble(),
                   height: size.toDouble(),
                 )
-              : Image.network(externalChainNetworkIcon),
+              : CachedNetworkImage(
+                  imageUrl: externalChainNetworkIcon,
+                  height: size.toDouble(),
+                  memCacheHeight: size * 3,
+                ),
         ),
       );
     });

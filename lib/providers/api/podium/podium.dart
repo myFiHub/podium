@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
@@ -23,6 +24,7 @@ import 'package:podium/providers/api/podium/models/users/follow_unfollow_request
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/storage.dart';
 
 class PodiumApi {
   final _baseUrl = Env.podimBackendBaseUrl;
@@ -41,13 +43,25 @@ class PodiumApi {
   }
 
   Future<PodiumAppMetadata> appMetadata() async {
+    final storage = GetStorage();
     try {
       final config = await dio.get('$_baseUrl/configurations/app-settings',
           options: Options(headers: _headers));
-      return PodiumAppMetadata.fromJson(config.data['data']);
+      final data = Map<String, dynamic>.from(config.data['data']);
+      final metadata = PodiumAppMetadata.fromJson(data);
+      storage.write(StorageKeys.lastAppMetadata, data);
+      return metadata;
     } catch (e) {
+      l.e('app-settings unavailable, using last known settings: $e');
+      final cached = storage.read(StorageKeys.lastAppMetadata);
+      if (cached is Map) {
+        try {
+          return PodiumAppMetadata.fromJson(Map<String, dynamic>.from(cached));
+        } catch (_) {}
+      }
+      // An outage must never look like a required update.
       return const PodiumAppMetadata(
-        force_update: true,
+        force_update: false,
         movement_aptos_metadata: Movement_Aptos_Metadata(
           chain_id: "126",
           cheer_boo_address:
@@ -60,7 +74,7 @@ class PodiumApi {
         referrals_enabled: true,
         va: "https://outposts.myfihub.com",
         version: "1.2.6",
-        version_check: true,
+        version_check: false,
       );
     }
   }
@@ -96,7 +110,7 @@ class PodiumApi {
       }
     } on DioException catch (e) {
       l.d('e: ${e.response}');
-      final String? message = e.response?.data['message'];
+      final message = _errorMessage(e);
       return (null, message, e.response?.statusCode);
     } catch (e) {
       l.e(e);
@@ -758,12 +772,17 @@ class PodiumApi {
     } on DioException catch (e) {
       l.e(e);
       Toast.error(
-          message: e.response?.data['message'] ??
-              'Error setting account as primary');
+          message: _errorMessage(e) ?? 'Error setting account as primary');
       return false;
     } catch (e) {
       l.e(e);
       return false;
     }
   }
+}
+
+/// Error bodies are not always JSON (e.g. nginx HTML pages on 502).
+String? _errorMessage(DioException e) {
+  final data = e.response?.data;
+  return data is Map ? data['message'] as String? : null;
 }

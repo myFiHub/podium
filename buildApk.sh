@@ -41,4 +41,4 @@ else
     exit 1
 fi
 # add ENVIRONMENT_PARAM as build argument
-flutter build apk  --obfuscate --split-debug-info=./debug-info  --release   --split-per-abi  --dart-define=ENVIRONMENT=$ENVIRONMENT_PARAM
+flutter build apk  --obfuscate --split-debug-info=./debug-info  --release   --split-per-abi  --dart-define-from-file="$ENV_FILE"

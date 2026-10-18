@@ -268,28 +268,6 @@ class AptosMovement {
     }
   }
 
-  Future<void> listenToEvents({
-    required String address,
-    required String eventHandle,
-    required String fieldName,
-  }) async {
-    Timer.periodic(const Duration(seconds: 5), (timer) async {
-      try {
-        // Replace with the actual method to fetch events
-        final events = await client.getEventsByEventHandle(
-          address,
-          eventHandle,
-          fieldName,
-          limit: 10, // Adjust the limit as needed
-        );
-
-        l.d(events);
-      } catch (e) {
-        print('Error fetching events: $e');
-      }
-    });
-  }
-
   static Future<(bool?, String?)> buyPodiumPassFromUser({
     required String sellerAddress,
     required String sellerName,

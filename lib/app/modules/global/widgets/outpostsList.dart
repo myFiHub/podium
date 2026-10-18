@@ -38,22 +38,21 @@ class OutpostsList extends GetView<OutpostsController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final allOutposts = controller.outposts.value;
-      final myOutposts = controller.myOutposts.value;
-      final lastPageReachedForAllOutposts =
-          controller.lastPageReachedForAllOutposts.value;
-      final lastPageReachedForMyOutposts =
-          controller.lastPageReachedForMyOutposts.value;
+      // Only subscribe to this tab's data so the other tab's updates don't
+      // rebuild this list.
+      final isMyPage = listPage == ListPage.my;
+      final pageOutposts =
+          isMyPage ? controller.myOutposts.value : controller.outposts.value;
+      final lastPageReached = isMyPage
+          ? controller.lastPageReachedForMyOutposts.value
+          : controller.lastPageReachedForAllOutposts.value;
 
       // Show loading placeholders if no data is available yet
-      if ((listPage == ListPage.all && allOutposts.isEmpty) ||
-          (listPage == ListPage.my && myOutposts.isEmpty)) {
+      if (listPage != ListPage.search && pageOutposts.isEmpty) {
         return ListView.builder(
-          controller: scrollController,
+          cacheExtent: 200, controller: scrollController,
           itemCount: 3, // Reduced from 5 to 3
           addAutomaticKeepAlives: false,
-          addRepaintBoundaries: false,
-          cacheExtent: 200,
           itemBuilder: (context, index) {
             return Container(
               height: 180,
@@ -79,11 +78,10 @@ class OutpostsList extends GetView<OutpostsController> {
         List<OutpostModel> listToShow = outpostsList!;
 
         listWidget = ListView.builder(
+          cacheExtent: 200,
           controller: scrollController,
           itemCount: listToShow.length,
           addAutomaticKeepAlives: false,
-          addRepaintBoundaries: false,
-          cacheExtent: 200,
           itemBuilder: (context, index) {
             final outpost = listToShow[index];
             return _SingleOutpost(
@@ -95,14 +93,10 @@ class OutpostsList extends GetView<OutpostsController> {
           },
         );
       } else {
-        List<OutpostModel> listToShow = listPage == ListPage.all
-            ? allOutposts.values.toList()
-            : myOutposts.values.toList();
+        final listToShow = pageOutposts.values.toList();
 
         listWidget = EnhancedPaginatedView(
-          hasReachedMax: listPage == ListPage.all
-              ? lastPageReachedForAllOutposts
-              : lastPageReachedForMyOutposts,
+          hasReachedMax: lastPageReached,
           onLoadMore: (int page) {
             listPage == ListPage.all
                 ? controller.fetchAllOutpostsPage(page - 1)
@@ -128,14 +122,13 @@ class OutpostsList extends GetView<OutpostsController> {
           ),
           builder: (items, physics, reverse, shrinkWrap) {
             return ListView.builder(
+              cacheExtent: 200,
               controller: scrollController,
               itemCount: items.length,
               physics: physics,
               reverse: reverse,
               shrinkWrap: shrinkWrap,
               addAutomaticKeepAlives: false,
-              addRepaintBoundaries: false,
-              cacheExtent: 200,
               itemBuilder: (context, index) {
                 final outpost = items[index];
                 return _SingleOutpost(
@@ -617,7 +610,7 @@ class _OutpostActions extends StatelessWidget {
                 icon: Icon(
                   Icons.share,
                   color: isJoining
-                      ? ColorName.greyText.withOpacity(0.5)
+                      ? ColorName.greyText.withValues(alpha: 0.5)
                       : ColorName.greyText,
                 ),
               ),
@@ -633,7 +626,9 @@ class _OutpostActions extends StatelessWidget {
                       },
                 icon: Icon(
                   Icons.exit_to_app,
-                  color: isJoining ? Colors.red.withOpacity(0.5) : Colors.red,
+                  color: isJoining
+                      ? Colors.red.withValues(alpha: 0.5)
+                      : Colors.red,
                 ),
               ),
             ),
@@ -648,8 +643,8 @@ class _OutpostActions extends StatelessWidget {
                 outpost.is_archived ? Icons.unarchive : Icons.archive,
                 color: isJoining
                     ? (outpost.is_archived
-                        ? ColorName.greyText.withOpacity(0.5)
-                        : Colors.red.withOpacity(0.5))
+                        ? ColorName.greyText.withValues(alpha: 0.5)
+                        : Colors.red.withValues(alpha: 0.5))
                     : (outpost.is_archived ? ColorName.greyText : Colors.red),
               ),
             )
@@ -762,7 +757,9 @@ class _ScheduledBanner extends StatelessWidget {
                   topRight: const Radius.circular(8),
                 ),
               ),
-              child: IgnorePointer(
+              // Ticks every second; keep its repaints off the card.
+              child: RepaintBoundary(
+                  child: IgnorePointer(
                 child: Container(
                   foregroundDecoration: RotatedCornerDecoration.withColor(
                     color: isStarted ? Colors.green : Colors.red,
@@ -787,7 +784,7 @@ class _ScheduledBanner extends StatelessWidget {
                   height: size.toDouble(),
                   width: size.toDouble(),
                 ),
-              ),
+              )),
             ),
           );
         });

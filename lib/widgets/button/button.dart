@@ -454,7 +454,7 @@ class _ButtonState extends State<Button> {
         if (disabledColor != null) {
           return disabledColor!;
         } else {
-          return color.withOpacity(0.48);
+          return color.withValues(alpha: 0.48);
         }
       }
     }
@@ -468,7 +468,7 @@ class _ButtonState extends State<Button> {
       if (disabledColor != null) {
         return disabledColor!;
       } else {
-        return color.withOpacity(0.48);
+        return color.withValues(alpha: 0.48);
       }
     }
 
@@ -649,10 +649,10 @@ class _ButtonState extends State<Button> {
           gradient: LinearGradient(
             colors: [
               disabled
-                  ? ColorName.primaryBlue.withOpacity(0.3)
+                  ? ColorName.primaryBlue.withValues(alpha: 0.3)
                   : ColorName.primaryBlue,
               disabled
-                  ? ColorName.secondaryBlue.withOpacity(0.3)
+                  ? ColorName.secondaryBlue.withValues(alpha: 0.3)
                   : ColorName.secondaryBlue,
             ],
             begin: Alignment.centerLeft,

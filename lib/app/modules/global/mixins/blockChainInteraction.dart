@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,7 +15,6 @@ import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
-import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
@@ -89,9 +89,8 @@ Future<bool> ext_cheerOrBoo({
     if (response == null) {
       Toast.error(message: "transaction failed");
       return false;
-    } else {
-      return (response as String).startsWith('0x') && response.length > 10;
     }
+    return await _externalTxSucceeded(response, chainId);
   } catch (e) {
     l.e('error : $e');
     return false;
@@ -640,7 +639,7 @@ Future<bool> ext_buyFirendtechTicket({
   final service = globalController.web3ModalService;
   final transaction = Transaction(
     from: parseAddress(externalWalletAddress!),
-    value: parseValue(buyPrice.toDouble()),
+    value: EtherAmount.inWei(buyPrice),
   );
   final contract = getDeployedContract(
     contract: Contracts.friendTech,
@@ -670,8 +669,7 @@ Future<bool> ext_buyFirendtechTicket({
       Toast.error(message: "transaction failed");
       return false;
     } else {
-      final isValid =
-          (response as String).startsWith('0x') && response.length > 10;
+      final isValid = await _externalTxSucceeded(response, chainId);
       if (isValid && targetUserId != myId) {
         // TODO: save payment
         // saveNewPayment(
@@ -685,9 +683,8 @@ Future<bool> ext_buyFirendtechTicket({
         //     chainId: chainId,
         //   ),
         // );
-        return true;
       }
-      return false;
+      return isValid;
     }
   } catch (e) {
     l.e('error : $e');
@@ -748,10 +745,7 @@ Future<bool> ext_buySharesWithReferrer({
         referrerWallet,
       ],
     );
-    final success = response != null &&
-        response is String &&
-        response.startsWith("0x") &&
-        response.length > 10;
+    final success = await _externalTxSucceeded(response, chainId);
     if (success && targetUserId != null) {
       // TODO: save payment
       // saveNewPayment(
@@ -910,34 +904,28 @@ Future<bool> internal_buySharesWithReferrer({
   }
 }
 
-int multiplier(BigInt decimals) {
-  final d = decimals.toInt();
-  final pad = '1'.padRight(d + 1, '0');
-  return int.parse(pad);
+Future<bool> _externalTxSucceeded(dynamic response, String chainId) async {
+  if (response is! String || !response.startsWith('0x') || response.length <= 10) {
+    return false;
+  }
+  return waitForEvmReceipt(chainId: chainId, txHash: response);
 }
 
-BigInt formatValue(num value, {required BigInt decimals}) {
-  final m = multiplier(decimals);
-  final result = EtherAmount.fromInt(
-    EtherUnit.ether,
-    (value * m).toInt(),
-  );
-  return result.getInEther;
+/// Converts a human amount (e.g. 0.1 ETH) to integer base units exactly,
+/// without going through floating-point multiplication.
+BigInt toBaseUnits(num amount, int decimals) {
+  final scaled = Decimal.parse(amount.toString()) *
+      Decimal.ten.pow(decimals).toDecimal();
+  return scaled.toBigInt();
 }
 
 EthereumAddress parseAddress(String address) {
   return EthereumAddress.fromHex(address);
 }
 
+/// [amount] is in ether, not wei.
 EtherAmount parseValue(num amount) {
-  final v = formatValue(amount, decimals: BigInt.from(18));
-  return EtherAmount.inWei(v);
-}
-
-BigInt doubleToBigIntWei(num v) {
-  final BigInt weiToEthRatio = BigInt.from(10).pow(18);
-  final BigInt vInWei = BigInt.from(v * weiToEthRatio.toInt());
-  return vInWei;
+  return EtherAmount.inWei(toBaseUnits(amount, 18));
 }
 
 double bigIntWeiToDouble(BigInt v) {
@@ -952,11 +940,7 @@ double bigIntCoinToMoveOnAptos(BigInt v) {
   return vInEth;
 }
 
-BigInt doubleToBigIntMoveForAptos(num v) {
-  final BigInt weiToEthRatio = BigInt.from(10).pow(8);
-  final BigInt vInWei = BigInt.from(v * weiToEthRatio.toInt());
-  return vInWei;
-}
+BigInt doubleToBigIntMoveForAptos(num v) => toBaseUnits(v, 8);
 
 String hexToAscii(String hexString) => List.generate(
       hexString.length ~/ 2,

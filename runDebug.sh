@@ -26,4 +26,4 @@ else
     exit 1
 fi
 
-flutter run
+flutter run --dart-define-from-file="$ENV_FILE" "$@"

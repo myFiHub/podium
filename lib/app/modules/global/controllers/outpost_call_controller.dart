@@ -13,6 +13,8 @@ import 'package:podium/app/modules/global/popUpsAndModals/scoreOutpostPrompt.dar
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/meeting.dart';
 import 'package:podium/models/jitsi_member.dart';
@@ -50,6 +52,19 @@ class OutpostCallController extends GetxController {
     // },
   });
   final haveOngoingCall = false.obs;
+  bool _callCleanedUp = true;
+
+  /// True once [cleanupAfterCall] ran for the current call. Jitsi reports
+  /// readyToClose after our own hang-up too, which must not clean up twice.
+  bool get callCleanedUp => _callCleanedUp;
+
+  /// True from the moment a join starts until [cleanupAfterCall] runs.
+  final isInCall = false.obs;
+
+  void markCallStarted() {
+    _callCleanedUp = false;
+    isInCall.value = true;
+  }
   final jitsiMembers = Rx<List<JitsiMember>>([]);
   final searchedValueInMeet = Rx<String>('');
   final sortType = Rx<String>(SortTypes.recentlyTalked);
@@ -311,6 +326,9 @@ class OutpostCallController extends GetxController {
   }
 
   cleanupAfterCall() async {
+    if (_callCleanedUp) return;
+    _callCleanedUp = true;
+    isInCall.value = false;
     haveOngoingCall.value = false;
     jitsiMembers.value = [];
     jitsiMeet.hangUp();
@@ -318,11 +336,26 @@ class OutpostCallController extends GetxController {
     searchedValueInMeet.value = '';
     final outpostId = outpost.value?.uuid;
     reactionsMap.value = {};
+    if (Get.isRegistered<CallRoomController>()) {
+      Get.delete<CallRoomController>(force: true);
+    }
+    // Delayed so the call page can finish its exit transition first.
+    Future.delayed(const Duration(seconds: 1), () {
+      for (var i = 0;
+          i < 3 &&
+              _callCleanedUp &&
+              Get.isRegistered<OngoingOutpostCallController>();
+          i++) {
+        Get.delete<OngoingOutpostCallController>(force: true);
+      }
+    });
     if (outpostId != null) {
       sendOutpostEvent(
         outpostId: outpostId,
         eventType: OutgoingMessageTypeEnums.leave,
       );
+      // Let the route change that triggered cleanup finish first.
+      await WidgetsBinding.instance.endOfFrame;
       final score = await showScoreOutpostPrompt();
       if (score != null) {
         await HttpApis.podium.scoreOutpost(
@@ -447,6 +480,11 @@ class OutpostCallController extends GetxController {
           outpost: outpostToJoin,
         ),
       );
+      if (Get.isRegistered<OngoingOutpostCallController>() &&
+          !Get.find<OngoingOutpostCallController>().callPageOpened &&
+          !_callCleanedUp) {
+        openCallPage();
+      }
 
       analytics.logEvent(
         name: 'joined_group_call',

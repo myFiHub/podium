@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:marquee/marquee.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/outpostImage.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
@@ -11,7 +12,6 @@ import 'package:podium/app/modules/global/widgets/cohosts_widget.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
-import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -386,7 +386,6 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
         return const SizedBox();
       }
       return GetBuilder<GlobalController>(
-        init: GlobalController(),
         id: GlobalUpdateIds.ticker,
         builder: (controller) {
           final hasTimePassed =
@@ -604,11 +603,13 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
       final outpost = controller.outpost.value;
       final joinButtonContent = controller.jointButtonContentProps.value;
       final isJoining = controller.isJoining.value;
-      final isRegistered = Get.isRegistered<OngoingOutpostCallController>();
-      if (isRegistered) {
-        joinButtonContent.enabled = true;
-        joinButtonContent.text = 'Return to Outpost';
-      }
+      final callController = Get.find<OutpostCallController>();
+      final callOutpostId = callController.outpost.value?.uuid;
+      final isRegistered = callController.isInCall.value &&
+          outpost != null &&
+          callOutpostId == outpost.uuid;
+      final enabled = isRegistered || joinButtonContent.enabled;
+      final text = isRegistered ? 'Return to Outpost' : joinButtonContent.text;
       if (accesses == null || outpost == null) {
         return Container();
       }
@@ -618,7 +619,7 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
         type: isRegistered ? ButtonType.outline : ButtonType.gradient,
         borderSide:
             BorderSide(color: isRegistered ? Colors.green : Colors.transparent),
-        onPressed: joinButtonContent.enabled
+        onPressed: enabled
             ? () {
                 if (isRegistered &&
                     Get.isRegistered<OutpostDetailController>()) {
@@ -634,25 +635,31 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            isRegistered
-                ? Shimmer.fromColors(
-                    baseColor: Colors.white,
-                    highlightColor: Colors.green,
-                    child: Text(
-                      joinButtonContent.text,
+            Flexible(
+              child: isRegistered
+                  ? Shimmer.fromColors(
+                      baseColor: Colors.white,
+                      highlightColor: Colors.green,
+                      child: Text(
+                        text,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.green,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      text,
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.green,
+                        color: Colors.white,
                       ),
                     ),
-                  )
-                : Text(
-                    joinButtonContent.text,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
+            ),
             space8,
             if (isRegistered)
               const Icon(Icons.arrow_forward, color: Colors.green),

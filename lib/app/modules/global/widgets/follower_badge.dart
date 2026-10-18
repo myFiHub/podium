@@ -30,7 +30,7 @@ class FollowerBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: _badgeColor.withOpacity(0.2),
+        color: _badgeColor.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _badgeColor),
       ),

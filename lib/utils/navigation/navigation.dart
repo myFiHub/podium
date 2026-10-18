@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/widgets/navbar.dart';
 
@@ -58,7 +58,8 @@ class Navigate {
 }
 
 Future<bool?> canNavigate() async {
-  final hasOngoingCall = Get.isRegistered<OngoingOutpostCallController>();
+  final hasOngoingCall = Get.isRegistered<OutpostCallController>() &&
+      Get.find<OutpostCallController>().isInCall.value;
   if (!hasOngoingCall) return true;
   final bool? can = await Get.dialog(
     AlertDialog(

@@ -55,7 +55,7 @@ class AddHostsPopup extends GetView<CreateOutpostController> {
 }
 
 class _DoneButton extends StatelessWidget {
-  const _DoneButton({super.key});
+  const _DoneButton();
   @override
   Widget build(BuildContext context) {
     return Button(
@@ -71,7 +71,7 @@ class _DoneButton extends StatelessWidget {
 }
 
 class _HostsList extends GetView<CreateOutpostController> {
-  const _HostsList({super.key});
+  const _HostsList();
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +92,7 @@ class _HostsList extends GetView<CreateOutpostController> {
 }
 
 class _HostItem extends StatelessWidget {
-  const _HostItem({super.key, required this.host, required this.controller});
+  const _HostItem({required this.host, required this.controller});
   final AddHostModel host;
   final CreateOutpostController controller;
   @override
@@ -151,7 +151,7 @@ class _HostItem extends StatelessWidget {
 }
 
 class _Form extends GetView<CreateOutpostController> {
-  _Form({super.key});
+  _Form();
   final emailController = TextEditingController();
   final nameController = TextEditingController();
   @override

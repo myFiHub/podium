@@ -110,7 +110,7 @@ class AllOutpostsView extends GetView<AllOutpostsController> {
 }
 
 class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
-  const _FloatingCreateOutpostButton({super.key});
+  const _FloatingCreateOutpostButton();
 
   @override
   Widget build(BuildContext context) {

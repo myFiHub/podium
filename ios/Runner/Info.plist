@@ -91,6 +91,13 @@
 		<key>NSLocalNetworkUsageDescription</key>
 		<string>Local network access is required for optimal connection quality</string>
 		
+		<!-- Keeps the background Jitsi conference audio alive when the app is not in the foreground -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>audio</string>
+			<string>voip</string>
+		</array>
+		
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
 		

@@ -96,7 +96,7 @@ class PodiumApi {
       }
     } on DioException catch (e) {
       l.d('e: ${e.response}');
-      final String? message = e.response?.data['message'];
+      final message = _errorMessage(e);
       return (null, message, e.response?.statusCode);
     } catch (e) {
       l.e(e);
@@ -758,12 +758,17 @@ class PodiumApi {
     } on DioException catch (e) {
       l.e(e);
       Toast.error(
-          message: e.response?.data['message'] ??
-              'Error setting account as primary');
+          message: _errorMessage(e) ?? 'Error setting account as primary');
       return false;
     } catch (e) {
       l.e(e);
       return false;
     }
   }
+}
+
+/// Error bodies are not always JSON (e.g. nginx HTML pages on 502).
+String? _errorMessage(DioException e) {
+  final data = e.response?.data;
+  return data is Map ? data['message'] as String? : null;
 }

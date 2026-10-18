@@ -10,33 +10,33 @@
       "name": "DEV",
       "request": "launch",
       "type": "dart",
-      "args": ["--dart-define=ENVIRONMENT=development"]
+      "args": ["--dart-define-from-file=env/development.env"]
     },
     {
       "name": "DEV-PROD",
       "request": "launch",
       "type": "dart",
-      "args": ["--dart-define=ENVIRONMENT=production"]
+      "args": ["--dart-define-from-file=env/production.env"]
     },
     {
       "name": "DEV-VERBOSE",
       "request": "launch",
       "type": "dart",
-      "args": ["--verbose", "--dart-define=ENVIRONMENT=development"]
+      "args": ["--verbose", "--dart-define-from-file=env/development.env"]
     },
     {
       "name": "RELEASE",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release",
-      "args": ["--dart-define=ENVIRONMENT=production"]
+      "args": ["--dart-define-from-file=env/production.env"]
      },
     {
       "name": "PROFILE",
       "request": "launch",
       "type": "dart",
       "flutterMode": "profile",
-      "args": ["--dart-define=ENVIRONMENT=production"]
+      "args": ["--dart-define-from-file=env/production.env"]
      },
   ]
 }

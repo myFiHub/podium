@@ -25,9 +25,11 @@ class MeetingConstants {
       FeatureFlags.iosRecordingEnabled: iAmCreator,
       FeatureFlags.welcomePageEnabled: false,
       FeatureFlags.preJoinPageEnabled: false,
-      FeatureFlags.pipEnabled: true,
+      // The conference runs hidden (runInBackground), so Jitsi must not enter
+      // PiP or toggle immersive mode on the app's own window.
+      FeatureFlags.pipEnabled: false,
       FeatureFlags.kickOutEnabled: iAmCreator,
-      FeatureFlags.fullScreenEnabled: true,
+      FeatureFlags.fullScreenEnabled: false,
       FeatureFlags.reactionsEnabled: true,
       FeatureFlags.videoMuteEnabled: false,
       FeatureFlags.audioMuteButtonEnabled: allowedToSpeak,

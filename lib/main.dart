@@ -7,7 +7,6 @@ import "package:device_preview/device_preview.dart";
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
@@ -115,13 +114,9 @@ processLink(String? link) async {
 }
 
 void main() async {
-  // final environment = read from dart-define
-  final environment = const String.fromEnvironment(
-    'ENVIRONMENT',
-    defaultValue: 'development',
-  );
-  print("ENVIRONMENT: $environment");
-  await dotenv.load(fileName: "env/$environment.env");
+  WidgetsFlutterBinding.ensureInitialized();
+  Env.ensureConfigured();
+  print("ENVIRONMENT: ${Env.environment}");
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,
     DeviceOrientation.portraitUp,

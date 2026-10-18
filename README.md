@@ -54,10 +54,12 @@ flutterfire configure
 1. Copy the example environment file:
 
 ```bash
-cp env/dev.example.json env/dev.json
+cp env/.env.example env/development.env
 ```
 
-2. Fill in the environment variables in `env/dev.json` with your configuration values.
+2. Fill in the values in `env/development.env` (and `env/production.env` for release builds). These files are gitignored and are not bundled as assets; their values are compiled in with `--dart-define-from-file`. The app refuses to start if any required key is missing.
+
+3. iOS only: copy `ios/Runner/ParticleNetwork-Info.plist.example` to `ios/Runner/ParticleNetwork-Info.plist` and fill in the Particle project credentials. The real plist is gitignored.
 
 ### 6. Jitsi Plugin Configuration
 
@@ -72,7 +74,7 @@ url "your-project-path/jitsi_plugin/android/libs"
 #### Development Mode
 
 ```bash
-flutter run --dart-define-from-file=env/dev.json
+flutter run --dart-define-from-file=env/development.env
 ```
 
 #### Building for Production

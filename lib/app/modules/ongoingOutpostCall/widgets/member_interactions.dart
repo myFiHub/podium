@@ -208,7 +208,11 @@ class ReactionCounts extends GetView<OutpostCallController> {
       final reactions = controller.reactionsMap.value[address] ?? const {};
       final items = [
         (Icons.thumb_up_rounded, OutgoingMessageTypeEnums.like, Colors.green),
-        (Icons.thumb_down_rounded, OutgoingMessageTypeEnums.dislike, Colors.red),
+        (
+          Icons.thumb_down_rounded,
+          OutgoingMessageTypeEnums.dislike,
+          Colors.red
+        ),
         (Icons.celebration, OutgoingMessageTypeEnums.cheer, Colors.green),
         (
           Icons.sentiment_very_dissatisfied,

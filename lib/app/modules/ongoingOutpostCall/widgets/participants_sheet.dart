@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_sheet.dart';
@@ -9,18 +10,19 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 
-enum _Filter { all, stage, talking, listeners }
+enum _Filter { all, hands, stage, talking, listeners }
 
-void openParticipantsSheet() {
+void openParticipantsSheet({bool showHands = false}) {
   Get.bottomSheet(
-    const ParticipantsSheet(),
+    ParticipantsSheet(showHands: showHands),
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
   );
 }
 
 class ParticipantsSheet extends StatefulWidget {
-  const ParticipantsSheet({super.key});
+  final bool showHands;
+  const ParticipantsSheet({super.key, this.showHands = false});
 
   @override
   State<ParticipantsSheet> createState() => _ParticipantsSheetState();
@@ -28,7 +30,13 @@ class ParticipantsSheet extends StatefulWidget {
 
 class _ParticipantsSheetState extends State<ParticipantsSheet> {
   final controller = Get.find<OutpostCallController>();
-  _Filter filter = _Filter.all;
+  final room = findCallRoom();
+  late _Filter filter = widget.showHands ? _Filter.hands : _Filter.all;
+
+  List<_Filter> get _filters => [
+        for (final f in _Filter.values)
+          if (f != _Filter.hands || (room?.channelAvailable.value ?? false)) f,
+      ];
 
   @override
   void dispose() {
@@ -46,6 +54,7 @@ class _ParticipantsSheetState extends State<ParticipantsSheet> {
     final onStage = isStageMember(m, creatorId: creatorId);
     return switch (filter) {
       _Filter.all => true,
+      _Filter.hands => room?.isHandRaised(m.uuid) ?? false,
       _Filter.stage => onStage,
       _Filter.talking => m.is_speaking,
       _Filter.listeners => !onStage,
@@ -55,7 +64,7 @@ class _ParticipantsSheetState extends State<ParticipantsSheet> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: MediaQuery.sizeOf(context).height * 0.8,
+      height: CallSheet.maxHeight(context, 0.8),
       child: CallSheet(
         title: 'People',
         padding: EdgeInsets.zero,
@@ -91,12 +100,13 @@ class _ParticipantsSheetState extends State<ParticipantsSheet> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
-                  for (final f in _Filter.values)
+                  for (final f in _filters)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ChoiceChip(
                         label: Text(switch (f) {
                           _Filter.all => 'All',
+                          _Filter.hands => '✋ Hands',
                           _Filter.stage => 'Speakers',
                           _Filter.talking => 'Talking now',
                           _Filter.listeners => 'Listeners',
@@ -126,20 +136,28 @@ class _ParticipantsSheetState extends State<ParticipantsSheet> {
               child: Obx(() {
                 final creatorId = controller.outpost.value?.creator_user_uuid;
                 final _ = controller.searchedValueInMeet.value;
+                final hands = room?.raisedHandUuids ?? const <String>[];
                 final members = controller.sortedMembers.value
                     .where((m) => _matches(m, creatorId))
                     .toList();
+                if (filter == _Filter.hands) {
+                  members.sort((a, b) =>
+                      hands.indexOf(a.uuid).compareTo(hands.indexOf(b.uuid)));
+                }
                 return RefreshIndicator(
                   onRefresh: () async =>
                       controller.fetchLiveData(withJoin: true),
                   child: members.isEmpty
                       ? ListView(
-                          children: const [
-                            SizedBox(height: 60),
+                          children: [
+                            const SizedBox(height: 60),
                             Center(
                               child: Text(
-                                'No one matches',
-                                style: TextStyle(color: ColorName.greyText),
+                                filter == _Filter.hands
+                                    ? 'No hands raised'
+                                    : 'No one matches',
+                                style:
+                                    const TextStyle(color: ColorName.greyText),
                               ),
                             ),
                           ],
@@ -198,7 +216,9 @@ class _ParticipantRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (member.is_speaking)
+          if (findCallRoom()?.isHandRaised(member.uuid) ?? false)
+            const Text('✋', style: TextStyle(fontSize: 16))
+          else if (member.is_speaking)
             const Icon(Icons.graphic_eq_rounded,
                 color: callSpeakingColor, size: 18),
           Text(

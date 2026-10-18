@@ -59,6 +59,8 @@ class OngoingOutpostCallController extends GetxController {
   final mySession = Rxn<LiveMember>();
   final amIAdmin = false.obs;
   final amIMuted = true.obs;
+  final isConferenceJoined = false.obs;
+  bool callPageOpened = false;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
   final reportReasonController = TextEditingController();
@@ -135,7 +137,6 @@ class OngoingOutpostCallController extends GetxController {
     recordingListeners?.cancel();
     membersListener?.cancel();
     sessionData.value = null;
-    await jitsiMeet.hangUp();
   }
 
   report() async {

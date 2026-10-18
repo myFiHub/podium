@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/chat_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/more_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
-import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
 
@@ -28,41 +29,32 @@ class ControlDock extends GetView<OngoingOutpostCallController> {
           child: Obx(() {
             final outpost = callController.outpost.value;
             if (outpost == null) return const SizedBox(height: 72);
-            final amICreator = outpost.creator_user_uuid == myId;
+            final room = findCallRoom();
             final memberCount = callController.members.value.length;
-            final canRecord = amICreator && outpost.is_recordable;
-            final invite = canInvite(outpost: outpost, currentUserId: myId)
-                ? DockButton(
-                    icon: Icons.person_add_alt_1_outlined,
-                    label: 'Invite',
-                    onPressed: () => openInviteBottomSheet(
-                      canInviteToSpeak: canInviteToSpeak(
-                        outpost: outpost,
-                        currentUserId: myId,
-                      ),
-                    ),
-                  )
-                : null;
+            final hasRoom = room?.channelAvailable.value ?? false;
             return Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                DockButton(
-                  icon: Icons.people_alt_outlined,
-                  label: 'People',
-                  badge: memberCount > 0 ? '$memberCount' : null,
-                  onPressed: openParticipantsSheet,
-                ),
-                if (canRecord) const _RecordButton(),
-                if (!canRecord && invite != null) invite,
+                if (room != null) const _ReactButton(),
+                if (hasRoom)
+                  const _HandButton()
+                else
+                  DockButton(
+                    icon: Icons.people_alt_outlined,
+                    label: 'People',
+                    badge: memberCount > 0 ? '$memberCount' : null,
+                    onPressed: openParticipantsSheet,
+                  ),
                 const MicButton(),
-                if (canRecord && invite != null) invite,
+                if (room != null) const _ChatButton(),
                 DockButton(
-                  icon: Icons.call_end_rounded,
-                  label: 'Leave',
-                  color: callDangerColor,
-                  filled: true,
-                  onPressed: () => confirmLeave(callController),
+                  icon: Icons.more_horiz_rounded,
+                  label: 'More',
+                  onPressed: () {
+                    room?.reactionTrayOpen.value = false;
+                    openMoreSheet();
+                  },
                 ),
               ],
             );
@@ -85,12 +77,12 @@ Future<void> confirmLeave(OutpostCallController callController) async {
       ),
       actions: [
         TextButton(
-          onPressed: () => Get.back(result: false),
+          onPressed: () => Get.closeOverlay(result: false),
           child: const Text('Stay'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: callDangerColor),
-          onPressed: () => Get.back(result: true),
+          onPressed: () => Get.closeOverlay(result: true),
           child: const Text('Leave'),
         ),
       ],
@@ -199,7 +191,8 @@ class MicButton extends GetView<OngoingOutpostCallController> {
       final outOfTime = !controller.amIAdmin.value &&
           session != null &&
           session.remaining_time <= 0;
-      final disabled = !canTalk || outOfTime;
+      final connecting = !controller.isConferenceJoined.value;
+      final disabled = !canTalk || outOfTime || connecting;
       final live = !disabled && !muted;
 
       final Color background = disabled
@@ -212,13 +205,15 @@ class MicButton extends GetView<OngoingOutpostCallController> {
           : live
               ? Colors.black
               : ColorName.pageBackground;
-      final label = !canTalk
-          ? 'Listening'
-          : outOfTime
-              ? "Time's up"
-              : live
-                  ? 'Live'
-                  : 'Tap to talk';
+      final label = connecting
+          ? 'Connecting'
+          : !canTalk
+              ? 'Listening'
+              : outOfTime
+                  ? "Time's up"
+                  : live
+                      ? 'Live'
+                      : 'Tap to talk';
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -247,6 +242,13 @@ class MicButton extends GetView<OngoingOutpostCallController> {
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: () {
+                  if (connecting) {
+                    Toast.info(
+                      title: 'Connecting…',
+                      message: 'You can talk as soon as you are connected',
+                    );
+                    return;
+                  }
                   if (!canTalk) {
                     Toast.info(
                       title: "You're a listener",
@@ -263,11 +265,24 @@ class MicButton extends GetView<OngoingOutpostCallController> {
                   }
                   controller.setMutedState(!muted);
                 },
-                child: Icon(
-                  disabled || muted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                  size: 30,
-                  color: foreground,
-                ),
+                child: connecting
+                    ? const Center(
+                        child: SizedBox(
+                          width: 26,
+                          height: 26,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: ColorName.greyText,
+                          ),
+                        ),
+                      )
+                    : Icon(
+                        disabled || muted
+                            ? Icons.mic_off_rounded
+                            : Icons.mic_rounded,
+                        size: 30,
+                        color: foreground,
+                      ),
               ),
             ),
           ),
@@ -286,30 +301,60 @@ class MicButton extends GetView<OngoingOutpostCallController> {
   }
 }
 
-class _RecordButton extends GetView<OngoingOutpostCallController> {
-  const _RecordButton();
+class _ReactButton extends GetView<CallRoomController> {
+  const _ReactButton();
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isRecording = controller.isRecording.value;
-      final isStarting = controller.isStartingToRecord.value;
+      final open = controller.reactionTrayOpen.value;
       return DockButton(
-        icon: isRecording ? Icons.stop_rounded : Icons.fiber_manual_record,
-        label: isRecording ? 'Stop rec' : 'Record',
-        color: callDangerColor,
-        iconWidget: isStarting
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : null,
-        onPressed: isStarting
+        icon: open ? Icons.close_rounded : Icons.add_reaction_outlined,
+        label: 'React',
+        color: open ? ColorName.primaryBlue : Colors.white,
+        onPressed: () => controller.reactionTrayOpen.value = !open,
+      );
+    });
+  }
+}
+
+class _HandButton extends GetView<CallRoomController> {
+  const _HandButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final raised = controller.myHandRaised;
+      return DockButton(
+        icon: raised ? Icons.back_hand_rounded : Icons.back_hand_outlined,
+        label: raised ? 'Lower' : 'Raise',
+        color: raised ? callAccentColor : Colors.white,
+        filled: raised,
+        onPressed: controller.toggleHand,
+      );
+    });
+  }
+}
+
+class _ChatButton extends GetView<CallRoomController> {
+  const _ChatButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final unread = controller.unreadChat.value;
+      return DockButton(
+        icon: Icons.chat_bubble_outline_rounded,
+        label: 'Chat',
+        badge: unread == 0
             ? null
-            : () => isRecording
-                ? controller.stopRecording()
-                : controller.startRecording(),
+            : unread > 99
+                ? '99+'
+                : '$unread',
+        onPressed: () {
+          controller.reactionTrayOpen.value = false;
+          openChatSheet();
+        },
       );
     });
   }

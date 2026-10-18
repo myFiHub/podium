@@ -5,10 +5,12 @@ import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -17,8 +19,34 @@ final jitsiMeet = JitsiMeet();
 const MethodChannel jitsiMethodChannel = MethodChannel('jitsi_meet_wrapper');
 final joinOrLeftDebounce = Debouncing(duration: const Duration(seconds: 1));
 
+CallRoomController? get _room => findCallRoom();
+
+void openCallPage() {
+  if (Get.isRegistered<OngoingOutpostCallController>()) {
+    Get.find<OngoingOutpostCallController>().callPageOpened = true;
+  }
+  Navigate.to(
+    route: Routes.ONGOING_OUTPOST_CALL,
+    type: NavigationTypes.toNamed,
+  );
+}
+
 JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
-  Get.put<OngoingOutpostCallController>(OngoingOutpostCallController());
+  for (var i = 0;
+      i < 3 && Get.isRegistered<OngoingOutpostCallController>();
+      i++) {
+    Get.delete<OngoingOutpostCallController>(force: true);
+  }
+  // Permanent so route disposal (sheets, dialogs, page swaps) never tears
+  // down a live call; only cleanupAfterCall deletes it.
+  Get.put<OngoingOutpostCallController>(
+    OngoingOutpostCallController(),
+    permanent: true,
+  );
+  if (Get.isRegistered<CallRoomController>()) {
+    Get.delete<CallRoomController>(force: true);
+  }
+  Get.put<CallRoomController>(CallRoomController(), permanent: true);
   final outpostCallController = Get.find<OutpostCallController>();
   outpostCallController.markCallStarted();
   return JitsiMeetEventListener(
@@ -28,10 +56,11 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       if (Platform.isIOS) {
         // jitsiMeet.enterPiP();
       }
-      Navigate.to(
-        route: Routes.ONGOING_OUTPOST_CALL,
-        type: NavigationTypes.toNamed,
-      );
+      if (Get.isRegistered<OngoingOutpostCallController>()) {
+        final ongoing = Get.find<OngoingOutpostCallController>();
+        ongoing.isConferenceJoined.value = true;
+        if (!ongoing.callPageOpened) openCallPage();
+      }
       final myUserId = myId;
       final outpostCreator = outpost.creator_user_uuid;
       final iAmCreator = outpostCreator == myUserId;
@@ -41,6 +70,12 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       outpostCallController.haveOngoingCall.value = true;
     },
     participantJoined: (email, name, role, participantId) {
+      _room?.onParticipantJoined(
+        email: email,
+        name: name,
+        role: role,
+        participantId: participantId,
+      );
       joinOrLeftDebounce.debounce(() {
         outpostCallController.fetchLiveData();
       });
@@ -50,12 +85,15 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       );
     },
     participantLeft: (p) {
+      _room?.onParticipantLeft(p);
       joinOrLeftDebounce.debounce(() {
         outpostCallController.fetchLiveData();
       });
       l.d("participantLeft: $p");
     },
     audioMutedChanged: (muted) {
+      // Jitsi resets to unmuted while tearing down after hangUp.
+      if (outpostCallController.callCleanedUp) return;
       if (Get.isRegistered<OngoingOutpostCallController>()) {
         Get.find<OngoingOutpostCallController>().audioMuteChanged(
           muted: muted,
@@ -65,9 +103,26 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
     videoMutedChanged: (muted) {
       l.d("videoMutedChanged: $muted");
     },
+    podiumEvent: (name, data) {
+      _room?.onPodiumEvent(name, data);
+    },
+    endpointTextMessageReceived: (senderId, message) {
+      _room?.onEndpointMessage(senderId, message);
+    },
+    chatMessageReceived: (senderId, message, isPrivate, timestamp) {
+      _room?.onChatMessage(senderId, message, isPrivate);
+    },
 
     conferenceTerminated: (url, error) async {
       l.f("conferenceTerminated: url: $url, error: $error");
+      final joined = Get.isRegistered<OngoingOutpostCallController>() &&
+          Get.find<OngoingOutpostCallController>().isConferenceJoined.value;
+      if (error != null && !joined) {
+        Toast.error(
+          title: "Couldn't connect",
+          message: 'Failed to join the outpost, please try again',
+        );
+      }
     },
     participantsInfoRetrieved: (participantsInfo) {
       try {} catch (e) {
@@ -81,11 +136,6 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
         type: NavigationTypes.offNamed,
       );
       outpostCallController.cleanupAfterCall();
-      Future.delayed(const Duration(seconds: 1), () {
-        if (Get.isRegistered<OngoingOutpostCallController>()) {
-          Get.delete<OngoingOutpostCallController>();
-        }
-      });
     },
     // like: (idWithAddedAtSign, participantId) async {
     //   final OngoingGroupCallController ongoingGroupCallController =

@@ -42,6 +42,7 @@ class MeetingConstants {
       "startWithVideoMuted": true,
       "subject": outpost.name,
       "localSubject": outpost.name,
+      "p2p": {"enabled": false},
     };
   }
 

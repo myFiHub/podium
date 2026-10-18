@@ -7,6 +7,8 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/control_dock.dart'
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/poll_card.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/room_overlays.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
@@ -36,7 +38,14 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
             children: [
               ContextSaver(),
               SafeArea(bottom: false, child: CallTopBar()),
-              Expanded(child: _CallBody()),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(child: _CallBody()),
+                    Positioned.fill(child: RoomOverlays()),
+                  ],
+                ),
+              ),
               ControlDock(),
             ],
           ),
@@ -84,6 +93,8 @@ class _CallBody extends GetView<OutpostCallController> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             const SliverToBoxAdapter(child: MyStatusCard()),
+            const SliverToBoxAdapter(child: RaisedHandsBanner()),
+            const SliverToBoxAdapter(child: PollCard()),
             if (showIntro) const SliverToBoxAdapter(child: _IntroDemoCard()),
             if (members.isEmpty)
               const SliverFillRemaining(
@@ -118,7 +129,7 @@ class _CallBody extends GetView<OutpostCallController> {
                   creatorId: creatorId,
                   onStage: false,
                 ),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              const SliverToBoxAdapter(child: SizedBox(height: 96)),
             ],
           ],
         ),
@@ -241,7 +252,7 @@ class _EmptyAudience extends StatelessWidget {
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              'No listeners yet. Share the outpost link from the menu to bring people in.',
+              'No listeners yet. Share the outpost link from More to bring people in.',
               style: TextStyle(fontSize: 12, color: ColorName.greyText),
             ),
           ),

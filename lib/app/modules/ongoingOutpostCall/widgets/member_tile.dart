@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_sheet.dart';
 import 'package:podium/gen/colors.gen.dart';
@@ -44,16 +46,11 @@ class MemberAvatar extends StatelessWidget {
                 fit: PulseFit.contain,
               ),
             ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            padding: EdgeInsets.all(ring),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: speaking ? callSpeakingColor : ColorName.cardBorder,
-                width: ring,
-              ),
-            ),
+          _VoiceRing(
+            uuid: member.uuid,
+            ring: ring,
+            size: size,
+            speaking: speaking,
             child: Img(
               src: memberAvatar(member),
               alt: member.name,
@@ -62,6 +59,7 @@ class MemberAvatar extends StatelessWidget {
             ),
           ),
           Positioned.fill(child: ConfettiDetector(userId: member.uuid)),
+          Positioned(top: 0, right: 0, child: _HandBadge(uuid: member.uuid)),
           if (isCreator)
             const Positioned(
               top: 0,
@@ -85,6 +83,74 @@ class MemberAvatar extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _VoiceRing extends StatelessWidget {
+  final String uuid;
+  final double ring;
+  final double size;
+  final bool speaking;
+  final Widget child;
+  const _VoiceRing({
+    required this.uuid,
+    required this.ring,
+    required this.size,
+    required this.speaking,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final room = findCallRoom();
+    Widget ringFor(double level) => AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: EdgeInsets.all(ring),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: speaking || level > 0.05
+                  ? callSpeakingColor
+                  : ColorName.cardBorder,
+              width: ring,
+            ),
+            boxShadow: level > 0.05
+                ? [
+                    BoxShadow(
+                      color: callSpeakingColor.withAlpha(140),
+                      blurRadius: 6 + level * size * 0.3,
+                      spreadRadius: level * size * 0.12,
+                    ),
+                  ]
+                : const [],
+          ),
+          child: child,
+        );
+    if (room == null) return ringFor(0);
+    return Obx(() => ringFor(room.levelOf(uuid)));
+  }
+}
+
+class _HandBadge extends StatelessWidget {
+  final String uuid;
+  const _HandBadge({required this.uuid});
+
+  @override
+  Widget build(BuildContext context) {
+    final room = findCallRoom();
+    if (room == null) return const SizedBox.shrink();
+    return Obx(() {
+      if (!room.isHandRaised(uuid)) return const SizedBox.shrink();
+      return Container(
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: callAccentColor,
+          shape: BoxShape.circle,
+          border: Border.all(color: ColorName.pageBackground, width: 2),
+        ),
+        child: const Text('✋', style: TextStyle(fontSize: 11)),
+      );
+    });
   }
 }
 

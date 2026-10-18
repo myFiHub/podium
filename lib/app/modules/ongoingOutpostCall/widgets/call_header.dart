@@ -1,20 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
-import 'package:podium/app/modules/ongoingOutpostCall/views/report_form.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/control_dock.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
-import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/services/toast/toast.dart';
-import 'package:podium/utils/storage.dart';
 import 'package:pulsator/pulsator.dart';
-
-enum _MenuAction { share, invite, tutorial, report }
 
 class CallTopBar extends GetView<OngoingOutpostCallController> {
   const CallTopBar({super.key});
@@ -66,96 +59,28 @@ class CallTopBar extends GetView<OngoingOutpostCallController> {
             ),
             if (isRecording) const _RecordingPill(),
             _LivePill(count: count),
-            PopupMenuButton<_MenuAction>(
-              icon: const Icon(Icons.more_vert_rounded),
-              color: ColorName.navbarBackground,
-              surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-                side: const BorderSide(color: ColorName.cardBorder),
+            const SizedBox(width: 6),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: callDangerColor,
+                  foregroundColor: Colors.white,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  shape: const StadiumBorder(),
+                ),
+                onPressed: () => confirmLeave(callController),
+                child: const Text(
+                  'Leave',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-              onSelected: (action) => _onMenu(action),
-              itemBuilder: (_) => [
-                if (canShareOutpostUrl(outpost: outpost))
-                  const PopupMenuItem(
-                    value: _MenuAction.share,
-                    child: _MenuRow(Icons.link_rounded, 'Copy outpost link'),
-                  ),
-                if (canInvite(outpost: outpost, currentUserId: myId))
-                  const PopupMenuItem(
-                    value: _MenuAction.invite,
-                    child: _MenuRow(Icons.person_add_alt_1, 'Invite people'),
-                  ),
-                const PopupMenuItem(
-                  value: _MenuAction.tutorial,
-                  child: _MenuRow(Icons.lightbulb_outline, 'Show tutorial'),
-                ),
-                const PopupMenuItem(
-                  value: _MenuAction.report,
-                  child: _MenuRow(Icons.flag_outlined, 'Report outpost'),
-                ),
-              ],
             ),
           ],
         ),
       );
     });
-  }
-
-  void _onMenu(_MenuAction action) {
-    final outpost = controller.outpostCallController.outpost.value;
-    if (outpost == null) return;
-    switch (action) {
-      case _MenuAction.share:
-        Clipboard.setData(
-          ClipboardData(text: generateOutpostShareUrl(outpostId: outpost.uuid)),
-        );
-        Toast.info(title: 'Copied!', message: 'URL copied to clipboard');
-      case _MenuAction.invite:
-        openInviteBottomSheet(
-          canInviteToSpeak: canInviteToSpeak(
-            outpost: outpost,
-            currentUserId: myId,
-          ),
-        );
-      case _MenuAction.tutorial:
-        GetStorage().remove(IntroStorageKeys.viewedOngiongCall);
-        controller.startIntro();
-      case _MenuAction.report:
-        Get.dialog(
-          Dialog(
-            backgroundColor: ColorName.cardBackground,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: ReportForm(),
-            ),
-          ),
-        );
-    }
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _MenuRow(this.icon, this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: ColorName.greyText),
-        const SizedBox(width: 12),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
   }
 }
 
@@ -165,30 +90,33 @@ class _LivePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(14),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.circle, size: 8, color: callSpeakingColor),
-          const SizedBox(width: 5),
-          const Text(
-            'LIVE',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(width: 8),
-          const Icon(Icons.people_alt_rounded,
-              size: 14, color: ColorName.greyText),
-          const SizedBox(width: 3),
-          Text(
-            '$count',
-            style: const TextStyle(fontSize: 12, color: ColorName.greyText),
-          ),
-        ],
+    return GestureDetector(
+      onTap: openParticipantsSheet,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(14),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.circle, size: 8, color: callSpeakingColor),
+            const SizedBox(width: 5),
+            const Text(
+              'LIVE',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.people_alt_rounded,
+                size: 14, color: ColorName.greyText),
+            const SizedBox(width: 3),
+            Text(
+              '$count',
+              style: const TextStyle(fontSize: 12, color: ColorName.greyText),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -259,7 +187,12 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
       final Color color;
       String? trailing;
 
-      if (session == null) {
+      if (!controller.isConferenceJoined.value) {
+        icon = Icons.wifi_tethering_rounded;
+        title = 'Connecting…';
+        subtitle = 'Joining the audio room';
+        color = ColorName.greyText;
+      } else if (session == null) {
         icon = Icons.hourglass_top_rounded;
         title = 'Joining…';
         subtitle = 'Syncing with the outpost';
@@ -272,7 +205,7 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
       } else if (!canTalk) {
         icon = Icons.headphones_rounded;
         title = "You're listening";
-        subtitle = "You can't speak in this outpost, but you can react";
+        subtitle = 'You can still react and chat';
         color = ColorName.primaryBlue;
       } else if (session.remaining_time <= 0) {
         icon = Icons.timer_off_outlined;
@@ -285,7 +218,7 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
         icon = muted ? Icons.mic_off_rounded : Icons.graphic_eq_rounded;
         title = muted ? 'Your talk time' : "You're live";
         subtitle = muted
-            ? 'The timer runs only while you are unmuted'
+            ? 'Timer runs only while unmuted'
             : 'Your talk time is counting down';
         color = low
             ? callDangerColor
@@ -321,6 +254,8 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
                 children: [
                   Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
@@ -329,6 +264,8 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 12,
                       color: ColorName.greyText,

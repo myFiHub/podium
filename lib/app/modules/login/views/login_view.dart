@@ -4,7 +4,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/app/modules/global/widgets/loading_widget.dart';
+import 'package:podium/app/modules/login/widgets/launch_loader.dart';
 import 'package:podium/app/modules/login/widgets/referral_input.dart';
 import 'package:podium/app/modules/myProfile/views/connected_accounts_view.dart';
 import 'package:podium/env.dart';
@@ -156,39 +156,7 @@ class LoginView extends GetView<LoginController> {
                             final isLoggingIn = controller.isLoggingIn.value ||
                                 controller
                                     .globalController.isAutoLoggingIn.value;
-                            if (isLoggingIn) {
-                              return Center(
-                                child: Column(
-                                  children: [
-                                    Hero(
-                                      tag: 'logo',
-                                      child: Container(
-                                        height: 200,
-                                        child: Assets.images.logo.image(),
-                                      ),
-                                    ),
-                                    const Text(
-                                      'Welcome to',
-                                      style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w300,
-                                      ),
-                                    ),
-                                    const Text(
-                                      'Podium',
-                                      style: TextStyle(
-                                        fontSize: 36,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    space10,
-                                    const LoadingWidget(),
-                                    space10,
-                                    const Text('Please wait...'),
-                                  ],
-                                ),
-                              );
-                            }
+                            if (isLoggingIn) return const SizedBox.shrink();
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -433,6 +401,18 @@ class LoginView extends GetView<LoginController> {
                   ),
                 ),
               ),
+            ),
+            Positioned.fill(
+              child: Obx(() {
+                final isLoggingIn = controller.isLoggingIn.value ||
+                    controller.globalController.isAutoLoggingIn.value;
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  child: isLoggingIn
+                      ? const LaunchLoader()
+                      : const SizedBox.shrink(),
+                );
+              }),
             ),
           ],
         ),

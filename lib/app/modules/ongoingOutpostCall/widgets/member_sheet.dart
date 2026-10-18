@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
@@ -47,11 +48,30 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
             controller.outpostCallController.outpost.value?.creator_user_uuid;
         final isCreator = member.uuid == creatorId;
         final isMe = member.uuid == myId;
+        final room = findCallRoom();
+        final handRaised = room?.isHandRaised(member.uuid) ?? false;
+        final canModerate = !isMe &&
+            room != null &&
+            room.canModerate &&
+            room.jitsiIdOf(member.uuid) != null;
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Header(member: member, isCreator: isCreator, isMe: isMe),
+            _Header(
+              member: member,
+              isCreator: isCreator,
+              isMe: isMe,
+              handRaised: handRaised,
+            ),
+            if (canModerate) ...[
+              const SizedBox(height: 16),
+              _ModerationRow(
+                member: member,
+                room: room,
+                handRaised: handRaised,
+              ),
+            ],
             const SizedBox(height: 16),
             _TalkTimeRow(member: member, isCreator: isCreator),
             const SizedBox(height: 12),
@@ -100,7 +120,7 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
                 ),
               ),
               onPressed: () {
-                Get.back();
+                Get.closeOverlay();
                 Get.find<UsersController>().openUserProfile(member.uuid);
               },
               icon: const Icon(Icons.person_outline_rounded, size: 18),
@@ -113,14 +133,164 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
   }
 }
 
+class _ModerationRow extends StatelessWidget {
+  final LiveMember member;
+  final CallRoomController room;
+  final bool handRaised;
+  const _ModerationRow({
+    required this.member,
+    required this.room,
+    required this.handRaised,
+  });
+
+  Future<void> _confirmRemove() async {
+    final remove = await Get.dialog<bool>(
+      AlertDialog(
+        backgroundColor: ColorName.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Remove ${member.name ?? 'this member'}?'),
+        content: const Text(
+          'They will be disconnected from this outpost.',
+          style: TextStyle(color: ColorName.greyText),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.closeOverlay(result: false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: callDangerColor),
+            onPressed: () => Get.closeOverlay(result: true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (remove == true) {
+      room.removeParticipant(member.uuid);
+      Get.closeOverlay();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(6),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorName.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              'HOST CONTROLS',
+              style: TextStyle(
+                fontSize: 11,
+                letterSpacing: 1.1,
+                fontWeight: FontWeight.w700,
+                color: ColorName.greyText,
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _ModButton(
+                  icon: Icons.mic_off_rounded,
+                  label: 'Mute',
+                  onPressed: member.is_speaking
+                      ? () {
+                          room.muteParticipant(member.uuid);
+                          Toast.info(
+                            title: 'Muted',
+                            message: '${member.name ?? 'Member'} was muted',
+                          );
+                        }
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ModButton(
+                  icon: Icons.back_hand_outlined,
+                  label: 'Lower hand',
+                  onPressed:
+                      handRaised ? () => room.lowerHand(member.uuid) : null,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ModButton(
+                  icon: Icons.person_remove_outlined,
+                  label: 'Remove',
+                  color: callDangerColor,
+                  onPressed: _confirmRemove,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final Color color;
+  const _ModButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.color = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Material(
+      color: Colors.white.withAlpha(enabled ? 12 : 4),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            children: [
+              Icon(icon, size: 20, color: enabled ? color : ColorName.greyText),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: enabled ? color : ColorName.greyText,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Header extends StatelessWidget {
   final LiveMember member;
   final bool isCreator;
   final bool isMe;
+  final bool handRaised;
   const _Header({
     required this.member,
     required this.isCreator,
     required this.isMe,
+    required this.handRaised,
   });
 
   @override
@@ -158,6 +328,10 @@ class _Header extends StatelessWidget {
                             ? callSpeakingColor
                             : ColorName.greyText,
                   ),
+                  if (handRaised) ...[
+                    const SizedBox(width: 6),
+                    const _RoleChip(label: '✋ Hand', color: callAccentColor),
+                  ],
                   const SizedBox(width: 8),
                   if (address.isNotEmpty)
                     Flexible(

@@ -87,6 +87,7 @@ class GlobalController extends GetxController {
   final isLoggingOut = false.obs;
   bool isFirebaseInitialized = false;
   final ticker = 0.obs;
+  Future<void> web3AuthReady = Future.value();
   Timer? _tickerTimer;
   final showArchivedOutposts =
       RxBool(storage.read(StorageKeys.showArchivedOutposts) ?? true);
@@ -122,9 +123,14 @@ class GlobalController extends GetxController {
     super.onInit();
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
 
+    // Takes seconds (network session restore). Only a saved login must wait for
+    // it here; socialLogin awaits web3AuthReady itself.
+    web3AuthReady = initializeWeb3Auth().catchError((e) {
+      l.e("error initializing Web3Auth $e");
+    });
+    final internetCheck = connectionCheckerInstance.hasInternetAccess;
     try {
       await Future.wait<void>([
-        initializeWeb3Auth(),
         _getAndSetMetadata(),
         FirebaseInit.init(),
       ]);
@@ -138,7 +144,10 @@ class GlobalController extends GetxController {
     final res = await analytics.getSessionId();
 
     l.d('analytics session id: $res');
-    bool result = await connectionCheckerInstance.hasInternetAccess;
+    if (storage.read<String?>(StorageKeys.loginType) != null) {
+      await web3AuthReady;
+    }
+    bool result = await internetCheck;
     l.d("has internet access: $result");
     if (result) {
       initializeApp();

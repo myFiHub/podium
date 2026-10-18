@@ -55,6 +55,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
         }
+        // React Native artifacts (via Jitsi) only publish debug/release variants.
+        profile {
+            matchingFallbacks = ['release']
+        }
     }
 }
 dependencies {

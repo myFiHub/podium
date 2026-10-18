@@ -116,7 +116,7 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
                       child: Container(
                         width: 20,
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.3),
+                          color: Colors.red.withValues(alpha: 0.3),
                           border: const Border(
                             right: BorderSide(
                               color: Colors.red,
@@ -129,7 +129,7 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
                     // Middle (selected area)
                     Expanded(
                       child: Container(
-                        color: Colors.blue.withOpacity(0.3),
+                        color: Colors.blue.withValues(alpha: 0.3),
                       ),
                     ),
                     // End handle
@@ -147,7 +147,7 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
                       child: Container(
                         width: 20,
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.3),
+                          color: Colors.red.withValues(alpha: 0.3),
                           border: const Border(
                             left: BorderSide(
                               color: Colors.red,

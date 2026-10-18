@@ -10,7 +10,13 @@ const defaultHeaders = {
   'content-type': 'application/json',
 };
 
-final Dio dio = Dio();
+final Dio dio = Dio(
+  BaseOptions(
+    connectTimeout: const Duration(seconds: 15),
+    sendTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 30),
+  ),
+);
 
 class HttpApis {
   static final HttpApis _instance = HttpApis._internal();

@@ -386,7 +386,6 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
         return const SizedBox();
       }
       return GetBuilder<GlobalController>(
-        init: GlobalController(),
         id: GlobalUpdateIds.ticker,
         builder: (controller) {
           final hasTimePassed =
@@ -634,25 +633,31 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            isRegistered
-                ? Shimmer.fromColors(
-                    baseColor: Colors.white,
-                    highlightColor: Colors.green,
-                    child: Text(
+            Flexible(
+              child: isRegistered
+                  ? Shimmer.fromColors(
+                      baseColor: Colors.white,
+                      highlightColor: Colors.green,
+                      child: Text(
+                        joinButtonContent.text,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.green,
+                        ),
+                      ),
+                    )
+                  : Text(
                       joinButtonContent.text,
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.green,
+                        color: Colors.white,
                       ),
                     ),
-                  )
-                : Text(
-                    joinButtonContent.text,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
+            ),
             space8,
             if (isRegistered)
               const Icon(Icons.arrow_forward, color: Colors.green),

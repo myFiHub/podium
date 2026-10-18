@@ -94,7 +94,7 @@ class HomeView extends GetView<HomeController> {
 }
 
 class _MyOutpostsList extends GetWidget<OutpostsController> {
-  const _MyOutpostsList({super.key});
+  const _MyOutpostsList();
 
   @override
   Widget build(BuildContext context) {

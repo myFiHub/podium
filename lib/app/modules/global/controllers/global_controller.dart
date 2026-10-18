@@ -87,6 +87,7 @@ class GlobalController extends GetxController {
   final isLoggingOut = false.obs;
   bool isFirebaseInitialized = false;
   final ticker = 0.obs;
+  Timer? _tickerTimer;
   final showArchivedOutposts =
       RxBool(storage.read(StorageKeys.showArchivedOutposts) ?? true);
   late PodiumAppMetadata appMetadata;
@@ -154,6 +155,7 @@ class GlobalController extends GetxController {
 
   @override
   void onClose() {
+    _tickerTimer?.cancel();
     super.onClose();
   }
 
@@ -175,8 +177,7 @@ class GlobalController extends GetxController {
     );
     movementAptosPodiumProtocolAddress =
         movementAptosMetadata.podium_protocol_address;
-    movementAptosCheerBooAddress =
-        '0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa'; // movementAptosMetadata.cheer_boo_address;
+    movementAptosCheerBooAddress = movementAptosMetadata.cheer_boo_address;
 
     try {
       ReownAppKitModalNetworks.addSupportedNetworks(
@@ -203,7 +204,8 @@ class GlobalController extends GetxController {
   }
 
   void startTicker() {
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    _tickerTimer?.cancel();
+    _tickerTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       ticker.value++;
       update([GlobalUpdateIds.ticker]);
     });

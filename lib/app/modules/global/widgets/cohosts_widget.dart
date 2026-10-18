@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/providers/api/api.dart';
@@ -291,7 +292,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                                   child: CircleAvatar(
                                     backgroundImage: cohost.image != null &&
                                             cohost.image!.isNotEmpty
-                                        ? NetworkImage(cohost.image!)
+                                        ? CachedNetworkImageProvider(cohost.image!, maxWidth: 160)
                                         : null,
                                     child: cohost.image == null ||
                                             cohost.image!.isEmpty
@@ -364,7 +365,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                         leading: CircleAvatar(
                           backgroundImage:
                               user.image != null && user.image!.isNotEmpty
-                                  ? NetworkImage(user.image!)
+                                  ? CachedNetworkImageProvider(user.image!, maxWidth: 160)
                                   : null,
                           child: user.image == null || user.image!.isEmpty
                               ? const Icon(Icons.person)
@@ -453,7 +454,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                               height: 40,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.grey[800]?.withOpacity(0.3),
+                                color: Colors.grey[800]?.withValues(alpha: 0.3),
                               ),
                               child: const Center(
                                 child: SizedBox(
@@ -471,7 +472,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                               height: 20, // Match title height
                               width: 120,
                               decoration: BoxDecoration(
-                                color: Colors.grey[800]?.withOpacity(0.3),
+                                color: Colors.grey[800]?.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -480,7 +481,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                               width: 80,
                               margin: const EdgeInsets.only(top: 4),
                               decoration: BoxDecoration(
-                                color: Colors.grey[800]?.withOpacity(0.2),
+                                color: Colors.grey[800]?.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -513,7 +514,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                           leading: CircleAvatar(
                             backgroundImage:
                                 cohost.image != null && cohost.image!.isNotEmpty
-                                    ? NetworkImage(cohost.image!)
+                                    ? CachedNetworkImageProvider(cohost.image!, maxWidth: 160)
                                     : null,
                             child: cohost.image == null || cohost.image!.isEmpty
                                 ? const Icon(Icons.person)

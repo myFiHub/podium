@@ -48,10 +48,10 @@ class LoginView extends GetView<LoginController> {
                       padding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.red.withOpacity(0.3),
+                          color: Colors.red.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -352,10 +352,10 @@ class LoginView extends GetView<LoginController> {
                           space10,
                           ReferralInput(),
                           space10,
-                          Center(
+                          const Center(
                             child: Text(
                               "Version: " + Env.VERSION,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: ColorName.greyText,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w300,

@@ -31,7 +31,6 @@ class _OpenImageDialogContent extends StatelessWidget {
   final Future<void> Function(String downloadUrl)? onComplete;
 
   const _OpenImageDialogContent({
-    super.key,
     required this.outpost,
     this.onComplete,
   });

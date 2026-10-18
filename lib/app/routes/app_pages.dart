@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
 import 'package:podium/app/modules/myProfile/views/connected_accounts_view.dart';
@@ -145,10 +146,11 @@ class AppPages {
       page: () => const AllOutpostsView(),
       binding: AllGroupsBinding(),
     ),
-    GetPage(
-      name: _Paths.PLAYGROUND,
-      page: () => const PlaygroundView(),
-      binding: PlaygroundBinding(),
-    ),
+    if (kDebugMode)
+      GetPage(
+        name: _Paths.PLAYGROUND,
+        page: () => const PlaygroundView(),
+        binding: PlaygroundBinding(),
+      ),
   ];
 }

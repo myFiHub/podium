@@ -4,14 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
-import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/popUpsAndModals/scoreOutpostPrompt.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
-import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -23,6 +20,7 @@ final joinOrLeftDebounce = Debouncing(duration: const Duration(seconds: 1));
 JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
   Get.put<OngoingOutpostCallController>(OngoingOutpostCallController());
   final outpostCallController = Get.find<OutpostCallController>();
+  outpostCallController.markCallStarted();
   return JitsiMeetEventListener(
     conferenceJoined: (url) async {
       outpostCallController.fetchLiveData(withJoin: true);
@@ -77,13 +75,10 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       }
     },
     readyToClose: () {
+      if (outpostCallController.callCleanedUp) return;
       Navigate.to(
         route: Routes.HOME,
         type: NavigationTypes.offNamed,
-      );
-      sendOutpostEvent(
-        outpostId: outpost.uuid,
-        eventType: OutgoingMessageTypeEnums.leave,
       );
       outpostCallController.cleanupAfterCall();
       Future.delayed(const Duration(seconds: 1), () {

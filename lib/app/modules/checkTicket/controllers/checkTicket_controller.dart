@@ -444,6 +444,12 @@ class CheckticketController extends GetxController {
   buyTicket({
     required TicketSeller ticketSeller,
   }) async {
+    final seller = allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid];
+    if (seller == null || seller.buying) {
+      return;
+    }
+    seller.buying = true;
+    allUsersToBuyTicketFrom.refresh();
     try {
       final groupAccessType = outpost.value!.enter_type;
       final groupSpeakerType = outpost.value!.speak_type;

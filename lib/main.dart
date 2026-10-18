@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
-import "package:device_preview/device_preview.dart";
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -132,16 +131,7 @@ void main() async {
 
   await GetStorage.init();
   HttpApis.configure();
-  // runApp(const MyApp());
-  runApp(
-    DevicePreview(
-      enabled:
-          //
-          false,
-      // !kReleaseMode,
-      builder: (context) => const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 preCache(BuildContext context) {
@@ -162,6 +152,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   ReownAppKitModalThemeData? _themeData;
 
   late final AppLifecycleListener _listener;
+  bool _imagesPrecached = false;
 
   @override
   void initState() {
@@ -242,10 +233,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.didChangePlatformBrightness();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_imagesPrecached) {
+      _imagesPrecached = true;
+      preCache(context);
+    }
+  }
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    preCache(context);
     return ReownAppKitModalTheme(
       isDarkMode: _isDarkMode,
       themeData: _themeData,

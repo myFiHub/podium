@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
@@ -25,8 +27,12 @@ class Img extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUrl = Uri.parse(src).isAbsolute;
+    final isUrl = Uri.tryParse(src)?.isAbsolute ?? false;
     final isEmptyAndHasIfEmpty = src.isEmpty && ifEmpty != null;
+    final boxSize = max(size ?? width ?? 70, size ?? height ?? 70);
+    // Decode near display size; 1.5x leaves room for non-square sources.
+    final cacheSize =
+        (boxSize * MediaQuery.devicePixelRatioOf(context) * 1.5).round();
     return Container(
       width: size ?? width ?? 70,
       height: size ?? height ?? 70,
@@ -42,6 +48,7 @@ class Img extends StatelessWidget {
             )
           : CachedNetworkImage(
               imageUrl: isUrl ? src : avatarPlaceHolder(alt ?? "OO"),
+              memCacheWidth: cacheSize,
               placeholder: (context, url) => GFShimmer(
                 secondaryColor: ColorName.pageBackground,
                 mainColor: ColorName.cardBorder,
@@ -62,8 +69,9 @@ class Img extends StatelessWidget {
                   borderRadius: borderRadius,
                   shape: BoxShape.rectangle,
                   image: DecorationImage(
-                    image: NetworkImage(
+                    image: CachedNetworkImageProvider(
                       avatarPlaceHolder(alt ?? "OO"),
+                      maxWidth: cacheSize,
                     ),
                     fit: BoxFit.cover,
                   ),

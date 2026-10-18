@@ -50,6 +50,13 @@ class OutpostCallController extends GetxController {
     // },
   });
   final haveOngoingCall = false.obs;
+  bool _callCleanedUp = true;
+
+  /// True once [cleanupAfterCall] ran for the current call. Jitsi reports
+  /// readyToClose after our own hang-up too, which must not clean up twice.
+  bool get callCleanedUp => _callCleanedUp;
+
+  void markCallStarted() => _callCleanedUp = false;
   final jitsiMembers = Rx<List<JitsiMember>>([]);
   final searchedValueInMeet = Rx<String>('');
   final sortType = Rx<String>(SortTypes.recentlyTalked);
@@ -311,6 +318,8 @@ class OutpostCallController extends GetxController {
   }
 
   cleanupAfterCall() async {
+    if (_callCleanedUp) return;
+    _callCleanedUp = true;
     haveOngoingCall.value = false;
     jitsiMembers.value = [];
     jitsiMeet.hangUp();
@@ -323,6 +332,8 @@ class OutpostCallController extends GetxController {
         outpostId: outpostId,
         eventType: OutgoingMessageTypeEnums.leave,
       );
+      // Let the route change that triggered cleanup finish first.
+      await WidgetsBinding.instance.endOfFrame;
       final score = await showScoreOutpostPrompt();
       if (score != null) {
         await HttpApis.podium.scoreOutpost(

@@ -83,7 +83,7 @@ class PrejoinReferralView extends GetView<LoginController> {
 }
 
 class _ExternalWalletConnectButton extends GetView<GlobalController> {
-  const _ExternalWalletConnectButton({super.key});
+  const _ExternalWalletConnectButton();
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +114,7 @@ class _ExternalWalletConnectButton extends GetView<GlobalController> {
 }
 
 class _InternalWalletAddress extends GetView<LoginController> {
-  const _InternalWalletAddress({super.key});
+  const _InternalWalletAddress();
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +207,7 @@ class _InternalWalletAddress extends GetView<LoginController> {
 }
 
 class _AccessUsingTicket extends GetView<LoginController> {
-  const _AccessUsingTicket({super.key});
+  const _AccessUsingTicket();
 
   @override
   Widget build(BuildContext context) {
@@ -378,7 +378,7 @@ class _ProfileCard extends GetView<LoginController> {
 }
 
 class _ReferralStatus extends GetView<LoginController> {
-  const _ReferralStatus({super.key});
+  const _ReferralStatus();
 
   @override
   Widget build(BuildContext context) {

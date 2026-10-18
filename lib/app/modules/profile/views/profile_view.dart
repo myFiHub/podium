@@ -902,7 +902,7 @@ class _BuyArenaTicketButton extends GetWidget<ProfileController> {
 }
 
 class _BuyFriendTechTicket extends GetWidget<ProfileController> {
-  const _BuyFriendTechTicket({super.key});
+  const _BuyFriendTechTicket();
 
   @override
   Widget build(BuildContext context) {

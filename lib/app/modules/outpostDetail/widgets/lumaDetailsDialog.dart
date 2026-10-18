@@ -76,7 +76,7 @@ class LumaDetailsDialog extends GetView<OutpostDetailController> {
 }
 
 class _Info extends StatefulWidget {
-  const _Info({super.key});
+  const _Info();
 
   @override
   State<_Info> createState() => _InfoState();
@@ -271,7 +271,7 @@ String _isoStringToDate(String isoString) {
 }
 
 class _Contents extends GetView<OutpostDetailController> {
-  const _Contents({super.key});
+  const _Contents();
 
   @override
   Widget build(BuildContext context) {
@@ -329,7 +329,7 @@ class _Contents extends GetView<OutpostDetailController> {
 
 class _HostItem extends StatelessWidget {
   final Luma_HostModel host;
-  const _HostItem({super.key, required this.host});
+  const _HostItem({required this.host});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -373,7 +373,7 @@ class _HostItem extends StatelessWidget {
 
 class _GuestItem extends StatelessWidget {
   final GuestDataModel guest;
-  const _GuestItem({super.key, required this.guest});
+  const _GuestItem({required this.guest});
 
   @override
   Widget build(BuildContext context) {
@@ -434,7 +434,7 @@ class _GuestItem extends StatelessWidget {
 }
 
 class _DoneButton extends GetView<OutpostDetailController> {
-  const _DoneButton({super.key});
+  const _DoneButton();
   @override
   Widget build(BuildContext context) {
     final eventLink = controller.lumaEventDetails.value?.event.url;

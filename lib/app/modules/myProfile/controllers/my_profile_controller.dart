@@ -506,8 +506,8 @@ class MyProfileController extends GetxController {
     );
   }
 
-  void showPrivateKeyWarning() async {
-    String privateKey = '';
+  Future<void> _copyPrivateKey() async {
+    final String privateKey;
     try {
       privateKey = await Web3AuthFlutter.getPrivKey();
     } catch (e) {
@@ -517,7 +517,20 @@ class MyProfileController extends GetxController {
       );
       return;
     }
+    await Clipboard.setData(ClipboardData(text: privateKey));
+    Toast.success(
+      title: 'Copied',
+      message: 'Private key copied. The clipboard will be cleared in 60 seconds.',
+    );
+    Future.delayed(const Duration(seconds: 60), () async {
+      final current = await Clipboard.getData(Clipboard.kTextPlain);
+      if (current?.text == privateKey) {
+        await Clipboard.setData(const ClipboardData(text: ''));
+      }
+    });
+  }
 
+  void showPrivateKeyWarning() {
     Get.dialog(
       AlertDialog(
         backgroundColor: ColorName.cardBackground,
@@ -583,12 +596,8 @@ class MyProfileController extends GetxController {
               foregroundColor: Colors.white,
             ),
             onPressed: () {
-              Clipboard.setData(ClipboardData(text: privateKey));
-              Toast.success(
-                title: 'Copied',
-                message: 'Private key copied to clipboard',
-              );
               Navigator.pop(Get.context!);
+              _copyPrivateKey();
             },
             child: const Text('Copy Private Key'),
           ),

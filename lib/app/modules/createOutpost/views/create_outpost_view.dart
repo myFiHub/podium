@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -149,7 +150,7 @@ class _SelectPicture extends GetWidget<CreateOutpostController> {
 }
 
 class _ScheduleToggle extends GetView<CreateOutpostController> {
-  const _ScheduleToggle({super.key});
+  const _ScheduleToggle();
 
   @override
   Widget build(BuildContext context) {
@@ -287,9 +288,7 @@ class _SubjectInput extends GetWidget<CreateOutpostController> {
 }
 
 class _TitleBar extends GetWidget<CreateOutpostController> {
-  const _TitleBar({
-    super.key,
-  });
+  const _TitleBar();
 
   @override
   Widget build(BuildContext context) {
@@ -330,9 +329,7 @@ class _OutpostNameInput extends GetWidget<CreateOutpostController> {
 }
 
 class _CreateButton extends GetWidget<CreateOutpostController> {
-  const _CreateButton({
-    super.key,
-  });
+  const _CreateButton();
 
   @override
   Widget build(BuildContext context) {
@@ -366,9 +363,7 @@ class _CreateButton extends GetWidget<CreateOutpostController> {
 }
 
 class _AddLumaEventCheckboxAndButtons extends GetView<CreateOutpostController> {
-  const _AddLumaEventCheckboxAndButtons({
-    super.key,
-  });
+  const _AddLumaEventCheckboxAndButtons();
 
   @override
   Widget build(BuildContext context) {
@@ -451,7 +446,6 @@ class _AddLumaEventCheckboxAndButtons extends GetView<CreateOutpostController> {
 class _AddLumaEventHostsButton extends GetView<CreateOutpostController> {
   final List<AddHostModel> hosts;
   const _AddLumaEventHostsButton({
-    super.key,
     required this.hosts,
   });
 
@@ -470,7 +464,6 @@ class _AddLumaEventHostsButton extends GetView<CreateOutpostController> {
 class _AddLumaEventGuestsButton extends GetView<CreateOutpostController> {
   final List<AddGuestModel> guests;
   const _AddLumaEventGuestsButton({
-    super.key,
     required this.guests,
   });
 
@@ -487,9 +480,7 @@ class _AddLumaEventGuestsButton extends GetView<CreateOutpostController> {
 }
 
 class _AdultsCheckbox extends GetView<CreateOutpostController> {
-  const _AdultsCheckbox({
-    super.key,
-  });
+  const _AdultsCheckbox();
 
   @override
   Widget build(BuildContext context) {
@@ -791,7 +782,7 @@ class SelectorContent extends StatelessWidget {
 }
 
 class _SelectCohosts extends GetView<CreateOutpostController> {
-  const _SelectCohosts({super.key});
+  const _SelectCohosts();
 
   @override
   Widget build(BuildContext context) {
@@ -906,7 +897,7 @@ class _SelectCohosts extends GetView<CreateOutpostController> {
                   leading: CircleAvatar(
                     backgroundImage:
                         cohost.image != null && cohost.image!.isNotEmpty
-                            ? NetworkImage(cohost.image!)
+                            ? CachedNetworkImageProvider(cohost.image!, maxWidth: 160)
                             : null,
                     child: cohost.image == null || cohost.image!.isEmpty
                         ? const Icon(Icons.person)

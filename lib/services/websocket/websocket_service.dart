@@ -84,6 +84,7 @@ class WebSocketService {
       _reconnectAttempts = 0;
       _setupListeners();
       _startPingTimer();
+      _rejoinCurrentOutpost();
 
       l.d('WebSocket connected successfully');
       return true;
@@ -154,7 +155,7 @@ class WebSocketService {
       return true;
     }
 
-    final joinId = _generateJoinId();
+    final joinId = _generateJoinId(outpostId);
     final completer = Completer<bool>();
     _joinRequests[joinId] = completer;
 
@@ -275,7 +276,8 @@ class WebSocketService {
   }
 
   void _handleDisconnect() {
-    l.w('WebSocket disconnected');
+    l.w('WebSocket disconnected: code ${_channel?.closeCode}, '
+        'reason ${_channel?.closeReason}');
     _setState(WebSocketState.disconnected);
     _scheduleReconnect();
   }
@@ -316,12 +318,14 @@ class WebSocketService {
     return totalDelay > _maxReconnectDelay ? _maxReconnectDelay : totalDelay;
   }
 
+  /// Keep this app-level message: with protocol pings instead, the server
+  /// dropped the connection shortly after every outpost join.
   void _startPingTimer() {
     _pingTimer?.cancel();
     _pingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       if (isConnected) {
         try {
-          _channel!.sink.add([0x8A]); // WebSocket ping frame
+          _channel!.sink.add([0x8A]);
         } catch (e) {
           l.e('Error sending ping: $e');
           _setState(WebSocketState.disconnected);
@@ -329,6 +333,19 @@ class WebSocketService {
         }
       }
     });
+  }
+
+  /// After a reconnect the server no longer knows we're in the outpost.
+  void _rejoinCurrentOutpost() {
+    if (!Get.isRegistered<OngoingOutpostCallController>()) return;
+    final outpostId = Get.find<OngoingOutpostCallController>()
+        .outpostCallController
+        .outpost
+        .value
+        ?.uuid;
+    if (outpostId != null) {
+      joinOutpost(outpostId, force: true);
+    }
   }
 
   Future<void> _closeChannel() async {
@@ -362,7 +379,11 @@ class WebSocketService {
     _joinRequests.clear();
   }
 
-  String _generateJoinId() => 'join-${myUser.address}';
+  int _joinCounter = 0;
+
+  /// Unique per attempt so concurrent or retried joins never overwrite each
+  /// other's completer.
+  String _generateJoinId(String outpostId) => '$outpostId#${_joinCounter++}';
 
   bool _isAlreadyJoined(String outpostId) {
     if (!Get.isRegistered<OngoingOutpostCallController>()) return false;
@@ -433,8 +454,11 @@ class WebSocketService {
 
   void _handleUserJoined(IncomingMessage message) {
     if (message.data.address == myUser.address) {
-      final joinId = _generateJoinId();
-      _completeJoinRequest(joinId);
+      final outpostId = message.data.outpost_uuid;
+      final pending = _joinRequests.keys
+          .where((id) => outpostId == null || id.startsWith('$outpostId#'))
+          .toList();
+      pending.forEach(_completeJoinRequest);
     }
 
     _withController<OutpostCallController>((controller) {

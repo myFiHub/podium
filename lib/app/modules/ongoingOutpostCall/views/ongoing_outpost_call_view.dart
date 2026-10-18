@@ -500,7 +500,7 @@ class MembersList extends GetView<OutpostCallController> {
 }
 
 class _StartIntroButton extends GetView<OngoingOutpostCallController> {
-  const _StartIntroButton({super.key});
+  const _StartIntroButton();
 
   @override
   Widget build(BuildContext context) {

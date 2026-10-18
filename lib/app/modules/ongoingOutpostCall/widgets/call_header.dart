@@ -1,0 +1,355 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/views/report_form.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
+import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
+import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/services/toast/toast.dart';
+import 'package:podium/utils/storage.dart';
+import 'package:pulsator/pulsator.dart';
+
+enum _MenuAction { share, invite, tutorial, report }
+
+class CallTopBar extends GetView<OngoingOutpostCallController> {
+  const CallTopBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final callController = controller.outpostCallController;
+    return Obx(() {
+      final outpost = callController.outpost.value;
+      if (outpost == null) return const SizedBox(height: 56);
+      final iAmCreator = outpost.creator_user_uuid == myId;
+      final count = callController.members.value.length;
+      final isRecording = controller.recorderUserId.value.isNotEmpty;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: 'Minimize',
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 30),
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    outpost.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    iAmCreator
+                        ? 'Hosted by you'
+                        : 'Hosted by ${outpost.creator_user_name ?? ''}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: ColorName.greyText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isRecording) const _RecordingPill(),
+            _LivePill(count: count),
+            PopupMenuButton<_MenuAction>(
+              icon: const Icon(Icons.more_vert_rounded),
+              color: ColorName.navbarBackground,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: ColorName.cardBorder),
+              ),
+              onSelected: (action) => _onMenu(action),
+              itemBuilder: (_) => [
+                if (canShareOutpostUrl(outpost: outpost))
+                  const PopupMenuItem(
+                    value: _MenuAction.share,
+                    child: _MenuRow(Icons.link_rounded, 'Copy outpost link'),
+                  ),
+                if (canInvite(outpost: outpost, currentUserId: myId))
+                  const PopupMenuItem(
+                    value: _MenuAction.invite,
+                    child: _MenuRow(Icons.person_add_alt_1, 'Invite people'),
+                  ),
+                const PopupMenuItem(
+                  value: _MenuAction.tutorial,
+                  child: _MenuRow(Icons.lightbulb_outline, 'Show tutorial'),
+                ),
+                const PopupMenuItem(
+                  value: _MenuAction.report,
+                  child: _MenuRow(Icons.flag_outlined, 'Report outpost'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  void _onMenu(_MenuAction action) {
+    final outpost = controller.outpostCallController.outpost.value;
+    if (outpost == null) return;
+    switch (action) {
+      case _MenuAction.share:
+        Clipboard.setData(
+          ClipboardData(text: generateOutpostShareUrl(outpostId: outpost.uuid)),
+        );
+        Toast.info(title: 'Copied!', message: 'URL copied to clipboard');
+      case _MenuAction.invite:
+        openInviteBottomSheet(
+          canInviteToSpeak: canInviteToSpeak(
+            outpost: outpost,
+            currentUserId: myId,
+          ),
+        );
+      case _MenuAction.tutorial:
+        GetStorage().remove(IntroStorageKeys.viewedOngiongCall);
+        controller.startIntro();
+      case _MenuAction.report:
+        Get.dialog(
+          Dialog(
+            backgroundColor: ColorName.cardBackground,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: ReportForm(),
+            ),
+          ),
+        );
+    }
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _MenuRow(this.icon, this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: ColorName.greyText),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LivePill extends StatelessWidget {
+  final int count;
+  const _LivePill({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(14),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.circle, size: 8, color: callSpeakingColor),
+          const SizedBox(width: 5),
+          const Text(
+            'LIVE',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.people_alt_rounded,
+              size: 14, color: ColorName.greyText),
+          const SizedBox(width: 3),
+          Text(
+            '$count',
+            style: const TextStyle(fontSize: 12, color: ColorName.greyText),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecordingPill extends StatelessWidget {
+  const _RecordingPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'The host is recording',
+      child: Container(
+        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.fromLTRB(2, 2, 8, 2),
+        decoration: BoxDecoration(
+          color: callDangerColor.withAlpha(30),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Pulsator(
+                style: PulseStyle(color: Colors.red),
+                duration: Duration(seconds: 2),
+                count: 2,
+                repeat: 0,
+                startFromScratch: false,
+                autoStart: true,
+                fit: PulseFit.contain,
+                child: Icon(Icons.circle, color: Colors.red, size: 6),
+              ),
+            ),
+            Text(
+              'REC',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: callDangerColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Personal status: role and remaining talk time. Carries the intro's timer key.
+class MyStatusCard extends GetView<OngoingOutpostCallController> {
+  const MyStatusCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final callController = Get.find<OutpostCallController>();
+    return Obx(() {
+      final session = controller.mySession.value;
+      final isAdmin = controller.amIAdmin.value;
+      final canTalk = callController.canTalk.value;
+      final muted = controller.amIMuted.value;
+
+      final IconData icon;
+      final String title;
+      final String subtitle;
+      final Color color;
+      String? trailing;
+
+      if (session == null) {
+        icon = Icons.hourglass_top_rounded;
+        title = 'Joining…';
+        subtitle = 'Syncing with the outpost';
+        color = ColorName.greyText;
+      } else if (isAdmin) {
+        icon = Icons.star_rounded;
+        title = "You're the host";
+        subtitle = 'Your talk time is unlimited';
+        color = callAccentColor;
+      } else if (!canTalk) {
+        icon = Icons.headphones_rounded;
+        title = "You're listening";
+        subtitle = "You can't speak in this outpost, but you can react";
+        color = ColorName.primaryBlue;
+      } else if (session.remaining_time <= 0) {
+        icon = Icons.timer_off_outlined;
+        title = "Time's up";
+        subtitle = 'Earn more time through likes and cheers';
+        color = callDangerColor;
+        trailing = '00:00';
+      } else {
+        final low = session.remaining_time < 120;
+        icon = muted ? Icons.mic_off_rounded : Icons.graphic_eq_rounded;
+        title = muted ? 'Your talk time' : "You're live";
+        subtitle = muted
+            ? 'The timer runs only while you are unmuted'
+            : 'Your talk time is counting down';
+        color = low
+            ? callDangerColor
+            : muted
+                ? Colors.white
+                : callSpeakingColor;
+        trailing = formatTalkTime(session.remaining_time);
+      }
+
+      return Container(
+        key: controller.timerKey,
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: ColorName.cardBackground.withAlpha(200),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withAlpha(80)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withAlpha(30),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 20, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: ColorName.greyText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null)
+              Text(
+                trailing,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+          ],
+        ),
+      );
+    });
+  }
+}

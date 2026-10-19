@@ -150,14 +150,26 @@ class WebSocketService {
     return await connect(_token);
   }
 
-  /// Join an outpost with simplified logic
-  Future<bool> joinOutpost(String outpostId,
-      {bool force = false, bool withRetry = false}) async {
-    if (withRetry) {
-      return await _joinOutpostWithRetry(outpostId, force: force);
-    }
+  final Map<String, Future<bool>> _inflightJoins = {};
 
-    return await _joinOutpostSingle(outpostId, force: force);
+  /// Join an outpost with simplified logic. A join already in flight for the
+  /// same outpost is shared: the server only answers the first join, so a
+  /// second one would just time out.
+  Future<bool> joinOutpost(String outpostId,
+      {bool force = false, bool withRetry = false}) {
+    final inflight = _inflightJoins[outpostId];
+    if (inflight != null) return inflight;
+
+    final join = withRetry
+        ? _joinOutpostWithRetry(outpostId, force: force)
+        : _joinOutpostSingle(outpostId, force: force);
+    _inflightJoins[outpostId] = join;
+    join.whenComplete(() {
+      if (identical(_inflightJoins[outpostId], join)) {
+        _inflightJoins.remove(outpostId);
+      }
+    });
+    return join;
   }
 
   /// Single join attempt

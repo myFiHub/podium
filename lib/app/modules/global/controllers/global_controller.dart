@@ -312,6 +312,7 @@ class GlobalController extends GetxController {
       (state) {
         if (state == AppLifecycleState.resumed) {
           _listenToInternetStatus();
+          ws_client?.ensureConnected();
         } else if (state == AppLifecycleState.hidden ||
             state == AppLifecycleState.paused) {
           _internetStatusSubscription?.cancel();
@@ -332,6 +333,7 @@ class GlobalController extends GetxController {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
           l.i("Internet connected");
+          ws_client?.ensureConnected();
           try {
             final versionResolved = await checkVersion();
             if (versionResolved && !initializedOnce.value) {

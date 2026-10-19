@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/widgets/navbar.dart';
-import 'package:podium/widgets/ui/app_ui.dart';
 
 enum NavigationTypes {
   toNamed,
@@ -54,18 +52,4 @@ class Navigate {
       globalController.activeRoute.value = route;
     }
   }
-}
-
-Future<bool?> canNavigate() async {
-  final hasOngoingCall = Get.isRegistered<OutpostCallController>() &&
-      Get.find<OutpostCallController>().isInCall.value;
-  if (!hasOngoingCall) return true;
-  return showAppConfirm(
-    title: 'Leave this outpost?',
-    message: 'Opening another page will take you out of the live outpost. '
-        'You can rejoin while it is still live.',
-    confirmLabel: 'Leave',
-    cancelLabel: 'Stay',
-    destructive: true,
-  );
 }

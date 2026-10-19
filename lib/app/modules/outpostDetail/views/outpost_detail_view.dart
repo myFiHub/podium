@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/outpostImage.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
@@ -13,7 +14,6 @@ import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
-import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
@@ -21,7 +21,6 @@ import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -837,10 +836,7 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
       final onPressed = enabled
           ? () {
               if (isRegistered && Get.isRegistered<OutpostDetailController>()) {
-                Navigate.to(
-                  type: NavigationTypes.toNamed,
-                  route: Routes.ONGOING_OUTPOST_CALL,
-                );
+                openCallPage();
               } else {
                 controller.startTheCall(accesses: accesses);
               }

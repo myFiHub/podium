@@ -14,7 +14,6 @@ import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
-import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/constants/meeting.dart';
 import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/providers/api/api.dart';
@@ -25,8 +24,8 @@ import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 class SortTypes {
   static const String recentlyTalked = 'recentlyTalked';
@@ -62,8 +61,10 @@ class OutpostCallController extends GetxController {
 
   void markCallStarted() {
     _callCleanedUp = false;
+    _jitsiClosed = Completer<void>();
     isInCall.value = true;
   }
+
   final jitsiMembers = Rx<List<JitsiMember>>([]);
   final searchedValueInMeet = Rx<String>('');
   final sortType = Rx<String>(SortTypes.recentlyTalked);
@@ -252,7 +253,7 @@ class OutpostCallController extends GetxController {
           Get.isRegistered<OutpostCallController>();
       if (isOutpostCallControllerRegistered) {
         final outpostCallController = Get.find<OutpostCallController>();
-        outpostCallController.runHome();
+        outpostCallController.leaveCall(askForScore: false);
         Toast.error(
           title: 'Could not join the outpost',
           message: 'Please try again.',
@@ -334,7 +335,7 @@ class OutpostCallController extends GetxController {
     return [...members];
   }
 
-  cleanupAfterCall() async {
+  Future<void> cleanupAfterCall({bool askForScore = true}) async {
     if (_callCleanedUp) return;
     _callCleanedUp = true;
     isInCall.value = false;
@@ -363,6 +364,7 @@ class OutpostCallController extends GetxController {
         outpostId: outpostId,
         eventType: OutgoingMessageTypeEnums.leave,
       );
+      if (!askForScore) return;
       // Let the route change that triggered cleanup finish first.
       await WidgetsBinding.instance.endOfFrame;
       final score = await showScoreOutpostPrompt();
@@ -434,6 +436,7 @@ class OutpostCallController extends GetxController {
   Future<void> startCall(
       {required OutpostModel outpostToJoin,
       OutpostAccesses? accessOverRides}) async {
+    if (!await _leaveOtherOutpostFirst(outpostToJoin)) return;
     final globalController = Get.find<GlobalController>();
 
     final iAmAllowedToSpeak = accessOverRides != null
@@ -508,12 +511,49 @@ class OutpostCallController extends GetxController {
     }
   }
 
-  runHome() async {
-    await Navigate.to(
-      route: Routes.HOME,
-      type: NavigationTypes.offAllNamed,
+  /// Ends the call and takes the call page out of the stack, leaving whatever
+  /// page the user is on in place.
+  Future<void> leaveCall({bool askForScore = true}) async {
+    closeCallPage();
+    await cleanupAfterCall(askForScore: askForScore);
+  }
+
+  Completer<void>? _jitsiClosed;
+
+  void onJitsiClosed() {
+    final completer = _jitsiClosed;
+    if (completer != null && !completer.isCompleted) completer.complete();
+  }
+
+  /// Completes once Jitsi has torn the previous conference down, so a new
+  /// one isn't joined into a session that is still closing.
+  Future<void> waitForJitsiClosed() async {
+    final completer = _jitsiClosed;
+    if (completer == null || completer.isCompleted) return;
+    await completer.future
+        .timeout(const Duration(seconds: 5), onTimeout: () {});
+  }
+
+  /// Returns false when the user chose to stay in the outpost they're in.
+  Future<bool> _leaveOtherOutpostFirst(OutpostModel outpostToJoin) async {
+    final current = outpost.value;
+    if (!isInCall.value || current == null) return true;
+    if (current.uuid == outpostToJoin.uuid) {
+      openCallPage();
+      return false;
+    }
+    final switchOutpost = await showAppConfirm(
+      title: "You're in ${current.name}",
+      message: 'You can only be in one outpost at a time. '
+          'Leave it and join ${outpostToJoin.name}?',
+      confirmLabel: 'Leave & join',
+      cancelLabel: 'Stay',
+      destructive: true,
     );
-    cleanupAfterCall();
+    if (!switchOutpost) return false;
+    await leaveCall(askForScore: false);
+    await waitForJitsiClosed();
+    return true;
   }
 }
 

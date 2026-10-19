@@ -13,7 +13,6 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/more_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
 import 'package:podium/utils/palette.dart';
-import 'package:podium/services/toast/toast.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class ControlDock extends GetView<OngoingOutpostCallController> {
@@ -80,7 +79,7 @@ Future<void> confirmLeave(OutpostCallController callController) async {
     destructive: true,
   );
   if (leave) {
-    callController.runHome();
+    callController.leaveCall();
   }
 }
 
@@ -185,10 +184,7 @@ class MicButton extends GetView<OngoingOutpostCallController> {
     return Obx(() {
       final canTalk = callController.canTalk.value;
       final muted = controller.amIMuted.value;
-      final session = controller.mySession.value;
-      final outOfTime = !controller.amIAdmin.value &&
-          session != null &&
-          session.remaining_time <= 0;
+      final outOfTime = controller.isOutOfTime;
       final connecting = !controller.isConferenceJoined.value;
       final disabled = !canTalk || outOfTime || connecting;
       final live = !disabled && !muted;
@@ -230,28 +226,7 @@ class MicButton extends GetView<OngoingOutpostCallController> {
             customBorder: const CircleBorder(),
             onTap: () {
               HapticFeedback.mediumImpact();
-              if (connecting) {
-                Toast.info(
-                  title: 'Connecting…',
-                  message: 'You can talk as soon as you are connected',
-                );
-                return;
-              }
-              if (!canTalk) {
-                Toast.info(
-                  title: "You're a listener",
-                  message: "You can't speak in this outpost",
-                );
-                return;
-              }
-              if (outOfTime && muted) {
-                Toast.error(
-                  title: "You've run out of time",
-                  message: 'Likes and cheers add more talk time',
-                );
-                return;
-              }
-              controller.setMutedState(!muted);
+              controller.toggleMyMic();
             },
             child: connecting
                 ? Center(

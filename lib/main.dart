@@ -19,6 +19,7 @@ import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/call_route_tracker.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -257,6 +258,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ),
           );
         },
+        navigatorObservers: [CallRouteTracker.instance.observer],
         binds: globalBindings,
         debugShowCheckedModeBanner: false,
         initialRoute: AppPages.INITIAL,

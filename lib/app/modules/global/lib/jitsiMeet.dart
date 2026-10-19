@@ -12,6 +12,7 @@ import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/call_route_tracker.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
@@ -24,15 +25,21 @@ final joinOrLeftDebounce = Debouncing(
 
 CallRoomController? get _room => findCallRoom();
 
+/// Shows the call page. A call page already in the stack is moved to the top
+/// rather than pushed again, since two copies would share GlobalKeys.
 void openCallPage() {
   if (Get.isRegistered<OngoingOutpostCallController>()) {
     Get.find<OngoingOutpostCallController>().callPageOpened = true;
   }
+  if (CallRouteTracker.instance.isCallPageVisible.value) return;
   Navigate.to(
     route: Routes.ONGOING_OUTPOST_CALL,
     type: NavigationTypes.toNamed,
   );
 }
+
+/// Takes the call page out of the stack without touching the other pages.
+void closeCallPage() => CallRouteTracker.instance.removeCallPage();
 
 JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
   for (var i = 0;
@@ -133,12 +140,9 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       }
     },
     readyToClose: () {
+      outpostCallController.onJitsiClosed();
       if (outpostCallController.callCleanedUp) return;
-      Navigate.to(
-        route: Routes.HOME,
-        type: NavigationTypes.offNamed,
-      );
-      outpostCallController.cleanupAfterCall();
+      outpostCallController.leaveCall();
     },
     // like: (idWithAddedAtSign, participantId) async {
     //   final OngoingGroupCallController ongoingGroupCallController =

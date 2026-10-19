@@ -131,6 +131,16 @@ class WebSocketService {
     }
   }
 
+  /// Reconnects right away (with a fresh retry budget) unless already
+  /// connected or connecting. For when the app returns to the foreground or
+  /// the network comes back, instead of waiting out the backoff.
+  Future<void> ensureConnected() async {
+    if (_token.isEmpty || isConnected || isConnecting) return;
+    _reconnectTimer?.cancel();
+    _reconnectAttempts = 0;
+    await connect(_token);
+  }
+
   /// Legacy reconnect method for API compatibility
   Future<bool> reconnect() async {
     if (_token.isEmpty) {
@@ -294,7 +304,8 @@ class WebSocketService {
 
     _reconnectTimer?.cancel();
 
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
+    // A live call keeps retrying at the max delay rather than giving up.
+    if (_reconnectAttempts >= _maxReconnectAttempts && !_isInCall) {
       l.e('Max reconnection attempts reached');
       Toast.error(
           message: 'Connection lost. Please check your internet connection.');
@@ -342,14 +353,19 @@ class WebSocketService {
     });
   }
 
+  bool get _isInCall =>
+      Get.isRegistered<OutpostCallController>() &&
+      Get.find<OutpostCallController>().isInCall.value;
+
+  /// The outpost of the live call, if any.
+  String? get _currentCallOutpostId {
+    if (!_isInCall) return null;
+    return Get.find<OutpostCallController>().outpost.value?.uuid;
+  }
+
   /// After a reconnect the server no longer knows we're in the outpost.
   void _rejoinCurrentOutpost() {
-    if (!Get.isRegistered<OngoingOutpostCallController>()) return;
-    final outpostId = Get.find<OngoingOutpostCallController>()
-        .outpostCallController
-        .outpost
-        .value
-        ?.uuid;
+    final outpostId = _currentCallOutpostId;
     if (outpostId != null) {
       joinOutpost(outpostId, force: true);
     }
@@ -393,16 +409,8 @@ class WebSocketService {
   /// other's completer.
   String _generateJoinId(String outpostId) => '$outpostId#${_joinCounter++}';
 
-  bool _isAlreadyJoined(String outpostId) {
-    if (!Get.isRegistered<OngoingOutpostCallController>()) return false;
-
-    final currentOutpost = Get.find<OngoingOutpostCallController>()
-        .outpostCallController
-        .outpost
-        .value;
-
-    return currentOutpost?.uuid == outpostId;
-  }
+  bool _isAlreadyJoined(String outpostId) =>
+      _currentCallOutpostId == outpostId;
 
   void _completeJoinRequest(String joinId) {
     if (_joinRequests.containsKey(joinId)) {

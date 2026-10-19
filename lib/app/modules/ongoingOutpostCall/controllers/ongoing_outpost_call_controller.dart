@@ -131,7 +131,7 @@ class OngoingOutpostCallController extends GetxController {
               title: 'Could not join the outpost',
               message: 'Please try again.',
             );
-            outpostCallController.runHome();
+            outpostCallController.leaveCall(askForScore: false);
           }
         }
       });
@@ -464,6 +464,44 @@ class OngoingOutpostCallController extends GetxController {
       tutorialCoachMark.finish();
       shouldShowIntro.value = false;
     } catch (e) {}
+  }
+
+  bool get isOutOfTime {
+    final session = mySession.value;
+    return !amIAdmin.value && session != null && session.remaining_time <= 0;
+  }
+
+  /// False when the mic can't be opened at all right now.
+  bool get canUseMic =>
+      outpostCallController.canTalk.value &&
+      !isOutOfTime &&
+      isConferenceJoined.value;
+
+  /// Flips the mic, toasting the reason when it can't be opened.
+  void toggleMyMic() {
+    final muted = amIMuted.value;
+    if (!isConferenceJoined.value) {
+      Toast.info(
+        title: 'Connecting…',
+        message: 'You can talk as soon as you are connected',
+      );
+      return;
+    }
+    if (!outpostCallController.canTalk.value) {
+      Toast.info(
+        title: "You're a listener",
+        message: "You can't speak in this outpost",
+      );
+      return;
+    }
+    if (isOutOfTime && muted) {
+      Toast.error(
+        title: "You've run out of time",
+        message: 'Likes and cheers add more talk time',
+      );
+      return;
+    }
+    setMutedState(!muted);
   }
 
   setMutedState(bool muted) async {

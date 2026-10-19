@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/utils/palette.dart';
@@ -165,11 +164,6 @@ Widget _buildNavItem({
       highlightColor: Colors.transparent,
       onTap: () async {
         HapticFeedback.selectionClick();
-        final canNavigateToNewRoute = await canNavigate();
-        if (canNavigateToNewRoute != true) {
-          return;
-        }
-        jitsiMeet.hangUp();
         Navigate.to(
           type: NavigationTypes.offAllNamed,
           route: route,

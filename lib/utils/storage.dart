@@ -19,6 +19,7 @@ class StorageKeys {
   static const referrerId = 'referrerId';
   static const lastAppMetadata = 'lastAppMetadata';
   static const colorTheme = 'colorTheme';
+  static const askedCallOverlayPermission = 'askedCallOverlayPermission';
 }
 
 class IntroStorageKeys {

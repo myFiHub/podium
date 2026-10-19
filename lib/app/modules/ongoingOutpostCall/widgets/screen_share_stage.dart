@@ -4,7 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 /// Banner for my own share plus the minimized stage for someone else's.
 /// Sits above the scrolling member list so the native stage never scrolls.
@@ -50,19 +50,19 @@ class _LocalShareBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const _LiveDot(color: callSpeakingColor),
+          _LiveDot(color: callSpeakingColor),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   "You're sharing your screen",
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   'Everyone can see it · uses your talk time',
                   maxLines: 1,
@@ -77,7 +77,7 @@ class _LocalShareBanner extends StatelessWidget {
             onPressed: room.stopScreenShare,
             style: FilledButton.styleFrom(
               backgroundColor: callDangerColor,
-              foregroundColor: Colors.white,
+              foregroundColor: ColorName.white,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               minimumSize: const Size(0, 38),
               shape: RoundedRectangleBorder(
@@ -109,7 +109,7 @@ class _MinimizedStage extends StatelessWidget {
         children: [
           Row(
             children: [
-              const _LiveDot(color: callDangerColor),
+              _LiveDot(color: callDangerColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -178,7 +178,7 @@ class FullscreenStage extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
                   child: Row(
                     children: [
-                      const _LiveDot(color: callDangerColor),
+                      _LiveDot(color: callDangerColor),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -206,7 +206,7 @@ class FullscreenStage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Double-tap to minimize',
                   style: TextStyle(fontSize: 12, color: ColorName.greyText),
                 ),
@@ -262,8 +262,8 @@ class _StageButton extends StatelessWidget {
       tooltip: tooltip,
       icon: Icon(icon, size: 20),
       style: IconButton.styleFrom(
-        backgroundColor: Colors.white.withAlpha(16),
-        foregroundColor: Colors.white,
+        backgroundColor: ColorName.white.withAlpha(16),
+        foregroundColor: ColorName.white,
       ),
     );
   }
@@ -315,7 +315,7 @@ class _StageSlotState extends State<StageSlot> {
       onRect: (rect) {
         if (mounted) room?.setStageRect(rect, dpr);
       },
-      child: const ColoredBox(
+      child: ColoredBox(
         color: Colors.black,
         child: Center(
           child: SizedBox(

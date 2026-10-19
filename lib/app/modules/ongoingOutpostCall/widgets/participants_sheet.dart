@@ -8,7 +8,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interaction
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 
 enum _Filter { all, hands, stage, talking, listeners }
@@ -71,7 +71,7 @@ class _ParticipantsSheetState extends State<ParticipantsSheet> {
         padding: EdgeInsets.zero,
         trailing: IconButton(
           tooltip: 'Refresh',
-          icon: const Icon(Icons.refresh_rounded, color: ColorName.greyText),
+          icon: Icon(Icons.refresh_rounded, color: ColorName.greyText),
           onPressed: () => controller.fetchLiveData(withJoin: true),
         ),
         child: Column(
@@ -86,7 +86,7 @@ class _ParticipantsSheetState extends State<ParticipantsSheet> {
                   hintText: 'Search by name or address',
                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   filled: true,
-                  fillColor: Colors.white.withAlpha(10),
+                  fillColor: ColorName.white.withAlpha(10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
@@ -157,8 +157,7 @@ class _ParticipantsSheetState extends State<ParticipantsSheet> {
                                 filter == _Filter.hands
                                     ? 'No hands raised'
                                     : 'No one matches',
-                                style:
-                                    const TextStyle(color: ColorName.greyText),
+                                style: TextStyle(color: ColorName.greyText),
                               ),
                             ),
                           ],
@@ -205,7 +204,7 @@ class _ParticipantRow extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontWeight: FontWeight.w600,
-          color: isMe ? ColorName.primaryBlue : Colors.white,
+          color: isMe ? ColorName.primaryBlue : ColorName.white,
         ),
       ),
       subtitle: Padding(

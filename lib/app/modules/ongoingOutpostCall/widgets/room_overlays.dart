@@ -6,7 +6,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_cont
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/chat_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 /// Overlays drawn above the member grid: floating reactions, the reaction
 /// tray and the incoming chat preview.
@@ -140,7 +140,7 @@ class _ChatPreview extends StatelessWidget {
                     children: [
                       TextSpan(
                         text: '${message.senderName}  ',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w700,
                           color: ColorName.primaryBlue,
                         ),
@@ -251,7 +251,7 @@ class _FloatingEmojiState extends State<_FloatingEmoji>
                   child: Text(
                     reaction.senderName,
                     maxLines: 1,
-                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                    style: TextStyle(fontSize: 12, color: ColorName.white),
                   ),
                 ),
               ],
@@ -312,7 +312,7 @@ class RaisedHandsBanner extends StatelessWidget {
                       hands.length == 1
                           ? '1 raised hand'
                           : '${hands.length} raised hands',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
                         color: callAccentColor,
@@ -322,7 +322,7 @@ class RaisedHandsBanner extends StatelessWidget {
                       '$names$more',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: ColorName.greyText,
                       ),
@@ -330,7 +330,7 @@ class RaisedHandsBanner extends StatelessWidget {
                   ],
                 ),
               ),
-              const Text(
+              Text(
                 'Review',
                 style: TextStyle(
                   fontSize: 12,
@@ -338,7 +338,7 @@ class RaisedHandsBanner extends StatelessWidget {
                   color: callAccentColor,
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 color: callAccentColor,
                 size: 18,

@@ -7,7 +7,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_cont
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:pulsator/pulsator.dart';
@@ -39,11 +39,11 @@ class MemberAvatar extends StatelessWidget {
         children: [
           if (speaking)
             // Animates every frame; keep it from repainting the avatar.
-            const Positioned.fill(
+            Positioned.fill(
               child: RepaintBoundary(
                 child: Pulsator(
                   style: PulseStyle(color: callSpeakingColor),
-                  duration: Duration(seconds: 2),
+                  duration: const Duration(seconds: 2),
                   count: 2,
                   repeat: 0,
                   startFromScratch: false,
@@ -66,7 +66,7 @@ class MemberAvatar extends StatelessWidget {
           Positioned.fill(child: ConfettiDetector(userId: member.uuid)),
           Positioned(top: 0, right: 0, child: _HandBadge(uuid: member.uuid)),
           if (isCreator)
-            const Positioned(
+            Positioned(
               top: 0,
               left: 0,
               child: _Badge(
@@ -81,7 +81,7 @@ class MemberAvatar extends StatelessWidget {
               right: 0,
               child: speaking
                   ? _LiveMicBadge(uuid: member.uuid)
-                  : const _Badge(
+                  : _Badge(
                       color: ColorName.cardBackground,
                       icon: Icons.mic_off_rounded,
                       iconColor: ColorName.greyText,
@@ -278,7 +278,7 @@ class _MemberName extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final room = findCallRoom();
-    final baseColor = isMe ? ColorName.primaryBlue : Colors.white;
+    final baseColor = isMe ? ColorName.primaryBlue : ColorName.white;
     Widget label(bool dominant) => AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
@@ -307,7 +307,7 @@ class _TalkTimeLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isCreator) {
-      return const Text(
+      return Text(
         'Host',
         style: TextStyle(fontSize: 12, color: callAccentColor),
       );

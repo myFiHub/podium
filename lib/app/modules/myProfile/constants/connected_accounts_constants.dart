@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 class ConnectedAccountsConstants {
   static const double containerPadding = 16.0;
@@ -9,11 +9,11 @@ class ConnectedAccountsConstants {
   static const double headerFontSize = 15.0;
   static const double identifierFontSize = 12.0;
 
-  static const Color headerBackgroundColor = ColorName.success;
+  static Color get headerBackgroundColor => ColorName.success;
   static const int headerBackgroundAlpha = 22;
-  static const Color successColor = ColorName.success;
-  static const Color identifierColor = ColorName.greyText;
-  static const Color primaryBlue = ColorName.primaryBlue;
+  static Color get successColor => ColorName.success;
+  static Color get identifierColor => ColorName.greyText;
+  static Color get primaryBlue => ColorName.primaryBlue;
 
   static const EdgeInsets defaultPadding = EdgeInsets.all(containerPadding);
   static const BorderRadius containerBorderRadius =

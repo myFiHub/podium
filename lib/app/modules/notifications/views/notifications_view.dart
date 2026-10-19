@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
@@ -214,7 +215,7 @@ class _NotificationAvatar extends StatelessWidget {
               child: Icon(
                 isInvite ? Icons.mail_rounded : Icons.person_add_alt_1_rounded,
                 size: 10,
-                color: Colors.black,
+                color: AppColors.onColor(color),
               ),
             ),
           ),
@@ -259,9 +260,9 @@ class NotificationHeader extends StatelessWidget {
           ),
           child: isRead
               ? const SizedBox.shrink(key: ValueKey('read'))
-              : const Padding(
-                  key: ValueKey('new'),
-                  padding: EdgeInsets.only(left: 8),
+              : Padding(
+                  key: const ValueKey('new'),
+                  padding: const EdgeInsets.only(left: 8),
                   child: AppPill(label: 'NEW', color: AppColors.primary),
                 ),
         ),
@@ -346,7 +347,7 @@ class NotificationIdSection extends StatelessWidget {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppColors.primary,
                   ),
@@ -356,7 +357,7 @@ class NotificationIdSection extends StatelessWidget {
               Obx(() {
                 final loadingUserId = controller.loadingUserId.value;
                 return loadingUserId == notifierId + notificationId
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 12,
                         height: 12,
                         child: CircularProgressIndicator(
@@ -364,7 +365,7 @@ class NotificationIdSection extends StatelessWidget {
                           color: AppColors.primary,
                         ),
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.chevron_right_rounded,
                         size: 14,
                         color: AppColors.primary,
@@ -464,7 +465,7 @@ class _NotifActionButton extends StatelessWidget {
     final fg = switch (style) {
       _NotifActionStyle.text => AppColors.textMuted,
       _NotifActionStyle.danger => AppColors.danger,
-      _NotifActionStyle.primary => Colors.white,
+      _NotifActionStyle.primary => ColorName.white,
     };
     final child = loading
         ? SizedBox(
@@ -510,9 +511,9 @@ class _NotifActionButton extends StatelessWidget {
           onPressed: onTap,
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.success,
-            foregroundColor: Colors.black,
+            foregroundColor: AppColors.onColor(AppColors.success),
             disabledBackgroundColor: AppColors.success.withAlpha(150),
-            disabledForegroundColor: Colors.black,
+            disabledForegroundColor: AppColors.onColor(AppColors.success),
             minimumSize: minimumSize,
             padding: padding,
             textStyle: textStyle,

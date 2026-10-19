@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:textfield_tags/textfield_tags.dart';
 
 /*
@@ -55,7 +55,7 @@ class _DynamicTagsState extends State<DynamicTags> {
               controller: inputFieldValues.textEditingController,
               focusNode: inputFieldValues.focusNode,
               keyboardAppearance: Brightness.dark,
-              style: const TextStyle(fontSize: 14, color: Colors.white),
+              style: TextStyle(fontSize: 14, color: ColorName.white),
               decoration: InputDecoration(
                 hintText: hasTags ? '' : 'Add tags (optional)',
                 prefixIconConstraints: BoxConstraints(
@@ -99,14 +99,14 @@ class _DynamicTagsState extends State<DynamicTags> {
                       ),
               ),
               onChanged: (value) {
-                final button = const ButtonData(ColorName.secondaryBlue, '');
+                final button = ButtonData(ColorName.secondaryBlue, '');
                 final tagData = DynamicTagData(value, button);
                 inputFieldValues.onTagChanged(tagData);
                 widget.onTagsChanged(
                     inputFieldValues.tags.map((e) => e.tag).toList());
               },
               onSubmitted: (value) {
-                final button = const ButtonData(ColorName.secondaryBlue, '');
+                final button = ButtonData(ColorName.secondaryBlue, '');
                 final tagData = DynamicTagData(value, button);
                 inputFieldValues.onTagSubmitted(tagData);
               },
@@ -142,10 +142,10 @@ class _TagChip extends StatelessWidget {
               '#$label',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: ColorName.white,
               ),
             ),
           ),
@@ -153,12 +153,12 @@ class _TagChip extends StatelessWidget {
           InkWell(
             customBorder: const CircleBorder(),
             onTap: onRemove,
-            child: const Padding(
-              padding: EdgeInsets.all(2),
+            child: Padding(
+              padding: const EdgeInsets.all(2),
               child: Icon(
                 Icons.close_rounded,
                 size: 14,
-                color: Colors.white70,
+                color: ColorName.greyText,
               ),
             ),
           ),
@@ -388,9 +388,9 @@ class _DynamicMultilineTagsState extends State<DynamicMultilineTags> {
           onPressed: () {
             _dynamicTagController.clearTags();
           },
-          child: const Text(
+          child: Text(
             'CLEAR TAGS',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: ColorName.white),
           ),
         ),
       ],
@@ -480,10 +480,10 @@ class _DynamicAutoCompleteTagsState extends State<DynamicAutoCompleteTags> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 74, 137, 92),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Dynamic Tag Autocomplete Demo',
           style: TextStyle(
-            color: Colors.white,
+            color: ColorName.white,
             fontSize: 18.0,
           ),
         ),
@@ -675,9 +675,9 @@ class _DynamicAutoCompleteTagsState extends State<DynamicAutoCompleteTags> {
               onPressed: () {
                 _dynamicTagController.clearTags();
               },
-              child: const Text(
+              child: Text(
                 'CLEAR TAGS',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: ColorName.white),
               ),
             ),
           ],

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../widgets/bottom_sheet_body.dart';
@@ -97,7 +97,7 @@ class _DeleteAction extends StatelessWidget {
     return SlidableAction(
       onPressed: (context) => _showDeleteConfirmationDialog(),
       backgroundColor: AppColors.danger,
-      foregroundColor: Colors.white,
+      foregroundColor: ColorName.white,
       icon: Icons.delete_outline_rounded,
       label: 'Delete',
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -154,9 +154,9 @@ class _RecordCard extends StatelessWidget {
               ),
               border: Border.all(color: AppColors.primary.withAlpha(60)),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.graphic_eq_rounded,
-              color: Colors.white,
+              color: ColorName.white,
               size: 22,
             ),
           ),
@@ -180,9 +180,9 @@ class _RecordCard extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.border),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.play_arrow_rounded,
-              color: Colors.white,
+              color: ColorName.white,
               size: 20,
             ),
           ),
@@ -218,7 +218,7 @@ class _RecordDate extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(
+        Icon(
           Icons.schedule_rounded,
           size: 13,
           color: ColorName.greyText,

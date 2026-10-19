@@ -7,7 +7,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/control_dock.dart'
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:pulsator/pulsator.dart';
 
 class CallTopBar extends GetView<OngoingOutpostCallController> {
@@ -50,7 +50,7 @@ class CallTopBar extends GetView<OngoingOutpostCallController> {
                         : 'Hosted by ${outpost.creator_user_name ?? ''}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: ColorName.greyText,
                     ),
@@ -66,7 +66,7 @@ class CallTopBar extends GetView<OngoingOutpostCallController> {
               child: FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: callDangerColor,
-                  foregroundColor: Colors.white,
+                  foregroundColor: ColorName.white,
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   shape: const StadiumBorder(),
@@ -100,25 +100,25 @@ class _LivePill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(14),
+            color: ColorName.white.withAlpha(14),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.circle, size: 8, color: callDangerColor),
+              Icon(Icons.circle, size: 8, color: callDangerColor),
               const SizedBox(width: 5),
               const Text(
                 'LIVE',
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.people_alt_rounded,
+              Icon(Icons.people_alt_rounded,
                   size: 14, color: ColorName.greyText),
               const SizedBox(width: 3),
               Text(
                 '$count',
-                style: const TextStyle(fontSize: 12, color: ColorName.greyText),
+                style: TextStyle(fontSize: 12, color: ColorName.greyText),
               ),
             ],
           ),
@@ -142,7 +142,7 @@ class _RecordingPill extends StatelessWidget {
           color: callDangerColor.withAlpha(30),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
@@ -150,7 +150,7 @@ class _RecordingPill extends StatelessWidget {
               height: 20,
               child: Pulsator(
                 style: PulseStyle(color: ColorName.danger),
-                duration: Duration(seconds: 2),
+                duration: const Duration(seconds: 2),
                 count: 2,
                 repeat: 0,
                 startFromScratch: false,
@@ -239,7 +239,7 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
         color = low
             ? callDangerColor
             : idle
-                ? Colors.white
+                ? ColorName.white
                 : callSpeakingColor;
         trailing = formatTalkTime(session.remaining_time);
       }
@@ -305,7 +305,7 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: ColorName.greyText,
                     ),

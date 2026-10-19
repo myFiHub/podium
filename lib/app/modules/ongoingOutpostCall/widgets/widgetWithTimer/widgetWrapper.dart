@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/widgetWithTimer/timer.dart';
 import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
@@ -59,7 +60,7 @@ class WidgetWithTimer extends StatelessWidget {
       strokeCap: StrokeCap.round,
       textStyle: TextStyle(
         fontSize: fontSize ?? 12.0,
-        color: Colors.white,
+        color: ColorName.white,
         fontWeight: FontWeight.bold,
       ),
       textAlign: TextAlign.center,

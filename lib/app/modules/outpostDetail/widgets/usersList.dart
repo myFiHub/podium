@@ -6,7 +6,7 @@ import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
@@ -156,10 +156,7 @@ class _SingleUser extends GetView<UsersController> {
         final gettingUserInfo_uuid = controller.gettingUserInfo_uuid.value;
         return GlowContainer(
           glowRadius: 4,
-          gradientColors: const [
-            ColorName.primaryBlue,
-            ColorName.secondaryBlue
-          ],
+          gradientColors: [ColorName.primaryBlue, ColorName.secondaryBlue],
           rotationDuration: const Duration(seconds: 1),
           glowLocation: GlowLocation.outerOnly,
           containerOptions: const ContainerOptions(
@@ -207,16 +204,16 @@ class _SingleUser extends GetView<UsersController> {
                               name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: ColorName.white,
                               ),
                             ),
                           ),
                           if (isItME) ...[
                             const SizedBox(width: 6),
-                            const AppPill(
+                            AppPill(
                               label: 'You',
                               color: AppColors.success,
                             ),
@@ -234,7 +231,7 @@ class _SingleUser extends GetView<UsersController> {
                 ),
                 const SizedBox(width: 8),
                 if (isItME)
-                  const Icon(
+                  Icon(
                     Icons.check_circle_rounded,
                     color: AppColors.success,
                     size: 22,
@@ -282,15 +279,16 @@ class FollowButton extends GetView<UsersController> {
       final loadingIds = controller.followingsInProgress;
       final isLoading = loadingIds[uuid] != null;
       final isFollowing = followed_by_me;
-      final foreground = isFollowing ? Colors.white : ColorName.cardBackground;
+      final foreground =
+          isFollowing ? ColorName.white : ColorName.cardBackground;
       final style = FilledButton.styleFrom(
         minimumSize: Size(fullWidth ? double.infinity : 0, small ? 32 : 44),
         padding: EdgeInsets.symmetric(horizontal: small ? 14 : 18),
         visualDensity: VisualDensity.compact,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        backgroundColor: isFollowing ? AppColors.fill : Colors.white,
+        backgroundColor: isFollowing ? AppColors.fill : ColorName.white,
         foregroundColor: foreground,
-        side: isFollowing ? const BorderSide(color: AppColors.border) : null,
+        side: isFollowing ? BorderSide(color: AppColors.border) : null,
         shape: const StadiumBorder(),
         textStyle: TextStyle(
           fontWeight: FontWeight.w700,
@@ -307,7 +305,7 @@ class FollowButton extends GetView<UsersController> {
           }
         },
         child: isLoading
-            ? const LoadingWidget(
+            ? LoadingWidget(
                 size: 12,
                 color: ColorName.secondaryBlue,
               )

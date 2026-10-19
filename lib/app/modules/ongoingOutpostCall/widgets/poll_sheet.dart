@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
@@ -64,7 +64,7 @@ class PollSheet extends GetView<CallRoomController> {
                 const SizedBox(height: 6),
                 Text(
                   _subtitle(poll, myVote),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: ColorName.greyText,
                   ),
@@ -146,16 +146,16 @@ class _NoPoll extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 32),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.poll_outlined, size: 40, color: ColorName.greyText),
-          SizedBox(height: 12),
-          Text(
+          const SizedBox(height: 12),
+          const Text(
             'No poll right now',
-            style: TextStyle(fontWeight: FontWeight.w600),
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -229,14 +229,14 @@ class PollOptionRow extends StatelessWidget {
         ? callAccentColor
         : selected
             ? ColorName.primaryBlue
-            : Colors.white;
+            : ColorName.white;
     final borderColor = leading
         ? callAccentColor.withAlpha(150)
         : selected
             ? ColorName.primaryBlue.withAlpha(170)
             : ColorName.cardBorder;
     return Material(
-      color: Colors.white.withAlpha(8),
+      color: ColorName.white.withAlpha(8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(color: borderColor),
@@ -294,12 +294,13 @@ class PollOptionRow extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: leading || selected ? accent : Colors.white,
+                            color:
+                                leading || selected ? accent : ColorName.white,
                           ),
                         ),
                         Text(
                           votesLabel(count),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             color: ColorName.greyText,
                           ),
@@ -444,7 +445,7 @@ class _CreatePollSheetState extends State<CreatePollSheet> {
                       ),
                     ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Everyone in the outpost can vote once and change their '
                     'vote until you end the poll.',
                     style: TextStyle(fontSize: 12, color: ColorName.greyText),
@@ -455,7 +456,7 @@ class _CreatePollSheetState extends State<CreatePollSheet> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: ColorName.cardBorder)),
               ),
               child: FilledButton.icon(
@@ -466,8 +467,8 @@ class _CreatePollSheetState extends State<CreatePollSheet> {
                   minimumSize: const Size.fromHeight(52),
                   backgroundColor: ColorName.primaryBlue,
                   foregroundColor: AppColors.onPrimary,
-                  disabledBackgroundColor: Colors.white.withAlpha(18),
-                  disabledForegroundColor: Colors.white.withAlpha(90),
+                  disabledBackgroundColor: ColorName.white.withAlpha(18),
+                  disabledForegroundColor: ColorName.white.withAlpha(90),
                   textStyle: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -495,7 +496,7 @@ class _FieldLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8, left: 2),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           letterSpacing: 1.2,
           fontWeight: FontWeight.w700,
@@ -536,10 +537,10 @@ class _PollTextField extends StatelessWidget {
       decoration: InputDecoration(
         isDense: true,
         counterText: showCounter ? null : '',
-        counterStyle: const TextStyle(fontSize: 12, color: ColorName.greyText),
+        counterStyle: TextStyle(fontSize: 12, color: ColorName.greyText),
         hintText: hint,
         filled: true,
-        fillColor: Colors.white.withAlpha(10),
+        fillColor: ColorName.white.withAlpha(10),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 12,

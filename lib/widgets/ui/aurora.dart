@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 /// Aurora look: brand gradients, the drifting glow background and the small
 /// motion helpers used across screens. Every animation here is skipped when
@@ -11,30 +11,30 @@ import 'package:podium/gen/colors.gen.dart';
 class AppGradients {
   AppGradients._();
 
-  static const primary = LinearGradient(
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
-    colors: [ColorName.primaryBlue, ColorName.auroraViolet],
-  );
+  static LinearGradient get primary => LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [ColorName.primaryBlue, ColorName.auroraViolet],
+      );
 
-  static const aurora = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      ColorName.primaryBlue,
-      ColorName.auroraViolet,
-      ColorName.auroraMagenta,
-    ],
-  );
+  static LinearGradient get aurora => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          ColorName.primaryBlue,
+          ColorName.auroraViolet,
+          ColorName.auroraMagenta,
+        ],
+      );
 
-  static const ring = SweepGradient(
-    colors: [
-      ColorName.primaryBlue,
-      ColorName.auroraViolet,
-      ColorName.auroraMagenta,
-      ColorName.primaryBlue,
-    ],
-  );
+  static SweepGradient get ring => SweepGradient(
+        colors: [
+          ColorName.primaryBlue,
+          ColorName.auroraViolet,
+          ColorName.auroraMagenta,
+          ColorName.primaryBlue,
+        ],
+      );
 }
 
 bool reduceMotion(BuildContext context) =>
@@ -118,23 +118,28 @@ class _Blob {
 class _AuroraPainter extends CustomPainter {
   final Animation<double> animation;
   final double intensity;
+  final AppPalette palette = AppPalette.current;
   _AuroraPainter(this.animation, this.intensity) : super(repaint: animation);
 
-  static const _base = ColorName.pageBackground;
-  static const _blobs = [
-    _Blob(ColorName.primaryBlue, Offset(0.1, 0.05), Offset(0.18, 0.08), 0.75,
-        0.0, 70),
-    _Blob(ColorName.auroraViolet, Offset(0.95, 0.3), Offset(0.15, 0.12), 0.8,
-        0.33, 80),
-    _Blob(ColorName.auroraMagenta, Offset(0.15, 0.85), Offset(0.2, 0.1), 0.7,
-        0.66, 55),
-    _Blob(ColorName.primaryBlue, Offset(0.85, 0.95), Offset(0.12, 0.08), 0.55,
-        0.5, 35),
-  ];
+  static List<_Blob> get _blobs => [
+        _Blob(ColorName.primaryBlue, const Offset(0.1, 0.05),
+            const Offset(0.18, 0.08), 0.75, 0.0, 70),
+        _Blob(ColorName.auroraViolet, const Offset(0.95, 0.3),
+            const Offset(0.15, 0.12), 0.8, 0.33, 80),
+        _Blob(ColorName.auroraMagenta, const Offset(0.15, 0.85),
+            const Offset(0.2, 0.1), 0.7, 0.66, 55),
+        _Blob(ColorName.primaryBlue, const Offset(0.85, 0.95),
+            const Offset(0.12, 0.08), 0.55, 0.5, 35),
+      ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = _base);
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = ColorName.pageBackground,
+    );
+    final glow = intensity * AppPalette.current.glow;
+    if (glow <= 0) return;
     final t = animation.value * 2 * math.pi;
     final extent = size.longestSide;
     for (final blob in _blobs) {
@@ -145,7 +150,7 @@ class _AuroraPainter extends CustomPainter {
       );
       final radius =
           extent * blob.radius * (0.92 + 0.08 * math.sin(angle * 1.3));
-      final alpha = (blob.alpha * intensity).round().clamp(0, 255);
+      final alpha = (blob.alpha * glow).round().clamp(0, 255);
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [
@@ -161,7 +166,7 @@ class _AuroraPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_AuroraPainter oldDelegate) =>
-      oldDelegate.intensity != intensity;
+      oldDelegate.intensity != intensity || oldDelegate.palette != palette;
 }
 
 /// Fades and slides [child] in once, staggered by [index]. Items that already
@@ -226,6 +231,138 @@ class _AppEntranceState extends State<AppEntrance>
           child: child,
         ),
       ),
+    );
+  }
+}
+
+/// Pops a dialog in with a slight overshoot and sinks it back out on close,
+/// following the enclosing dialog route's animation.
+class AppDialogMotion extends StatelessWidget {
+  final Widget child;
+  const AppDialogMotion({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation == null || reduceMotion(context)) return child;
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        final closing = animation.status == AnimationStatus.reverse;
+        final t = animation.value;
+        final scale =
+            (closing ? Curves.easeInCubic : Curves.easeOutBack).transform(t);
+        final lift =
+            (closing ? Curves.easeInCubic : Curves.easeOutCubic).transform(t);
+        return Transform.translate(
+          offset: Offset(0, 28 * (1 - lift)),
+          child: Transform.scale(scale: 0.88 + 0.12 * scale, child: child),
+        );
+      },
+    );
+  }
+}
+
+/// Fades and lifts one part of a dialog in after the dialog itself appears,
+/// staggered by [index], so the content settles top to bottom.
+class AppDialogStagger extends StatelessWidget {
+  final Widget child;
+  final int index;
+  const AppDialogStagger({super.key, required this.child, this.index = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation == null || reduceMotion(context)) return child;
+    final interval = Interval(
+      (0.2 + 0.12 * index).clamp(0.0, 0.7),
+      1,
+      curve: Curves.easeOutCubic,
+    );
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        if (animation.status == AnimationStatus.reverse) return child!;
+        final t = interval.transform(animation.value);
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - t)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Pops [child] in with an elastic overshoot after [delay]. With [shake] it
+/// then wiggles a few times to draw attention, e.g. for warnings and errors.
+class AppPopIn extends StatefulWidget {
+  final Widget child;
+  final bool shake;
+  final Duration delay;
+  const AppPopIn({
+    super.key,
+    required this.child,
+    this.shake = false,
+    this.delay = const Duration(milliseconds: 120),
+  });
+
+  @override
+  State<AppPopIn> createState() => _AppPopInState();
+}
+
+class _AppPopInState extends State<AppPopIn>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: widget.shake ? 1200 : 700),
+  );
+  Timer? _timer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_controller.isAnimating || _controller.isCompleted) return;
+    if (reduceMotion(context)) {
+      _controller.value = 1;
+      return;
+    }
+    _timer?.cancel();
+    _timer = Timer(widget.delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final popEnd = widget.shake ? 0.5 : 1.0;
+    return AnimatedBuilder(
+      animation: _controller,
+      child: widget.child,
+      builder: (context, child) {
+        final t = _controller.value;
+        final pop = Curves.elasticOut.transform((t / popEnd).clamp(0.0, 1.0));
+        var angle = 0.0;
+        if (widget.shake && t > 0.4) {
+          final s = (t - 0.4) / 0.6;
+          angle = math.sin(s * math.pi * 6) * 0.22 * (1 - s);
+        }
+        return Transform.rotate(
+          angle: angle,
+          child: Transform.scale(scale: pop, child: child),
+        );
+      },
     );
   }
 }
@@ -417,9 +554,9 @@ class _SheenPainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          Colors.white.withAlpha(0),
-          Colors.white.withAlpha(90),
-          Colors.white.withAlpha(0),
+          ColorName.white.withAlpha(0),
+          ColorName.white.withAlpha(90),
+          ColorName.white.withAlpha(0),
         ],
       ).createShader(
         Rect.fromPoints(
@@ -490,11 +627,13 @@ class AppRollingText extends StatelessWidget {
 class RingPainter extends CustomPainter {
   final double strokeWidth;
   final Gradient? gradient;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? ColorName.cardBorder;
+
   const RingPainter({
     required this.strokeWidth,
     this.gradient,
-    this.color = ColorName.cardBorder,
+    this.color,
   });
 
   @override
@@ -507,7 +646,7 @@ class RingPainter extends CustomPainter {
     if (gradient != null) {
       paint.shader = gradient!.createShader(rect);
     } else {
-      paint.color = color;
+      paint.color = _color;
     }
     canvas.drawCircle(rect.center, radius, paint);
   }
@@ -516,28 +655,18 @@ class RingPainter extends CustomPainter {
   bool shouldRepaint(RingPainter oldDelegate) =>
       oldDelegate.strokeWidth != strokeWidth ||
       oldDelegate.gradient != gradient ||
-      oldDelegate.color != color;
+      oldDelegate._color != _color;
 }
 
 /// Thin luminous gradient outline for glass cards.
 class GradientBorderPainter extends CustomPainter {
   final double radius;
   final double strokeWidth;
-  final Gradient gradient;
+  final Gradient? gradient;
   const GradientBorderPainter({
     required this.radius,
     this.strokeWidth = 1,
-    this.gradient = const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Color(0x7054E4EF),
-        Color(0x308B5CF6),
-        Color(0x14FFFFFF),
-        Color(0x40FF4FD8),
-      ],
-      stops: [0, 0.35, 0.7, 1],
-    ),
+    this.gradient,
   });
 
   @override
@@ -546,12 +675,24 @@ class GradientBorderPainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
-      ..shader = gradient.createShader(Offset.zero & size);
+      ..shader = (gradient ?? defaultGradient).createShader(Offset.zero & size);
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect, Radius.circular(radius)),
       paint,
     );
   }
+
+  static LinearGradient get defaultGradient => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          ColorName.primaryBlue.withAlpha(0x70),
+          ColorName.auroraViolet.withAlpha(0x30),
+          ColorName.white.withAlpha(0x14),
+          ColorName.auroraMagenta.withAlpha(0x40),
+        ],
+        stops: const [0, 0.35, 0.7, 1],
+      );
 
   @override
   bool shouldRepaint(GradientBorderPainter oldDelegate) =>

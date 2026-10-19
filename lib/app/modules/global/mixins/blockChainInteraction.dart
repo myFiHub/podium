@@ -13,13 +13,14 @@ import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/env.dart' as Environment;
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/aurora.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
 Future<bool> ext_cheerOrBoo({
@@ -905,7 +906,9 @@ Future<bool> internal_buySharesWithReferrer({
 }
 
 Future<bool> _externalTxSucceeded(dynamic response, String chainId) async {
-  if (response is! String || !response.startsWith('0x') || response.length <= 10) {
+  if (response is! String ||
+      !response.startsWith('0x') ||
+      response.length <= 10) {
     return false;
   }
   return waitForEvmReceipt(chainId: chainId, txHash: response);
@@ -914,8 +917,8 @@ Future<bool> _externalTxSucceeded(dynamic response, String chainId) async {
 /// Converts a human amount (e.g. 0.1 ETH) to integer base units exactly,
 /// without going through floating-point multiplication.
 BigInt toBaseUnits(num amount, int decimals) {
-  final scaled = Decimal.parse(amount.toString()) *
-      Decimal.ten.pow(decimals).toDecimal();
+  final scaled =
+      Decimal.parse(amount.toString()) * Decimal.ten.pow(decimals).toDecimal();
   return scaled.toBigInt();
 }
 
@@ -974,24 +977,26 @@ Future<String?> choseAWallet(
 
   final selectedWallet = await Get.dialog(
     barrierDismissible: true,
-    AlertDialog(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text("Choose a wallet"),
-          space10,
-          Img(
-            src: chainInfoByChainId(chainId).chainIcon ??
-                Assets.images.logo.path,
-            alt: "logo",
-            size: 20,
-          ),
-        ],
-      ),
-      content: SelectChainContent(
-        includeAptos: supportsAptos == true,
-        chainId: chainId,
-        hideExternalWalletAndRemember: hideExternalWalletAndRemember,
+    AppDialogMotion(
+      child: AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Choose a wallet"),
+            space10,
+            Img(
+              src: chainInfoByChainId(chainId).chainIcon ??
+                  Assets.images.logo.path,
+              alt: "logo",
+              size: 20,
+            ),
+          ],
+        ),
+        content: SelectChainContent(
+          includeAptos: supportsAptos == true,
+          chainId: chainId,
+          hideExternalWalletAndRemember: hideExternalWalletAndRemember,
+        ),
       ),
     ),
   );
@@ -1086,7 +1091,7 @@ class SelectChainContent extends GetView<GlobalController> {
           if (externalWalletEnabled == false)
             Text(
               "to use External Wallet, please switch to ${targetChain.name} (${targetChainId}) on your wallet and try again",
-              style: const TextStyle(color: ColorName.danger, fontSize: 12),
+              style: TextStyle(color: ColorName.danger, fontSize: 12),
               textAlign: TextAlign.center,
             ),
           space10,

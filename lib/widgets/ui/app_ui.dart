@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/aurora.dart';
 
 export 'package:podium/widgets/ui/aurora.dart';
@@ -15,37 +15,40 @@ export 'package:podium/widgets/ui/aurora.dart';
 class AppColors {
   AppColors._();
 
-  static const success = ColorName.success;
-  static const danger = ColorName.danger;
-  static const accent = ColorName.warning;
-  static const live = ColorName.danger;
-  static const primary = ColorName.primaryBlue;
-  static const violet = ColorName.auroraViolet;
-  static const magenta = ColorName.auroraMagenta;
+  static AppPalette get _p => AppPalette.current;
 
-  /// Text/icons on [primary] fills. The primary cyan is too light for white
-  /// text to be legible.
-  static const onPrimary = ColorName.cardBackground;
+  static Color get success => _p.success;
+  static Color get danger => _p.danger;
+  static Color get accent => _p.warning;
+  static Color get live => _p.danger;
+  static Color get primary => _p.accent;
+  static Color get violet => _p.violet;
+  static Color get magenta => _p.magenta;
 
-  static const surface = ColorName.cardBackground;
+  /// Text/icons on [primary] fills.
+  static Color get onPrimary => _p.onAccent;
+
+  static Color get surface => _p.surface;
 
   /// Slightly lifted surface for sheets, dialogs and popovers.
-  static const surfaceRaised = Color(0xFF1B1B36);
-  static const border = ColorName.cardBorder;
-  static const textMuted = ColorName.greyText;
-  static const textFaint = ColorName.secondaryText;
+  static Color get surfaceRaised => _p.surfaceRaised;
+  static Color get border => _p.border;
+  static Color get textMuted => _p.textMuted;
+  static Color get textFaint => _p.textFaint;
 
   /// Translucent card fill that lets the page gradient show through.
-  static Color get surfaceGlass => ColorName.cardBackground.withAlpha(200);
+  static Color get surfaceGlass => _p.surface.withAlpha(200);
 
   /// Fill for inputs, chips and icon buttons sitting on a surface.
-  static Color get fill => Colors.white.withAlpha(12);
+  static Color get fill => _p.text.withAlpha(12);
 
   /// Legible text/icon color for content drawn on a solid [background].
-  static Color onColor(Color background) =>
-      ThemeData.estimateBrightnessForColor(background) == Brightness.light
-          ? onPrimary
-          : Colors.white;
+  static Color onColor(Color background) {
+    final isLightBackground =
+        ThemeData.estimateBrightnessForColor(background) == Brightness.light;
+    if (_p.isLight) return isLightBackground ? _p.text : _p.surfaceRaised;
+    return isLightBackground ? _p.surface : _p.text;
+  }
 }
 
 class AppRadius {
@@ -60,31 +63,34 @@ class AppRadius {
 class AppText {
   AppText._();
 
-  static const pageTitle = TextStyle(
-    fontSize: 28,
-    fontWeight: FontWeight.w800,
-    height: 1.15,
-    color: Colors.white,
-  );
-  static const title = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w700,
-    color: Colors.white,
-  );
-  static const cardTitle = TextStyle(
-    fontSize: 15,
-    fontWeight: FontWeight.w700,
-    color: Colors.white,
-  );
-  static const body = TextStyle(fontSize: 14, color: Colors.white, height: 1.4);
-  static const muted = TextStyle(fontSize: 13, color: ColorName.greyText);
-  static const caption = TextStyle(fontSize: 12, color: ColorName.greyText);
-  static const label = TextStyle(
-    fontSize: 12,
-    letterSpacing: 1.2,
-    fontWeight: FontWeight.w700,
-    color: ColorName.greyText,
-  );
+  static TextStyle get pageTitle => TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.w800,
+        height: 1.15,
+        color: ColorName.white,
+      );
+  static TextStyle get title => TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: ColorName.white,
+      );
+  static TextStyle get cardTitle => TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        color: ColorName.white,
+      );
+  static TextStyle get body =>
+      TextStyle(fontSize: 14, color: ColorName.white, height: 1.4);
+  static TextStyle get muted =>
+      TextStyle(fontSize: 13, color: ColorName.greyText);
+  static TextStyle get caption =>
+      TextStyle(fontSize: 12, color: ColorName.greyText);
+  static TextStyle get label => TextStyle(
+        fontSize: 12,
+        letterSpacing: 1.2,
+        fontWeight: FontWeight.w700,
+        color: ColorName.greyText,
+      );
 }
 
 /// Rounded translucent card with a hairline border.
@@ -293,8 +299,8 @@ class AppIconButton extends StatelessWidget {
         fixedSize: Size.square(size),
         minimumSize: Size.square(size),
         backgroundColor: background ?? AppColors.fill,
-        foregroundColor: color ?? Colors.white,
-        side: const BorderSide(color: AppColors.border),
+        foregroundColor: color ?? ColorName.white,
+        side: BorderSide(color: AppColors.border),
       ),
     );
   }
@@ -442,7 +448,9 @@ class _AppRefreshButtonState extends State<AppRefreshButton>
                             turns: turns,
                             child: TweenAnimationBuilder<Color?>(
                               tween: ColorTween(
-                                end: active ? AppColors.primary : Colors.white,
+                                end: active
+                                    ? AppColors.primary
+                                    : ColorName.white,
                               ),
                               duration: duration,
                               builder: (context, color, _) => Icon(
@@ -531,8 +539,8 @@ class AppPrimaryButton extends StatelessWidget {
             ? (useGradient
                 ? Colors.transparent
                 : (color ?? AppColors.primary).withAlpha(150))
-            : Colors.white.withAlpha(18),
-        disabledForegroundColor: loading ? fg : Colors.white.withAlpha(90),
+            : ColorName.white.withAlpha(18),
+        disabledForegroundColor: loading ? fg : ColorName.white.withAlpha(90),
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -565,13 +573,15 @@ class AppGradientShell extends StatelessWidget {
   final Widget child;
   final bool enabled;
   final BorderRadius borderRadius;
-  final Gradient gradient;
+  final Gradient? gradient;
+  Gradient get _gradient => gradient ?? AppGradients.primary;
+
   const AppGradientShell({
     super.key,
     required this.child,
     required this.borderRadius,
     this.enabled = true,
-    this.gradient = AppGradients.primary,
+    this.gradient,
   });
 
   @override
@@ -580,7 +590,7 @@ class AppGradientShell extends StatelessWidget {
     return AppPressScale(
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: gradient,
+          gradient: _gradient,
           borderRadius: borderRadius,
           boxShadow: [
             BoxShadow(
@@ -617,7 +627,7 @@ class AppSecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = color ?? Colors.white;
+    final fg = color ?? ColorName.white;
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
@@ -649,13 +659,15 @@ class AppSecondaryButton extends StatelessWidget {
 /// Small rounded status/label chip.
 class AppPill extends StatelessWidget {
   final String label;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? ColorName.greyText;
+
   final IconData? icon;
   final bool filled;
   const AppPill({
     super.key,
     required this.label,
-    this.color = ColorName.greyText,
+    this.color,
     this.icon,
     this.filled = false,
   });
@@ -665,15 +677,15 @@ class AppPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: filled ? color : color.withAlpha(28),
+        color: filled ? _color : _color.withAlpha(28),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withAlpha(filled ? 255 : 70)),
+        border: Border.all(color: _color.withAlpha(filled ? 255 : 70)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 13, color: filled ? Colors.black : color),
+            Icon(icon, size: 13, color: filled ? AppColors.onColor(_color) : _color),
             const SizedBox(width: 4),
           ],
           Text(
@@ -683,7 +695,7 @@ class AppPill extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: filled ? Colors.black : color,
+              color: filled ? AppColors.onColor(_color) : _color,
             ),
           ),
         ],
@@ -816,10 +828,10 @@ class AppSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceRaised,
         border: Border(top: BorderSide(color: ColorName.cardBorder)),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: const Radius.circular(24)),
       ),
       child: SafeArea(
         top: false,
@@ -866,27 +878,54 @@ Future<T?> showAppSheet<T>(Widget sheet) {
   );
 }
 
-/// Tinted circular icon shown at the top of a dialog.
+/// Tinted circular icon shown at the top of a dialog. Pops in when shown;
+/// when [urgent] it also shakes once and keeps a soft pulsing halo.
 class AppDialogIcon extends StatelessWidget {
   final IconData icon;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? AppColors.primary;
+
+  final bool urgent;
   const AppDialogIcon({
     super.key,
     required this.icon,
-    this.color = AppColors.primary,
+    this.color,
+    this.urgent = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    return AppPopIn(
+      shake: urgent,
+      delay: const Duration(milliseconds: 140),
+      child: urgent
+          ? AppBreathing(
+              period: const Duration(milliseconds: 1400),
+              builder: (context, v) => _badge(v),
+            )
+          : _badge(0),
+    );
+  }
+
+  Widget _badge(double glow) {
     return Container(
       width: 52,
       height: 52,
       decoration: BoxDecoration(
-        color: color.withAlpha(30),
+        color: _color.withAlpha(30),
         shape: BoxShape.circle,
-        border: Border.all(color: color.withAlpha(70)),
+        border: Border.all(color: _color.withAlpha(70 + (80 * glow).round())),
+        boxShadow: glow == 0
+            ? null
+            : [
+                BoxShadow(
+                  color: _color.withAlpha((70 * glow).round()),
+                  blurRadius: 8 + 14 * glow,
+                  spreadRadius: 4 * glow,
+                ),
+              ],
       ),
-      child: Icon(icon, color: color),
+      child: Icon(icon, color: _color),
     );
   }
 }
@@ -894,12 +933,14 @@ class AppDialogIcon extends StatelessWidget {
 /// Tinted box with an icon for warnings and side notes inside dialogs.
 class AppCallout extends StatelessWidget {
   final String text;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? AppColors.accent;
+
   final IconData icon;
   const AppCallout({
     super.key,
     required this.text,
-    this.color = AppColors.accent,
+    this.color,
     this.icon = Icons.info_outline_rounded,
   });
 
@@ -908,14 +949,14 @@ class AppCallout extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withAlpha(22),
+        color: _color.withAlpha(22),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: color.withAlpha(70)),
+        border: Border.all(color: _color.withAlpha(70)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: color),
+          Icon(icon, size: 18, color: _color),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -924,7 +965,7 @@ class AppCallout extends StatelessWidget {
                 fontSize: 13,
                 height: 1.4,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: _color,
               ),
             ),
           ),
@@ -936,71 +977,110 @@ class AppCallout extends StatelessWidget {
 
 /// Dialog chrome: optional icon badge, title, message/content and a row (or
 /// stack) of actions, usually [AppSecondaryButton] and [AppPrimaryButton].
+/// Set [urgent] for warnings (leaving, deleting, exposing secrets) so the icon
+/// shakes and pulses.
 class AppDialog extends StatelessWidget {
   final String title;
   final String? message;
   final Widget? content;
   final IconData? icon;
-  final Color iconColor;
+  final Color? iconColor;
+  Color get _iconColor => iconColor ?? AppColors.primary;
+
   final List<Widget> actions;
   final bool stackActions;
+  final bool urgent;
   const AppDialog({
     super.key,
     required this.title,
     this.message,
     this.content,
     this.icon,
-    this.iconColor = AppColors.primary,
+    this.iconColor,
     this.actions = const [],
     this.stackActions = false,
+    this.urgent = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (icon != null) ...[
-              Align(
-                alignment: Alignment.centerLeft,
-                child: AppDialogIcon(icon: icon!, color: iconColor),
-              ),
-              const SizedBox(height: 14),
-            ],
-            Text(title, style: AppText.title),
-            if (message != null) ...[
-              const SizedBox(height: 8),
-              Text(message!, style: AppText.muted.copyWith(height: 1.45)),
-            ],
-            if (content != null) ...[
-              SizedBox(height: message == null ? 12 : 16),
-              Flexible(child: SingleChildScrollView(child: content!)),
-            ],
-            if (actions.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              if (stackActions)
-                for (var i = 0; i < actions.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 10),
-                  actions[i],
-                ]
-              else
-                Row(
-                  children: [
-                    for (var i = 0; i < actions.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 12),
-                      Expanded(child: actions[i]),
-                    ],
-                  ],
+    var step = 0;
+    return AppDialogMotion(
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (icon != null) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppDialogIcon(
+                    icon: icon!,
+                    color: _iconColor,
+                    urgent: urgent,
+                  ),
                 ),
+                const SizedBox(height: 14),
+              ],
+              AppDialogStagger(
+                index: step++,
+                child: Text(title, style: AppText.title),
+              ),
+              if (message != null) ...[
+                const SizedBox(height: 8),
+                AppDialogStagger(
+                  index: step++,
+                  child: Text(
+                    message!,
+                    style: AppText.muted.copyWith(height: 1.45),
+                  ),
+                ),
+              ],
+              if (content != null) ...[
+                SizedBox(height: message == null ? 12 : 16),
+                Flexible(
+                  child: AppDialogStagger(
+                    index: step++,
+                    child: SingleChildScrollView(child: content!),
+                  ),
+                ),
+              ],
+              if (actions.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                AppDialogStagger(
+                  index: step++,
+                  child: _actions(),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _actions() {
+    if (stackActions) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < actions.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            actions[i],
+          ],
+        ],
+      );
+    }
+    return Row(
+      children: [
+        for (var i = 0; i < actions.length; i++) ...[
+          if (i > 0) const SizedBox(width: 12),
+          Expanded(child: actions[i]),
+        ],
+      ],
     );
   }
 }
@@ -1019,6 +1099,7 @@ Future<bool> showAppConfirm({
       message: message,
       icon: destructive ? Icons.warning_amber_rounded : null,
       iconColor: destructive ? AppColors.danger : AppColors.primary,
+      urgent: destructive,
       actions: [
         AppSecondaryButton(
           label: cancelLabel,

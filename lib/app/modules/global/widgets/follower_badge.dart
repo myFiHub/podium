@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 class FollowerBadge extends StatelessWidget {
   const FollowerBadge({
@@ -47,10 +47,10 @@ class FollowerBadge extends StatelessWidget {
           Text(
             '$followerCount followers',
             maxLines: 1,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: ColorName.white,
             ),
           ),
           const SizedBox(width: 8),

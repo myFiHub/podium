@@ -3,7 +3,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/env.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
@@ -47,7 +47,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
 
     return Container(
       height: 600,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: ColorName.cardBackground,
         border: Border(
           top: BorderSide(
@@ -55,9 +55,9 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
             width: 1,
           ),
         ),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+        borderRadius: const BorderRadius.only(
+          topLeft: const Radius.circular(20),
+          topRight: const Radius.circular(20),
         ),
       ),
       child: FormBuilder(
@@ -73,7 +73,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
               height: 20,
               child: Text(
                 parsedValue,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   color: ColorName.greyText,
                   height: 2,
@@ -126,7 +126,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
                 Text(
                     """each 0.1 ${ReownAppKitModalNetworks.getNetworkInfo(Env.chainNamespace, movementEVMChain.chainId)!.currency}, will ${widget.isCheer ? "add" : "reduce"} 1 min ${widget.isCheer ? "to" : "from"}\nthat user's time""",
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       color: ColorName.greyText,
                       height: 2,

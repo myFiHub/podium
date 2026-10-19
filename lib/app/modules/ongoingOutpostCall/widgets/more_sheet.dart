@@ -12,9 +12,10 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interaction
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/poll_sheet.dart';
 import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/storage.dart';
+import 'package:podium/widgets/ui/aurora.dart';
 
 void openMoreSheet() {
   Get.bottomSheet(
@@ -172,11 +173,13 @@ class MoreSheet extends GetView<OngoingOutpostCallController> {
             label: 'Report',
             onTap: () => _runAfterClose(() {
               Get.dialog(
-                Dialog(
-                  backgroundColor: ColorName.cardBackground,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ReportForm(),
+                AppDialogMotion(
+                  child: Dialog(
+                    backgroundColor: ColorName.cardBackground,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: ReportForm(),
+                    ),
                   ),
                 ),
               );
@@ -202,12 +205,14 @@ class _MoreTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? ColorName.white;
+
   const _MoreTile({
     required this.icon,
     required this.label,
     required this.onTap,
-    this.color = Colors.white,
+    this.color,
   });
 
   @override
@@ -222,10 +227,10 @@ class _MoreTile extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(12),
+              color: ColorName.white.withAlpha(12),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: _color, size: 24),
           ),
           const SizedBox(height: 6),
           Text(
@@ -233,7 +238,7 @@ class _MoreTile extends StatelessWidget {
             maxLines: 2,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: ColorName.greyText),
+            style: TextStyle(fontSize: 12, color: ColorName.greyText),
           ),
         ],
       ),

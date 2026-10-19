@@ -6,11 +6,11 @@ import 'package:just_waveform/just_waveform.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
-const _handleColor = AppColors.accent;
+Color get _handleColor => AppColors.accent;
 
 class _TrimHandle extends StatelessWidget {
   final bool isStart;
@@ -62,11 +62,11 @@ class _TimeChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
-              fontFeatures: [FontFeature.tabularFigures()],
+              color: ColorName.white,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
@@ -149,7 +149,7 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
           margin: const EdgeInsets.symmetric(horizontal: 16),
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(8),
+            color: ColorName.white.withAlpha(8),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: ColorName.cardBorder),
           ),
@@ -192,7 +192,7 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: ColorName.primaryBlue.withAlpha(30),
-                          border: const Border.symmetric(
+                          border: Border.symmetric(
                             horizontal: BorderSide(
                               color: _handleColor,
                               width: 2,
@@ -234,8 +234,8 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
               ),
               _TimeChip(
                 label: 'End',
-                value: _formatDuration(Duration(
-                    milliseconds: (_endPosition * _duration).toInt())),
+                value: _formatDuration(
+                    Duration(milliseconds: (_endPosition * _duration).toInt())),
               ),
             ],
           ),

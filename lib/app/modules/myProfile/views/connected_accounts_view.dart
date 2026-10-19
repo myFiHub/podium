@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
@@ -109,18 +110,19 @@ class _SmallActionButton extends StatelessWidget {
     required this.onPressed,
     this.loading = false,
     this.filled = true,
-    this.color = AppColors.primary,
+    this.color,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool loading;
   final bool filled;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? AppColors.primary;
 
   @override
   Widget build(BuildContext context) {
-    final foreground = filled ? Colors.white : color;
+    final foreground = filled ? ColorName.white : _color;
     return FilledButton(
       onPressed: loading ? null : onPressed,
       style: FilledButton.styleFrom(
@@ -128,12 +130,12 @@ class _SmallActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: VisualDensity.compact,
-        backgroundColor: filled ? color : color.withAlpha(20),
+        backgroundColor: filled ? _color : _color.withAlpha(20),
         foregroundColor: foreground,
         disabledBackgroundColor:
-            filled ? color.withAlpha(150) : color.withAlpha(20),
+            filled ? _color.withAlpha(150) : _color.withAlpha(20),
         disabledForegroundColor: foreground,
-        side: filled ? null : BorderSide(color: color.withAlpha(110)),
+        side: filled ? null : BorderSide(color: _color.withAlpha(110)),
         textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -158,7 +160,7 @@ class _PrimaryBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const AppPill(
+    return AppPill(
       label: 'Primary',
       icon: Icons.check_rounded,
       color: ConnectedAccountsConstants.successColor,
@@ -199,7 +201,8 @@ class LoginOption extends GetView<GlobalController> {
       if (accounts != null) {
         if (isConnected) {
           final isPrimary = accounts.any(
-            (account) => account.address == myUser?.address && account.is_primary,
+            (account) =>
+                account.address == myUser?.address && account.is_primary,
           );
           subtitle = IdentifierText(identifier: myUser?.login_type_identifier);
           trailing = !isPrimary
@@ -279,10 +282,10 @@ class LoginOption extends GetView<GlobalController> {
                       width: ConnectedAccountsConstants.iconSize,
                       height: ConnectedAccountsConstants.iconSize,
                     )
-                  : const Icon(
+                  : Icon(
                       Icons.email_outlined,
                       size: ConnectedAccountsConstants.iconSize,
-                      color: Colors.white,
+                      color: ColorName.white,
                     ),
             ),
             const SizedBox(width: 12),
@@ -317,7 +320,13 @@ class LoginOption extends GetView<GlobalController> {
     String? email,
   }) {
     Get.dialog(
-      ConnectConfirmationDialog(provider: provider, title: title, email: email),
+      AppDialogMotion(
+        child: ConnectConfirmationDialog(
+          provider: provider,
+          title: title,
+          email: email,
+        ),
+      ),
     );
   }
 }
@@ -360,25 +369,13 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      icon: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          color: AppColors.primary.withAlpha(30),
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.primary.withAlpha(70)),
-        ),
-        child: const Icon(
-          Icons.swap_horiz_rounded,
-          color: AppColors.primary,
-        ),
-      ),
+      icon: const AppDialogIcon(icon: Icons.swap_horiz_rounded),
       title: const Text('Account Connection'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'In process of merging accounts:',
             style: AppText.muted,
           ),
@@ -443,7 +440,7 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: ColorName.white.withAlpha(8),
         borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(color: AppColors.border),
       ),
@@ -455,10 +452,10 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
           Expanded(
             child: Text.rich(
               TextSpan(
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   height: 1.4,
-                  color: Colors.white,
+                  color: ColorName.white,
                 ),
                 children: [
                   TextSpan(text: prefix),

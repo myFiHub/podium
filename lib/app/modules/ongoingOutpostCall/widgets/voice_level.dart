@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:podium/utils/palette.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -36,13 +37,15 @@ class VoiceLevelBuilder extends StatelessWidget {
 /// while silent and only animate while there is sound.
 class VoiceBars extends StatefulWidget {
   final double level;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? ColorName.white;
+
   final double height;
   final int bars;
   const VoiceBars({
     super.key,
     required this.level,
-    this.color = Colors.white,
+    this.color,
     this.height = 12,
     this.bars = 3,
   });
@@ -99,7 +102,7 @@ class _VoiceBarsState extends State<VoiceBars>
         painter: _VoiceBarsPainter(
           animation: _controller,
           level: widget.level,
-          color: widget.color,
+          color: widget._color,
           bars: widget.bars,
           barWidth: barWidth,
           gap: gap,

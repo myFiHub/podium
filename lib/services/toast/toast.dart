@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
+import 'package:podium/widgets/ui/aurora.dart';
 
 /// A utility class for showing toast notifications using GetX snackbar.
 /// Provides various methods for different types of notifications with consistent styling.
@@ -15,9 +16,9 @@ class Toast {
   static const EdgeInsets _defaultMargin =
       EdgeInsets.symmetric(horizontal: 12, vertical: 8);
 
-  static const Color _success = ColorName.success;
-  static const Color _danger = ColorName.danger;
-  static const Color _warning = ColorName.warning;
+  static Color get _success => ColorName.success;
+  static Color get _danger => ColorName.danger;
+  static Color get _warning => ColorName.warning;
 
   /// Capitalizes the first letter, leaving URLs and addresses untouched.
   static String _sentenceCase(String text) {
@@ -36,6 +37,7 @@ class Toast {
     int? duration,
     TextButton? mainButton,
     SnackPosition position = SnackPosition.top,
+    bool shake = false,
   }) {
     title = _sentenceCase(title == 'Error' ? 'Something went wrong' : title);
     message = _sentenceCase(message);
@@ -46,8 +48,8 @@ class Toast {
         title,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: ColorName.white,
           fontSize: 14,
           fontWeight: FontWeight.w700,
         ),
@@ -60,7 +62,7 @@ class Toast {
                 message,
                 maxLines: 4,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   color: ColorName.greyText,
                   fontSize: 13,
                   height: 1.35,
@@ -79,14 +81,18 @@ class Toast {
       mainButton: mainButton,
       shouldIconPulse: false,
       icon: Center(
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: accentColor.withAlpha(36),
-            shape: BoxShape.circle,
+        child: AppPopIn(
+          shake: shake,
+          delay: _defaultAnimationDuration,
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: accentColor.withAlpha(36),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: accentColor, size: 18),
           ),
-          child: Icon(icon, color: accentColor, size: 18),
         ),
       ),
       forwardAnimationCurve: Curves.easeOutCubic,
@@ -146,6 +152,7 @@ class Toast {
       duration: duration,
       mainButton: mainButton,
       position: position,
+      shake: true,
     );
   }
 
@@ -190,6 +197,7 @@ class Toast {
       icon: Icons.warning_rounded,
       duration: duration,
       position: position,
+      shake: true,
     );
   }
 

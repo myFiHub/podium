@@ -7,7 +7,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_cont
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_sheet.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 Future<void> openChatSheet() async {
   final room = findCallRoom();
@@ -80,7 +80,7 @@ class _ChatSheetState extends State<ChatSheet> {
             ),
             Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: ColorName.cardBorder)),
               ),
               child: Row(
@@ -99,7 +99,7 @@ class _ChatSheetState extends State<ChatSheet> {
                         counterText: '',
                         hintText: 'Say something to the room',
                         filled: true,
-                        fillColor: Colors.white.withAlpha(10),
+                        fillColor: ColorName.white.withAlpha(10),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 10,
@@ -151,20 +151,20 @@ class _EmptyChat extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!compact) ...const [
+                    if (!compact) ...[
                       Icon(
                         Icons.chat_bubble_outline_rounded,
                         size: 40,
                         color: ColorName.greyText,
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                     ],
                     const Text(
                       'No messages yet',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Messages are visible to everyone in this outpost and disappear when it ends.',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12, color: ColorName.greyText),
@@ -230,7 +230,7 @@ class _ChatBubble extends StatelessWidget {
       decoration: BoxDecoration(
         color: mine
             ? ColorName.primaryBlue.withAlpha(mine && message.pending ? 25 : 45)
-            : Colors.white.withAlpha(14),
+            : ColorName.white.withAlpha(14),
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(16),
           topRight: const Radius.circular(16),
@@ -264,7 +264,7 @@ class _ChatBubble extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 3, left: 4, right: 4),
                   child: Text(
                     mine ? time : '${message.senderName} · $time',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: ColorName.greyText,
                     ),

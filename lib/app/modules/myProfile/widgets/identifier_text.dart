@@ -19,7 +19,7 @@ class IdentifierText extends StatelessWidget {
         identifier != null ? truncate(identifier!) : '',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: ConnectedAccountsConstants.identifierFontSize,
           color: ConnectedAccountsConstants.identifierColor,
         ),

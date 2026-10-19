@@ -9,7 +9,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpos
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -35,8 +35,8 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
         final member =
             controller.members.value.firstOrNullWhere((m) => m.uuid == userId);
         if (member == null) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 40),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
             child: Center(
               child: Text(
                 'This member has left the outpost',
@@ -103,8 +103,8 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
               ],
             ),
             if (isMe)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   'Cheering yourself adds time to your talk time; the fee is shared with the other members.',
                   style: TextStyle(fontSize: 12, color: ColorName.greyText),
@@ -113,8 +113,8 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
             const SizedBox(height: 16),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: ColorName.cardBorder),
+                foregroundColor: ColorName.white,
+                side: BorderSide(color: ColorName.cardBorder),
                 minimumSize: const Size.fromHeight(46),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -151,6 +151,7 @@ class _ModerationRow extends StatelessWidget {
         message: 'They will be disconnected from this outpost.',
         icon: Icons.person_remove_rounded,
         iconColor: AppColors.danger,
+        urgent: true,
         actions: [
           AppSecondaryButton(
             label: 'Cancel',
@@ -175,15 +176,15 @@ class _ModerationRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(6),
+        color: ColorName.white.withAlpha(6),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: ColorName.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               'HOST CONTROLS',
               style: TextStyle(
@@ -241,19 +242,21 @@ class _ModButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onPressed;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? ColorName.white;
+
   const _ModButton({
     required this.icon,
     required this.label,
     required this.onPressed,
-    this.color = Colors.white,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     return Material(
-      color: Colors.white.withAlpha(enabled ? 12 : 4),
+      color: ColorName.white.withAlpha(enabled ? 12 : 4),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -262,13 +265,14 @@ class _ModButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Column(
             children: [
-              Icon(icon, size: 20, color: enabled ? color : ColorName.greyText),
+              Icon(icon,
+                  size: 20, color: enabled ? _color : ColorName.greyText),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  color: enabled ? color : ColorName.greyText,
+                  color: enabled ? _color : ColorName.greyText,
                 ),
               ),
             ],
@@ -328,7 +332,7 @@ class _Header extends StatelessWidget {
                   ),
                   if (handRaised) ...[
                     const SizedBox(width: 6),
-                    const _RoleChip(label: '✋ Hand', color: callAccentColor),
+                    _RoleChip(label: '✋ Hand', color: callAccentColor),
                   ],
                   const SizedBox(width: 8),
                   if (address.isNotEmpty)
@@ -348,14 +352,14 @@ class _Header extends StatelessWidget {
                               child: Text(
                                 truncate(address, length: 10),
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   color: ColorName.greyText,
                                 ),
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(
+                            Icon(
                               Icons.copy_rounded,
                               size: 12,
                               color: ColorName.greyText,
@@ -420,19 +424,19 @@ class _TalkTimeRow extends StatelessWidget {
         ? callAccentColor
         : time < 120
             ? callDangerColor
-            : Colors.white;
+            : ColorName.white;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: ColorName.white.withAlpha(8),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: ColorName.cardBorder),
       ),
       child: Row(
         children: [
-          const Icon(Icons.timer_outlined, size: 18, color: ColorName.greyText),
+          Icon(Icons.timer_outlined, size: 18, color: ColorName.greyText),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'Talk time left',
             style: TextStyle(color: ColorName.greyText, fontSize: 13),
           ),

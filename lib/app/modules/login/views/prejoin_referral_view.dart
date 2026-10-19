@@ -6,7 +6,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/modules/login/widgets/referral_input.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -75,7 +75,7 @@ class _AccessIntro extends StatelessWidget {
               color: AppColors.primary.withAlpha(28),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.lock_open_rounded,
               color: AppColors.primary,
               size: 20,
@@ -84,22 +84,22 @@ class _AccessIntro extends StatelessWidget {
           const SizedBox(width: 14),
           Expanded(
             child: RichText(
-              text: const TextSpan(
+              text: TextSpan(
                 style: TextStyle(
                   color: ColorName.greyText,
                   fontSize: 14,
                   height: 1.5,
                 ),
                 children: [
-                  TextSpan(text: 'In order to use '),
+                  const TextSpan(text: 'In order to use '),
                   TextSpan(
                     text: 'Podium',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: ColorName.white,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  TextSpan(text: ', you need to be '),
+                  const TextSpan(text: ', you need to be '),
                   TextSpan(
                     text: 'referred',
                     style: TextStyle(
@@ -107,7 +107,7 @@ class _AccessIntro extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  TextSpan(text: ' by an existing user '),
+                  const TextSpan(text: ' by an existing user '),
                   TextSpan(
                     text: 'or hold at least one key or pass',
                     style: TextStyle(
@@ -115,7 +115,7 @@ class _AccessIntro extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  TextSpan(text: '.'),
+                  const TextSpan(text: '.'),
                 ],
               ),
             ),
@@ -148,8 +148,8 @@ class _ExternalWalletConnectButton extends GetView<GlobalController> {
         },
         child: Text(
           connected ? 'External Wallet Connected' : 'Connect External Wallet',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: ColorName.white,
             fontSize: 16,
           ),
         ),
@@ -174,7 +174,7 @@ class _InternalWalletAddress extends GetView<LoginController> {
           children: [
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'YOUR INTERNAL WALLET',
                     style: AppText.label,
@@ -236,8 +236,8 @@ class _InternalWalletAddress extends GetView<LoginController> {
                             truncate(internalWalletAddress, length: 16),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: ColorName.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.4,
@@ -245,7 +245,7 @@ class _InternalWalletAddress extends GetView<LoginController> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(
+                        Icon(
                           Icons.copy_rounded,
                           color: AppColors.primary,
                           size: 16,
@@ -345,7 +345,7 @@ class _ProfileCard extends GetView<LoginController> {
                 ),
               ),
               const SizedBox(width: 8),
-              const AppPill(
+              AppPill(
                 label: 'Podium Pass',
                 color: AppColors.primary,
                 icon: Icons.confirmation_number_outlined,
@@ -361,7 +361,7 @@ class _ProfileCard extends GetView<LoginController> {
             ),
             child: Row(
               children: [
-                const Text('ADDRESS', style: AppText.label),
+                Text('ADDRESS', style: AppText.label),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -369,8 +369,8 @@ class _ProfileCard extends GetView<LoginController> {
                     textAlign: TextAlign.end,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: ColorName.white,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -444,7 +444,7 @@ class _ReferralStatus extends GetView<LoginController> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
+            Icon(
               Icons.info_outline_rounded,
               color: AppColors.danger,
               size: 20,
@@ -455,11 +455,11 @@ class _ReferralStatus extends GetView<LoginController> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Referral status', style: AppText.cardTitle),
+                  Text('Referral status', style: AppText.cardTitle),
                   const SizedBox(height: 4),
                   Text(
                     "${referrer.name} doesn't have any unused referral codes",
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: ColorName.greyText,
                       fontSize: 13,
                       height: 1.4,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 /// Creates a image widget with shaded overlay.
 class ImageOverlay extends StatelessWidget {

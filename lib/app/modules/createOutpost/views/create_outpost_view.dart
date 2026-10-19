@@ -7,7 +7,7 @@ import 'package:podium/app/modules/createOutpost/widgets/addGuestsPopup.dart';
 import 'package:podium/app/modules/createOutpost/widgets/addHostsPopup.dart';
 import 'package:podium/app/modules/createOutpost/widgets/tags_input.dart';
 import 'package:podium/app/modules/global/widgets/cohosts_widget.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/root.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -67,8 +67,8 @@ class CreateGroupView extends GetView<CreateOutpostController> {
                               key: controller.intro_tagsKey,
                             ),
                             const SizedBox(height: 8),
-                            const Padding(
-                              padding: EdgeInsets.only(left: 4),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 4),
                               child: Text(
                                 'Separate tags with a space or comma',
                                 style: AppText.caption,
@@ -138,7 +138,7 @@ class _RowDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       thickness: 1,
       indent: 16,
@@ -150,8 +150,10 @@ class _RowDivider extends StatelessWidget {
 
 class _IconBadge extends StatelessWidget {
   final IconData icon;
-  final Color color;
-  const _IconBadge({required this.icon, this.color = AppColors.primary});
+  final Color? color;
+  Color get _color => color ?? AppColors.primary;
+
+  const _IconBadge({required this.icon, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -159,10 +161,10 @@ class _IconBadge extends StatelessWidget {
       width: 38,
       height: 38,
       decoration: BoxDecoration(
-        color: color.withAlpha(28),
+        color: _color.withAlpha(28),
         borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
-      child: Icon(icon, size: 20, color: color),
+      child: Icon(icon, size: 20, color: _color),
     );
   }
 }
@@ -172,14 +174,16 @@ class _SettingRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget trailing;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? AppColors.primary;
+
   final VoidCallback? onTap;
   const _SettingRow({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.trailing,
-    this.color = AppColors.primary,
+    this.color,
     this.onTap,
   });
 
@@ -191,7 +195,7 @@ class _SettingRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
-            _IconBadge(icon: icon, color: color),
+            _IconBadge(icon: icon, color: _color),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -241,7 +245,7 @@ class _SelectPicture extends GetWidget<CreateOutpostController> {
           children: [
             Positioned.fill(
               child: Material(
-                color: Colors.white.withAlpha(10),
+                color: ColorName.white.withAlpha(10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(
@@ -261,7 +265,7 @@ class _SelectPicture extends GetWidget<CreateOutpostController> {
                           fit: BoxFit.cover,
                           cacheWidth: 320,
                         )
-                      : const Column(
+                      : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
@@ -269,7 +273,7 @@ class _SelectPicture extends GetWidget<CreateOutpostController> {
                               size: 28,
                               color: AppColors.primary,
                             ),
-                            SizedBox(height: 6),
+                            const SizedBox(height: 6),
                             Text(
                               'Cover',
                               style: TextStyle(
@@ -306,10 +310,10 @@ class _SelectPicture extends GetWidget<CreateOutpostController> {
                         width: 2,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.edit_rounded,
                       size: 14,
-                      color: Colors.white,
+                      color: ColorName.white,
                     ),
                   ),
                 ),
@@ -358,7 +362,7 @@ class _ScheduleToggle extends GetView<CreateOutpostController> {
                     child: Material(
                       color: selected
                           ? AppColors.primary.withAlpha(24)
-                          : Colors.white.withAlpha(10),
+                          : ColorName.white.withAlpha(10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
                         side: BorderSide(
@@ -389,8 +393,7 @@ class _ScheduleToggle extends GetView<CreateOutpostController> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       selected
@@ -414,7 +417,7 @@ class _ScheduleToggle extends GetView<CreateOutpostController> {
                                   ],
                                 ),
                               ),
-                              const Icon(
+                              Icon(
                                 Icons.chevron_right_rounded,
                                 color: AppColors.textMuted,
                               ),
@@ -479,10 +482,10 @@ class _TextInput extends StatelessWidget {
       keyboardAppearance: Brightness.dark,
       textCapitalization: TextCapitalization.sentences,
       textInputAction: TextInputAction.next,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w500,
-        color: Colors.white,
+        color: ColorName.white,
       ),
       decoration: InputDecoration(hintText: hintText),
     );
@@ -569,7 +572,7 @@ class _CreateButton extends GetWidget<CreateOutpostController> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         decoration: BoxDecoration(
           color: ColorName.cardBackground.withAlpha(235),
-          border: const Border(top: BorderSide(color: AppColors.border)),
+          border: Border(top: BorderSide(color: AppColors.border)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -584,7 +587,7 @@ class _CreateButton extends GetWidget<CreateOutpostController> {
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.info_outline_rounded,
                             size: 16,
                             color: AppColors.accent,
@@ -927,13 +930,13 @@ class _OptionTile extends StatelessWidget {
                       fontSize: 13,
                       height: 1.25,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      color: selected ? Colors.white : Colors.white70,
+                      color: selected ? ColorName.white : ColorName.greyText,
                     ),
                   ),
                 ),
                 if (selected) ...[
                   const SizedBox(width: 6),
-                  const Icon(
+                  Icon(
                     Icons.check_circle_rounded,
                     size: 16,
                     color: AppColors.primary,
@@ -1146,89 +1149,91 @@ class _SelectCohosts extends GetView<CreateOutpostController> {
 
   void _showCohostsDialog() {
     Get.dialog(
-      AlertDialog(
-        title: const Text('Selected Cohosts'),
-        contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-        content: Obx(() {
-          final cohosts = controller.cohosts.value;
-          if (cohosts.isEmpty) {
-            return const AppEmptyState(
-              icon: Icons.group_outlined,
-              title: 'No cohosts selected',
-              compact: true,
-            );
-          }
-          return SizedBox(
-            width: double.maxFinite,
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: cohosts.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final cohost = cohosts[index];
-                final hasImage =
-                    cohost.image != null && cohost.image!.isNotEmpty;
-                return Container(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.fill,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: AppColors.primary.withAlpha(40),
-                        backgroundImage: hasImage
-                            ? CachedNetworkImageProvider(
-                                cohost.image!,
-                                maxWidth: 160,
-                              )
-                            : null,
-                        child: hasImage
-                            ? null
-                            : const Icon(
-                                Icons.person_rounded,
-                                size: 18,
-                                color: AppColors.primary,
-                              ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          cohost.name ?? 'Unknown',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+      AppDialogMotion(
+        child: AlertDialog(
+          title: const Text('Selected Cohosts'),
+          contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          content: Obx(() {
+            final cohosts = controller.cohosts.value;
+            if (cohosts.isEmpty) {
+              return const AppEmptyState(
+                icon: Icons.group_outlined,
+                title: 'No cohosts selected',
+                compact: true,
+              );
+            }
+            return SizedBox(
+              width: double.maxFinite,
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: cohosts.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final cohost = cohosts[index];
+                  final hasImage =
+                      cohost.image != null && cohost.image!.isNotEmpty;
+                  return Container(
+                    padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.fill,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: AppColors.primary.withAlpha(40),
+                          backgroundImage: hasImage
+                              ? CachedNetworkImageProvider(
+                                  cohost.image!,
+                                  maxWidth: 160,
+                                )
+                              : null,
+                          child: hasImage
+                              ? null
+                              : Icon(
+                                  Icons.person_rounded,
+                                  size: 18,
+                                  color: AppColors.primary,
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            cohost.name ?? 'Unknown',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        tooltip: 'Remove',
-                        icon: const Icon(
-                          Icons.remove_circle_outline_rounded,
-                          color: AppColors.danger,
+                        IconButton(
+                          tooltip: 'Remove',
+                          icon: Icon(
+                            Icons.remove_circle_outline_rounded,
+                            color: AppColors.danger,
+                          ),
+                          onPressed: () {
+                            controller.cohosts.removeAt(index);
+                          },
                         ),
-                        onPressed: () {
-                          controller.cohosts.removeAt(index);
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
+          actions: [
+            TextButton(
+              onPressed: () => Get.closeOverlay(),
+              child: const Text('Close'),
             ),
-          );
-        }),
-        actions: [
-          TextButton(
-            onPressed: () => Get.closeOverlay(),
-            child: const Text('Close'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

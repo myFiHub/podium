@@ -29,14 +29,14 @@ class RecordsPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   border: Border.all(color: AppColors.accent.withAlpha(60)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       Icons.phone_iphone_rounded,
                       color: AppColors.accent,
                       size: 18,
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Recordings are saved locally on your device',

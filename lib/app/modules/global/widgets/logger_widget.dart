@@ -28,7 +28,7 @@
 //       Text(
 //         '=> $event',
 //         style: const TextStyle(
-//           color: Colors.white,
+//           color: ColorName.white,
 //           fontSize: 12.0,
 //         ),
 //       ),
@@ -84,7 +84,7 @@
 //                     child: const Center(
 //                       child: Icon(
 //                         Icons.drag_indicator_rounded,
-//                         color: Colors.white,
+//                         color: ColorName.white,
 //                       ),
 //                     ),
 //                   ),

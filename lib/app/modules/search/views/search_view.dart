@@ -22,7 +22,7 @@ class SearchTextField extends GetView<SearchPageController> {
       style: AppText.body,
       decoration: InputDecoration(
         hintText: "Search Outposts, Users or Tags",
-        prefixIcon: const Icon(
+        prefixIcon: Icon(
           Icons.search_rounded,
           color: AppColors.textMuted,
         ),
@@ -30,8 +30,8 @@ class SearchTextField extends GetView<SearchPageController> {
           final searchValue = controller.searchValue.value;
           final isSearching = controller.isSearching.value;
           if (isSearching) {
-            return const Padding(
-              padding: EdgeInsets.all(14),
+            return Padding(
+              padding: const EdgeInsets.all(14),
               child: SizedBox(
                 width: 18,
                 height: 18,
@@ -50,7 +50,7 @@ class SearchTextField extends GetView<SearchPageController> {
             onPressed: () {
               controller.setSeachValue("");
             },
-            icon: const Icon(
+            icon: Icon(
               Icons.close_rounded,
               size: 20,
               color: AppColors.textMuted,
@@ -322,7 +322,7 @@ class _TagTile extends StatelessWidget {
               color: AppColors.primary.withAlpha(26),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.tag_rounded,
               size: 18,
               color: AppColors.primary,
@@ -338,7 +338,7 @@ class _TagTile extends StatelessWidget {
             ),
           ),
           if (loading)
-            const SizedBox(
+            SizedBox(
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
@@ -347,7 +347,7 @@ class _TagTile extends StatelessWidget {
               ),
             )
           else
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textMuted,
             ),

@@ -721,7 +721,9 @@ class OutpostsController extends GetxController {
         canSpeak: accesses.canSpeak,
       );
     } else {
-      final result = await Get.dialog<OutpostAccesses?>(CheckTicketView());
+      final result = await Get.dialog<OutpostAccesses?>(
+        AppDialogMotion(child: CheckTicketView()),
+      );
       l.d("Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
       Get.delete<CheckticketController>();
       joiningOutpostId.value = '';
@@ -746,11 +748,11 @@ class OutpostsController extends GetxController {
         icon: Icons.warning_amber_rounded,
         iconColor: AppColors.accent,
         title: "Age Verification Required",
-        content: const Column(
+        content: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text("Adult Content Warning", style: AppText.cardTitle),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Row(
               children: [
                 Icon(
@@ -758,7 +760,7 @@ class OutpostsController extends GetxController {
                   color: AppColors.primary,
                   size: 16,
                 ),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     "You must be 18+ to access this content",
@@ -767,8 +769,8 @@ class OutpostsController extends GetxController {
                 ),
               ],
             ),
-            SizedBox(height: 14),
-            AppCallout(
+            const SizedBox(height: 14),
+            const AppCallout(
               text:
                   "By proceeding, you confirm that you are at least 18 years of age.",
               icon: Icons.verified_user_outlined,
@@ -780,7 +782,7 @@ class OutpostsController extends GetxController {
           AppPrimaryButton(
             label: "Yes, I'm 18 or older",
             color: AppColors.accent,
-            foreground: Colors.black,
+            foreground: AppColors.onColor(AppColors.accent),
             onPressed: () {
               globalController.setIsMyUserOver18(true);
               HttpApis.podium.updateMyUserData({'is_over_18': true});
@@ -867,9 +869,10 @@ _showModalToLeaveGroup({required OutpostModel outpost}) async {
     AppDialog(
       icon: Icons.exit_to_app_rounded,
       iconColor: AppColors.danger,
+      urgent: true,
       title: "Leave Outpost",
       message: "Are you sure you want to leave this outpost?",
-      content: const AppCallout(
+      content: AppCallout(
         text: "You can rejoin later if you have the required access.",
         color: AppColors.danger,
       ),

@@ -12,7 +12,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interaction
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/more_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
@@ -25,7 +25,7 @@ class ControlDock extends GetView<OngoingOutpostCallController> {
     return Container(
       decoration: BoxDecoration(
         color: ColorName.navbarBackground.withAlpha(235),
-        border: const Border(top: BorderSide(color: ColorName.cardBorder)),
+        border: Border(top: BorderSide(color: ColorName.cardBorder)),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
@@ -88,7 +88,9 @@ class DockButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onPressed;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? ColorName.white;
+
   final bool filled;
   final String? badge;
   final Widget? iconWidget;
@@ -97,7 +99,7 @@ class DockButton extends StatelessWidget {
     required this.icon,
     required this.label,
     this.onPressed,
-    this.color = Colors.white,
+    this.color,
     this.filled = false,
     this.badge,
     this.iconWidget,
@@ -114,7 +116,7 @@ class DockButton extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Material(
-                color: filled ? color : Colors.white.withAlpha(16),
+                color: filled ? _color : ColorName.white.withAlpha(16),
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),
@@ -132,7 +134,7 @@ class DockButton extends StatelessWidget {
                           Icon(
                             icon,
                             size: 22,
-                            color: filled ? Colors.white : color,
+                            color: filled ? ColorName.white : _color,
                           ),
                     ),
                   ),
@@ -151,10 +153,10 @@ class DockButton extends StatelessWidget {
                     ),
                     child: Text(
                       badge!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: AppColors.onPrimary,
                       ),
                     ),
                   ),
@@ -166,7 +168,7 @@ class DockButton extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: ColorName.greyText),
+            style: TextStyle(fontSize: 12, color: ColorName.greyText),
           ),
         ],
       ),
@@ -192,14 +194,14 @@ class MicButton extends GetView<OngoingOutpostCallController> {
       final live = !disabled && !muted;
 
       final Color background = disabled
-          ? Colors.white.withAlpha(16)
+          ? ColorName.white.withAlpha(16)
           : live
               ? callSpeakingColor
-              : Colors.white;
+              : ColorName.white;
       final Color foreground = disabled
           ? ColorName.greyText
           : live
-              ? Colors.white
+              ? ColorName.white
               : ColorName.pageBackground;
       final label = connecting
           ? 'Connecting'
@@ -252,7 +254,7 @@ class MicButton extends GetView<OngoingOutpostCallController> {
               controller.setMutedState(!muted);
             },
             child: connecting
-                ? const Center(
+                ? Center(
                     child: SizedBox(
                       width: 26,
                       height: 26,
@@ -317,7 +319,7 @@ class MicButton extends GetView<OngoingOutpostCallController> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: live ? const Color(0xFFB79BFF) : ColorName.greyText,
+              color: live ? AppColors.violet : ColorName.greyText,
             ),
           ),
         ],
@@ -336,7 +338,7 @@ class _ReactButton extends GetView<CallRoomController> {
       return DockButton(
         icon: open ? Icons.close_rounded : Icons.add_reaction_outlined,
         label: 'React',
-        color: open ? ColorName.primaryBlue : Colors.white,
+        color: open ? ColorName.primaryBlue : ColorName.white,
         onPressed: () => controller.reactionTrayOpen.value = !open,
       );
     });
@@ -353,7 +355,7 @@ class _HandButton extends GetView<CallRoomController> {
       return DockButton(
         icon: raised ? Icons.back_hand_rounded : Icons.back_hand_outlined,
         label: raised ? 'Lower' : 'Raise',
-        color: raised ? callAccentColor : Colors.white,
+        color: raised ? callAccentColor : ColorName.white,
         filled: raised,
         onPressed: controller.toggleHand,
       );

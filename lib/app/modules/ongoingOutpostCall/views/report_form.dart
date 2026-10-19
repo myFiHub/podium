@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/widgets/button/button.dart';
 
@@ -80,7 +80,8 @@ class ReportForm extends GetView<OngoingOutpostCallController> {
                   text: 'Submit Report',
                   size: ButtonSize.SMALL,
                   type: ButtonType.solid,
-                  color: isFormValid ? ColorName.success : ColorName.secondaryText,
+                  color:
+                      isFormValid ? ColorName.success : ColorName.secondaryText,
                   onPressed: isFormValid
                       ? () {
                           if (_formKey.currentState?.validate() ?? false) {

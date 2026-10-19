@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:just_waveform/just_waveform.dart';
 
 class AudioWaveformWidget extends StatefulWidget {
@@ -113,7 +114,7 @@ class AudioWaveformPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.0
           ..strokeCap = StrokeCap.round
-          ..color = Colors.white.withAlpha(230);
+          ..color = ColorName.white.withAlpha(230);
 
   @override
   void paint(Canvas canvas, Size size) {

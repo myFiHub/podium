@@ -214,6 +214,7 @@ class CallRoomController extends GetxController
   // Podium channel ------------------------------------------------------------
 
   void onPodiumEvent(String name, Map<String, dynamic> data) {
+    if (name != 'audioLevels') l.d('[podium] $name $data');
     switch (name) {
       case 'state':
         channelAvailable.value = true;
@@ -362,7 +363,14 @@ class CallRoomController extends GetxController
     _levelRx(uuid).value = (level * 10).round() / 10;
   }
 
+  DateTime _lastLevelsLog = DateTime(0);
+
   void _onAudioLevels(dynamic raw) {
+    if (DateTime.now().difference(_lastLevelsLog).inSeconds >= 2) {
+      _lastLevelsLog = DateTime.now();
+      l.d('[levels] raw=$raw local=$_localJitsiId mapped='
+          '${raw is Map ? raw.keys.map((k) => '$k->${uuidOf(k.toString())}').toList() : null}');
+    }
     if (raw is! Map) return;
     raw.forEach((jitsiId, level) {
       final uuid = uuidOf(jitsiId.toString());

@@ -15,7 +15,7 @@ import 'package:podium/app/modules/login/bindings/login_binding.dart';
 import 'package:podium/app/modules/login/views/login_view.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
@@ -50,17 +50,7 @@ _extractLinkForAndroid(String link) {
   return deepLinkedPage;
 }
 
-_setSystemUIOverlayStyle() {
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      systemNavigationBarIconBrightness: Brightness.light,
-      statusBarColor: ColorName.systemTrayBackground,
-      systemNavigationBarColor:
-          ColorName.navbarBackground, // Color de la barra de navegación
-      statusBarIconBrightness: Brightness.light, // Iconos claros en la
-    ),
-  );
-}
+_setSystemUIOverlayStyle() => AppPalette.applySystemUi();
 
 _extractLinkForIOS(String link) {
   late String deepLinkedPage;
@@ -120,16 +110,8 @@ void main() async {
     DeviceOrientation.portraitDown,
     DeviceOrientation.portraitUp,
   ]);
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: ColorName.systemTrayBackground,
-      systemNavigationBarColor:
-          ColorName.navbarBackground, // Color de la barra de navegación
-      statusBarIconBrightness: Brightness.light, // Iconos claros en la
-    ),
-  );
-
   await GetStorage.init();
+  AppPalette.load();
   HttpApis.configure();
   runApp(const MyApp());
 }
@@ -154,8 +136,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  /// The app is dark-only; the wallet modal must not follow the system theme.
-  bool _isDarkMode = true;
+  /// The wallet modal follows the app palette, not the system theme.
+  bool get _isDarkMode => !AppPalette.current.isLight;
   ReownAppKitModalThemeData? _themeData;
 
   late final AppLifecycleListener _listener;
@@ -237,7 +219,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       isDarkMode: _isDarkMode,
       themeData: _themeData,
       child: GetMaterialApp(
-        theme: darkThemeData,
+        theme: buildThemeData(),
         defaultTransition: Transition.native,
         // showPerformanceOverlay: true,
         onDispose: () {
@@ -255,7 +237,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   left: 0,
                   right: 0,
                   height: insets.top,
-                  child: const ColoredBox(
+                  child: ColoredBox(
                     color: ColorName.systemTrayBackground,
                   ),
                 ),
@@ -264,7 +246,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   left: 0,
                   right: 0,
                   height: insets.bottom,
-                  child: const ColoredBox(color: ColorName.navbarBackground),
+                  child: ColoredBox(color: ColorName.navbarBackground),
                 ),
                 SafeArea(
                   child: Root(
@@ -291,10 +273,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 // ignore: unused_element
   void _toggleTheme() => setState(() {
         _themeData = (_themeData == null) ? _customTheme : null;
-      });
-// ignore: unused_element
-  void _toggleBrightness() => setState(() {
-        _isDarkMode = !_isDarkMode;
       });
 
   ReownAppKitModalThemeData get _customTheme => ReownAppKitModalThemeData(

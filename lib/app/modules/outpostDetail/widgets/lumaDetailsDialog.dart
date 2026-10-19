@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/utils/truncate.dart';
@@ -36,8 +36,8 @@ class LumaDetailsDialog extends GetView<OutpostDetailController> {
             children: [
               Row(
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
                     child: Text('Luma Details', style: AppText.title),
                   ),
                   if (isStarted) ...[
@@ -55,7 +55,7 @@ class LumaDetailsDialog extends GetView<OutpostDetailController> {
                         ),
                       ),
                       child: Shimmer.fromColors(
-                        baseColor: Colors.white,
+                        baseColor: ColorName.white,
                         highlightColor: AppColors.success,
                         child: const Text(
                           "Started",
@@ -123,7 +123,7 @@ class _Info extends GetView<OutpostDetailController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'EVENT NAME',
                         style: AppText.label,
                       ),
@@ -195,10 +195,10 @@ class _MetaChip extends StatelessWidget {
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: ColorName.white,
               ),
             ),
           ),
@@ -239,7 +239,7 @@ class _Contents extends GetView<OutpostDetailController> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: Colors.white,
+                labelColor: ColorName.white,
                 unselectedLabelColor: ColorName.greyText,
                 dividerColor: Colors.transparent,
                 tabs: [
@@ -341,10 +341,10 @@ class _PersonRow extends StatelessWidget {
                     name!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: ColorName.white,
                     ),
                   ),
                 Text(
@@ -395,17 +395,17 @@ class _GuestItem extends StatelessWidget {
       name: guest.user_name,
       email: truncate(guest.user_email),
       trailing: switch (status) {
-        'pending' => const AppPill(
+        'pending' => AppPill(
             label: 'Pending',
             color: AppColors.accent,
             icon: Icons.schedule_rounded,
           ),
-        'approved' => const AppPill(
+        'approved' => AppPill(
             label: 'Approved',
             color: AppColors.success,
             icon: Icons.check_rounded,
           ),
-        'rejected' => const AppPill(
+        'rejected' => AppPill(
             label: 'Rejected',
             color: AppColors.danger,
             icon: Icons.close_rounded,
@@ -450,6 +450,6 @@ class _DoneButton extends GetView<OutpostDetailController> {
 
 openLumaDetailsDialog() {
   Get.dialog(
-    const LumaDetailsDialog(),
+    const AppDialogMotion(child: LumaDetailsDialog()),
   );
 }

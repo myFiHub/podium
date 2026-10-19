@@ -18,6 +18,7 @@ class StorageKeys {
   static const showArchivedOutposts = 'showArchivedOutposts';
   static const referrerId = 'referrerId';
   static const lastAppMetadata = 'lastAppMetadata';
+  static const colorTheme = 'colorTheme';
 }
 
 class IntroStorageKeys {

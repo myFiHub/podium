@@ -30,9 +30,9 @@ class PlaygroundView extends GetView<PlaygroundController> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Text('NATIVE CHANNEL', style: AppText.label),
+                          Text('NATIVE CHANNEL', style: AppText.label),
                           const SizedBox(height: 6),
-                          const Text(
+                          Text(
                             'Call the native helper to change the color.',
                             style: AppText.muted,
                           ),

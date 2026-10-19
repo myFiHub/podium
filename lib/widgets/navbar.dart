@@ -5,7 +5,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -91,7 +91,7 @@ class PodiumNavbar extends GetView<GlobalController> {
                 activeRoute: activeRoute,
               ),
             ),
-            const Positioned(
+            Positioned(
               top: 0,
               left: 0,
               right: 0,
@@ -100,11 +100,11 @@ class PodiumNavbar extends GetView<GlobalController> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0x0054E4EF),
-                      Color(0x8054E4EF),
-                      Color(0x808B5CF6),
-                      Color(0x80FF4FD8),
-                      Color(0x00FF4FD8),
+                      ColorName.primaryBlue.withAlpha(0),
+                      ColorName.primaryBlue.withAlpha(0x80),
+                      ColorName.auroraViolet.withAlpha(0x80),
+                      ColorName.auroraMagenta.withAlpha(0x80),
+                      ColorName.auroraMagenta.withAlpha(0),
                     ],
                   ),
                 ),
@@ -154,7 +154,7 @@ Widget _buildNavItem({
 }) {
   final activeRoute = Get.find<GlobalController>().activeRoute.value;
   final isActive = activeRoute == route;
-  final color = isActive ? Colors.white : ColorName.secondaryText;
+  final color = isActive ? ColorName.white : ColorName.secondaryText;
   return Semantics(
     button: true,
     selected: isActive,
@@ -336,7 +336,7 @@ class ProfileBadge extends GetView<GlobalController> {
   }
 }
 
-const _badgeColor = ColorName.danger;
+Color get _badgeColor => ColorName.danger;
 
 class NotificationBadge extends GetWidget<NotificationsController> {
   const NotificationBadge({super.key});
@@ -377,8 +377,8 @@ class NotificationBadge extends GetWidget<NotificationsController> {
                         ? '99+'
                         : numberOfUnreadNotifications.toString(),
                     alignment: Alignment.center,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: ColorName.white,
                       fontSize: 11,
                       height: 1.1,
                       fontWeight: FontWeight.w700,

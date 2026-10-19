@@ -12,16 +12,16 @@ import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/likePath.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/widgetWithTimer/widgetWrapper.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 
-const callSpeakingColor = ColorName.success;
-const callDangerColor = ColorName.danger;
-const callAccentColor = ColorName.warning;
+Color get callSpeakingColor => ColorName.success;
+Color get callDangerColor => ColorName.danger;
+Color get callAccentColor => ColorName.warning;
 
 String memberAvatar(LiveMember member) {
   final avatar = member.image ?? '';
@@ -219,7 +219,11 @@ class ReactionCounts extends GetView<OutpostCallController> {
     return Obx(() {
       final reactions = controller.reactionsMap.value[address] ?? const {};
       final items = [
-        (Icons.thumb_up_rounded, OutgoingMessageTypeEnums.like, ColorName.success),
+        (
+          Icons.thumb_up_rounded,
+          OutgoingMessageTypeEnums.like,
+          ColorName.success
+        ),
         (
           Icons.thumb_down_rounded,
           OutgoingMessageTypeEnums.dislike,

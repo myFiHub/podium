@@ -101,6 +101,14 @@ dependencies:
     sdk: flutter
   firebase_messaging: ^16.0.0
 
+  intl: any
+  path: any
+  rxdart: any
+  web3dart: any
+  http: any
+  copy_with_extension: any
+  flutter_svg: any
+  vector_graphics: any
 dependency_overrides:
   intl: ^0.19.0
 
@@ -117,9 +125,6 @@ dev_dependencies:
 flutter_gen:
   output: lib/gen/ # Optional (default: lib/gen/)
   line_length: 80 # Optional (default: 80)
-  colors:
-    inputs:
-      - assets/colors/colors.xml
   # Optional
   integrations:
     flutter_svg: true

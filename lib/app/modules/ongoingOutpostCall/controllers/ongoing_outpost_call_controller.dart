@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 // import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -227,6 +227,12 @@ class OngoingOutpostCallController extends GetxController {
     );
   }
 
+  /// The server doesn't echo our own start/stop speaking events, so the local
+  /// talk-time countdown needs us marked as speaking here.
+  void _setMeSpeaking(bool isTalking) {
+    updateUserIsTalking(address: myUser.address, isTalking: isTalking);
+  }
+
   handleTimeIsUp(IncomingMessage incomingMessage) {
     final address = incomingMessage.data.address!;
     final creatorUuid = outpostCallController.outpost.value!.creator_user_uuid;
@@ -274,6 +280,7 @@ class OngoingOutpostCallController extends GetxController {
     if (outpostId == null || outpostCallController.callCleanedUp) return;
     // While the mic is open the server already counts us as speaking.
     if (!amIMuted.value) return;
+    _setMeSpeaking(sharing);
     sendOutpostEvent(
       outpostId: outpostId,
       requestId: sharing ? outpostId : null,
@@ -413,34 +420,34 @@ class OngoingOutpostCallController extends GetxController {
               children: [
                 Text(
                   text,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: ColorName.white,
                   ),
                 ),
                 if (hasNext)
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () {
                       tutorialCoachMark.next();
                     },
-                    child: const Text(
+                    child: Text(
                       "Next",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   )
                 else
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () {
                       introFinished(true);
                     },
-                    child: const Text(
+                    child: Text(
                       "Finish",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   ),
               ],
@@ -815,6 +822,7 @@ class OngoingOutpostCallController extends GetxController {
       // and an unwanted stop speaking event is sent
       if (!amIMuted.value) {
         if (!isSharingScreen.value) {
+          _setMeSpeaking(false);
           sendOutpostEvent(
             outpostId: outpostId,
             eventType: OutgoingMessageTypeEnums.stop_speaking,
@@ -836,6 +844,7 @@ class OngoingOutpostCallController extends GetxController {
         jitsiMeet.setAudioMuted(true);
         return;
       }
+      _setMeSpeaking(true);
       if (!isSharingScreen.value) {
         sendOutpostEvent(
           outpostId: outpostId,

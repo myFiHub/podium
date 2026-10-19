@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/truncate.dart';
@@ -45,14 +45,14 @@ class CohostsWidget extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: isLoading
-                ? const Padding(
-                    padding: EdgeInsets.all(10),
+                ? Padding(
+                    padding: const EdgeInsets.all(10),
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: AppColors.primary,
                     ),
                   )
-                : const Icon(
+                : Icon(
                     Icons.people_alt_rounded,
                     color: AppColors.primary,
                     size: 18,
@@ -161,7 +161,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
             if (widget.isCreator) ...[
               TextField(
                 controller: _searchController,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: ColorName.white),
                 decoration: InputDecoration(
                   hintText: 'Search users by name...',
                   prefixIcon: const Icon(Icons.search_rounded),
@@ -221,7 +221,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                                     color: AppColors.fill,
                                     border: Border.all(color: AppColors.border),
                                   ),
-                                  child: const Center(
+                                  child: Center(
                                     child: SizedBox(
                                       width: 18,
                                       height: 18,
@@ -274,7 +274,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                                         width: 52,
                                         height: 52,
                                         padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(
+                                        decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: AppColors.primary,
                                         ),
@@ -301,9 +301,9 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                                               width: 2,
                                             ),
                                           ),
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.close_rounded,
-                                            color: Colors.white,
+                                            color: ColorName.white,
                                             size: 11,
                                           ),
                                         ),
@@ -573,8 +573,8 @@ class _UserRow extends StatelessWidget {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: ColorName.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -612,9 +612,9 @@ class _UserRowSkeleton extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withAlpha(14),
+              color: ColorName.white.withAlpha(14),
             ),
-            child: const Center(
+            child: Center(
               child: SizedBox(
                 width: 16,
                 height: 16,
@@ -633,7 +633,7 @@ class _UserRowSkeleton extends StatelessWidget {
                 height: 14,
                 width: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(16),
+                  color: ColorName.white.withAlpha(16),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -642,7 +642,7 @@ class _UserRowSkeleton extends StatelessWidget {
                 height: 10,
                 width: 80,
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(10),
+                  color: ColorName.white.withAlpha(10),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),

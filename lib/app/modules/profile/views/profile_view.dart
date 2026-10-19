@@ -9,7 +9,7 @@ import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -42,7 +42,7 @@ void showPodiumPassOptionsDialog(
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.confirmation_number_outlined,
                   color: AppColors.accent,
                 ),
@@ -58,7 +58,7 @@ void showPodiumPassOptionsDialog(
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'What would you like to do?',
                         style: AppText.caption,
                       ),
@@ -186,7 +186,7 @@ class _AvatarRing extends StatelessWidget {
       ),
       child: Container(
         padding: const EdgeInsets.all(2.5),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: ColorName.cardBackground,
         ),
@@ -262,7 +262,7 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                       const SizedBox(height: 8),
                       Material(
                         color: AppColors.fill,
-                        shape: const StadiumBorder(
+                        shape: StadiumBorder(
                           side: BorderSide(color: AppColors.border),
                         ),
                         clipBehavior: Clip.antiAlias,
@@ -282,7 +282,7 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.account_balance_wallet_outlined,
                                   size: 13,
                                   color: AppColors.textMuted,
@@ -297,7 +297,7 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                const Icon(
+                                Icon(
                                   Icons.copy_rounded,
                                   size: 13,
                                   color: AppColors.textMuted,
@@ -355,7 +355,7 @@ class _SocialCounts extends GetWidget<ProfileController> {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: ColorName.white.withAlpha(8),
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(color: AppColors.border),
         ),
@@ -363,13 +363,13 @@ class _SocialCounts extends GetWidget<ProfileController> {
           child: Row(
             children: [
               Expanded(child: _CountCell(value: holders, label: 'Holders')),
-              const VerticalDivider(
+              VerticalDivider(
                 width: 1,
                 thickness: 1,
                 color: AppColors.border,
               ),
               Expanded(child: _CountCell(value: followers, label: 'Followers')),
-              const VerticalDivider(
+              VerticalDivider(
                 width: 1,
                 thickness: 1,
                 color: AppColors.border,
@@ -397,11 +397,11 @@ class _CountCell extends StatelessWidget {
       children: [
         Text(
           value.toString(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: Colors.white,
-            fontFeatures: [FontFeature.tabularFigures()],
+            color: ColorName.white,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 2),
@@ -453,7 +453,7 @@ class _TicketButton extends GetWidget<ProfileController> {
           ),
         ),
         child: busy
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
@@ -506,7 +506,7 @@ class _TicketButtonContent extends StatelessWidget {
             Flexible(
               child: Text.rich(
                 TextSpan(
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onPrimary,
@@ -530,8 +530,8 @@ class _TicketButtonContent extends StatelessWidget {
               ),
             ),
             if (isLoading)
-              const Padding(
-                padding: EdgeInsets.only(left: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
                 child: LoadingWidget(
                   size: 12,
                   color: AppColors.onPrimary,
@@ -747,7 +747,7 @@ class _YouPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const AppPill(label: 'You', color: AppColors.success);
+    return AppPill(label: 'You', color: AppColors.success);
   }
 }
 
@@ -963,11 +963,11 @@ class _ActivityCell extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           value.toString(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
-            color: Colors.white,
-            fontFeatures: [FontFeature.tabularFigures()],
+            color: ColorName.white,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 2),

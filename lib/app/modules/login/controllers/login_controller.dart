@@ -193,7 +193,8 @@ class LoginController extends GetxController {
           referrerNotFound.value = true;
           Toast.error(message: 'Referrer not found');
         } else {
-          Toast.success(message: 'Using ${referrer.value?.name} as your referrer');
+          Toast.success(
+              message: 'Using ${referrer.value?.name} as your referrer');
 
           if (temporaryLoginRequest != null) {
             isLoggingIn.value = true;
@@ -572,7 +573,7 @@ class LoginController extends GetxController {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'The name you want to use in the platform',
                 style: AppText.muted,
               ),
@@ -635,7 +636,7 @@ Future<String?> showDialogToGetTheEmail() async {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Please enter your email address',
               style: AppText.muted,
             ),

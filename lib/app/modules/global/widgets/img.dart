@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 /// The name encoded in a ui-avatars.com placeholder URL, which is drawn
 /// locally with [InitialsAvatar] instead of downloading a picture of it.
@@ -55,7 +55,8 @@ class Img extends StatelessWidget {
               ),
             )
           : placeholderName != null
-              ? InitialsAvatar(name: placeholderName, borderRadius: borderRadius)
+              ? InitialsAvatar(
+                  name: placeholderName, borderRadius: borderRadius)
               : CachedNetworkImage(
                   imageUrl: src,
                   memCacheWidth: cacheSize,

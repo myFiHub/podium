@@ -103,7 +103,7 @@ class EnterButton extends GetView<CheckticketController> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (!canSpeak && canSpeakThough) ...[
-              const _Notice(
+              _Notice(
                 icon: Icons.mic_off_rounded,
                 color: AppColors.accent,
                 text:
@@ -124,7 +124,7 @@ class EnterButton extends GetView<CheckticketController> {
           ],
         );
       }
-      return const Column(
+      return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -134,8 +134,8 @@ class EnterButton extends GetView<CheckticketController> {
             text:
                 'you will be able to Enter if you buy 1 ticket required for Entering the room',
           ),
-          SizedBox(height: 10),
-          AppPrimaryButton(
+          const SizedBox(height: 10),
+          const AppPrimaryButton(
             label: 'Enter',
             icon: Icons.lock_outline_rounded,
             onPressed: null,
@@ -335,19 +335,19 @@ class Header extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Expanded(
+        Expanded(
           child: Padding(
-            padding: EdgeInsets.only(left: 4, top: 2),
+            padding: const EdgeInsets.only(left: 4, top: 2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Tickets required', style: AppText.title),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   'Buy tickets to enter and speak',
                   style: AppText.caption,
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
@@ -429,7 +429,7 @@ class Actions extends StatelessWidget {
           color: AppColors.success.withAlpha(30),
           shape: BoxShape.circle,
         ),
-        child: const Icon(
+        child: Icon(
           Icons.check_rounded,
           color: AppColors.success,
           size: 20,
@@ -446,7 +446,7 @@ class Actions extends StatelessWidget {
         },
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.success,
-          foregroundColor: Colors.black,
+          foregroundColor: AppColors.onColor(AppColors.success),
           minimumSize: const Size(0, 36),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           visualDensity: VisualDensity.compact,

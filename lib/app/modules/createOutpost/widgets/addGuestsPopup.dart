@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/createOutpost/widgets/luma_people_dialog.dart';
+import 'package:podium/widgets/ui/aurora.dart';
 
 class AddGuestsPopup extends GetView<CreateOutpostController> {
   const AddGuestsPopup({super.key});
@@ -26,6 +27,6 @@ class AddGuestsPopup extends GetView<CreateOutpostController> {
 
 openAddGuestsDialog() {
   Get.dialog(
-    const AddGuestsPopup(),
+    const AppDialogMotion(child: AddGuestsPopup()),
   );
 }

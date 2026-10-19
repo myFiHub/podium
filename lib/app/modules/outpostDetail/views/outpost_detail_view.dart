@@ -15,7 +15,7 @@ import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart'
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/root.dart';
@@ -83,10 +83,10 @@ class OutpostImage extends GetView<OutpostDetailController> {
                       color: Colors.black.withAlpha(110),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.open_in_full_rounded,
                       size: 14,
-                      color: Colors.white,
+                      color: ColorName.white,
                     ),
                   ),
                 ),
@@ -245,7 +245,7 @@ class _TopBar extends StatelessWidget {
             tooltip: 'Back',
             onTap: () => Navigator.of(context).maybePop(),
           ),
-          const Expanded(
+          Expanded(
             child: Text(
               'OUTPOST',
               textAlign: TextAlign.center,
@@ -273,25 +273,25 @@ class _HeroCard extends StatelessWidget {
         outpost.scheduled_for > DateTime.now().millisecondsSinceEpoch;
     final pills = <Widget>[
       if (outpost.creator_joined)
-        const AppPill(
+        AppPill(
           label: 'Host is live',
           color: AppColors.success,
           icon: Icons.circle,
         ),
       if (isUpcoming)
-        const AppPill(
+        AppPill(
           label: 'Scheduled',
           color: AppColors.accent,
           icon: Icons.event_rounded,
         ),
       if (outpost.is_recordable)
-        const AppPill(
+        AppPill(
           label: 'Recordable',
           color: AppColors.danger,
           icon: Icons.fiber_manual_record_rounded,
         ),
       if (outpost.has_adult_content)
-        const AppPill(
+        AppPill(
           label: '18+',
           color: AppColors.danger,
           icon: Icons.explicit_rounded,
@@ -343,7 +343,7 @@ class _HeroCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Hosted by', style: AppText.caption),
+                          Text('Hosted by', style: AppText.caption),
                           Text(
                             iAmOwner ? 'You' : creatorName,
                             maxLines: 1,
@@ -506,7 +506,7 @@ class _ActionRow extends StatelessWidget {
             ),
           ),
           trailing ??
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 color: ColorName.greyText,
               ),
@@ -527,7 +527,7 @@ class _BottomActionBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
         color: ColorName.cardBackground.withAlpha(235),
-        border: const Border(top: BorderSide(color: ColorName.cardBorder)),
+        border: Border(top: BorderSide(color: ColorName.cardBorder)),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Row(
@@ -607,11 +607,11 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
                         hasTimePassed ? 'Reschedule?' : time,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          fontFeatures: [FontFeature.tabularFigures()],
+                          color: ColorName.white,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                     ],
@@ -623,10 +623,10 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
                     color: AppColors.fill,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.edit_rounded,
                     size: 16,
-                    color: Colors.white,
+                    color: ColorName.white,
                   ),
                 ),
               ],
@@ -864,12 +864,12 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
               ? AppColors.success
               : useGradient
                   ? AppColors.onPrimary
-                  : Colors.white,
+                  : ColorName.white,
           shadowColor: Colors.transparent,
           disabledBackgroundColor: isJoining
               ? (useGradient ? Colors.transparent : background.withAlpha(150))
               : AppColors.fill,
-          disabledForegroundColor: Colors.white.withAlpha(150),
+          disabledForegroundColor: ColorName.white.withAlpha(150),
           side: isRegistered
               ? BorderSide(color: AppColors.success.withAlpha(140))
               : null,
@@ -884,7 +884,7 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.2,
-                  color: useGradient ? AppColors.onPrimary : Colors.white,
+                  color: useGradient ? AppColors.onPrimary : ColorName.white,
                 ),
               )
             : Row(
@@ -902,7 +902,7 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
                   Flexible(
                     child: isRegistered
                         ? Shimmer.fromColors(
-                            baseColor: Colors.white,
+                            baseColor: ColorName.white,
                             highlightColor: AppColors.success,
                             child: Text(
                               text,
@@ -993,12 +993,12 @@ class UserInvitationBottomSheetContent
               padding: const EdgeInsets.fromLTRB(20, 16, 12, 4),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Invite users', style: AppText.title),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           'Find people and invite them in',
                           style: AppText.caption,
@@ -1081,7 +1081,7 @@ class UserInvitationBottomSheetContent
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: invitedToSpeak == null
-                                    ? Colors.white
+                                    ? ColorName.white
                                     : ColorName.greyText,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,

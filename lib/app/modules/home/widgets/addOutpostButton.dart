@@ -59,12 +59,12 @@ class _AddOutpostButtonState extends State<AddOutpostButton> {
                           turns: _showText ? 0 : 0.25,
                           duration: const Duration(milliseconds: 400),
                           curve: Curves.easeInOutCubic,
-                          child: const Icon(Icons.add_rounded,
+                          child: Icon(Icons.add_rounded,
                               color: AppColors.onPrimary, size: 20),
                         ),
                         if (_showText) ...[
                           const SizedBox(width: 6),
-                          const Text(
+                          Text(
                             "Start new outpost",
                             maxLines: 1,
                             overflow: TextOverflow.fade,

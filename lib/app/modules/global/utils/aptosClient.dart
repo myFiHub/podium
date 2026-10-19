@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -162,10 +162,10 @@ class AptosMovement {
                 message: 'Address copied to clipboard',
               );
             },
-            child: const Text(
+            child: Text(
               'Copy Address',
               style: TextStyle(
-                  color: Colors.white,
+                  color: ColorName.white,
                   fontSize: 12,
                   fontWeight: FontWeight.bold),
             ),

@@ -3,8 +3,9 @@ import 'dart:convert';
 // import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:podium/widgets/ui/aurora.dart';
 
 class MethodDialog extends StatefulWidget {
   static Future<void> show(
@@ -15,9 +16,11 @@ class MethodDialog extends StatefulWidget {
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return MethodDialog(
-          method: method,
-          response: response,
+        return AppDialogMotion(
+          child: MethodDialog(
+            method: method,
+            response: response,
+          ),
         );
       },
     );
@@ -101,7 +104,7 @@ class _ResultBox extends StatelessWidget {
         decoration: BoxDecoration(
           color: isError
               ? ColorName.danger.withAlpha(20)
-              : Colors.white.withAlpha(10),
+              : ColorName.white.withAlpha(10),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withAlpha(isError ? 90 : 255)),
         ),

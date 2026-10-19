@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:just_waveform/just_waveform.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:siri_wave/siri_wave.dart';
@@ -54,7 +54,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                         color: AppColors.primary.withAlpha(30),
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.graphic_eq_rounded,
                         color: AppColors.primary,
                         size: 20,
@@ -97,7 +97,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                               'Error: ${snapshot.error}',
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.danger,
                                 fontSize: 13,
                               ),
@@ -115,7 +115,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(
+                              SizedBox(
                                 width: 22,
                                 height: 22,
                                 child: CircularProgressIndicator(
@@ -161,10 +161,10 @@ class BottomSheetBody extends GetView<RecordsController> {
                                   child: Obx(() {
                                     final siriController =
                                         IOS9SiriWaveformController()
-                                          ..amplitude = controller
-                                                  .isPlaying.value
-                                              ? 1.0
-                                              : 0.0
+                                          ..amplitude =
+                                              controller.isPlaying.value
+                                                  ? 1.0
+                                                  : 0.0
                                           ..speed = 0.5
                                           ..color1 =
                                               Colors.purple[400]!.withAlpha(110)
@@ -197,11 +197,11 @@ class BottomSheetBody extends GetView<RecordsController> {
                                             'we are working on this feature',
                                       );
                                     },
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(6),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(6),
                                       child: Icon(
                                         Icons.content_cut_rounded,
-                                        color: Colors.white,
+                                        color: ColorName.white,
                                         size: 14,
                                       ),
                                     ),
@@ -224,11 +224,11 @@ class BottomSheetBody extends GetView<RecordsController> {
                                     final duration = waveform.duration;
                                     return Text(
                                       '${_formatDuration(position)} / ${_formatDuration(duration)}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: TextStyle(
+                                        color: ColorName.white,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
-                                        fontFeatures: [
+                                        fontFeatures: const [
                                           FontFeature.tabularFigures(),
                                         ],
                                       ),
@@ -275,8 +275,8 @@ class BottomSheetBody extends GetView<RecordsController> {
                             {controller.stopPlayback()}
                           else if (controller.selectedFile.value != null)
                             {
-                              controller.playRecording(
-                                  controller.selectedFile.value!)
+                              controller
+                                  .playRecording(controller.selectedFile.value!)
                             }
                         },
                       );
@@ -308,7 +308,7 @@ class _WaveFrame extends StatelessWidget {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: ColorName.white.withAlpha(8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: ColorName.cardBorder),
       ),

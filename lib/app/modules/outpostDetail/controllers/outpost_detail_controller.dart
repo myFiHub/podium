@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -192,15 +192,15 @@ class OutpostDetailController extends GetxController {
       cancelText: 'Cancel',
       confirmText: 'Confirm',
       confirmColor: ColorName.danger,
-      cancelColor: Colors.white,
+      cancelColor: ColorName.white,
       title: 'Reschedule The Outpost',
       richMessage: RichText(
-        text: const TextSpan(
+        text: TextSpan(
           children: [
             TextSpan(
               text: 'Are you sure you want to reschedule the outpost?\n\n',
               style: TextStyle(
-                color: Colors.white,
+                color: ColorName.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 height: 1.5,
@@ -218,7 +218,7 @@ class OutpostDetailController extends GetxController {
             TextSpan(
               text: 'The outpost will be rescheduled to the new time.\n\n',
               style: TextStyle(
-                color: Colors.white,
+                color: ColorName.white,
                 fontSize: 14,
                 height: 1.5,
               ),

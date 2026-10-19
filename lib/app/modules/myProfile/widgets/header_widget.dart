@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/myProfile/constants/connected_accounts_constants.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -29,7 +30,7 @@ class HeaderWidget extends StatelessWidget {
                 color: ConnectedAccountsConstants.successColor.withAlpha(36),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.check_rounded,
                 color: ConnectedAccountsConstants.successColor,
                 size: ConnectedAccountsConstants.headerIconSize,
@@ -41,16 +42,16 @@ class HeaderWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Currently logged in with', style: AppText.caption),
+                Text('Currently logged in with', style: AppText.caption),
                 const SizedBox(height: 2),
                 Text(
                   loginTypeToDisplayName(loginType),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: ConnectedAccountsConstants.headerFontSize,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: ColorName.white,
                   ),
                 ),
               ],

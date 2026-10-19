@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/poll_sheet.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 /// Compact card for the running (or just ended) poll on the call page.
 class PollCard extends StatelessWidget {
@@ -147,7 +147,7 @@ class _PollCardBody extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 46, right: 8),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.emoji_events_rounded,
                           size: 16,
                           color: callAccentColor,
@@ -161,7 +161,7 @@ class _PollCardBody extends StatelessWidget {
                                 : 'Tie: ${leaders.map((i) => poll.options[i]).join(', ')}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: callAccentColor,
@@ -182,7 +182,7 @@ class _PollCardBody extends StatelessWidget {
                           myVote == null
                               ? votesLabel(poll.total)
                               : '${votesLabel(poll.total)} · You voted',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             color: ColorName.greyText,
                           ),

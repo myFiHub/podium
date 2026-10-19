@@ -9,7 +9,7 @@ import 'package:podium/app/modules/login/widgets/referral_input.dart';
 import 'package:podium/app/modules/myProfile/views/connected_accounts_view.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/root.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:shimmer/shimmer.dart';
@@ -67,7 +67,7 @@ class LoginView extends GetView<LoginController> {
                                   icon: Assets.images.xPlatform.image(
                                     width: 18,
                                     height: 18,
-                                    color: Colors.black,
+                                    color: AppColors.onColor(ColorName.white),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -104,10 +104,10 @@ class LoginView extends GetView<LoginController> {
                                     );
                                   },
                                   label: 'Continue with Email',
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.mail_outline_rounded,
                                     size: 21,
-                                    color: Colors.white,
+                                    color: ColorName.white,
                                   ),
                                 ),
                                 const SizedBox(height: 24),
@@ -167,7 +167,7 @@ class LoginView extends GetView<LoginController> {
                           RichText(
                             textAlign: TextAlign.center,
                             text: TextSpan(
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: ColorName.greyText,
                                 fontSize: 12,
                                 height: 1.6,
@@ -178,7 +178,7 @@ class LoginView extends GetView<LoginController> {
                                 ),
                                 TextSpan(
                                   text: 'End User License Agreement',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: ColorName.primaryBlue,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -191,7 +191,7 @@ class LoginView extends GetView<LoginController> {
                                 const TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Privacy Policy',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: ColorName.primaryBlue,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -279,13 +279,13 @@ class _BrandHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        const Text(
+        Text(
           'Where attention pays.',
           textAlign: TextAlign.center,
           style: AppText.pageTitle,
         ),
         const SizedBox(height: 10),
-        const Text(
+        Text(
           'Join live audio rooms, speak your mind and get rewarded. Sign in to start using your account.',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -317,14 +317,14 @@ class _ReferrerBanner extends GetView<LoginController> {
             borderRadius: BorderRadius.circular(AppRadius.md),
             border: Border.all(color: AppColors.danger.withAlpha(80)),
           ),
-          child: const Row(
+          child: Row(
             children: [
               Icon(
                 Icons.error_outline_rounded,
                 color: AppColors.danger,
                 size: 20,
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Referrer not found',
@@ -358,10 +358,10 @@ class _ReferrerBanner extends GetView<LoginController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('REFERRED BY', style: AppText.label),
+                      Text('REFERRED BY', style: AppText.label),
                       const SizedBox(height: 2),
                       Shimmer.fromColors(
-                        baseColor: Colors.white,
+                        baseColor: ColorName.white,
                         highlightColor: ColorName.primaryBlue,
                         child: Text(
                           referrer.name ?? '',
@@ -376,7 +376,7 @@ class _ReferrerBanner extends GetView<LoginController> {
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.verified_rounded,
                   color: AppColors.success,
                   size: 20,
@@ -385,7 +385,7 @@ class _ReferrerBanner extends GetView<LoginController> {
             ),
             if (referrerIsFul) ...[
               const SizedBox(height: 10),
-              const AppPill(
+              AppPill(
                 label: 'But their referrals are all used up',
                 color: AppColors.accent,
                 icon: Icons.info_outline_rounded,
@@ -412,16 +412,17 @@ class _ProviderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = highlighted ? Colors.black : Colors.white;
+    final fg =
+        highlighted ? AppColors.onColor(ColorName.white) : ColorName.white;
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         minimumSize: const Size.fromHeight(54),
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        backgroundColor: highlighted ? Colors.white : AppColors.fill,
+        backgroundColor: highlighted ? ColorName.white : AppColors.fill,
         foregroundColor: fg,
         side: BorderSide(
-          color: highlighted ? Colors.white : AppColors.border,
+          color: highlighted ? ColorName.white : AppColors.border,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -470,7 +471,7 @@ class _ProviderTile extends StatelessWidget {
           minimumSize: const Size.fromHeight(52),
           padding: EdgeInsets.zero,
           backgroundColor: AppColors.fill,
-          side: const BorderSide(color: AppColors.border),
+          side: BorderSide(color: AppColors.border),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -486,11 +487,11 @@ class _OrDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
         Expanded(child: Divider(color: AppColors.border, height: 1)),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             'OR CONTINUE WITH',
             style: TextStyle(

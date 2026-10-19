@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 class PodiumListTile extends StatelessWidget {
   /// Creates ListTile with leading, title, trailing, image widget for almost every type of ListTile design.
@@ -15,7 +15,7 @@ class PodiumListTile extends StatelessWidget {
     this.icon,
     this.padding = const EdgeInsets.all(12),
     this.margin = const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-    this.listItemTextColor = ColorName.white,
+    this.listItemTextColor,
     this.enabled = true,
     this.onTap,
     this.onLongPress,
@@ -92,6 +92,7 @@ class PodiumListTile extends StatelessWidget {
 
   /// The color for the color of the list item text.
   final Color? listItemTextColor;
+  Color get _listItemTextColor => listItemTextColor ?? ColorName.white;
 
   /// The color for the tile's [Material] when a pointer is hovering over it.
   final Color? hoverColor;
@@ -178,7 +179,7 @@ class PodiumListTile extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    color: listItemTextColor,
+                                    color: _listItemTextColor,
                                   ),
                                 )
                               else if (title != null)
@@ -190,7 +191,7 @@ class PodiumListTile extends StatelessWidget {
                                     subTitleText!,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
                                       color: ColorName.greyText,
                                     ),

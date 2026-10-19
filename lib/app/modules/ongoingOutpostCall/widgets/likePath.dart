@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 
 // Paths are built once at the origin; each particle translates the canvas to
@@ -10,7 +10,7 @@ Paint _fill(Color color) => Paint()
   ..color = color;
 
 class LikePath extends ConfettiParticle {
-  static final Paint _paint = _fill(ColorName.success);
+  static Paint get _paint => _fill(ColorName.success);
   static final Path _path = _build();
 
   @override
@@ -71,7 +71,7 @@ class LikePath extends ConfettiParticle {
 }
 
 class DislikePath extends ConfettiParticle {
-  static final Paint _paint = _fill(ColorName.danger);
+  static Paint get _paint => _fill(ColorName.danger);
   static final Path _path = _build();
 
   @override
@@ -121,7 +121,7 @@ class DislikePath extends ConfettiParticle {
 }
 
 class CheerPath extends ConfettiParticle {
-  static final Paint _paint = _fill(ColorName.success);
+  static Paint get _paint => _fill(ColorName.success);
   static final List<Path> _paths = _build();
 
   /// Each part is drawn at half the scale of the previous one.
@@ -564,7 +564,7 @@ class CheerPath extends ConfettiParticle {
 }
 
 class BooPath extends ConfettiParticle {
-  static final Paint _paint = _fill(ColorName.danger);
+  static Paint get _paint => _fill(ColorName.danger);
   static final List<Path> _paths = _build();
 
   @override

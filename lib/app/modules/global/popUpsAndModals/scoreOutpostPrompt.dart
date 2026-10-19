@@ -31,7 +31,7 @@ Future<int?> showScoreOutpostPrompt() async {
             color: AppColors.fill,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              side: const BorderSide(color: AppColors.border),
+              side: BorderSide(color: AppColors.border),
             ),
             clipBehavior: Clip.antiAlias,
             child: InkWell(

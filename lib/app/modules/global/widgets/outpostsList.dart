@@ -10,7 +10,7 @@ import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/analytics.dart';
@@ -96,7 +96,7 @@ class OutpostsList extends GetView<OutpostsController> {
       }
 
       return RawScrollbar(
-        thumbColor: Colors.white.withAlpha(40),
+        thumbColor: ColorName.white.withAlpha(40),
         radius: const Radius.circular(4),
         thickness: 3,
         controller: scrollController,
@@ -267,7 +267,7 @@ class _OutpostCard extends StatelessWidget {
               TagsWrapper(outpost: outpost),
             ],
             const SizedBox(height: 12),
-            const Divider(height: 1, thickness: 1, color: AppColors.border),
+            Divider(height: 1, thickness: 1, color: AppColors.border),
             const SizedBox(height: 10),
             _OutpostActions(
               outpost: outpost,
@@ -352,7 +352,7 @@ class _OutpostThumb extends StatelessWidget {
       child: Container(
         foregroundDecoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: Colors.white.withAlpha(20)),
+          border: Border.all(color: ColorName.white.withAlpha(20)),
         ),
         child: Img(
           src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
@@ -397,7 +397,7 @@ class _OutpostCreator extends StatelessWidget {
                   text: amICreator ? 'You' : outpost.creator_user_name ?? '',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: amICreator ? AppColors.success : Colors.white70,
+                    color: amICreator ? AppColors.success : ColorName.greyText,
                   ),
                 ),
               ],
@@ -438,8 +438,8 @@ class _OutpostMeta extends StatelessWidget {
           text: parseSpeakerType(outpost.speak_type),
         ),
         if (outpost.is_recordable)
-          const _MetaChip(
-            leading: Icon(Icons.fiber_manual_record_rounded),
+          _MetaChip(
+            leading: const Icon(Icons.fiber_manual_record_rounded),
             text: 'Recordable by creator',
             color: AppColors.danger,
           ),
@@ -481,7 +481,7 @@ class _MetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: color == null ? Colors.white.withAlpha(10) : fg.withAlpha(22),
+        color: color == null ? ColorName.white.withAlpha(10) : fg.withAlpha(22),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -595,7 +595,7 @@ class _CardIconAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = color ?? Colors.white;
+    final fg = color ?? ColorName.white;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: IconButton(
@@ -655,7 +655,7 @@ class _EnterButton extends StatelessWidget {
         ),
       ),
       child: loading
-          ? const SizedBox(
+          ? SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
@@ -729,13 +729,13 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
+            SizedBox(
               width: 16,
               height: 16,
               child: RepaintBoundary(
                 child: Pulsator(
                   style: PulseStyle(color: AppColors.live),
-                  duration: Duration(seconds: 2),
+                  duration: const Duration(seconds: 2),
                   count: 2,
                   repeat: 0,
                   startFromScratch: false,
@@ -750,7 +750,7 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
               ),
             ),
             const SizedBox(width: 3),
-            const Text(
+            Text(
               'LIVE',
               style: TextStyle(
                 fontSize: 12,
@@ -763,11 +763,11 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
             AppRollingText(
               '$count',
               alignment: Alignment.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
-                fontFeatures: [FontFeature.tabularFigures()],
+                color: ColorName.white,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],
@@ -854,8 +854,8 @@ class OutpostCardSkeleton extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.all(14),
       child: Shimmer.fromColors(
-        baseColor: Colors.white.withAlpha(16),
-        highlightColor: Colors.white.withAlpha(40),
+        baseColor: ColorName.white.withAlpha(16),
+        highlightColor: ColorName.white.withAlpha(40),
         child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -917,7 +917,7 @@ class _SkeletonBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorName.white,
         borderRadius: BorderRadius.circular(radius),
       ),
     );
@@ -962,11 +962,15 @@ class SingleTag extends StatelessWidget {
     super.key,
   });
 
-  static const _palette = [
-    AppColors.primary,
-    Color(0xFFB79BFF),
-    Color(0xFFFF8AE6),
-  ];
+  static List<Color> get _palette => [
+        AppColors.primary,
+        _soften(AppColors.violet),
+        _soften(AppColors.magenta),
+      ];
+
+  static Color _soften(Color color) => AppPalette.current.isLight
+      ? color
+      : Color.lerp(color, Colors.white, 0.35)!;
 
   Color get _color {
     final sum = tagName.codeUnits.fold<int>(0, (a, b) => a + b);

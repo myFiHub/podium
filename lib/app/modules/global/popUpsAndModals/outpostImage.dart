@@ -13,12 +13,14 @@ void openOutpostImageDialog({
   Future<void> Function(String downloadUrl)? onComplete,
 }) {
   Get.dialog(
-    Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-      clipBehavior: Clip.antiAlias,
-      child: _OpenImageDialogContent(
-        outpost: outpost,
-        onComplete: onComplete,
+    AppDialogMotion(
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+        clipBehavior: Clip.antiAlias,
+        child: _OpenImageDialogContent(
+          outpost: outpost,
+          onComplete: onComplete,
+        ),
       ),
     ),
   );

@@ -218,7 +218,7 @@ class _PersonTile extends StatelessWidget {
             backgroundColor: AppColors.primary.withAlpha(40),
             child: Text(
               initial.isEmpty ? '?' : initial[0].toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: AppColors.primary,
@@ -252,7 +252,7 @@ class _PersonTile extends StatelessWidget {
           IconButton(
             tooltip: 'Remove',
             onPressed: onRemove,
-            icon: const Icon(
+            icon: Icon(
               Icons.delete_outline_rounded,
               size: 20,
               color: AppColors.danger,

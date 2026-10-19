@@ -1,6 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 class DropDownItem {
   final String value;
@@ -30,9 +30,9 @@ class DropDown extends StatelessWidget {
     return DropdownButtonHideUnderline(
       child: DropdownButton2<String>(
         isExpanded: true,
-        hint: const Row(
+        hint: Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 4,
             ),
             Expanded(
@@ -57,7 +57,9 @@ class DropDown extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: item.enabled == false ? ColorName.secondaryText : Colors.white,
+                      color: item.enabled == false
+                          ? ColorName.secondaryText
+                          : ColorName.white,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -75,12 +77,12 @@ class DropDown extends StatelessWidget {
             border: Border.all(
               color: ColorName.cardBorder,
             ),
-            color: Colors.white.withAlpha(10),
+            color: ColorName.white.withAlpha(10),
           ),
           elevation: 0,
         ),
-        iconStyleData: const IconStyleData(
-          icon: Icon(
+        iconStyleData: IconStyleData(
+          icon: const Icon(
             Icons.expand_more_rounded,
           ),
           iconSize: 20,

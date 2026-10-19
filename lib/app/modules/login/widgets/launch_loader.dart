@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 const _logoCyan = Color(0xFF4ED6DC);
 
@@ -182,26 +182,6 @@ class _WavesPainter extends CustomPainter {
           ..color = _logoCyan.withValues(alpha: opacity),
       );
     }
-    final arcRect = Rect.fromCircle(center: center, radius: baseRadius + 8);
-    canvas.drawArc(
-      arcRect,
-      loop * 2 * pi,
-      pi * 0.6,
-      false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round
-        ..shader = SweepGradient(
-          startAngle: loop * 2 * pi,
-          endAngle: loop * 2 * pi + pi * 0.6,
-          colors: [
-            _logoCyan.withValues(alpha: 0),
-            _logoCyan.withValues(alpha: 0.9 * intensity),
-          ],
-          transform: GradientRotation(loop * 2 * pi),
-        ).createShader(arcRect),
-    );
   }
 
   @override
@@ -216,7 +196,7 @@ class _Title extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
         Text(
           'Welcome to',
@@ -227,16 +207,16 @@ class _Title extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
-        SizedBox(height: 4),
-        Text(
+        const SizedBox(height: 4),
+        const Text(
           'Podium',
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 38,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
           ),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         Text(
           'Where attention pays.',
           style: TextStyle(fontSize: 13, color: ColorName.greyText),
@@ -262,7 +242,7 @@ class _Footer extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               minHeight: 3,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              backgroundColor: ColorName.white.withValues(alpha: 0.08),
               valueColor: const AlwaysStoppedAnimation(_logoCyan),
             ),
           ),
@@ -271,7 +251,7 @@ class _Footer extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Please wait',
               style: TextStyle(fontSize: 13, color: ColorName.greyText),
             ),
@@ -279,7 +259,7 @@ class _Footer extends StatelessWidget {
               width: 18,
               child: Text(
                 '.' * dots,
-                style: const TextStyle(fontSize: 13, color: ColorName.greyText),
+                style: TextStyle(fontSize: 13, color: ColorName.greyText),
               ),
             ),
           ],

@@ -12,7 +12,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/poll_card.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/room_overlays.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/screen_share_stage.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
@@ -211,12 +211,11 @@ class _SectionHeader extends StatelessWidget {
           Text('$count', style: AppText.caption),
           if (extra != null) ...[
             const SizedBox(width: 10),
-            const Icon(Icons.graphic_eq_rounded,
-                size: 14, color: callSpeakingColor),
+            Icon(Icons.graphic_eq_rounded, size: 14, color: callSpeakingColor),
             const SizedBox(width: 3),
             Text(
               extra!,
-              style: const TextStyle(fontSize: 12, color: callSpeakingColor),
+              style: TextStyle(fontSize: 12, color: callSpeakingColor),
             ),
           ],
           const Spacer(),
@@ -252,9 +251,9 @@ class _EmptyAudience extends GetView<OutpostCallController> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.headphones_outlined, color: AppColors.textMuted),
+          Icon(Icons.headphones_outlined, color: AppColors.textMuted),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
               'No listeners yet. Invite people to join.',
               style: AppText.caption,
@@ -281,16 +280,16 @@ class _JoiningPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
+          const SizedBox(
             width: 28,
             height: 28,
-            child: CircularProgressIndicator(strokeWidth: 2.5),
+            child: const CircularProgressIndicator(strokeWidth: 2.5),
           ),
-          SizedBox(height: 14),
+          const SizedBox(height: 14),
           Text(
             'Getting everyone on stage…',
             style: TextStyle(color: ColorName.greyText),
@@ -329,7 +328,7 @@ class _IntroDemoCard extends GetView<OngoingOutpostCallController> {
               Expanded(
                 child: Row(
                   key: controller.likeDislikeKey,
-                  children: const [
+                  children: [
                     Expanded(
                       child: CallActionButton(
                         icon: Icon(Icons.thumb_up_rounded,
@@ -338,7 +337,7 @@ class _IntroDemoCard extends GetView<OngoingOutpostCallController> {
                         color: ColorName.success,
                       ),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: CallActionButton(
                         icon: Icon(Icons.thumb_down_rounded,
@@ -357,8 +356,8 @@ class _IntroDemoCard extends GetView<OngoingOutpostCallController> {
                   children: [
                     Expanded(
                       child: CallActionButton(
-                        icon: Assets.images.cheer
-                            .image(width: 24, height: 24, color: ColorName.success),
+                        icon: Assets.images.cheer.image(
+                            width: 24, height: 24, color: ColorName.success),
                         label: 'Cheer',
                         color: ColorName.success,
                       ),
@@ -366,8 +365,8 @@ class _IntroDemoCard extends GetView<OngoingOutpostCallController> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: CallActionButton(
-                        icon: Assets.images.boo
-                            .image(width: 24, height: 24, color: ColorName.danger),
+                        icon: Assets.images.boo.image(
+                            width: 24, height: 24, color: ColorName.danger),
                         label: 'Boo',
                         color: ColorName.danger,
                       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/buttonBar/buttonBar.dart';
 import 'package:podium/widgets/imageOverlay/imageOverlay.dart';
@@ -179,7 +179,7 @@ class Card extends StatelessWidget {
               shape: shape ??
                   RoundedRectangleBorder(
                     borderRadius: borderRadius ?? _defaultRadius,
-                    side: const BorderSide(color: ColorName.cardBorder),
+                    side: BorderSide(color: ColorName.cardBorder),
                   ),
               borderOnForeground: borderOnForeground,
               clipBehavior: clipBehavior ??

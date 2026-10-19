@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/textField/textField.dart';
 
 class Input extends StatefulWidget {
   const Input(
       {Key? key,
-      this.editingbordercolor = ColorName.primaryBlue,
-      this.idlebordercolor = ColorName.cardBorder,
+      this.editingbordercolor,
+      this.idlebordercolor,
       this.borderwidth = 1,
       this.cornerradius = 14,
       required this.hintText,
       this.iconPrefix,
       this.suffixIcon,
       this.formField = true,
-      this.backgroundcolor = const Color(0x0DFFFFFF),
-      this.normalbordercolor = ColorName.cardBorder,
-      this.focusedbordercolor = ColorName.primaryBlue,
-      this.errorbordercolor = ColorName.danger,
-      this.disabledbordercolor = const Color(0x0FFFFFFF),
+      this.backgroundcolor,
+      this.normalbordercolor,
+      this.focusedbordercolor,
+      this.errorbordercolor,
+      this.disabledbordercolor,
       this.paddingvertical = 3,
       this.paddinghorizontal = 4,
       this.marginvertical = 3,
@@ -72,13 +72,26 @@ class Input extends StatefulWidget {
       this.autoValidateMode = AutovalidateMode.disabled})
       : super(key: key);
 
-  final Color normalbordercolor;
-  final Color editingbordercolor;
-  final Color focusedbordercolor;
-  final Color errorbordercolor;
-  final Color idlebordercolor;
-  final Color disabledbordercolor;
+  final Color? normalbordercolor;
+  Color get _normalbordercolor => normalbordercolor ?? ColorName.cardBorder;
+
+  final Color? editingbordercolor;
+  Color get _editingbordercolor => editingbordercolor ?? ColorName.primaryBlue;
+
+  final Color? focusedbordercolor;
+
+  final Color? errorbordercolor;
+  Color get _errorbordercolor => errorbordercolor ?? ColorName.danger;
+
+  final Color? idlebordercolor;
+  Color get _idlebordercolor => idlebordercolor ?? ColorName.cardBorder;
+
+  final Color? disabledbordercolor;
+  Color get _disabledbordercolor =>
+      disabledbordercolor ?? ColorName.white.withAlpha(0x0F);
   final Color? backgroundcolor;
+  Color get _backgroundcolor =>
+      backgroundcolor ?? ColorName.white.withAlpha(0x0D);
   final double borderwidth;
   final double cornerradius;
   final double paddingvertical;
@@ -153,17 +166,17 @@ class _InputState extends State<Input> {
       child: PodiumTextField(
           formField: widget.formField,
           decoration: InputDecoration(
-            filled: widget.backgroundcolor != null || false,
+            filled: true,
             prefixIcon: widget.iconPrefix,
             suffixIcon: widget.suffixIcon,
-            fillColor: widget.backgroundcolor,
+            fillColor: widget._backgroundcolor,
             hintText: widget.hintText,
-            hintStyle: const TextStyle(
+            hintStyle: TextStyle(
               color: ColorName.secondaryText,
               fontSize: 14,
               fontWeight: FontWeight.w400,
             ),
-            errorStyle: const TextStyle(
+            errorStyle: TextStyle(
               color: ColorName.danger,
               fontSize: 12,
             ),
@@ -171,42 +184,42 @@ class _InputState extends State<Input> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderSide: BorderSide(
-                color: widget.normalbordercolor,
+                color: widget._normalbordercolor,
                 width: widget.borderwidth,
               ),
               borderRadius: BorderRadius.circular(widget.cornerradius),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: widget.editingbordercolor,
+                color: widget._editingbordercolor,
                 width: widget.borderwidth + 0.4,
               ),
               borderRadius: BorderRadius.circular(widget.cornerradius),
             ),
             disabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: widget.disabledbordercolor,
+                color: widget._disabledbordercolor,
                 width: widget.borderwidth,
               ),
               borderRadius: BorderRadius.circular(widget.cornerradius),
             ),
             errorBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: widget.errorbordercolor,
+                color: widget._errorbordercolor,
                 width: widget.borderwidth,
               ),
               borderRadius: BorderRadius.circular(widget.cornerradius),
             ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: widget.idlebordercolor,
+                color: widget._idlebordercolor,
                 width: widget.borderwidth,
               ),
               borderRadius: BorderRadius.circular(widget.cornerradius),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: widget.errorbordercolor,
+                color: widget._errorbordercolor,
                 width: widget.borderwidth + 0.4,
               ),
               borderRadius: BorderRadius.circular(widget.cornerradius),

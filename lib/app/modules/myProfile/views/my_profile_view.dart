@@ -10,11 +10,12 @@ import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/chainIcons.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/app/modules/myProfile/widgets/color_theme_sheet.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -79,6 +80,8 @@ class MyProfileView extends GetView<MyProfileController> {
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
+                      ColorThemeSetting(),
+                      _RowDivider(),
                       ToggleShowArchivedGroups(),
                       _RowDivider(),
                       BugsAndFeedbacks(),
@@ -116,7 +119,7 @@ class _RowDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       thickness: 1,
       indent: 68,
@@ -127,11 +130,13 @@ class _RowDivider extends StatelessWidget {
 
 class _IconTile extends StatelessWidget {
   final IconData icon;
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? AppColors.primary;
+
   final double size;
   const _IconTile({
     required this.icon,
-    this.color = AppColors.primary,
+    this.color,
     this.size = 38,
   });
 
@@ -141,18 +146,20 @@ class _IconTile extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: color.withAlpha(30),
+        color: _color.withAlpha(30),
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(color: color.withAlpha(50)),
+        border: Border.all(color: _color.withAlpha(50)),
       ),
-      child: Icon(icon, size: size * 0.5, color: color),
+      child: Icon(icon, size: size * 0.5, color: _color),
     );
   }
 }
 
 class _SettingsRow extends StatelessWidget {
   final IconData icon;
-  final Color iconColor;
+  final Color? iconColor;
+  Color get _iconColor => iconColor ?? AppColors.primary;
+
   final String title;
   final String? subtitle;
   final Widget? trailing;
@@ -161,7 +168,7 @@ class _SettingsRow extends StatelessWidget {
   const _SettingsRow({
     required this.icon,
     required this.title,
-    this.iconColor = AppColors.primary,
+    this.iconColor,
     this.subtitle,
     this.trailing,
     this.onTap,
@@ -178,7 +185,7 @@ class _SettingsRow extends StatelessWidget {
           children: [
             _IconTile(
               icon: icon,
-              color: dimmed ? AppColors.textMuted : iconColor,
+              color: dimmed ? AppColors.textMuted : _iconColor,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -191,7 +198,7 @@ class _SettingsRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppText.cardTitle.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: dimmed ? AppColors.textMuted : Colors.white,
+                      color: dimmed ? AppColors.textMuted : ColorName.white,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -209,7 +216,7 @@ class _SettingsRow extends StatelessWidget {
             const SizedBox(width: 8),
             trailing ??
                 (onTap != null
-                    ? const Icon(
+                    ? Icon(
                         Icons.chevron_right_rounded,
                         color: AppColors.textMuted,
                       )
@@ -254,7 +261,7 @@ class _DangerButton extends StatelessWidget {
         ),
       ),
       child: loading
-          ? const SizedBox(
+          ? SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(
@@ -351,6 +358,22 @@ class BugsAndFeedbacks extends GetView<MyProfileController> {
   }
 }
 
+class ColorThemeSetting extends StatelessWidget {
+  const ColorThemeSetting({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SettingsRow(
+      icon: Icons.palette_outlined,
+      title: 'Color theme',
+      subtitle: AppPalette.current.name,
+      onTap: () {
+        showAppSheet(const ColorThemeSheet());
+      },
+    );
+  }
+}
+
 class ToggleShowArchivedGroups extends GetView<GlobalController> {
   const ToggleShowArchivedGroups({super.key});
 
@@ -401,7 +424,7 @@ class _DefaultWalletState extends State<DefaultWallet> {
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
       child: Row(
         children: [
-          const _IconTile(
+          _IconTile(
             icon: Icons.star_outline_rounded,
             color: AppColors.accent,
           ),
@@ -410,7 +433,7 @@ class _DefaultWalletState extends State<DefaultWallet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Default wallet', style: AppText.caption),
+                Text('Default wallet', style: AppText.caption),
                 const SizedBox(height: 2),
                 Text(
                   defaultWallet,
@@ -530,17 +553,17 @@ class InternalWallet extends GetView<GlobalController> {
                 child: Assets.images.logo.image(),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Podium Wallet', style: AppText.cardTitle),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text('Your built-in wallet', style: AppText.caption),
                   ],
                 ),
               ),
-              const AppPill(
+              AppPill(
                 label: 'Linked',
                 icon: Icons.link_rounded,
                 color: AppColors.primary,
@@ -595,7 +618,7 @@ class AddressAndBalanceWidget extends StatelessWidget {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: ColorName.white.withAlpha(8),
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.border),
       ),
@@ -633,10 +656,10 @@ class AddressAndBalanceWidget extends StatelessWidget {
                             truncate(address, length: 16),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: ColorName.white,
                             ),
                           ),
                         ],
@@ -650,7 +673,7 @@ class AddressAndBalanceWidget extends StatelessWidget {
                         color: AppColors.fill,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.copy_rounded,
                         size: 16,
                         color: AppColors.textMuted,
@@ -661,7 +684,7 @@ class AddressAndBalanceWidget extends StatelessWidget {
               ),
             ),
             if (balanceWidget != null) ...[
-              const Divider(height: 1, thickness: 1, color: AppColors.border),
+              Divider(height: 1, thickness: 1, color: AppColors.border),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 child: balanceWidget,
@@ -738,7 +761,7 @@ class FriendTechExternalWalletActivationButton
             textStyle: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isActivated ? ColorName.success : Colors.white,
+              color: isActivated ? ColorName.success : ColorName.white,
             ),
             onPressed: (isActivated || isLoading)
                 ? null
@@ -778,7 +801,7 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
             textStyle: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isActivated ? ColorName.success : Colors.white,
+              color: isActivated ? ColorName.success : ColorName.white,
             ),
             onPressed: (isActivated || isLoading)
                 ? null
@@ -809,20 +832,20 @@ class ExternalWallet extends GetView<GlobalController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Row(
+            Row(
               children: [
                 _IconTile(
                   icon: Icons.link_rounded,
                   color: AppColors.success,
                   size: 44,
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('External Wallet', style: AppText.cardTitle),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'Connected',
                         style: TextStyle(
@@ -833,7 +856,7 @@ class ExternalWallet extends GetView<GlobalController> {
                     ],
                   ),
                 ),
-                ExternalWalletChainIcon(
+                const ExternalWalletChainIcon(
                   size: 22,
                 ),
               ],
@@ -923,7 +946,7 @@ class _AvatarRing extends StatelessWidget {
       ),
       child: Container(
         padding: const EdgeInsets.all(3),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: ColorName.cardBackground,
         ),
@@ -1001,7 +1024,7 @@ class UserInfo extends GetView<GlobalController> {
               constraints: const BoxConstraints(maxWidth: 300),
               child: Material(
                 color: AppColors.fill,
-                shape: const StadiumBorder(
+                shape: StadiumBorder(
                   side: BorderSide(color: AppColors.border),
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -1021,7 +1044,7 @@ class UserInfo extends GetView<GlobalController> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('ID', style: AppText.label),
+                        Text('ID', style: AppText.label),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
@@ -1032,7 +1055,7 @@ class UserInfo extends GetView<GlobalController> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(
+                        Icon(
                           Icons.copy_rounded,
                           size: 14,
                           color: AppColors.textMuted,
@@ -1081,7 +1104,7 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: ColorName.white.withAlpha(8),
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.border),
       ),
@@ -1105,11 +1128,11 @@ class _StatTile extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value.toString(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
-              fontFeatures: [FontFeature.tabularFigures()],
+              color: ColorName.white,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
@@ -1214,26 +1237,26 @@ class _Statistics extends GetWidget<MyProfileController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Row(
+                Row(
                   children: [
                     _IconTile(
                       icon: Icons.account_balance_wallet_outlined,
                       color: AppColors.success,
                     ),
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
                     Text('Earned', style: AppText.cardTitle),
                   ],
                 ),
                 const SizedBox(height: 12),
                 if (incomeEntries.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Text('Nothing yet', style: AppText.muted),
                   ),
                 for (final e in incomeEntries) ...[
                   _IncomeRow(chainId: e.key, amount: e.value.toString()),
                   if (e.key != incomeEntries.last.key)
-                    const Divider(
+                    Divider(
                       height: 1,
                       thickness: 1,
                       color: AppColors.border,
@@ -1280,7 +1303,7 @@ class _IncomeRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$amount $currency',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: AppColors.success,
@@ -1307,24 +1330,24 @@ class _PriceSkeleton extends StatelessWidget {
       return Text(
         price,
         textAlign: TextAlign.end,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
-          fontFeatures: [FontFeature.tabularFigures()],
+          color: ColorName.white,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       );
     }
 
     return Shimmer.fromColors(
-      baseColor: Colors.white.withAlpha(20),
-      highlightColor: Colors.white.withAlpha(50),
+      baseColor: ColorName.white.withAlpha(20),
+      highlightColor: ColorName.white.withAlpha(50),
       period: const Duration(milliseconds: 900),
       child: Container(
         width: 56,
         height: 14,
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(20),
+          color: ColorName.white.withAlpha(20),
           borderRadius: BorderRadius.circular(6),
         ),
       ),
@@ -1396,7 +1419,7 @@ class NonPrimaryAccountWarning extends GetView<GlobalController> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _IconTile(
+              _IconTile(
                 icon: Icons.warning_amber_rounded,
                 color: AppColors.danger,
               ),
@@ -1415,7 +1438,7 @@ class NonPrimaryAccountWarning extends GetView<GlobalController> {
                     Text(
                       'This is not your primary account. Only the primary account can perform certain actions.',
                       style: AppText.caption.copyWith(
-                        color: Colors.white.withAlpha(200),
+                        color: ColorName.white.withAlpha(200),
                         height: 1.4,
                       ),
                     ),

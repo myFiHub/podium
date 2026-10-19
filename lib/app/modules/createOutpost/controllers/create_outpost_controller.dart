@@ -17,7 +17,7 @@ import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
@@ -138,8 +138,7 @@ class CreateOutpostController extends GetxController {
         },
         onClickTargetWithTapPosition: (target, tapDetails) {
           l.d("target: $target");
-          l.d(
-              "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+          l.d("clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
         },
         onClickOverlay: (target) {
           l.d('onClickOverlay: $target');
@@ -266,34 +265,34 @@ class CreateOutpostController extends GetxController {
               children: <Widget>[
                 Text(
                   text,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: ColorName.white,
                   ),
                 ),
                 if (hasNext)
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () {
                       tutorialCoachMark.next();
                     },
-                    child: const Text(
+                    child: Text(
                       "Next",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   )
                 else
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () {
                       introFinished(true);
                     },
-                    child: const Text(
+                    child: Text(
                       "Finish",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   ),
               ],
@@ -811,8 +810,10 @@ class CreateOutpostController extends GetxController {
   }) {
     searchValueForSeletTickets.value = "";
     Get.dialog(
-      SelectUsersToBuyTicketFromBottomSheetContent(
-        buyTicketToGetPermisionFor: buyTicketToGetPermisionFor,
+      AppDialogMotion(
+        child: SelectUsersToBuyTicketFromBottomSheetContent(
+          buyTicketToGetPermisionFor: buyTicketToGetPermisionFor,
+        ),
       ),
     );
   }
@@ -826,7 +827,7 @@ Future<bool?> showActivatePopup() async {
       message:
           'You need to activate your wallet to buy tickets for this event. Do you want to activate it now?',
       content: externalWalletAddress == null
-          ? const AppCallout(
+          ? AppCallout(
               text:
                   'Your external wallet is disconnected, we checked against your Podium wallet address',
               color: AppColors.danger,
@@ -860,11 +861,11 @@ class ScheduledGroupDateSelector extends GetView<CreateOutpostController> {
       child: Container(
         width: Get.width,
         padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: ColorName.cardBackground,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+          borderRadius: const BorderRadius.only(
+            topLeft: const Radius.circular(20),
+            topRight: const Radius.circular(20),
           ),
         ),
         child: const Column(
@@ -899,9 +900,9 @@ class SelectUsersToBuyTicketFromBottomSheetContent
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.only(left: 4),
                       child: Text('Search user', style: AppText.title),
                     ),
                   ),
@@ -972,7 +973,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                     }
                                   }
                                 },
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.paste,
                                   color: ColorName.secondaryText,
                                 ),
@@ -1001,7 +1002,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       );
                                       inputController.clear();
                                     },
-                                    icon: const Icon(Icons.check,
+                                    icon: Icon(Icons.check,
                                         color: ColorName.success),
                                   )
                                 : IconButton(
@@ -1010,7 +1011,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       controller.searchUsers('');
                                       inputController.clear();
                                     },
-                                    icon: const Icon(Icons.close,
+                                    icon: Icon(Icons.close,
                                         color: ColorName.danger),
                                   ),
                     hintText:
@@ -1151,7 +1152,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                             ),
                                           ),
                                           if (verifiedOnTwitter)
-                                            const Text(
+                                            Text(
                                               "verified on twitter",
                                               style: TextStyle(
                                                   color: ColorName.primaryBlue,
@@ -1161,7 +1162,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                               verifiedOnArena)
                                             space5,
                                           if (verifiedOnArena)
-                                            const Text(
+                                            Text(
                                               "verified on Stars Arena",
                                               style: TextStyle(
                                                   color: ColorName.danger,
@@ -1182,7 +1183,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                     ],
                                   ),
                                 ),
-                                const Divider(color: AppColors.border),
+                                Divider(color: AppColors.border),
                               ],
                             );
                           }
@@ -1219,7 +1220,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                             style: TextStyle(
                                               color: element.user!.uuid == myId
                                                   ? ColorName.success
-                                                  : Colors.white,
+                                                  : ColorName.white,
                                               fontSize: 14,
                                             ),
                                           ),
@@ -1230,8 +1231,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                               length: 20,
                                             ),
                                             textAlign: TextAlign.start,
-                                            style: const TextStyle(
-                                              color: Colors.white,
+                                            style: TextStyle(
+                                              color: ColorName.white,
                                               fontSize: 14,
                                             ),
                                           ),
@@ -1244,7 +1245,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                             "user ID: " +
                                                 truncate(element.user!.uuid,
                                                     length: 12),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: ColorName.secondaryText,
                                               fontSize: 12,
                                             ),
@@ -1316,7 +1317,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                   ],
                                 ),
                               ),
-                              const Divider(
+                              Divider(
                                 color: AppColors.border,
                               ),
                             ],
@@ -1337,8 +1338,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                   ready = !controller.shouldSelectTicketHolersForAccess;
                 }
                 if (!ready) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 12),
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12),
                     child: Center(
                       child: Text(
                         'Select Users, or Enter Address',

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/navbar.dart';
 import 'package:podium/widgets/ui/aurora.dart';
 
@@ -114,7 +114,7 @@ class _InternetConnectionCheckerState extends State<InternetConnectionChecker> {
 class _ConnectionIssueBanner extends StatelessWidget {
   const _ConnectionIssueBanner();
 
-  static const _danger = ColorName.danger;
+  static Color get _danger => ColorName.danger;
 
   @override
   Widget build(BuildContext context) {
@@ -144,20 +144,20 @@ class _ConnectionIssueBanner extends StatelessWidget {
                 color: _danger.withAlpha(36),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.wifi_off_rounded,
                 color: _danger,
                 size: 16,
               ),
             ),
             const SizedBox(width: 10),
-            const Flexible(
+            Flexible(
               child: Text(
                 'No connection. Reconnecting…',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: ColorName.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),

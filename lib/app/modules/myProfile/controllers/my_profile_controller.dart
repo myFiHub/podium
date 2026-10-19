@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
@@ -144,8 +144,7 @@ class MyProfileController extends GetxController {
         },
         onClickTargetWithTapPosition: (target, tapDetails) {
           l.d("target: $target");
-          l.d(
-              "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+          l.d("clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
         },
         onClickOverlay: (target) {
           l.d('onClickOverlay: $target');
@@ -268,35 +267,35 @@ class MyProfileController extends GetxController {
               children: <Widget>[
                 Text(
                   text,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: ColorName.white,
                   ),
                 ),
                 if (hasNext)
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () async {
                       await _scrollIfNeeded();
                       tutorialCoachMark.next();
                     },
-                    child: const Text(
+                    child: Text(
                       "Next",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   )
                 else
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () {
                       introFinished(true);
                     },
-                    child: const Text(
+                    child: Text(
                       "Finish",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   ),
               ],
@@ -511,7 +510,8 @@ class MyProfileController extends GetxController {
     await Clipboard.setData(ClipboardData(text: privateKey));
     Toast.success(
       title: 'Copied',
-      message: 'Private key copied. The clipboard will be cleared in 60 seconds.',
+      message:
+          'Private key copied. The clipboard will be cleared in 60 seconds.',
     );
     Future.delayed(const Duration(seconds: 60), () async {
       final current = await Clipboard.getData(Clipboard.kTextPlain);
@@ -526,10 +526,11 @@ class MyProfileController extends GetxController {
       AppDialog(
         icon: Icons.warning_amber_rounded,
         iconColor: AppColors.danger,
+        urgent: true,
         title: 'WARNING: Private Key Access',
         message:
             'IMPORTANT: Your private key is the key to your account. Anyone with access to it can control your account and steal your assets.',
-        content: const Column(
+        content: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppCallout(
@@ -537,13 +538,13 @@ class MyProfileController extends GetxController {
               color: AppColors.danger,
               icon: Icons.block_rounded,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             AppCallout(
               text: 'NEVER enter it on any website',
               color: AppColors.danger,
               icon: Icons.block_rounded,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             AppCallout(
               text: 'NEVER store it in plain text',
               color: AppColors.danger,
@@ -614,13 +615,14 @@ class DeactivationForm extends GetView<MyProfileController> {
       child: AppDialog(
         icon: Icons.delete_outline_rounded,
         iconColor: AppColors.danger,
+        urgent: true,
         title: 'Delete Account',
         message:
             'You are about to delete your account. Your account will be deactivated and you will not be able to use it anymore. Are you sure you want to delete your account? This action cannot be undone.',
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Type "delete" to confirm.',
               style: TextStyle(
                 fontSize: 13,

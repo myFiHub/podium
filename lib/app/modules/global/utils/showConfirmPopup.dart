@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:get/get.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
@@ -21,6 +22,7 @@ Future<bool> showConfirmPopup(
       title: title,
       icon: iconColor == null ? null : Icons.warning_amber_rounded,
       iconColor: iconColor ?? AppColors.primary,
+      urgent: dangerous,
       content: richMessage != null
           ? Text.rich(
               richMessage.text,
@@ -37,7 +39,7 @@ Future<bool> showConfirmPopup(
       actions: [
         AppSecondaryButton(
           label: cancelText,
-          color: cancelColor == Colors.white ? null : cancelColor,
+          color: cancelColor == ColorName.white ? null : cancelColor,
           onPressed: () => Get.closeOverlay(result: false),
         ),
         AppPrimaryButton(

@@ -5,8 +5,10 @@ import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
+// Reown's modal only renders http icons; in-app widgets use
+// Assets.images.movementIcon instead.
 const movementIcon =
-    "https://pbs.twimg.com/profile_images/1744477796301496320/z7AIB7_W_400x400.jpg";
+    "https://s2.coinmarketcap.com/static/img/coins/64x64/32452.png";
 ////////// Aptos chains (these are just to format things and keep things in shape,
 /// they are not used for anything else since they are not supported by the appkit)
 

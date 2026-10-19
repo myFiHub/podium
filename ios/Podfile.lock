@@ -237,6 +237,9 @@ PODS:
     - KeychainSwift (~> 20.0.0)
   - url_launcher_ios (0.0.1):
     - Flutter
+  - video_player_avfoundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - Web3Auth (11.1.0):
     - BigInt (~> 5.2.0)
     - curvelib.swift (~> 2.0.0)
@@ -276,6 +279,7 @@ DEPENDENCIES:
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite (from `.symlinks/plugins/sqflite/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
   - web3auth_flutter (from `.symlinks/plugins/web3auth_flutter/ios`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
@@ -358,6 +362,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sqflite/darwin"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
+  video_player_avfoundation:
+    :path: ".symlinks/plugins/video_player_avfoundation/darwin"
   web3auth_flutter:
     :path: ".symlinks/plugins/web3auth_flutter/ios"
   webview_flutter_wkwebview:
@@ -395,7 +401,7 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMSessionFetcher: 02d6e866e90bc236f48a703a041dfe43e6221a29
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
-  jitsi_meet_flutter_sdk: 8f984d84f20f312539e7c0ce86cc892757369002
+  jitsi_meet_flutter_sdk: f1d95887e14debb3ff92b748b9752d2d8ab51125
   JitsiWebRTC: b47805ab5668be38e7ee60e2258f49badfe8e1d0
   just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   just_waveform: be2cb6dec86096cb972bf8b73c893fe16bf1cff4
@@ -413,6 +419,7 @@ SPEC CHECKSUMS:
   sqflite: c35dad70033b8862124f8337cc994a809fcd9fa3
   TorusSessionManager: 3c47c2a4c4d6173a10006eb0af4b86317ee45ff8
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
   Web3Auth: fa82260fa6dacdcf647b333d85a923530d045051
   web3auth_flutter: ecf03bfbcb9ebf1ed8edb24642b5dac6d6b6a980
   webview_flutter_wkwebview: 44d4dee7d7056d5ad185d25b38404436d56c547c

@@ -18,6 +18,10 @@ abstract class Routes {
   static const NOTIFICATIONS = _Paths.NOTIFICATIONS;
   static const ALL_OUTPOSTS = _Paths.ALL_OUTPOSTS;
   static const RECORDS = _Paths.RECORDS;
+  static const REPLAY = _Paths.REPLAY;
+  static const TAG_OUTPOSTS = _Paths.TAG_OUTPOSTS;
+  static const HOST_DASHBOARD = _Paths.HOST_DASHBOARD;
+  static const HOST_OUTPOST_ANALYTICS = _Paths.HOST_OUTPOST_ANALYTICS;
 }
 
 abstract class _Paths {
@@ -35,7 +39,11 @@ abstract class _Paths {
   static const MY_PROFILE = '/my-profile';
   static const CONNECTED_ACCOUNTS = '/connected-accounts';
   static const RECORDS = '/records';
+  static const REPLAY = '/replay';
   static const SEARCH = '/search';
   static const NOTIFICATIONS = '/notifications';
   static const ALL_OUTPOSTS = '/all-outposts';
+  static const TAG_OUTPOSTS = '/tag-outposts';
+  static const HOST_DASHBOARD = '/host-dashboard';
+  static const HOST_OUTPOST_ANALYTICS = '/host-outpost-analytics';
 }

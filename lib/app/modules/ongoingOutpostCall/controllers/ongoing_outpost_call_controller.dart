@@ -7,7 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/controllers/recorder_controller.dart';
+import 'package:podium/app/services/replay/replay_recorder.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/blockchain/blockchain.dart';
@@ -50,7 +50,7 @@ class OngoingOutpostCallController extends GetxController {
   final likeDislikeKey = GlobalKey();
   final cheerBooKey = GlobalKey();
   final storage = GetStorage();
-  final recorderController = Get.find<RecorderController>();
+  final recorder = ReplayRecorder.instance;
   final outpostCallController = Get.find<OutpostCallController>();
   final globalController = Get.find<GlobalController>();
   final sessionData = Rxn<OutpostLiveData>();
@@ -91,12 +91,12 @@ class OngoingOutpostCallController extends GetxController {
   void onInit() async {
     super.onInit();
 
-    isRecording.value = recorderController.isRecording.value;
-    _disposeRecordingListener = recorderController.isRecording.addListener(() {
-      isRecording.value = recorderController.isRecording.value;
+    isRecording.value = recorder.isRecording.value;
+    _disposeRecordingListener = recorder.isRecording.addListener(() {
+      isRecording.value = recorder.isRecording.value;
     });
     _disposeMicListener = amIMuted.addListener(() {
-      if (isRecording.value) recorderController.setMicEnabled(!amIMuted.value);
+      if (isRecording.value) recorder.setMicEnabled(!amIMuted.value);
     });
     final ongoingOutpost = outpostCallController.outpost.value!;
     final myUser = globalController.myUserInfo.value!;
@@ -555,8 +555,8 @@ class OngoingOutpostCallController extends GetxController {
     if (outpost == null) return;
     if (recording) {
       isStartingToRecord.value = true;
-      final started = await recorderController.startRecording(
-        prefix: outpost.name,
+      final started = await recorder.start(
+        outpost: outpost,
         micEnabled: !amIMuted.value,
       );
       isStartingToRecord.value = false;
@@ -566,16 +566,16 @@ class OngoingOutpostCallController extends GetxController {
         eventType: OutgoingMessageTypeEnums.start_recording,
       );
     } else {
-      if (!recorderController.isRecording.value) return;
-      final path = await recorderController.stopRecording();
+      if (!recorder.isRecording.value) return;
+      final id = await recorder.stop();
       sendOutpostEvent(
         outpostId: outpost.uuid,
         eventType: OutgoingMessageTypeEnums.stop_recording,
       );
-      if (path != null) {
+      if (id != null) {
         Toast.success(
-          title: 'Recording saved',
-          message: 'to $path',
+          title: 'Replay saved',
+          message: 'Find it in your recordings',
         );
       }
     }

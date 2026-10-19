@@ -11,6 +11,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
+import 'package:podium/app/services/replay/replay_recorder.dart';
 import 'package:podium/env.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
@@ -266,6 +267,11 @@ class WebSocketService {
     if (_state != newState) {
       l.d('WebSocket state changed: $_state -> $newState');
       _state = newState;
+      if (newState != WebSocketState.connecting) {
+        ReplayRecorder.instance.onConnection(
+          online: newState == WebSocketState.connected,
+        );
+      }
     }
   }
 
@@ -435,6 +441,7 @@ class WebSocketService {
   // Simplified message routing
   void _routeMessage(IncomingMessage message) {
     if (kDebugMode) l.d('Routing message: ${message.name}');
+    ReplayRecorder.instance.onWsMessage(message);
 
     switch (message.name) {
       case IncomingMessageType.userJoined:

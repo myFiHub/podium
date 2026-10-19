@@ -17,7 +17,7 @@ class RecordsPage extends StatelessWidget {
             children: [
               const AppPageHeader(
                 title: 'Records',
-                subtitle: 'Your saved outpost recordings',
+                subtitle: 'Your outpost replays and recordings',
                 showBack: true,
               ),
               Container(

@@ -196,6 +196,27 @@ class MyProfileStatistics extends GetWidget<MyProfileController> {
   }
 }
 
+class HostDashboardButton extends StatelessWidget {
+  const HostDashboardButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: AppSettingsRow(
+        icon: Icons.insights_rounded,
+        iconColor: AppColors.violet,
+        title: 'Host dashboard',
+        subtitle: 'Listeners, retention, earnings and best time to go live',
+        onTap: () => Navigate.to(
+          type: NavigationTypes.toNamed,
+          route: Routes.HOST_DASHBOARD,
+        ),
+      ),
+    );
+  }
+}
+
 class _IncomeRow extends StatelessWidget {
   final String chainId;
   final String amount;

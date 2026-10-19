@@ -4,9 +4,14 @@ import 'package:podium/app/modules/myProfile/views/connected_accounts_view.dart'
 import 'package:podium/app/modules/outpostDetail/views/outpost_by_id_landing.dart';
 import 'package:podium/app/modules/records/bindings/records_binding.dart';
 import 'package:podium/app/modules/records/views/records_view.dart';
+import 'package:podium/app/modules/replay/bindings/replay_binding.dart';
+import 'package:podium/app/modules/replay/views/replay_view.dart';
 
 import '../modules/allOutposts/bindings/all_groups_binding.dart';
 import '../modules/allOutposts/views/all_outposts_view.dart';
+import '../modules/allOutposts/views/tag_outposts_view.dart';
+import '../modules/hostAnalytics/views/host_dashboard_view.dart';
+import '../modules/hostAnalytics/views/host_outpost_analytics_view.dart';
 import '../modules/createOutpost/bindings/create_outpost_binding.dart';
 import '../modules/createOutpost/views/create_outpost_view.dart';
 import '../modules/home/bindings/home_binding.dart';
@@ -108,6 +113,11 @@ class AppPages {
       binding: RecordsBinding(),
     ),
     GetPage(
+      name: _Paths.REPLAY,
+      page: () => const ReplayView(),
+      binding: ReplayBinding(),
+    ),
+    GetPage(
       name: _Paths.SEARCH,
       page: () => const SearchView(),
       binding: SearchBinding(),
@@ -121,6 +131,20 @@ class AppPages {
       name: _Paths.ALL_OUTPOSTS,
       page: () => const AllOutpostsView(),
       binding: AllGroupsBinding(),
+    ),
+    GetPage(
+      name: _Paths.TAG_OUTPOSTS,
+      page: () => const TagOutpostsView(),
+      preventDuplicates: false,
+    ),
+    GetPage(
+      name: _Paths.HOST_DASHBOARD,
+      page: () => const HostDashboardView(),
+    ),
+    GetPage(
+      name: _Paths.HOST_OUTPOST_ANALYTICS,
+      page: () => const HostOutpostAnalyticsView(),
+      preventDuplicates: false,
     ),
   ];
 }

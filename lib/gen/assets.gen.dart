@@ -91,6 +91,10 @@ class $AssetsImagesGen {
   /// File path: assets/images/lumaPng.png
   AssetGenImage get lumaPng => const AssetGenImage('assets/images/lumaPng.png');
 
+  /// File path: assets/images/movement_icon.png
+  AssetGenImage get movementIcon =>
+      const AssetGenImage('assets/images/movement_icon.png');
+
   /// File path: assets/images/movement_logo.svg
   SvgGenImage get movementLogo =>
       const SvgGenImage('assets/images/movement_logo.svg');
@@ -121,6 +125,7 @@ class $AssetsImagesGen {
         logo,
         luma,
         lumaPng,
+        movementIcon,
         movementLogo,
         particleIcon,
         xPlatform

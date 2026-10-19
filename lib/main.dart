@@ -13,6 +13,8 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/login/bindings/login_binding.dart';
 import 'package:podium/app/modules/login/views/login_view.dart';
+import 'package:podium/app/services/replay/replay_import_service.dart';
+import 'package:podium/app/services/replay/replay_processor.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/palette.dart';
@@ -151,6 +153,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     _setSystemUIOverlayStyle();
     initDeepLinks();
+    ReplayProcessor.instance.recoverInterrupted();
+    ReplayImportService.instance.start();
 
     l.i(SchedulerBinding.instance.lifecycleState);
 

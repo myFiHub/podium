@@ -61,6 +61,12 @@ android {
         }
     }
 }
+// Jitsi's react-native-video artifact bundles media3's RTSP classes, which clash with the module
+// video_player depends on. Replays only play local files, never RTSP streams.
+configurations.configureEach {
+    exclude group: 'androidx.media3', module: 'media3-exoplayer-rtsp'
+}
+
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
     implementation 'org.slf4j:slf4j-android:1.7.36'

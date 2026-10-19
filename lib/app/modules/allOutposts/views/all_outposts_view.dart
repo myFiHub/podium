@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/allOutposts/controllers/discover_controller.dart';
+import 'package:podium/app/modules/allOutposts/widgets/discover_header.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -152,6 +154,8 @@ class AllOutpostsList extends GetWidget<OutpostsController> {
         child: OutpostsList(
           scrollController: scrollController,
           listPage: ListPage.all,
+          header: const DiscoverHeader(),
+          onRefresh: Get.find<DiscoverController>().refreshAll,
         ),
       );
     });

@@ -15,6 +15,7 @@ import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/services/replay/replay_recorder.dart';
 import 'package:podium/constants/meeting.dart';
 import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/models/jitsi_member.dart';
@@ -338,6 +339,7 @@ class OutpostCallController extends GetxController {
       // the members of a newer one.
       if (seq != _liveDataSeq) return;
       members.value = tmp.where((member) => member.is_present == true).toList();
+      ReplayRecorder.instance.onMembers(members.value);
     }
   }
 
@@ -369,6 +371,19 @@ class OutpostCallController extends GetxController {
     isInCall.value = false;
     haveOngoingCall.value = false;
     jitsiMembers.value = [];
+    // The recording needs the call's audio, so it ends before the call does.
+    if (ReplayRecorder.instance.isRecording.value) {
+      sendOutpostEvent(
+        outpostId: callSession.outpostId,
+        eventType: OutgoingMessageTypeEnums.stop_recording,
+      );
+      if (await ReplayRecorder.instance.stop() != null) {
+        Toast.success(
+          title: 'Replay saved',
+          message: 'Find it in your recordings',
+        );
+      }
+    }
     jitsiMeet.hangUp();
     members.value = [];
     searchedValueInMeet.value = '';

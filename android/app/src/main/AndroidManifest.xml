@@ -40,6 +40,24 @@
                 <data android:scheme="http" android:host="web3podium.page.link/referral" />
             </intent-filter>
 
+            <!-- Replay (.podium) files. Many apps send them as generic binaries or zips. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/vnd.podium.replay" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/zip" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.podium.replay" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/zip" />
+            </intent-filter>
+
             <!-- Specifies an Android theme to apply to this Activity as soon as
                 the Android process has started. This theme is visible to the user
                 while the Flutter UI initializes. After that, this theme continues

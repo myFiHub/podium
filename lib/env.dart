@@ -44,6 +44,11 @@ class Env {
 
   static const websocketAddress = String.fromEnvironment('WEBSOCKET_ADDRESS');
 
+  /// How often a recording's audio chunk, event log and screen frame index
+  /// are saved, so a crash loses at most this much.
+  static const recordingChunkSeconds =
+      int.fromEnvironment('RECORDING_CHUNK_SECONDS', defaultValue: 5);
+
   static const _required = {
     'ONESIGNAL_API_KEY': oneSignalApiKey,
     'INITIAL_EXTERNAL_WALLET_CHAIN_ID': initialExternalWalletChainId,

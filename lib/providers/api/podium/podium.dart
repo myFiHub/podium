@@ -3,7 +3,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/api_failure.dart';
+import 'package:podium/providers/api/podium/models/analytics/host_analytics.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
+import 'package:podium/providers/api/podium/models/discovery/discovery_models.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
@@ -408,6 +410,105 @@ class PodiumApi {
       (outpost) => outpost.uuid,
       query: {'tag_id': id, ..._paging(page, page_size)},
     );
+  }
+
+  /// Throws [ApiFailure].
+  Future<List<OutpostModel>> fetchOutpostsByTagId({
+    required int id,
+    int? page,
+    int? page_size,
+  }) {
+    return _fetchList(
+      '/outposts',
+      OutpostModel.fromJson,
+      query: {'tag_id': id, ..._paging(page, page_size)},
+    );
+  }
+
+  /// Skips items that fail to parse, so one bad row can't empty a rail.
+  Future<List<DiscoveredOutpost>> _getDiscovered(
+    String path, {
+    Map<String, dynamic>? query,
+  }) {
+    return _guard(() async {
+      final data = await _getData(path, query: query) as List;
+      final items = <DiscoveredOutpost>[];
+      for (final e in data) {
+        try {
+          items.add(DiscoveredOutpost.fromJson(Map<String, dynamic>.from(e)));
+        } catch (err) {
+          l.e(err);
+        }
+      }
+      return items;
+    }, <DiscoveredOutpost>[]);
+  }
+
+  Future<List<DiscoveredOutpost>> getLiveOutposts({int? limit}) {
+    return _getDiscovered(
+      '/discover/live',
+      query: {if (limit != null) 'limit': limit},
+    );
+  }
+
+  Future<List<DiscoveredOutpost>> getLiveFromFollowings({int? limit}) {
+    return _getDiscovered(
+      '/discover/live-from-followings',
+      query: {if (limit != null) 'limit': limit},
+    );
+  }
+
+  Future<List<DiscoveredOutpost>> getTrendingOutposts({
+    TrendingWindow window = TrendingWindow.week,
+    int? limit,
+  }) {
+    return _getDiscovered(
+      '/discover/trending',
+      query: {'window': window.value, if (limit != null) 'limit': limit},
+    );
+  }
+
+  Future<List<PopularTagModel>> getPopularTags({int? limit}) {
+    return _getList(
+      '/discover/tags',
+      PopularTagModel.fromJson,
+      query: {if (limit != null) 'limit': limit},
+    );
+  }
+
+  /// Throws [ApiFailure].
+  Future<HostAnalyticsSummary> getHostAnalyticsSummary({
+    required AnalyticsWindow window,
+    required int utcOffsetMinutes,
+  }) {
+    return _attempt(() async {
+      final data = await _getData(
+        '/analytics/host/summary',
+        query: {
+          'window': window.value,
+          'utc_offset_minutes': utcOffsetMinutes,
+        },
+      );
+      return HostAnalyticsSummary.fromJson(Map<String, dynamic>.from(data));
+    });
+  }
+
+  /// Throws [ApiFailure].
+  Future<HostOutpostAnalytics> getHostOutpostAnalytics({
+    required String outpostUuid,
+    required AnalyticsWindow window,
+    required int utcOffsetMinutes,
+  }) {
+    return _attempt(() async {
+      final data = await _getData(
+        '/analytics/host/outposts/$outpostUuid',
+        query: {
+          'window': window.value,
+          'utc_offset_minutes': utcOffsetMinutes,
+        },
+      );
+      return HostOutpostAnalytics.fromJson(Map<String, dynamic>.from(data));
+    });
   }
 
   /// Throws [ApiFailure].

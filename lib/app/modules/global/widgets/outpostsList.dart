@@ -30,12 +30,24 @@ class OutpostsList extends GetView<OutpostsController> {
   final ScrollController? scrollController;
   final ListPage listPage;
   final EdgeInsets padding;
+
+  /// Scrolls with the list, above the first outpost.
+  final Widget? header;
+
+  /// Runs alongside the first-page reload on pull-to-refresh.
+  final Future<void> Function()? onRefresh;
+
+  /// Called as an [outpostsList] scrolls near its end, to load more.
+  final VoidCallback? onNearEnd;
   const OutpostsList({
     super.key,
     this.outpostsList,
     this.scrollController,
     required this.listPage,
     this.padding = _listPadding,
+    this.header,
+    this.onRefresh,
+    this.onNearEnd,
   });
 
   @override
@@ -51,6 +63,17 @@ class OutpostsList extends GetView<OutpostsController> {
           : controller.lastPageReachedForAllOutposts.value;
 
       if (listPage != ListPage.search && pageOutposts.isEmpty) {
+        final header = this.header;
+        if (header != null) {
+          return ListView(
+            controller: scrollController,
+            padding: padding,
+            children: [
+              header,
+              for (var i = 0; i < 3; i++) const OutpostCardSkeleton(),
+            ],
+          );
+        }
         return ListView.builder(
           controller: scrollController,
           padding: padding,
@@ -84,6 +107,21 @@ class OutpostsList extends GetView<OutpostsController> {
             );
           },
         );
+        final onNearEnd = this.onNearEnd;
+        if (onNearEnd != null) {
+          listWidget = NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollUpdateNotification &&
+                  notification.metrics.axis == Axis.vertical &&
+                  notification.metrics.extentAfter <=
+                      _PaginatedOutpostsState._loadMoreThreshold) {
+                onNearEnd();
+              }
+              return false;
+            },
+            child: listWidget,
+          );
+        }
       } else {
         listWidget = _PaginatedOutposts(
           items: pageOutposts.values.toList(),
@@ -91,6 +129,8 @@ class OutpostsList extends GetView<OutpostsController> {
           scrollController: scrollController,
           controller: controller,
           padding: padding,
+          header: header,
+          onRefresh: onRefresh,
           fetchPage: listPage == ListPage.all
               ? controller.fetchAllOutpostsPage
               : controller.fetchMyOutpostsPage,
@@ -117,6 +157,8 @@ class _PaginatedOutposts extends StatefulWidget {
     required this.controller,
     required this.fetchPage,
     required this.padding,
+    this.header,
+    this.onRefresh,
   });
 
   final List<OutpostModel> items;
@@ -125,6 +167,8 @@ class _PaginatedOutposts extends StatefulWidget {
   final OutpostsController controller;
   final Future<void> Function(int page) fetchPage;
   final EdgeInsets padding;
+  final Widget? header;
+  final Future<void> Function()? onRefresh;
 
   @override
   State<_PaginatedOutposts> createState() => _PaginatedOutpostsState();
@@ -156,19 +200,26 @@ class _PaginatedOutpostsState extends State<_PaginatedOutposts> {
   @override
   Widget build(BuildContext context) {
     final items = widget.items;
+    final header = widget.header;
+    final offset = header == null ? 0 : 1;
     return RefreshIndicator(
       color: AppColors.onPrimary,
       backgroundColor: ColorName.primaryBlue,
-      onRefresh: () async => await widget.fetchPage(0),
+      onRefresh: () async {
+        final extra = widget.onRefresh;
+        await Future.wait([widget.fetchPage(0), if (extra != null) extra()]);
+      },
       child: NotificationListener<ScrollNotification>(
         onNotification: _onScroll,
         child: ListView.builder(
           controller: widget.scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: widget.padding,
-          itemCount: items.length,
+          itemCount: items.length + offset,
           addAutomaticKeepAlives: false,
-          itemBuilder: (context, index) {
+          itemBuilder: (context, i) {
+            if (header != null && i == 0) return header;
+            final index = i - offset;
             final outpost = items[index];
             return AppEntrance(
               key: ValueKey(outpost.uuid),
@@ -198,6 +249,10 @@ Future<void> _openOutpost(
     outpostId: outpost.uuid,
   );
 }
+
+/// Joins [outpost] and opens its page, the same way tapping a list card does.
+Future<void> openOutpost(OutpostModel outpost) =>
+    _openOutpost(Get.find<OutpostsController>(), outpost);
 
 class _SingleOutpost extends StatelessWidget {
   const _SingleOutpost({

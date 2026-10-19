@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
+import 'package:podium/app/modules/hostAnalytics/views/host_outpost_analytics_view.dart';
 import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -238,6 +239,30 @@ class LumaIconButton extends GetView<OutpostDetailController> {
         trailing: isLoading ? const LoadingWidget(size: 14) : null,
       );
     });
+  }
+}
+
+class OutpostAnalyticsButton extends StatelessWidget {
+  const OutpostAnalyticsButton({super.key, required this.outpost});
+
+  final OutpostModel outpost;
+
+  @override
+  Widget build(BuildContext context) {
+    return _OutpostActionRow(
+      onTap: () => openHostOutpostAnalytics(
+        uuid: outpost.uuid,
+        name: outpost.name,
+      ),
+      leading: AppIconTile(
+        size: 36,
+        circle: true,
+        icon: Icons.insights_rounded,
+        color: AppColors.violet,
+      ),
+      title: 'Outpost analytics',
+      subtitle: 'Listeners, retention and earnings per session',
+    );
   }
 }
 

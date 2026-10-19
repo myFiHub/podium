@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/controllers/recorder_controller.dart';
 import 'package:podium/app/modules/global/controllers/referral_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/services/oneSignal.dart';
@@ -41,7 +40,6 @@ final globalBindings = [
   Bind.put<OutpostCallController>(OutpostCallController(), permanent: true),
   Bind.put<NotificationsController>(NotificationsController(), permanent: true),
   Bind.put<ReferalController>(ReferalController(), permanent: true),
-  Bind.put<RecorderController>(RecorderController(), permanent: true),
   Bind.put<OneSignalService>(OneSignalService(), permanent: true),
   Bind.put<OutpostImageService>(OutpostImageService(), permanent: true),
   Bind.put<CallOverlayService>(CallOverlayService(), permanent: true),

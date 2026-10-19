@@ -38,6 +38,17 @@ enum IncomingMessageType {
   userStoppedRecording,
 }
 
+extension IncomingMessageTypeWire on IncomingMessageType {
+  /// The name the server uses, e.g. `user.joined`.
+  String get wireName => _$IncomingMessageTypeEnumMap[this]!;
+
+  static IncomingMessageType? fromWireName(String name) =>
+      _$IncomingMessageTypeEnumMap.entries
+          .where((e) => e.value == name)
+          .firstOrNull
+          ?.key;
+}
+
 @JsonSerializable()
 class IncomingMessage {
   final IncomingMessageType name;

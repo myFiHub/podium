@@ -1,3 +1,5 @@
+import 'package:podium/providers/api/podium/models/analytics/host_analytics.dart';
+import 'package:podium/providers/api/podium/models/discovery/discovery_models.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
@@ -34,6 +36,51 @@ class OutpostRepository {
 
   Future<Map<String, OutpostModel>> getOutpostsByTagId({required int id}) =>
       _api.getOutpostsByTagId(id: id);
+
+  /// Throws [ApiFailure] so a failed page can be retried.
+  Future<List<OutpostModel>> fetchOutpostsByTagId({
+    required int id,
+    int? page,
+    int? page_size,
+  }) =>
+      _api.fetchOutpostsByTagId(id: id, page: page, page_size: page_size);
+
+  Future<List<DiscoveredOutpost>> getLiveOutposts({int? limit}) =>
+      _api.getLiveOutposts(limit: limit);
+
+  Future<List<DiscoveredOutpost>> getLiveFromFollowings({int? limit}) =>
+      _api.getLiveFromFollowings(limit: limit);
+
+  Future<List<DiscoveredOutpost>> getTrendingOutposts({
+    TrendingWindow window = TrendingWindow.week,
+    int? limit,
+  }) =>
+      _api.getTrendingOutposts(window: window, limit: limit);
+
+  Future<List<PopularTagModel>> getPopularTags({int? limit}) =>
+      _api.getPopularTags(limit: limit);
+
+  /// Throws [ApiFailure].
+  Future<HostAnalyticsSummary> getHostAnalyticsSummary({
+    required AnalyticsWindow window,
+    required int utcOffsetMinutes,
+  }) =>
+      _api.getHostAnalyticsSummary(
+        window: window,
+        utcOffsetMinutes: utcOffsetMinutes,
+      );
+
+  /// Throws [ApiFailure].
+  Future<HostOutpostAnalytics> getHostOutpostAnalytics({
+    required String outpostUuid,
+    required AnalyticsWindow window,
+    required int utcOffsetMinutes,
+  }) =>
+      _api.getHostOutpostAnalytics(
+        outpostUuid: outpostUuid,
+        window: window,
+        utcOffsetMinutes: utcOffsetMinutes,
+      );
 
   Future<Map<String, OutpostModel>> searchOutpostByName({
     required String name,

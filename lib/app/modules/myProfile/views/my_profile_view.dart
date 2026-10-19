@@ -52,6 +52,8 @@ class MyProfileView extends GetView<MyProfileController> {
                   key: controller.walletConnectKey,
                 ),
                 const AppSectionLabel('Activity'),
+                const HostDashboardButton(),
+                const SizedBox(height: 12),
                 MyProfileStatistics(
                   key: controller.statisticsKey,
                 ),

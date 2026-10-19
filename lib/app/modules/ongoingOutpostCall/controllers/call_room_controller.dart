@@ -10,6 +10,7 @@ import 'package:podium/app/modules/global/controllers/outpost_call_controller.da
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/services/replay/replay_recorder.dart';
 import 'package:podium/constants/meeting.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -111,11 +112,15 @@ class CallRoomController extends GetxController
   Timer? _levelDecayTimer;
   Worker? _mutedWorker;
   late final Worker _handsWorker;
+  void Function()? _disposePollRecording;
 
   @override
   void onInit() {
     super.onInit();
     _handsWorker = everAll([_raisedHands, peers], (_) => _refreshHandUuids());
+    _disposePollRecording = activePoll.addListener(
+      () => ReplayRecorder.instance.onPoll(activePoll.value),
+    );
   }
 
   @override
@@ -138,6 +143,7 @@ class CallRoomController extends GetxController
     _chatPreviewTimer?.cancel();
     _mutedWorker?.dispose();
     _handsWorker.dispose();
+    _disposePollRecording?.call();
     _disposeStage();
     super.onClose();
   }
@@ -240,12 +246,18 @@ class CallRoomController extends GetxController
           _onScreenShareEvent(data['screenShare'], notify: false);
         }
         if (data['localScreenShare'] is bool) {
-          _onLocalScreenShare(data['localScreenShare'] as bool);
+          _onLocalScreenShare(
+            data['localScreenShare'] as bool,
+            data['localScreenShareTrackId']?.toString(),
+          );
         }
       case 'screenShare':
         _onScreenShareEvent(data['screenShare'], notify: true);
       case 'localScreenShare':
-        _onLocalScreenShare(data['sharing'] == true);
+        _onLocalScreenShare(
+          data['sharing'] == true,
+          data['trackId']?.toString(),
+        );
       case 'stageVideoSize':
         _onStageVideoSize(data);
       case 'raisedHands':
@@ -257,6 +269,7 @@ class CallRoomController extends GetxController
         dominantSpeakerUuid.value = data['silence'] == true
             ? null
             : uuidOf(data['participantId']?.toString());
+        ReplayRecorder.instance.onDominantSpeaker(dominantSpeakerUuid.value);
       case 'roleChanged':
         final id = data['participantId']?.toString();
         if (data['isLocal'] == true || id == _localJitsiId) {
@@ -297,6 +310,7 @@ class CallRoomController extends GetxController
     _handUuids.assignAll(
       sorted.map((h) => uuidOf(h.jitsiId)).whereNotNull(),
     );
+    ReplayRecorder.instance.onHands(_handUuids);
   }
 
   bool get myHandRaised {
@@ -419,6 +433,11 @@ class CallRoomController extends GetxController
     if (now.difference(_lastReactionSentAt).inMilliseconds < 250) return;
     _lastReactionSentAt = now;
     _showReaction(emoji, 'You');
+    ReplayRecorder.instance.onReaction(
+      uuid: myId,
+      name: myUser.name ?? '',
+      emoji: emoji,
+    );
     jitsiMeet.sendEndpointTextMessage(
       message: jsonEncode({
         'podium': _envelopeVersion,
@@ -443,12 +462,13 @@ class CallRoomController extends GetxController
       case 'reaction':
         final emoji = data['e'];
         if (emoji is String && reactionEmojis.contains(emoji)) {
-          _showReaction(
-            emoji,
-            displayNameOf(
-              uuid: data['uid']?.toString(),
-              jitsiId: senderId,
-            ),
+          final uuid = uuidOf(senderId) ?? data['uid']?.toString();
+          final name = displayNameOf(uuid: uuid, jitsiId: senderId);
+          _showReaction(emoji, name);
+          ReplayRecorder.instance.onReaction(
+            uuid: uuid,
+            name: name,
+            emoji: emoji,
           );
         }
       case 'poll':
@@ -496,6 +516,11 @@ class CallRoomController extends GetxController
       mine: true,
       pending: true,
     ));
+    ReplayRecorder.instance.onChat(
+      uuid: myId,
+      name: myUser.name ?? '',
+      text: clipped,
+    );
     jitsiMeet.sendChatMessage(message: clipped);
   }
 
@@ -522,6 +547,11 @@ class CallRoomController extends GetxController
       mine: false,
     );
     chat.add(message);
+    ReplayRecorder.instance.onChat(
+      uuid: uuid,
+      name: message.senderName,
+      text: text,
+    );
     if (!_chatOpen) {
       unreadChat.value++;
       chatPreview.value = message;

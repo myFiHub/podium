@@ -36,6 +36,7 @@ mixin _CallScreenShare on GetxController {
 
   final remoteShare = Rxn<RemoteScreenShare>();
   final localSharing = false.obs;
+  String? _localShareTrackId;
   final stageMaximized = false.obs;
 
   /// Width / height of the shared video, once the first frame arrives.
@@ -57,6 +58,7 @@ mixin _CallScreenShare on GetxController {
       return;
     }
     remoteShare.value = next;
+    ReplayRecorder.instance.onScreenShare(recordableShare);
     if (next == null) {
       stageMaximized.value = false;
       stageAspect.value = 16 / 9;
@@ -73,11 +75,37 @@ mixin _CallScreenShare on GetxController {
     }
   }
 
-  void _onLocalScreenShare(bool sharing) {
+  void _onLocalScreenShare(bool sharing, String? trackId) {
     localSharing.value = sharing;
+    _localShareTrackId = sharing ? trackId : null;
+    ReplayRecorder.instance.onScreenShare(recordableShare);
     if (Get.isRegistered<OngoingOutpostCallController>()) {
       Get.find<OngoingOutpostCallController>().onScreenShareChanged(sharing);
     }
+  }
+
+  /// The share a replay should record: someone else's, or this device's own.
+  /// Older SDK builds don't report the local track, so it can't be recorded.
+  ReplayShareSource? get recordableShare {
+    final remote = remoteShare.value;
+    if (remote != null) {
+      return ReplayShareSource(
+        pcId: remote.pcId,
+        trackId: remote.trackId,
+        uuid: remote.ownerUuid ?? '',
+        name: sharerName,
+      );
+    }
+    final localTrack = _localShareTrackId;
+    if (localSharing.value && localTrack != null && localTrack.isNotEmpty) {
+      return ReplayShareSource(
+        pcId: -1,
+        trackId: localTrack,
+        uuid: myId,
+        name: myUser.name ?? '',
+      );
+    }
+    return null;
   }
 
   void _onStageVideoSize(Map<String, dynamic> data) {

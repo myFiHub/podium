@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
@@ -496,8 +495,7 @@ class _TicketButtonContent extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Img(
-              src: chainInfoByChainId(movementAptosNetwork.chainId).chainIcon ??
-                  Assets.images.movementLogo.path,
+              src: Assets.images.movementIcon.path,
               size: 18,
               borderRadius: BorderRadius.circular(999),
             ),

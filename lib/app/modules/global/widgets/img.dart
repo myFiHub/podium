@@ -36,6 +36,11 @@ class Img extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUrl = Uri.tryParse(src)?.isAbsolute ?? false;
     final isEmptyAndHasIfEmpty = src.isEmpty && ifEmpty != null;
+    final assetPath = src.startsWith('assets/')
+        ? src
+        : isEmptyAndHasIfEmpty
+            ? ifEmpty
+            : null;
     final boxSize = max(size ?? width ?? 70, size ?? height ?? 70);
     // Decode near display size; 1.5x leaves room for non-square sources.
     final cacheSize =
@@ -44,11 +49,11 @@ class Img extends StatelessWidget {
     return SizedBox(
       width: size ?? width ?? 70,
       height: size ?? height ?? 70,
-      child: isEmptyAndHasIfEmpty
+      child: assetPath != null
           ? ClipRRect(
               borderRadius: borderRadius ?? BorderRadius.zero,
               child: Image.asset(
-                ifEmpty!,
+                assetPath,
                 width: size ?? width ?? 70,
                 height: size ?? height ?? 70,
                 fit: BoxFit.cover,

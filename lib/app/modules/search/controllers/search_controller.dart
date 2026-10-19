@@ -2,17 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/allOutposts/views/tag_outposts_view.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
-import 'package:podium/root.dart';
-import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
-import 'package:podium/widgets/ui/app_ui.dart';
 
 final _deb = Debouncing(duration: const Duration(milliseconds: 600));
 
@@ -124,47 +121,8 @@ class SearchPageController extends GetxController {
     searchedOutposts.value = foundOutposts;
   }
 
-  Future<void> tagClicked(TagModel tag) async {
-    loadingTag_name.value = tag.name;
-    final foundOutposts =
-        await _outpostRepository.getOutpostsByTagId(id: tag.id);
-    if (foundOutposts.isEmpty) {
-      l.e('No groups found for tag: ${tag.name}');
-      return;
-    } else {
-      final parsedOutposts = foundOutposts.values.toList();
-
-      Get.dialog(
-        Scaffold(
-          body: PageWrapper(
-            child: SafeArea(
-              child: Column(
-                children: [
-                  AppPageHeader(
-                    title: '#${tag.name}',
-                    padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
-                    actions: [
-                      AppIconButton(
-                        icon: Icons.close_rounded,
-                        tooltip: 'Close',
-                        onTap: Get.close,
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: OutpostsList(
-                      outpostsList: parsedOutposts,
-                      listPage: ListPage.search,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-    loadingTag_name.value = '';
+  void tagClicked(TagModel tag) {
+    openTagOutposts(id: tag.id, name: tag.name);
   }
 
   Future<void> searchUser(String v) async {

@@ -88,6 +88,11 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
                       const SliverToBoxAdapter(child: LumaIconButton()),
                     if (outpost.scheduled_for != 0)
                       const SliverToBoxAdapter(child: SetReminderButton()),
+                    if (iAmOwner ||
+                        (outpost.cohost_user_uuids?.contains(myId) ?? false))
+                      SliverToBoxAdapter(
+                        child: OutpostAnalyticsButton(outpost: outpost),
+                      ),
                     const MembersList(),
                     const SliverToBoxAdapter(child: SizedBox(height: 24)),
                   ],

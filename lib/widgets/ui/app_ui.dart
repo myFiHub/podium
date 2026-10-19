@@ -1236,17 +1236,26 @@ class AppDialog extends StatelessWidget {
 Future<bool> showAppConfirm({
   required String title,
   String? message,
+  InlineSpan? richMessage,
   String confirmLabel = 'Confirm',
   String cancelLabel = 'Cancel',
   bool destructive = false,
 }) async {
   final result = await Get.dialog<bool>(
+    barrierDismissible: !destructive,
     AppDialog(
       title: title,
-      message: message,
+      message: richMessage == null ? message : null,
+      content: richMessage == null
+          ? null
+          : Text.rich(
+              richMessage,
+              style: AppText.body.copyWith(height: 1.5),
+            ),
       icon: destructive ? Icons.warning_amber_rounded : null,
       iconColor: destructive ? AppColors.danger : AppColors.primary,
       urgent: destructive,
+      stackActions: cancelLabel.length + confirmLabel.length > 22,
       actions: [
         AppSecondaryButton(
           label: cancelLabel,

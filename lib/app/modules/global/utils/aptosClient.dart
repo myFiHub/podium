@@ -7,12 +7,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:http/http.dart' as http;
 import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
@@ -278,32 +278,26 @@ class AptosMovement {
         return (false, 'Error fetching price');
       }
       final parsedPrice = price;
-      final confirmed = await showConfirmPopup(
+      final confirmed = await showAppConfirm(
         title: 'Buy Podium Pass',
-        richMessage: RichText(
-          text: TextSpan(
-            style: const TextStyle(height: 1.5),
-            children: [
-              const TextSpan(text: 'buy '),
-              TextSpan(
-                  text: numberOfTickets.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              TextSpan(
-                  text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} from '),
-              TextSpan(
-                  text: sellerName,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const TextSpan(text: ' for '),
-              TextSpan(
-                  text: parsedPrice.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const TextSpan(text: ' MOVE?'),
-            ],
-          ),
+        richMessage: TextSpan(
+          children: [
+            const TextSpan(text: 'buy '),
+            TextSpan(
+                text: numberOfTickets.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            TextSpan(
+                text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} from '),
+            TextSpan(
+                text: sellerName,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const TextSpan(text: ' for '),
+            TextSpan(
+                text: parsedPrice.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const TextSpan(text: ' MOVE?'),
+          ],
         ),
-        cancelText: 'Cancel',
-        confirmText: 'Confirm',
-        confirmColor: ColorName.success,
       );
 
       if (!confirmed) {
@@ -399,27 +393,23 @@ class AptosMovement {
         return (false, 'Error fetching price');
       }
       final parsedPrice = bigIntCoinToMoveOnAptos(price);
-      final confirmed = await showConfirmPopup(
+      final confirmed = await showAppConfirm(
         title: 'Sell Podium Pass',
-        richMessage: RichText(
-          text: TextSpan(
-            children: [
-              const TextSpan(text: 'sell '),
-              TextSpan(
-                  text: numberOfTickets.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              TextSpan(
-                  text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} for '),
-              TextSpan(
-                  text: parsedPrice.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const TextSpan(text: ' MOVE?'),
-            ],
-          ),
+        destructive: true,
+        richMessage: TextSpan(
+          children: [
+            const TextSpan(text: 'sell '),
+            TextSpan(
+                text: numberOfTickets.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            TextSpan(
+                text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} for '),
+            TextSpan(
+                text: parsedPrice.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const TextSpan(text: ' MOVE?'),
+          ],
         ),
-        cancelText: 'Cancel',
-        confirmText: 'Confirm',
-        confirmColor: ColorName.danger,
       );
       if (!confirmed) {
         return (false, 'Cancelled');

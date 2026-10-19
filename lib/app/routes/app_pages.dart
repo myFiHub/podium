@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/login/views/prejoin_referral_view.dart';
 import 'package:podium/app/modules/myProfile/views/connected_accounts_view.dart';
@@ -8,12 +7,8 @@ import 'package:podium/app/modules/records/views/records_view.dart';
 
 import '../modules/allOutposts/bindings/all_groups_binding.dart';
 import '../modules/allOutposts/views/all_outposts_view.dart';
-import '../modules/chat/bindings/chat_binding.dart';
-import '../modules/chat/views/chat_view.dart';
 import '../modules/createOutpost/bindings/create_outpost_binding.dart';
 import '../modules/createOutpost/views/create_outpost_view.dart';
-import '../modules/editGroup/bindings/edit_group_binding.dart';
-import '../modules/editGroup/views/edit_group_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
@@ -25,14 +20,10 @@ import '../modules/notifications/views/notifications_view.dart';
 import '../modules/ongoingOutpostCall/views/ongoing_outpost_call_view.dart';
 import '../modules/outpostDetail/bindings/outpost_detail_binding.dart';
 import '../modules/outpostDetail/views/outpost_detail_view.dart';
-import '../modules/playground/bindings/playground_binding.dart';
-import '../modules/playground/views/playground_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/search/bindings/search_binding.dart';
 import '../modules/search/views/search_view.dart';
-import '../modules/wallet/bindings/wallet_binding.dart';
-import '../modules/wallet/views/wallet_view.dart';
 
 part 'app_routes.dart';
 
@@ -93,23 +84,8 @@ class AppPages {
       ],
     ),
     GetPage(
-      name: _Paths.EDIT_OUTPOST,
-      page: () => const EditGroupView(),
-      binding: EditGroupBinding(),
-    ),
-    GetPage(
-      name: _Paths.CHAT,
-      page: () => const ChatView(),
-      binding: ChatBinding(),
-    ),
-    GetPage(
       name: _Paths.ONGOING_OUTPOST_CALL,
       page: () => const OngoingGroupCallView(),
-    ),
-    GetPage(
-      name: _Paths.WALLET,
-      page: () => const WalletView(),
-      binding: WalletBinding(),
     ),
     GetPage(
       name: _Paths.PROFILE,
@@ -146,11 +122,5 @@ class AppPages {
       page: () => const AllOutpostsView(),
       binding: AllGroupsBinding(),
     ),
-    if (kDebugMode)
-      GetPage(
-        name: _Paths.PLAYGROUND,
-        page: () => const PlaygroundView(),
-        binding: PlaygroundBinding(),
-      ),
   ];
 }

@@ -163,14 +163,6 @@ class CircularCountDownTimerState extends State<CircularCountDownTimer>
   }
 
   void _setAnimationDirection() {
-    // if ((widget.isReverse && !widget.isReverseAnimation) ||
-    //     (widget.isReverse && widget.isReverseAnimation)) {
-    //   _countDownAnimation =
-    //       Tween<double>(begin: 1, end: 0).animate(_controller!);
-    // } else if (!widget.isReverse && widget.isReverseAnimation) {
-    //   _countDownAnimation =
-    //       Tween<double>(begin: 0, end: 1).animate(_controller!);
-    // }
     if ((!widget.isReverse && widget.isReverseAnimation) ||
         (widget.isReverse && !widget.isReverseAnimation)) {
       _countDownAnimation =

@@ -581,20 +581,6 @@ Future<bool> internal_buyFriendTechTicket({
     );
 
     if (signature != null && signature.length > 10) {
-      if (targetUserId != myId) {
-        // TODO: save new payment
-        // saveNewPayment(
-        //   event: PaymentEvent(
-        //     type: PaymentTypes.frienTechTicket,
-        //     targetAddress: sharesSubjectWallet,
-        //     amount: bigIntWeiToDouble(buyPrice).toString(),
-        //     initiatorAddress: myAddress,
-        //     initiatorId: myId,
-        //     targetId: targetUserId,
-        //     chainId: chainId,
-        //   ),
-        // );
-      }
 
       return true;
     }
@@ -655,20 +641,6 @@ Future<bool> ext_buyFirendtechTicket({
       return false;
     } else {
       final isValid = await _externalTxSucceeded(response, chainId);
-      if (isValid && targetUserId != myId) {
-        // TODO: save payment
-        // saveNewPayment(
-        //   event: PaymentEvent(
-        //     type: PaymentTypes.frienTechTicket,
-        //     targetAddress: sharesSubjectWallet.hex,
-        //     amount: bigIntWeiToDouble(buyPrice).toString(),
-        //     initiatorAddress: externalWalletAddress!,
-        //     initiatorId: myId,
-        //     targetId: targetUserId,
-        //     chainId: chainId,
-        //   ),
-        // );
-      }
       return isValid;
     }
   } catch (e) {
@@ -731,20 +703,6 @@ Future<bool> ext_buySharesWithReferrer({
       ],
     );
     final success = await _externalTxSucceeded(response, chainId);
-    if (success && targetUserId != null) {
-      // TODO: save payment
-      // saveNewPayment(
-      //   event: PaymentEvent(
-      //     type: PaymentTypes.arenaTicket,
-      //     targetAddress: sharesSubjectWallet.hex,
-      //     amount: bigIntWeiToDouble(bigIntValue).toString(),
-      //     initiatorAddress: externalWalletAddress!,
-      //     initiatorId: myId,
-      //     targetId: targetUserId,
-      //     chainId: chainId,
-      //   ),
-      // );
-    }
 
     return success;
   } on JsonRpcError catch (e) {
@@ -863,20 +821,6 @@ Future<bool> internal_buySharesWithReferrer({
         transaction: transaction, chainId: chainId, metadata: metadata);
 
     if (signature != null && signature.length > 10) {
-      if (targetUserId != null) {
-        // TODO: save payment
-        // saveNewPayment(
-        //   event: PaymentEvent(
-        //     type: PaymentTypes.arenaTicket,
-        //     targetAddress: sharesSubjectWallet,
-        //     amount: bigIntWeiToDouble(buyPrice).toString(),
-        //     initiatorAddress: myAddress,
-        //     initiatorId: myId,
-        //     targetId: targetUserId,
-        //     chainId: chainId,
-        //   ),
-        // );
-      }
       return true;
     }
     return false;

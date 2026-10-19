@@ -163,7 +163,6 @@ class BlockChainUtils {
 
     try {
       await w3mService.init();
-      _startListeningToCheerBoEvents();
       final chainId = externalWalletChianId;
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
@@ -216,29 +215,4 @@ class BlockChainUtils {
     }
   }
 
-  static void _startListeningToCheerBoEvents() {
-    //
-    // final cheerEventToListenTo = _getContractEventListener(
-    //   contract: getDeployedContract(
-    //     contract: Contracts.cheerboo,
-    //     chainId: movementChain.chainId,
-    //   )!,
-    //   eventName: 'Cheer',
-    // );
-    // cheerEventToListenTo.take(1).listen((event) {
-    //   l.i('^^^^^^^^^^^^^^^^^^^^Cheer event: $event^^^^^^^^^^^^^^^^^^^');
-    // });
-    // //
-    // final booEventToListenTo = _getContractEventListener(
-    //   contract: getDeployedContract(
-    //     contract: Contracts.cheerboo,
-    //     chainId: movementChain.chainId,
-    //   )!,
-    //   eventName: 'Boo',
-    // );
-    // booEventToListenTo.take(1).listen((event) {
-    //   l.i('^^^^^^^^^^^^^^^Boo event: $event^^^^^^^^^^^^^^^^^^^^^');
-    // });
-    //
-  }
 }

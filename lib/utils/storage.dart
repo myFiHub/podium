@@ -10,7 +10,6 @@ class StorageKeys {
   static const userEmail = 'userEmail';
   static const userAvatar = 'userAvatar';
   static const ignoredOrAcceptedVersion = 'ignoredOrAcceptedVersion';
-  static const ongoingCallSortType = 'ongoingCallSortType';
   static const loginType = 'loginType';
   static const rememberSelectedWallet = 'rememberWallet';
   static const selectedWalletName = 'selectedWalletName';

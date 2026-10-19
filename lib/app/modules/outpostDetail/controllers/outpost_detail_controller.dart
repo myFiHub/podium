@@ -3,13 +3,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
@@ -77,13 +77,6 @@ class OutpostDetailController extends GetxController {
 
   final isJoining = false.obs;
   final isLoadingCohosts = false.obs;
-
-// image
-  // final ImagePicker _picker = ImagePicker();
-  // final RxBool isUploadingImage = false.obs;
-  // File? selectedFile;
-  // final RxString fileLocalAddress = ''.obs;
-
   // Inject ImageService
   final OutpostImageService imageService = Get.find();
 
@@ -187,52 +180,47 @@ class OutpostDetailController extends GetxController {
       }
     }
 
-    final sure = await showConfirmPopup(
-      cancelText: 'Cancel',
-      confirmText: 'Confirm',
-      confirmColor: ColorName.danger,
-      cancelColor: ColorName.white,
+    final sure = await showAppConfirm(
+      destructive: true,
       title: 'Reschedule The Outpost',
-      richMessage: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: 'Are you sure you want to reschedule the outpost?\n\n',
-              style: TextStyle(
-                color: ColorName.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                height: 1.5,
-              ),
+      richMessage: TextSpan(
+        children: [
+          TextSpan(
+            text: 'Are you sure you want to reschedule the outpost?\n\n',
+            style: TextStyle(
+              color: ColorName.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              height: 1.5,
             ),
-            TextSpan(
-              text: '⚠️ Important: ',
-              style: TextStyle(
-                color: ColorName.warning,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                height: 1.5,
-              ),
+          ),
+          TextSpan(
+            text: '⚠️ Important: ',
+            style: TextStyle(
+              color: ColorName.warning,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.5,
             ),
-            TextSpan(
-              text: 'The outpost will be rescheduled to the new time.\n\n',
-              style: TextStyle(
-                color: ColorName.white,
-                fontSize: 14,
-                height: 1.5,
-              ),
+          ),
+          TextSpan(
+            text: 'The outpost will be rescheduled to the new time.\n\n',
+            style: TextStyle(
+              color: ColorName.white,
+              fontSize: 14,
+              height: 1.5,
             ),
-            TextSpan(
-              text: 'All existing members will be notified of this change.',
-              style: TextStyle(
-                color: ColorName.primaryBlue,
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-                height: 1.5,
-              ),
+          ),
+          TextSpan(
+            text: 'All existing members will be notified of this change.',
+            style: TextStyle(
+              color: ColorName.primaryBlue,
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              height: 1.5,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
 
@@ -510,11 +498,6 @@ class OutpostDetailController extends GetxController {
                 .map((e) => e.uuid)
                 .contains(element.uuid))
             .toList();
-        // // remove the users that are already invited
-        // final filteredList2 = filteredList
-        //     .where(
-        //         (element) => !liveInvitedMemberIds.value.contains(element.id))
-        //     .toList();
         // remove my user from the list
         final filteredList3 =
             filteredList.where((element) => element.uuid != myId).toList();

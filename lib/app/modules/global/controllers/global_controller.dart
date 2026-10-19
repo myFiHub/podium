@@ -5,10 +5,12 @@ import 'package:dartx/dartx_io.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
+import 'package:podium/app/modules/global/services/app_version_checker.dart';
+import 'package:podium/app/modules/global/services/connectivity_service.dart';
+import 'package:podium/app/modules/global/services/deep_links.dart';
 import 'package:podium/app/modules/global/services/oneSignal.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
@@ -31,9 +33,7 @@ import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
-import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
 import 'package:web3auth_flutter/output.dart';
@@ -50,10 +50,6 @@ PairingMetadata _pairingMetadata = const PairingMetadata(
     native: 'podium://',
   ),
 );
-
-final _checkOptions = [
-  InternetCheckOption(uri: Uri.parse(Env.jitsiServerUrl)),
-];
 
 class GlobalUpdateIds {
   static const showArchivedOutposts = 'showArchivedOutposts';
@@ -75,7 +71,11 @@ class GlobalController extends GetxController {
   final myUserInfo = Rxn<UserModel>();
   final activeRoute = AppPages.INITIAL.obs;
   final isAutoLoggingIn = true.obs;
-  final isConnectedToInternet = true.obs;
+  late final connectivity = ConnectivityService(
+    onConnected: _onInternetConnected,
+    onResumed: () => ws_client?.ensureConnected(),
+  );
+  RxBool get isConnectedToInternet => connectivity.isConnected;
   late ReownAppKitModal web3ModalService;
   AptosAccount? aptosAccount;
   final loggedIn = false.obs;
@@ -94,7 +94,11 @@ class GlobalController extends GetxController {
   late String movementAptosPodiumProtocolAddress;
   late String movementAptosCheerBooAddress;
 
-  final deepLinkRoute = ''.obs;
+  late final deepLinks = DeepLinkHandler(
+    isLoggedIn: () => loggedIn.value,
+    logout: () => setLoggedIn(false),
+  );
+  RxString get deepLinkRoute => deepLinks.route;
 
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
@@ -110,12 +114,6 @@ class GlobalController extends GetxController {
     return chain;
   }
 
-  final connectionCheckerInstance = InternetConnection.createInstance(
-    checkInterval: const Duration(seconds: 5),
-    customCheckOptions: _checkOptions,
-    useDefaultOptions: false,
-  );
-
   @override
   void onInit() async {
     super.onInit();
@@ -126,7 +124,7 @@ class GlobalController extends GetxController {
     web3AuthReady = initializeWeb3Auth().catchError((e) {
       l.e("error initializing Web3Auth $e");
     });
-    final internetCheck = connectionCheckerInstance.hasInternetAccess;
+    final internetCheck = connectivity.hasInternetAccess();
     try {
       await Future.wait<void>([
         _getAndSetMetadata(),
@@ -146,21 +144,18 @@ class GlobalController extends GetxController {
     if (storage.read<String?>(StorageKeys.loginType) != null) {
       await web3AuthReady;
     }
-    bool result = await internetCheck;
-    l.d("has internet access: $result");
-    if (result) {
+    final reachable = await internetCheck;
+    l.d("has internet access: $reachable");
+    if (reachable) {
       initializeApp();
-    } else {
-      l.e("one of the main apis can't be reached: ${_checkOptions.map((e) => e.uri)}");
     }
-    initializeInternetConnectionChecker();
+    connectivity.start(appLifecycleState);
   }
 
   @override
   void onClose() {
     _tickerTimer?.cancel();
-    _internetStatusSubscription?.cancel();
-    _internetLifecycleWorker?.dispose();
+    connectivity.dispose();
     _walletAddressSubscription?.cancel();
     super.onClose();
   }
@@ -289,59 +284,6 @@ class GlobalController extends GetxController {
     l.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
   }
 
-  StreamSubscription<InternetStatus>? _internetStatusSubscription;
-  InternetStatus? _lastInternetStatus;
-  Worker? _internetLifecycleWorker;
-
-  /// Probing stops while the app is in the background (no network pings every
-  /// few seconds) and resumes when it comes back.
-  Future<void> initializeInternetConnectionChecker() async {
-    _listenToInternetStatus();
-    _internetLifecycleWorker ??= ever<AppLifecycleState>(
-      appLifecycleState,
-      (state) {
-        if (state == AppLifecycleState.resumed) {
-          _listenToInternetStatus();
-          ws_client?.ensureConnected();
-        } else if (state == AppLifecycleState.hidden ||
-            state == AppLifecycleState.paused) {
-          _internetStatusSubscription?.cancel();
-          _internetStatusSubscription = null;
-        }
-      },
-    );
-  }
-
-  void _listenToInternetStatus() {
-    if (_internetStatusSubscription != null) return;
-    _internetStatusSubscription = connectionCheckerInstance.onStatusChange
-        .listen((InternetStatus status) async {
-      // The checker re-emits the current status on every new subscription.
-      if (status == _lastInternetStatus) return;
-      _lastInternetStatus = status;
-      switch (status) {
-        case InternetStatus.connected:
-          isConnectedToInternet.value = true;
-          l.i("Internet connected");
-          ws_client?.ensureConnected();
-          try {
-            final versionResolved = await checkVersion();
-            if (versionResolved && !initializedOnce.value) {
-              await initializeApp();
-            }
-          } catch (e) {
-            l.e(e);
-          }
-
-          break;
-        case InternetStatus.disconnected:
-          l.f("Internet disconnected");
-          isConnectedToInternet.value = false;
-          break;
-      }
-    });
-  }
-
   StreamSubscription<String>? _walletAddressSubscription;
 
   Future<void> listenToWalletAddressChange() async {
@@ -374,57 +316,12 @@ class GlobalController extends GetxController {
     return;
   }
 
-  Future<void> openDeepLinkOutpost(String route) async {
-    if (route.contains(Routes.OUTPOST_DETAIL)) {
-      Navigate.to(
-        type: NavigationTypes.offAllNamed,
-        route: Routes.HOME,
-      );
-      final splited = route.split(Routes.OUTPOST_DETAIL);
-      if (splited.length < 2) {
-        l.f("splited: $splited");
-        return;
-      }
-      final outpostId = splited[1];
-      final outpostsController = Get.find<OutpostsController>();
-      outpostsController.joinOutpostAndOpenOutpostDetailPage(
-        outpostId: outpostId,
-        joiningByLink: true,
-      );
-      deepLinkRoute.value = '';
+  void setDeepLinkRoute(String route) => deepLinks.handle(route);
 
-      activeRoute.value = Routes.HOME;
-    }
-  }
-
-  Future<void> setDeepLinkRoute(String route) async {
-    deepLinkRoute.value = route;
-    if (loggedIn.value) {
-      l.e("logged in, opening deep link $route");
-      if (route.contains(Routes.OUTPOST_DETAIL)) {
-        openDeepLinkOutpost(route);
-      } else {
-        l.e("deep link not handled");
-      }
-    } else if (route.contains('referral')) {
-      openLoginPageWithReferral(route);
-    }
-  }
-
-  Future<void> openLoginPageWithReferral(String route) async {
-    l.f("opening login page with referral");
-    final referrerId = _extractReferrerId(route);
-    if (loggedIn.value) {
-      setLoggedIn(false);
-      return;
-    }
-    Navigate.to(
-      type: NavigationTypes.offAllNamed,
-      route: Routes.LOGIN,
-      parameters: {
-        LoginParametersKeys.referrerId: referrerId ?? '',
-      },
-    );
+  Future<void> _onInternetConnected() async {
+    ws_client?.ensureConnected();
+    AppVersionChecker().check(appMetadata);
+    if (!initializedOnce.value) await initializeApp();
   }
 
   void cleanStorage() {
@@ -443,100 +340,6 @@ class GlobalController extends GetxController {
     storage.write(StorageKeys.showArchivedOutposts, showArchivedOutposts);
     storage.write(IntroStorageKeys.viewedCreateOutpost, sawCreateGroupIntro);
     storage.write(IntroStorageKeys.viewedOngiongCall, sawOngoingCallIntro);
-  }
-
-  Future<bool> checkVersion() async {
-    final storage = GetStorage();
-    final ignoredOrAcceptedVersion =
-        storage.read<String>(StorageKeys.ignoredOrAcceptedVersion) ?? '';
-
-    final (
-      shouldCheckVersion,
-      forceUpdate,
-      version,
-    ) = (
-      appMetadata.version_check,
-      appMetadata.force_update,
-      appMetadata.version
-    );
-
-    if (shouldCheckVersion == false) {
-      l.d('version check disabled');
-      return true;
-    }
-
-    final currentVersion = Env.VERSION.split('+')[0];
-
-    // Skip if already ignored/accepted this version
-    if (ignoredOrAcceptedVersion == version) {
-      l.d('version already ignored/accepted');
-      return true;
-    }
-
-    // Compare versions using semantic versioning
-    final currentParts = currentVersion.split('.').map(int.parse).toList();
-    final remoteParts = version.split('.').map(int.parse).toList();
-
-    // Pad shorter version with zeros
-    while (currentParts.length < remoteParts.length) {
-      currentParts.add(0);
-    }
-    while (remoteParts.length < currentParts.length) {
-      remoteParts.add(0);
-    }
-
-    bool isRemoteVersionGreater = false;
-    for (int i = 0; i < currentParts.length; i++) {
-      if (remoteParts[i] > currentParts[i]) {
-        isRemoteVersionGreater = true;
-        break;
-      } else if (remoteParts[i] < currentParts[i]) {
-        break;
-      }
-    }
-
-    if (isRemoteVersionGreater) {
-      l.e('New version available: $version (current: $currentVersion)');
-      Get.dialog(
-        barrierDismissible: false,
-        AppDialog(
-          icon: Icons.system_update_rounded,
-          title: 'New version available',
-          message: 'A new version of Podium ($version) is available',
-          actions: [
-            if (!forceUpdate)
-              AppSecondaryButton(
-                label: 'Later',
-                onPressed: () {
-                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                  Get.close();
-                },
-              ),
-            AppPrimaryButton(
-              label: 'Update',
-              onPressed: () async {
-                if (!forceUpdate) {
-                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                }
-                try {
-                  await launchUrl(
-                    Uri.parse(
-                      Env.appStoreUrl,
-                    ),
-                  );
-                } catch (e) {
-                  l.e("error launching url $e");
-                }
-              },
-            ),
-          ],
-        ),
-      );
-      return true;
-    } else {
-      l.d('version is up to date');
-      return true;
-    }
   }
 
   Future<void> checkLogin() async {
@@ -581,10 +384,7 @@ class GlobalController extends GetxController {
         route: Routes.HOME,
       );
 
-      if (deepLinkRoute.value.isNotEmpty) {
-        final route = deepLinkRoute;
-        openDeepLinkOutpost(route.value);
-      }
+      deepLinks.openPendingOutpost();
       isAutoLoggingIn.value = false;
       await _initializeOneSignal(myUserId: myUserInfo.value?.uuid ?? '');
     }
@@ -609,15 +409,6 @@ class GlobalController extends GetxController {
     return await ws_client?.connect(token) ?? false;
   }
 
-  String? _extractReferrerId(String route) {
-    final splited = route.split('referral');
-    if (splited.length < 2) {
-      l.f("splited: $splited");
-      return null;
-    }
-    return splited[1];
-  }
-
   Future<void> _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
@@ -638,12 +429,7 @@ class GlobalController extends GetxController {
     }
     l.f('Navigating to login page');
 
-    final rerouteWithReferral =
-        deepLinkRoute.isNotEmpty && deepLinkRoute.contains('referral');
-    String referrerId = '';
-    if (rerouteWithReferral) {
-      referrerId = _extractReferrerId(deepLinkRoute.value) ?? '';
-    }
+    final referrerId = deepLinks.pendingReferrerId ?? '';
     Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.LOGIN,

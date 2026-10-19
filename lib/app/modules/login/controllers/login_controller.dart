@@ -12,6 +12,7 @@ import 'package:podium/app/modules/global/blockchain/blockchain.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
+import 'package:podium/app/modules/global/services/deep_links.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
@@ -173,8 +174,8 @@ class LoginController extends GetxController {
     referrerIsFul.value = false;
     referrer.value = null;
     Future.delayed(const Duration(seconds: 0), () async {
-      referrerId =
-          id ?? _extractReferrerId(globalController.deepLinkRoute.value);
+      referrerId = id ??
+          (DeepLink.referrerId(globalController.deepLinkRoute.value) ?? '');
       if (referrerId.isNotEmpty) {
         referrer.value = await _userRepository.getUserData(referrerId);
         storage.write(StorageKeys.referrerId, referrerId);
@@ -199,15 +200,6 @@ class LoginController extends GetxController {
         }
       }
     });
-  }
-
-  String _extractReferrerId(String route) {
-    final splited = route.split('referral/');
-    if (splited.length < 2) {
-      l.f("splited: $splited");
-      return '';
-    }
-    return splited[1];
   }
 
   void removeLogingInState() {

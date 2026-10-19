@@ -10,6 +10,7 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/scoreOutpostPrompt.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/live_members.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
@@ -162,32 +163,17 @@ class OutpostCallController extends GetxController {
 
   void _updateStageAndAudience() {
     final creatorId = outpost.value?.creator_user_uuid;
-    final speaking = <LiveMember>[];
-    final silent = <LiveMember>[];
-    final audience = <LiveMember>[];
-    for (final member in members.value) {
-      if (!isStageMember(member, creatorId: creatorId)) {
-        audience.add(member);
-      } else if (member.is_speaking) {
-        speaking.add(member);
-      } else {
-        silent.add(member);
-      }
+    final (:stage, :audience, :talking) = partitionLiveMembers(
+      members.value,
+      isOnStage: (m) => isStageMember(m, creatorId: creatorId),
+    );
+    talkingCount.value = talking;
+    if (!sameMemberOrder(stageMembers.value, stage)) {
+      stageMembers.value = stage;
     }
-    final stage = [...speaking, ...silent];
-    talkingCount.value = speaking.length;
-    if (!_sameOrder(stageMembers.value, stage)) stageMembers.value = stage;
-    if (!_sameOrder(audienceMembers.value, audience)) {
+    if (!sameMemberOrder(audienceMembers.value, audience)) {
       audienceMembers.value = audience;
     }
-  }
-
-  static bool _sameOrder(List<LiveMember> a, List<LiveMember> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (!identical(a[i], b[i])) return false;
-    }
-    return true;
   }
 
   void updateReactionsMapByWsEvent(IncomingMessage incomingMessage) {

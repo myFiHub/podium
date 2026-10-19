@@ -13,7 +13,7 @@ import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
-final _options = const LiveOptions(
+const _options = LiveOptions(
   // Start animation after (default zero)
   // delay: Duration(seconds: 0),
 

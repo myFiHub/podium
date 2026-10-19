@@ -27,10 +27,6 @@ class ReferalController extends GetxController {
     });
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
   @override
   void onClose() {
@@ -38,8 +34,8 @@ class ReferalController extends GetxController {
     loggedInListener?.cancel();
   }
 
-  referButtonClicked() async {
-    Clipboard.setData(ClipboardData(text: '${generateReferralLink()}'));
+  Future<void> referButtonClicked() async {
+    Clipboard.setData(ClipboardData(text: generateReferralLink()));
     Toast.success(
       title: 'Copied!',
       message: 'Referral link copied to clipboard',
@@ -47,6 +43,6 @@ class ReferalController extends GetxController {
   }
 }
 
-generateReferralLink() {
-  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}/referral?referrerId=${myId}&apn=com.web3podium";
+String generateReferralLink() {
+  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}/referral?referrerId=$myId&apn=com.web3podium";
 }

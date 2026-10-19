@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-final defaultAvatar = 'https://ui-avatars.com/api/?name=Oo.png';
+const defaultAvatar = 'https://ui-avatars.com/api/?name=Oo.png';
 
-avatarPlaceHolder(String? name) {
+String avatarPlaceHolder(String? name) {
   final n = (name == null || name.isEmpty) ? 'Oo' : name;
   return 'https://ui-avatars.com/api/?name=${n.replaceAll(' ', '+')}.png';
 }

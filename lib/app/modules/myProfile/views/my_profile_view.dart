@@ -10,7 +10,7 @@ import 'package:podium/utils/styles.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
-  const MyProfileView({Key? key}) : super(key: key);
+  const MyProfileView({super.key});
   @override
   Widget build(BuildContext context) {
     return PopScope(

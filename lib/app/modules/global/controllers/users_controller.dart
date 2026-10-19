@@ -19,7 +19,7 @@ class UsersController extends GetxController {
   // current user is set by listening to global controller's currentUserInfo
   final currentUserInfo = Rxn<UserModel>();
   final OutpostsController groupsController = Get.find<OutpostsController>();
-  final followingsInProgress = Map<String, String>().obs;
+  final followingsInProgress = <String, String>{}.obs;
   final gettingUserInfo_uuid = ''.obs;
   @override
   void onInit() {
@@ -30,15 +30,7 @@ class UsersController extends GetxController {
     });
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
 
   Future<UserModel?> getUserById(String id) async {
     final users = await HttpApis.podium.getUsersByIds([id]);

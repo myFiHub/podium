@@ -44,7 +44,7 @@ String loginTypeToDisplayName(String loginType) {
 
 class LoginTypeService {
   static final _storage = GetStorage();
-  static setLoginType(String loginType) {
+  static void setLoginType(String loginType) {
     _storage.write(StorageKeys.loginType, loginType);
   }
 

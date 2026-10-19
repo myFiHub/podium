@@ -37,11 +37,11 @@ class AptosMovement {
   static const _podiumProtocolName = 'PodiumProtocol';
   static const _cheerBooName = 'CheerOrBooPodium';
 
-  static get podiumProtocolAddress {
+  static String get podiumProtocolAddress {
     return movementAptosPodiumProtocolAddress;
   }
 
-  static get cheerBooAddress {
+  static String get cheerBooAddress {
     return movementAptosCheerBooAddress;
   }
 
@@ -184,7 +184,7 @@ class AptosMovement {
 
       final PercentageString = percentage.toString();
       final payload = EntryFunctionPayload(
-        functionId: "${cheerBooAddress}::$_cheerBooName::cheer_or_boo",
+        functionId: "$cheerBooAddress::$_cheerBooName::cheer_or_boo",
         typeArguments: [],
         arguments: [
           target,
@@ -200,7 +200,7 @@ class AptosMovement {
         payload,
       );
       final signedTransaction =
-          await client.signTransaction(account, transactionRequest);
+          client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
@@ -218,7 +218,7 @@ class AptosMovement {
   }) async {
     try {
       final response = await client.view(
-        "${podiumProtocolAddress}::$_podiumProtocolName::calculate_buy_price_with_fees",
+        "$podiumProtocolAddress::$_podiumProtocolName::calculate_buy_price_with_fees",
         [],
         [
           sellerAddress,
@@ -242,7 +242,7 @@ class AptosMovement {
   }) async {
     try {
       final respone = await client.view(
-        "${podiumProtocolAddress}::$_podiumProtocolName::get_balance",
+        "$podiumProtocolAddress::$_podiumProtocolName::get_balance",
         [],
         [
           myAddress ?? myUser.aptos_address,
@@ -310,7 +310,7 @@ class AptosMovement {
         return (null, 'Cancelled');
       }
       final payload = EntryFunctionPayload(
-        functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
+        functionId: "$podiumProtocolAddress::$_podiumProtocolName::buy_pass",
         typeArguments: [],
         /**
           "params": [
@@ -331,7 +331,7 @@ class AptosMovement {
         payload,
       );
       final signedTransaction =
-          await client.signTransaction(account, transactionRequest);
+          client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
@@ -373,7 +373,7 @@ class AptosMovement {
   }) async {
     try {
       final response = await client.view(
-        "${podiumProtocolAddress}::$_podiumProtocolName::calculate_sell_price_with_fees",
+        "$podiumProtocolAddress::$_podiumProtocolName::calculate_sell_price_with_fees",
         [],
         [sellerAddress, numberOfTickets.toString()],
       );
@@ -425,7 +425,7 @@ class AptosMovement {
         return (false, 'Cancelled');
       }
       final payload = EntryFunctionPayload(
-        functionId: "${podiumProtocolAddress}::$_podiumProtocolName::sell_pass",
+        functionId: "$podiumProtocolAddress::$_podiumProtocolName::sell_pass",
         typeArguments: [],
         arguments: [sellerAddress, numberOfTickets.toString()],
       );
@@ -434,7 +434,7 @@ class AptosMovement {
         payload,
       );
       final signedTransaction =
-          await client.signTransaction(account, transactionRequest);
+          client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);

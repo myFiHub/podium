@@ -367,7 +367,7 @@ class _PersonRow extends StatelessWidget {
 }
 
 class _HostItem extends StatelessWidget {
-  final Luma_HostModel host;
+  final LumaHostModel host;
   const _HostItem({required this.host});
   @override
   Widget build(BuildContext context) {
@@ -437,9 +437,7 @@ class _DoneButton extends GetView<OutpostDetailController> {
             label: 'Share Luma Link',
             icon: Icons.ios_share_rounded,
             onPressed: () {
-              Share.share(
-                eventLink ?? '',
-              );
+              SharePlus.instance.share(ShareParams(text: eventLink ?? ''));
             },
           ),
         ),
@@ -448,7 +446,7 @@ class _DoneButton extends GetView<OutpostDetailController> {
   }
 }
 
-openLumaDetailsDialog() {
+void openLumaDetailsDialog() {
   Get.dialog(
     const AppDialogMotion(child: LumaDetailsDialog()),
   );

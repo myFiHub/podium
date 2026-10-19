@@ -60,7 +60,7 @@ class _LocalShareBanner extends StatelessWidget {
                   "You're sharing your screen",
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
                 const SizedBox(height: 2),
                 Text(

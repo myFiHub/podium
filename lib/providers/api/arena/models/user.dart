@@ -42,14 +42,10 @@ class StarsArenaUser {
     this.lastKeyPrice,
   });
 
-  get mainAddress {
+  String get mainAddress {
     String? tmp = addressBeforeDynamicMigration;
-    if (tmp == null) {
-      tmp = dynamicAddress;
-    }
-    if (tmp == null) {
-      tmp = address;
-    }
+    tmp ??= dynamicAddress;
+    tmp ??= address;
     return tmp;
   }
 

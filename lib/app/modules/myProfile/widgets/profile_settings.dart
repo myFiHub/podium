@@ -84,7 +84,7 @@ class DeleteAccountButton extends GetView<MyProfileController> {
 }
 
 class ReferalSystem extends GetView<ReferalController> {
-  const ReferalSystem({Key? key}) : super(key: key);
+  const ReferalSystem({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +113,7 @@ class ReferalSystem extends GetView<ReferalController> {
 }
 
 class BugsAndFeedbacks extends GetView<MyProfileController> {
-  const BugsAndFeedbacks({Key? key}) : super(key: key);
+  const BugsAndFeedbacks({super.key});
 
   @override
   Widget build(BuildContext context) {

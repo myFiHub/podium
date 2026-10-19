@@ -5,7 +5,7 @@ import 'package:podium/utils/palette.dart';
 class ImageOverlay extends StatelessWidget {
   /// Creates a image widget with shaded overlay.
   const ImageOverlay({
-    Key? key,
+    super.key,
     this.height,
     this.width,
     this.color,
@@ -20,7 +20,7 @@ class ImageOverlay extends StatelessWidget {
     this.boxFit = BoxFit.fill,
     this.border,
     this.shape = BoxShape.rectangle,
-  }) : super(key: key);
+  });
 
   /// define image's [double] height
   final double? height;

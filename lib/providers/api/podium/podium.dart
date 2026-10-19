@@ -134,7 +134,7 @@ class PodiumApi {
       // An outage must never look like a required update.
       return const PodiumAppMetadata(
         force_update: false,
-        movement_aptos_metadata: Movement_Aptos_Metadata(
+        movement_aptos_metadata: MovementAptosMetadata(
           chain_id: "126",
           cheer_boo_address:
               "0xd2f0d0cf38a4c64620f8e9fcba104e0dd88f8d82963bef4ad57686c3ee9ed7aa",

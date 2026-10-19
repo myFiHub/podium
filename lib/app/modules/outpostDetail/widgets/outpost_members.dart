@@ -31,7 +31,7 @@ class MembersList extends GetView<OutpostDetailController> {
       }
       // add my user to the top if it doesn't exist in the list
 
-      if (members.length == 0) {
+      if (members.isEmpty) {
         return const SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.all(32),
@@ -208,7 +208,7 @@ class UserInvitationBottomSheetContent
                                 tooltip: 'Invite to speak',
                                 icon: Icons.mic_rounded,
                                 color: AppColors.success,
-                                loading: loadingInviteId == user.uuid + 'true',
+                                loading: loadingInviteId == '${user.uuid}true',
                                 onPressed: () {
                                   controller.inviteUserToJoinThisOutpost(
                                     userId: user.uuid,
@@ -223,7 +223,7 @@ class UserInvitationBottomSheetContent
                               tooltip: 'Invite to listen',
                               icon: Icons.headphones_rounded,
                               color: AppColors.primary,
-                              loading: loadingInviteId == user.uuid + 'false',
+                              loading: loadingInviteId == '${user.uuid}false',
                               onPressed: () {
                                 controller.inviteUserToJoinThisOutpost(
                                   userId: user.uuid,

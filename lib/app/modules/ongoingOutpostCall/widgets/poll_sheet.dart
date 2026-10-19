@@ -155,7 +155,7 @@ class _NoPoll extends StatelessWidget {
           const SizedBox(height: 12),
           const Text(
             'No poll right now',
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: TextStyle(fontWeight: FontWeight.w600),
           ),
         ],
       ),

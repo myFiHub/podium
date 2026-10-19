@@ -118,7 +118,7 @@ class EditableImage extends StatefulWidget {
   final String outpostId;
   final Future<void> Function(String downloadUrl)? onUploadComplete;
 
-  EditableImage({
+  const EditableImage({
     super.key,
     required this.imageSrc,
     required this.imageAlt,

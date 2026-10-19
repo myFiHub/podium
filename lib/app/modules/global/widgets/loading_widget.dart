@@ -15,12 +15,12 @@ class LoadingWidget extends StatelessWidget {
   final SpinKitWaveType type;
 
   const LoadingWidget({
-    Key? key,
+    super.key,
     this.size = 24.0,
     this.color,
     this.type = SpinKitWaveType
         .center, // Changed default to center for a more typical wave
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -157,10 +157,6 @@ class GlobalController extends GetxController {
     initializeInternetConnectionChecker();
   }
 
-  @override
-  void onReady() async {
-    super.onReady();
-  }
 
   @override
   void onClose() {
@@ -171,13 +167,13 @@ class GlobalController extends GetxController {
     super.onClose();
   }
 
-  _getAndSetMetadata() async {
+  Future<void> _getAndSetMetadata() async {
     final metadata = await HttpApis.podium.appMetadata();
     appMetadata = metadata;
     jitsiServerAddress = appMetadata.va;
   }
 
-  _addCustomNetworks() async {
+  Future<void> _addCustomNetworks() async {
     final movementAptosMetadata = appMetadata.movement_aptos_metadata;
     movementAptosNetwork = ReownAppKitModalNetworkInfo(
       name: movementAptosMetadata.name,
@@ -374,7 +370,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  saveUserWalletAddressOnFirebase(String walletAddress) async {
+  Future<void> saveUserWalletAddressOnFirebase(String walletAddress) async {
     await HttpApis.podium.updateMyUserData({
       "external_wallet_address": walletAddress,
     });
@@ -435,7 +431,7 @@ class GlobalController extends GetxController {
     );
   }
 
-  cleanStorage() {
+  void cleanStorage() {
     final storage = GetStorage();
     final sawProfileIntro =
         storage.read<bool?>(IntroStorageKeys.viewedMyProfile);
@@ -547,7 +543,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  checkLogin() async {
+  Future<void> checkLogin() async {
     isAutoLoggingIn.value = true;
     try {
       final loginType = storage.read<String?>(StorageKeys.loginType);
@@ -745,15 +741,13 @@ class GlobalController extends GetxController {
     );
   }
 
-  addOrSwitchAccount(Provider provider, {String? email}) async {
+  Future<void> addOrSwitchAccount(Provider provider, {String? email}) async {
     try {
       final currentPrivateKey = await Web3AuthFlutter.getPrivKey();
       final currentAccountAddress = privateKeyToPublicKey(currentPrivateKey);
       addingOrSwitchingAccount_provider.value = provider;
       if (provider == Provider.email_passwordless) {
-        if (email == null) {
-          email = await showDialogToGetTheEmail();
-        }
+        email ??= await showDialogToGetTheEmail();
         if (email.isNullOrEmpty) {
           addingOrSwitchingAccount_provider.value = null;
           return;

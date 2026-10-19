@@ -32,10 +32,6 @@ class NotificationsController extends GetxController {
     });
   }
 
-  @override
-  void onReady() async {
-    super.onReady();
-  }
 
   @override
   void onClose() {
@@ -43,7 +39,7 @@ class NotificationsController extends GetxController {
     super.onClose();
   }
 
-  getNotifications() async {
+  Future<void> getNotifications() async {
     final notifs = await HttpApis.podium.getNotifications();
     int numberOfUnread = 0;
     for (final notif in notifs) {
@@ -55,8 +51,8 @@ class NotificationsController extends GetxController {
     notifications.assignAll(notifs);
   }
 
-  markNotificationAsRead({required String id}) async {
-    loadingInviteId.value = id + 'read';
+  Future<void> markNotificationAsRead({required String id}) async {
+    loadingInviteId.value = '${id}read';
     final success = await HttpApis.podium.markNotificationAsRead(id: id);
     if (success) {
       await getNotifications();
@@ -64,18 +60,18 @@ class NotificationsController extends GetxController {
     loadingInviteId.value = '';
   }
 
-  openUserProfile({required String id, required String notifId}) async {
+  Future<void> openUserProfile({required String id, required String notifId}) async {
     loadingUserId.value = id + notifId;
     final usersController = Get.find<UsersController>();
     await usersController.openUserProfile(id);
     loadingUserId.value = '';
   }
 
-  acceptOutpostInvitation({
+  Future<void> acceptOutpostInvitation({
     required NotificationModel notif,
   }) async {
     try {
-      loadingInviteId.value = notif.uuid + 'accept';
+      loadingInviteId.value = '${notif.uuid}accept';
       final outpostId = notif.invite_metadata!.outpost_uuid;
       await outpostsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: outpostId,
@@ -92,11 +88,11 @@ class NotificationsController extends GetxController {
     }
   }
 
-  rejectOutpostInvitation({
+  Future<void> rejectOutpostInvitation({
     required NotificationModel notif,
   }) async {
     try {
-      loadingInviteId.value = notif.uuid + 'reject';
+      loadingInviteId.value = '${notif.uuid}reject';
       final success = await HttpApis.podium.rejectInvitation(
         RejectInvitationRequest(
           inviter_uuid: notif.invite_metadata!.inviter_uuid,

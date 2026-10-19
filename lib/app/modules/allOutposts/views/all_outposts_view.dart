@@ -13,7 +13,7 @@ final _scrollController = ScrollController();
 // listen to scroll controller to show or hide the bottom button
 
 class AllOutpostsView extends GetView<AllOutpostsController> {
-  const AllOutpostsView({Key? key}) : super(key: key);
+  const AllOutpostsView({super.key});
 
   @override
   Widget build(BuildContext context) {

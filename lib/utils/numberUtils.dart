@@ -1,3 +1,3 @@
-hexToInt(String hex) {
+int hexToInt(String hex) {
   return int.parse(hex, radix: 16);
 }

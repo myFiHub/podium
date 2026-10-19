@@ -77,7 +77,7 @@ class OutpostBottomActionBar extends StatelessWidget {
   final OutpostModel outpost;
   final bool showInvite;
   const OutpostBottomActionBar(
-      {required this.outpost, required this.showInvite});
+      {super.key, required this.outpost, required this.showInvite});
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +199,7 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
 }
 
 class LumaIconButton extends GetView<OutpostDetailController> {
-  const LumaIconButton();
+  const LumaIconButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -269,7 +269,7 @@ class SetReminderButton extends GetView<OutpostDetailController> {
       if (outpost == null) {
         return const SizedBox();
       }
-      int? reminderIsSetForInMinotes = null;
+      int? reminderIsSetForInMinotes;
       if (remindMeBefore != null) {
         reminderIsSetForInMinotes = remindMeBefore;
       }

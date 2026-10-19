@@ -125,13 +125,13 @@ void _copyToClipboard(String text, {String? prefix}) async {
   await Get.closeCurrentSnackbar();
   Clipboard.setData(ClipboardData(text: text)).then(
     (_) => Toast.info(
-      title: "${prefix} Copied",
+      title: "$prefix Copied",
       message: text,
     ),
   );
 }
 
-_showTransactionConfirmationDialog({
+Future<dynamic> _showTransactionConfirmationDialog({
   required TransactionMetadata metadata,
   required String chainId,
 }) async {

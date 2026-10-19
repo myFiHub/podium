@@ -10,7 +10,7 @@ class ArenaApi {
 
   Future<StarsArenaUser?> getUserFromStarsArenaByHandle(String handle) async {
     try {
-      final String url = _starsArenaBaseUrl + '/user/handle?handle=$handle';
+      final String url = '$_starsArenaBaseUrl/user/handle?handle=$handle';
       // request with dio
       final response = await dio.get(url);
       if (response.statusCode == 200) {
@@ -29,7 +29,7 @@ class ArenaApi {
 
   Future<StarsArenaUser?> getUserFromStarsArenaById(String handle) async {
     try {
-      final String url = _starsArenaBaseUrl + '/user/id?userId=$handle';
+      final String url = '$_starsArenaBaseUrl/user/id?userId=$handle';
       // request with dio
       final response = await dio.get(url);
       if (response.statusCode == 200) {

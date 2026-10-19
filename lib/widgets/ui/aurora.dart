@@ -427,13 +427,14 @@ class _AppPressScaleState extends State<AppPressScale> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled || reduceMotion(context)) return widget.child;
+    // Keep the same widget tree when disabled so the child isn't remounted.
+    final active = widget.enabled && !reduceMotion(context);
     return Listener(
-      onPointerDown: (_) => _set(true),
+      onPointerDown: active ? (_) => _set(true) : null,
       onPointerUp: (_) => _set(false),
       onPointerCancel: (_) => _set(false),
       child: AnimatedScale(
-        scale: _pressed ? widget.scale : 1,
+        scale: active && _pressed ? widget.scale : 1,
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
         child: widget.child,

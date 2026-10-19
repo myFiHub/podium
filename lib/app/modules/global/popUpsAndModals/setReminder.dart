@@ -71,9 +71,7 @@ Future<int?> setReminder({
   required int scheduledFor,
   String? eventUrl,
 }) async {
-  if (timesList == null) {
-    timesList = defaultTimeList(endsAt: scheduledFor);
-  }
+  timesList ??= defaultTimeList(endsAt: scheduledFor);
   final hasNotificationPermission =
       await getPermission(Permission.notification);
   if (!hasNotificationPermission) {
@@ -165,7 +163,7 @@ Future<int?> setReminder({
     if (isSet) {
       Toast.success(
         message:
-            'You will be reminded ${alarmMeBefore == 0 ? "when Event is started" : "${alarmMeBefore} minutes before the event"}',
+            'You will be reminded ${alarmMeBefore == 0 ? "when Event is started" : "$alarmMeBefore minutes before the event"}',
       );
       final updatedOutpost =
           outpost.copyWith.reminder_offset_minutes(alarmMeBefore);

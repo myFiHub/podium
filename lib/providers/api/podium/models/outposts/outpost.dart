@@ -29,8 +29,8 @@ class OutpostModel {
   final String speak_type;
   final String subject;
   final List<String> tags;
-  final List<_TicketToEnterModel>? tickets_to_enter;
-  final List<_TicketToSpeakModel>? tickets_to_speak;
+  final List<TicketToEnterModel>? tickets_to_enter;
+  final List<TicketToSpeakModel>? tickets_to_speak;
   final int? online_users_count;
   bool i_am_member;
   final int? reminder_offset_minutes;
@@ -73,35 +73,35 @@ class OutpostModel {
 }
 
 @JsonSerializable()
-class _TicketToEnterModel {
+class TicketToEnterModel {
   final String access_type;
   final String address;
   final String? user_uuid;
 
-  _TicketToEnterModel({
+  TicketToEnterModel({
     required this.access_type,
     required this.address,
     this.user_uuid,
   });
 
-  factory _TicketToEnterModel.fromJson(Map<String, dynamic> json) =>
+  factory TicketToEnterModel.fromJson(Map<String, dynamic> json) =>
       _$TicketToEnterModelFromJson(json);
   Map<String, dynamic> toJson() => _$TicketToEnterModelToJson(this);
 }
 
 @JsonSerializable()
-class _TicketToSpeakModel {
+class TicketToSpeakModel {
   final String access_type;
   final String address;
   final String? user_uuid;
 
-  _TicketToSpeakModel({
+  TicketToSpeakModel({
     required this.access_type,
     required this.address,
     this.user_uuid,
   });
 
-  factory _TicketToSpeakModel.fromJson(Map<String, dynamic> json) =>
+  factory TicketToSpeakModel.fromJson(Map<String, dynamic> json) =>
       _$TicketToSpeakModelFromJson(json);
   Map<String, dynamic> toJson() => _$TicketToSpeakModelToJson(this);
 }

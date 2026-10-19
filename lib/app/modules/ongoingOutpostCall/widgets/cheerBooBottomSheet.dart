@@ -11,8 +11,7 @@ import 'package:reown_appkit/reown_appkit.dart';
 
 class CheerBooBottomSheet extends StatefulWidget {
   final bool isCheer;
-  const CheerBooBottomSheet({required this.isCheer, Key? key})
-      : super(key: key);
+  const CheerBooBottomSheet({required this.isCheer, super.key});
 
   @override
   State<CheerBooBottomSheet> createState() => _CheerBooBottomSheetState();
@@ -38,9 +37,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
       // convert to min and sec
       final min = calculatedSecondsToAdd ~/ 60;
       final sec = calculatedSecondsToAdd % 60;
-      parsedValue = 'will ${widget.isCheer ? "add" : "reduce"} $min min' +
-          (sec > 0 ? ' $sec sec' : '') +
-          ' to selected user\'s time';
+      parsedValue = 'will ${widget.isCheer ? "add" : "reduce"} $min min${sec > 0 ? ' $sec sec' : ''} to selected user\'s time';
     } else {
       parsedValue = 'enter a valid amount';
     }
@@ -56,8 +53,8 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
           ),
         ),
         borderRadius: const BorderRadius.only(
-          topLeft: const Radius.circular(20),
-          topRight: const Radius.circular(20),
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
       ),
       child: FormBuilder(
@@ -69,7 +66,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
               widget.isCheer ? 'Cheer' : 'Boo',
               style: const TextStyle(fontSize: 20),
             ),
-            Container(
+            SizedBox(
               height: 20,
               child: Text(
                 parsedValue,
@@ -80,7 +77,7 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
                 ),
               ),
             ),
-            Container(
+            SizedBox(
               height: 85,
               child: FormBuilderField(
                 builder: (FormFieldState<String?> field) {

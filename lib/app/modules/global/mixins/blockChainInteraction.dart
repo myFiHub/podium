@@ -10,7 +10,6 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/env.dart' as Environment;
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/utils/palette.dart';
@@ -43,7 +42,9 @@ Future<bool> ext_cheerOrBoo({
           message:
               "Please switch to ${chain.name} chain on your wallet and try again");
       return false;
-    } catch (e) {}
+    } catch (e) {
+      l.e('Failed to switch chain: $e');
+    }
   }
   final transaction = Transaction(
     from: parseAddress(externalWalletAddress!),
@@ -98,7 +99,7 @@ Future<bool> ext_cheerOrBoo({
   }
 }
 
-internal_cheerOrBoo({
+Future<bool?> internal_cheerOrBoo({
   required String target,
   required List<String> receiverAddresses,
   required num amount,
@@ -936,7 +937,7 @@ String hexToAscii(String hexString) => List.generate(
     ).join();
 
 String? fihubAddress(String chainId) {
-  return Environment.Env.fihubAddress(chainId);
+  return Env.fihubAddress(chainId);
 }
 
 class WalletNames {
@@ -1073,7 +1074,7 @@ class SelectChainContent extends GetView<GlobalController> {
                     : null),
           if (externalWalletEnabled == false)
             Text(
-              "to use External Wallet, please switch to ${targetChain.name} (${targetChainId}) on your wallet and try again",
+              "to use External Wallet, please switch to ${targetChain.name} ($targetChainId) on your wallet and try again",
               style: TextStyle(color: ColorName.danger, fontSize: 12),
               textAlign: TextAlign.center,
             ),

@@ -5,7 +5,7 @@ import 'package:podium/widgets/textField/textField.dart';
 
 class Input extends StatefulWidget {
   const Input(
-      {Key? key,
+      {super.key,
       this.editingbordercolor,
       this.idlebordercolor,
       this.borderwidth = 1,
@@ -69,8 +69,7 @@ class Input extends StatefulWidget {
       this.buildCounter,
       this.scrollPhysics,
       this.autofillHints,
-      this.autoValidateMode = AutovalidateMode.disabled})
-      : super(key: key);
+      this.autoValidateMode = AutovalidateMode.disabled});
 
   final Color? normalbordercolor;
   Color get _normalbordercolor => normalbordercolor ?? ColorName.cardBorder;
@@ -152,7 +151,7 @@ class Input extends StatefulWidget {
   final AutovalidateMode autoValidateMode;
 
   @override
-  _InputState createState() => _InputState();
+  State<Input> createState() => _InputState();
 }
 
 class _InputState extends State<Input> {

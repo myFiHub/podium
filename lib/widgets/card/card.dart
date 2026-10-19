@@ -15,7 +15,7 @@ class Card extends StatelessWidget {
   /// The [elevation] must be null or non-negative. The [borderOnForeground]
   /// must not be null.
   const Card(
-      {Key? key,
+      {super.key,
       this.color,
       this.elevation,
       this.shape,
@@ -42,8 +42,7 @@ class Card extends StatelessWidget {
         assert(
             color == null || gradient == null,
             'Cannot provide both a color and a decoration\n'
-            'The color argument is just a shorthand for "decoration: new BoxDecoration(color: color)".'),
-        super(key: key);
+            'The color argument is just a shorthand for "decoration: new BoxDecoration(color: color)".');
 
   /// defines the card's height
   final double? height;
@@ -153,13 +152,13 @@ class Card extends StatelessWidget {
 
     final Widget overlayImage = ImageOverlay(
       width: MediaQuery.of(context).size.width,
-      child: cardChild,
       color: color ?? ColorName.cardBackground.withAlpha(200),
       image: imageOverlay,
       boxFit: boxFit,
       colorFilter: colorFilter,
       border: border,
       borderRadius: borderRadius ?? _defaultRadius,
+      child: cardChild,
     );
 
     return Container(

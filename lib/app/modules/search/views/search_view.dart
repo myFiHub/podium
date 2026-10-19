@@ -11,7 +11,7 @@ import 'package:podium/widgets/ui/app_ui.dart';
 import '../controllers/search_controller.dart';
 
 class SearchTextField extends GetView<SearchPageController> {
-  const SearchTextField({Key? key}) : super(key: key);
+  const SearchTextField({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +66,7 @@ class SearchTextField extends GetView<SearchPageController> {
 }
 
 class SearchView extends GetView<SearchPageController> {
-  const SearchView({Key? key}) : super(key: key);
+  const SearchView({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -8,7 +8,7 @@ import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class ScheduleToggle extends GetView<CreateOutpostController> {
-  const ScheduleToggle();
+  const ScheduleToggle({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +118,7 @@ class ScheduleToggle extends GetView<CreateOutpostController> {
 }
 
 class AddLumaEventCheckboxAndButtons extends GetView<CreateOutpostController> {
-  const AddLumaEventCheckboxAndButtons();
+  const AddLumaEventCheckboxAndButtons({super.key});
 
   @override
   Widget build(BuildContext context) {

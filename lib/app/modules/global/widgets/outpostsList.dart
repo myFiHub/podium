@@ -49,7 +49,6 @@ class OutpostsList extends GetView<OutpostsController> {
 
       if (listPage != ListPage.search && pageOutposts.isEmpty) {
         return ListView.builder(
-          cacheExtent: 200,
           controller: scrollController,
           padding: _listPadding,
           physics: const NeverScrollableScrollPhysics(),
@@ -64,7 +63,6 @@ class OutpostsList extends GetView<OutpostsController> {
         List<OutpostModel> listToShow = outpostsList!;
 
         listWidget = ListView.builder(
-          cacheExtent: 200,
           controller: scrollController,
           padding: _listPadding,
           itemCount: listToShow.length,
@@ -268,7 +266,7 @@ class _OutpostCard extends StatelessWidget {
     return Obx(() {
       final isJoining = controller.joiningOutpostId.value == outpost.uuid;
       return AppCard(
-        key: Key(outpost.uuid + "OutpostCard"),
+        key: Key("${outpost.uuid}OutpostCard"),
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
         borderColor: isJoining ? AppColors.primary.withAlpha(140) : null,
@@ -330,12 +328,12 @@ class _OutpostHeader extends StatelessWidget {
             if (isScheduled)
               _ScheduledBanner(
                 outpost: outpost,
-                key: Key(outpost.uuid + 'scheduledBanner'),
+                key: Key('${outpost.uuid}scheduledBanner'),
               ),
             _NumberOfActiveUsers(
               outpost: outpost,
               topGap: isScheduled ? 6 : 0,
-              key: Key(outpost.uuid + 'numberOfActiveUsers'),
+              key: Key('${outpost.uuid}numberOfActiveUsers'),
             ),
           ],
         ),
@@ -549,8 +547,11 @@ class _OutpostActions extends StatelessWidget {
                         "outpost_name": outpost.name,
                       },
                     );
-                    Share.share(
-                        generateOutpostShareUrl(outpostId: outpost.uuid));
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text: generateOutpostShareUrl(outpostId: outpost.uuid),
+                      ),
+                    );
                   },
           ),
         if (canLeaveOutpost(outpost: outpost))
@@ -786,7 +787,7 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
 }
 
 String generateOutpostShareUrl({required String outpostId}) {
-  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.OUTPOST_DETAIL}?id=${outpostId}&apn=com.web3podium&ibi=com.web3podium";
+  return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.OUTPOST_DETAIL}?id=$outpostId&apn=com.web3podium&ibi=com.web3podium";
 }
 
 class _ScheduledBanner extends StatelessWidget {
@@ -1051,7 +1052,7 @@ String parseAccessType(String? accessType) {
   }
 }
 
-canShareOutpostUrl({required OutpostModel outpost}) {
+bool canShareOutpostUrl({required OutpostModel outpost}) {
   final GlobalController globalController = Get.find();
   if (globalController.myUserInfo.value == null) {
     return false;
@@ -1071,7 +1072,7 @@ canShareOutpostUrl({required OutpostModel outpost}) {
   return false;
 }
 
-canLeaveOutpost({required OutpostModel outpost}) {
+bool canLeaveOutpost({required OutpostModel outpost}) {
   final GlobalController globalController = Get.find();
   if (globalController.myUserInfo.value == null) {
     return false;
@@ -1084,7 +1085,7 @@ canLeaveOutpost({required OutpostModel outpost}) {
   return amIMember;
 }
 
-canArchiveOutpost({required OutpostModel outpost}) {
+bool canArchiveOutpost({required OutpostModel outpost}) {
   final GlobalController globalController = Get.find();
   if (globalController.myUserInfo.value == null) {
     return false;

@@ -22,8 +22,8 @@ class LumaApi {
 
   static const String _lumaBaseUrl = "https://api.lu.ma";
 
-  Future<Luma_EventModel?> createEvent({
-    required Luma_CreateEvent event,
+  Future<LumaEventModel?> createEvent({
+    required LumaCreateEvent event,
   }) async {
     try {
       if (event.end_at == null) {
@@ -37,7 +37,7 @@ class LumaApi {
       return null;
     }
     final response = await dio.post(
-      _lumaBaseUrl + '/public/v1/event/create',
+      '$_lumaBaseUrl/public/v1/event/create',
       data: event.toJson(),
       options: lumaApiOptions,
     );
@@ -56,15 +56,15 @@ class LumaApi {
     }
   }
 
-  Future<Luma_EventModel?> getEvent({required String eventId}) async {
+  Future<LumaEventModel?> getEvent({required String eventId}) async {
     try {
       final response = await dio.get(
-        _lumaBaseUrl + '/public/v1/event/get?api_id=$eventId',
+        '$_lumaBaseUrl/public/v1/event/get?api_id=$eventId',
         options: lumaApiOptions,
       );
       if (response.statusCode == 200) {
         final jsonBody = response.data;
-        final event = Luma_EventModel.fromJson(jsonBody);
+        final event = LumaEventModel.fromJson(jsonBody);
         return event;
       } else {
         return null;
@@ -77,7 +77,7 @@ class LumaApi {
 
   Future<List<GuestModel>> getGuests({required String eventId}) async {
     final response = await dio.get(
-      _lumaBaseUrl + '/public/v1/event/get-guests?event_api_id=$eventId',
+      '$_lumaBaseUrl/public/v1/event/get-guests?event_api_id=$eventId',
       options: lumaApiOptions,
     );
     if (response.statusCode == 200) {
@@ -99,7 +99,7 @@ class LumaApi {
   }) async {
     try {
       final response = await dio.post(
-        _lumaBaseUrl + '/public/v1/event/add-guests',
+        '$_lumaBaseUrl/public/v1/event/add-guests',
         data: {
           'guests': guests.map((e) => e.toJson()).toList(),
           'event_api_id': eventId,
@@ -122,7 +122,7 @@ class LumaApi {
     required String eventId,
   }) async {
     final response = await dio.post(
-      _lumaBaseUrl + '/public/v1/event/send-invite',
+      '$_lumaBaseUrl/public/v1/event/send-invite',
       data: {
         'guests': guests.map((e) => e.toJson()).toList(),
         'event_api_id': eventId,
@@ -141,7 +141,7 @@ class LumaApi {
   }) async {
     try {
       final response = await dio.post(
-        _lumaBaseUrl + '/public/v1/event/add-host',
+        '$_lumaBaseUrl/public/v1/event/add-host',
         data: host.toJson(),
         options: lumaApiOptions,
       );

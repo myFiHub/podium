@@ -7,7 +7,7 @@ import 'package:podium/widgets/ui/app_ui.dart';
 import '../controllers/edit_group_controller.dart';
 
 class EditGroupView extends GetView<EditGroupController> {
-  const EditGroupView({Key? key}) : super(key: key);
+  const EditGroupView({super.key});
   @override
   Widget build(BuildContext context) {
     return const PageWrapper(

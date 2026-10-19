@@ -6,30 +6,30 @@ part of 'eventModel.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Luma_EventModel _$Luma_EventModelFromJson(Map<String, dynamic> json) =>
-    Luma_EventModel(
-      event: Luma_EventDetailsModel.fromJson(
+LumaEventModel _$LumaEventModelFromJson(Map<String, dynamic> json) =>
+    LumaEventModel(
+      event: LumaEventDetailsModel.fromJson(
           json['event'] as Map<String, dynamic>),
       hosts: (json['hosts'] as List<dynamic>)
-          .map((e) => Luma_HostModel.fromJson(e as Map<String, dynamic>))
+          .map((e) => LumaHostModel.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
-Map<String, dynamic> _$Luma_EventModelToJson(Luma_EventModel instance) =>
+Map<String, dynamic> _$LumaEventModelToJson(LumaEventModel instance) =>
     <String, dynamic>{
       'event': instance.event,
       'hosts': instance.hosts,
     };
 
-Luma_HostModel _$Luma_HostModelFromJson(Map<String, dynamic> json) =>
-    Luma_HostModel(
+LumaHostModel _$LumaHostModelFromJson(Map<String, dynamic> json) =>
+    LumaHostModel(
       api_id: json['api_id'] as String,
       email: json['email'] as String,
       name: json['name'] as String? ?? '',
       avatar_url: json['avatar_url'] as String,
     );
 
-Map<String, dynamic> _$Luma_HostModelToJson(Luma_HostModel instance) =>
+Map<String, dynamic> _$LumaHostModelToJson(LumaHostModel instance) =>
     <String, dynamic>{
       'api_id': instance.api_id,
       'email': instance.email,
@@ -37,9 +37,9 @@ Map<String, dynamic> _$Luma_HostModelToJson(Luma_HostModel instance) =>
       'avatar_url': instance.avatar_url,
     };
 
-Luma_EventDetailsModel _$Luma_EventDetailsModelFromJson(
+LumaEventDetailsModel _$LumaEventDetailsModelFromJson(
         Map<String, dynamic> json) =>
-    Luma_EventDetailsModel(
+    LumaEventDetailsModel(
       api_id: json['api_id'] as String,
       created_at: json['created_at'] as String,
       cover_url: json['cover_url'] as String,
@@ -55,8 +55,8 @@ Luma_EventDetailsModel _$Luma_EventDetailsModelFromJson(
       meeting_url: json['meeting_url'] as String,
     );
 
-Map<String, dynamic> _$Luma_EventDetailsModelToJson(
-        Luma_EventDetailsModel instance) =>
+Map<String, dynamic> _$LumaEventDetailsModelToJson(
+        LumaEventDetailsModel instance) =>
     <String, dynamic>{
       'api_id': instance.api_id,
       'created_at': instance.created_at,

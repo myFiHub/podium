@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'createEvent.g.dart';
 
 @JsonSerializable()
-class Luma_CreateEvent {
+class LumaCreateEvent {
   final String name;
   final String start_at;
   final String meeting_url;
@@ -12,7 +12,7 @@ class Luma_CreateEvent {
   final bool
       require_rsvp_approval; //Require host approval for a guest to see meeting information.
 
-  Luma_CreateEvent({
+  LumaCreateEvent({
     required this.name,
     required this.start_at,
     required this.meeting_url,
@@ -21,7 +21,7 @@ class Luma_CreateEvent {
     this.require_rsvp_approval = false,
   });
 
-  factory Luma_CreateEvent.fromJson(Map<String, dynamic> json) =>
-      _$Luma_CreateEventFromJson(json);
-  Map<String, dynamic> toJson() => _$Luma_CreateEventToJson(this);
+  factory LumaCreateEvent.fromJson(Map<String, dynamic> json) =>
+      _$LumaCreateEventFromJson(json);
+  Map<String, dynamic> toJson() => _$LumaCreateEventToJson(this);
 }

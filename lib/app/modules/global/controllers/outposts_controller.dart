@@ -113,10 +113,6 @@ class OutpostsController extends GetxController {
     });
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
   @override
   void onClose() {
@@ -313,7 +309,7 @@ class OutpostsController extends GetxController {
           DateTime.fromMillisecondsSinceEpoch(scheduledFor + 60 * 60 * 1000)
               .toUtc()
               .toIso8601String();
-      final lumaEvent = Luma_CreateEvent(
+      final lumaEvent = LumaCreateEvent(
         name: outpostName,
         start_at: isoDate,
         end_at: oneHourAfter,
@@ -444,9 +440,7 @@ class OutpostsController extends GetxController {
   }) async {
     outpostId = outpostId.replaceAll('/', '');
     if (outpostId.isEmpty) return;
-    if (joiningOutpostId != '') {
-      return;
-    }
+    if (joiningOutpostId.value.isNotEmpty) return;
     try {
       joiningOutpostId.value = outpostId;
       final outpost = await HttpApis.podium.getOutpost(outpostId);
@@ -523,7 +517,7 @@ class OutpostsController extends GetxController {
     return;
   }
 
-  _openOutpost({
+  Future<void> _openOutpost({
     required OutpostModel outpost,
     required bool openTheRoomAfterJoining,
     required OutpostAccesses accesses,
@@ -612,8 +606,9 @@ class OutpostsController extends GetxController {
   Future<OutpostAccesses> getOutpostAccesses(
       {required OutpostModel outpost, bool? joiningByLink}) async {
     final iAmOutpostCreator = outpost.creator_user_uuid == myUser.uuid;
-    if (iAmOutpostCreator)
+    if (iAmOutpostCreator) {
       return OutpostAccesses(canEnter: true, canSpeak: true);
+    }
     if (outpost.is_archived) {
       Toast.error(
         message: "This Outpost is archived",
@@ -639,18 +634,18 @@ class OutpostsController extends GetxController {
         );
         return OutpostAccesses(canEnter: false, canSpeak: false);
       } else {
-        return accesses != null
-            ? accesses
-            : OutpostAccesses(canEnter: false, canSpeak: false);
+        return accesses ?? OutpostAccesses(canEnter: false, canSpeak: false);
       }
     }
 
-    if (outpost.i_am_member)
+    if (outpost.i_am_member) {
       return OutpostAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
-    if (outpost.enter_type == FreeOutpostAccessTypes.public)
+    }
+    if (outpost.enter_type == FreeOutpostAccessTypes.public) {
       return OutpostAccesses(
           canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
+    }
     if (outpost.enter_type == FreeOutpostAccessTypes.onlyLink) {
       if (joiningByLink == true) {
         return OutpostAccesses(
@@ -696,7 +691,7 @@ class OutpostsController extends GetxController {
       );
     } else {
       final result = await Get.dialog<OutpostAccesses?>(
-        AppDialogMotion(child: CheckTicketView()),
+        const AppDialogMotion(child: CheckTicketView()),
       );
       l.d("Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
       Get.delete<CheckticketController>();
@@ -775,7 +770,7 @@ class OutpostsController extends GetxController {
   }
 }
 
-_showModalToToggleArchiveGroup({required OutpostModel outpost}) async {
+Future<dynamic> _showModalToToggleArchiveGroup({required OutpostModel outpost}) async {
   final isCurrentlyArchived = outpost.is_archived;
   final result = await Get.dialog(
     AppDialog(
@@ -821,7 +816,7 @@ _showModalToToggleArchiveGroup({required OutpostModel outpost}) async {
   return result;
 }
 
-_showModalToLeaveGroup({required OutpostModel outpost}) async {
+Future<dynamic> _showModalToLeaveGroup({required OutpostModel outpost}) async {
   final result = await Get.dialog(
     AppDialog(
       icon: Icons.exit_to_app_rounded,

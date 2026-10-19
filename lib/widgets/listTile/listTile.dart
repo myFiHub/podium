@@ -4,7 +4,7 @@ import 'package:podium/utils/palette.dart';
 class PodiumListTile extends StatelessWidget {
   /// Creates ListTile with leading, title, trailing, image widget for almost every type of ListTile design.
   const PodiumListTile({
-    Key? key,
+    super.key,
     this.titleText,
     this.subTitleText,
     this.color,
@@ -32,7 +32,7 @@ class PodiumListTile extends StatelessWidget {
     this.secondButtonTextStyle,
     this.radius,
     this.shadow,
-  }) : super(key: key);
+  });
 
   /// type of [String] used to pass text, alternative to title property and gets higher priority than title
   final String? titleText;

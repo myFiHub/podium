@@ -51,7 +51,7 @@ class _ConfettiDetectorState extends State<ConfettiDetector> {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<OngoingOutpostCallController>(
-      id: 'confetti' + widget.userId,
+      id: 'confetti${widget.userId}',
       builder: (controller) {
         final lastReaction = controller.lastReaction.value;
         if (lastReaction.targetId == widget.userId &&

@@ -70,10 +70,6 @@ class SearchPageController extends GetxController {
     });
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
   @override
   void onClose() {
@@ -81,12 +77,12 @@ class SearchPageController extends GetxController {
     super.onClose();
   }
 
-  setSeachValue(String value) {
+  void setSeachValue(String value) {
     searchValue.value = value;
     textFieldController.text = value;
   }
 
-  updateOutpost_local(OutpostModel outpost) {
+  void updateOutpost_local(OutpostModel outpost) {
     final outpostIndex = searchedOutposts.value.values
         .toList()
         .indexWhere((element) => element.uuid == outpost.uuid);
@@ -96,7 +92,7 @@ class SearchPageController extends GetxController {
     }
   }
 
-  updateUserFollow(String id) async {
+  Future<void> updateUserFollow(String id) async {
     final user = searchedUsers.value[id];
     if (user != null) {
       final opposite =
@@ -118,7 +114,7 @@ class SearchPageController extends GetxController {
     return filteredOutpostsMap;
   }
 
-  searchOutpost(String v) async {
+  Future<void> searchOutpost(String v) async {
     if (v.isEmpty) {
       searchedOutposts.value = {};
       return;
@@ -127,7 +123,7 @@ class SearchPageController extends GetxController {
     searchedOutposts.value = foundOutposts;
   }
 
-  tagClicked(TagModel tag) async {
+  Future<void> tagClicked(TagModel tag) async {
     loadingTag_name.value = tag.name;
     final foundOutposts = await HttpApis.podium.getOutpostsByTagId(id: tag.id);
     if (foundOutposts.isEmpty) {
@@ -169,7 +165,7 @@ class SearchPageController extends GetxController {
     loadingTag_name.value = '';
   }
 
-  searchUser(String v) async {
+  Future<void> searchUser(String v) async {
     if (v.isEmpty) {
       searchedUsers.value = {};
       return;
@@ -178,7 +174,7 @@ class SearchPageController extends GetxController {
     searchedUsers.value = foundUsers;
   }
 
-  refreshSearchedGroup(OutpostModel group) {
+  void refreshSearchedGroup(OutpostModel group) {
     if (searchedOutposts.value.isEmpty) {
       return;
     }

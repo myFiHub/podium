@@ -10,7 +10,7 @@ import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class CreateGroupView extends GetView<CreateOutpostController> {
-  const CreateGroupView({Key? key}) : super(key: key);
+  const CreateGroupView({super.key});
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -115,7 +115,7 @@ class CreateGroupView extends GetView<CreateOutpostController> {
   }
 }
 
-millisecondsToFormattedDateWithTime(int milliseconds) {
+String millisecondsToFormattedDateWithTime(int milliseconds) {
 // if a number is less than 10, add a 0 before it
   String addZero(int number) {
     return number < 10 ? '0$number' : number.toString();

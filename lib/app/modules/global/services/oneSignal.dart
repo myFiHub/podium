@@ -6,8 +6,9 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 class OneSignalService extends GetxService {
-  static String _oneSignalAppId = Env.oneSignalApiKey;
+  static const String _oneSignalAppId = Env.oneSignalApiKey;
   bool _isInitialized = false;
+  @override
   bool get initialized => _isInitialized;
   bool _isLoggedIn = false;
   bool get loggedIn => _isLoggedIn;
@@ -17,15 +18,7 @@ class OneSignalService extends GetxService {
     super.onInit();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
 
   /// Get the OneSignal device ID
   Future<String?> getOneSignalId() async {
@@ -147,10 +140,10 @@ class OneSignalService extends GetxService {
         if (state.current.toString().contains('NO_PERMISSION')) {
           l.e('onesignal: No permission for notifications');
           // Check current permission state
-          final currentPermission = await OneSignal.Notifications.permission;
+          final currentPermission = OneSignal.Notifications.permission;
           l.d('onesignal: Current permission state: $currentPermission');
 
-          if (currentPermission == OSNotificationPermission.authorized) {
+          if (currentPermission) {
             l.d('onesignal: Permission is authorized, retrying subscription');
             // If we have permission but still get NO_PERMISSION, try to force a refresh
             await OneSignal.User.pushSubscription.optIn();
@@ -182,10 +175,6 @@ class OneSignalService extends GetxService {
       // Add permission observer
       OneSignal.Notifications.addPermissionObserver((state) {
         l.d('onesignal: Notification Permission: $state');
-        if (state == OSNotificationPermission.notDetermined) {
-          l.d('onesignal: Permission not determined, requesting again');
-          OneSignal.Notifications.requestPermission(true);
-        }
       });
 
       // Add click listener for notifications

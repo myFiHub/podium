@@ -117,10 +117,9 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final glowBorder = borderColor == null;
+    // The border is painted in the foreground so toggling it never shifts layout.
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(radius),
-      side: glowBorder ? BorderSide.none : BorderSide(color: borderColor!),
     );
     return Padding(
       padding: margin ?? EdgeInsets.zero,
@@ -128,8 +127,12 @@ class AppCard extends StatelessWidget {
         enabled: onTap != null,
         scale: 0.985,
         child: CustomPaint(
-          foregroundPainter:
-              glowBorder ? GradientBorderPainter(radius: radius) : null,
+          foregroundPainter: GradientBorderPainter(
+            radius: radius,
+            gradient: borderColor == null
+                ? null
+                : LinearGradient(colors: [borderColor!, borderColor!]),
+          ),
           child: Material(
             color: Colors.transparent,
             shape: shape,
@@ -975,7 +978,7 @@ class AppSheet extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceRaised,
         border: Border(top: BorderSide(color: ColorName.cardBorder)),
-        borderRadius: const BorderRadius.vertical(top: const Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         top: false,

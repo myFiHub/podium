@@ -7,7 +7,7 @@ import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class AdultsCheckbox extends GetView<CreateOutpostController> {
-  const AdultsCheckbox();
+  const AdultsCheckbox({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,7 @@ class AdultsCheckbox extends GetView<CreateOutpostController> {
 }
 
 class RecordableCheckbox extends GetView<CreateOutpostController> {
-  const RecordableCheckbox();
+  const RecordableCheckbox({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +66,7 @@ class RecordableCheckbox extends GetView<CreateOutpostController> {
 }
 
 class SelectCohosts extends GetView<CreateOutpostController> {
-  const SelectCohosts();
+  const SelectCohosts({super.key});
 
   @override
   Widget build(BuildContext context) {

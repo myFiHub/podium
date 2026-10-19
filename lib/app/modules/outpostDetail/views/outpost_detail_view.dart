@@ -13,7 +13,7 @@ import 'package:podium/root.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class OutpostDetailView extends GetView<OutpostDetailController> {
-  const OutpostDetailView({Key? key}) : super(key: key);
+  const OutpostDetailView({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

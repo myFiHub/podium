@@ -4,7 +4,7 @@ import 'package:podium/utils/palette.dart';
 
 class PodiumTextField extends FormField<String> {
   PodiumTextField(
-      {Key? key,
+      {super.key,
       this.controller,
       this.fieldinitialValue,
       this.focusNode,
@@ -55,7 +55,6 @@ class PodiumTextField extends FormField<String> {
       this.autofillHints,
       this.autoValidateMode = AutovalidateMode.disabled})
       : super(
-            key: key,
             builder: (FormFieldState<String> field) => _GfTextFieldState(
                   state: field,
                   formField: formField ?? false,
@@ -156,7 +155,7 @@ class PodiumTextField extends FormField<String> {
   final Radius? cursorRadius;
   final Color? cursorColor;
   final Color? color;
-  final formField;
+  final bool? formField;
   final Radius? borderradius;
   final Brightness? keyboardAppearance;
   final EdgeInsets scrollPadding;

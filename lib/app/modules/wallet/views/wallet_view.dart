@@ -6,7 +6,7 @@ import 'package:podium/widgets/ui/app_ui.dart';
 import '../controllers/wallet_controller.dart';
 
 class WalletView extends GetView<WalletController> {
-  const WalletView({Key? key}) : super(key: key);
+  const WalletView({super.key});
   @override
   Widget build(BuildContext context) {
     return const PageWrapper(

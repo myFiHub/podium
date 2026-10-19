@@ -162,7 +162,7 @@ class MyProfileController extends GetxController {
   }
 
   int _currentStep = 0;
-  _scrollIfNeeded() async {
+  Future<void> _scrollIfNeeded() async {
     _currentStep++;
     if (_currentStep == 1) {
       await scrollController.animateTo(
@@ -224,7 +224,7 @@ class MyProfileController extends GetxController {
     super.onClose();
   }
 
-  getMyProfile() async {
+  Future<void> getMyProfile() async {
     final profile = await HttpApis.podium
         .getMyUserData(additionalData: AdditionalDataForLogin());
     if (profile == null) {
@@ -239,7 +239,7 @@ class MyProfileController extends GetxController {
     );
   }
 
-  _createStep({
+  TargetFocus _createStep({
     required GlobalKey targetId,
     required String text,
     bool hasNext = true,
@@ -319,7 +319,7 @@ class MyProfileController extends GetxController {
     }
   }
 
-  getBalances() async {
+  Future<void> getBalances() async {
     try {
       isGettingBalances.value = true;
       final baseClient = evmClientByChainId(baseChainId);
@@ -390,7 +390,7 @@ class MyProfileController extends GetxController {
     return isActivated;
   }
 
-  activateInternalWallet() async {
+  Future<void> activateInternalWallet() async {
     loadingInternalWalletActivation.value = true;
     final isAlreadyActivated = await checkInternalWalletActivation(
       silent: true,
@@ -405,7 +405,7 @@ class MyProfileController extends GetxController {
     isInternalWalletActivatedOnFriendTech.value = activated;
   }
 
-  activateExternalWallet() async {
+  Future<void> activateExternalWallet() async {
     loadingExternalWalletActivation.value = true;
     if (externalWalletChianId != baseChainId) {
       Toast.error(
@@ -468,7 +468,7 @@ class MyProfileController extends GetxController {
     }
   }
 
-  openFeedbackPage() {
+  void openFeedbackPage() {
     launchUrl(
       Uri.parse(
         'https://docs.google.com/forms/u/1/d/1yj3GC6-JkFnWo1UiWj36sMISave9529x2fpqzHv2hIo/edit',
@@ -476,7 +476,7 @@ class MyProfileController extends GetxController {
     );
   }
 
-  deactivateAccount() async {
+  Future<void> deactivateAccount() async {
     isDeactivatingAccount.value = true;
     Get.close();
     final success = await HttpApis.podium.deactivateAccount();

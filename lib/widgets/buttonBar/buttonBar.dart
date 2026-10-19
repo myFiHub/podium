@@ -4,7 +4,7 @@ class PodiumButtonBar extends StatelessWidget {
   /// Create buttons bar for all types of buttons.
   /// check [Button] and [GFIconButton]
   const PodiumButtonBar({
-    Key? key,
+    super.key,
     this.direction = Axis.horizontal,
     this.alignment = WrapAlignment.center,
     this.spacing = 8.0,
@@ -15,7 +15,7 @@ class PodiumButtonBar extends StatelessWidget {
     this.verticalDirection = VerticalDirection.down,
     required this.children,
     this.padding = const EdgeInsets.all(0),
-  }) : super(key: key);
+  });
 
   /// The empty space that surrounds the buttonBar. Default's to padding.zero
   final EdgeInsetsGeometry padding;

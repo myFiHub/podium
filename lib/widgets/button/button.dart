@@ -78,7 +78,7 @@ Color get _outlineBorder => ColorName.white.withAlpha(0x33);
 class Button extends StatefulWidget {
   /// Create buttons of all types. check out [GFIconButton] for icon buttons, and [GFBadge] for badges
   const Button({
-    Key? key,
+    super.key,
     required this.onPressed,
     this.loading = false,
     this.onHighlightChanged,
@@ -124,8 +124,7 @@ class Button extends StatefulWidget {
         assert(focusElevation >= 0.0),
         assert(hoverElevation >= 0.0),
         assert(highlightElevation >= 0.0),
-        assert(disabledElevation >= 0.0),
-        super(key: key);
+        assert(disabledElevation >= 0.0);
 
   /// Called when the button is tapped or otherwise activated.
   final VoidCallback? onPressed;
@@ -293,7 +292,7 @@ class Button extends StatefulWidget {
   final VoidCallback? onLongPress;
 
   @override
-  _ButtonState createState() => _ButtonState();
+  State<Button> createState() => _ButtonState();
 }
 
 class _ButtonState extends State<Button> {
@@ -534,11 +533,9 @@ class _ButtonState extends State<Button> {
       color: widget.borderSide == null
           ? getBorderColor()
           : widget.borderSide!.color,
-      width: (widget.borderSide?.width == null
-          ? widget.type == ButtonType.outline2x
+      width: (widget.borderSide?.width ?? (widget.type == ButtonType.outline2x
               ? 2.0
-              : 1.0
-          : widget.borderSide?.width)!,
+              : 1.0)),
     );
 
     Size minSize;
@@ -653,7 +650,7 @@ class _ButtonState extends State<Button> {
       );
     }
 
-    _gradientBoxDecoration(bool disabled) => BoxDecoration(
+    gradientBoxDecoration(bool disabled) => BoxDecoration(
           gradient: disabled
               ? null
               : LinearGradient(
@@ -682,12 +679,12 @@ class _ButtonState extends State<Button> {
           ? getBoxShadow()
           : type == ButtonType.gradient
               ? widget.onPressed == null
-                  ? _gradientBoxDecoration(true)
-                  : _gradientBoxDecoration(false)
+                  ? gradientBoxDecoration(true)
+                  : gradientBoxDecoration(false)
               : null,
       child: Material(
         elevation: _effectiveElevation,
-        textStyle: widget.textStyle == null ? getTextStyle() : widget.textStyle,
+        textStyle: widget.textStyle ?? getTextStyle(),
         shape: widget.type == ButtonType.transparent
             ? null
             : widget.borderShape ?? shapeBorderType,
@@ -778,13 +775,9 @@ class _ButtonState extends State<Button> {
 /// "tap target", but not its material or its ink splashes.
 class _InputPadding extends SingleChildRenderObjectWidget {
   const _InputPadding({
-    Key? key,
-    Widget? child,
+    super.child,
     this.minSize,
-  }) : super(
-          key: key,
-          child: child,
-        );
+  });
 
   final Size? minSize;
 

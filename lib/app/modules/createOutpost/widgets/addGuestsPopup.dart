@@ -25,7 +25,7 @@ class AddGuestsPopup extends GetView<CreateOutpostController> {
   }
 }
 
-openAddGuestsDialog() {
+void openAddGuestsDialog() {
   Get.dialog(
     const AppDialogMotion(child: AddGuestsPopup()),
   );

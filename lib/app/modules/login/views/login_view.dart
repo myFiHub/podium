@@ -21,10 +21,10 @@ import '../controllers/login_controller.dart';
 const _brandCyan = Color(0xFF4ED6DC);
 
 class LoginView extends GetView<LoginController> {
-  const LoginView({Key? key}) : super(key: key);
+  const LoginView({super.key});
   @override
   Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormBuilderState>();
+    final formKey = GlobalKey<FormBuilderState>();
     final addingOrSwitchingAccount_provider =
         Get.find<GlobalController>().addingOrSwitchingAccount_provider.value;
     if (addingOrSwitchingAccount_provider != null) {
@@ -41,7 +41,7 @@ class LoginView extends GetView<LoginController> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 440),
                     child: FormBuilder(
-                      key: _formKey,
+                      key: formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,

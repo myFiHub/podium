@@ -6,8 +6,8 @@ part of 'createEvent.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Luma_CreateEvent _$Luma_CreateEventFromJson(Map<String, dynamic> json) =>
-    Luma_CreateEvent(
+LumaCreateEvent _$LumaCreateEventFromJson(Map<String, dynamic> json) =>
+    LumaCreateEvent(
       name: json['name'] as String,
       start_at: json['start_at'] as String,
       meeting_url: json['meeting_url'] as String,
@@ -16,7 +16,7 @@ Luma_CreateEvent _$Luma_CreateEventFromJson(Map<String, dynamic> json) =>
       require_rsvp_approval: json['require_rsvp_approval'] as bool? ?? false,
     );
 
-Map<String, dynamic> _$Luma_CreateEventToJson(Luma_CreateEvent instance) =>
+Map<String, dynamic> _$LumaCreateEventToJson(LumaCreateEvent instance) =>
     <String, dynamic>{
       'name': instance.name,
       'start_at': instance.start_at,

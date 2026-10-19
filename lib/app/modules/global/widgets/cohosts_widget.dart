@@ -372,7 +372,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                         return _UserRow(
                           image: user.image,
                           name: user.name ?? 'Unknown',
-                          subtitle: truncate(user.aptos_address ?? '') ?? '',
+                          subtitle: truncate(user.aptos_address ?? ''),
                           selected: isSelected,
                           onTap: () {
                             if (isSelected) {
@@ -462,9 +462,8 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                         child: _UserRow(
                           image: cohost.image,
                           name: cohost.name ?? 'Unknown',
-                          subtitle: truncate(cohost.aptos_address ?? '',
-                                  length: 14) ??
-                              '',
+                          subtitle:
+                              truncate(cohost.aptos_address ?? '', length: 14),
                         ),
                       );
                     },

@@ -215,13 +215,13 @@ class OutpostCallController extends GetxController {
     final Map<String, Map<OutgoingMessageTypeEnums, int>> tmp = {};
 
     final feedbackTypes = {
-      OutgoingMessageTypeEnums.like: OutgoingMessageTypeEnums.like,
-      OutgoingMessageTypeEnums.dislike: OutgoingMessageTypeEnums.dislike,
+      OutgoingMessageTypeEnums.like.name: OutgoingMessageTypeEnums.like,
+      OutgoingMessageTypeEnums.dislike.name: OutgoingMessageTypeEnums.dislike,
     };
 
     final reactionTypes = {
-      OutgoingMessageTypeEnums.cheer: OutgoingMessageTypeEnums.cheer,
-      OutgoingMessageTypeEnums.boo: OutgoingMessageTypeEnums.boo,
+      OutgoingMessageTypeEnums.cheer.name: OutgoingMessageTypeEnums.cheer,
+      OutgoingMessageTypeEnums.boo.name: OutgoingMessageTypeEnums.boo,
     };
 
     for (final user in listOfUsers) {
@@ -309,9 +309,7 @@ class OutpostCallController extends GetxController {
     } else {
       final tmp = liveData.members;
       tmp.asMap().forEach((index, element) {
-        if (element.last_speaked_at_timestamp == null) {
-          element.last_speaked_at_timestamp = -1 * (index);
-        }
+        element.last_speaked_at_timestamp ??= -1 * (index);
       });
       if (withJoin == true) {
         // do i exist and is present?
@@ -508,7 +506,7 @@ class OutpostCallController extends GetxController {
     final myUser = globalController.myUserInfo.value!;
 
     if ((myUser.external_wallet_address == '' ||
-            globalController.connectedWalletAddress == '') &&
+            globalController.connectedWalletAddress.value == '') &&
         myUser.defaultWalletAddress == '') {
       Toast.warning(
         title: 'Wallet required',

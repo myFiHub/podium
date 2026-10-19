@@ -49,9 +49,9 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel tags(List<String> tags);
 
-  OutpostModel tickets_to_enter(List<_TicketToEnterModel>? tickets_to_enter);
+  OutpostModel tickets_to_enter(List<TicketToEnterModel>? tickets_to_enter);
 
-  OutpostModel tickets_to_speak(List<_TicketToSpeakModel>? tickets_to_speak);
+  OutpostModel tickets_to_speak(List<TicketToSpeakModel>? tickets_to_speak);
 
   OutpostModel luma_event_id(String? luma_event_id);
 
@@ -92,8 +92,8 @@ abstract class _$OutpostModelCWProxy {
     String speak_type,
     String subject,
     List<String> tags,
-    List<_TicketToEnterModel>? tickets_to_enter,
-    List<_TicketToSpeakModel>? tickets_to_speak,
+    List<TicketToEnterModel>? tickets_to_enter,
+    List<TicketToSpeakModel>? tickets_to_speak,
     String? luma_event_id,
     bool i_am_member,
     int? online_users_count,
@@ -183,11 +183,11 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
   OutpostModel tags(List<String> tags) => call(tags: tags);
 
   @override
-  OutpostModel tickets_to_enter(List<_TicketToEnterModel>? tickets_to_enter) =>
+  OutpostModel tickets_to_enter(List<TicketToEnterModel>? tickets_to_enter) =>
       call(tickets_to_enter: tickets_to_enter);
 
   @override
-  OutpostModel tickets_to_speak(List<_TicketToSpeakModel>? tickets_to_speak) =>
+  OutpostModel tickets_to_speak(List<TicketToSpeakModel>? tickets_to_speak) =>
       call(tickets_to_speak: tickets_to_speak);
 
   @override
@@ -347,11 +347,11 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       tickets_to_enter: tickets_to_enter == const $CopyWithPlaceholder()
           ? _value.tickets_to_enter
           // ignore: cast_nullable_to_non_nullable
-          : tickets_to_enter as List<_TicketToEnterModel>?,
+          : tickets_to_enter as List<TicketToEnterModel>?,
       tickets_to_speak: tickets_to_speak == const $CopyWithPlaceholder()
           ? _value.tickets_to_speak
           // ignore: cast_nullable_to_non_nullable
-          : tickets_to_speak as List<_TicketToSpeakModel>?,
+          : tickets_to_speak as List<TicketToSpeakModel>?,
       luma_event_id: luma_event_id == const $CopyWithPlaceholder()
           ? _value.luma_event_id
           // ignore: cast_nullable_to_non_nullable
@@ -416,10 +416,10 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
       subject: json['subject'] as String,
       tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
       tickets_to_enter: (json['tickets_to_enter'] as List<dynamic>?)
-          ?.map((e) => _TicketToEnterModel.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => TicketToEnterModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       tickets_to_speak: (json['tickets_to_speak'] as List<dynamic>?)
-          ?.map((e) => _TicketToSpeakModel.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => TicketToSpeakModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       luma_event_id: json['luma_event_id'] as String?,
       i_am_member: json['i_am_member'] as bool,
@@ -464,28 +464,28 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'cohost_user_uuids': instance.cohost_user_uuids,
     };
 
-_TicketToEnterModel _$TicketToEnterModelFromJson(Map<String, dynamic> json) =>
-    _TicketToEnterModel(
+TicketToEnterModel _$TicketToEnterModelFromJson(Map<String, dynamic> json) =>
+    TicketToEnterModel(
       access_type: json['access_type'] as String,
       address: json['address'] as String,
       user_uuid: json['user_uuid'] as String?,
     );
 
-Map<String, dynamic> _$TicketToEnterModelToJson(_TicketToEnterModel instance) =>
+Map<String, dynamic> _$TicketToEnterModelToJson(TicketToEnterModel instance) =>
     <String, dynamic>{
       'access_type': instance.access_type,
       'address': instance.address,
       'user_uuid': instance.user_uuid,
     };
 
-_TicketToSpeakModel _$TicketToSpeakModelFromJson(Map<String, dynamic> json) =>
-    _TicketToSpeakModel(
+TicketToSpeakModel _$TicketToSpeakModelFromJson(Map<String, dynamic> json) =>
+    TicketToSpeakModel(
       access_type: json['access_type'] as String,
       address: json['address'] as String,
       user_uuid: json['user_uuid'] as String?,
     );
 
-Map<String, dynamic> _$TicketToSpeakModelToJson(_TicketToSpeakModel instance) =>
+Map<String, dynamic> _$TicketToSpeakModelToJson(TicketToSpeakModel instance) =>
     <String, dynamic>{
       'access_type': instance.access_type,
       'address': instance.address,

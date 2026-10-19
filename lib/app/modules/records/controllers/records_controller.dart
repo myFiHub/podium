@@ -153,9 +153,8 @@ class RecordsController extends GetxController {
 
   Future<void> shareRecording(RecordingFile file) async {
     try {
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: '${file.name}',
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], subject: file.name),
       );
     } catch (e) {
       l.d('Error sharing file: $e');
@@ -225,9 +224,8 @@ class RecordsController extends GetxController {
         );
         return;
       }
-      await Share.shareXFiles(
-        [XFile(trimmedFile.path)],
-        subject: '${trimmedFile.name}',
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(trimmedFile.path)], subject: trimmedFile.name),
       );
     } catch (e) {
       l.d('Error sharing selected portion: $e');

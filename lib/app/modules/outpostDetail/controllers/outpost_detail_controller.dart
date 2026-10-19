@@ -69,11 +69,11 @@ class OutpostDetailController extends GetxController {
   late bool shouldOpenJitsiAfterJoining;
 
   //luma event
-  final lumaEventDetails = Rxn<Luma_EventModel?>(null);
+  final lumaEventDetails = Rxn<LumaEventModel?>(null);
   final isGettingLumaEventDetails = false.obs;
   final isGettingLumaEventGuests = false.obs;
   final lumaEventGuests = Rx<List<GuestDataModel>>([]);
-  final lumaHosts = Rx<List<Luma_HostModel>>([]);
+  final lumaHosts = Rx<List<LumaHostModel>>([]);
 
   final isJoining = false.obs;
   final isLoadingCohosts = false.obs;
@@ -173,7 +173,7 @@ class OutpostDetailController extends GetxController {
     isSettingReminder.value = false;
   }
 
-  openRescheduleOutpostDialog() async {
+  Future<void> openRescheduleOutpostDialog() async {
     final scheduledTime = outpost.value?.scheduled_for;
     if (scheduledTime == null) return;
 
@@ -303,7 +303,7 @@ class OutpostDetailController extends GetxController {
     isLoadingCohosts.value = false;
   }
 
-  onCreatorJoined(IncomingMessage incomingMessage) {
+  void onCreatorJoined(IncomingMessage incomingMessage) {
     final outpostData = outpost.value;
     if (incomingMessage.data.outpost_uuid != null &&
         incomingMessage.data.outpost_uuid == outpostData?.uuid) {
@@ -313,7 +313,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  updatedFollowDataForMember(String uuid) async {
+  Future<void> updatedFollowDataForMember(String uuid) async {
     final userIndex =
         membersList.value.indexWhere((element) => element.uuid == uuid);
     if (userIndex != -1) {
@@ -328,7 +328,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  onMembersUpdated(IncomingMessage incomingMessage) {
+  void onMembersUpdated(IncomingMessage incomingMessage) {
     final outpostData = outpost.value;
     if (incomingMessage.data.outpost_uuid != null &&
         incomingMessage.data.outpost_uuid == outpostData?.uuid) {
@@ -336,7 +336,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  _getLumaData() async {
+  Future<void> _getLumaData() async {
     if (outpost.value == null) return;
     if (outpost.value!.luma_event_id == null) return;
     try {
@@ -365,7 +365,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  reselectScheduleTime() async {
+  Future<void> reselectScheduleTime() async {
     DateTime? dateTime = await showOmniDateTimePicker(
       context: Get.context!,
       is24HourMode: true,
@@ -378,7 +378,7 @@ class OutpostDetailController extends GetxController {
     l.i(dateTime);
   }
 
-  scheduleChecks() async {
+  Future<void> scheduleChecks() async {
     final outpostData = outpost.value;
     if (outpostData == null) return;
     final amICreator = outpostData.creator_user_uuid == myId;
@@ -421,7 +421,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  fetchInvitedMembers() async {
+  Future<void> fetchInvitedMembers() async {
     if (outpost.value == null) return;
     final res = await HttpApis.podium.getOutpost(outpost.value!.uuid);
     if (res == null) return;
@@ -430,14 +430,14 @@ class OutpostDetailController extends GetxController {
 
   void _setInvitedMembers(List<InviteModel>? invites) {
     Map<String, InviteModel> map = {};
-    (invites ?? []).forEach((value) {
+    for (var value in (invites ?? [])) {
       map[value.invitee_uuid] = value;
-    });
+    }
 
     liveInvitedMembers.value = map;
   }
 
-  getOutpostInfo({required String id}) async {
+  Future<void> getOutpostInfo({required String id}) async {
     if (isGettingGroupInfo.value) return;
     isGettingGroupInfo.value = true;
     final groupsController = Get.find<OutpostsController>();
@@ -461,7 +461,7 @@ class OutpostDetailController extends GetxController {
     isGettingGroupInfo.value = false;
   }
 
-  refetchMembers() async {
+  Future<void> refetchMembers() async {
     final data = outpost.value;
     if (data == null) return;
     final outpostData = await HttpApis.podium.getOutpost(data.uuid);
@@ -469,7 +469,7 @@ class OutpostDetailController extends GetxController {
     membersList.value = outpostData.members ?? [];
   }
 
-  startTheCall({required OutpostAccesses accesses}) async {
+  Future<void> startTheCall({required OutpostAccesses accesses}) async {
     if (isJoining.value) return;
 
     final isWsConnected = wsClient.connected;
@@ -493,7 +493,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  searchUsers(String value) async {
+  Future<void> searchUsers(String value) async {
     _deb.debounce(() async {
       if (value.isEmpty) {
         listOfSearchedUsersToInvite.value = [];
@@ -523,7 +523,7 @@ class OutpostDetailController extends GetxController {
     });
   }
 
-  inviteUserToJoinThisOutpost(
+  Future<void> inviteUserToJoinThisOutpost(
       {required String userId, required bool inviteToSpeak}) async {
     if (outpost.value == null) return;
     if (loadingInviteId.value == userId + inviteToSpeak.toString()) return;

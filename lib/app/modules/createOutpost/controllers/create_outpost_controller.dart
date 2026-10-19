@@ -157,7 +157,7 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  addHost(String email, String name) {
+  void addHost(String email, String name) {
     // add if not already in the list
     if (!lumaHosts.any((e) => e.email == email)) {
       lumaHosts.add(AddHostModel(
@@ -171,7 +171,7 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  addGuest(String email, String name) {
+  void addGuest(String email, String name) {
     // add if not already in the list
     if (!lumaGuests.any((e) => e.email == email)) {
       lumaGuests.add(AddGuestModel(
@@ -181,14 +181,14 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  removeGuest(String email) {
+  void removeGuest(String email) {
     // remove the guest from the list if it exists
     if (lumaGuests.any((e) => e.email == email)) {
       lumaGuests.removeWhere((e) => e.email == email);
     }
   }
 
-  removeHost(String email) {
+  void removeHost(String email) {
     // remove the host from the list if it exists
     if (lumaHosts.any((e) => e.email == email)) {
       lumaHosts.removeWhere((e) => e.email == email);
@@ -235,12 +235,8 @@ class CreateOutpostController extends GetxController {
     return targets;
   }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
 
-  _createStep({
+  TargetFocus _createStep({
     required GlobalKey targetId,
     required String text,
     bool hasNext = true,
@@ -313,10 +309,12 @@ class CreateOutpostController extends GetxController {
     saveIntroAsDone(setAsFinished);
     try {
       tutorialCoachMark.finish();
-    } catch (e) {}
+    } catch (e) {
+      // The tutorial was never shown.
+    }
   }
 
-  pickImage() async {
+  Future<void> pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final f = File(pickedFile
@@ -336,7 +334,7 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  Future<String?> uploadFile({required outpostId}) async {
+  Future<String?> uploadFile({required String outpostId}) async {
     try {
       final storageRef =
           FirebaseStorage.instance.ref().child('outposts/$outpostId');
@@ -365,23 +363,23 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  toggleScheduled() {
+  void toggleScheduled() {
     isScheduled.value = !isScheduled.value;
   }
 
-  setTags(List<String> values) {
+  void setTags(List<String> values) {
     tags.value = values;
   }
 
-  setRoomPrivacyType(String value) {
+  void setRoomPrivacyType(String value) {
     outpostAccessType.value = value;
   }
 
-  setRoomSpeakingType(String value) {
+  void setRoomSpeakingType(String value) {
     outpostSpeakerType.value = value;
   }
 
-  setRoomSubject(String value) {
+  void setRoomSubject(String value) {
     outpostSubject.value = value;
   }
 
@@ -401,7 +399,7 @@ class CreateOutpostController extends GetxController {
     return scheduledFor.value;
   }
 
-  get shouldSelectTicketHolersForSpeaking {
+  bool get shouldSelectTicketHolersForSpeaking {
     return (outpostSpeakerType.value ==
                 BuyableTicketTypes.onlyFriendTechTicketHolders ||
             outpostSpeakerType.value ==
@@ -412,7 +410,7 @@ class CreateOutpostController extends GetxController {
         addressesToAddForSpeaking.isEmpty;
   }
 
-  get shouldSelectTicketHolersForAccess {
+  bool get shouldSelectTicketHolersForAccess {
     return ((outpostAccessType.value ==
                 BuyableTicketTypes.onlyFriendTechTicketHolders) ||
             outpostAccessType.value ==
@@ -423,21 +421,21 @@ class CreateOutpostController extends GetxController {
         addressesToAddForEntering.isEmpty;
   }
 
-  get shouldBuyTicketToSpeak {
+  bool get shouldBuyTicketToSpeak {
     return outpostSpeakerType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders ||
         outpostSpeakerType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
         outpostSpeakerType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
-  get shouldBuyTicketToAccess {
+  bool get shouldBuyTicketToAccess {
     return outpostAccessType.value ==
             BuyableTicketTypes.onlyFriendTechTicketHolders ||
         outpostAccessType.value == BuyableTicketTypes.onlyArenaTicketHolders ||
         outpostAccessType.value == BuyableTicketTypes.onlyPodiumPassHolders;
   }
 
-  toggleAddressForSelectedList({
+  Future<void> toggleAddressForSelectedList({
     required String address,
     required String ticketPermissionType,
   }) async {
@@ -474,7 +472,7 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  toggleArenaUser({
+  void toggleArenaUser({
     required StarsArenaUser user,
     required String ticketPermissiontype,
   }) {
@@ -502,7 +500,7 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  toggleUserToSelectedList({
+  Future<void> toggleUserToSelectedList({
     required UserModel user,
     required String ticketPermissiontype,
   }) async {
@@ -619,15 +617,15 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  removeAddressForEntering(String address) {
+  void removeAddressForEntering(String address) {
     addressesToAddForEntering.remove(address);
   }
 
-  removeAddressForSpeaking(String address) {
+  void removeAddressForSpeaking(String address) {
     addressesToAddForSpeaking.remove(address);
   }
 
-  searchUsers(String value, {String? ticketType}) async {
+  Future<void> searchUsers(String value, {String? ticketType}) async {
     searchValueForSeletTickets.value = value;
     if (value.isEmpty) {
       listOfSearchedUsersToBuyTicketFrom.value = [];
@@ -657,7 +655,6 @@ class CreateOutpostController extends GetxController {
             ),
           ...podiumUsers
         ];
-      } catch (e) {
       } finally {
         showLoadingOnSearchInput.value = false;
       }
@@ -676,14 +673,14 @@ class CreateOutpostController extends GetxController {
     return false;
   }
 
-  get _shouldCreateLumaEvent =>
+  bool get _shouldCreateLumaEvent =>
       addToLuma.value &&
       isScheduled.value &&
-      scheduledFor != 0 &&
+      scheduledFor.value != 0 &&
       lumaHosts.value.isNotEmpty &&
       lumaGuests.value.isNotEmpty;
 
-  create() async {
+  Future<void> create() async {
     if (outpostName.value.isEmpty) {
       Toast.error(message: 'Outpost name cannot be empty');
       return;
@@ -782,7 +779,7 @@ class CreateOutpostController extends GetxController {
     }
   }
 
-  _resetAllFields() {
+  void _resetAllFields() {
     outpostName.value = "";
     selectedFile = null;
     tags.value = [];
@@ -804,7 +801,7 @@ class CreateOutpostController extends GetxController {
     cohosts.value = [];
   }
 
-  openSelectTicketBottomSheet({
+  void openSelectTicketBottomSheet({
     required String buyTicketToGetPermisionFor,
   }) {
     searchValueForSeletTickets.value = "";
@@ -944,7 +941,6 @@ class _SelectUsersToBuyTicketFromBottomSheetContentState
                         : controller.outpostAccessType.value;
                 bool isAddress =
                     controller.checkIfValueIsDirectAddress(searchValue);
-                try {} catch (e) {}
                 return SizedBox(
                   height: 70,
                   child: Input(
@@ -1076,10 +1072,8 @@ class _SelectUsersToBuyTicketFromBottomSheetContentState
                                 .toList();
                         selectedIds = selectedUsers.map((e) => e.uuid).toList();
                       } else {
-                        return Container(
-                          child: const Center(
-                            child: Text('Error, type is not valid'),
-                          ),
+                        return const Center(
+                          child: Text('Error, type is not valid'),
                         );
                       }
                       // move selectedIds to the top of the list then my id to the top of them
@@ -1160,7 +1154,7 @@ class _SelectUsersToBuyTicketFromBottomSheetContentState
                                             ],
                                           ),
                                           Text(
-                                            "Followers: ${numberOfFollowers}",
+                                            "Followers: $numberOfFollowers",
                                             style: const TextStyle(
                                               fontSize: 12,
                                             ),
@@ -1256,9 +1250,8 @@ class _SelectUsersToBuyTicketFromBottomSheetContentState
                                       Row(
                                         children: [
                                           Text(
-                                            "user ID: " +
-                                                truncate(element.user!.uuid,
-                                                    length: 12),
+                                            "user ID: ${truncate(element.user!.uuid,
+                                                    length: 12)}",
                                             style: TextStyle(
                                               color: ColorName.secondaryText,
                                               fontSize: 12,

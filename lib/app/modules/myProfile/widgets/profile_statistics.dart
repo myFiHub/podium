@@ -241,7 +241,7 @@ class _IncomeRow extends StatelessWidget {
 }
 
 class PriceSkeleton extends StatelessWidget {
-  const PriceSkeleton({
+  const PriceSkeleton({super.key, 
     required this.price,
     required this.isLoading,
   });

@@ -10,7 +10,7 @@ import 'package:podium/widgets/ui/app_ui.dart';
 import '../controllers/notifications_controller.dart';
 
 class NotificationsView extends GetView<NotificationsController> {
-  const NotificationsView({Key? key}) : super(key: key);
+  const NotificationsView({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +60,7 @@ class NotificationsView extends GetView<NotificationsController> {
 }
 
 class EmptyNotificationsWidget extends StatelessWidget {
-  const EmptyNotificationsWidget({Key? key}) : super(key: key);
+  const EmptyNotificationsWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -81,10 +81,10 @@ class NotificationCard extends StatelessWidget {
   final NotificationsController controller;
 
   const NotificationCard({
-    Key? key,
+    super.key,
     required this.notification,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +116,7 @@ class NotificationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _NotificationAvatar(
-                key: ValueKey('img_${imageSrc}'),
+                key: ValueKey('img_$imageSrc'),
                 imageSrc: imageSrc,
                 alt: alt,
                 isInvite: isInvite,
@@ -127,7 +127,7 @@ class NotificationCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     NotificationHeader(
-                      key: ValueKey('${imageSrc}_${alt}'),
+                      key: ValueKey('${imageSrc}_$alt'),
                       imageSrc: imageSrc,
                       alt: alt,
                       title: title,
@@ -233,13 +233,13 @@ class NotificationHeader extends StatelessWidget {
   final bool isRead;
 
   const NotificationHeader({
-    Key? key,
+    super.key,
     required this.imageSrc,
     required this.alt,
     required this.title,
     required this.isInvite,
     required this.isRead,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +247,7 @@ class NotificationHeader extends StatelessWidget {
       children: [
         Flexible(
           child: NotifTitleWidget(
-            key: ValueKey('title_${title}'),
+            key: ValueKey('title_$title'),
             title: title,
           ),
         ),
@@ -275,9 +275,9 @@ class NotificationMessage extends StatelessWidget {
   final String message;
 
   const NotificationMessage({
-    Key? key,
+    super.key,
     required this.message,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -298,13 +298,13 @@ class NotificationIdSection extends StatelessWidget {
   final NotificationsController controller;
 
   const NotificationIdSection({
-    Key? key,
+    super.key,
     required this.idPrefix,
     required this.notifierId,
     required this.isInvite,
     required this.notificationId,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -329,7 +329,7 @@ class NotificationIdSection extends StatelessWidget {
             children: [
               Flexible(
                 child: Text.rich(
-                  key: ValueKey('richText_${notifierId}'),
+                  key: ValueKey('richText_$notifierId'),
                   TextSpan(
                     children: [
                       TextSpan(
@@ -384,10 +384,10 @@ class NotificationActions extends StatelessWidget {
   final NotificationsController controller;
 
   const NotificationActions({
-    Key? key,
+    super.key,
     required this.notification,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -400,7 +400,7 @@ class NotificationActions extends StatelessWidget {
             _NotifActionButton(
               key: ValueKey('read_${notification.uuid}'),
               label: 'Mark as read',
-              loading: loadingInviteId == notification.uuid + 'read',
+              loading: loadingInviteId == '${notification.uuid}read',
               style: _NotifActionStyle.text,
               onPressed: () {
                 controller.markNotificationAsRead(id: notification.uuid);
@@ -411,7 +411,7 @@ class NotificationActions extends StatelessWidget {
             _NotifActionButton(
               key: ValueKey('reject_${notification.uuid}'),
               label: 'Reject',
-              loading: loadingInviteId == notification.uuid + 'reject',
+              loading: loadingInviteId == '${notification.uuid}reject',
               style: _NotifActionStyle.danger,
               onPressed: () {
                 controller.rejectOutpostInvitation(
@@ -423,7 +423,7 @@ class NotificationActions extends StatelessWidget {
             _NotifActionButton(
               key: ValueKey('accept_${notification.uuid}'),
               label: 'Accept',
-              loading: loadingInviteId == notification.uuid + 'accept',
+              loading: loadingInviteId == '${notification.uuid}accept',
               style: _NotifActionStyle.primary,
               onPressed: () {
                 controller.acceptOutpostInvitation(

@@ -1,4 +1,4 @@
-library circular_countdown_timer;
+library;
 
 import 'package:flutter/material.dart';
 
@@ -218,7 +218,7 @@ class CircularCountDownTimerState extends State<CircularCountDownTimer>
     }
   }
 
-  _defaultFormat(Duration duration) {
+  String _defaultFormat(Duration duration) {
     if (duration.inHours != 0) {
       return '${duration.inHours.toString().padLeft(2, '0')}:${(duration.inMinutes % 60).toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
     } else if (duration.inMinutes != 0) {

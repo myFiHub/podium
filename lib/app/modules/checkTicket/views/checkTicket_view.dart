@@ -11,6 +11,8 @@ import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class CheckTicketView extends GetWidget<CheckticketController> {
+  const CheckTicketView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -296,13 +298,13 @@ class SingleTicketHolder extends StatelessWidget {
                     children: [
                       if (showAccessPrice)
                         AppPill(
-                          label: accessPriceFullString + ' (access)',
+                          label: '$accessPriceFullString (access)',
                           color: AppColors.accent,
                           icon: Icons.login_rounded,
                         ),
                       if (showSpeakPrice)
                         AppPill(
-                          label: speakPriceFullString + ' (speak)',
+                          label: '$speakPriceFullString (speak)',
                           color: AppColors.accent,
                           icon: Icons.mic_rounded,
                         ),

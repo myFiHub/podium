@@ -143,7 +143,7 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
     );
     final onRight = resting.dx + _bubbleSize / 2 > size.width / 2;
     // Leave room for the fan above and below the bubble while it's open.
-    final fanReach = _fanRadius + _actionSize / 2 + 18;
+    const fanReach = _fanRadius + _actionSize / 2 + 18;
     final open = _expanded;
     final topLeft = open
         ? Offset(

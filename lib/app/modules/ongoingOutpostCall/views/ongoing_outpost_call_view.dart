@@ -20,7 +20,7 @@ import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:share_plus/share_plus.dart';
 
 class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
-  const OngoingGroupCallView({Key? key}) : super(key: key);
+  const OngoingGroupCallView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +277,7 @@ class _JoiningPlaceholder extends StatelessWidget {
           const SizedBox(
             width: 28,
             height: 28,
-            child: const CircularProgressIndicator(strokeWidth: 2.5),
+            child: CircularProgressIndicator(strokeWidth: 2.5),
           ),
           const SizedBox(height: 14),
           Text(

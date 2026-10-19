@@ -79,17 +79,9 @@ class ProfileController extends GetxController {
     updateTheData();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
 
-  updateTheData() async {
+  Future<void> updateTheData() async {
     mySharesOfPodiumPassFromThisUser.value = 0;
     await Future.wait<void>([
       getPrices(),
@@ -99,7 +91,7 @@ class ProfileController extends GetxController {
     ]);
   }
 
-  getFollowers({bool silent = false}) async {
+  Future<void> getFollowers({bool silent = false}) async {
     if (!silent) {
       isGettingFollowers.value = true;
     }
@@ -112,7 +104,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  getFollowings({bool silent = false}) async {
+  Future<void> getFollowings({bool silent = false}) async {
     if (!silent) {
       isGettingFollowings.value = true;
     }
@@ -125,7 +117,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  getUserInfo() async {
+  Future<void> getUserInfo() async {
     final info = await HttpApis.podium.getUserData(userInfo.value!.uuid);
     if (info != null) {
       userInfo.value = info;
@@ -138,8 +130,8 @@ class ProfileController extends GetxController {
     }
   }
 
-  openUserProfilePage({required String uuid}) async {
-    if (uuid == userInfo.value!.uuid || loadingUserID != '') {
+  Future<void> openUserProfilePage({required String uuid}) async {
+    if (uuid == userInfo.value!.uuid || loadingUserID.value != '') {
       return;
     }
     loadingUserID.value = uuid;
@@ -160,7 +152,7 @@ class ProfileController extends GetxController {
     loadingUserID.value = '';
   }
 
-  updateMyFollowState(UserModel user) {
+  void updateMyFollowState(UserModel user) {
     final opposite = user.followed_by_me != null ? !user.followed_by_me! : true;
 
     userInfo.value = userInfo.value!.copyWith.followed_by_me(opposite);
@@ -187,14 +179,14 @@ class ProfileController extends GetxController {
     // is outpostDetails page  registered
   }
 
-  alsoUpdateOutpostListMembersIfExists(String uuid) {
+  void alsoUpdateOutpostListMembersIfExists(String uuid) {
     if (Get.isRegistered<OutpostDetailController>()) {
       final outpostDetailController = Get.find<OutpostDetailController>();
       outpostDetailController.updatedFollowDataForMember(uuid);
     }
   }
 
-  updateFollowState(FollowerModel user) {
+  void updateFollowState(FollowerModel user) {
     if (user.uuid == userInfo.value!.uuid) {
       userInfo.value = userInfo.value!.copyWith.followed_by_me(
         !user.followed_by_me,
@@ -235,7 +227,7 @@ class ProfileController extends GetxController {
     alsoUpdateOutpostListMembersIfExists(user.uuid);
   }
 
-  getPrices() async {
+  Future<void> getPrices() async {
     try {
       if (userInfo.value == null) {
         return;
@@ -252,7 +244,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  getFriendTechPriceAndMyShare({int delay = 0}) async {
+  Future<void> getFriendTechPriceAndMyShare({int delay = 0}) async {
     loadingFriendTechPrice.value = true;
     if (delay > 0) {
       await Future.delayed(Duration(seconds: delay));
@@ -288,7 +280,7 @@ class ProfileController extends GetxController {
     loadingFriendTechPrice.value = false;
   }
 
-  getArenaPriceAndMyShares({int delay = 0}) async {
+  Future<void> getArenaPriceAndMyShares({int delay = 0}) async {
     loadingArenaPrice.value = true;
 
     if (delay > 0) {
@@ -318,7 +310,7 @@ class ProfileController extends GetxController {
     loadingArenaPrice.value = false;
   }
 
-  getPodiumPassPriceAndMyShares({int delay = 0}) async {
+  Future<void> getPodiumPassPriceAndMyShares({int delay = 0}) async {
     loadingPodiumPassPrice.value = true;
     if (delay > 0) {
       await Future.delayed(Duration(seconds: delay));
@@ -342,7 +334,7 @@ class ProfileController extends GetxController {
       }
     }
     loadingPodiumPassPrice.value = false;
-    if (buyPrice != null && buyPrice != BigInt.zero) {
+    if (buyPrice != null && buyPrice != 0) {
       //  price in aptos move
       podiumPassBuyPrice.value = buyPrice;
     }
@@ -352,7 +344,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  sellPodiumPass() async {
+  Future<void> sellPodiumPass() async {
     isSellingPodiumPass.value = true;
     try {
       final (sold, hash) = await AptosMovement.sellTicketOnPodiumPass(
@@ -378,7 +370,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  buyPodiumPass() async {
+  Future<void> buyPodiumPass() async {
     isBuyingPodiumPass.value = true;
     try {
       final price = await AptosMovement.getTicketPriceForPodiumPass(
@@ -421,7 +413,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  buyFriendTechTicket() async {
+  Future<void> buyFriendTechTicket() async {
     try {
       final activeWallets = activeFriendTechWallets.value!;
       final preferedAddress = activeWallets.preferedWalletAddress;
@@ -455,13 +447,12 @@ class ProfileController extends GetxController {
           message: 'Error buying Friendtech key',
         );
       }
-    } catch (e) {
     } finally {
       isBuyingFriendTechTicket.value = false;
     }
   }
 
-  buyArenaTicket() async {
+  Future<void> buyArenaTicket() async {
     try {
       final mySelectedWallet = await choseAWallet(chainId: avalancheChainId);
       if (mySelectedWallet == null) {
@@ -489,13 +480,12 @@ class ProfileController extends GetxController {
       } else {
         Toast.error(message: 'Error buying Arena ticket');
       }
-    } catch (e) {
     } finally {
       isBuyingArenaTicket.value = false;
     }
   }
 
-  getPassBuyers() async {
+  Future<void> getPassBuyers() async {
     isGettingPassBuyers.value = true;
     final buyers = await HttpApis.podium.podiumPassBuyers(
       uuid: userInfo.value!.uuid,

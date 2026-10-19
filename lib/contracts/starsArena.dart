@@ -1,7 +1,7 @@
 import 'package:podium/env.dart';
 
 class StarsArenaSmartContract {
-  static final String address = Env.starsArenaAddress_Avalanche_Mainnet;
+  static const String address = Env.starsArenaAddress_Avalanche_Mainnet;
   static const abi = [
     {"inputs": [], "stateMutability": "nonpayable", "type": "constructor"},
     {

@@ -9,7 +9,7 @@ part of 'metadata.dart';
 PodiumAppMetadata _$PodiumAppMetadataFromJson(Map<String, dynamic> json) =>
     PodiumAppMetadata(
       force_update: json['force_update'] as bool,
-      movement_aptos_metadata: Movement_Aptos_Metadata.fromJson(
+      movement_aptos_metadata: MovementAptosMetadata.fromJson(
           json['movement_aptos_metadata'] as Map<String, dynamic>),
       referrals_enabled: json['referrals_enabled'] as bool,
       va: json['va'] as String,
@@ -27,9 +27,9 @@ Map<String, dynamic> _$PodiumAppMetadataToJson(PodiumAppMetadata instance) =>
       'version_check': instance.version_check,
     };
 
-Movement_Aptos_Metadata _$Movement_Aptos_MetadataFromJson(
+MovementAptosMetadata _$MovementAptosMetadataFromJson(
         Map<String, dynamic> json) =>
-    Movement_Aptos_Metadata(
+    MovementAptosMetadata(
       chain_id: json['chain_id'] as String,
       cheer_boo_address: json['cheer_boo_address'] as String,
       name: json['name'] as String,
@@ -37,8 +37,8 @@ Movement_Aptos_Metadata _$Movement_Aptos_MetadataFromJson(
       rpc_url: json['rpc_url'] as String,
     );
 
-Map<String, dynamic> _$Movement_Aptos_MetadataToJson(
-        Movement_Aptos_Metadata instance) =>
+Map<String, dynamic> _$MovementAptosMetadataToJson(
+        MovementAptosMetadata instance) =>
     <String, dynamic>{
       'chain_id': instance.chain_id,
       'cheer_boo_address': instance.cheer_boo_address,

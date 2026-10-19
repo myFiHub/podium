@@ -110,7 +110,7 @@ class OngoingOutpostCallController extends GetxController {
           break;
         }
       }
-      if (my_user.length == 0) return;
+      if (my_user.isEmpty) return;
       mySession.value = (my_user[0]);
       mySession.refresh();
       _enforceTimeUp();
@@ -125,11 +125,11 @@ class OngoingOutpostCallController extends GetxController {
     });
     final callSession = outpostCallController.session;
     callSession?.delayed(const Duration(seconds: 10), () {
-      if (members.value.length == 0) {
+      if (members.value.isEmpty) {
         outpostCallController.fetchLiveData(withJoin: true);
       }
       callSession.delayed(const Duration(seconds: 3), () {
-        if (members.value.length == 0) {
+        if (members.value.isEmpty) {
           Toast.error(
             title: 'Could not join the outpost',
             message: 'Please try again.',
@@ -171,7 +171,7 @@ class OngoingOutpostCallController extends GetxController {
     sessionData.value = null;
   }
 
-  report() async {
+  Future<void> report() async {
     final reason = reportReason.value;
     if (reason.isEmpty) {
       return;
@@ -193,7 +193,7 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  onUserStartedRecording(IncomingMessage incomingMessage) {
+  void onUserStartedRecording(IncomingMessage incomingMessage) {
     final recorderUser = members.value
         .firstWhere((e) => e.address == incomingMessage.data.address!);
     recorderUserId.value = recorderUser.uuid;
@@ -202,7 +202,7 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  onUserStoppedRecording(IncomingMessage incomingMessage) {
+  void onUserStoppedRecording(IncomingMessage incomingMessage) {
     final recorderUser = members.value
         .firstWhere((e) => e.address == incomingMessage.data.address!);
     if (recorderUser.uuid == recorderUserId.value) {
@@ -213,7 +213,7 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  updateUserRemainingTime(
+  void updateUserRemainingTime(
       {required String address, required int newTimeInSeconds}) {
     l.d('updateUserRemainingTime: $address, $newTimeInSeconds');
     outpostCallController.updateUserTime(
@@ -222,7 +222,7 @@ class OngoingOutpostCallController extends GetxController {
     );
   }
 
-  updateUserIsTalking({required String address, required bool isTalking}) {
+  void updateUserIsTalking({required String address, required bool isTalking}) {
     outpostCallController.updateUserIsTalking(
       address: address,
       isTalking: isTalking,
@@ -235,7 +235,7 @@ class OngoingOutpostCallController extends GetxController {
     updateUserIsTalking(address: myUser.address, isTalking: isTalking);
   }
 
-  handleTimeIsUp(IncomingMessage incomingMessage) {
+  void handleTimeIsUp(IncomingMessage incomingMessage) {
     final address = incomingMessage.data.address!;
     final creatorUuid = outpostCallController.outpost.value!.creator_user_uuid;
     if (address == myUser.address && creatorUuid != myUser.uuid) {
@@ -292,7 +292,7 @@ class OngoingOutpostCallController extends GetxController {
     );
   }
 
-  handleIncomingReaction(IncomingMessage incomingMessage) {
+  void handleIncomingReaction(IncomingMessage incomingMessage) {
     final members = [...outpostCallController.members.value];
     final targetUserIndex = members.indexWhere(
         (item) => item.address == incomingMessage.data.react_to_user_address);
@@ -308,7 +308,7 @@ class OngoingOutpostCallController extends GetxController {
     );
   }
 
-  startIntro() {
+  void startIntro() {
     if (storage.read(IntroStorageKeys.viewedOngiongCall) == null) {
       shouldShowIntro.value = true;
     } else {
@@ -397,7 +397,7 @@ class OngoingOutpostCallController extends GetxController {
     return targets;
   }
 
-  _createStep({
+  TargetFocus _createStep({
     required GlobalKey targetId,
     required String text,
     bool hasNext = true,
@@ -462,10 +462,12 @@ class OngoingOutpostCallController extends GetxController {
 
   void introFinished(bool? setAsFinished) {
     saveIntroAsDone(setAsFinished);
+    shouldShowIntro.value = false;
     try {
       tutorialCoachMark.finish();
-      shouldShowIntro.value = false;
-    } catch (e) {}
+    } catch (e) {
+      // The tutorial was never shown.
+    }
   }
 
   bool get isOutOfTime {
@@ -506,7 +508,7 @@ class OngoingOutpostCallController extends GetxController {
     setMutedState(!muted);
   }
 
-  setMutedState(bool muted) async {
+  Future<void> setMutedState(bool muted) async {
     if (!wsClient.connected) {
       final reconnectSuccess = await wsClient.reconnect();
       if (!reconnectSuccess || !wsClient.connected) {
@@ -524,11 +526,11 @@ class OngoingOutpostCallController extends GetxController {
     jitsiMeet.setAudioMuted(muted);
   }
 
-  startRecording() {
+  void startRecording() {
     _setIsRecording(true);
   }
 
-  stopRecording() {
+  void stopRecording() {
     _setIsRecording(false);
   }
 
@@ -542,7 +544,7 @@ class OngoingOutpostCallController extends GetxController {
     await recorder.start(config, path: path);
   }
 
-  _setIsRecording(bool recording) async {
+  Future<void> _setIsRecording(bool recording) async {
     final canRecord = await recorderController.initializeRecorder();
     if (!canRecord) {
       return;
@@ -568,7 +570,7 @@ class OngoingOutpostCallController extends GetxController {
           outpostId: outpostCallController.outpost.value!.uuid,
           eventType: OutgoingMessageTypeEnums.stop_recording,
         );
-        final path = await recorderController.lastRecordedPath;
+        final path = recorderController.lastRecordedPath;
         if (path != null) {
           Toast.success(
             title: 'Recording saved',
@@ -581,20 +583,20 @@ class OngoingOutpostCallController extends GetxController {
     // use recorder controller to record the file
   }
 
-  handleInteractionEvent({
+  void handleInteractionEvent({
     required IncomingMessageType action,
     required String initiatorId,
     required String targetId,
   }) {
     lastReaction.value = Reaction(targetId: targetId, reaction: action);
-    update(['confetti' + targetId]);
+    update(['confetti$targetId']);
     Future.delayed(const Duration(milliseconds: 50), () {
       lastReaction.value = Reaction(
           targetId: '', reaction: IncomingMessageType.userStoppedSpeaking);
     });
   }
 
-  onLikeClicked({required String userId}) async {
+  Future<void> onLikeClicked({required String userId}) async {
     final user = _getUserById(id: userId);
     sendOutpostEvent(
       outpostId: outpostCallController.outpost.value!.uuid,
@@ -614,7 +616,7 @@ class OngoingOutpostCallController extends GetxController {
     timers.refresh();
   }
 
-  onDislikeClicked({required String userId}) async {
+  Future<void> onDislikeClicked({required String userId}) async {
     final user = _getUserById(id: userId);
 
     sendOutpostEvent(
@@ -635,7 +637,7 @@ class OngoingOutpostCallController extends GetxController {
     timers.refresh();
   }
 
-  _removeLoadingCheerBoo({
+  void _removeLoadingCheerBoo({
     required String userId,
     required bool cheer,
   }) {
@@ -643,7 +645,7 @@ class OngoingOutpostCallController extends GetxController {
     loadingWalletAddressForUser.refresh();
   }
 
-  cheerBoo(
+  Future<void> cheerBoo(
       {required String targetUserUuid,
       required bool cheer,
       bool? fromMeetPage}) async {
@@ -706,8 +708,8 @@ class OngoingOutpostCallController extends GetxController {
         aptosReceiverAddresses.remove(myPrimaryAddress);
       }
 
-      if (receiverAddresses.length == 0 &&
-          aptosReceiverAddresses.length == 0 &&
+      if (receiverAddresses.isEmpty &&
+          aptosReceiverAddresses.isEmpty &&
           (isSelfReaction || isBoo)) {
         l.e("No Users found in session");
         Toast.error(
@@ -828,7 +830,7 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  audioMuteChanged({required bool muted}) async {
+  Future<void> audioMuteChanged({required bool muted}) async {
     if (!wsClient.connected) {
       final reconnectSuccess = await wsClient.reconnect();
       if (!reconnectSuccess || !wsClient.connected) {
@@ -886,7 +888,7 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  checkWalletConnected({void Function()? afterConnection}) {
+  bool checkWalletConnected({void Function()? afterConnection}) {
     final connectedWalletAddress =
         globalController.connectedWalletAddress.value;
     if (connectedWalletAddress == '') {

@@ -10,7 +10,7 @@ const movementIcon =
 ////////// Aptos chains (these are just to format things and keep things in shape,
 /// they are not used for anything else since they are not supported by the appkit)
 
-final movementAptosBardokChain = const ReownAppKitModalNetworkInfo(
+const movementAptosBardokChain = ReownAppKitModalNetworkInfo(
   name: 'Movement Testnet',
   chainId: '250',
   chainIcon: movementIcon,
@@ -19,7 +19,7 @@ final movementAptosBardokChain = const ReownAppKitModalNetworkInfo(
   explorerUrl: 'https://explorer.movementlabs.xyz',
 );
 
-final movementTestnet = const ReownAppKitModalNetworkInfo(
+const movementTestnet = ReownAppKitModalNetworkInfo(
   name: 'Movement Aptos Testnet',
   chainId: '177',
   chainIcon: movementIcon,
@@ -29,7 +29,7 @@ final movementTestnet = const ReownAppKitModalNetworkInfo(
 );
 
 ///////////////////
-final movementEVMMainNetChain = const ReownAppKitModalNetworkInfo(
+const movementEVMMainNetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement',
   chainId: '126',
   chainIcon: movementIcon,
@@ -38,7 +38,7 @@ final movementEVMMainNetChain = const ReownAppKitModalNetworkInfo(
   explorerUrl: 'https://explorer.movementnetwork.xyz/?network=mainnet',
 );
 
-final movementEVMDevnetChain = const ReownAppKitModalNetworkInfo(
+const movementEVMDevnetChain = ReownAppKitModalNetworkInfo(
   name: 'Movement Testnet',
   chainId: '30732',
   chainIcon: movementIcon,
@@ -46,28 +46,28 @@ final movementEVMDevnetChain = const ReownAppKitModalNetworkInfo(
   rpcUrl: 'https://mevm.devnet.imola.movementlabs.xyz',
   explorerUrl: 'https://explorer.devnet.imola.movementlabs.xyz',
 );
-final movementEVMChain = movementEVMDevnetChain;
+const movementEVMChain = movementEVMDevnetChain;
 
 class BlockChainUtils {
   static Future<ReownAppKitModal> initializewm3Service(
-    ReownAppKitModal _w3mService,
+    ReownAppKitModal w3mService,
     RxString connectedWalletAddress,
     RxBool w3serviceInitialized,
   ) async {
-    _w3mService.addListener(() async {
-      if (_w3mService.session == null) {
+    w3mService.addListener(() async {
+      if (w3mService.session == null) {
         connectedWalletAddress.value = '';
         return;
       }
-      final address = await retrieveConnectedWallet(_w3mService);
+      final address = await retrieveConnectedWallet(w3mService);
       connectedWalletAddress.value = address;
     });
-    void _onModalConnect(ModalConnect? event) async {
-      if (_w3mService.session == null) {
+    void onModalConnect(ModalConnect? event) async {
+      if (w3mService.session == null) {
         connectedWalletAddress.value = '';
         return;
       }
-      final address = await retrieveConnectedWallet(_w3mService);
+      final address = await retrieveConnectedWallet(w3mService);
       connectedWalletAddress.value = address;
       if (event != null) {
         String chainId = event.session.chainId;
@@ -78,16 +78,16 @@ class BlockChainUtils {
         final GlobalController globalController = Get.find<GlobalController>();
         await globalController.switchExternalWalletChain(chainId);
       }
-      l.d('Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${_w3mService.session?.chainId}');
+      l.d('Connected Wallet Address: ${connectedWalletAddress.value}, chainId: ${w3mService.session?.chainId}');
       l.i('[initializewm3Service] _onModalConnect ${event?.toString()}');
     }
 
     // ignore: unused_element
-    void _onModalUpdate(ModalConnect? event) {
+    void onModalUpdate(ModalConnect? event) {
       l.i('[initializewm3Service] _onModalUpdate ${event?.toString()}');
     }
 
-    void _onModalNetworkChange(ModalNetworkChange? event) async {
+    void onModalNetworkChange(ModalNetworkChange? event) async {
       l.i('[initializewm3Service] _onModalNetworkChange ${event?.toString()}');
       if (event != null) {
         GlobalController globalController = Get.find<GlobalController>();
@@ -101,23 +101,23 @@ class BlockChainUtils {
       }
     }
 
-    void _onModalDisconnect(ModalDisconnect? event) {
+    void onModalDisconnect(ModalDisconnect? event) {
       l.i('[initializewm3Service] _onModalDisconnect ${event?.toString()}');
     }
 
-    void _onModalError(ModalError? event) {
+    void onModalError(ModalError? event) {
       l.i('[initializewm3Service] _onModalError ${event?.toString()}');
     }
 
-    void _onSessionExpired(SessionExpire? event) {
+    void onSessionExpired(SessionExpire? event) {
       l.i('[initializewm3Service] _onSessionExpired ${event?.toString()}');
     }
 
-    void _onSessionUpdate(SessionUpdate? event) {
+    void onSessionUpdate(SessionUpdate? event) {
       l.i('[initializewm3Service] _onSessionUpdate ${event?.toString()}');
     }
 
-    void _onSessionEvent(SessionEvent? event) {
+    void onSessionEvent(SessionEvent? event) {
       l.i('[initializewm3Service] _onSessionEvent ${event?.toString()}');
       String? eventChainId = event?.chainId;
       if (eventChainId != null && eventChainId.isNotEmpty) {
@@ -130,48 +130,48 @@ class BlockChainUtils {
       }
     }
 
-    void _onRelayClientConnect(EventArgs? event) {
+    void onRelayClientConnect(EventArgs? event) {
       l.i('Relay connected');
     }
 
-    void _onRelayClientError(EventArgs? event) {
+    void onRelayClientError(EventArgs? event) {
       l.i('[initializewm3Service] _onRelayClientError ${event?.toString()}');
     }
 
-    void _onRelayClientDisconnect(EventArgs? event) {
+    void onRelayClientDisconnect(EventArgs? event) {
       l.i('Relay disconnected: ${event?.toString()}');
     }
 
-    _w3mService.onModalConnect.subscribe(_onModalConnect);
-    _w3mService.onModalNetworkChange.subscribe(_onModalNetworkChange);
-    _w3mService.onModalDisconnect.subscribe(_onModalDisconnect);
-    _w3mService.onModalError.subscribe(_onModalError);
+    w3mService.onModalConnect.subscribe(onModalConnect);
+    w3mService.onModalNetworkChange.subscribe(onModalNetworkChange);
+    w3mService.onModalDisconnect.subscribe(onModalDisconnect);
+    w3mService.onModalError.subscribe(onModalError);
     // session related subscriptions
-    _w3mService.onSessionExpireEvent.subscribe(_onSessionExpired);
-    _w3mService.onSessionUpdateEvent.subscribe(_onSessionUpdate);
-    _w3mService.onSessionEventEvent.subscribe(_onSessionEvent);
+    w3mService.onSessionExpireEvent.subscribe(onSessionExpired);
+    w3mService.onSessionUpdateEvent.subscribe(onSessionUpdate);
+    w3mService.onSessionEventEvent.subscribe(onSessionEvent);
     // relayClient subscriptions
-    _w3mService.appKit!.core.relayClient.onRelayClientConnect.subscribe(
-      _onRelayClientConnect,
+    w3mService.appKit!.core.relayClient.onRelayClientConnect.subscribe(
+      onRelayClientConnect,
     );
-    _w3mService.appKit!.core.relayClient.onRelayClientError.subscribe(
-      _onRelayClientError,
+    w3mService.appKit!.core.relayClient.onRelayClientError.subscribe(
+      onRelayClientError,
     );
-    _w3mService.appKit!.core.relayClient.onRelayClientDisconnect.subscribe(
-      _onRelayClientDisconnect,
+    w3mService.appKit!.core.relayClient.onRelayClientDisconnect.subscribe(
+      onRelayClientDisconnect,
     );
 
     try {
-      await _w3mService.init();
+      await w3mService.init();
       _startListeningToCheerBoEvents();
       final chainId = externalWalletChianId;
       // ignore: unnecessary_null_comparison
       if (chainId != null && chainId.isNotEmpty) {
-        await _w3mService.selectChain(
+        await w3mService.selectChain(
           ReownAppKitModalNetworks.getNetworkInfo(Env.chainNamespace, chainId),
           switchChain: true,
         );
-        _w3mService.loadAccountData().then((_) {
+        w3mService.loadAccountData().then((_) {
           w3serviceInitialized.value = true;
         });
       }
@@ -181,25 +181,25 @@ class BlockChainUtils {
         error: e,
       );
     }
-    return _w3mService;
+    return w3mService;
   }
 
   static Future<String> retrieveConnectedWallet(
-      ReownAppKitModal _w3mService) async {
+      ReownAppKitModal w3mService) async {
     final GlobalController globalController = Get.find<GlobalController>();
     if (globalController.web3ModalService.session == null) {
       return '';
     }
-    if (_w3mService.session == null) {
+    if (w3mService.session == null) {
       return '';
     }
-    final session = _w3mService.session;
+    final session = w3mService.session;
     final connectedChain = session!.chainId;
     String chainId = connectedChain;
 
 
     final accounts = session.getAccounts();
-    final currentNamespace = '${Env.chainNamespace}:${chainId}';
+    final currentNamespace = '${Env.chainNamespace}:$chainId';
     if (accounts != null && accounts.isNotEmpty) {
       final chainsNamespaces = NamespaceUtils.getChainsFromAccounts(accounts);
       if (chainsNamespaces.contains(currentNamespace)) {
@@ -216,7 +216,7 @@ class BlockChainUtils {
     }
   }
 
-  static _startListeningToCheerBoEvents() {
+  static void _startListeningToCheerBoEvents() {
     //
     // final cheerEventToListenTo = _getContractEventListener(
     //   contract: getDeployedContract(

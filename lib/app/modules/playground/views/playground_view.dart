@@ -7,10 +7,10 @@ import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../controllers/playground_controller.dart';
 
-const platform = const MethodChannel('flutter.native/helper');
+const platform = MethodChannel('flutter.native/helper');
 
 class PlaygroundView extends GetView<PlaygroundController> {
-  const PlaygroundView({Key? key}) : super(key: key);
+  const PlaygroundView({super.key});
   @override
   Widget build(BuildContext context) {
     return PageWrapper(

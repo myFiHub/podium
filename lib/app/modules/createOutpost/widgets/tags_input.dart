@@ -16,9 +16,9 @@ class ButtonData {
 class DynamicTags extends StatefulWidget {
   final Function(List<String>) onTagsChanged;
   const DynamicTags({
-    Key? key,
+    super.key,
     required this.onTagsChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<DynamicTags> createState() => _DynamicTagsState();
@@ -169,7 +169,7 @@ class _TagChip extends StatelessWidget {
 }
 
 class DynamicMultilineTags extends StatefulWidget {
-  const DynamicMultilineTags({Key? key}) : super(key: key);
+  const DynamicMultilineTags({super.key});
 
   @override
   State<DynamicMultilineTags> createState() => _DynamicMultilineTagsState();
@@ -398,7 +398,7 @@ class _DynamicMultilineTagsState extends State<DynamicMultilineTags> {
 }
 
 class DynamicAutoCompleteTags extends StatefulWidget {
-  const DynamicAutoCompleteTags({Key? key}) : super(key: key);
+  const DynamicAutoCompleteTags({super.key});
 
   @override
   State<DynamicAutoCompleteTags> createState() =>

@@ -46,7 +46,7 @@ class LoginController extends GetxController {
   final web3AuthLogintype = ''.obs;
   final internalWalletAddress = ''.obs;
   final internalWalletBalance = ''.obs;
-  Function? afterLogin = null;
+  Function? afterLogin;
   String? _privateKeyFromWeb3Auth;
 
   final isReferrerInputExpanded = false.obs;
@@ -97,8 +97,8 @@ class LoginController extends GetxController {
   StreamSubscription<bool>? isLoggedInListener;
   StreamSubscription<String>? deeplinkRouteListener;
 
-  LoginRequest? temporaryLoginRequest = null;
-  AdditionalDataForLogin? temporaryAdditionalData = null;
+  LoginRequest? temporaryLoginRequest;
+  AdditionalDataForLogin? temporaryAdditionalData;
 
   bool isBeforeLaunchUser = false;
 
@@ -223,7 +223,9 @@ class LoginController extends GetxController {
     if (!ignoreIfNotLoggedIn) {
       try {
         await Web3AuthFlutter.logout();
-      } catch (e) {}
+      } catch (e) {
+        // Nobody was logged in.
+      }
     }
     try {
       final (userInfo, privateKey) = await (
@@ -369,7 +371,7 @@ class LoginController extends GetxController {
   }) async {
     if (email.isEmpty) {
       // just a placeholder for email
-      email = const Uuid().v4().replaceAll('-', '') + '@gmail.com';
+      email = '${const Uuid().v4().replaceAll('-', '')}@gmail.com';
     }
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
     isBeforeLaunchUser = false;
@@ -400,7 +402,7 @@ class LoginController extends GetxController {
     _continueLogin(hasTicket: hasTicket);
   }
 
-  _continueLogin({
+  Future<void> _continueLogin({
     required bool hasTicket,
     String? forcedReferrerID,
   }) async {
@@ -458,7 +460,8 @@ class LoginController extends GetxController {
 
     //force to add name if field is empty
     String? savedName = userLoginResponse.name;
-    if (userLoginResponse.name == email || userLoginResponse.name == null) {
+    if (userLoginResponse.name == temporaryAdditionalData!.email ||
+        userLoginResponse.name == null) {
       savedName = await forceSaveUserFullName();
       if (savedName == null) {
         Toast.error(
@@ -502,7 +505,7 @@ class LoginController extends GetxController {
     }
   }
 
-  _redirectToBuyTicketPage() async {
+  Future<void> _redirectToBuyTicketPage() async {
     try {
       await getBalance();
     } catch (e) {
@@ -515,7 +518,7 @@ class LoginController extends GetxController {
     removeLogingInState();
   }
 
-  getBalance() async {
+  Future<void> getBalance() async {
     final balance = await AptosMovement.balance;
     internalWalletBalance.value = bigIntCoinToMoveOnAptos(balance).toString();
   }
@@ -548,7 +551,7 @@ class LoginController extends GetxController {
   }
 
   Future<String?> forceSaveUserFullName() async {
-    final _formKey = GlobalKey<FormBuilderState>();
+    final formKey = GlobalKey<FormBuilderState>();
     String fullName = '';
     await Get.bottomSheet(
       isDismissible: false,
@@ -556,7 +559,7 @@ class LoginController extends GetxController {
       AppSheet(
         title: 'Full Name',
         child: FormBuilder(
-          key: _formKey,
+          key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -585,7 +588,7 @@ class LoginController extends GetxController {
               AppPrimaryButton(
                 label: 'Submit',
                 onPressed: () {
-                  final re = _formKey.currentState?.saveAndValidate();
+                  final re = formKey.currentState?.saveAndValidate();
                   if (re == true) {
                     Navigator.pop(Get.context!, fullName);
                   }
@@ -612,14 +615,14 @@ class LoginController extends GetxController {
 }
 
 Future<String?> showDialogToGetTheEmail() async {
-  final _formKey = GlobalKey<FormBuilderState>();
+  final formKey = GlobalKey<FormBuilderState>();
   String email = '';
   final String? enteredEmail = await Get.bottomSheet(
     isScrollControlled: true,
     AppSheet(
       title: 'Email',
       child: FormBuilder(
-        key: _formKey,
+        key: formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -647,7 +650,7 @@ Future<String?> showDialogToGetTheEmail() async {
             AppPrimaryButton(
               label: 'Submit',
               onPressed: () {
-                final re = _formKey.currentState?.saveAndValidate();
+                final re = formKey.currentState?.saveAndValidate();
                 if (re == true) {
                   Navigator.pop(Get.context!, email);
                 }

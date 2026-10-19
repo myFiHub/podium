@@ -210,7 +210,7 @@ class _Title extends StatelessWidget {
         const SizedBox(height: 4),
         const Text(
           'Podium',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 38,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,

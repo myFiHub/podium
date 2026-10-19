@@ -4,7 +4,7 @@ part 'metadata.g.dart';
 @JsonSerializable()
 class PodiumAppMetadata {
   final bool force_update;
-  final Movement_Aptos_Metadata movement_aptos_metadata;
+  final MovementAptosMetadata movement_aptos_metadata;
   final bool referrals_enabled;
   final String va;
   final String version;
@@ -25,21 +25,21 @@ class PodiumAppMetadata {
 }
 
 @JsonSerializable()
-class Movement_Aptos_Metadata {
+class MovementAptosMetadata {
   final String chain_id;
   final String cheer_boo_address;
   final String name;
   final String podium_protocol_address;
   final String rpc_url;
 
-  const Movement_Aptos_Metadata({
+  const MovementAptosMetadata({
     required this.chain_id,
     required this.cheer_boo_address,
     required this.name,
     required this.podium_protocol_address,
     required this.rpc_url,
   });
-  factory Movement_Aptos_Metadata.fromJson(Map<String, dynamic> json) =>
-      _$Movement_Aptos_MetadataFromJson(json);
-  Map<String, dynamic> toJson() => _$Movement_Aptos_MetadataToJson(this);
+  factory MovementAptosMetadata.fromJson(Map<String, dynamic> json) =>
+      _$MovementAptosMetadataFromJson(json);
+  Map<String, dynamic> toJson() => _$MovementAptosMetadataToJson(this);
 }

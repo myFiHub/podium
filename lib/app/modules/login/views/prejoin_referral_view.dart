@@ -285,7 +285,7 @@ class _AccessUsingTicket extends GetView<LoginController> {
                 itemCount: ticketHoldersList.length,
                 itemBuilder: (context, index) {
                   return _ProfileCard(
-                    key: ValueKey(ticketHoldersList[index].uuid + 'podiumUser'),
+                    key: ValueKey('${ticketHoldersList[index].uuid}podiumUser'),
                     user: ticketHoldersList[index],
                   );
                 },

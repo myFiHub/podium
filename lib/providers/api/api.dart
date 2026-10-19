@@ -21,13 +21,13 @@ final Dio dio = Dio(
 class HttpApis {
   static final HttpApis _instance = HttpApis._internal();
   factory HttpApis() => _instance;
-  HttpApis._internal() {}
+  HttpApis._internal();
 
   static LumaApi lumaApi = LumaApi(dio);
   static ArenaApi arenaApi = ArenaApi(dio);
   static PodiumApi podium = PodiumApi(dio);
 
-  static configure() {
+  static void configure() {
     dio.interceptors.add(
       PrettyDioLogger(
         requestHeader: true,

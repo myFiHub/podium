@@ -104,7 +104,7 @@ class ShareIconButton extends StatelessWidget {
 
 class OutpostTopBar extends StatelessWidget {
   final OutpostModel outpost;
-  const OutpostTopBar({required this.outpost});
+  const OutpostTopBar({super.key, required this.outpost});
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +138,7 @@ class OutpostTopBar extends StatelessWidget {
 class OutpostHeroCard extends StatelessWidget {
   final OutpostModel outpost;
   final bool iAmOwner;
-  const OutpostHeroCard({required this.outpost, required this.iAmOwner});
+  const OutpostHeroCard({super.key, required this.outpost, required this.iAmOwner});
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +240,7 @@ class OutpostHeroCard extends StatelessWidget {
 class OutpostAccessInfo extends StatelessWidget {
   final OutpostModel outpost;
   final bool iAmOwner;
-  const OutpostAccessInfo({required this.outpost, required this.iAmOwner});
+  const OutpostAccessInfo({super.key, required this.outpost, required this.iAmOwner});
 
   @override
   Widget build(BuildContext context) {

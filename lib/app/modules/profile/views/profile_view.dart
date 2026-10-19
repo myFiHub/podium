@@ -103,7 +103,7 @@ void showPodiumPassOptionsDialog(
 }
 
 class ProfileView extends GetView<ProfileController> {
-  const ProfileView({Key? key}) : super(key: key);
+  const ProfileView({super.key});
   @override
   Widget build(BuildContext context) {
     return PageWrapper(
@@ -236,7 +236,7 @@ class _ProfileHeader extends GetWidget<ProfileController> {
               children: [
                 _AvatarRing(
                   child: Hero(
-                    tag: '${_profileHeroTagPrefix}${user.uuid}',
+                    tag: '$_profileHeroTagPrefix${user.uuid}',
                     child: Img(
                       src: avatar,
                       alt: user.name ?? '',
@@ -474,12 +474,11 @@ class _TicketButton extends GetWidget<ProfileController> {
 
 class _TicketButtonContent extends StatelessWidget {
   const _TicketButtonContent({
-    Key? key,
     required this.numberOfPasses,
     required this.podiumPassBuyPrice,
     required this.podiumPassSellPrice,
     required this.isLoading,
-  }) : super(key: key);
+  });
 
   final int numberOfPasses;
   final double podiumPassBuyPrice;
@@ -668,7 +667,7 @@ class _TabLoading extends StatelessWidget {
 const _listPadding = EdgeInsets.fromLTRB(16, 4, 16, 24);
 
 class FollowersTab extends GetWidget<ProfileController> {
-  const FollowersTab();
+  const FollowersTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -752,7 +751,7 @@ class _YouPill extends StatelessWidget {
 }
 
 class PassHoldersTab extends GetWidget<ProfileController> {
-  const PassHoldersTab();
+  const PassHoldersTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -799,7 +798,7 @@ class PassHoldersTab extends GetWidget<ProfileController> {
 }
 
 class FollowingTab extends GetWidget<ProfileController> {
-  const FollowingTab();
+  const FollowingTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -832,9 +831,9 @@ class FollowingTab extends GetWidget<ProfileController> {
 /// A single user item for followers/following lists
 class UserListItem extends GetView<ProfileController> {
   const UserListItem({
-    Key? key,
+    super.key,
     required this.user,
-  }) : super(key: key);
+  });
 
   final FollowerModel user;
 

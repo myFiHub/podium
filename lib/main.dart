@@ -44,16 +44,16 @@ Future<void> initDeepLinks() async {
   });
 }
 
-_extractLinkForAndroid(String link) {
+String _extractLinkForAndroid(String link) {
   String deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
   deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
   deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
   return deepLinkedPage;
 }
 
-_setSystemUIOverlayStyle() => AppPalette.applySystemUi();
+void _setSystemUIOverlayStyle() => AppPalette.applySystemUi();
 
-_extractLinkForIOS(String link) {
+String _extractLinkForIOS(String link) {
   late String deepLinkedPage;
   Uri uri = Uri.parse(link);
   String? originalLink = uri.queryParameters['link'];
@@ -73,7 +73,7 @@ _extractLinkForIOS(String link) {
   return deepLinkedPage;
 }
 
-processLink(String? link) async {
+Future<void> processLink(String? link) async {
   if (link != null) {
     l.f('deep link: $link');
     late String deepLinkedPage;
@@ -118,8 +118,8 @@ void main() async {
 }
 
 /// Only what the first (login) screen shows; the rest load on demand.
-preCache(BuildContext context) {
-  [
+void preCache(BuildContext context) {
+  for (var asset in [
     Assets.images.logo,
     Assets.images.xPlatform,
     Assets.images.apple,
@@ -127,7 +127,9 @@ preCache(BuildContext context) {
     Assets.images.facebook,
     Assets.images.linkedin,
     Assets.images.github,
-  ].forEach((asset) => precacheImage(asset.provider(), context));
+  ]) {
+    precacheImage(asset.provider(), context);
+  }
 }
 
 class MyApp extends StatefulWidget {

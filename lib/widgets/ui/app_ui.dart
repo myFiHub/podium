@@ -835,14 +835,16 @@ class AppPill extends StatelessWidget {
             Icon(icon, size: 13, color: filled ? AppColors.onColor(_color) : _color),
             const SizedBox(width: 4),
           ],
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: filled ? AppColors.onColor(_color) : _color,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: filled ? AppColors.onColor(_color) : _color,
+              ),
             ),
           ),
         ],

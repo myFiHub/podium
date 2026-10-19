@@ -15,6 +15,7 @@ import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/utils/format_amount.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -131,6 +132,42 @@ class AptosMovement {
     return await getAddressBalance(address);
   }
 
+  /// Shows an "Insufficient balance" toast (with a copy-address button so the
+  /// user can top up) and returns false when the wallet holds less than
+  /// [amount] MOVE.
+  static Future<bool> _ensureBalance(num amount) async {
+    final b = await balance;
+    if (b >= doubleToBigIntMoveForAptos(amount)) return true;
+    _showInsufficientBalance(
+      message: 'You need ${formatAmount(amount, 'MOVE')}, you have '
+          '${formatAmount(bigIntCoinToMoveOnAptos(b), 'MOVE')}.',
+    );
+    return false;
+  }
+
+  static void _showInsufficientBalance({String message = ''}) {
+    Toast.error(
+      title: 'Insufficient balance',
+      message: message,
+      mainButton: TextButton(
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: address));
+          Toast.info(
+            title: 'Copied!',
+            message: 'Address copied to clipboard',
+          );
+        },
+        child: Text(
+          'Copy Address',
+          style: TextStyle(
+              color: ColorName.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
   static Future<(bool?, String?)> cheerBoo({
     required String target,
     required List<String> receiverAddresses,
@@ -139,30 +176,7 @@ class AptosMovement {
     required String outpostId,
   }) async {
     try {
-      final b = await balance;
-      if (b < doubleToBigIntMoveForAptos(amount)) {
-        Toast.error(
-          title: 'Insufficient balance',
-          mainButton: TextButton(
-            onPressed: () {
-              final addr = address;
-              Clipboard.setData(
-                ClipboardData(text: addr),
-              );
-              Toast.info(
-                title: 'Copied!',
-                message: 'Address copied to clipboard',
-              );
-            },
-            child: Text(
-              'Copy Address',
-              style: TextStyle(
-                  color: ColorName.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold),
-            ),
-          ),
-        );
+      if (!await _ensureBalance(amount)) {
         return (false, 'Insufficient balance');
       }
 
@@ -276,7 +290,11 @@ class AptosMovement {
         numberOfTickets: numberOfTickets,
       );
       if (price == null) {
+        Toast.error(message: 'Could not fetch the pass price, try again');
         return (false, 'Error fetching price');
+      }
+      if (!await _ensureBalance(price)) {
+        return (false, 'Insufficient balance');
       }
       final parsedPrice = price;
       final confirmed = await showAppConfirm(
@@ -344,8 +362,16 @@ class AptosMovement {
       return (true, hash);
     } catch (e, stackTrace) {
       l.e(e, stackTrace: stackTrace);
+      // Gas can still push a just-sufficient balance over the edge.
+      if (e.toString().contains('INSUFFICIENT_BALANCE')) {
+        _showInsufficientBalance(
+          message: 'Not enough MOVE to cover the pass and network fee.',
+        );
+        return (false, 'Insufficient balance');
+      }
       final isCopyableError = e.toString().contains('Waiting for transaction');
       Toast.error(
+        title: 'Purchase failed',
         message: isCopyableError
             ? e.toString()
             : 'Error Submiting Transaction, please try again later',

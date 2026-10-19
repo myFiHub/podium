@@ -37,6 +37,10 @@ import 'package:reown_appkit/reown_appkit.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:podium/app/modules/createOutpost/outpost_types.dart';
+
+export 'package:podium/app/modules/createOutpost/outpost_types.dart';
+
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class TicketSellersListMember {
@@ -1367,34 +1371,6 @@ class _SelectUsersToBuyTicketFromBottomSheetContentState
       ),
     );
   }
-}
-
-class BuyableTicketTypes {
-  static const onlyFriendTechTicketHolders = 'friend_tech_key_holders';
-  static const onlyArenaTicketHolders = 'arena_ticket_holders';
-  static const onlyPodiumPassHolders = 'podium_pass_holders';
-}
-
-class FreeOutpostAccessTypes {
-  static const public = 'everyone';
-  static const onlyLink = 'having_link';
-  static const invited_users = 'invited_users';
-}
-
-class TicketPermissionType {
-  static const speak = 'speak';
-  static const access = 'access';
-}
-
-class TicketTypes {
-  static const arena = 'arena';
-  static const podium = 'podium';
-  static const friendTech = 'friendTech';
-}
-
-class FreeOutpostSpeakerTypes {
-  static const everyone = FreeOutpostAccessTypes.public;
-  static const invited_users = FreeOutpostAccessTypes.invited_users;
 }
 
 class SelectBoxOption {

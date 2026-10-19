@@ -4,10 +4,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
-import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/join_outpost_flow.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
@@ -22,7 +21,6 @@ import 'package:podium/providers/api/luma/models/createEvent.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
-import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
@@ -30,6 +28,9 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
+
+export 'package:podium/app/modules/checkTicket/ticket_access.dart'
+    show OutpostAccesses;
 
 /// Sends an outpost event to the WebSocket server
 ///
@@ -76,7 +77,7 @@ final debounceForFetchingNumberOfOnlineMembers =
 
 class OutpostsController extends GetxController {
   final _outpostRepository = Get.find<OutpostRepository>();
-  final _userRepository = Get.find<UserRepository>();
+  final _joinFlow = JoinOutpostFlow();
   final showCreateButton = true.obs;
 
   final globalController = Get.find<GlobalController>();
@@ -465,16 +466,16 @@ class OutpostsController extends GetxController {
         return;
       }
 
-      final accesses = await getOutpostAccesses(
+      final accesses = await _joinFlow.getOutpostAccesses(
         outpost: outpost,
-        joiningByLink: joiningByLink,
+        joiningByLink: joiningByLink ?? false,
       );
       l.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
       if (accesses.canEnter == false) {
         joiningOutpostId.value = '';
         return;
       }
-      final hasAgeVerified = await _showAreYouOver18Dialog(
+      final hasAgeVerified = await _joinFlow.confirmAge(
         outpost: outpost,
         myUser: myUser,
       );
@@ -580,203 +581,6 @@ class OutpostsController extends GetxController {
       outpostDetailController.outpost.value = updatedOutpost;
     }
   }
-
-  Future<OutpostAccesses?> _checkLumaAccess(
-      {required OutpostModel outpost}) async {
-    try {
-      if (outpost.luma_event_id != null && outpost.luma_event_id!.isNotEmpty) {
-        final myLoginType = myUser.login_type;
-        if (myLoginType != null) {
-          if (myLoginType.contains('google') || myLoginType.contains('email')) {
-            final myEmail = myUser.email;
-            final (guests, event) = await (
-              HttpApis.lumaApi.getGuests(eventId: outpost.luma_event_id!),
-              HttpApis.lumaApi.getEvent(eventId: outpost.luma_event_id!)
-            ).wait;
-            final guestsList = guests.map((e) => e.guest).toList();
-            final hostsList = event?.hosts ?? [];
-            final guestEmails = guestsList.map((e) => e.user_email).toList();
-            final hostsEmails = hostsList.map((e) => e.email).toList();
-            final isGuest = guestEmails.contains(myEmail);
-            final isHost = hostsEmails.contains(myEmail);
-            if (isGuest || isHost) {
-              return OutpostAccesses(canEnter: true, canSpeak: true);
-            }
-          }
-        }
-      }
-      return null;
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
-  }
-
-  Future<OutpostAccesses> getOutpostAccesses(
-      {required OutpostModel outpost, bool? joiningByLink}) async {
-    final iAmOutpostCreator = outpost.creator_user_uuid == myUser.uuid;
-    if (iAmOutpostCreator) {
-      return OutpostAccesses(canEnter: true, canSpeak: true);
-    }
-    if (outpost.is_archived) {
-      Toast.error(
-        message: "This Outpost is archived",
-      );
-      return OutpostAccesses(canEnter: false, canSpeak: false);
-    }
-    final cohosts = outpost.cohost_user_uuids ?? [];
-    if (cohosts.contains(myUser.uuid)) {
-      return OutpostAccesses(canEnter: true, canSpeak: true);
-    }
-    final lumaAccessResponse = await _checkLumaAccess(outpost: outpost);
-    if (lumaAccessResponse != null) {
-      return lumaAccessResponse;
-    }
-    if (accessIsBuyableByTicket(outpost) || speakIsBuyableByTicket(outpost)) {
-      final OutpostAccesses? accesses = await checkTicket(
-        outpost: outpost,
-        joiningByLink: joiningByLink ?? false,
-      );
-      if (accesses?.canEnter == false) {
-        Toast.error(
-          message: "You need a ticket to join this Outpost",
-        );
-        return OutpostAccesses(canEnter: false, canSpeak: false);
-      } else {
-        return accesses ?? OutpostAccesses(canEnter: false, canSpeak: false);
-      }
-    }
-
-    if (outpost.i_am_member) {
-      return OutpostAccesses(
-          canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
-    }
-    if (outpost.enter_type == FreeOutpostAccessTypes.public) {
-      return OutpostAccesses(
-          canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
-    }
-    if (outpost.enter_type == FreeOutpostAccessTypes.onlyLink) {
-      if (joiningByLink == true) {
-        return OutpostAccesses(
-            canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
-      } else {
-        Toast.error(
-          message: "This is a private Outpost, you need an invite link to join",
-        );
-        return OutpostAccesses(canEnter: false, canSpeak: false);
-      }
-    }
-
-    if (outpost.enter_type == FreeOutpostAccessTypes.invited_users) {
-      if (isInvitedToOutpost(outpost)) {
-        return OutpostAccesses(
-          canEnter: true,
-          canSpeak: canISpeakWithoutTicket(outpost: outpost),
-        );
-      } else {
-        Toast.error(
-          message: "You need an invite to join this Outpost",
-        );
-        return OutpostAccesses(canEnter: false, canSpeak: false);
-      }
-    }
-
-    return OutpostAccesses(canEnter: false, canSpeak: false);
-  }
-
-  Future<OutpostAccesses?> checkTicket({
-    required OutpostModel outpost,
-    bool joiningByLink = false,
-  }) async {
-    final checkTicketController = Get.put(CheckticketController());
-    checkTicketController.outpost.value = outpost;
-    checkTicketController.joiningByLink = joiningByLink;
-    final accesses = await checkTicketController.checkTickets();
-    if (accesses.canEnter == true && accesses.canSpeak == true) {
-      Get.delete<CheckticketController>();
-      return OutpostAccesses(
-        canEnter: accesses.canEnter,
-        canSpeak: accesses.canSpeak,
-      );
-    } else {
-      final result = await Get.dialog<OutpostAccesses?>(
-        const AppDialogMotion(child: CheckTicketView()),
-      );
-      l.d("Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
-      Get.delete<CheckticketController>();
-      return result;
-    }
-  }
-
-  Future<bool> _showAreYouOver18Dialog({
-    required OutpostModel outpost,
-    required UserModel myUser,
-  }) async {
-    final isGroupAgeRestricted = outpost.has_adult_content;
-    final iAmOwner = outpost.creator_user_uuid == myUser.uuid;
-    final iAmMember = outpost.i_am_member;
-    final amIOver18 = myUser.is_over_18;
-    if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18 == true) {
-      return true;
-    }
-
-    final result = await Get.dialog(
-      AppDialog(
-        icon: Icons.warning_amber_rounded,
-        iconColor: AppColors.accent,
-        title: "Age Verification Required",
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text("Adult Content Warning", style: AppText.cardTitle),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: AppColors.primary,
-                  size: 16,
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    "You must be 18+ to access this content",
-                    style: AppText.muted,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            const AppCallout(
-              text:
-                  "By proceeding, you confirm that you are at least 18 years of age.",
-              icon: Icons.verified_user_outlined,
-            ),
-          ],
-        ),
-        stackActions: true,
-        actions: [
-          AppPrimaryButton(
-            label: "Yes, I'm 18 or older",
-            color: AppColors.accent,
-            foreground: AppColors.onColor(AppColors.accent),
-            onPressed: () {
-              globalController.setIsMyUserOver18(true);
-              _userRepository.updateMyUserData({'is_over_18': true});
-              Navigator.of(Get.overlayContext!).pop(true);
-            },
-          ),
-          AppSecondaryButton(
-            label: "No, I'm under 18",
-            onPressed: () {
-              Navigator.of(Get.overlayContext!).pop(false);
-            },
-          ),
-        ],
-      ),
-    );
-    return result ?? false;
-  }
 }
 
 Future<dynamic> _showModalToToggleArchiveGroup(
@@ -856,17 +660,4 @@ Future<dynamic> _showModalToLeaveGroup({required OutpostModel outpost}) async {
     ),
   );
   return result;
-}
-
-class OutpostAccesses {
-  bool canEnter;
-  bool canSpeak;
-  String? accessPriceFullString;
-  String? speakPriceFullString;
-  OutpostAccesses({
-    required this.canEnter,
-    required this.canSpeak,
-    this.accessPriceFullString,
-    this.speakPriceFullString,
-  });
 }

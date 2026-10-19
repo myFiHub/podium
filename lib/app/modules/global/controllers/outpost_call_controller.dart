@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
+import 'package:podium/app/modules/checkTicket/ticket_access.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
@@ -643,19 +643,5 @@ bool isStageMember(LiveMember member, {required String? creatorId}) {
       (member.uuid == myId && Get.find<OutpostCallController>().canTalk.value);
 }
 
-bool canISpeakWithoutTicket({required OutpostModel outpost}) {
-  final iAmTheCreator = outpost.creator_user_uuid == myId;
-  if (iAmTheCreator) return true;
-  if (outpost.speak_type == FreeOutpostSpeakerTypes.invited_users) {
-    // check if I am invited and am invited to speak
-    final invitedMember = (outpost.invites ?? [])
-        .firstWhereOrNull((element) => element.invitee_uuid == myId);
-    if (invitedMember != null && invitedMember.can_speak == true) return true;
-    return false;
-  }
-
-  final iAmAllowedToSpeak =
-      outpost.speak_type == FreeOutpostSpeakerTypes.everyone;
-
-  return iAmAllowedToSpeak;
-}
+bool canISpeakWithoutTicket({required OutpostModel outpost}) =>
+    TicketAccessEvaluator(outpost, myId: myId).canSpeakWithoutTicket;

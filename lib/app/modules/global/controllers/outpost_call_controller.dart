@@ -44,19 +44,31 @@ class OutpostCallController extends GetxController {
   final reactionsMap = Rx<Map<String, Map<OutgoingMessageTypeEnums, int>>>({
   });
   final haveOngoingCall = false.obs;
-  bool _callCleanedUp = true;
+
+  CallSession? _session;
+
+  /// The live call, or null once it ended. Async work started for a call
+  /// should capture this and check [CallSession.isActive] after every await,
+  /// or schedule itself through [CallSession.delayed].
+  CallSession? get session {
+    final s = _session;
+    return s != null && s.isActive ? s : null;
+  }
 
   /// True once [cleanupAfterCall] ran for the current call. Jitsi reports
   /// readyToClose after our own hang-up too, which must not clean up twice.
-  bool get callCleanedUp => _callCleanedUp;
+  bool get callCleanedUp => session == null;
 
   /// True from the moment a join starts until [cleanupAfterCall] runs.
   final isInCall = false.obs;
 
-  void markCallStarted() {
-    _callCleanedUp = false;
+  CallSession markCallStarted({required String outpostId}) {
+    _session?.end();
+    final s = CallSession(outpostId);
+    _session = s;
     _jitsiClosed = Completer<void>();
     isInCall.value = true;
+    return s;
   }
 
   final jitsiMembers = Rx<List<JitsiMember>>([]);
@@ -235,24 +247,22 @@ class OutpostCallController extends GetxController {
 
   /// don't use withRetry, use withJoin only, if needed
   void fetchLiveData({bool? withRetry = true, bool? withJoin = false}) async {
-    if (outpost.value == null) return;
+    final callSession = session;
+    if (callSession == null) return;
+    final outpostId = callSession.outpostId;
 
     final seq = ++_liveDataSeq;
     final liveData =
-        await HttpApis.podium.getLatestLiveData(outpostId: outpost.value!.uuid);
+        await HttpApis.podium.getLatestLiveData(outpostId: outpostId);
+    if (!callSession.isActive) return;
     if (liveData == null) {
       // A newer request is in flight and will decide.
       if (seq != _liveDataSeq && withJoin != true) return;
-      final isOutpostCallControllerRegistered =
-          Get.isRegistered<OutpostCallController>();
-      if (isOutpostCallControllerRegistered) {
-        final outpostCallController = Get.find<OutpostCallController>();
-        outpostCallController.leaveCall(askForScore: false);
-        Toast.error(
-          title: 'Could not join the outpost',
-          message: 'Please try again.',
-        );
-      }
+      leaveCall(askForScore: false);
+      Toast.error(
+        title: 'Could not join the outpost',
+        message: 'Please try again.',
+      );
     } else {
       final tmp = liveData.members;
       tmp.asMap().forEach((index, element) {
@@ -267,8 +277,9 @@ class OutpostCallController extends GetxController {
         if (!iExistAndPresent) {
           bool joined = false;
           try {
-            joined = await wsClient.joinOutpost(outpost.value!.uuid,
+            joined = await wsClient.joinOutpost(outpostId,
                 force: true, withRetry: true);
+            if (!callSession.isActive) return;
             if (withRetry == true && joined == true) {
               fetchLiveData(withRetry: false);
               return;
@@ -276,6 +287,7 @@ class OutpostCallController extends GetxController {
           } catch (e) {
             l.e('Error joining outpost: $e');
           }
+          if (!callSession.isActive) return;
           if (!joined) {
             final reconnecting = wsClient.isConnecting;
             if (reconnecting) {
@@ -330,44 +342,47 @@ class OutpostCallController extends GetxController {
   }
 
   Future<void> cleanupAfterCall({bool askForScore = true}) async {
-    if (_callCleanedUp) return;
-    _callCleanedUp = true;
+    final callSession = session;
+    if (callSession == null) return;
+    callSession.end();
     isInCall.value = false;
     haveOngoingCall.value = false;
     jitsiMembers.value = [];
     jitsiMeet.hangUp();
     members.value = [];
     searchedValueInMeet.value = '';
-    final outpostId = outpost.value?.uuid;
+    final outpostId = callSession.outpostId;
     reactionsMap.value = {};
     if (Get.isRegistered<CallRoomController>()) {
       Get.delete<CallRoomController>(force: true);
     }
-    // Delayed so the call page can finish its exit transition first.
+    final ongoing = Get.isRegistered<OngoingOutpostCallController>()
+        ? Get.find<OngoingOutpostCallController>()
+        : null;
+    // Delayed so the call page can finish its exit transition first. Only
+    // this call's controller is deleted; a call joined meanwhile has its own.
     Future.delayed(const Duration(seconds: 1), () {
       for (var i = 0;
           i < 3 &&
-              _callCleanedUp &&
-              Get.isRegistered<OngoingOutpostCallController>();
+              Get.isRegistered<OngoingOutpostCallController>() &&
+              identical(Get.find<OngoingOutpostCallController>(), ongoing);
           i++) {
         Get.delete<OngoingOutpostCallController>(force: true);
       }
     });
-    if (outpostId != null) {
-      sendOutpostEvent(
+    sendOutpostEvent(
+      outpostId: outpostId,
+      eventType: OutgoingMessageTypeEnums.leave,
+    );
+    if (!askForScore) return;
+    // Let the route change that triggered cleanup finish first.
+    await WidgetsBinding.instance.endOfFrame;
+    final score = await showScoreOutpostPrompt();
+    if (score != null) {
+      await HttpApis.podium.scoreOutpost(
         outpostId: outpostId,
-        eventType: OutgoingMessageTypeEnums.leave,
+        score: score,
       );
-      if (!askForScore) return;
-      // Let the route change that triggered cleanup finish first.
-      await WidgetsBinding.instance.endOfFrame;
-      final score = await showScoreOutpostPrompt();
-      if (score != null) {
-        await HttpApis.podium.scoreOutpost(
-          outpostId: outpostId,
-          score: score,
-        );
-      }
     }
   }
 
@@ -431,6 +446,9 @@ class OutpostCallController extends GetxController {
       {required OutpostModel outpostToJoin,
       OutpostAccesses? accessOverRides}) async {
     if (!await _leaveOtherOutpostFirst(outpostToJoin)) return;
+    // The previous conference's late readyToClose would otherwise reach the
+    // new call's listeners and end it.
+    await waitForJitsiClosed();
 
     final iAmAllowedToSpeak = accessOverRides != null
         ? accessOverRides.canSpeak
@@ -487,7 +505,7 @@ class OutpostCallController extends GetxController {
       );
       if (Get.isRegistered<OngoingOutpostCallController>() &&
           !Get.find<OngoingOutpostCallController>().callPageOpened &&
-          !_callCleanedUp) {
+          !callCleanedUp) {
         openCallPage();
       }
 
@@ -547,6 +565,38 @@ class OutpostCallController extends GetxController {
     await leaveCall(askForScore: false);
     await waitForJitsiClosed();
     return true;
+  }
+}
+
+/// One joined call, from [OutpostCallController.markCallStarted] until
+/// [OutpostCallController.cleanupAfterCall]. Leaving and rejoining creates a
+/// new session, so work belonging to the old one can tell it is stale.
+class CallSession {
+  CallSession(this.outpostId);
+
+  final String outpostId;
+  bool _ended = false;
+  final _timers = <Timer>{};
+
+  bool get isActive => !_ended;
+
+  /// Like [Future.delayed], but cancelled when the call ends.
+  void delayed(Duration duration, void Function() action) {
+    if (_ended) return;
+    late final Timer timer;
+    timer = Timer(duration, () {
+      _timers.remove(timer);
+      if (!_ended) action();
+    });
+    _timers.add(timer);
+  }
+
+  void end() {
+    _ended = true;
+    for (final timer in _timers) {
+      timer.cancel();
+    }
+    _timers.clear();
   }
 }
 

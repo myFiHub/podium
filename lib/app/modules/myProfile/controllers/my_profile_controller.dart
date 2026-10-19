@@ -598,13 +598,26 @@ class MyProfileController extends GetxController {
   }
 }
 
-class DeactivationForm extends GetView<MyProfileController> {
+class DeactivationForm extends StatefulWidget {
   const DeactivationForm({super.key});
+
+  @override
+  State<DeactivationForm> createState() => _DeactivationFormState();
+}
+
+class _DeactivationFormState extends State<DeactivationForm> {
+  final controller = Get.find<MyProfileController>();
+  final _deactivationController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _deactivationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final TextEditingController _deactivationController =
-        TextEditingController();
-    final _formKey = GlobalKey<FormState>();
     return Form(
       key: _formKey,
       child: AppDialog(

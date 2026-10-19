@@ -120,7 +120,8 @@ class LoginController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    globalController.deepLinkRoute.listen((v) {
+    deeplinkRouteListener?.cancel();
+    deeplinkRouteListener = globalController.deepLinkRoute.listen((v) {
       if (v.isNotEmpty) {
         initializeReferral(null);
       }

@@ -119,19 +119,18 @@ class OngoingOutpostCallController extends GetxController {
       mySession.refresh();
       _enforceTimeUp();
     });
-    Future.delayed(const Duration(seconds: 10)).then((value) {
+    final callSession = outpostCallController.session;
+    callSession?.delayed(const Duration(seconds: 10), () {
       if (members.value.length == 0) {
         outpostCallController.fetchLiveData(withJoin: true);
       }
-      Future.delayed(const Duration(seconds: 3)).then((value) {
+      callSession.delayed(const Duration(seconds: 3), () {
         if (members.value.length == 0) {
-          if (Get.isRegistered<OngoingOutpostCallController>()) {
-            Toast.error(
-              title: 'Could not join the outpost',
-              message: 'Please try again.',
-            );
-            outpostCallController.leaveCall(askForScore: false);
-          }
+          Toast.error(
+            title: 'Could not join the outpost',
+            message: 'Please try again.',
+          );
+          outpostCallController.leaveCall(askForScore: false);
         }
       });
     });

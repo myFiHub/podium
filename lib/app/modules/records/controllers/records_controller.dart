@@ -113,6 +113,7 @@ class RecordsController extends GetxController {
   @override
   void onClose() async {
     _positionSubscription?.cancel();
+    _disposeWaveform();
     await _audioPlayer.closePlayer();
     super.onClose();
   }
@@ -165,16 +166,41 @@ class RecordsController extends GetxController {
     selectedFile.value = file;
   }
 
+  String? _waveformPath;
+  BehaviorSubject<WaveformProgress>? _waveform;
+  StreamSubscription<WaveformProgress>? _waveformExtraction;
+
+  void _disposeWaveform() {
+    _waveformExtraction?.cancel();
+    _waveformExtraction = null;
+    _waveform?.close();
+    _waveform = null;
+    _waveformPath = null;
+  }
+
+  /// Cached per recording: the sheet asks for it on every rebuild, and each
+  /// extraction decodes the whole file.
   Stream<WaveformProgress> getWaveformProgress(RecordingFile recording) {
+    final cached = _waveform;
+    if (cached != null &&
+        !cached.hasError &&
+        _waveformPath == recording.path) {
+      return cached;
+    }
+    _disposeWaveform();
+
     final progressStream = BehaviorSubject<WaveformProgress>();
+    _waveform = progressStream;
+    _waveformPath = recording.path;
 
     Future<void> generateWaveform() async {
       try {
         final audioFile = File(recording.path);
         final waveFile = File(p.join(
             (await getTemporaryDirectory()).path, '${recording.name}.wave'));
+        if (progressStream.isClosed) return;
 
-        JustWaveform.extract(
+        _waveformExtraction = JustWaveform.extract(
           audioInFile: audioFile,
           waveOutFile: waveFile,
         ).listen(
@@ -182,7 +208,7 @@ class RecordsController extends GetxController {
           onError: progressStream.addError,
         );
       } catch (e) {
-        progressStream.addError(e);
+        if (!progressStream.isClosed) progressStream.addError(e);
       }
     }
 
@@ -214,6 +240,8 @@ class RecordsController extends GetxController {
       if (selectedFile.value?.path == file.path && isPlaying.value) {
         await stopPlayback();
       }
+
+      if (_waveformPath == file.path) _disposeWaveform();
 
       // Delete the file
       final fileToDelete = File(file.path);

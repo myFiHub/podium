@@ -448,7 +448,9 @@ class OutpostDetailController extends GetxController {
       );
     } else {
       Get.offAllNamed(Routes.LOGIN);
-      final loginController = Get.put(LoginController());
+      final loginController = Get.isRegistered<LoginController>()
+          ? Get.find<LoginController>()
+          : Get.put(LoginController());
       loginController.afterLogin = () {
         groupsController.joinOutpostAndOpenOutpostDetailPage(
           outpostId: id,
@@ -480,12 +482,15 @@ class OutpostDetailController extends GetxController {
     }
 
     isJoining.value = true;
-    final groupCallController = Get.find<OutpostCallController>();
-    await groupCallController.startCall(
-      outpostToJoin: outpost.value!,
-      accessOverRides: accesses,
-    );
-    isJoining.value = false;
+    try {
+      final groupCallController = Get.find<OutpostCallController>();
+      await groupCallController.startCall(
+        outpostToJoin: outpost.value!,
+        accessOverRides: accesses,
+      );
+    } finally {
+      isJoining.value = false;
+    }
   }
 
   searchUsers(String value) async {

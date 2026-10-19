@@ -6,14 +6,34 @@ import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
-class GroupByIdLandingScreen extends GetView<OutpostDetailController> {
+class GroupByIdLandingScreen extends StatefulWidget {
   const GroupByIdLandingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final id = Get.parameters['id'];
-    if (id == null || id.isEmpty) {
+  State<GroupByIdLandingScreen> createState() => _GroupByIdLandingScreenState();
+}
+
+class _GroupByIdLandingScreenState extends State<GroupByIdLandingScreen> {
+  final id = Get.parameters['id'];
+
+  @override
+  void initState() {
+    super.initState();
+    final outpostId = id;
+    if (outpostId == null || outpostId.isEmpty) {
       l.e('GroupByIdLandingScreen: id is null or empty');
+      return;
+    }
+    final controller = Get.isRegistered<OutpostDetailController>()
+        ? Get.find<OutpostDetailController>()
+        : Get.put(OutpostDetailController());
+    controller.getOutpostInfo(id: outpostId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final outpostId = id;
+    if (outpostId == null || outpostId.isEmpty) {
       return Scaffold(
         body: PageWrapper(
           child: Center(
@@ -30,8 +50,6 @@ class GroupByIdLandingScreen extends GetView<OutpostDetailController> {
         ),
       );
     }
-    Get.put(OutpostDetailController());
-    controller.getOutpostInfo(id: id);
     return const Scaffold(
       body: PageWrapper(
         child: Center(

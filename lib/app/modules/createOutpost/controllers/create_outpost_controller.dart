@@ -877,8 +877,7 @@ class ScheduledGroupDateSelector extends GetView<CreateOutpostController> {
   }
 }
 
-class SelectUsersToBuyTicketFromBottomSheetContent
-    extends GetView<CreateOutpostController> {
+class SelectUsersToBuyTicketFromBottomSheetContent extends StatefulWidget {
   final String buyTicketToGetPermisionFor;
   const SelectUsersToBuyTicketFromBottomSheetContent({
     super.key,
@@ -886,8 +885,25 @@ class SelectUsersToBuyTicketFromBottomSheetContent
   });
 
   @override
+  State<SelectUsersToBuyTicketFromBottomSheetContent> createState() =>
+      _SelectUsersToBuyTicketFromBottomSheetContentState();
+}
+
+class _SelectUsersToBuyTicketFromBottomSheetContentState
+    extends State<SelectUsersToBuyTicketFromBottomSheetContent> {
+  final controller = Get.find<CreateOutpostController>();
+  final inputController = TextEditingController();
+
+  String get buyTicketToGetPermisionFor => widget.buyTicketToGetPermisionFor;
+
+  @override
+  void dispose() {
+    inputController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final inputController = TextEditingController();
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       clipBehavior: Clip.antiAlias,

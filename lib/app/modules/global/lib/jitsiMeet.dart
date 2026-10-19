@@ -57,9 +57,16 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
   }
   Get.put<CallRoomController>(CallRoomController(), permanent: true);
   final outpostCallController = Get.find<OutpostCallController>();
-  outpostCallController.markCallStarted();
+  final callSession =
+      outpostCallController.markCallStarted(outpostId: outpost.uuid);
   return JitsiMeetEventListener(
     conferenceJoined: (url) async {
+      // Left while still connecting: make sure the native side leaves too
+      // instead of reopening the call page for a call that has ended.
+      if (!callSession.isActive) {
+        jitsiMeet.hangUp();
+        return;
+      }
       outpostCallController.fetchLiveData(withJoin: true);
 
       if (Get.isRegistered<OngoingOutpostCallController>()) {
@@ -73,6 +80,7 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       if (outpost.creator_joined != true && iAmCreator) {
         await HttpApis.podium.setCreatorJoinedToTrue(outpost.uuid);
       }
+      if (!callSession.isActive) return;
       outpostCallController.haveOngoingCall.value = true;
     },
     participantJoined: (email, name, role, participantId) {
@@ -99,7 +107,7 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
     },
     audioMutedChanged: (muted) {
       // Jitsi resets to unmuted while tearing down after hangUp.
-      if (outpostCallController.callCleanedUp) return;
+      if (!callSession.isActive) return;
       if (Get.isRegistered<OngoingOutpostCallController>()) {
         Get.find<OngoingOutpostCallController>().audioMuteChanged(
           muted: muted,
@@ -121,6 +129,7 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
 
     conferenceTerminated: (url, error) async {
       l.f("conferenceTerminated: url: $url, error: $error");
+      if (!callSession.isActive) return;
       final joined = Get.isRegistered<OngoingOutpostCallController>() &&
           Get.find<OngoingOutpostCallController>().isConferenceJoined.value;
       if (error != null && !joined) {
@@ -137,7 +146,7 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
     },
     readyToClose: () {
       outpostCallController.onJitsiClosed();
-      if (outpostCallController.callCleanedUp) return;
+      if (!callSession.isActive) return;
       outpostCallController.leaveCall();
     },
   );

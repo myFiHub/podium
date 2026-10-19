@@ -16,7 +16,6 @@ import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
-import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
@@ -166,6 +165,9 @@ class GlobalController extends GetxController {
   @override
   void onClose() {
     _tickerTimer?.cancel();
+    _internetStatusSubscription?.cancel();
+    _internetLifecycleWorker?.dispose();
+    _walletAddressSubscription?.cancel();
     super.onClose();
   }
 
@@ -348,8 +350,12 @@ class GlobalController extends GetxController {
     });
   }
 
+  StreamSubscription<String>? _walletAddressSubscription;
+
   Future<void> listenToWalletAddressChange() async {
-    connectedWalletAddress.listen((newAddress) async {
+    if (_walletAddressSubscription != null) return;
+    _walletAddressSubscription =
+        connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
       if (newAddress != '' && myUserInfo.value != null) {
         _saveExternalWalletAddress(newAddress);
@@ -388,8 +394,7 @@ class GlobalController extends GetxController {
         return;
       }
       final outpostId = splited[1];
-      final outpostsController = Get.put(OutpostsController());
-      Get.put(OutpostDetailController());
+      final outpostsController = Get.find<OutpostsController>();
       outpostsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: outpostId,
         joiningByLink: true,
@@ -550,7 +555,9 @@ class GlobalController extends GetxController {
         isAutoLoggingIn.value = false;
         return;
       }
-      final LoginController loginController = Get.put(LoginController());
+      final loginController = Get.isRegistered<LoginController>()
+          ? Get.find<LoginController>()
+          : Get.put(LoginController());
       await loginController.socialLogin(
         loginMethod: loginTypeStringToWeb3AuthProvider(loginType),
         ignoreIfNotLoggedIn: true,

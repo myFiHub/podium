@@ -23,6 +23,7 @@ class CallOverlayService extends GetxService {
   final _workers = <Worker>[];
   final _callWorkers = <Worker>[];
   bool _shown = false;
+  bool _showing = false;
 
   GlobalController get _global => Get.find<GlobalController>();
   OutpostCallController get _call => Get.find<OutpostCallController>();
@@ -69,9 +70,14 @@ class CallOverlayService extends GetxService {
   Future<void> _show() async {
     final ongoing = _ongoing;
     final outpost = _call.outpost.value;
-    if (_shown || !_call.isInCall.value || ongoing == null || outpost == null) {
+    if (_shown ||
+        _showing ||
+        !_call.isInCall.value ||
+        ongoing == null ||
+        outpost == null) {
       return;
     }
+    _showing = true;
     try {
       final shown = await _channel.invokeMethod<bool>('show', {
         'title': outpost.name,
@@ -80,11 +86,19 @@ class CallOverlayService extends GetxService {
       });
       if (shown != true) return;
       _shown = true;
+      // The call may have ended, or the app come back, while showing.
+      if (!_call.isInCall.value ||
+          _global.appLifecycleState.value == AppLifecycleState.resumed) {
+        _hide();
+        return;
+      }
       _callWorkers
         ..add(ever<bool>(ongoing.amIMuted, (_) => _update()))
         ..add(ever<bool>(_call.canTalk, (_) => _update()));
     } catch (e) {
       l.e('call overlay show failed: $e');
+    } finally {
+      _showing = false;
     }
   }
 

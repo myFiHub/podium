@@ -61,7 +61,8 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
     super.dispose();
   }
 
-  bool get _expanded => _fan.status == AnimationStatus.forward ||
+  bool get _expanded =>
+      _fan.status == AnimationStatus.forward ||
       _fan.status == AnimationStatus.completed;
 
   void _toggle() {
@@ -147,9 +148,7 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
   ) {
     final bounds = _bounds(size, MediaQuery.viewInsetsOf(context));
     final resting = _clamp(
-      _topLeft ??
-          _savedTopLeft ??
-          Offset(bounds.right, bounds.bottom - 96),
+      _topLeft ?? _savedTopLeft ?? Offset(bounds.right, bounds.bottom - 96),
       bounds,
     );
     final onRight = resting.dx + _bubbleSize / 2 > size.width / 2;
@@ -193,9 +192,8 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
             action: actions[i],
           ),
         AnimatedPositioned(
-          duration: _dragging
-              ? Duration.zero
-              : const Duration(milliseconds: 260),
+          duration:
+              _dragging ? Duration.zero : const Duration(milliseconds: 260),
           curve: Curves.easeOutCubic,
           left: topLeft.dx,
           top: topLeft.dy,
@@ -227,6 +225,8 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
     );
   }
 
+  /// Built inside the bubble's Obx, so every observable read here rebuilds
+  /// the fan; the buttons themselves hold plain values and no Obx.
   List<_BubbleAction> _actions({
     required bool canTalk,
     required CallRoomController? room,
@@ -234,57 +234,49 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
   }) {
     final ongoing = Get.find<OngoingOutpostCallController>();
     final call = ongoing.outpostCallController;
+    final muted = ongoing.amIMuted.value;
+    final usable = ongoing.canUseMic;
+    final raised = room?.myHandRaised ?? false;
+    final unread = room?.unreadChat.value ?? 0;
     return [
       if (canTalk)
         _BubbleAction(
-          builder: () {
-            final muted = ongoing.amIMuted.value;
-            final usable = ongoing.canUseMic;
-            return _ActionLook(
-              icon: muted || !usable
-                  ? Icons.mic_off_rounded
-                  : Icons.mic_rounded,
-              label: muted || !usable ? 'Unmute' : 'Mute',
-              color: !muted && usable ? callSpeakingColor : ColorName.white,
-              dimmed: !usable && muted,
-            );
-          },
+          look: _ActionLook(
+            icon: muted || !usable ? Icons.mic_off_rounded : Icons.mic_rounded,
+            label: muted || !usable ? 'Unmute' : 'Mute',
+            color: !muted && usable ? callSpeakingColor : ColorName.white,
+            dimmed: !usable && muted,
+          ),
           onTap: ongoing.toggleMyMic,
         ),
       if (room != null && hasHands)
         _BubbleAction(
-          builder: () {
-            final raised = room.myHandRaised;
-            return _ActionLook(
-              icon: raised ? Icons.back_hand_rounded : Icons.back_hand_outlined,
-              label: raised ? 'Lower' : 'Raise',
-              color: raised ? callAccentColor : ColorName.white,
-            );
-          },
+          look: _ActionLook(
+            icon: raised ? Icons.back_hand_rounded : Icons.back_hand_outlined,
+            label: raised ? 'Lower' : 'Raise',
+            color: raised ? callAccentColor : ColorName.white,
+          ),
           onTap: room.toggleHand,
         ),
       if (room != null)
         _BubbleAction(
-          builder: () {
-            final unread = room.unreadChat.value;
-            return _ActionLook(
-              icon: Icons.chat_bubble_outline_rounded,
-              label: 'Chat',
-              color: ColorName.white,
-              badge: unread == 0
-                  ? null
-                  : unread > 99
-                      ? '99+'
-                      : '$unread',
-            );
-          },
+          look: _ActionLook(
+            icon: Icons.chat_bubble_outline_rounded,
+            label: 'Chat',
+            color: ColorName.white,
+            badge: unread == 0
+                ? null
+                : unread > 99
+                    ? '99+'
+                    : '$unread',
+          ),
           onTap: () {
             _collapse();
             openChatSheet();
           },
         ),
       _BubbleAction(
-        builder: () => _ActionLook(
+        look: _ActionLook(
           icon: Icons.open_in_full_rounded,
           label: 'Open',
           color: ColorName.primaryBlue,
@@ -295,7 +287,7 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
         },
       ),
       _BubbleAction(
-        builder: () => _ActionLook(
+        look: _ActionLook(
           icon: Icons.call_end_rounded,
           label: 'Leave',
           color: callDangerColor,
@@ -310,9 +302,9 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
 }
 
 class _BubbleAction {
-  final _ActionLook Function() builder;
+  final _ActionLook look;
   final VoidCallback onTap;
-  const _BubbleAction({required this.builder, required this.onTap});
+  const _BubbleAction({required this.look, required this.onTap});
 }
 
 class _ActionLook {
@@ -362,8 +354,8 @@ class _FanItem extends StatelessWidget {
     final start = (index / count) * 0.45;
     final curved = CurvedAnimation(
       parent: animation,
-      curve: Interval(start, math.min(1, start + 0.55),
-          curve: Curves.easeOutBack),
+      curve:
+          Interval(start, math.min(1, start + 0.55), curve: Curves.easeOutBack),
       reverseCurve: Curves.easeIn,
     );
     return AnimatedBuilder(
@@ -378,14 +370,12 @@ class _FanItem extends StatelessWidget {
           width: _actionSize + 28,
           child: Opacity(
             opacity: v.clamp(0.0, 1.0),
-            child: Transform.scale(scale: 0.4 + 0.6 * v.clamp(0.0, 1.2), child: child),
+            child: Transform.scale(
+                scale: 0.4 + 0.6 * v.clamp(0.0, 1.2), child: child),
           ),
         );
       },
-      child: Obx(() {
-        final look = action.builder();
-        return _ActionButton(look: look, onTap: action.onTap);
-      }),
+      child: _ActionButton(look: action.look, onTap: action.onTap),
     );
   }
 }

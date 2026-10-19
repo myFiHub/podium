@@ -194,8 +194,11 @@ class ReplayController extends GetxController {
     video.value = null;
     await old?.dispose();
     if (clip == null) return;
-    final controller =
-        VideoPlayerController.file(File(p.join(_dir.path, clip.file)));
+    // Silent clip: taking audio focus would pause the replay's audio player.
+    final controller = VideoPlayerController.file(
+      File(p.join(_dir.path, clip.file)),
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+    );
     try {
       await controller.initialize();
       await controller.setVolume(0);

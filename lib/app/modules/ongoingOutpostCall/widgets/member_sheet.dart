@@ -32,6 +32,7 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
   Widget build(BuildContext context) {
     return CallSheet(
       child: Obx(() {
+        controller.outpostCallController.speakingTick.value;
         final member =
             controller.members.value.firstOrNullWhere((m) => m.uuid == userId);
         if (member == null) {

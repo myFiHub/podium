@@ -110,6 +110,13 @@ class CallRoomController extends GetxController
 
   Timer? _levelDecayTimer;
   Worker? _mutedWorker;
+  late final Worker _handsWorker;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _handsWorker = everAll([_raisedHands, peers], (_) => _refreshHandUuids());
+  }
 
   @override
   void onReady() {
@@ -130,6 +137,7 @@ class CallRoomController extends GetxController
     _levelDecayTimer?.cancel();
     _chatPreviewTimer?.cancel();
     _mutedWorker?.dispose();
+    _handsWorker.dispose();
     _disposeStage();
     super.onClose();
   }
@@ -275,13 +283,21 @@ class CallRoomController extends GetxController
 
   // Raised hands --------------------------------------------------------------
 
-  List<String> get raisedHandUuids {
+  /// Uuids with a raised hand, oldest first. Recomputed only when hands or
+  /// peers change, since every avatar asks [isHandRaised] while building.
+  final _handUuids = <String>[].obs;
+
+  List<String> get raisedHandUuids => _handUuids;
+
+  bool isHandRaised(String uuid) => _handUuids.contains(uuid);
+
+  void _refreshHandUuids() {
     final sorted = _raisedHands.toList()
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    return sorted.map((h) => uuidOf(h.jitsiId)).whereNotNull().toList();
+    _handUuids.assignAll(
+      sorted.map((h) => uuidOf(h.jitsiId)).whereNotNull(),
+    );
   }
-
-  bool isHandRaised(String uuid) => raisedHandUuids.contains(uuid);
 
   bool get myHandRaised {
     final hands = _raisedHands.toList();

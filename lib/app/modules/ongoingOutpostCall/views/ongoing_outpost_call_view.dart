@@ -85,19 +85,7 @@ class _CallBody extends GetView<OutpostCallController> {
     final callController = Get.find<OngoingOutpostCallController>();
     return Obx(() {
       final showIntro = callController.shouldShowIntro.value;
-      final members = controller.sortedMembers.value;
-      final creatorId = controller.outpost.value?.creator_user_uuid;
-
-      final stage = <LiveMember>[];
-      final audience = <LiveMember>[];
-      for (final m in members) {
-        (isStageMember(m, creatorId: creatorId) ? stage : audience).add(m);
-      }
-      final orderedStage = [
-        ...stage.where((m) => m.is_speaking),
-        ...stage.where((m) => !m.is_speaking),
-      ];
-      final talkingCount = stage.where((m) => m.is_speaking).length;
+      final hasMembers = controller.members.value.isNotEmpty;
 
       return RefreshIndicator(
         onRefresh: () async => controller.fetchLiveData(withJoin: true),
@@ -108,39 +96,34 @@ class _CallBody extends GetView<OutpostCallController> {
             const SliverToBoxAdapter(child: RaisedHandsBanner()),
             const SliverToBoxAdapter(child: PollCard()),
             if (showIntro) const SliverToBoxAdapter(child: _IntroDemoCard()),
-            if (members.isEmpty)
+            if (!hasMembers)
               const SliverFillRemaining(
                 hasScrollBody: false,
                 child: _JoiningPlaceholder(),
               )
             else ...[
               SliverToBoxAdapter(
-                child: _SectionHeader(
-                  title: 'On stage',
-                  count: orderedStage.length,
-                  extra: talkingCount > 0 ? '$talkingCount talking' : null,
-                ),
+                child: Obx(() {
+                  final talking = controller.talkingCount.value;
+                  return _SectionHeader(
+                    title: 'On stage',
+                    count: controller.stageMembers.value.length,
+                    extra: talking > 0 ? '$talking talking' : null,
+                  );
+                }),
               ),
-              _MemberGrid(
-                members: orderedStage,
-                creatorId: creatorId,
-                onStage: true,
-              ),
+              const _MemberGrid(onStage: true),
               SliverToBoxAdapter(
-                child: _SectionHeader(
-                  title: 'Listening',
-                  count: audience.length,
-                  onSeeAll: audience.isEmpty ? null : openParticipantsSheet,
-                ),
+                child: Obx(() {
+                  final count = controller.audienceMembers.value.length;
+                  return _SectionHeader(
+                    title: 'Listening',
+                    count: count,
+                    onSeeAll: count == 0 ? null : openParticipantsSheet,
+                  );
+                }),
               ),
-              if (audience.isEmpty)
-                const SliverToBoxAdapter(child: _EmptyAudience())
-              else
-                _MemberGrid(
-                  members: audience,
-                  creatorId: creatorId,
-                  onStage: false,
-                ),
+              const _MemberGrid(onStage: false),
               const SliverToBoxAdapter(child: SizedBox(height: 96)),
             ],
           ],
@@ -150,18 +133,25 @@ class _CallBody extends GetView<OutpostCallController> {
   }
 }
 
-class _MemberGrid extends StatelessWidget {
-  final List<LiveMember> members;
-  final String? creatorId;
+class _MemberGrid extends GetView<OutpostCallController> {
   final bool onStage;
-  const _MemberGrid({
-    required this.members,
-    required this.creatorId,
-    required this.onStage,
-  });
+  const _MemberGrid({required this.onStage});
 
   @override
   Widget build(BuildContext context) {
+    return Obx(() {
+      final members = onStage
+          ? controller.stageMembers.value
+          : controller.audienceMembers.value;
+      if (!onStage && members.isEmpty) {
+        return const SliverToBoxAdapter(child: _EmptyAudience());
+      }
+      final creatorId = controller.outpost.value?.creator_user_uuid;
+      return _grid(members, creatorId);
+    });
+  }
+
+  Widget _grid(List<LiveMember> members, String? creatorId) {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       sliver: SliverGrid.builder(

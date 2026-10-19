@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:podium/utils/palette.dart';
 
@@ -57,26 +58,60 @@ class AuroraBackground extends StatefulWidget {
   State<AuroraBackground> createState() => _AuroraBackgroundState();
 }
 
-class _AuroraBackgroundState extends State<AuroraBackground>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 28),
-  );
+class _AuroraBackgroundState extends State<AuroraBackground> {
+  static const _period = Duration(seconds: 28);
+
+  /// The glows drift over [_period], so ~20 fps looks the same as the
+  /// display rate at a fraction of the paint cost.
+  static const _frameInterval = Duration(milliseconds: 50);
+
+  /// Position in the drift cycle, 0..1.
+  final _phase = ValueNotifier<double>(0);
+  final _clock = Stopwatch();
+  Timer? _timer;
+  late final AppLifecycleListener _lifecycle;
+  bool _tickerEnabled = true;
+  bool _reduceMotion = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onStateChange: (_) => _sync());
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (reduceMotion(context)) {
-      _controller.stop();
-    } else if (!_controller.isAnimating) {
-      _controller.repeat();
+    // False while the route is covered by another page.
+    _tickerEnabled = TickerMode.valuesOf(context).enabled;
+    _reduceMotion = reduceMotion(context);
+    _sync();
+  }
+
+  void _sync() {
+    final state = WidgetsBinding.instance.lifecycleState;
+    final foreground = state == null ||
+        state == AppLifecycleState.resumed ||
+        state == AppLifecycleState.inactive;
+    final run = _tickerEnabled && !_reduceMotion && foreground;
+    if (run && _timer == null) {
+      _clock.start();
+      _timer = Timer.periodic(_frameInterval, (_) {
+        final periodMs = _period.inMilliseconds;
+        _phase.value = (_clock.elapsedMilliseconds % periodMs) / periodMs;
+      });
+    } else if (!run && _timer != null) {
+      _clock.stop();
+      _timer!.cancel();
+      _timer = null;
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _timer?.cancel();
+    _lifecycle.dispose();
+    _phase.dispose();
     super.dispose();
   }
 
@@ -88,7 +123,7 @@ class _AuroraBackgroundState extends State<AuroraBackground>
         Positioned.fill(
           child: RepaintBoundary(
             child: CustomPaint(
-              painter: _AuroraPainter(_controller, widget.intensity),
+              painter: _AuroraPainter(_phase, widget.intensity),
             ),
           ),
         ),
@@ -116,10 +151,10 @@ class _Blob {
 }
 
 class _AuroraPainter extends CustomPainter {
-  final Animation<double> animation;
+  final ValueListenable<double> phase;
   final double intensity;
   final AppPalette palette = AppPalette.current;
-  _AuroraPainter(this.animation, this.intensity) : super(repaint: animation);
+  _AuroraPainter(this.phase, this.intensity) : super(repaint: phase);
 
   static List<_Blob> get _blobs => [
         _Blob(ColorName.primaryBlue, const Offset(0.1, 0.05),
@@ -140,7 +175,7 @@ class _AuroraPainter extends CustomPainter {
     );
     final glow = intensity * AppPalette.current.glow;
     if (glow <= 0) return;
-    final t = animation.value * 2 * math.pi;
+    final t = phase.value * 2 * math.pi;
     final extent = size.longestSide;
     for (final blob in _blobs) {
       final angle = t + blob.phase * 2 * math.pi;

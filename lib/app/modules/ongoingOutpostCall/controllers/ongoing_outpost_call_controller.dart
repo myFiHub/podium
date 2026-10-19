@@ -81,6 +81,7 @@ class OngoingOutpostCallController extends GetxController {
 
   StreamSubscription<List<LiveMember>>? membersListener;
   StreamSubscription<int>? talkTimeListener;
+  StreamSubscription<int>? speakingListener;
 
   @override
   void onInit() async {
@@ -118,6 +119,9 @@ class OngoingOutpostCallController extends GetxController {
       if (mySession.value == null) return;
       mySession.refresh();
       _enforceTimeUp();
+    });
+    speakingListener = outpostCallController.speakingTick.listen((_) {
+      mySession.refresh();
     });
     final callSession = outpostCallController.session;
     callSession?.delayed(const Duration(seconds: 10), () {
@@ -162,6 +166,8 @@ class OngoingOutpostCallController extends GetxController {
     recordingListeners?.cancel();
     membersListener?.cancel();
     talkTimeListener?.cancel();
+    speakingListener?.cancel();
+    reportReasonController.dispose();
     sessionData.value = null;
   }
 

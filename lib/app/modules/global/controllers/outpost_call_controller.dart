@@ -24,23 +24,33 @@ import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
-import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
-
-class SortTypes {
-  static const String recentlyTalked = 'recentlyTalked';
-  static const String timeJoined = 'timeJoined';
-}
 
 class OutpostCallController extends GetxController {
   final storage = GetStorage();
-  // group session id is group id
   final outpostsController = Get.find<OutpostsController>();
   final globalController = Get.find<GlobalController>();
   final outpost = Rxn<OutpostModel>();
+
+  /// Present members in server order. Emits only when membership changes;
+  /// speaking flags and talk times are updated in place, see [speakingTick]
+  /// and [talkTimeTick].
   final members = Rx<List<LiveMember>>([]);
-  final sortedMembers = Rx<List<LiveMember>>([]);
-  final talkingUsers = Rx<List<LiveMember>>([]);
+
+  /// [members] split by [isStageMember], speakers first on stage. Each is
+  /// reassigned only when its order actually changes, so a speak event that
+  /// doesn't move anyone rebuilds nothing but the speaker's avatar.
+  final stageMembers = Rx<List<LiveMember>>([]);
+  final audienceMembers = Rx<List<LiveMember>>([]);
+  final talkingCount = 0.obs;
+
+  /// Bumped whenever a member's speaking flag changes in place.
+  final speakingTick = 0.obs;
+  final Map<String, RxBool> _speaking = {};
+
+  /// Per-member speaking flag, so an avatar rebuilds only for its own member.
+  RxBool speakingOf(String uuid) => _speaking.putIfAbsent(uuid, () => false.obs);
+
   final reactionsMap = Rx<Map<String, Map<OutgoingMessageTypeEnums, int>>>({
   });
   final haveOngoingCall = false.obs;
@@ -73,70 +83,59 @@ class OutpostCallController extends GetxController {
 
   final jitsiMembers = Rx<List<JitsiMember>>([]);
   final searchedValueInMeet = Rx<String>('');
-  final sortType = Rx<String>(SortTypes.recentlyTalked);
   final canTalk = false.obs;
   final keysMap = Rx<Map<String, GlobalKey>>({});
 
   StreamSubscription<bool>? triggerLiveDataFetchListener;
-  StreamSubscription<List<LiveMember>>? sortedMembersListener;
   StreamSubscription<List<LiveMember>>? membersListener;
   StreamSubscription<OutpostModel?>? outpostListener;
   StreamSubscription<int>? tickerListener;
+  StreamSubscription<bool>? canTalkListener;
 
   bool gotMembersOnce = false;
   @override
   void onInit() {
     super.onInit();
-    sortType.value = storage.read(StorageKeys.ongoingCallSortType) ??
-        SortTypes.recentlyTalked;
-
     tickerListener = globalController.ticker.listen((d) {
       handleTimerTick();
     });
-    sortedMembersListener = sortedMembers.listen((listOfSortedUsers) {
-      final talking = listOfSortedUsers
-          .where((member) => member.is_speaking == true)
-          .toList();
-      talkingUsers.value = talking;
-    });
+    canTalkListener = canTalk.listen((_) => _updateStageAndAudience());
     membersListener = members.listen((listOfUsers) {
-      final sorted = sortMembers(members: listOfUsers);
       if (!gotMembersOnce) {
         _updateReactionsMap(listOfUsers);
         gotMembersOnce = true;
       }
-      sortedMembers.value = sorted;
+      _syncSpeakingFlags(listOfUsers);
+      _updateStageAndAudience();
     });
-    outpostListener = outpost.listen((activeOutpost) async {
+    outpostListener = outpost.listen((_) {
       members.value = [];
-      if (activeOutpost != null) {
-        // NOTE: this should be the only place where this is used to join the outpost when the user is in the outpost call screen
-        // NOTE: otherwise there will be multiple join requests, and websocket server only reacts to the first one
-        final joined =
-            await wsClient.joinOutpost(activeOutpost.uuid, withRetry: true);
-        final reconnecting = wsClient.isConnecting;
-        if (!joined && reconnecting) {
-          Toast.error(
-            title: 'Connecting…',
-            message: 'Please wait a moment, then try again.',
-          );
-          return;
-        }
-
-        if (!joined) {
-          Toast.error(
-            title: 'Could not join the outpost',
-            message: 'Please try again in a moment.',
-          );
-          jitsiMeet.hangUp();
-        }
-      }
     });
   }
 
-  @override
-  void onReady() {
-    super.onReady();
+  /// Joins the outpost on the websocket for [callSession]. Called on every
+  /// call start: rejoining sets [outpost] to the same value, so nothing keyed
+  /// on it changing would fire, and the server treats the outpost as not live
+  /// until someone joins it here.
+  Future<void> _joinOutpostSocket(CallSession callSession) async {
+    final joined = await wsClient.joinOutpost(
+      callSession.outpostId,
+      force: true,
+      withRetry: true,
+    );
+    if (joined || !callSession.isActive) return;
+    if (wsClient.isConnecting) {
+      Toast.error(
+        title: 'Connecting…',
+        message: 'Please wait a moment, then try again.',
+      );
+      return;
+    }
+    Toast.error(
+      title: 'Could not join the outpost',
+      message: 'Please try again in a moment.',
+    );
+    leaveCall(askForScore: false);
   }
 
   @override
@@ -145,20 +144,50 @@ class OutpostCallController extends GetxController {
     gotMembersOnce = false;
     reactionsMap.value = {};
     membersListener?.cancel();
-    sortedMembersListener?.cancel();
     outpostListener?.cancel();
     tickerListener?.cancel();
+    canTalkListener?.cancel();
     triggerLiveDataFetchListener?.cancel();
   }
 
-  /////////////////////////////////////////////////////////////
-
-  @override
-  void dispose() {
-    super.dispose();
+  void _syncSpeakingFlags(List<LiveMember> listOfUsers) {
+    final present = <String>{};
+    for (final member in listOfUsers) {
+      present.add(member.uuid);
+      speakingOf(member.uuid).value = member.is_speaking;
+    }
+    _speaking.removeWhere((uuid, _) => !present.contains(uuid));
   }
 
-  ///////////////////////////////////////////////////////////////
+  void _updateStageAndAudience() {
+    final creatorId = outpost.value?.creator_user_uuid;
+    final speaking = <LiveMember>[];
+    final silent = <LiveMember>[];
+    final audience = <LiveMember>[];
+    for (final member in members.value) {
+      if (!isStageMember(member, creatorId: creatorId)) {
+        audience.add(member);
+      } else if (member.is_speaking) {
+        speaking.add(member);
+      } else {
+        silent.add(member);
+      }
+    }
+    final stage = [...speaking, ...silent];
+    talkingCount.value = speaking.length;
+    if (!_sameOrder(stageMembers.value, stage)) stageMembers.value = stage;
+    if (!_sameOrder(audienceMembers.value, audience)) {
+      audienceMembers.value = audience;
+    }
+  }
+
+  static bool _sameOrder(List<LiveMember> a, List<LiveMember> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!identical(a[i], b[i])) return false;
+    }
+    return true;
+  }
 
   void updateReactionsMapByWsEvent(IncomingMessage incomingMessage) {
     final reactionTypes = {
@@ -258,6 +287,20 @@ class OutpostCallController extends GetxController {
     if (liveData == null) {
       // A newer request is in flight and will decide.
       if (seq != _liveDataSeq && withJoin != true) return;
+      // "Outpost is not live" until our websocket join lands; Jitsi can
+      // connect before it does. Wait for the join, then ask once more.
+      if (withJoin == true && withRetry == true) {
+        final joined = await wsClient.joinOutpost(
+          outpostId,
+          force: true,
+          withRetry: true,
+        );
+        if (!callSession.isActive) return;
+        if (joined) {
+          fetchLiveData(withRetry: false, withJoin: true);
+          return;
+        }
+      }
       leaveCall(askForScore: false);
       Toast.error(
         title: 'Could not join the outpost',
@@ -272,8 +315,9 @@ class OutpostCallController extends GetxController {
       });
       if (withJoin == true) {
         // do i exist and is present?
-        final iExistAndPresent = tmp.any((member) => member.uuid == myId) &&
-            tmp.any((member) => member.is_present == true);
+        // After leaving, the server keeps us in the list with is_present false.
+        final iExistAndPresent = tmp
+            .any((member) => member.uuid == myId && member.is_present == true);
         if (!iExistAndPresent) {
           bool joined = false;
           try {
@@ -315,30 +359,22 @@ class OutpostCallController extends GetxController {
   int _liveDataSeq = 0;
 
   void updateUserIsTalking({required String address, required bool isTalking}) {
-    final membersList = [...members.value];
-    final memberIndex = membersList.indexWhere((m) => m.address == address);
-    if (memberIndex != -1) {
-      membersList[memberIndex].last_speaked_at_timestamp =
-          DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      membersList[memberIndex].is_speaking = isTalking;
-      members.value = membersList;
-    }
+    final member = members.value.firstWhereOrNull((m) => m.address == address);
+    if (member == null) return;
+    member.last_speaked_at_timestamp =
+        DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final changed = member.is_speaking != isTalking;
+    member.is_speaking = isTalking;
+    speakingOf(member.uuid).value = isTalking;
+    _updateStageAndAudience();
+    if (changed) speakingTick.value++;
   }
 
   void updateUserTime({required String address, required int newTime}) {
-    final membersList = [...members.value];
-    final memberIndex = membersList.indexWhere((m) => m.address == address);
-    if (memberIndex != -1) {
-      membersList[memberIndex].remaining_time = newTime;
-      members.value = membersList;
-      members.refresh();
-    }
-  }
-
-  /// Keeps the server's order. Sorting by [LiveMember.last_speaked_at_timestamp]
-  /// would reorder the stage whenever someone starts talking.
-  List<LiveMember> sortMembers({required List<LiveMember> members}) {
-    return [...members];
+    final member = members.value.firstWhereOrNull((m) => m.address == address);
+    if (member == null) return;
+    member.remaining_time = newTime;
+    talkTimeTick.value++;
   }
 
   Future<void> cleanupAfterCall({bool askForScore = true}) async {
@@ -497,12 +533,10 @@ class OutpostCallController extends GetxController {
       final canProceed = await _verifyOutpostSchedule(outpostToJoin);
       if (!canProceed) return;
 
-      await jitsiMeet.join(
-        options,
-        jitsiListeners(
-          outpost: outpostToJoin,
-        ),
-      );
+      final listeners = jitsiListeners(outpost: outpostToJoin);
+      final callSession = session;
+      if (callSession != null) _joinOutpostSocket(callSession);
+      await jitsiMeet.join(options, listeners);
       if (Get.isRegistered<OngoingOutpostCallController>() &&
           !Get.find<OngoingOutpostCallController>().callPageOpened &&
           !callCleanedUp) {
@@ -598,6 +632,16 @@ class CallSession {
     }
     _timers.clear();
   }
+}
+
+/// Creators always count as speakers; `last_speaked_at_timestamp` is only
+/// positive once the member actually talked (see `fetchLiveData`).
+bool isStageMember(LiveMember member, {required String? creatorId}) {
+  return member.uuid == creatorId ||
+      member.can_speak ||
+      member.is_speaking ||
+      (member.last_speaked_at_timestamp ?? 0) > 0 ||
+      (member.uuid == myId && Get.find<OutpostCallController>().canTalk.value);
 }
 
 bool canISpeakWithoutTicket({required OutpostModel outpost}) {

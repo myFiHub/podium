@@ -239,6 +239,32 @@ class _OutpostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Built outside the Obx so a join state change only rebuilds the frame
+    // and the actions row.
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _OutpostHeader(outpost: outpost, amICreator: amICreator),
+        if (outpost.subject.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Text(
+            outpost.subject,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.muted.copyWith(height: 1.35),
+          ),
+        ],
+        const SizedBox(height: 12),
+        _OutpostMeta(outpost: outpost),
+        if (outpost.tags.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          TagsWrapper(outpost: outpost),
+        ],
+        const SizedBox(height: 12),
+        Divider(height: 1, thickness: 1, color: AppColors.border),
+        const SizedBox(height: 10),
+      ],
+    );
     return Obx(() {
       final isJoining = controller.joiningOutpostId.value == outpost.uuid;
       return AppCard(
@@ -250,25 +276,7 @@ class _OutpostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _OutpostHeader(outpost: outpost, amICreator: amICreator),
-            if (outpost.subject.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Text(
-                outpost.subject,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.muted.copyWith(height: 1.35),
-              ),
-            ],
-            const SizedBox(height: 12),
-            _OutpostMeta(outpost: outpost),
-            if (outpost.tags.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              TagsWrapper(outpost: outpost),
-            ],
-            const SizedBox(height: 12),
-            Divider(height: 1, thickness: 1, color: AppColors.border),
-            const SizedBox(height: 10),
+            body,
             _OutpostActions(
               outpost: outpost,
               controller: controller,
@@ -941,13 +949,13 @@ class TagsWrapper extends StatelessWidget {
       onHorizontalDragEnd: (_) {},
       child: SizedBox(
         height: 26,
-        child: ListView.builder(
+        child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.zero,
-          itemCount: outpost.tags.length,
-          itemBuilder: (context, index) => SingleTag(
-            tagName: outpost.tags[index],
+          child: Row(
+            children: [
+              for (final tag in outpost.tags) SingleTag(tagName: tag),
+            ],
           ),
         ),
       ),

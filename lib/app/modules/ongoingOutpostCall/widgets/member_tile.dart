@@ -27,7 +27,14 @@ class MemberAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final speaking = member.is_speaking;
+    if (!Get.isRegistered<OutpostCallController>()) {
+      return _build(member.is_speaking);
+    }
+    final speaking = Get.find<OutpostCallController>().speakingOf(member.uuid);
+    return Obx(() => _build(speaking.value));
+  }
+
+  Widget _build(bool speaking) {
     final ring = size * 0.06 + 1.5;
     final box = size + ring * 4;
     return SizedBox(

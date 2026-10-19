@@ -123,29 +123,19 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
         if (_fan.value != 0) _fan.value = 0;
         return const SizedBox.shrink();
       }
-      final room = findCallRoom();
-      final actions = _actions(
-        canTalk: call.canTalk.value,
-        room: room,
-        hasHands: room?.channelAvailable.value ?? false,
-      );
       return Positioned.fill(
         child: Material(
           type: MaterialType.transparency,
           child: LayoutBuilder(
             builder: (context, constraints) =>
-                _buildLayer(context, constraints.biggest, actions),
+                _buildLayer(context, constraints.biggest),
           ),
         ),
       );
     });
   }
 
-  Widget _buildLayer(
-    BuildContext context,
-    Size size,
-    List<_BubbleAction> actions,
-  ) {
+  Widget _buildLayer(BuildContext context, Size size) {
     final bounds = _bounds(size, MediaQuery.viewInsetsOf(context));
     final resting = _clamp(
       _topLeft ?? _savedTopLeft ?? Offset(bounds.right, bounds.bottom - 96),
@@ -182,15 +172,32 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
               ),
             ),
           ),
-        for (var i = 0; i < actions.length; i++)
-          _FanItem(
-            animation: _fan,
-            index: i,
-            count: actions.length,
-            center: center,
-            towardsLeft: onRight,
-            action: actions[i],
-          ),
+        Positioned.fill(
+          child: Obx(() {
+            if (!Get.isRegistered<OngoingOutpostCallController>()) {
+              return const SizedBox.shrink();
+            }
+            final room = findCallRoom();
+            final actions = _actions(
+              canTalk: Get.find<OutpostCallController>().canTalk.value,
+              room: room,
+              hasHands: room?.channelAvailable.value ?? false,
+            );
+            return Stack(
+              children: [
+                for (var i = 0; i < actions.length; i++)
+                  _FanItem(
+                    animation: _fan,
+                    index: i,
+                    count: actions.length,
+                    center: center,
+                    towardsLeft: onRight,
+                    action: actions[i],
+                  ),
+              ],
+            );
+          }),
+        ),
         AnimatedPositioned(
           duration:
               _dragging ? Duration.zero : const Duration(milliseconds: 260),
@@ -225,8 +232,8 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
     );
   }
 
-  /// Built inside the bubble's Obx, so every observable read here rebuilds
-  /// the fan; the buttons themselves hold plain values and no Obx.
+  /// Built inside the fan's Obx, so every observable read here rebuilds the
+  /// fan; the buttons themselves hold plain values and no Obx.
   List<_BubbleAction> _actions({
     required bool canTalk,
     required CallRoomController? room,
@@ -324,7 +331,7 @@ class _ActionLook {
 
 /// One action on the arc that opens beside the bubble, facing the screen
 /// center. Items fly out from the bubble one after another.
-class _FanItem extends StatelessWidget {
+class _FanItem extends StatefulWidget {
   final Animation<double> animation;
   final int index;
   final int count;
@@ -340,28 +347,60 @@ class _FanItem extends StatelessWidget {
     required this.action,
   });
 
+  @override
+  State<_FanItem> createState() => _FanItemState();
+}
+
+class _FanItemState extends State<_FanItem> {
   static const _spread = 150 * math.pi / 180;
 
-  @override
-  Widget build(BuildContext context) {
-    final t = count == 1 ? 0.5 : index / (count - 1);
-    // From top to bottom along the arc.
-    final angle = -_spread / 2 + _spread * t;
-    final direction = Offset(
-      (towardsLeft ? -1 : 1) * math.cos(angle),
-      math.sin(angle),
-    );
-    final start = (index / count) * 0.45;
-    final curved = CurvedAnimation(
-      parent: animation,
+  /// Listens to the shared fan controller, so it must be disposed rather
+  /// than recreated on every build.
+  late CurvedAnimation _curved = _createCurve();
+
+  CurvedAnimation _createCurve() {
+    final start = (widget.index / widget.count) * 0.45;
+    return CurvedAnimation(
+      parent: widget.animation,
       curve:
           Interval(start, math.min(1, start + 0.55), curve: Curves.easeOutBack),
       reverseCurve: Curves.easeIn,
     );
+  }
+
+  @override
+  void didUpdateWidget(_FanItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animation != widget.animation ||
+        oldWidget.index != widget.index ||
+        oldWidget.count != widget.count) {
+      _curved.dispose();
+      _curved = _createCurve();
+    }
+  }
+
+  @override
+  void dispose() {
+    _curved.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final count = widget.count;
+    final t = count == 1 ? 0.5 : widget.index / (count - 1);
+    // From top to bottom along the arc.
+    final angle = -_spread / 2 + _spread * t;
+    final direction = Offset(
+      (widget.towardsLeft ? -1 : 1) * math.cos(angle),
+      math.sin(angle),
+    );
+    final center = widget.center;
+    final animation = widget.animation;
     return AnimatedBuilder(
-      animation: curved,
+      animation: _curved,
       builder: (context, child) {
-        final v = curved.value;
+        final v = _curved.value;
         if (animation.value == 0) return const SizedBox.shrink();
         final pos = center + direction * (_fanRadius * v);
         return Positioned(
@@ -375,7 +414,7 @@ class _FanItem extends StatelessWidget {
           ),
         );
       },
-      child: _ActionButton(look: action.look, onTap: action.onTap),
+      child: _ActionButton(look: widget.action.look, onTap: widget.action.onTap),
     );
   }
 }
@@ -493,6 +532,33 @@ class _BubbleFace extends StatelessWidget {
         final muted = ongoing.amIMuted.value;
         final live = !muted && ongoing.canUseMic;
         final unread = room?.unreadChat.value ?? 0;
+        final showMutedBadge = muted && call.canTalk.value;
+        // Built once per Obx pass and reused by the level builder below, so
+        // voice level changes don't rebuild the image.
+        final image = ClipOval(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Img(
+                src: outpost?.image ?? '',
+                alt: outpost?.name,
+                size: _bubbleSize - 6,
+                borderRadius: BorderRadius.zero,
+              ),
+              FadeTransition(
+                opacity: animation,
+                child: ColoredBox(
+                  color: Colors.black.withAlpha(150),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: ColorName.white,
+                    size: 26,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
         return VoiceLevelBuilder(
           uuid: myId,
           builder: (context, level) {
@@ -532,32 +598,9 @@ class _BubbleFace extends StatelessWidget {
                           ),
                       ],
                     ),
-                    child: ClipOval(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Img(
-                            src: outpost?.image ?? '',
-                            alt: outpost?.name,
-                            size: _bubbleSize - 6,
-                            borderRadius: BorderRadius.zero,
-                          ),
-                          FadeTransition(
-                            opacity: animation,
-                            child: ColoredBox(
-                              color: Colors.black.withAlpha(150),
-                              child: Icon(
-                                Icons.close_rounded,
-                                color: ColorName.white,
-                                size: 26,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    child: image,
                   ),
-                  if (muted && call.canTalk.value)
+                  if (showMutedBadge)
                     Positioned(
                       right: -2,
                       bottom: -2,

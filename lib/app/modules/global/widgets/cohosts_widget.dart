@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -5,6 +7,7 @@ import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
@@ -119,25 +122,36 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
   final RxBool _isSearching = false.obs;
   final RxBool _isLoadingInitialCohosts = false.obs;
 
+  static const _searchDelay = Duration(milliseconds: 350);
+  Timer? _searchDebounce;
+
+  /// Responses can arrive out of order; only the latest search may apply.
+  int _searchSeq = 0;
+
   @override
   void initState() {
     super.initState();
-    // Initialize with current cohosts - we need to fetch user data for the UUIDs
     _loadInitialCohosts();
   }
 
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   void _loadInitialCohosts() async {
-    if (widget.initialCohostUuids.isNotEmpty) {
-      _isLoadingInitialCohosts.value = true;
-      try {
-        final users =
-            await HttpApis.podium.getUsersByIds(widget.initialCohostUuids);
-        _selectedCohosts.value = users;
-      } catch (e) {
-        // Handle error silently
-      } finally {
-        _isLoadingInitialCohosts.value = false;
-      }
+    if (widget.initialCohostUuids.isEmpty) return;
+    _isLoadingInitialCohosts.value = true;
+    try {
+      final users =
+          await HttpApis.podium.getUsersByIds(widget.initialCohostUuids);
+      _selectedCohosts.value = users;
+    } catch (e) {
+      l.e('Failed to load cohosts: $e');
+    } finally {
+      _isLoadingInitialCohosts.value = false;
     }
   }
 
@@ -181,7 +195,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () {
                           _searchController.clear();
-                          _searchedUsers.clear();
+                          _searchUsers('');
                         },
                       );
                     }
@@ -470,20 +484,29 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
     );
   }
 
-  void _searchUsers(String query) async {
+  void _searchUsers(String query) {
+    _searchDebounce?.cancel();
     if (query.isEmpty) {
+      _searchSeq++;
+      _isSearching.value = false;
       _searchedUsers.clear();
       return;
     }
-
     _isSearching.value = true;
+    _searchDebounce = Timer(_searchDelay, () => _runSearch(query));
+  }
+
+  Future<void> _runSearch(String query) async {
+    final seq = ++_searchSeq;
     try {
       final users = await HttpApis.podium.searchUserByName(name: query);
+      if (seq != _searchSeq || !mounted) return;
       _searchedUsers.value = users.values.toList();
     } catch (e) {
+      if (seq != _searchSeq || !mounted) return;
       _searchedUsers.clear();
     } finally {
-      _isSearching.value = false;
+      if (seq == _searchSeq && mounted) _isSearching.value = false;
     }
   }
 }

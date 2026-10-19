@@ -132,6 +132,7 @@ class LoginController extends GetxController {
   void onClose() {
     isLoggedInListener?.cancel();
     deeplinkRouteListener?.cancel();
+    textController.dispose();
     super.onClose();
   }
 

@@ -136,9 +136,10 @@ class _ParticipantsSheetState extends State<ParticipantsSheet> {
             Expanded(
               child: Obx(() {
                 final creatorId = controller.outpost.value?.creator_user_uuid;
-                final _ = controller.searchedValueInMeet.value;
+                controller.searchedValueInMeet.value;
+                controller.speakingTick.value;
                 final hands = room?.raisedHandUuids ?? const <String>[];
-                final members = controller.sortedMembers.value
+                final members = controller.members.value
                     .where((m) => _matches(m, creatorId))
                     .toList();
                 if (filter == _Filter.hands) {

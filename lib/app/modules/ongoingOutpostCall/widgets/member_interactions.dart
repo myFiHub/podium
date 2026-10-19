@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
-import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
@@ -29,16 +28,6 @@ String memberAvatar(LiveMember member) {
     return avatarPlaceHolder(member.name);
   }
   return avatar;
-}
-
-/// Creators always count as speakers; `last_speaked_at_timestamp` is only
-/// positive once the member actually talked (see `fetchLiveData`).
-bool isStageMember(LiveMember member, {required String? creatorId}) {
-  return member.uuid == creatorId ||
-      member.can_speak ||
-      member.is_speaking ||
-      (member.last_speaked_at_timestamp ?? 0) > 0 ||
-      (member.uuid == myId && Get.find<OutpostCallController>().canTalk.value);
 }
 
 String formatTalkTime(int seconds) {

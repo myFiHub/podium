@@ -40,17 +40,101 @@ An **outpost** is a scheduled or live room. People join with a social login or a
 
 ## What you can do
 
-| | |
-| --- | --- |
-| **Rooms** | Browse live and upcoming outposts, search, open a detail page, and join. A floating bubble keeps the call reachable while you move around the app. |
-| **Live call** | Mic, reactions, raised hands, chat, screen share, polls, invite links, mute-all, and a local recording you can trim afterward. |
-| **Access** | Public rooms, link-only rooms, invite lists, and ticket gates. Tickets can be a Podium pass, a Stars Arena ticket (Avalanche), or a Friend.tech key (Base). Entry and speaking are checked separately. |
-| **Cheer and boo** | Send an on-chain reaction to someone in the room. Amounts and timing come from the environment and from backend metadata. |
-| **Identity** | Sign in with Web3Auth (email, Apple, Google, X, Facebook, LinkedIn, GitHub) or connect an external wallet through Reown AppKit. Referral links are supported. |
-| **People** | Profiles, follows, connected accounts, notifications (OneSignal), and Luma guest lists for events imported into an outpost. |
-| **Records** | Recordings stay on the device. Playback uses a waveform, and a trimmer lets you cut the file before you keep it. |
+### Sign in and onboarding
 
-Deep links use the `podium://` scheme and the HTTPS base in `BASE_DEEP_LINK_URL`. They open an outpost or a referral.
+- Sign in with Web3Auth using X, Apple, Google, email, Facebook, LinkedIn, or GitHub. Each login comes with a built-in Podium wallet.
+- Referral system: open a referral link or paste a referrer ID. The app shows who referred you, and tells you when that person has used up their invites.
+- Pre-join access page. If you have no referral, connect an external wallet and buy a Podium Pass to get in.
+- Restored sessions skip the login screen, and a branded launch loader shows while the app starts.
+- An update prompt appears when the backend advertises a newer app version. Optional updates can be dismissed once per version.
+
+### Discover
+
+- Home greets you by time of day and lists your outposts, with shortcuts to explore or start one.
+- The directory has a **Live now** rail, a **Live from people you follow** rail, a **Trending** rail with a time window toggle, and a full list of outposts.
+- Tag pages (`#tag`) list every outpost that uses a tag.
+- Search covers outposts, people, and tags in one place.
+- Archived outposts can be shown or hidden from a profile setting.
+
+### Create and schedule an outpost
+
+- Set a name, a main subject, tags, and a cover image.
+- Choose **who can join**: everyone, people who have the link, invited users, or ticket holders.
+- Choose **who can speak**: everyone, invited users only, or ticket holders. Speaking rights are set separately from entry.
+- Ticket gates accept Podium Passes, Stars Arena tickets (Avalanche), and Friend.tech keys (Base). You pick the sellers whose tickets count, by name, address, or Arena handle.
+- Schedule for later or go live now. You can reschedule from the detail page.
+- Publish a scheduled outpost as a Luma event, with Luma hosts and guests invited by email.
+- Optional settings: 18+ content, recordable sessions, and cohosts who help run the room.
+
+### Outpost page (before you join)
+
+- Header with host, live and scheduled badges, recordable and 18+ flags, and who can join and speak.
+- Copy the outpost link, or invite people to speak or to listen.
+- Set a reminder through Podium notifications or your device calendar.
+- See the Luma event's hosts and guests, with guest status (pending, approved, rejected), and share the Luma link.
+- If you need a ticket, the ticket sheet lists the sellers, the price, what each ticket unlocks (enter, speak, or both), and whether you already hold it. You can buy in place.
+- If the host has not joined yet, opening the outpost puts you on its waitlist until the host arrives.
+- Hosts and cohosts get a link to that outpost's analytics.
+- Links to a missing or removed outpost land on a "not found" page.
+
+### Live room
+
+- Audio over Jitsi. The mic button shows whether you are connecting, listening, or live. Voice levels show who is talking.
+- **Talk time**: each speaker has a timer that runs only while unmuted. The header shows how much is left, or "unlimited" for the host.
+- **Likes and dislikes** add seconds to a speaker's talk time or take seconds away.
+- **Cheer and boo**: send an on-chain payment to a member. A cheer adds talk time and a boo removes it, in proportion to the amount (`MINIMUM_CHEERBOO_AMOUNT` and `CHEERBOO_TIME_MULTIPLICATION`). Cheering yourself buys more time, and the fee is shared with the other members.
+- Emoji reactions float across the room.
+- Raise or lower your hand. Hosts see raised hands and can lower them all at once.
+- Room chat. Messages are visible to everyone and disappear when the outpost ends.
+- Polls. The host starts a poll with a question and options, everyone votes once and can change their vote, and final results stay visible when the poll ends.
+- Screen sharing on Android, and on iOS through a broadcast upload extension. Sharing your screen uses your talk time.
+- People sheet with search by name or address, and filters for speakers, talking now, listeners, and raised hands.
+- Member sheet with role, talk time left, and a link to the profile. Hosts can mute or remove a member, or lower their hand.
+- Host tools: mute everyone, lower all hands, invite, copy link.
+- A banner shows when someone is recording the room.
+- Minimize the call into a floating bubble that stays on top while you use the rest of the app, with chat, open, and leave actions.
+- In-app tutorial, a report form for the outpost, and a call quality rating after you leave.
+
+### Replays and recordings
+
+- Record an outpost when it is marked recordable. The replay captures the call audio as heard on your device, the screen share, and a timeline of what happened in the room: members, speakers, raised hands, chat, polls, and reactions.
+- Recording saves progress every few seconds (`RECORDING_CHUNK_SECONDS`, default 5). If the app is killed mid-call, the replay is recovered up to the last save on the next launch.
+- The replay player rebuilds the room around the audio: who was on stage and talking, the screen share, chat, and the poll at each moment. It has a seek bar with screen-share clip markers, skip back and forward 10 seconds, and playback speed control.
+- Share a replay as a single `.podium` file. Opening a `.podium` file from another app (open with or share to) imports it into Podium.
+- The Records page lists replays with their status (recording, saving, failed and retry, ready, recovered) and audio-only recordings.
+- Audio recordings show a waveform, can be trimmed before you keep them, and can be shared or deleted.
+- Everything stays on the device unless you share it.
+
+### Host analytics
+
+- A host dashboard across all your outposts: peak and unique listeners, listening time, listeners who stayed 10+ minutes, sessions, and earnings.
+- Charts for daily listeners, retention (the share of visits that lasted past a given number of minutes), and earnings from cheers and boos after fees.
+- **Best time to go live**: when your followers or listeners are usually around, in your local time.
+- Outposts ranked by listeners in the selected period.
+- Per-outpost analytics with a session history. Only the host and cohosts can see them.
+
+### Profiles and social
+
+- Your profile has your account, wallets, activity, and preferences.
+- Other people's profiles show pass holders, followers, and following, plus cheers and boos sent and received. You can follow, unfollow, and buy or sell their Podium Pass.
+- Connected accounts: link several sign-in methods to one Podium account, switch between them, and choose the primary. Some actions are limited to the primary account.
+- Alerts for outpost invitations and new followers. Accept or reject invites, and mark alerts as read. Push notifications are delivered through OneSignal.
+- Refer friends from your profile, with a count of the invites you have left.
+- Delete your account, log out, or send a bug report or feedback.
+
+### Wallets and chains
+
+- Built-in Podium wallet from Web3Auth, with EVM and Movement addresses, balances (Base ETH, AVAX, MOVE), and private key export.
+- External wallets through Reown AppKit (WalletConnect). Choose a default wallet, or forget it.
+- Activate Friend.tech on your wallet so you can buy and use keys.
+- On-chain integrations: FiHub on Avalanche and Aptos, Stars Arena on Avalanche, Friend.tech on Base, and cheer and boo contracts loaded from backend metadata.
+
+### App experience
+
+- Aurora design: a dark navy canvas with drifting cyan, violet, and magenta light, shared across pages so transitions stay smooth. Several color themes can be picked from the profile.
+- Deep links: `podium://` and the HTTPS base in `BASE_DEEP_LINK_URL` open an outpost or a referral. If you are not logged in yet, the link waits until you are.
+- Connectivity tracking that pauses while the app is in the background and resyncs when it comes back.
+- Firebase Analytics and Firebase Storage for outpost images.
 
 ---
 
@@ -122,9 +206,12 @@ lib/
       outpostDetail/        Room page before you join
       ongoingOutpostCall/   Live room
       search/  notifications/  myProfile/  profile/
-      records/              On-device recordings
+      records/              On-device replays and recordings
+      replay/               Replay player
+      hostAnalytics/        Host dashboard and per-outpost analytics
       checkTicket/          Ticket gates
       global/               Shared controllers, chain clients, services
+    services/replay/        Replay recording, processing, storage, sharing
   providers/api/            Dio clients: podium, luma, arena
   services/websocket/       Socket messages
   contracts/                ABIs and chain ids
@@ -150,7 +237,14 @@ Routes worth knowing:
 | `/create-outpost` | Create a room |
 | `/outpost-detail` | Room detail |
 | `/ongoing-outpost-call` | Live room |
-| `/records` | Saved recordings |
+| `/records` | Saved replays and recordings |
+| `/replay` | Replay player |
+| `/tag-outposts` | Outposts for one tag |
+| `/profile` | Someone else's profile |
+| `/connected-accounts` | Linked sign-in methods |
+| `/host-dashboard` | Host analytics across your outposts |
+| `/host-outpost-analytics` | Analytics for one outpost |
+| `/referral` | Referral landing, opens the login page |
 
 The bottom bar is Home, Outposts, Search, Alerts, Profile. It stays hidden until you are logged in.
 
@@ -267,6 +361,8 @@ The app refuses to start when any of these are empty:
 | `FRIENDTECH_ADDRESS_BASECHAIN_MAINNET` | Friend.tech keys on Base (`8453`) |
 | `MINIMUM_CHEERBOO_AMOUNT` | Smallest cheer or boo |
 | `CHEERBOO_TIME_MULTIPLICATION` | How long a reaction stays on screen |
+
+`RECORDING_CHUNK_SECONDS` is optional and defaults to `5`. It sets how often a replay in progress is saved to disk.
 
 `VERSION` is optional at compile time (it falls back to a default). `runDebug.sh`, `buildApk.sh`, `buildBundle.sh`, and `buildIpa.sh` overwrite it with the version in `pubspec.yaml` before each build.
 

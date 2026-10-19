@@ -193,7 +193,7 @@ class LoginController extends GetxController {
           referrerNotFound.value = true;
           Toast.error(message: 'Referrer not found');
         } else {
-          Toast.success(message: 'use ${referrer.value?.name} as referrer');
+          Toast.success(message: 'Using ${referrer.value?.name} as your referrer');
 
           if (temporaryLoginRequest != null) {
             isLoggingIn.value = true;

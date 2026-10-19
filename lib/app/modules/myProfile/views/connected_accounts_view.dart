@@ -417,7 +417,7 @@ class ConnectConfirmationDialog extends GetView<MyProfileController> {
         FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.onPrimary,
           ),
           onPressed: () {
             Get.closeOverlay();

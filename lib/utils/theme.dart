@@ -3,16 +3,18 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/gen/fonts.gen.dart';
 
 const _radius = 14.0;
-const _danger = Color(0xFFF04141);
+const _danger = ColorName.danger;
+const _onPrimary = ColorName.cardBackground;
+const _surfaceRaised = Color(0xFF1B1B36);
 
 final ThemeData darkThemeData = ThemeData(
   fontFamily: FontFamily.sora,
   primarySwatch: Colors.blue,
   colorScheme: const ColorScheme.dark(
     primary: ColorName.primaryBlue,
-    onPrimary: Colors.white,
+    onPrimary: _onPrimary,
     secondary: ColorName.primaryBlue,
-    onSecondary: Colors.white,
+    onSecondary: _onPrimary,
     surface: ColorName.cardBackground,
     onSurface: Colors.white,
     surfaceContainerHighest: ColorName.cardBorder,
@@ -28,12 +30,13 @@ final ThemeData darkThemeData = ThemeData(
   canvasColor: Colors.transparent,
   dividerColor: ColorName.cardBorder,
   textTheme: const TextTheme(
-    headlineLarge: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
-    headlineMedium: TextStyle(fontSize: 36.0, fontWeight: FontWeight.bold),
-    headlineSmall: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+    headlineLarge: TextStyle(fontSize: 28.0, fontWeight: FontWeight.w800),
+    headlineMedium: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w700),
+    headlineSmall: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w700),
     bodyLarge: TextStyle(fontSize: 18.0, fontWeight: FontWeight.normal),
     bodyMedium: TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal),
     bodySmall: TextStyle(fontSize: 14.0, fontWeight: FontWeight.normal),
+    labelSmall: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w500),
   ).apply(
     bodyColor: ColorName.white,
     displayColor: ColorName.white,
@@ -56,7 +59,7 @@ final ThemeData darkThemeData = ThemeData(
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: ColorName.primaryBlue,
-      foregroundColor: Colors.white,
+      foregroundColor: _onPrimary,
       disabledBackgroundColor: Colors.white.withAlpha(18),
       disabledForegroundColor: Colors.white.withAlpha(90),
       textStyle: const TextStyle(
@@ -71,7 +74,7 @@ final ThemeData darkThemeData = ThemeData(
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: ColorName.primaryBlue,
-      foregroundColor: Colors.white,
+      foregroundColor: _onPrimary,
       elevation: 0,
       textStyle: const TextStyle(
         fontFamily: FontFamily.sora,
@@ -144,7 +147,7 @@ final ThemeData darkThemeData = ThemeData(
     selectionHandleColor: ColorName.primaryBlue,
   ),
   dialogTheme: DialogThemeData(
-    backgroundColor: ColorName.cardBackground,
+    backgroundColor: _surfaceRaised,
     surfaceTintColor: Colors.transparent,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(24),
@@ -189,7 +192,7 @@ final ThemeData darkThemeData = ThemeData(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
   ),
   popupMenuTheme: PopupMenuThemeData(
-    color: ColorName.cardBackground,
+    color: _surfaceRaised,
     surfaceTintColor: Colors.transparent,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16),
@@ -198,7 +201,7 @@ final ThemeData darkThemeData = ThemeData(
     textStyle: const TextStyle(fontFamily: FontFamily.sora, fontSize: 14),
   ),
   snackBarTheme: SnackBarThemeData(
-    backgroundColor: ColorName.cardBackground,
+    backgroundColor: _surfaceRaised,
     contentTextStyle: const TextStyle(
       fontFamily: FontFamily.sora,
       color: Colors.white,
@@ -274,7 +277,7 @@ final ThemeData darkThemeData = ThemeData(
   ),
   tooltipTheme: TooltipThemeData(
     decoration: BoxDecoration(
-      color: ColorName.cardBackground,
+      color: _surfaceRaised,
       borderRadius: BorderRadius.circular(10),
       border: Border.all(color: ColorName.cardBorder),
     ),

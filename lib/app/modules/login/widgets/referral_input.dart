@@ -140,7 +140,7 @@ class ReferralInput extends GetView<LoginController> {
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
                           backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadius.md),
                           ),

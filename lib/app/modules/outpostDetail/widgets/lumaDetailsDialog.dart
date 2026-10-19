@@ -60,7 +60,7 @@ class LumaDetailsDialog extends GetView<OutpostDetailController> {
                         child: const Text(
                           "Started",
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -123,9 +123,9 @@ class _Info extends GetView<OutpostDetailController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'EVENT NAME',
-                        style: AppText.label.copyWith(fontSize: 10),
+                        style: AppText.label,
                       ),
                       const SizedBox(height: 2),
                       Text(

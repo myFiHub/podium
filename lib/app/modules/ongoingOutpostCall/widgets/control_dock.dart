@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
@@ -9,6 +10,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/more_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 class ControlDock extends GetView<OngoingOutpostCallController> {
   const ControlDock({super.key});
@@ -66,29 +68,14 @@ class ControlDock extends GetView<OngoingOutpostCallController> {
 }
 
 Future<void> confirmLeave(OutpostCallController callController) async {
-  final leave = await Get.dialog<bool>(
-    AlertDialog(
-      backgroundColor: ColorName.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('Leave this outpost?'),
-      content: const Text(
-        'You can rejoin later while the outpost is still live.',
-        style: TextStyle(color: ColorName.greyText),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Get.closeOverlay(result: false),
-          child: const Text('Stay'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: callDangerColor),
-          onPressed: () => Get.closeOverlay(result: true),
-          child: const Text('Leave'),
-        ),
-      ],
-    ),
+  final leave = await showAppConfirm(
+    title: 'Leave this outpost?',
+    message: 'You can rejoin later while the outpost is still live.',
+    confirmLabel: 'Leave',
+    cancelLabel: 'Stay',
+    destructive: true,
   );
-  if (leave == true) {
+  if (leave) {
     callController.runHome();
   }
 }
@@ -127,7 +114,12 @@ class DockButton extends StatelessWidget {
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: onPressed,
+                  onTap: onPressed == null
+                      ? null
+                      : () {
+                          HapticFeedback.selectionClick();
+                          onPressed!();
+                        },
                   child: SizedBox(
                     width: 48,
                     height: 48,
@@ -156,7 +148,7 @@ class DockButton extends StatelessWidget {
                     child: Text(
                       badge!,
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: Colors.black,
                       ),
@@ -170,7 +162,7 @@ class DockButton extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, color: ColorName.greyText),
+            style: const TextStyle(fontSize: 12, color: ColorName.greyText),
           ),
         ],
       ),
@@ -242,6 +234,7 @@ class MicButton extends GetView<OngoingOutpostCallController> {
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: () {
+                  HapticFeedback.mediumImpact();
                   if (connecting) {
                     Toast.info(
                       title: 'Connecting…',
@@ -290,7 +283,7 @@ class MicButton extends GetView<OngoingOutpostCallController> {
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: live ? callSpeakingColor : ColorName.greyText,
             ),

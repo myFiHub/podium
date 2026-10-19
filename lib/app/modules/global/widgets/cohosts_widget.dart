@@ -177,6 +177,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
                       );
                     } else if (_searchController.text.isNotEmpty) {
                       return IconButton(
+                        tooltip: 'Clear search',
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () {
                           _searchController.clear();

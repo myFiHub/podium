@@ -2,7 +2,7 @@
 <resources>
     <color name="white">#FFFFFF</color>
     <color name="primarytext">#FFFFFF</color>
-    <color name="secondary_text">#7781A6</color>
+    <color name="secondary_text">#8A93B5</color>
     <color name="grey_text">#C1C1C4</color>
     <color name="system_tray_background">#245A6C</color>
     <color name="black">#000000</color>
@@ -15,6 +15,8 @@
     <color name="card_border">#2A2A40</color>
     <color name="primary_blue" type="material">#54E4EF</color>
     <color name="secondary_blue" type="material material-accent">#4579FD</color>
-
+    <color name="success">#3DDC97</color>
+    <color name="danger">#F04141</color>
+    <color name="warning">#FFC857</color>
 
 </resources>

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -23,7 +25,7 @@ class Root extends StatelessWidget {
             const PodiumNavbar(),
           ],
         ),
-        // InternetConnectionChecker(),
+        const InternetConnectionChecker(),
         // ConnectedNetworks(),
       ],
     );
@@ -42,30 +44,76 @@ class PageWrapper extends StatelessWidget {
   }
 }
 
-class InternetConnectionChecker extends GetView<GlobalController> {
+/// Shows a banner once the connection has been down for a few seconds, so
+/// brief network hiccups don't flash it.
+class InternetConnectionChecker extends StatefulWidget {
   const InternetConnectionChecker({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final connected = controller.isConnectedToInternet.value;
-      final AppLifecycleState state = controller.appLifecycleState.value;
-      return connected && state != AppLifecycleState.paused
-          ? const SizedBox()
-          : const Positioned(
-              bottom: 76,
-              left: 16,
-              right: 16,
-              child: Center(child: _ConnectionIssueBanner()),
-            );
+  State<InternetConnectionChecker> createState() =>
+      _InternetConnectionCheckerState();
+}
+
+class _InternetConnectionCheckerState extends State<InternetConnectionChecker> {
+  static const _showDelay = Duration(seconds: 3);
+
+  Worker? _worker;
+  Timer? _timer;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!Get.isRegistered<GlobalController>()) return;
+    final connection = Get.find<GlobalController>().isConnectedToInternet;
+    _onChange(connection.value);
+    _worker = ever<bool>(connection, _onChange);
+  }
+
+  void _onChange(bool connected) {
+    _timer?.cancel();
+    if (connected) {
+      if (_visible && mounted) setState(() => _visible = false);
+      return;
+    }
+    _timer = Timer(_showDelay, () {
+      if (mounted) setState(() => _visible = true);
     });
+  }
+
+  @override
+  void dispose() {
+    _worker?.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: navbarHeight + 16,
+      left: 16,
+      right: 16,
+      child: IgnorePointer(
+        child: AnimatedSlide(
+          offset: _visible ? Offset.zero : const Offset(0, 0.4),
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          child: AnimatedOpacity(
+            opacity: _visible ? 1 : 0,
+            duration: const Duration(milliseconds: 250),
+            child: const Center(child: _ConnectionIssueBanner()),
+          ),
+        ),
+      ),
+    );
   }
 }
 
 class _ConnectionIssueBanner extends StatelessWidget {
   const _ConnectionIssueBanner();
 
-  static const _danger = Color(0xFFF04141);
+  static const _danger = ColorName.danger;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +152,7 @@ class _ConnectionIssueBanner extends StatelessWidget {
             const SizedBox(width: 10),
             const Flexible(
               child: Text(
-                'Connection issue',
+                'No connection. Reconnecting…',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

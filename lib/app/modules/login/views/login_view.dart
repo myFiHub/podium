@@ -169,7 +169,7 @@ class LoginView extends GetView<LoginController> {
                             text: TextSpan(
                               style: const TextStyle(
                                 color: ColorName.greyText,
-                                fontSize: 11,
+                                fontSize: 12,
                                 height: 1.6,
                               ),
                               children: [
@@ -211,7 +211,7 @@ class LoginView extends GetView<LoginController> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: ColorName.greyText.withAlpha(150),
-                              fontSize: 10,
+                              fontSize: 12,
                               letterSpacing: 0.6,
                             ),
                           ),
@@ -494,7 +494,7 @@ class _OrDivider extends StatelessWidget {
           child: Text(
             'OR CONTINUE WITH',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               letterSpacing: 1.2,
               fontWeight: FontWeight.w700,
               color: ColorName.greyText,

@@ -9,12 +9,20 @@ import 'package:podium/gen/colors.gen.dart';
 class AppColors {
   AppColors._();
 
-  static const success = Color(0xFF3DDC97);
-  static const danger = Color(0xFFF04141);
-  static const accent = Color(0xFFFFC857);
+  static const success = ColorName.success;
+  static const danger = ColorName.danger;
+  static const accent = ColorName.warning;
+  static const live = ColorName.danger;
   static const primary = ColorName.primaryBlue;
 
+  /// Text/icons on [primary] fills. The primary cyan is too light for white
+  /// text to be legible.
+  static const onPrimary = ColorName.cardBackground;
+
   static const surface = ColorName.cardBackground;
+
+  /// Slightly lifted surface for sheets, dialogs and popovers.
+  static const surfaceRaised = Color(0xFF1B1B36);
   static const border = ColorName.cardBorder;
   static const textMuted = ColorName.greyText;
   static const textFaint = ColorName.secondaryText;
@@ -24,6 +32,12 @@ class AppColors {
 
   /// Fill for inputs, chips and icon buttons sitting on a surface.
   static Color get fill => Colors.white.withAlpha(12);
+
+  /// Legible text/icon color for content drawn on a solid [background].
+  static Color onColor(Color background) =>
+      ThemeData.estimateBrightnessForColor(background) == Brightness.light
+          ? onPrimary
+          : Colors.white;
 }
 
 class AppRadius {
@@ -291,7 +305,7 @@ class AppPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = foreground ?? Colors.white;
+    final fg = foreground ?? AppColors.onColor(color ?? AppColors.primary);
     return FilledButton(
       onPressed: loading ? null : onPressed,
       style: FilledButton.styleFrom(
@@ -409,7 +423,7 @@ class AppPill extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: filled ? Colors.black : color,
             ),
@@ -478,7 +492,7 @@ class AppEmptyState extends StatelessWidget {
               onPressed: onAction,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
@@ -519,7 +533,7 @@ class AppSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: ColorName.cardBackground,
+        color: AppColors.surfaceRaised,
         border: Border(top: BorderSide(color: ColorName.cardBorder)),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -716,23 +730,20 @@ Future<bool> showAppConfirm({
   bool destructive = false,
 }) async {
   final result = await Get.dialog<bool>(
-    AlertDialog(
-      title: Text(title),
-      content: message == null
-          ? null
-          : Text(message, style: const TextStyle(color: AppColors.textMuted)),
+    AppDialog(
+      title: title,
+      message: message,
+      icon: destructive ? Icons.warning_amber_rounded : null,
+      iconColor: destructive ? AppColors.danger : AppColors.primary,
       actions: [
-        TextButton(
+        AppSecondaryButton(
+          label: cancelLabel,
           onPressed: () => Get.closeOverlay(result: false),
-          child: Text(cancelLabel),
         ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: destructive ? AppColors.danger : AppColors.primary,
-            foregroundColor: Colors.white,
-          ),
+        AppPrimaryButton(
+          label: confirmLabel,
+          color: destructive ? AppColors.danger : null,
           onPressed: () => Get.closeOverlay(result: true),
-          child: Text(confirmLabel),
         ),
       ],
     ),

@@ -10,6 +10,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/truncate.dart';
@@ -106,7 +107,7 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
                 padding: EdgeInsets.only(top: 8),
                 child: Text(
                   'Cheering yourself adds time to your talk time; the fee is shared with the other members.',
-                  style: TextStyle(fontSize: 11, color: ColorName.greyText),
+                  style: TextStyle(fontSize: 12, color: ColorName.greyText),
                 ),
               ),
             const SizedBox(height: 16),
@@ -145,23 +146,20 @@ class _ModerationRow extends StatelessWidget {
 
   Future<void> _confirmRemove() async {
     final remove = await Get.dialog<bool>(
-      AlertDialog(
-        backgroundColor: ColorName.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Remove ${member.name ?? 'this member'}?'),
-        content: const Text(
-          'They will be disconnected from this outpost.',
-          style: TextStyle(color: ColorName.greyText),
-        ),
+      AppDialog(
+        title: 'Remove ${member.name ?? 'this member'}?',
+        message: 'They will be disconnected from this outpost.',
+        icon: Icons.person_remove_rounded,
+        iconColor: AppColors.danger,
         actions: [
-          TextButton(
+          AppSecondaryButton(
+            label: 'Cancel',
             onPressed: () => Get.closeOverlay(result: false),
-            child: const Text('Cancel'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: callDangerColor),
+          AppPrimaryButton(
+            label: 'Remove',
+            color: AppColors.danger,
             onPressed: () => Get.closeOverlay(result: true),
-            child: const Text('Remove'),
           ),
         ],
       ),
@@ -189,7 +187,7 @@ class _ModerationRow extends StatelessWidget {
             child: Text(
               'HOST CONTROLS',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 letterSpacing: 1.1,
                 fontWeight: FontWeight.w700,
                 color: ColorName.greyText,
@@ -269,7 +267,7 @@ class _ModButton extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   color: enabled ? color : ColorName.greyText,
                 ),
               ),
@@ -392,7 +390,7 @@ class _RoleChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
           color: color,
         ),

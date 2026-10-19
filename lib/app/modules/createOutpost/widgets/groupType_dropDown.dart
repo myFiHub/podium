@@ -57,7 +57,7 @@ class DropDown extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: item.enabled == false ? Colors.grey : Colors.white,
+                      color: item.enabled == false ? ColorName.secondaryText : Colors.white,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -85,7 +85,7 @@ class DropDown extends StatelessWidget {
           ),
           iconSize: 20,
           iconEnabledColor: ColorName.greyText,
-          iconDisabledColor: Colors.grey,
+          iconDisabledColor: ColorName.secondaryText,
         ),
         dropdownStyleData: DropdownStyleData(
           maxHeight: 220,

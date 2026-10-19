@@ -81,7 +81,7 @@ class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
                   minimumSize: const Size(0, 50),
                   padding: const EdgeInsets.symmetric(horizontal: 22),
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.onPrimary,
                   elevation: 6,
                   shadowColor: AppColors.primary.withAlpha(90),
                   textStyle: const TextStyle(

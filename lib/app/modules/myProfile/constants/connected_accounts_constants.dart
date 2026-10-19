@@ -9,9 +9,9 @@ class ConnectedAccountsConstants {
   static const double headerFontSize = 15.0;
   static const double identifierFontSize = 12.0;
 
-  static const Color headerBackgroundColor = Color(0xFF3DDC97);
+  static const Color headerBackgroundColor = ColorName.success;
   static const int headerBackgroundAlpha = 22;
-  static const Color successColor = Color(0xFF3DDC97);
+  static const Color successColor = ColorName.success;
   static const Color identifierColor = ColorName.greyText;
   static const Color primaryBlue = ColorName.primaryBlue;
 

@@ -149,7 +149,7 @@ class _PaginatedOutpostsState extends State<_PaginatedOutposts> {
   Widget build(BuildContext context) {
     final items = widget.items;
     return RefreshIndicator(
-      color: Colors.white,
+      color: AppColors.onPrimary,
       backgroundColor: ColorName.primaryBlue,
       onRefresh: () async => await widget.fetchPage(0),
       child: NotificationListener<ScrollNotification>(
@@ -491,7 +491,7 @@ class _MetaChip extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: fg,
               ),
@@ -632,9 +632,9 @@ class _EnterButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18),
         visualDensity: VisualDensity.compact,
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.onPrimary,
         disabledBackgroundColor: AppColors.primary.withAlpha(150),
-        disabledForegroundColor: Colors.white,
+        disabledForegroundColor: AppColors.onPrimary,
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -646,7 +646,7 @@ class _EnterButton extends StatelessWidget {
               height: 16,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.white,
+                color: AppColors.onPrimary,
               ),
             )
           : Row(
@@ -687,9 +687,9 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(4, 3, 10, 3),
           decoration: BoxDecoration(
-            color: AppColors.success.withAlpha(26),
+            color: AppColors.live.withAlpha(26),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.success.withAlpha(70)),
+            border: Border.all(color: AppColors.live.withAlpha(70)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -699,7 +699,7 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
                 height: 16,
                 child: RepaintBoundary(
                   child: Pulsator(
-                    style: PulseStyle(color: AppColors.success),
+                    style: PulseStyle(color: AppColors.live),
                     duration: Duration(seconds: 2),
                     count: 2,
                     repeat: 0,
@@ -709,7 +709,7 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
                     child: Icon(
                       Icons.circle,
                       size: 6,
-                      color: AppColors.success,
+                      color: AppColors.live,
                     ),
                   ),
                 ),
@@ -718,17 +718,17 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
               const Text(
                 'LIVE',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.6,
-                  color: AppColors.success,
+                  color: AppColors.live,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
                 '$count',
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
                   fontFeatures: [FontFeature.tabularFigures()],
@@ -796,7 +796,7 @@ class _ScheduledBanner extends StatelessWidget {
                   Text(
                     text,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: color,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -943,9 +943,9 @@ class SingleTag extends StatelessWidget {
         tagName,
         maxLines: 1,
         style: const TextStyle(
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: Color(0xFFA9B4FF),
+          color: AppColors.primary,
         ),
       ),
     );

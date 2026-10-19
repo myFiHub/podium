@@ -90,32 +90,37 @@ class _LivePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: openParticipantsSheet,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha(14),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.circle, size: 8, color: callSpeakingColor),
-            const SizedBox(width: 5),
-            const Text(
-              'LIVE',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.people_alt_rounded,
-                size: 14, color: ColorName.greyText),
-            const SizedBox(width: 3),
-            Text(
-              '$count',
-              style: const TextStyle(fontSize: 12, color: ColorName.greyText),
-            ),
-          ],
+    return Semantics(
+      button: true,
+      label: 'Live, $count people. Show participants',
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: openParticipantsSheet,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(14),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.circle, size: 8, color: callDangerColor),
+              const SizedBox(width: 5),
+              const Text(
+                'LIVE',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.people_alt_rounded,
+                  size: 14, color: ColorName.greyText),
+              const SizedBox(width: 3),
+              Text(
+                '$count',
+                style: const TextStyle(fontSize: 12, color: ColorName.greyText),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -143,20 +148,20 @@ class _RecordingPill extends StatelessWidget {
               width: 20,
               height: 20,
               child: Pulsator(
-                style: PulseStyle(color: Colors.red),
+                style: PulseStyle(color: ColorName.danger),
                 duration: Duration(seconds: 2),
                 count: 2,
                 repeat: 0,
                 startFromScratch: false,
                 autoStart: true,
                 fit: PulseFit.contain,
-                child: Icon(Icons.circle, color: Colors.red, size: 6),
+                child: Icon(Icons.circle, color: ColorName.danger, size: 6),
               ),
             ),
             Text(
               'REC',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: callDangerColor,
               ),

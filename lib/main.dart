@@ -154,6 +154,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  /// The app is dark-only; the wallet modal must not follow the system theme.
   bool _isDarkMode = true;
   ReownAppKitModalThemeData? _themeData;
 
@@ -180,13 +181,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       onExitRequested: _handleExitRequest,
     );
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      setState(() {
-        final platformDispatcher = View.of(context).platformDispatcher;
-        final platformBrightness = platformDispatcher.platformBrightness;
-        _isDarkMode = platformBrightness == Brightness.dark;
-      });
-    });
   }
 
   @override
@@ -228,18 +222,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangePlatformBrightness() {
-    if (mounted) {
-      setState(() {
-        final platformDispatcher = View.of(context).platformDispatcher;
-        final platformBrightness = platformDispatcher.platformBrightness;
-        _isDarkMode = platformBrightness == Brightness.dark;
-      });
-    }
-    super.didChangePlatformBrightness();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_imagesPrecached) {
@@ -261,10 +243,35 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         onDispose: () {
           jitsiMeet.hangUp();
         },
-        builder: (_, child) {
-          return SafeArea(
-            child: Root(
-              child: child!,
+        builder: (context, child) {
+          final insets = MediaQuery.paddingOf(context);
+          return ColoredBox(
+            color: ColorName.black,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: insets.top,
+                  child: const ColoredBox(
+                    color: ColorName.systemTrayBackground,
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: insets.bottom,
+                  child: const ColoredBox(color: ColorName.navbarBackground),
+                ),
+                SafeArea(
+                  child: Root(
+                    child: child!,
+                  ),
+                ),
+              ],
             ),
           );
         },

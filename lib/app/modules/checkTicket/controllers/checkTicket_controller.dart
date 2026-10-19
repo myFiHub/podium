@@ -527,15 +527,15 @@ class CheckticketController extends GetxController {
         }
       } else {
         Toast.warning(
-          title: "Update required",
-          message: "tickets are not on same chain",
+          title: "Can't buy together",
+          message: "These tickets are on different chains. Buy them separately.",
         );
       }
     } catch (e) {
       l.e(e);
       Toast.error(
-        title: "Error",
-        message: e.toString(),
+        title: "Purchase failed",
+        message: "Could not complete the ticket purchase. Please try again.",
       );
     } finally {
       allUsersToBuyTicketFrom.value[ticketSeller.userInfo.uuid]!.buying = false;

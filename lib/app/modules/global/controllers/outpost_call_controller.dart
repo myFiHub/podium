@@ -110,16 +110,16 @@ class OutpostCallController extends GetxController {
         final reconnecting = wsClient.isConnecting;
         if (!joined && reconnecting) {
           Toast.error(
-            title: 'stablishing connection',
-            message: 'please wait a bit, then try again',
+            title: 'Connecting…',
+            message: 'Please wait a moment, then try again.',
           );
           return;
         }
 
         if (!joined) {
           Toast.error(
-            title: 'try again in a bit, fixing the issue',
-            message: 'there was an error joining the outpost',
+            title: 'Could not join the outpost',
+            message: 'Please try again in a moment.',
           );
           jitsiMeet.hangUp();
         }
@@ -254,8 +254,8 @@ class OutpostCallController extends GetxController {
         final outpostCallController = Get.find<OutpostCallController>();
         outpostCallController.runHome();
         Toast.error(
-          title: 'there was an error joining the outpost',
-          message: 'please try again',
+          title: 'Could not join the outpost',
+          message: 'Please try again.',
         );
       }
     } else {
@@ -285,14 +285,14 @@ class OutpostCallController extends GetxController {
             final reconnecting = wsClient.isConnecting;
             if (reconnecting) {
               Toast.error(
-                title: 'stablishing connection',
-                message: 'please wait a bit, then try again',
+                title: 'Connecting…',
+                message: 'Please wait a moment, then try again.',
               );
               return;
             }
             Toast.error(
-              title: 'try again',
-              message: 'there was an error joining the outpost',
+              title: 'Could not join the outpost',
+              message: 'Please try again.',
             );
             jitsiMeet.hangUp();
           }

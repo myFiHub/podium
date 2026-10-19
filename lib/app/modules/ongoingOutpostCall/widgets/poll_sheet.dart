@@ -5,6 +5,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 void openPollSheet() {
   if (findCallRoom() == null) return;
@@ -189,7 +190,7 @@ class PollStatusChip extends StatelessWidget {
           Text(
             open ? 'LIVE' : 'ENDED',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               letterSpacing: 1,
               fontWeight: FontWeight.w700,
               color: color,
@@ -299,7 +300,7 @@ class PollOptionRow extends StatelessWidget {
                         Text(
                           votesLabel(count),
                           style: const TextStyle(
-                            fontSize: 10,
+                            fontSize: 12,
                             color: ColorName.greyText,
                           ),
                         ),
@@ -464,7 +465,7 @@ class _CreatePollSheetState extends State<CreatePollSheet> {
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
                   backgroundColor: ColorName.primaryBlue,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.onPrimary,
                   disabledBackgroundColor: Colors.white.withAlpha(18),
                   disabledForegroundColor: Colors.white.withAlpha(90),
                   textStyle: const TextStyle(
@@ -495,7 +496,7 @@ class _FieldLabel extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: const TextStyle(
-          fontSize: 11,
+          fontSize: 12,
           letterSpacing: 1.2,
           fontWeight: FontWeight.w700,
           color: ColorName.greyText,
@@ -535,7 +536,7 @@ class _PollTextField extends StatelessWidget {
       decoration: InputDecoration(
         isDense: true,
         counterText: showCounter ? null : '',
-        counterStyle: const TextStyle(fontSize: 10, color: ColorName.greyText),
+        counterStyle: const TextStyle(fontSize: 12, color: ColorName.greyText),
         hintText: hint,
         filled: true,
         fillColor: Colors.white.withAlpha(10),

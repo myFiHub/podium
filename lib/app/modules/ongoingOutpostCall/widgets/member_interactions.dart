@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
@@ -18,9 +19,9 @@ import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/dateUtils.dart';
 
-const callSpeakingColor = Color(0xFF3DDC97);
-const callDangerColor = Color(0xFFF04141);
-const callAccentColor = Color(0xFFFFC857);
+const callSpeakingColor = ColorName.success;
+const callDangerColor = ColorName.danger;
+const callAccentColor = ColorName.warning;
 
 String memberAvatar(LiveMember member) {
   final avatar = member.image ?? '';
@@ -218,17 +219,17 @@ class ReactionCounts extends GetView<OutpostCallController> {
     return Obx(() {
       final reactions = controller.reactionsMap.value[address] ?? const {};
       final items = [
-        (Icons.thumb_up_rounded, OutgoingMessageTypeEnums.like, Colors.green),
+        (Icons.thumb_up_rounded, OutgoingMessageTypeEnums.like, ColorName.success),
         (
           Icons.thumb_down_rounded,
           OutgoingMessageTypeEnums.dislike,
-          Colors.red
+          ColorName.danger
         ),
-        (Icons.celebration, OutgoingMessageTypeEnums.cheer, Colors.green),
+        (Icons.celebration, OutgoingMessageTypeEnums.cheer, ColorName.success),
         (
           Icons.sentiment_very_dissatisfied,
           OutgoingMessageTypeEnums.boo,
-          Colors.red
+          ColorName.danger
         ),
       ];
       return Wrap(
@@ -274,7 +275,7 @@ class _ReactionChip extends StatelessWidget {
           Text(
             count.toString(),
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               color: color,
               fontWeight: FontWeight.w600,
             ),
@@ -306,7 +307,12 @@ class CallActionButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: onPressed,
+        onTap: onPressed == null
+            ? null
+            : () {
+                HapticFeedback.lightImpact();
+                onPressed!();
+              },
         child: Container(
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -324,7 +330,7 @@ class CallActionButton extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: color,
                 ),
@@ -348,7 +354,7 @@ class LikeDislikeButton extends GetView<OngoingOutpostCallController> {
 
   @override
   Widget build(BuildContext context) {
-    final color = isLike ? Colors.green : Colors.red;
+    final color = isLike ? ColorName.success : ColorName.danger;
     final label = isLike
         ? 'Like +${amountToAddForLikeInSeconds}s'
         : 'Dislike −${amountToReduceForDislikeInSeconds}s';
@@ -400,7 +406,7 @@ class CheerBooButton extends GetView<OngoingOutpostCallController> {
 
   @override
   Widget build(BuildContext context) {
-    final color = cheer ? Colors.green : Colors.red;
+    final color = cheer ? ColorName.success : ColorName.danger;
     return Obx(() {
       if (!Get.isRegistered<OngoingOutpostCallController>()) {
         return const SizedBox();

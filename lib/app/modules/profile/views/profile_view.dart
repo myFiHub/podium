@@ -445,9 +445,9 @@ class _TicketButton extends GetWidget<ProfileController> {
           minimumSize: const Size.fromHeight(50),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.onPrimary,
           disabledBackgroundColor: AppColors.primary.withAlpha(150),
-          disabledForegroundColor: Colors.white,
+          disabledForegroundColor: AppColors.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -458,7 +458,7 @@ class _TicketButton extends GetWidget<ProfileController> {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.2,
-                  color: Colors.white,
+                  color: AppColors.onPrimary,
                 ),
               )
             : _TicketButtonContent(
@@ -509,7 +509,7 @@ class _TicketButtonContent extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                   ),
                   children: [
                     TextSpan(
@@ -519,8 +519,8 @@ class _TicketButtonContent extends StatelessWidget {
                     ),
                     if (numberOfPasses == 0)
                       TextSpan(
-                        text: " ${podiumPassBuyPrice.toString()} MOV",
-                        style: const TextStyle(color: AppColors.accent),
+                        text: " · ${podiumPassBuyPrice.toString()} MOV",
+                        style: const TextStyle(fontWeight: FontWeight.w800),
                       ),
                   ],
                 ),
@@ -534,6 +534,7 @@ class _TicketButtonContent extends StatelessWidget {
                 padding: EdgeInsets.only(left: 8),
                 child: LoadingWidget(
                   size: 12,
+                  color: AppColors.onPrimary,
                 ),
               ),
           ],
@@ -546,9 +547,9 @@ class _TicketButtonContent extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: AppColors.accent.withAlpha(230),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.onPrimary.withAlpha(200),
               ),
             ),
           ),
@@ -975,7 +976,7 @@ class _ActivityCell extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: AppText.caption.copyWith(fontSize: 10, height: 1.2),
+          style: AppText.caption.copyWith(height: 1.2),
         ),
       ],
     );

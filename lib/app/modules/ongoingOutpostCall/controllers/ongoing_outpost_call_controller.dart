@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 // import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -127,8 +128,8 @@ class OngoingOutpostCallController extends GetxController {
         if (members.value.length == 0) {
           if (Get.isRegistered<OngoingOutpostCallController>()) {
             Toast.error(
-              title: 'try again please',
-              message: 'Failed to join the outpost',
+              title: 'Could not join the outpost',
+              message: 'Please try again.',
             );
             outpostCallController.runHome();
           }
@@ -319,7 +320,7 @@ class OngoingOutpostCallController extends GetxController {
           skipWidget: Button(
             size: ButtonSize.SMALL,
             type: ButtonType.outline,
-            color: Colors.red,
+            color: ColorName.danger,
             onPressed: () {
               introFinished(true);
             },
@@ -698,7 +699,7 @@ class OngoingOutpostCallController extends GetxController {
 
       bool? success;
       String? txHash;
-      final selectedWallet = WalletNames.internal_Aptos;
+      const selectedWallet = WalletNames.internal_Aptos;
       // await choseAWallet(
       //   chainId: movementEVMChain.chainId,
       //   supportsAptos: true,

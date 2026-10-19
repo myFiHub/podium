@@ -626,7 +626,7 @@ class AddressAndBalanceWidget extends StatelessWidget {
                         children: [
                           Text(
                             label.toUpperCase(),
-                            style: AppText.label.copyWith(fontSize: 10),
+                            style: AppText.label,
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -724,7 +724,7 @@ class FriendTechExternalWalletActivationButton
         const Text(
           'FriendTech',
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -738,7 +738,7 @@ class FriendTechExternalWalletActivationButton
             textStyle: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isActivated ? Colors.green[400] : Colors.red[100],
+              color: isActivated ? ColorName.success : Colors.white,
             ),
             onPressed: (isActivated || isLoading)
                 ? null
@@ -764,7 +764,7 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
         const Text(
           'FriendTech',
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -778,7 +778,7 @@ class FriendTeckActivationButton extends GetWidget<MyProfileController> {
             textStyle: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isActivated ? Colors.green[400] : Colors.red[100],
+              color: isActivated ? ColorName.success : Colors.white,
             ),
             onPressed: (isActivated || isLoading)
                 ? null
@@ -1021,7 +1021,7 @@ class UserInfo extends GetView<GlobalController> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('ID', style: AppText.label.copyWith(fontSize: 11)),
+                        const Text('ID', style: AppText.label),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(

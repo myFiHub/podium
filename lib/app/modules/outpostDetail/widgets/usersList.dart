@@ -227,7 +227,7 @@ class _SingleUser extends GetView<UsersController> {
                       Text(
                         truncate(uuid, length: 10),
                         maxLines: 1,
-                        style: AppText.caption.copyWith(fontSize: 11),
+                        style: AppText.caption,
                       ),
                     ],
                   ),

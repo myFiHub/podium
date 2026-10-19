@@ -115,6 +115,7 @@ class _ChatSheetState extends State<ChatSheet> {
                   ValueListenableBuilder(
                     valueListenable: input,
                     builder: (context, value, _) => IconButton(
+                      tooltip: 'Send',
                       onPressed: value.text.trim().isEmpty ? null : _send,
                       icon: const Icon(Icons.send_rounded),
                       color: ColorName.primaryBlue,
@@ -264,7 +265,7 @@ class _ChatBubble extends StatelessWidget {
                   child: Text(
                     mine ? time : '${message.senderName} · $time',
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: ColorName.greyText,
                     ),
                   ),

@@ -233,7 +233,7 @@ class _MoreTile extends StatelessWidget {
             maxLines: 2,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, color: ColorName.greyText),
+            style: const TextStyle(fontSize: 12, color: ColorName.greyText),
           ),
         ],
       ),

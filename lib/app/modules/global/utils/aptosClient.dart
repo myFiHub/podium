@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -73,7 +74,7 @@ class AptosMovement {
 
   static Future<BigInt> _getBalanceFromIndexer(String address) async {
     try {
-      final String query = '''
+      const String query = '''
         query GetBalance(\$address: String!) {
           current_fungible_asset_balances(
             where: {
@@ -163,7 +164,7 @@ class AptosMovement {
             },
             child: const Text(
               'Copy Address',
-              style: const TextStyle(
+              style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.bold),
@@ -312,7 +313,7 @@ class AptosMovement {
         ),
         cancelText: 'Cancel',
         confirmText: 'Confirm',
-        confirmColor: Colors.green,
+        confirmColor: ColorName.success,
       );
 
       if (!confirmed) {
@@ -429,7 +430,7 @@ class AptosMovement {
         ),
         cancelText: 'Cancel',
         confirmText: 'Confirm',
-        confirmColor: Colors.red,
+        confirmColor: ColorName.danger,
       );
       if (!confirmed) {
         return (false, 'Cancelled');

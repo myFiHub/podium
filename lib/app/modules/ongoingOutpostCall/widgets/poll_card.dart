@@ -109,7 +109,7 @@ class _PollCardBody extends StatelessWidget {
                           Text(
                             open ? 'LIVE POLL' : 'POLL ENDED',
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 12,
                               letterSpacing: 1.2,
                               fontWeight: FontWeight.w700,
                               color:

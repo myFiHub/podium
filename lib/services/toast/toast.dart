@@ -15,9 +15,17 @@ class Toast {
   static const EdgeInsets _defaultMargin =
       EdgeInsets.symmetric(horizontal: 12, vertical: 8);
 
-  static const Color _success = Color(0xFF3DDC97);
-  static const Color _danger = Color(0xFFF04141);
-  static const Color _warning = Color(0xFFFFC857);
+  static const Color _success = ColorName.success;
+  static const Color _danger = ColorName.danger;
+  static const Color _warning = ColorName.warning;
+
+  /// Capitalizes the first letter, leaving URLs and addresses untouched.
+  static String _sentenceCase(String text) {
+    if (text.isEmpty) return text;
+    final firstWord = text.split(' ').first;
+    if (firstWord.contains('://') || firstWord.startsWith('0x')) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
 
   /// Common configuration for all toast messages
   static SnackbarController _showToast({
@@ -29,6 +37,8 @@ class Toast {
     TextButton? mainButton,
     SnackPosition position = SnackPosition.top,
   }) {
+    title = _sentenceCase(title == 'Error' ? 'Something went wrong' : title);
+    message = _sentenceCase(message);
     return Get.snackbar(
       title,
       message,

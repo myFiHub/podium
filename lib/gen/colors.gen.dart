@@ -26,6 +26,9 @@ class ColorName {
   /// Color: #2A2A40
   static const Color cardBorder = Color(0xFF2A2A40);
 
+  /// Color: #F04141
+  static const Color danger = Color(0xFFF04141);
+
   /// Color: #C1C1C4
   static const Color greyText = Color(0xFFC1C1C4);
 
@@ -113,11 +116,17 @@ class ColorName {
     },
   );
 
-  /// Color: #7781A6
-  static const Color secondaryText = Color(0xFF7781A6);
+  /// Color: #8A93B5
+  static const Color secondaryText = Color(0xFF8A93B5);
+
+  /// Color: #3DDC97
+  static const Color success = Color(0xFF3DDC97);
 
   /// Color: #245A6C
   static const Color systemTrayBackground = Color(0xFF245A6C);
+
+  /// Color: #FFC857
+  static const Color warning = Color(0xFFFFC857);
 
   /// Color: #FFFFFF
   static const Color white = Color(0xFFFFFFFF);

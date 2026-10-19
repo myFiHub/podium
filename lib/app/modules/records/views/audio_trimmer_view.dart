@@ -58,7 +58,7 @@ class _TimeChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label.toUpperCase(), style: AppText.label.copyWith(fontSize: 10)),
+          Text(label.toUpperCase(), style: AppText.label),
           const SizedBox(width: 6),
           Text(
             value,

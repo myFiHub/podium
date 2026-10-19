@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_header.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/control_dock.dart';
@@ -15,6 +16,8 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
+import 'package:share_plus/share_plus.dart';
 
 class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
   const OngoingGroupCallView({Key? key}) : super(key: key);
@@ -203,20 +206,9 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 18, 8, 10),
       child: Row(
         children: [
-          Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w700,
-              color: ColorName.greyText,
-            ),
-          ),
+          Text(title.toUpperCase(), style: AppText.label),
           const SizedBox(width: 6),
-          Text(
-            '$count',
-            style: const TextStyle(fontSize: 12, color: ColorName.greyText),
-          ),
+          Text('$count', style: AppText.caption),
           if (extra != null) ...[
             const SizedBox(width: 10),
             const Icon(Icons.graphic_eq_rounded,
@@ -243,28 +235,41 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _EmptyAudience extends StatelessWidget {
+class _EmptyAudience extends GetView<OutpostCallController> {
   const _EmptyAudience();
 
   @override
   Widget build(BuildContext context) {
+    final outpost = controller.outpost.value;
+    final canShare =
+        outpost != null && canShareOutpostUrl(outpost: outpost) == true;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ColorName.cardBorder),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.headphones_outlined, color: ColorName.greyText),
-          SizedBox(width: 12),
-          Expanded(
+          const Icon(Icons.headphones_outlined, color: AppColors.textMuted),
+          const SizedBox(width: 12),
+          const Expanded(
             child: Text(
-              'No listeners yet. Share the outpost link from More to bring people in.',
-              style: TextStyle(fontSize: 12, color: ColorName.greyText),
+              'No listeners yet. Invite people to join.',
+              style: AppText.caption,
             ),
           ),
+          if (canShare)
+            TextButton.icon(
+              onPressed: () => SharePlus.instance.share(
+                ShareParams(
+                  text: generateOutpostShareUrl(outpostId: outpost.uuid),
+                ),
+              ),
+              icon: const Icon(Icons.ios_share_rounded, size: 18),
+              label: const Text('Share'),
+            ),
         ],
       ),
     );
@@ -328,18 +333,18 @@ class _IntroDemoCard extends GetView<OngoingOutpostCallController> {
                     Expanded(
                       child: CallActionButton(
                         icon: Icon(Icons.thumb_up_rounded,
-                            color: Colors.green, size: 22),
+                            color: ColorName.success, size: 22),
                         label: 'Like',
-                        color: Colors.green,
+                        color: ColorName.success,
                       ),
                     ),
                     SizedBox(width: 8),
                     Expanded(
                       child: CallActionButton(
                         icon: Icon(Icons.thumb_down_rounded,
-                            color: Colors.red, size: 22),
+                            color: ColorName.danger, size: 22),
                         label: 'Dislike',
-                        color: Colors.red,
+                        color: ColorName.danger,
                       ),
                     ),
                   ],
@@ -353,18 +358,18 @@ class _IntroDemoCard extends GetView<OngoingOutpostCallController> {
                     Expanded(
                       child: CallActionButton(
                         icon: Assets.images.cheer
-                            .image(width: 24, height: 24, color: Colors.green),
+                            .image(width: 24, height: 24, color: ColorName.success),
                         label: 'Cheer',
-                        color: Colors.green,
+                        color: ColorName.success,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: CallActionButton(
                         icon: Assets.images.boo
-                            .image(width: 24, height: 24, color: Colors.red),
+                            .image(width: 24, height: 24, color: ColorName.danger),
                         label: 'Boo',
-                        color: Colors.red,
+                        color: ColorName.danger,
                       ),
                     ),
                   ],

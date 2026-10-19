@@ -226,7 +226,7 @@ class BottomSheetBody extends GetView<RecordsController> {
                                       '${_formatDuration(position)} / ${_formatDuration(duration)}',
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 11,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         fontFeatures: [
                                           FontFeature.tabularFigures(),

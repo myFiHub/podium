@@ -197,32 +197,40 @@ class MemberTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMe = member.uuid == myId;
     final name = isMe ? 'You' : (member.name ?? 'User');
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => openMemberSheet(member.uuid),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          MemberAvatar(
-            member: member,
-            size: onStage ? 60 : 44,
-            isCreator: isCreator,
-            showMicBadge: onStage,
+    return Semantics(
+      button: true,
+      label: isCreator ? '$name, host' : name,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => openMemberSheet(member.uuid),
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.2,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MemberAvatar(
+                member: member,
+                size: onStage ? 60 : 44,
+                isCreator: isCreator,
+                showMicBadge: onStage,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: onStage ? FontWeight.w600 : FontWeight.w400,
+                  color: isMe ? ColorName.primaryBlue : Colors.white,
+                ),
+              ),
+              if (onStage)
+                _TalkTimeLabel(member: member, isCreator: isCreator),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: onStage ? 12 : 11,
-              fontWeight: onStage ? FontWeight.w600 : FontWeight.w400,
-              color: isMe ? ColorName.primaryBlue : Colors.white,
-            ),
-          ),
-          if (onStage) _TalkTimeLabel(member: member, isCreator: isCreator),
-        ],
+        ),
       ),
     );
   }
@@ -238,7 +246,7 @@ class _TalkTimeLabel extends StatelessWidget {
     if (isCreator) {
       return const Text(
         'Host',
-        style: TextStyle(fontSize: 10, color: callAccentColor),
+        style: TextStyle(fontSize: 12, color: callAccentColor),
       );
     }
     return TalkTimeBuilder(builder: (context) {
@@ -247,7 +255,7 @@ class _TalkTimeLabel extends StatelessWidget {
       return Text(
         time <= 0 ? 'time up' : formatTalkTime(time),
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 12,
           fontFeatures: const [FontFeature.tabularFigures()],
           color: low ? callDangerColor : ColorName.greyText,
         ),

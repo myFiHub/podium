@@ -84,10 +84,10 @@ Future<bool> ext_cheerOrBoo({
       parameters: parameters,
     );
     if (response == "User rejected") {
-      Toast.error(message: "transaction rejected");
+      Toast.error(message: "Transaction rejected");
     }
     if (response == null) {
-      Toast.error(message: "transaction failed");
+      Toast.error(message: "Transaction failed");
       return false;
     }
     return await _externalTxSucceeded(response, chainId);
@@ -127,7 +127,7 @@ internal_cheerOrBoo({
       percentage = BigInt.from(0);
     }
     final value = parseValue(amount);
-    final methodName = 'cheerOrBoo';
+    const methodName = 'cheerOrBoo';
     final parameters = [
       parseAddress(target),
       receiverAddresses.map((e) => parseAddress(e)).toList(),
@@ -266,7 +266,7 @@ Future<BigInt?> getMyShares_arena({
   if (contract == null) {
     return null;
   }
-  final methodName = 'getMyShares';
+  const methodName = 'getMyShares';
   final parameters = [
     parseAddress(sharesSubjectWallet),
   ];
@@ -413,7 +413,7 @@ Future<BigInt?> _internal_getShares_friendthech({
   if (contract == null) {
     return null;
   }
-  final methodName = 'sharesBalance';
+  const methodName = 'sharesBalance';
   final client = evmClientByChainId(chainId);
   try {
     final results = await Future.wait([
@@ -481,7 +481,7 @@ Future<BigInt?> internal_getFriendTechTicketPrice({
   if (contract == null) {
     return null;
   }
-  final methodName = 'getBuyPriceAfterFee';
+  const methodName = 'getBuyPriceAfterFee';
   final parameters = [
     parseAddress(sharesSubjectWallet),
     BigInt.from(numberOfTickets),
@@ -568,7 +568,7 @@ Future<bool> internal_buyFriendTechTicket({
   if (buyPrice == null) {
     return false;
   }
-  final methodName = 'buyShares';
+  const methodName = 'buyShares';
   final parameters = [
     parseAddress(sharesSubjectWallet),
     BigInt.from(numberOfTickets),
@@ -663,10 +663,10 @@ Future<bool> ext_buyFirendtechTicket({
       ],
     );
     if (response == "User rejected") {
-      Toast.error(message: "transaction rejected");
+      Toast.error(message: "Transaction rejected");
     }
     if (response == null) {
-      Toast.error(message: "transaction failed");
+      Toast.error(message: "Transaction failed");
       return false;
     } else {
       final isValid = await _externalTxSucceeded(response, chainId);
@@ -793,7 +793,7 @@ Future<BigInt?> getBuyPriceForArenaTicket({
   if (contract == null) {
     return null;
   }
-  final methodName = 'getBuyPriceAfterFee';
+  const methodName = 'getBuyPriceAfterFee';
   final parameters = [parseAddress(sharesSubject), BigInt.from(shareAmount)];
 
   try {
@@ -852,7 +852,7 @@ Future<bool> internal_buySharesWithReferrer({
     return false;
   }
 
-  final methodName = 'buySharesWithReferrerForUser';
+  const methodName = 'buySharesWithReferrerForUser';
   final parameters = [
     parseAddress(sharesSubjectWallet),
     parseAddress(myAddress),
@@ -988,7 +988,6 @@ Future<String?> choseAWallet(
           ),
         ],
       ),
-      backgroundColor: ColorName.cardBackground,
       content: SelectChainContent(
         includeAptos: supportsAptos == true,
         chainId: chainId,
@@ -1087,7 +1086,7 @@ class SelectChainContent extends GetView<GlobalController> {
           if (externalWalletEnabled == false)
             Text(
               "to use External Wallet, please switch to ${targetChain.name} (${targetChainId}) on your wallet and try again",
-              style: const TextStyle(color: Colors.red, fontSize: 12),
+              style: const TextStyle(color: ColorName.danger, fontSize: 12),
               textAlign: TextAlign.center,
             ),
           space10,

@@ -90,7 +90,7 @@ class _ResultBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isError ? const Color(0xFFF04141) : ColorName.cardBorder;
+    final color = isError ? ColorName.danger : ColorName.cardBorder;
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.5,
@@ -100,7 +100,7 @@ class _ResultBox extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isError
-              ? const Color(0xFFF04141).withAlpha(20)
+              ? ColorName.danger.withAlpha(20)
               : Colors.white.withAlpha(10),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withAlpha(isError ? 90 : 255)),
@@ -112,7 +112,7 @@ class _ResultBox extends StatelessWidget {
               fontSize: 12,
               height: 1.45,
               fontFamily: 'monospace',
-              color: isError ? const Color(0xFFF04141) : ColorName.greyText,
+              color: isError ? ColorName.danger : ColorName.greyText,
             ),
           ),
         ),

@@ -413,7 +413,7 @@ class _InfoTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(label.toUpperCase(),
-                    style: AppText.label.copyWith(fontSize: 10)),
+                    style: AppText.label),
                 const SizedBox(height: 3),
                 Text(
                   value,
@@ -590,7 +590,7 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
                     children: [
                       Text(
                         hasTimePassed ? 'START TIME PASSED' : 'STARTS IN',
-                        style: AppText.label.copyWith(fontSize: 10),
+                        style: AppText.label,
                       ),
                       const SizedBox(height: 3),
                       Text(

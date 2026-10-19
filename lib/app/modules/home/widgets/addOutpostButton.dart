@@ -52,7 +52,8 @@ class _AddOutpostButtonState extends State<AddOutpostButton> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                    const Icon(Icons.add_rounded,
+                        color: AppColors.onPrimary, size: 20),
                     if (_showText) ...[
                       const SizedBox(width: 6),
                       const Text(
@@ -61,7 +62,7 @@ class _AddOutpostButtonState extends State<AddOutpostButton> {
                         overflow: TextOverflow.fade,
                         softWrap: false,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.onPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),

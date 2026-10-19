@@ -10,11 +10,11 @@ class FollowerBadge extends StatelessWidget {
   final int followerCount;
 
   Color get _badgeColor => followerCount >= 1000
-      ? const Color(0xFFFFC857)
+      ? ColorName.warning
       : followerCount >= 100
           ? ColorName.primaryBlue
           : followerCount >= 10
-              ? const Color(0xFF3DDC97)
+              ? ColorName.success
               : ColorName.greyText;
 
   String get _badgeText => followerCount >= 1000
@@ -63,7 +63,7 @@ class FollowerBadge extends StatelessWidget {
             child: Text(
               _badgeText.toUpperCase(),
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 letterSpacing: 0.8,
                 fontWeight: FontWeight.w800,
                 color: color,

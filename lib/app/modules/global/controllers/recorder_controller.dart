@@ -168,7 +168,9 @@ class RecorderController extends GetxController {
       l.d('Stack trace: $stackTrace');
       isRecording.value = false;
       _isInitialized.value = false;
-      Toast.error(message: 'Recording failed: ${e.toString()}');
+      Toast.error(
+          title: 'Recording failed',
+          message: 'Check microphone access and try again.');
     } finally {
       _isBusy.value = false;
     }

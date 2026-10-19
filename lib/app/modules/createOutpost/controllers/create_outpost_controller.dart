@@ -123,7 +123,7 @@ class CreateOutpostController extends GetxController {
         skipWidget: Button(
           size: ButtonSize.SMALL,
           type: ButtonType.outline,
-          color: Colors.red,
+          color: ColorName.danger,
           onPressed: () {
             introFinished(true);
           },
@@ -687,10 +687,10 @@ class CreateOutpostController extends GetxController {
 
   create() async {
     if (outpostName.value.isEmpty) {
-      Toast.error(message: 'room name cannot be empty');
+      Toast.error(message: 'Outpost name cannot be empty');
       return;
     } else if (outpostName.value.length < 5) {
-      Toast.error(message: 'room name must be at least 5 characters');
+      Toast.error(message: 'Outpost name must be at least 5 characters');
       return;
     }
 
@@ -712,9 +712,9 @@ class CreateOutpostController extends GetxController {
           cancelText: 'Cancel Outpost Creation',
           confirmText: 'Continue',
           isDangerous: true,
-          cancelColor: Colors.red,
-          confirmColor: Colors.green,
-          titleColor: Colors.orange,
+          cancelColor: ColorName.danger,
+          confirmColor: ColorName.success,
+          titleColor: ColorName.warning,
         );
         if (result == false) {
           isCreatingNewOutpost.value = false;
@@ -862,14 +862,14 @@ class ScheduledGroupDateSelector extends GetView<CreateOutpostController> {
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(
           color: ColorName.cardBackground,
-          borderRadius: const BorderRadius.only(
+          borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
         ),
         child: const Column(
           children: [
-            const Text('Select Date and Time'),
+            Text('Select Date and Time'),
           ],
         ),
       ),
@@ -936,10 +936,11 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                     suffixIcon: hasLoadingAddress || isInputBusy
                         ? const SizedBox(
                             width: 50,
-                            child: const GFLoader(),
+                            child: GFLoader(),
                           )
                         : searchValue.isEmpty
                             ? IconButton(
+                                tooltip: 'Paste address',
                                 onPressed: () async {
                                   final clipboardData = await Clipboard.getData(
                                       Clipboard.kTextPlain);
@@ -973,11 +974,12 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                 },
                                 icon: const Icon(
                                   Icons.paste,
-                                  color: Colors.grey,
+                                  color: ColorName.secondaryText,
                                 ),
                               )
                             : isAddress
                                 ? IconButton(
+                                    tooltip: 'Add address',
                                     onPressed: () {
                                       if (buyTicketToGetPermisionFor ==
                                           TicketPermissionType.speak) {
@@ -1000,15 +1002,16 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                       inputController.clear();
                                     },
                                     icon: const Icon(Icons.check,
-                                        color: Colors.green),
+                                        color: ColorName.success),
                                   )
                                 : IconButton(
+                                    tooltip: 'Clear search',
                                     onPressed: () {
                                       controller.searchUsers('');
                                       inputController.clear();
                                     },
                                     icon: const Icon(Icons.close,
-                                        color: Colors.red),
+                                        color: ColorName.danger),
                                   ),
                     hintText:
                         'Enter the Name/address${ticketType == BuyableTicketTypes.onlyArenaTicketHolders ? '/handle' : ''}',
@@ -1059,7 +1062,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                       } else {
                         return Container(
                           child: const Center(
-                            child: const Text('Error, type is not valid'),
+                            child: Text('Error, type is not valid'),
                           ),
                         );
                       }
@@ -1144,24 +1147,24 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                           Text(
                                             "Followers: ${numberOfFollowers}",
                                             style: const TextStyle(
-                                              fontSize: 11,
+                                              fontSize: 12,
                                             ),
                                           ),
                                           if (verifiedOnTwitter)
-                                            Text(
+                                            const Text(
                                               "verified on twitter",
                                               style: TextStyle(
-                                                  color: Colors.blue[400],
+                                                  color: ColorName.primaryBlue,
                                                   fontSize: 12),
                                             ),
                                           if (verifiedOnTwitter &&
                                               verifiedOnArena)
                                             space5,
                                           if (verifiedOnArena)
-                                            Text(
+                                            const Text(
                                               "verified on Stars Arena",
                                               style: TextStyle(
-                                                  color: Colors.red[400],
+                                                  color: ColorName.danger,
                                                   fontSize: 12),
                                             ),
                                         ],
@@ -1215,7 +1218,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                             textAlign: TextAlign.start,
                                             style: TextStyle(
                                               color: element.user!.uuid == myId
-                                                  ? Colors.green
+                                                  ? ColorName.success
                                                   : Colors.white,
                                               fontSize: 14,
                                             ),
@@ -1242,7 +1245,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                                 truncate(element.user!.uuid,
                                                     length: 12),
                                             style: const TextStyle(
-                                              color: Colors.grey,
+                                              color: ColorName.secondaryText,
                                               fontSize: 12,
                                             ),
                                           ),

@@ -59,7 +59,7 @@ class _ShareAction extends StatelessWidget {
     return SlidableAction(
       onPressed: (context) => controller.shareRecording(recording),
       backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
+      foregroundColor: AppColors.onPrimary,
       icon: Icons.ios_share_rounded,
       label: 'Share',
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

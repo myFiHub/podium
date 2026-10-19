@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -190,13 +191,13 @@ class OutpostDetailController extends GetxController {
     final sure = await showConfirmPopup(
       cancelText: 'Cancel',
       confirmText: 'Confirm',
-      confirmColor: Colors.red,
+      confirmColor: ColorName.danger,
       cancelColor: Colors.white,
       title: 'Reschedule The Outpost',
       richMessage: RichText(
-        text: TextSpan(
+        text: const TextSpan(
           children: [
-            const TextSpan(
+            TextSpan(
               text: 'Are you sure you want to reschedule the outpost?\n\n',
               style: TextStyle(
                 color: Colors.white,
@@ -208,13 +209,13 @@ class OutpostDetailController extends GetxController {
             TextSpan(
               text: '⚠️ Important: ',
               style: TextStyle(
-                color: Colors.orange[300],
+                color: ColorName.warning,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 height: 1.5,
               ),
             ),
-            const TextSpan(
+            TextSpan(
               text: 'The outpost will be rescheduled to the new time.\n\n',
               style: TextStyle(
                 color: Colors.white,
@@ -225,7 +226,7 @@ class OutpostDetailController extends GetxController {
             TextSpan(
               text: 'All existing members will be notified of this change.',
               style: TextStyle(
-                color: Colors.blue[200],
+                color: ColorName.primaryBlue,
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
                 height: 1.5,

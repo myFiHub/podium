@@ -251,7 +251,7 @@ class _FloatingEmojiState extends State<_FloatingEmoji>
                   child: Text(
                     reaction.senderName,
                     maxLines: 1,
-                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
                   ),
                 ),
               ],

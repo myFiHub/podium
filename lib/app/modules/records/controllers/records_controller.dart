@@ -232,7 +232,8 @@ class RecordsController extends GetxController {
 
       Toast.success(message: 'Recording deleted successfully');
     } catch (e) {
-      Toast.error(message: 'Failed to delete recording: $e');
+      l.e(e);
+      Toast.error(message: 'Could not delete the recording. Please try again.');
     }
   }
 }

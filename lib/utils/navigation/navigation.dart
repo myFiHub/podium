@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/widgets/navbar.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 enum NavigationTypes {
   toNamed,
@@ -61,43 +60,12 @@ Future<bool?> canNavigate() async {
   final hasOngoingCall = Get.isRegistered<OutpostCallController>() &&
       Get.find<OutpostCallController>().isInCall.value;
   if (!hasOngoingCall) return true;
-  final bool? can = await Get.dialog(
-    AlertDialog(
-      backgroundColor: ColorName.cardBackground,
-      title: const Text('Are you sure?'),
-      content: RichText(
-        text: const TextSpan(
-          // Note: Styles for TextSpans must be explicitly defined.
-          // Child text spans will inherit styles from parent
-          style: TextStyle(height: 2),
-          children: <TextSpan>[
-            TextSpan(text: 'By navigating to another page, you will also '),
-            TextSpan(
-              text: 'LEAVE THE OUTPOST',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-            ),
-            TextSpan(text: ', Continue?'),
-          ],
-        ),
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(Get.overlayContext!).pop(false);
-          },
-          child: const Text('No'),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(Get.overlayContext!).pop(true);
-          },
-          child: const Text('Yes'),
-        ),
-      ],
-    ),
+  return showAppConfirm(
+    title: 'Leave this outpost?',
+    message: 'Opening another page will take you out of the live outpost. '
+        'You can rejoin while it is still live.',
+    confirmLabel: 'Leave',
+    cancelLabel: 'Stay',
+    destructive: true,
   );
-  return can;
 }

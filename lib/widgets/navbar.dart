@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
@@ -40,7 +41,7 @@ final List<NavbarItem> navbarItems = [
     route: Routes.ALL_OUTPOSTS,
     icon: Icons.group_outlined,
     activeIcon: Icons.group_rounded,
-    label: 'Groups',
+    label: 'Outposts',
   ),
   NavbarItem(
     route: Routes.SEARCH,
@@ -84,8 +85,11 @@ class PodiumNavbar extends GetView<GlobalController> {
           color: ColorName.navbarBackground,
           border: Border(top: BorderSide(color: ColorName.cardBorder)),
         ),
-        child: BottomNav(
-          activeRoute: activeRoute,
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.15,
+          child: BottomNav(
+            activeRoute: activeRoute,
+          ),
         ),
       );
     });
@@ -119,7 +123,7 @@ class BottomNav extends StatelessWidget {
   }
 }
 
-final _animationDuration = const Duration(milliseconds: 220);
+const _animationDuration = Duration(milliseconds: 220);
 Widget _buildNavItem({
   required String route,
   required IconData icon,
@@ -130,20 +134,57 @@ Widget _buildNavItem({
   final activeRoute = Get.find<GlobalController>().activeRoute.value;
   final isActive = activeRoute == route;
   final color = isActive ? Colors.white : ColorName.secondaryText;
-  return GestureDetector(
-    behavior: HitTestBehavior.opaque,
-    onTap: () async {
-      final canNavigateToNewRoute = await canNavigate();
-      if (canNavigateToNewRoute != true) {
-        return;
-      }
-      jitsiMeet.hangUp();
-      Navigate.to(
-        type: NavigationTypes.offAllNamed,
-        route: route,
-      );
-    },
-    child: ClipRect(
+  return Semantics(
+    button: true,
+    selected: isActive,
+    label: label,
+    excludeSemantics: true,
+    child: InkWell(
+      splashColor: ColorName.primaryBlue.withAlpha(30),
+      highlightColor: Colors.transparent,
+      onTap: () async {
+        HapticFeedback.selectionClick();
+        final canNavigateToNewRoute = await canNavigate();
+        if (canNavigateToNewRoute != true) {
+          return;
+        }
+        jitsiMeet.hangUp();
+        Navigate.to(
+          type: NavigationTypes.offAllNamed,
+          route: route,
+        );
+      },
+      child: _NavItemBody(
+        isActive: isActive,
+        icon: icon,
+        activeIcon: activeIcon,
+        label: label,
+        color: color,
+        overlay: overlay,
+      ),
+    ),
+  );
+}
+
+class _NavItemBody extends StatelessWidget {
+  final bool isActive;
+  final IconData icon;
+  final IconData? activeIcon;
+  final String label;
+  final Color color;
+  final Widget? overlay;
+  const _NavItemBody({
+    required this.isActive,
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.color,
+    required this.overlay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -171,29 +212,34 @@ Widget _buildNavItem({
                     color: isActive ? ColorName.primaryBlue : color,
                   ),
                 ),
-                if (overlay != null) overlay,
+                if (overlay != null) overlay!,
               ],
             ),
           ),
           const SizedBox(height: 3),
-          AnimatedDefaultTextStyle(
-            duration: _animationDuration,
-            style: TextStyle(
-              fontSize: 10.5,
-              height: 1.2,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-              color: color,
-            ),
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.clip,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: AnimatedDefaultTextStyle(
+                duration: _animationDuration,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.2,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: color,
+                ),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                ),
+              ),
             ),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
 
 class ProfileBadge extends GetView<GlobalController> {
@@ -243,7 +289,7 @@ class ProfileBadge extends GetView<GlobalController> {
   }
 }
 
-const _badgeColor = Color(0xFFF04141);
+const _badgeColor = ColorName.danger;
 
 class NotificationBadge extends GetWidget<NotificationsController> {
   const NotificationBadge({super.key});
@@ -278,7 +324,7 @@ class NotificationBadge extends GetWidget<NotificationsController> {
                       : numberOfUnreadNotifications.toString(),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 10,
+                    fontSize: 11,
                     height: 1.1,
                     fontWeight: FontWeight.w700,
                   ),

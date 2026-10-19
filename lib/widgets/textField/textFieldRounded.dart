@@ -17,7 +17,7 @@ class Input extends StatefulWidget {
       this.backgroundcolor = const Color(0x0DFFFFFF),
       this.normalbordercolor = ColorName.cardBorder,
       this.focusedbordercolor = ColorName.primaryBlue,
-      this.errorbordercolor = const Color(0xFFF04141),
+      this.errorbordercolor = ColorName.danger,
       this.disabledbordercolor = const Color(0x0FFFFFFF),
       this.paddingvertical = 3,
       this.paddinghorizontal = 4,
@@ -164,7 +164,7 @@ class _InputState extends State<Input> {
               fontWeight: FontWeight.w400,
             ),
             errorStyle: const TextStyle(
-              color: Color(0xFFF04141),
+              color: ColorName.danger,
               fontSize: 12,
             ),
             contentPadding:

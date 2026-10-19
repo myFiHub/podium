@@ -20,7 +20,7 @@ class NotificationsView extends GetView<NotificationsController> {
             Obx(() {
               final unread = controller.numberOfUnreadNotifications.value;
               return AppPageHeader(
-                title: 'Notifications',
+                title: 'Alerts',
                 subtitle: unread == 0
                     ? "You're all caught up"
                     : '$unread unread',
@@ -326,7 +326,7 @@ class NotificationIdSection extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: AppColors.primary,
                   ),
                 ),

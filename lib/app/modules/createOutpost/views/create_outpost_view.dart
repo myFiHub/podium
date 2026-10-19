@@ -281,7 +281,7 @@ class _SelectPicture extends GetWidget<CreateOutpostController> {
                             Text(
                               'max 2MB',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 12,
                                 color: AppColors.textMuted,
                               ),
                             ),

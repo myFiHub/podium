@@ -187,7 +187,7 @@ class _SearchTabs extends GetView<SearchPageController> {
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(AppRadius.sm - 2),
         ),
-        labelColor: Colors.white,
+        labelColor: AppColors.onPrimary,
         unselectedLabelColor: AppColors.textMuted,
         labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
         unselectedLabelStyle: const TextStyle(

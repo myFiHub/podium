@@ -13,8 +13,6 @@ import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../controllers/home_controller.dart';
 
-final _scrollController = ScrollController();
-
 class HomeView extends GetView<HomeController> {
   const HomeView({Key? key}) : super(key: key);
   @override
@@ -35,7 +33,6 @@ class HomeView extends GetView<HomeController> {
               trailing: AppIconButton(
                 icon: Icons.refresh_rounded,
                 tooltip: 'Refresh',
-                size: 34,
                 onTap: () {
                   controller.refreshOutposts();
                 },
@@ -51,8 +48,22 @@ class HomeView extends GetView<HomeController> {
   }
 }
 
-class _MyOutpostsList extends GetWidget<OutpostsController> {
+class _MyOutpostsList extends StatefulWidget {
   const _MyOutpostsList();
+
+  @override
+  State<_MyOutpostsList> createState() => _MyOutpostsListState();
+}
+
+class _MyOutpostsListState extends State<_MyOutpostsList> {
+  final _scrollController = ScrollController();
+  final controller = Get.find<OutpostsController>();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +120,7 @@ class _MyOutpostsEmpty extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                "You haven't participated yet. Try joining an outpost and enjoy! ✨",
+                "You haven't joined any outposts yet. Find a live conversation or start your own.",
                 textAlign: TextAlign.center,
                 style: AppText.muted.copyWith(height: 1.45),
               ),
@@ -121,6 +132,17 @@ class _MyOutpostsEmpty extends StatelessWidget {
                   Navigate.to(
                     type: NavigationTypes.offAllNamed,
                     route: Routes.ALL_OUTPOSTS,
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              AppSecondaryButton(
+                label: "Start an outpost",
+                icon: Icons.add_rounded,
+                onPressed: () {
+                  Navigate.to(
+                    type: NavigationTypes.toNamed,
+                    route: Routes.CREATE_OUTPOST,
                   );
                 },
               ),

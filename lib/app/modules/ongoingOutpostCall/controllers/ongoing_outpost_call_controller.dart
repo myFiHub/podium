@@ -73,7 +73,7 @@ class OngoingOutpostCallController extends GetxController {
   final isRecording = false.obs;
   final recorderUserId = Rx<String>('');
   final isStartingToRecord = false.obs;
-  StreamSubscription<bool>? recordingListeners;
+  void Function()? _disposeRecordingListener;
   final loadingWalletAddressForUser = RxList<String>([]);
 
   final lastReaction = Rx<Reaction>(
@@ -81,15 +81,19 @@ class OngoingOutpostCallController extends GetxController {
   );
 
   StreamSubscription<List<LiveMember>>? membersListener;
-  StreamSubscription<int>? talkTimeListener;
-  StreamSubscription<int>? speakingListener;
+  // GetX 5 stops feeding an Rx's stream for good once its last stream
+  // subscriber cancels, so a `listen` on a long-lived Rx from a later call
+  // never fires. `addListener` doesn't go through that stream.
+  void Function()? _disposeTalkTimeListener;
+  void Function()? _disposeSpeakingListener;
 
   @override
   void onInit() async {
     super.onInit();
 
-    recordingListeners = recorderController.isRecording.listen((recording) {
-      isRecording.value = recording;
+    isRecording.value = recorderController.isRecording.value;
+    _disposeRecordingListener = recorderController.isRecording.addListener(() {
+      isRecording.value = recorderController.isRecording.value;
     });
     final ongoingOutpost = outpostCallController.outpost.value!;
     final myUser = globalController.myUserInfo.value!;
@@ -116,12 +120,14 @@ class OngoingOutpostCallController extends GetxController {
       mySession.refresh();
       _enforceTimeUp();
     });
-    talkTimeListener = outpostCallController.talkTimeTick.listen((_) {
+    _disposeTalkTimeListener =
+        outpostCallController.talkTimeTick.addListener(() {
       if (mySession.value == null) return;
       mySession.refresh();
       _enforceTimeUp();
     });
-    speakingListener = outpostCallController.speakingTick.listen((_) {
+    _disposeSpeakingListener =
+        outpostCallController.speakingTick.addListener(() {
       mySession.refresh();
     });
     final callSession = outpostCallController.session;
@@ -164,10 +170,10 @@ class OngoingOutpostCallController extends GetxController {
   void onClose() async {
     super.onClose();
     stopRecording();
-    recordingListeners?.cancel();
+    _disposeRecordingListener?.call();
     membersListener?.cancel();
-    talkTimeListener?.cancel();
-    speakingListener?.cancel();
+    _disposeTalkTimeListener?.call();
+    _disposeSpeakingListener?.call();
     reportReasonController.dispose();
     sessionData.value = null;
   }

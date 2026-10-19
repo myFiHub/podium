@@ -180,6 +180,7 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
       final isAdmin = controller.amIAdmin.value;
       final canTalk = callController.canTalk.value;
       final muted = controller.amIMuted.value;
+      final sharing = controller.isSharingScreen.value;
 
       final IconData icon;
       final String title;
@@ -215,14 +216,21 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
         trailing = '00:00';
       } else {
         final low = session.remaining_time < 120;
-        icon = muted ? Icons.mic_off_rounded : Icons.graphic_eq_rounded;
-        title = muted ? 'Your talk time' : "You're live";
-        subtitle = muted
-            ? 'Timer runs only while unmuted'
-            : 'Your talk time is counting down';
+        final idle = muted && !sharing;
+        icon = sharing
+            ? Icons.screen_share_rounded
+            : muted
+                ? Icons.mic_off_rounded
+                : Icons.graphic_eq_rounded;
+        title = idle ? 'Your talk time' : "You're live";
+        subtitle = sharing
+            ? 'Sharing your screen uses your talk time'
+            : muted
+                ? 'Timer runs only while unmuted'
+                : 'Your talk time is counting down';
         color = low
             ? callDangerColor
-            : muted
+            : idle
                 ? Colors.white
                 : callSpeakingColor;
         trailing = formatTalkTime(session.remaining_time);

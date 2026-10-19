@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'dart:math';
+import 'dart:ui' show Rect;
 
 import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
@@ -13,6 +15,7 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 part 'call_polls.dart';
+part 'call_screen_share.dart';
 
 class CallPeer {
   final String jitsiId;
@@ -62,8 +65,10 @@ CallRoomController? findCallRoom() => Get.isRegistered<CallRoomController>()
     : null;
 
 /// Room-level state that lives in Jitsi rather than in the Podium backend:
-/// raised hands, audio levels, chat, emoji reactions, polls and moderation.
-class CallRoomController extends GetxController with _CallPolls {
+/// raised hands, audio levels, chat, emoji reactions, polls, screen sharing
+/// and moderation.
+class CallRoomController extends GetxController
+    with _CallPolls, _CallScreenShare {
   static const reactionEmojis = [
     '❤️',
     '🔥',
@@ -124,6 +129,7 @@ class CallRoomController extends GetxController with _CallPolls {
     _levelDecayTimer?.cancel();
     _chatPreviewTimer?.cancel();
     _mutedWorker?.dispose();
+    _disposeStage();
     super.onClose();
   }
 
@@ -142,6 +148,7 @@ class CallRoomController extends GetxController with _CallPolls {
     return peers.values.firstOrNullWhere((p) => p.uuid == uuid)?.jitsiId;
   }
 
+  @override
   String displayNameOf({String? uuid, String? jitsiId}) {
     final id = uuid ?? uuidOf(jitsiId);
     if (id == myId) return 'You';
@@ -219,6 +226,18 @@ class CallRoomController extends GetxController with _CallPolls {
         }
         _setRaisedHands(data['raisedHands'], notify: false);
         _retryUnverifiedPoll();
+        if (data.containsKey('screenShare')) {
+          _onScreenShareEvent(data['screenShare'], notify: false);
+        }
+        if (data['localScreenShare'] is bool) {
+          _onLocalScreenShare(data['localScreenShare'] as bool);
+        }
+      case 'screenShare':
+        _onScreenShareEvent(data['screenShare'], notify: true);
+      case 'localScreenShare':
+        _onLocalScreenShare(data['sharing'] == true);
+      case 'stageVideoSize':
+        _onStageVideoSize(data);
       case 'raisedHands':
         channelAvailable.value = true;
         _setRaisedHands(data['raisedHands'], notify: true);

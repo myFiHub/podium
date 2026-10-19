@@ -9,6 +9,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/poll_card.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/room_overlays.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/screen_share_stage.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
@@ -34,19 +35,27 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
       },
       child: const Scaffold(
         body: PageWrapper(
-          child: Column(
+          child: Stack(
             children: [
-              ContextSaver(),
-              SafeArea(bottom: false, child: CallTopBar()),
-              Expanded(
-                child: Stack(
+              Positioned.fill(
+                child: Column(
                   children: [
-                    Positioned.fill(child: _CallBody()),
-                    Positioned.fill(child: RoomOverlays()),
+                    ContextSaver(),
+                    SafeArea(bottom: false, child: CallTopBar()),
+                    ScreenShareArea(),
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Positioned.fill(child: _CallBody()),
+                          Positioned.fill(child: RoomOverlays()),
+                        ],
+                      ),
+                    ),
+                    ControlDock(),
                   ],
                 ),
               ),
-              ControlDock(),
+              Positioned.fill(child: FullscreenStage()),
             ],
           ),
         ),

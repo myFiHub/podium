@@ -49,8 +49,24 @@ class MoreSheet extends GetView<OngoingOutpostCallController> {
         final poll = room?.activePoll.value;
         final canStartPoll = room?.canStartPoll ?? false;
         final canEndPoll = room?.canEndPoll ?? false;
+        final sharing = room?.localSharing.value ?? false;
+        final canOfferShare = (room?.screenShareSupported ?? false) &&
+            callController.canTalk.value;
 
         final tiles = <_MoreTile>[
+          if (sharing)
+            _MoreTile(
+              icon: Icons.stop_screen_share_outlined,
+              label: 'Stop sharing',
+              color: callDangerColor,
+              onTap: () => _runAfterClose(room!.stopScreenShare),
+            )
+          else if (canOfferShare)
+            _MoreTile(
+              icon: Icons.screen_share_outlined,
+              label: 'Share screen',
+              onTap: () => _runAfterClose(room!.startScreenShare),
+            ),
           _MoreTile(
             icon: Icons.people_alt_outlined,
             label: 'People ($memberCount)',

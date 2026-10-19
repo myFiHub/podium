@@ -59,6 +59,10 @@ class OngoingOutpostCallController extends GetxController {
   final mySession = Rxn<LiveMember>();
   final amIAdmin = false.obs;
   final amIMuted = true.obs;
+
+  /// Sharing the screen counts as speaking: the server timer runs while
+  /// either the mic is open or the screen is shared.
+  final isSharingScreen = false.obs;
   final isConferenceJoined = false.obs;
   bool callPageOpened = false;
   final timers = Rx<Map<String, int>>({});
@@ -110,6 +114,7 @@ class OngoingOutpostCallController extends GetxController {
       if (mySession.value!.remaining_time <= 0 &&
           outpostCallController.outpost.value!.creator_user_uuid != myId) {
         jitsiMeet.setAudioMuted(true);
+        if (isSharingScreen.value) jitsiMeet.toggleScreenShare(false);
       }
     });
     Future.delayed(const Duration(seconds: 10)).then((value) {
@@ -204,7 +209,55 @@ class OngoingOutpostCallController extends GetxController {
     final creatorUuid = outpostCallController.outpost.value!.creator_user_uuid;
     if (address == myUser.address && creatorUuid != myUser.uuid) {
       jitsiMeet.setAudioMuted(true);
+      if (isSharingScreen.value) {
+        jitsiMeet.toggleScreenShare(false);
+        Toast.warning(
+          title: "Time's up",
+          message: 'Screen sharing stopped',
+        );
+      }
     }
+  }
+
+  /// True when the screen can be shared right now, toasting why not otherwise.
+  bool canStartScreenShare() {
+    final session = mySession.value;
+    final creator = outpostCallController.outpost.value?.creator_user_uuid;
+    if (!outpostCallController.canTalk.value) {
+      Toast.info(
+        title: "You're a listener",
+        message: 'Only speakers can share their screen',
+      );
+      return false;
+    }
+    if (session == null || !isConferenceJoined.value) {
+      Toast.info(title: 'Connecting…', message: 'Try again in a moment');
+      return false;
+    }
+    if (session.remaining_time <= 0 && creator != myId) {
+      Toast.error(
+        title: "You've ran out of time",
+        message: 'Sharing your screen uses your talk time',
+      );
+      return false;
+    }
+    return true;
+  }
+
+  void onScreenShareChanged(bool sharing) {
+    if (sharing == isSharingScreen.value) return;
+    isSharingScreen.value = sharing;
+    final outpostId = outpostCallController.outpost.value?.uuid;
+    if (outpostId == null || outpostCallController.callCleanedUp) return;
+    // While the mic is open the server already counts us as speaking.
+    if (!amIMuted.value) return;
+    sendOutpostEvent(
+      outpostId: outpostId,
+      requestId: sharing ? outpostId : null,
+      eventType: sharing
+          ? OutgoingMessageTypeEnums.start_speaking
+          : OutgoingMessageTypeEnums.stop_speaking,
+    );
   }
 
   handleIncomingReaction(IncomingMessage incomingMessage) {
@@ -738,10 +791,12 @@ class OngoingOutpostCallController extends GetxController {
       // because on page load, jitsi fires the muted event
       // and an unwanted stop speaking event is sent
       if (!amIMuted.value) {
-        sendOutpostEvent(
-          outpostId: outpostId,
-          eventType: OutgoingMessageTypeEnums.stop_speaking,
-        );
+        if (!isSharingScreen.value) {
+          sendOutpostEvent(
+            outpostId: outpostId,
+            eventType: OutgoingMessageTypeEnums.stop_speaking,
+          );
+        }
         amIMuted.value = true;
       }
     } else {
@@ -758,11 +813,13 @@ class OngoingOutpostCallController extends GetxController {
         jitsiMeet.setAudioMuted(true);
         return;
       }
-      sendOutpostEvent(
-        outpostId: outpostId,
-        requestId: outpostId,
-        eventType: OutgoingMessageTypeEnums.start_speaking,
-      );
+      if (!isSharingScreen.value) {
+        sendOutpostEvent(
+          outpostId: outpostId,
+          requestId: outpostId,
+          eventType: OutgoingMessageTypeEnums.start_speaking,
+        );
+      }
       amIMuted.value = false;
       jitsiMeet.setAudioMuted(false);
     }

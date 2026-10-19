@@ -119,7 +119,6 @@ class OutpostDetailController extends GetxController {
       canEnter: enterAccess == 'true',
       canSpeak: speakAccess == 'true',
     );
-    // final remoteGroup = await getGroupInfoById(groupId);
     outpost.value = outpostInfo;
     gotOutpostInfo = true;
     // outpostInfo was just fetched by joinOutpostAndOpenOutpostDetailPage.
@@ -441,7 +440,6 @@ class OutpostDetailController extends GetxController {
   getOutpostInfo({required String id}) async {
     if (isGettingGroupInfo.value) return;
     isGettingGroupInfo.value = true;
-    final globalController = Get.find<GlobalController>();
     final groupsController = Get.find<OutpostsController>();
     if (globalController.loggedIn.value) {
       groupsController.joinOutpostAndOpenOutpostDetailPage(

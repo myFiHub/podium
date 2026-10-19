@@ -24,8 +24,6 @@ class CheckTicketView extends GetWidget<CheckticketController> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Header(),
-              // space10,
-              // TicketBuyObserver(),
               const SizedBox(height: 14),
               Expanded(
                 child: Obx(

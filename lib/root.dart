@@ -29,7 +29,6 @@ class Root extends StatelessWidget {
         ),
         const InternetConnectionChecker(),
         const FloatingCallBubble(),
-        // ConnectedNetworks(),
       ],
     );
   }

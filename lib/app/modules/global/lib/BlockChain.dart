@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/env.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:reown_appkit/reown_appkit.dart';
@@ -55,7 +54,6 @@ class BlockChainUtils {
     RxString connectedWalletAddress,
     RxBool w3serviceInitialized,
   ) async {
-    // W3MChainPresets.chains.addAll(W3MChainPresets.testChains);
     _w3mService.addListener(() async {
       if (_w3mService.session == null) {
         connectedWalletAddress.value = '';
@@ -109,12 +107,6 @@ class BlockChainUtils {
 
     void _onModalError(ModalError? event) {
       l.i('[initializewm3Service] _onModalError ${event?.toString()}');
-      // When user connected to Coinbase Wallet but Coinbase Wallet does not have a session anymore
-      // (for instance if user disconnected the dapp directly within Coinbase Wallet)
-      // Then Coinbase Wallet won't emit any event
-      if ((event?.message ?? '').contains('Coinbase Wallet Error')) {
-        // service.disconnect();
-      }
     }
 
     void _onSessionExpired(SessionExpire? event) {
@@ -139,8 +131,6 @@ class BlockChainUtils {
     }
 
     void _onRelayClientConnect(EventArgs? event) {
-      // final BuildContext context = Get.context!;
-      // showTextToast(text: 'Relay connected', context: context);
       l.i('Relay connected');
     }
 
@@ -207,15 +197,6 @@ class BlockChainUtils {
     final connectedChain = session!.chainId;
     String chainId = connectedChain;
 
-    // if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty) {
-    //   final globalController = Get.find<GlobalController>();
-    //   if (connectedChain != externalWalletChianId) {
-    //     if (chainId.contains(':')) {
-    //       chainId = chainId.split(':')[1];
-    //     }
-    //     await globalController.switchExternalWalletChain(chainId);
-    //   }
-    // }
 
     final accounts = session.getAccounts();
     final currentNamespace = '${Env.chainNamespace}:${chainId}';
@@ -260,20 +241,4 @@ class BlockChainUtils {
     // });
     //
   }
-}
-
-Stream<FilterEvent> _getContractEventStream({
-  required DeployedContract contract,
-  required String eventName,
-}) {
-  final event = contract.event(eventName);
-  final filter = FilterOptions.events(
-    contract: contract,
-    event: event,
-    fromBlock: const BlockNum.current(),
-    toBlock: const BlockNum.current(),
-  );
-  final movementClient = evmClientByChainId(movementEVMChain.chainId);
-  Stream<FilterEvent> eventStream = movementClient.events(filter);
-  return eventStream;
 }

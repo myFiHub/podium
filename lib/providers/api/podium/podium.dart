@@ -26,6 +26,8 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
 
+typedef _FromJson<T> = T Function(Map<String, dynamic> json);
+
 class PodiumApi {
   final _baseUrl = Env.podimBackendBaseUrl;
   final Dio dio;
@@ -35,7 +37,77 @@ class PodiumApi {
       ? {...defaultHeaders, 'Authorization': 'Bearer $_token'}
       : defaultHeaders;
 
+  Options get _options => Options(headers: _headers);
+
   PodiumApi(this.dio);
+
+  /// Returns [fallback] instead of throwing, so callers never see network errors.
+  Future<T> _guard<T>(Future<T> Function() request, T fallback) async {
+    try {
+      return await request();
+    } catch (e) {
+      l.e(e);
+      return fallback;
+    }
+  }
+
+  Future<dynamic> _getData(String path, {Map<String, dynamic>? query}) async {
+    final response = await dio.get(
+      '$_baseUrl$path',
+      queryParameters: query,
+      options: _options,
+    );
+    return response.data['data'];
+  }
+
+  Future<T?> _getOne<T>(
+    String path,
+    _FromJson<T> fromJson, {
+    Map<String, dynamic>? query,
+  }) {
+    return _guard<T?>(
+      () async => fromJson(await _getData(path, query: query)),
+      null,
+    );
+  }
+
+  Future<List<T>> _getList<T>(
+    String path,
+    _FromJson<T> fromJson, {
+    Map<String, dynamic>? query,
+  }) {
+    return _guard(() async {
+      final data = await _getData(path, query: query) as List;
+      return data.map((e) => fromJson(e)).toList();
+    }, <T>[]);
+  }
+
+  Future<Map<String, T>> _getMap<T>(
+    String path,
+    _FromJson<T> fromJson,
+    String Function(T item) keyOf, {
+    Map<String, dynamic>? query,
+  }) async {
+    final items = await _getList(path, fromJson, query: query);
+    return {for (final item in items) keyOf(item): item};
+  }
+
+  /// Sends a POST (or [method]) and reports whether the server answered 200.
+  Future<bool> _send(String path, {Object? data, String method = 'POST'}) {
+    return _guard(() async {
+      final response = await dio.request(
+        '$_baseUrl$path',
+        data: data,
+        options: _options.copyWith(method: method),
+      );
+      return response.statusCode == 200;
+    }, false);
+  }
+
+  Map<String, dynamic> _paging(int? page, int? pageSize) => {
+        if (page != null) 'page': page,
+        if (pageSize != null) 'page_size': pageSize,
+      };
 
   Future<bool> connectToWebSocket() async {
     final globalController = Get.find<GlobalController>();
@@ -45,9 +117,9 @@ class PodiumApi {
   Future<PodiumAppMetadata> appMetadata() async {
     final storage = GetStorage();
     try {
-      final config = await dio.get('$_baseUrl/configurations/app-settings',
-          options: Options(headers: _headers));
-      final data = Map<String, dynamic>.from(config.data['data']);
+      final data = Map<String, dynamic>.from(
+        await _getData('/configurations/app-settings'),
+      );
       final metadata = PodiumAppMetadata.fromJson(data);
       storage.write(StorageKeys.lastAppMetadata, data);
       return metadata;
@@ -121,654 +193,339 @@ class PodiumApi {
 
   Future<UserModel?> getMyUserData({
     required AdditionalDataForLogin additionalData,
-  }) async {
-    try {
-      final response = await dio.get(
-        '$_baseUrl/users/profile',
-        options: Options(headers: _headers),
-      );
-      UserModel myUser = UserModel.fromJson(response.data['data']);
-      final Map<String, dynamic> patchJson = {};
+  }) {
+    return _guard<UserModel?>(() async {
+      UserModel myUser = UserModel.fromJson(await _getData('/users/profile'));
       final fieldsToUpdate = {
         'email': (myUser.email, additionalData.email),
         'name': (myUser.name, additionalData.name),
         'image': (myUser.image, additionalData.image),
       };
-
-      patchJson.addAll(Map.fromEntries(fieldsToUpdate.entries
-          .where((entry) => entry.value.$1 == null && entry.value.$2 != null)
-          .map((entry) => MapEntry(entry.key, entry.value.$2!))));
+      final patchJson = <String, dynamic>{
+        for (final entry in fieldsToUpdate.entries)
+          if (entry.value.$1 == null && entry.value.$2 != null)
+            entry.key: entry.value.$2!,
+      };
       if (patchJson.isNotEmpty) {
         final updatedUser = await updateMyUserData(patchJson);
         if (updatedUser != null) {
           myUser = updatedUser;
         }
       }
-
       return myUser;
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
+    }, null);
   }
 
   Future<Map<String, UserModel>> searchUserByName({
     required String name,
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/users/search',
-          queryParameters: {
-            'text': name,
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      final usersList = (response.data['data'] as List)
-          .map((e) => UserModel.fromJson(e))
-          .toList();
-      final Map<String, UserModel> usersMap = {};
-      usersList.forEach((user) {
-        usersMap[user.uuid] = user;
-      });
-      return usersMap;
-    } catch (e) {
-      l.e(e);
-      return {};
-    }
+  }) {
+    return _getMap(
+      '/users/search',
+      UserModel.fromJson,
+      (user) => user.uuid,
+      query: {'text': name, ..._paging(page, page_size)},
+    );
   }
 
-  Future<int> getNumberOfOnlineMembers(String outpostId) async {
-    try {
-      final response = await dio.get('$_baseUrl/outposts/online-members-count',
-          queryParameters: {'uuid': outpostId},
-          options: Options(headers: _headers));
-      return response.data['data']['count'];
-    } catch (e) {
-      l.e(e);
-      return 0;
-    }
+  Future<int> getNumberOfOnlineMembers(String outpostId) {
+    return _guard(() async {
+      final data = await _getData(
+        '/outposts/online-members-count',
+        query: {'uuid': outpostId},
+      );
+      return data['count'] as int;
+    }, 0);
   }
 
-  Future<bool> setCreatorJoinedToTrue(String outpostId) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/creator-joined',
-          data: {'uuid': outpostId}, options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> setCreatorJoinedToTrue(String outpostId) {
+    return _send('/outposts/creator-joined', data: {'uuid': outpostId});
   }
 
-  Future<UserModel?> updateMyUserData(
-    Map<String, dynamic> patchJson,
-  ) async {
-    try {
-      final response = await dio.post('$_baseUrl/users/update-profile',
-          data: patchJson, options: Options(headers: _headers));
+  Future<UserModel?> updateMyUserData(Map<String, dynamic> patchJson) {
+    return _guard<UserModel?>(() async {
+      final response = await dio.post(
+        '$_baseUrl/users/update-profile',
+        data: patchJson,
+        options: _options,
+      );
       return UserModel.fromJson(response.data['data']);
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
+    }, null);
   }
 
-  Future<UserModel?> getUserData(String id) async {
-    try {
-      id = id.replaceAll('/', '');
-      final response = await dio.get('$_baseUrl/users/detail?uuid=$id',
-          options: Options(headers: _headers));
-      return UserModel.fromJson(response.data['data']);
-    } catch (e) {
-      return null;
-    }
+  Future<UserModel?> getUserData(String id) {
+    return _getOne(
+      '/users/detail',
+      UserModel.fromJson,
+      query: {'uuid': id.replaceAll('/', '')},
+    );
   }
 
-  Future<UserModel?> getUserByAptosAddress(String address) async {
-    try {
-      final response = await dio.get('$_baseUrl/users/detail/by-aptos-address',
-          queryParameters: {'aptos_address': address},
-          options: Options(headers: _headers));
-      return UserModel.fromJson(response.data['data']);
-    } catch (e) {
-      return null;
-    }
+  Future<UserModel?> getUserByAptosAddress(String address) {
+    return _getOne(
+      '/users/detail/by-aptos-address',
+      UserModel.fromJson,
+      query: {'aptos_address': address},
+    );
   }
 
   Future<List<UserModel>> getUsersByIds(List<String> ids) async {
-    try {
-      final List<Future<UserModel?>> callArray = [];
-      for (var id in ids) {
-        callArray.add(getUserData(id));
-      }
-      final List<UserModel?> response = await Future.wait(callArray);
-      return response.whereType<UserModel>().toList();
-    } catch (e) {
-      return [];
-    }
+    final users = await Future.wait(ids.map(getUserData));
+    return users.whereType<UserModel>().toList();
   }
 
   Future<List<UserModel>> getUserByAptosAddresses(
       List<String> addresses) async {
-    try {
-      final callArray =
-          addresses.map((address) => getUserByAptosAddress(address));
-      final List<UserModel?> response = await Future.wait(callArray);
-      return response.whereType<UserModel>().toList();
-    } catch (e) {
-      return [];
-    }
+    final users = await Future.wait(addresses.map(getUserByAptosAddress));
+    return users.whereType<UserModel>().toList();
   }
 
-  Future<bool> followUnfollow(String uuid, FollowUnfollowAction action) async {
-    try {
-      await dio.post('$_baseUrl/users/follow',
-          data: FollowUnfollowRequest(uuid: uuid, action: action).toJson(),
-          options: Options(headers: _headers));
+  Future<bool> followUnfollow(String uuid, FollowUnfollowAction action) {
+    return _guard(() async {
+      await dio.post(
+        '$_baseUrl/users/follow',
+        data: FollowUnfollowRequest(uuid: uuid, action: action).toJson(),
+        options: _options,
+      );
       return true;
-    } catch (e) {
-      return false;
-    }
+    }, false);
   }
 
   Future<List<FollowerModel>> getFollowersOfUser({
     required String uuid,
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/users/followers',
-          queryParameters: {
-            'uuid': uuid,
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      return (response.data['data'] as List)
-          .map((e) => FollowerModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  }) {
+    return _getList(
+      '/users/followers',
+      FollowerModel.fromJson,
+      query: {'uuid': uuid, ..._paging(page, page_size)},
+    );
   }
 
   Future<List<FollowerModel>> getFollowingsOfUser({
     required String uuid,
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/users/followings',
-          queryParameters: {
-            'uuid': uuid,
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      return (response.data['data'] as List)
-          .map((e) => FollowerModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  }) {
+    return _getList(
+      '/users/followings',
+      FollowerModel.fromJson,
+      query: {'uuid': uuid, ..._paging(page, page_size)},
+    );
   }
 
-  Future<List<FollowerModel>> getMyFollowers({
-    int? page,
-    int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/users/followers',
-          queryParameters: {
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      return (response.data['data'] as List)
-          .map((e) => FollowerModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  Future<List<FollowerModel>> getMyFollowers({int? page, int? page_size}) {
+    return _getList(
+      '/users/followers',
+      FollowerModel.fromJson,
+      query: _paging(page, page_size),
+    );
   }
 
-  Future<List<FollowerModel>> getMyFollowings({
-    int? page,
-    int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/users/followings',
-          queryParameters: {
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      return (response.data['data'] as List)
-          .map((e) => FollowerModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  Future<List<FollowerModel>> getMyFollowings({int? page, int? page_size}) {
+    return _getList(
+      '/users/followings',
+      FollowerModel.fromJson,
+      query: _paging(page, page_size),
+    );
   }
 
-  Future<OutpostModel?> getOutpost(String id) async {
-    try {
-      id = id.replaceAll('/', '');
-      final response = await dio.get('$_baseUrl/outposts/detail?uuid=$id',
-          options: Options(headers: _headers));
-      return OutpostModel.fromJson(response.data['data']);
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
+  Future<OutpostModel?> getOutpost(String id) {
+    return _getOne(
+      '/outposts/detail',
+      OutpostModel.fromJson,
+      query: {'uuid': id.replaceAll('/', '')},
+    );
   }
 
   Future<Map<String, OutpostModel>> searchOutpostByName({
     required String name,
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/outposts/search',
-          queryParameters: {'text': name}, options: Options(headers: _headers));
-      final outposts = (response.data['data'] as List)
-          .map((e) => OutpostModel.fromJson(e))
-          .toList();
-      final Map<String, OutpostModel> outpostsMap = {};
-      outposts.forEach((outpost) {
-        outpostsMap[outpost.uuid] = outpost;
-      });
-      return outpostsMap;
-    } catch (e) {
-      l.e(e);
-      return {};
-    }
+  }) {
+    return _getMap(
+      '/outposts/search',
+      OutpostModel.fromJson,
+      (outpost) => outpost.uuid,
+      query: {'text': name},
+    );
   }
 
   Future<Map<String, TagModel>> searchTag({
     required String tagName,
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/tags/search',
-          queryParameters: {'text': tagName},
-          options: Options(headers: _headers));
-      final tags = (response.data['data'] as List)
-          .map((e) => TagModel.fromJson(e))
-          .toList();
-      return Map.fromEntries(
-          tags.map((tag) => MapEntry(tag.id.toString(), tag)));
-    } catch (e) {
-      l.e(e);
-      return {};
-    }
+  }) {
+    return _getMap(
+      '/tags/search',
+      TagModel.fromJson,
+      (tag) => tag.id.toString(),
+      query: {'text': tagName},
+    );
   }
 
-  Future<bool> updateOutpost({
-    required UpdateOutpostRequest request,
-  }) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/update',
-          data: request.toJson(), options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> updateOutpost({required UpdateOutpostRequest request}) {
+    return _send('/outposts/update', data: request.toJson());
   }
 
-  Future<OutpostModel?> createOutpost(CreateOutpostRequest request) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/create',
-          data: request.toJson(), options: Options(headers: _headers));
+  Future<OutpostModel?> createOutpost(CreateOutpostRequest request) {
+    return _guard<OutpostModel?>(() async {
+      final response = await dio.post(
+        '$_baseUrl/outposts/create',
+        data: request.toJson(),
+        options: _options,
+      );
       return OutpostModel.fromJson(response.data['data']);
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
+    }, null);
   }
 
-  Future<List<OutpostModel>> getOutposts({
-    int? page,
-    int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/outposts',
-          queryParameters: {
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      return (response.data['data'] as List)
-          .map((e) => OutpostModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  Future<List<OutpostModel>> getOutposts({int? page, int? page_size}) {
+    return _getList(
+      '/outposts',
+      OutpostModel.fromJson,
+      query: _paging(page, page_size),
+    );
   }
 
   Future<Map<String, OutpostModel>> getOutpostsByTagId({
     required int id,
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/outposts',
-          queryParameters: {
-            'tag_id': id,
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      final outposts = (response.data['data'] as List)
-          .map((e) => OutpostModel.fromJson(e))
-          .toList();
-      final Map<String, OutpostModel> outpostsMap = {};
-      outposts.forEach((outpost) {
-        outpostsMap[outpost.uuid] = outpost;
-      });
-      return outpostsMap;
-    } catch (e) {
-      l.e(e);
-      return {};
-    }
+  }) {
+    return _getMap(
+      '/outposts',
+      OutpostModel.fromJson,
+      (outpost) => outpost.uuid,
+      query: {'tag_id': id, ..._paging(page, page_size)},
+    );
   }
 
   Future<List<OutpostModel>> getMyOutposts({
     bool include_archived = true,
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/outposts/my-outposts',
-          queryParameters: {
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-            'include_archived': include_archived,
-          },
-          options: Options(headers: _headers));
-      return (response.data['data'] as List)
-          .map((e) => OutpostModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  }) {
+    return _getList(
+      '/outposts/my-outposts',
+      OutpostModel.fromJson,
+      query: {
+        ..._paging(page, page_size),
+        'include_archived': include_archived,
+      },
+    );
   }
 
-  Future<bool?> toggleOutpostArchive(String id, bool archive) async {
-    final response = await dio.post('$_baseUrl/outposts/set-archive',
-        data: {'uuid': id, 'archive': archive},
-        options: Options(headers: _headers));
-    return response.statusCode == 200;
+  Future<bool> toggleOutpostArchive(String id, bool archive) {
+    return _send(
+      '/outposts/set-archive',
+      data: {'uuid': id, 'archive': archive},
+    );
   }
 
   Future<bool> reportOutpost({
     required String outpostId,
     required List<String> reasons,
-  }) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/report',
-          data: {'uuid': outpostId, 'reasons': reasons},
-          options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  }) {
+    return _send(
+      '/outposts/report',
+      data: {'uuid': outpostId, 'reasons': reasons},
+    );
   }
 
-  Future<bool> scoreOutpost({
-    required String outpostId,
-    required int score,
-  }) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/rate',
-          data: {'uuid': outpostId, 'rating': score},
-          options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> scoreOutpost({required String outpostId, required int score}) {
+    return _send(
+      '/outposts/rate',
+      data: {'uuid': outpostId, 'rating': score},
+    );
   }
 
-  Future<bool> addMeAsMember({
-    required String outpostId,
-    String? inviterId,
-  }) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/add-me-as-member',
-          data: {
-            'uuid': outpostId,
-            if (inviterId != null) 'inviter_uuid': inviterId,
-          },
-          options: Options(headers: _headers));
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> addMeAsMember({required String outpostId, String? inviterId}) {
+    return _send('/outposts/add-me-as-member', data: {
+      'uuid': outpostId,
+      if (inviterId != null) 'inviter_uuid': inviterId,
+    });
   }
 
-  Future<bool> inviteUserToJoinOutpost(InviteRequestModel request) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/invites/create',
-          data: request.toJson(), options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> inviteUserToJoinOutpost(InviteRequestModel request) {
+    return _send('/outposts/invites/create', data: request.toJson());
   }
 
-  Future<bool> rejectInvitation(RejectInvitationRequest request) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/invites/reject',
-          data: request.toJson(), options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> rejectInvitation(RejectInvitationRequest request) {
+    return _send('/outposts/invites/reject', data: request.toJson());
   }
 
-  Future<bool> markNotificationAsRead({required String id}) async {
-    try {
-      final response = await dio.post('$_baseUrl/notifications/mark-as-read',
-          data: {"uuid": id}, options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> markNotificationAsRead({required String id}) {
+    return _send('/notifications/mark-as-read', data: {'uuid': id});
   }
 
-  Future<bool> deleteNotification(String id) async {
-    try {
-      final response = await dio.delete('$_baseUrl/notifications',
-          data: {'uuid': id}, options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> deleteNotification(String id) {
+    return _send('/notifications', data: {'uuid': id}, method: 'DELETE');
   }
 
-  Future<bool> leaveOutpost(String id) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/leave',
-          data: {'uuid': id}, options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> leaveOutpost(String id) {
+    return _send('/outposts/leave', data: {'uuid': id});
   }
 
-  Future<List<NotificationModel>> getNotifications() async {
-    try {
-      final response = await dio.get('$_baseUrl/notifications',
-          options: Options(headers: _headers));
-      return (response.data['data'] as List).map((e) {
-        final created_at = e['created_at'];
-        final is_read = e['is_read'];
-        final message = e['message'];
-        final notification_type_str = e['notification_type'];
-        final uuid = e['uuid'];
-
-        // Convert string to enum
-        NotificationTypes notification_type;
-        if (notification_type_str == 'follow') {
-          notification_type = NotificationTypes.follow;
-        } else if (notification_type_str == 'invite') {
-          notification_type = NotificationTypes.invite;
-        } else {
-          throw Exception('Unknown notification type: $notification_type_str');
-        }
-
-        FollowMetadata? followMetadata = null;
-        InviteMetadata? inviteMetadata = null;
-        if (notification_type == NotificationTypes.follow) {
-          followMetadata = FollowMetadata.fromJson(e['metadata']);
-        }
-        if (notification_type == NotificationTypes.invite) {
-          inviteMetadata = InviteMetadata.fromJson(e['metadata']);
-        }
-        final NotificationModel notification = NotificationModel(
-          created_at: created_at,
-          is_read: is_read,
-          message: message,
-          notification_type: notification_type,
-          follow_metadata: followMetadata,
-          invite_metadata: inviteMetadata,
-          uuid: uuid,
-        );
-        return notification;
-      }).toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  Future<List<NotificationModel>> getNotifications() {
+    return _getList('/notifications', _notificationFromJson);
   }
 
-  Future<bool> deactivateAccount() async {
-    try {
-      final response = await dio.post('$_baseUrl/users/deactivate',
-          options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> deactivateAccount() {
+    return _send('/users/deactivate');
   }
 
-  Future<OutpostLiveData?> getLatestLiveData(
-      {required String outpostId}) async {
-    try {
-      final response = await dio.get('$_baseUrl/outposts/online-data',
-          queryParameters: {
-            'uuid': outpostId,
-          },
-          options: Options(headers: _headers));
-      return OutpostLiveData.fromJson(response.data['data']);
-    } catch (e) {
-      l.e(e);
-      return null;
-    }
+  Future<OutpostLiveData?> getLatestLiveData({required String outpostId}) {
+    return _getOne(
+      '/outposts/online-data',
+      OutpostLiveData.fromJson,
+      query: {'uuid': outpostId},
+    );
   }
 
-  Future<bool> buySellPodiumPass(BuySellPodiumPassRequest request) async {
-    try {
-      final response = await dio.post('$_baseUrl/podium-passes/trade',
-          data: request.toJson(), options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> buySellPodiumPass(BuySellPodiumPassRequest request) {
+    return _send('/podium-passes/trade', data: request.toJson());
   }
 
   Future<List<PodiumPassBuyerModel>> myPodiumPasses({
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/podium-passes/my-passes',
-          queryParameters: {
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      return (response.data['data'] as List)
-          .map((e) => PodiumPassBuyerModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  }) {
+    return _getList(
+      '/podium-passes/my-passes',
+      PodiumPassBuyerModel.fromJson,
+      query: _paging(page, page_size),
+    );
   }
 
   Future<List<PodiumPassBuyerModel>> podiumPassBuyers({
     required String uuid,
     int? page,
     int? page_size,
-  }) async {
-    try {
-      final response = await dio.get('$_baseUrl/podium-passes/recent-holders',
-          queryParameters: {
-            'uuid': uuid,
-            if (page != null) 'page': page,
-            if (page_size != null) 'page_size': page_size,
-          },
-          options: Options(headers: _headers));
-      return (response.data['data'] as List)
-          .map((e) => PodiumPassBuyerModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      l.e(e);
-      return [];
-    }
+  }) {
+    return _getList(
+      '/podium-passes/recent-holders',
+      PodiumPassBuyerModel.fromJson,
+      query: {'uuid': uuid, ..._paging(page, page_size)},
+    );
   }
 
-  Future<bool> setOrRemoveReminder(SetOrRemoveReminderRequest request) async {
-    try {
-      final response = await dio.post('$_baseUrl/outposts/set-reminder',
-          data: request.toJson(), options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> setOrRemoveReminder(SetOrRemoveReminderRequest request) {
+    return _send('/outposts/set-reminder', data: request.toJson());
   }
 
-  Future<bool> connectNewAccount(ConnectNewAccountRequest request) async {
-    try {
-      final response = await dio.post('$_baseUrl/users/accounts/connect',
-          data: request.toJson(), options: Options(headers: _headers));
-      return response.statusCode == 200;
-    } catch (e) {
-      l.e(e);
-      return false;
-    }
+  Future<bool> connectNewAccount(ConnectNewAccountRequest request) {
+    return _send('/users/accounts/connect', data: request.toJson());
   }
 
   Future<bool> setAccountAsPrimary({required String address}) async {
     try {
-      final response = await dio.post('$_baseUrl/users/accounts/set-primary',
-          data: {'address': address}, options: Options(headers: _headers));
+      final response = await dio.post(
+        '$_baseUrl/users/accounts/set-primary',
+        data: {'address': address},
+        options: _options,
+      );
       return response.statusCode == 200;
     } on DioException catch (e) {
       l.e(e);
@@ -780,6 +537,27 @@ class PodiumApi {
       return false;
     }
   }
+}
+
+NotificationModel _notificationFromJson(Map<String, dynamic> e) {
+  final type = switch (e['notification_type']) {
+    'follow' => NotificationTypes.follow,
+    'invite' => NotificationTypes.invite,
+    final other => throw Exception('Unknown notification type: $other'),
+  };
+  return NotificationModel(
+    created_at: e['created_at'],
+    is_read: e['is_read'],
+    message: e['message'],
+    notification_type: type,
+    follow_metadata: type == NotificationTypes.follow
+        ? FollowMetadata.fromJson(e['metadata'])
+        : null,
+    invite_metadata: type == NotificationTypes.invite
+        ? InviteMetadata.fromJson(e['metadata'])
+        : null,
+    uuid: e['uuid'],
+  );
 }
 
 /// Error bodies are not always JSON (e.g. nginx HTML pages on 502).

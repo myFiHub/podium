@@ -276,16 +276,12 @@ class GlobalController extends GetxController {
     await Web3AuthFlutter.init(
       Web3AuthOptions(
         clientId:
-            //
-            // "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ",
             Env.web3AuthClientId,
         sessionTime: 60 * 60 * 24 * 7,
         network: Network.sapphire_mainnet,
         redirectUrl: resolveRedirectUrl(),
         whiteLabel: WhiteLabelData(
           appName:
-              //
-              // "Web3Auth Flutter Playground",
               "Podium",
           mode: ThemeModes.dark,
         ),
@@ -699,7 +695,6 @@ class GlobalController extends GetxController {
 
   Future<void> connectToWallet({void Function()? afterConnection}) async {
     try {
-      // web3ModalService.disconnect();
       await web3ModalService.init();
       await web3ModalService.openModalView();
       final address =

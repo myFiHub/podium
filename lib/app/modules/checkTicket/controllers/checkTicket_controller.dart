@@ -108,7 +108,6 @@ class CheckticketController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    // checkTickets();
   }
 
   @override

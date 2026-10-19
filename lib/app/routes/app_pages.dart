@@ -86,7 +86,7 @@ class AppPages {
       children: [
         GetPage(
           name: '/:id',
-          page: () => GroupByIdLandingScreen(),
+          page: () => const GroupByIdLandingScreen(),
           transition: Transition.native,
           preventDuplicates: false,
         ),

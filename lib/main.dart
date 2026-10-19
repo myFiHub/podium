@@ -201,7 +201,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return AppExitResponse.exit;
 
     /// Cancel the exit.
-    // return AppExitResponse.cancel;
   }
 
   @override
@@ -222,7 +221,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       child: GetMaterialApp(
         theme: buildThemeData(),
         defaultTransition: Transition.native,
-        // showPerformanceOverlay: true,
         onDispose: () {
           jitsiMeet.hangUp();
         },

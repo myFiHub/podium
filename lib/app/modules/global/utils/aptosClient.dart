@@ -2,11 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:aptos/aptos.dart';
-import 'package:aptos/coin_client.dart';
 import 'package:aptos/models/entry_function_payload.dart';
 import 'package:flutter/foundation.dart';
-// import 'package:aptos_sdk_dart/aptos_sdk_dart.dart' as AptosSdkDart;
-// import 'package:built_value/json_object.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -21,7 +18,6 @@ import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
-// import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class AptosMovement {
   AptosMovement._internal();
@@ -33,7 +29,6 @@ class AptosMovement {
     final movementAptosProtoTestNetChain =
         globalController.movementAptosNetwork;
     return AptosClient(
-      // movementAptosBardokChain.rpcUrl,
       movementAptosProtoTestNetChain.rpcUrl,
       enableDebugLog: !kReleaseMode, // Env.environment == DEVELOPMENT,
     );
@@ -135,10 +130,6 @@ class AptosMovement {
     return await getAddressBalance(address);
   }
 
-  static CoinClient get _coinClient {
-    return CoinClient(client);
-  }
-
   static Future<(bool?, String?)> cheerBoo({
     required String target,
     required List<String> receiverAddresses,
@@ -196,7 +187,6 @@ class AptosMovement {
         functionId: "${cheerBooAddress}::$_cheerBooName::cheer_or_boo",
         typeArguments: [],
         arguments: [
-          // address,
           target,
           receiverAddresses,
           cheer,
@@ -361,7 +351,6 @@ class AptosMovement {
       l.e(e, stackTrace: stackTrace);
       final isCopyableError = e.toString().contains('Waiting for transaction');
       Toast.error(
-        title: 'Error',
         message: isCopyableError
             ? e.toString()
             : 'Error Submiting Transaction, please try again later',

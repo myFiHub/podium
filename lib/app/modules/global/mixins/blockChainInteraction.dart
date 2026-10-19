@@ -201,7 +201,6 @@ Future<BigInt?> ext_getBuyPrice({
   if (contract == null) {
     return null;
   }
-  // service.launchConnectedWallet();
   try {
     final sharesSubjectWallet = parseAddress(sharesSubject);
     final response = await service.requestReadContract(
@@ -423,14 +422,6 @@ Future<BigInt?> _internal_getShares_friendthech({
         function: contract.function(methodName),
         params: [parseAddress(sellerAddress), parseAddress(buyerWalletAddress)],
       ),
-      // EvmService.readContract(
-      //   buyerWalletAddress,
-      //   BigInt.zero,
-      //   contractAddress,
-      //   methodName,
-      //   parameters,
-      //   abiJsonString,
-      // ),
       if (externalWalletAddress != null && externalWalletAddress!.isNotEmpty)
         client.call(
           contract: contract,
@@ -440,14 +431,6 @@ Future<BigInt?> _internal_getShares_friendthech({
             parseAddress(externalWalletAddress!),
           ],
         ),
-      // EvmService.readContract(
-      //   externalWalletAddress!,
-      //   BigInt.zero,
-      //   contractAddress,
-      //   methodName,
-      //   parameters,
-      //   abiJsonString,
-      // ),
     ]);
 
     if (results[0][0] == '0x') {

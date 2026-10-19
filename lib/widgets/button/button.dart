@@ -121,7 +121,6 @@ class Button extends StatefulWidget {
     this.disabledTextColor,
   })  : materialTapTargetSize =
             materialTapTargetSize ?? MaterialTapTargetSize.padded,
-        // assert(elevation != null && elevation >= 0.0),
         assert(focusElevation >= 0.0),
         assert(hoverElevation >= 0.0),
         assert(highlightElevation >= 0.0),

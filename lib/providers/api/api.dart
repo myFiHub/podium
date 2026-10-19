@@ -37,7 +37,6 @@ class HttpApis {
         error: true,
         compact: true,
         maxWidth: 90,
-        // logPrint: log.d,
         enabled: kDebugMode,
         filter: (options, args) {
           // don't print responses with unit8 list data

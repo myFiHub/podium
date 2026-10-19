@@ -42,11 +42,6 @@ DeployedContract? getDeployedContract(
           deployedContract = friendTechContract(chainId);
         }
       }
-    default:
-      {
-        l.e("Invalid contract");
-        deployedContract = null;
-      }
   }
   if (deployedContract == null) {
     l.e("Contract not deployed");

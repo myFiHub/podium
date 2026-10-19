@@ -242,8 +242,6 @@ class ProfileController extends GetxController {
       }
       isGettingTicketPrice.value = true;
       await Future.wait<void>([
-        // getFriendTechPriceAndMyShare(),
-        // getArenaPriceAndMyShares(),
         getPodiumPassPriceAndMyShares(),
       ]);
       //
@@ -366,7 +364,7 @@ class ProfileController extends GetxController {
         return;
       }
       if (sold == true) {
-        Toast.success(title: 'Success', message: 'Podium pass sold');
+        Toast.success(message: 'Podium pass sold');
         mySharesOfPodiumPassFromThisUser.value--;
 
         getPassBuyers();
@@ -388,7 +386,7 @@ class ProfileController extends GetxController {
         numberOfTickets: 1,
       );
       if (price == null) {
-        Toast.error(title: 'Error', message: 'Error getting podium pass price');
+        Toast.error(message: 'Error getting podium pass price');
         return;
       }
       final myReferrerUuid = userInfo.value!.referrer_user_uuid;
@@ -409,12 +407,12 @@ class ProfileController extends GetxController {
         return;
       }
       if (success == true) {
-        Toast.success(title: 'Success', message: 'Podium pass bought');
+        Toast.success(message: 'Podium pass bought');
         mySharesOfPodiumPassFromThisUser.value++;
         getPassBuyers();
         getPodiumPassPriceAndMyShares(delay: 5);
       } else {
-        Toast.error(title: 'Error', message: 'Error buying podium pass');
+        Toast.error(message: 'Error buying podium pass');
       }
     } catch (e) {
       l.e(e);
@@ -449,13 +447,11 @@ class ProfileController extends GetxController {
       if (bought) {
         mySharesOfFriendTechFromThisUser.value++;
         Toast.success(
-          title: 'Success',
           message: 'Bought Friendtech Key',
         );
         getFriendTechPriceAndMyShare(delay: 5);
       } else {
         Toast.error(
-          title: 'Error',
           message: 'Error buying Friendtech key',
         );
       }
@@ -488,10 +484,10 @@ class ProfileController extends GetxController {
       }
       if (bought) {
         mySharesOfArenaFromThisUser.value++;
-        Toast.success(title: 'Success', message: 'Arena ticket bought');
+        Toast.success(message: 'Arena ticket bought');
         getArenaPriceAndMyShares(delay: 5);
       } else {
-        Toast.error(title: 'Error', message: 'Error buying Arena ticket');
+        Toast.error(message: 'Error buying Arena ticket');
       }
     } catch (e) {
     } finally {

@@ -47,13 +47,11 @@ class Payments {
 class Balances {
   String Base = '0.0';
   String Avalanche = '0.0';
-  // String Movement = '0.0';
   String movementAptos = '0.0';
 
   Balances({
     required this.Base,
     required this.Avalanche,
-    // required this.Movement,
     required this.movementAptos,
   });
 }
@@ -83,7 +81,6 @@ class MyProfileController extends GetxController {
     Balances(
       Base: '0.0',
       Avalanche: '0.0',
-      // Movement: '0.0',
       movementAptos: '0.0',
     ),
   );
@@ -360,7 +357,6 @@ class MyProfileController extends GetxController {
       balances.value = Balances(
         Base: weiToDecimalString(wei: baseBalance),
         Avalanche: weiToDecimalString(wei: avalancheBalance),
-        // Movement: weiToDecimalString(wei: movementBalance),
         movementAptos: bigIntCoinToMoveOnAptos(movementAptosBalance).toString(),
       );
       isGettingBalances.value = false;
@@ -502,7 +498,6 @@ class MyProfileController extends GetxController {
       privateKey = await Web3AuthFlutter.getPrivKey();
     } catch (e) {
       Toast.error(
-        title: 'Error',
         message: 'Private key not found',
       );
       return;

@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -63,9 +62,6 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
     conferenceJoined: (url) async {
       outpostCallController.fetchLiveData(withJoin: true);
 
-      if (Platform.isIOS) {
-        // jitsiMeet.enterPiP();
-      }
       if (Get.isRegistered<OngoingOutpostCallController>()) {
         final ongoing = Get.find<OngoingOutpostCallController>();
         ongoing.isConferenceJoined.value = true;
@@ -144,38 +140,5 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       if (outpostCallController.callCleanedUp) return;
       outpostCallController.leaveCall();
     },
-    // like: (idWithAddedAtSign, participantId) async {
-    //   final OngoingGroupCallController ongoingGroupCallController =
-    //       Get.find<OngoingGroupCallController>();
-    //   final id = transformEmailLikeToId(idWithAddedAtSign!);
-    //   ongoingGroupCallController.onLikeClicked(id);
-    // },
-    // dislike: (idWithAddedAtSign, participantId) async {
-    //   final OngoingGroupCallController ongoingGroupCallController =
-    //       Get.find<OngoingGroupCallController>();
-    //   final id = transformEmailLikeToId(idWithAddedAtSign!);
-    //   ongoingGroupCallController.onDislikeClicked(id);
-    // },
-    // cheer: (idWithAddedAtSign, participantId) async {
-    //   final OngoingGroupCallController ongoingGroupCallController =
-    //       Get.find<OngoingGroupCallController>();
-    //   final id = transformEmailLikeToId(idWithAddedAtSign!);
-    //   log.f(id);
-    //   ongoingGroupCallController.cheerBoo(
-    //     userId: id,
-    //     cheer: true,
-    //     fromMeetPage: true,
-    //   );
-    // },
-    // boo: (idWithAddedAtSign, participantId) async {
-    //   final OngoingGroupCallController ongoingGroupCallController =
-    //       Get.find<OngoingGroupCallController>();
-    //   final id = transformEmailLikeToId(idWithAddedAtSign!);
-    //   ongoingGroupCallController.cheerBoo(
-    //     userId: id,
-    //     cheer: false,
-    //     fromMeetPage: true,
-    //   );
-    // },
   );
 }

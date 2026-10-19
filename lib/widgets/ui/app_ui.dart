@@ -155,6 +155,150 @@ class AppCard extends StatelessWidget {
   }
 }
 
+/// Section heading for settings and form pages, aligned with [AppCard] edges.
+class AppSectionLabel extends StatelessWidget {
+  final String title;
+  const AppSectionLabel(this.title, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSectionHeader(
+      title: title,
+      padding: const EdgeInsets.fromLTRB(4, 24, 4, 10),
+    );
+  }
+}
+
+/// Hairline between rows inside an [AppCard].
+class AppRowDivider extends StatelessWidget {
+  final double indent;
+  final double endIndent;
+  const AppRowDivider({super.key, this.indent = 16, this.endIndent = 16});
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: indent,
+      endIndent: endIndent,
+      color: AppColors.border,
+    );
+  }
+}
+
+/// Icon on a soft tinted square (or circle) used as a row's leading badge.
+class AppIconTile extends StatelessWidget {
+  final IconData icon;
+  final Color? color;
+  final double size;
+  final bool circle;
+  final bool bordered;
+  const AppIconTile({
+    super.key,
+    required this.icon,
+    this.color,
+    this.size = 38,
+    this.circle = false,
+    this.bordered = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = color ?? AppColors.primary;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: tint.withAlpha(30),
+        shape: circle ? BoxShape.circle : BoxShape.rectangle,
+        borderRadius: circle ? null : BorderRadius.circular(AppRadius.sm),
+        border: bordered ? Border.all(color: tint.withAlpha(50)) : null,
+      ),
+      child: Icon(icon, size: size * 0.5, color: tint),
+    );
+  }
+}
+
+/// Tappable settings row: icon tile, title, optional subtitle and trailing
+/// widget (a chevron when tappable and no trailing is given). [dense] is the
+/// tighter variant used inside forms.
+class AppSettingsRow extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final bool dimmed;
+  final bool dense;
+  const AppSettingsRow({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.iconColor,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+    this.dimmed = false,
+    this.dense = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 10 : 14),
+        child: Row(
+          children: [
+            AppIconTile(
+              icon: icon,
+              color: dimmed ? AppColors.textMuted : iconColor,
+              bordered: !dense,
+            ),
+            SizedBox(width: dense ? 12 : 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.cardTitle.copyWith(
+                      fontSize: dense ? 14 : null,
+                      fontWeight: FontWeight.w600,
+                      color: dimmed ? AppColors.textMuted : null,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.caption,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            trailing ??
+                (onTap != null
+                    ? Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.textMuted,
+                      )
+                    : const SizedBox.shrink()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Small uppercase label above a group of content, with optional count and
 /// action.
 class AppSectionHeader extends StatelessWidget {

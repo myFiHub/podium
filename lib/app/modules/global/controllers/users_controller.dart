@@ -19,7 +19,6 @@ class UsersController extends GetxController {
   // current user is set by listening to global controller's currentUserInfo
   final currentUserInfo = Rxn<UserModel>();
   final OutpostsController groupsController = Get.find<OutpostsController>();
-  // final users = Map<String, UserInfoModel>();
   final followingsInProgress = Map<String, String>().obs;
   final gettingUserInfo_uuid = ''.obs;
   @override
@@ -72,7 +71,6 @@ class UsersController extends GetxController {
         return true;
       } catch (e) {
         Toast.error(
-          title: 'Error',
           message: 'Error ${startFollowing ? "" : "un"}following user',
         );
         return false;

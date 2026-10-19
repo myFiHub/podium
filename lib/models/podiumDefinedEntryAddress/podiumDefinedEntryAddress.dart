@@ -15,5 +15,8 @@ class PodiumDefinedEntryAddress {
     required this.address,
   });
 
+  factory PodiumDefinedEntryAddress.fromJson(Map<String, dynamic> json) =>
+      _$PodiumDefinedEntryAddressFromJson(json);
+
   Map<String, dynamic> toJson() => _$PodiumDefinedEntryAddressToJson(this);
 }

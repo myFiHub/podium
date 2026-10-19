@@ -120,17 +120,6 @@ class LoginController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    // final isAddingAccount = globalController.isAddingAccount;
-    // if (isAddingAccount) {
-    //   Toast.success(
-    //     title: 'Account added',
-    //   );
-    //   Navigate.to(
-    //     route: Routes.CONNECTED_ACCOUNTS,
-    //     type: NavigationTypes.offAllNamed,
-    //   );
-    //   return;
-    // }
     globalController.deepLinkRoute.listen((v) {
       if (v.isNotEmpty) {
         initializeReferral(null);
@@ -504,13 +493,10 @@ class LoginController extends GetxController {
 
       LoginTypeService.setLoginType(temporaryLoginRequest!.login_type);
       globalController.setLoggedIn(true);
-      // newx line is commented because loginController is cleared from memory (offAllNamed in global controller)
-      // removeLogingInState();
       if (afterLogin != null) {
         afterLogin!();
         afterLogin = null;
       }
-      // Navigate.toInitial();
     }
   }
 

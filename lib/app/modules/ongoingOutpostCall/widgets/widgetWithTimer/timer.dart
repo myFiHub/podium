@@ -248,13 +248,9 @@ class CircularCountDownTimerState extends State<CircularCountDownTimer>
     _controller!.addStatusListener((status) {
       switch (status) {
         case AnimationStatus.forward:
-          _onStart();
-          break;
-
         case AnimationStatus.reverse:
           _onStart();
           break;
-
         case AnimationStatus.dismissed:
           _onComplete();
           break;
@@ -264,8 +260,6 @@ class CircularCountDownTimerState extends State<CircularCountDownTimer>
           /// Only call the [_onComplete] block when the animation is not reversed.
           if (!widget.isReverse) _onComplete();
           break;
-        default:
-        // Do nothing
       }
     });
 

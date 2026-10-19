@@ -97,7 +97,6 @@ class DropDown extends StatelessWidget {
             color: ColorName.cardBackground,
             border: Border.all(color: ColorName.cardBorder),
           ),
-          // offset: const Offset(-10, 0),
           scrollbarTheme: ScrollbarThemeData(
             radius: const Radius.circular(8),
             thickness: WidgetStateProperty.all(4),

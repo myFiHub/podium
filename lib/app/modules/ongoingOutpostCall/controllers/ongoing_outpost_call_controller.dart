@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-// import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/utils/palette.dart';
@@ -178,12 +177,10 @@ class OngoingOutpostCallController extends GetxController {
     );
     if (!success) {
       Toast.error(
-        title: 'Error',
         message: 'Failed to report outpost',
       );
     } else {
       Toast.success(
-        title: 'Success',
         message: 'Report submitted successfully',
       );
       reportReason.value = '';
@@ -590,8 +587,6 @@ class OngoingOutpostCallController extends GetxController {
       lastReaction.value = Reaction(
           targetId: '', reaction: IncomingMessageType.userStoppedSpeaking);
     });
-    // lastReaction.value = Reaction(targetId: '', reaction: '');
-    // final initiatorUser=groupCallController.
   }
 
   onLikeClicked({required String userId}) async {
@@ -711,7 +706,6 @@ class OngoingOutpostCallController extends GetxController {
           (isSelfReaction || isBoo)) {
         l.e("No Users found in session");
         Toast.error(
-          title: "Error",
           message: "No Users found in session",
         );
 
@@ -734,7 +728,6 @@ class OngoingOutpostCallController extends GetxController {
       } catch (e) {
         l.e("something went wrong parsing amount");
         Toast.error(
-          title: "Error",
           message: "Amount is not a number",
         );
 
@@ -745,10 +738,6 @@ class OngoingOutpostCallController extends GetxController {
       bool? success;
       String? txHash;
       const selectedWallet = WalletNames.internal_Aptos;
-      // await choseAWallet(
-      //   chainId: movementEVMChain.chainId,
-      //   supportsAptos: true,
-      // );
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           groupId: outpostCallController.outpost.value!.uuid,
@@ -786,7 +775,6 @@ class OngoingOutpostCallController extends GetxController {
         _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
 
         Toast.success(
-          title: "Success",
           message: "${cheer ? "Cheer" : "Boo"} successful",
         );
         final ev = cheer
@@ -820,7 +808,6 @@ class OngoingOutpostCallController extends GetxController {
       } else {
         l.e("${cheer ? "Cheer" : "Boo"} failed");
         Toast.error(
-          title: "Error",
           message: "${cheer ? "Cheer" : "Boo"} failed",
         );
         _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
@@ -830,7 +817,6 @@ class OngoingOutpostCallController extends GetxController {
       l.e("User has not connected wallet for some reason");
       _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
       Toast.error(
-        title: "Error",
         message: "User has not connected wallet for some reason",
       );
       return;

@@ -7,14 +7,12 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class GroupByIdLandingScreen extends GetView<OutpostDetailController> {
-  String? id;
-
-  GroupByIdLandingScreen({super.key});
+  const GroupByIdLandingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    id ??= Get.parameters['id'];
-    if (id == null || id!.isEmpty) {
+    final id = Get.parameters['id'];
+    if (id == null || id.isEmpty) {
       l.e('GroupByIdLandingScreen: id is null or empty');
       return Scaffold(
         body: PageWrapper(
@@ -33,7 +31,7 @@ class GroupByIdLandingScreen extends GetView<OutpostDetailController> {
       );
     }
     Get.put(OutpostDetailController());
-    controller.getOutpostInfo(id: id!);
+    controller.getOutpostInfo(id: id);
     return const Scaffold(
       body: PageWrapper(
         child: Center(

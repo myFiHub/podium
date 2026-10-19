@@ -633,7 +633,6 @@ class CreateOutpostController extends GetxController {
       listOfSearchedUsersToBuyTicketFrom.value = [];
       return;
     }
-    // loadingAddresses.add(value);
     showLoadingOnSearchInput.value = true;
     _deb.debounce(() async {
       try {
@@ -864,8 +863,8 @@ class ScheduledGroupDateSelector extends GetView<CreateOutpostController> {
         decoration: BoxDecoration(
           color: ColorName.cardBackground,
           borderRadius: const BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
         ),
         child: const Column(
@@ -1080,7 +1079,6 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                         },
                       ).toList();
 
-                      // listOfUsers.add(myUser);
                       final SelectedUsersExceptMe = selectedUsers
                           .where((element) => element.uuid != myId);
                       listOfUsers.addAll([myUser, ...SelectedUsersExceptMe]);

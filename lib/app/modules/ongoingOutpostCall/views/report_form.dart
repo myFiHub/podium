@@ -75,7 +75,6 @@ class ReportForm extends GetView<OngoingOutpostCallController> {
               const SizedBox(width: 16),
               Obx(() {
                 final isFormValid = _isFormValid();
-                final reason = controller.reportReason.value;
                 return Button(
                   text: 'Submit Report',
                   size: ButtonSize.SMALL,

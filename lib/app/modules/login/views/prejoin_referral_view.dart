@@ -38,7 +38,6 @@ class PrejoinReferralView extends GetView<LoginController> {
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: _InternalWalletAddress(),
               ),
-              // const _ExternalWalletConnectButton(),
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: _ReferralStatus(),
@@ -139,7 +138,6 @@ class _ExternalWalletConnectButton extends GetView<GlobalController> {
         size: ButtonSize.SMALL,
         blockButton: true,
         type: connected ? ButtonType.outline2x : ButtonType.gradient,
-        // loading: loadingExternalWalletActivation,
         onPressed: () {
           if (externalWalletAddress.isNotEmpty) {
             return;
@@ -308,9 +306,6 @@ class _ProfileCard extends GetView<LoginController> {
   });
   @override
   Widget build(BuildContext context) {
-    // final keyPrice = user.lastKeyPrice ?? '0';
-    // final binIntKeyPrice = BigInt.from(int.parse(keyPrice));
-    // final valueToShow = bigIntWeiToDouble(binIntKeyPrice).toString();
     return AppCard(
       margin: const EdgeInsets.only(bottom: 12),
       child: Column(

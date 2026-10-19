@@ -33,7 +33,7 @@ class LumaApi {
       }
     } catch (e) {
       l.e(e);
-      Toast.error(title: 'Error', message: 'Error getting timezone');
+      Toast.error(message: 'Error getting timezone');
       return null;
     }
     final response = await dio.post(

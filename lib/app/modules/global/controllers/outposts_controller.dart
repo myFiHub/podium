@@ -83,17 +83,6 @@ class OutpostsController extends GetxController {
   final isGettingMyOutposts = false.obs;
   final isGettingAllOutposts = false.obs;
 
-  final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
-  final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
-  final tmpPresentUsersInGroupsMap = <String, List<String>>{};
-  final tmpTakingUsersInGroupsMap = <String, List<String>>{};
-  final enterListenersMap = {};
-  final updateListenersMap = {};
-  final leaveListenersMap = {};
-  final gettingAllOutposts = true.obs;
-  bool initializedChannels = false;
-  bool gotDetectPresenceTime = false;
-
   final lastPageReachedForAllOutposts = false.obs;
   final lastPageReachedForMyOutposts = false.obs;
 
@@ -176,49 +165,52 @@ class OutpostsController extends GetxController {
 
   /// Page 0 replaces the list once the response arrives, so a refresh keeps
   /// showing the current outposts instead of flashing skeletons.
-  Future<void> fetchAllOutpostsPage(int pageKey) async {
-    try {
-      if (pageKey == 0) {
-        isGettingAllOutposts.value = true;
-      }
-      final newItems = await HttpApis.podium.getOutposts(
+  Future<void> fetchAllOutpostsPage(int pageKey) {
+    return _fetchPage(
+      pageKey: pageKey,
+      target: outposts,
+      isLoading: isGettingAllOutposts,
+      lastPageReached: lastPageReachedForAllOutposts,
+      fetch: () => HttpApis.podium.getOutposts(
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
-      );
-      final previousOutposts =
-          pageKey == 0 ? <OutpostModel>[] : outposts.value.values.toList();
-      outposts.value = Map<String, OutpostModel>.fromEntries(
-        [...previousOutposts, ...newItems].map((e) => MapEntry(e.uuid, e)),
-      );
-      lastPageReachedForAllOutposts.value =
-          newItems.length < numberOfOutpostsPerPage;
-    } catch (error) {
-    } finally {
-      isGettingAllOutposts.value = false;
-    }
+      ),
+    );
   }
 
-  Future<void> fetchMyOutpostsPage(int pageKey) async {
-    try {
-      if (pageKey == 0) {
-        isGettingMyOutposts.value = true;
-      }
-      final showArchived = showArchivedOutposts.value;
-      final newItems = await HttpApis.podium.getMyOutposts(
-        include_archived: showArchived,
+  Future<void> fetchMyOutpostsPage(int pageKey) {
+    return _fetchPage(
+      pageKey: pageKey,
+      target: myOutposts,
+      isLoading: isGettingMyOutposts,
+      lastPageReached: lastPageReachedForMyOutposts,
+      fetch: () => HttpApis.podium.getMyOutposts(
+        include_archived: showArchivedOutposts.value,
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
-      );
-      final previousOutposts =
-          pageKey == 0 ? <OutpostModel>[] : myOutposts.value.values.toList();
-      myOutposts.value = Map<String, OutpostModel>.fromEntries(
-        [...previousOutposts, ...newItems].map((e) => MapEntry(e.uuid, e)),
-      );
-      lastPageReachedForMyOutposts.value =
-          newItems.length < numberOfOutpostsPerPage;
-    } catch (error) {
+      ),
+    );
+  }
+
+  Future<void> _fetchPage({
+    required int pageKey,
+    required Rx<Map<String, OutpostModel>> target,
+    required RxBool isLoading,
+    required RxBool lastPageReached,
+    required Future<List<OutpostModel>> Function() fetch,
+  }) async {
+    if (pageKey == 0) {
+      isLoading.value = true;
+    }
+    try {
+      final newItems = await fetch();
+      target.value = {
+        if (pageKey != 0) ...target.value,
+        for (final outpost in newItems) outpost.uuid: outpost,
+      };
+      lastPageReached.value = newItems.length < numberOfOutpostsPerPage;
     } finally {
-      isGettingMyOutposts.value = false;
+      isLoading.value = false;
     }
   }
 
@@ -230,10 +222,6 @@ class OutpostsController extends GetxController {
     lastPageReachedForMyOutposts.value = false;
     mapOfOnlineUsersInOutposts.value = {};
     _onlineCountFetchedAt.clear();
-  }
-
-  getPresentUsersInGroup(String groupId) {
-    return tmpPresentUsersInGroupsMap[groupId] ?? [];
   }
 
   Future<void> leaveOutpost({required OutpostModel outpost}) async {
@@ -251,7 +239,6 @@ class OutpostsController extends GetxController {
         fetchMyOutpostsPage(0);
 
         Toast.success(
-          title: "Success",
           message: "You have left the outpost",
         );
       }
@@ -291,13 +278,11 @@ class OutpostsController extends GetxController {
         await HttpApis.podium.toggleOutpostArchive(outpost.uuid, archive);
     if (success != true) {
       Toast.error(
-        title: "Error",
         message: "Failed to toggle archive",
       );
       return;
     }
     Toast.success(
-      title: "Success",
       message: "Outpost ${archive ? "archived" : "is available again"}",
     );
 
@@ -386,12 +371,12 @@ class OutpostsController extends GetxController {
     List<AddGuestModel> lumaGuests = const [],
   }) async {
     final accessAddresses = [
-      ...requiredAddressesToEnter.map((e) => e).toList(),
-      ...requiredTicketsToAccess.map((e) => e.activeAddress).toList(),
+      ...requiredAddressesToEnter,
+      ...requiredTicketsToAccess.map((e) => e.activeAddress),
     ];
     final speakAddresses = [
-      ...requiredAddressesToSpeak.map((e) => e).toList(),
-      ...requiredTicketsToSpeak.map((e) => e.activeAddress).toList(),
+      ...requiredAddressesToSpeak,
+      ...requiredTicketsToSpeak.map((e) => e.activeAddress),
     ];
 
     final createOutpostRequest = CreateOutpostRequest(
@@ -446,7 +431,6 @@ class OutpostsController extends GetxController {
       return response;
     } catch (e) {
       Toast.error(
-        title: "Error",
         message: "Failed to create the Outpost",
       );
       return null;
@@ -502,7 +486,6 @@ class OutpostsController extends GetxController {
         );
         if (!added) {
           Toast.error(
-            title: "Error",
             message: "Failed to join the Outpost, try again or report a bug",
           );
           return;
@@ -530,7 +513,6 @@ class OutpostsController extends GetxController {
       }
     } catch (e) {
       Toast.error(
-        title: "Error",
         message: "Failed to join the Outpost,please try again or report a bug",
       );
       l.f("Error joining outpost: $e");
@@ -575,20 +557,12 @@ class OutpostsController extends GetxController {
 
   /// updates the outpost in the local list of outposts and my outposts and searched outposts, the new outpost is not fetched from the server,
   /// edits most be done before calling this function, then pass the edited outpost to this function
-  updateOutpost_local(OutpostModel updatedOutpost) {
-    final outpostIndex = outposts.value.values
-        .toList()
-        .indexWhere((element) => element.uuid == updatedOutpost.uuid);
-    if (outpostIndex != -1) {
-      outposts.value[updatedOutpost.uuid] = updatedOutpost;
-      outposts.refresh();
-    }
-    final myOutpostIndex = myOutposts.value.values
-        .toList()
-        .indexWhere((element) => element.uuid == updatedOutpost.uuid);
-    if (myOutpostIndex != -1) {
-      myOutposts.value[updatedOutpost.uuid] = updatedOutpost;
-      myOutposts.refresh();
+  void updateOutpost_local(OutpostModel updatedOutpost) {
+    for (final list in [outposts, myOutposts]) {
+      if (list.value.containsKey(updatedOutpost.uuid)) {
+        list.value[updatedOutpost.uuid] = updatedOutpost;
+        list.refresh();
+      }
     }
 
     final isSearchRegistered = Get.isRegistered<SearchPageController>();
@@ -642,7 +616,6 @@ class OutpostsController extends GetxController {
       return OutpostAccesses(canEnter: true, canSpeak: true);
     if (outpost.is_archived) {
       Toast.error(
-        title: "Error",
         message: "This Outpost is archived",
       );
       return OutpostAccesses(canEnter: false, canSpeak: false);
@@ -662,7 +635,6 @@ class OutpostsController extends GetxController {
       );
       if (accesses?.canEnter == false) {
         Toast.error(
-          title: "Error",
           message: "You need a ticket to join this Outpost",
         );
         return OutpostAccesses(canEnter: false, canSpeak: false);
@@ -685,7 +657,6 @@ class OutpostsController extends GetxController {
             canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
       } else {
         Toast.error(
-          title: "Error",
           message: "This is a private Outpost, you need an invite link to join",
         );
         return OutpostAccesses(canEnter: false, canSpeak: false);
@@ -700,7 +671,6 @@ class OutpostsController extends GetxController {
         );
       } else {
         Toast.error(
-          title: "Error",
           message: "You need an invite to join this Outpost",
         );
         return OutpostAccesses(canEnter: false, canSpeak: false);
@@ -803,22 +773,6 @@ class OutpostsController extends GetxController {
     );
     return result ?? false;
   }
-}
-
-Map<String, OutpostModel> getOutpostsVisibleToMe(
-    Map<String, OutpostModel> groups, String myId) {
-  return groups;
-  // final filteredGroups = groups.entries.where((element) {
-  //   if (element.value.privacyType == RoomPrivacyTypes.public ||
-  //       element.value.members.contains(myId)) {
-  //     return true;
-  //   }
-  //   return false;
-  // }).toList();
-  // final filteredGroupsConverted = Map<String, FirebaseGroup>.fromEntries(
-  //   filteredGroups,
-  // );
-  // return filteredGroupsConverted;
 }
 
 _showModalToToggleArchiveGroup({required OutpostModel outpost}) async {

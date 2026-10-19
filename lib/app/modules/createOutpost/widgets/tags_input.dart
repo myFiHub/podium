@@ -333,7 +333,6 @@ class _DynamicMultilineTagsState extends State<DynamicMultilineTags> {
                                                     255, 0, 0, 0)),
                                           ),
                                           onTap: () {
-                                            // print("${tag.tag} selected");
                                           },
                                         ),
                                         const SizedBox(width: 4.0),
@@ -605,7 +604,6 @@ class _DynamicAutoCompleteTagsState extends State<DynamicAutoCompleteTags> {
                                                       255, 0, 0, 0)),
                                             ),
                                             onTap: () {
-                                              // print("${tag.tag} selected");
                                             },
                                           ),
                                           const SizedBox(width: 4.0),

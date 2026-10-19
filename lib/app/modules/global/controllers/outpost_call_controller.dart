@@ -42,12 +42,6 @@ class OutpostCallController extends GetxController {
   final sortedMembers = Rx<List<LiveMember>>([]);
   final talkingUsers = Rx<List<LiveMember>>([]);
   final reactionsMap = Rx<Map<String, Map<OutgoingMessageTypeEnums, int>>>({
-    // "0x673f34ad366c81bc5cd0e6bc2a5a1afe932dbf35": {
-    //   OutgoingMessageTypeEnums.cheer: 2,
-    //   OutgoingMessageTypeEnums.boo: 1,
-    //   OutgoingMessageTypeEnums.like: 1,
-    //   OutgoingMessageTypeEnums.dislike: 1,
-    // },
   });
   final haveOngoingCall = false.obs;
   bool _callCleanedUp = true;
@@ -437,7 +431,6 @@ class OutpostCallController extends GetxController {
       {required OutpostModel outpostToJoin,
       OutpostAccesses? accessOverRides}) async {
     if (!await _leaveOtherOutpostFirst(outpostToJoin)) return;
-    final globalController = Get.find<GlobalController>();
 
     final iAmAllowedToSpeak = accessOverRides != null
         ? accessOverRides.canSpeak

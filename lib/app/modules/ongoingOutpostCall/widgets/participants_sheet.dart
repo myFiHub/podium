@@ -7,6 +7,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 
@@ -218,8 +219,15 @@ class _ParticipantRow extends StatelessWidget {
           if (findCallRoom()?.isHandRaised(member.uuid) ?? false)
             const Text('✋', style: TextStyle(fontSize: 16))
           else if (member.is_speaking)
-            const Icon(Icons.graphic_eq_rounded,
-                color: callSpeakingColor, size: 18),
+            VoiceLevelBuilder(
+              uuid: member.uuid,
+              builder: (context, level) => VoiceBars(
+                level: level,
+                color: callSpeakingColor,
+                height: 14,
+                bars: 4,
+              ),
+            ),
           TalkTimeBuilder(builder: (context) {
             final time = member.remaining_time;
             return Text(

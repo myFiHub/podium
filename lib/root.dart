@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/widgets/navbar.dart';
+import 'package:podium/widgets/ui/aurora.dart';
 
 class Root extends StatelessWidget {
   final Widget child;
@@ -175,32 +176,11 @@ class AnimatedBgbWrapper extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final loggedIn = controller.loggedIn.value;
-      return Container(
-          child: child,
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: loggedIn
-                  ? const Alignment(0, -1)
-                  : const Alignment(-0.0, -0.1),
-              colors: loggedIn ? _linearColors : _cirularColors,
-              radius: loggedIn ? 2.0 : 1.0,
-            ),
-          ));
-    });
+    return Obx(
+      () => AuroraBackground(
+        intensity: controller.loggedIn.value ? 1 : 1.3,
+        child: child,
+      ),
+    );
   }
 }
-
-final _linearColors = [
-  ColorName.pageBgGradientStart,
-  ColorName.pageBgGradientEnd,
-];
-final _cirularColors = [
-  ColorName.pageBgGradientStart.withAlpha(153),
-  ColorName.pageBgGradientStart.withAlpha(128),
-  ColorName.pageBgGradientStart.withAlpha(102),
-  ColorName.pageBgGradientStart.withAlpha(77),
-  ColorName.pageBgGradientStart.withAlpha(51),
-  // ColorName.pageBgGradientStart.withAlpha(26),
-];

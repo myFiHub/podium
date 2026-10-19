@@ -1,6 +1,12 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/widgets/ui/aurora.dart';
+
+export 'package:podium/widgets/ui/aurora.dart';
 
 /// Podium design kit: the look of the outpost call page, shared by every
 /// screen. Prefer these over hand-rolled containers so screens stay
@@ -14,6 +20,8 @@ class AppColors {
   static const accent = ColorName.warning;
   static const live = ColorName.danger;
   static const primary = ColorName.primaryBlue;
+  static const violet = ColorName.auroraViolet;
+  static const magenta = ColorName.auroraMagenta;
 
   /// Text/icons on [primary] fills. The primary cyan is too light for white
   /// text to be legible.
@@ -103,25 +111,37 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final glowBorder = borderColor == null;
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(radius),
-      side: BorderSide(color: borderColor ?? AppColors.border),
+      side: glowBorder ? BorderSide.none : BorderSide(color: borderColor!),
     );
     return Padding(
       padding: margin ?? EdgeInsets.zero,
-      child: Material(
-        color: Colors.transparent,
-        shape: shape,
-        clipBehavior: Clip.antiAlias,
-        child: Ink(
-          decoration: ShapeDecoration(
+      child: AppPressScale(
+        enabled: onTap != null,
+        scale: 0.985,
+        child: CustomPaint(
+          foregroundPainter:
+              glowBorder ? GradientBorderPainter(radius: radius) : null,
+          child: Material(
+            color: Colors.transparent,
             shape: shape,
-            color: gradient == null ? (color ?? AppColors.surfaceGlass) : null,
-            gradient: gradient,
-          ),
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(padding: padding, child: child),
+            clipBehavior: Clip.antiAlias,
+            child: Ink(
+              decoration: ShapeDecoration(
+                shape: shape,
+                color:
+                    gradient == null ? (color ?? AppColors.surfaceGlass) : null,
+                gradient: gradient,
+              ),
+              child: InkWell(
+                onTap: onTap,
+                splashColor: AppColors.violet.withAlpha(30),
+                highlightColor: AppColors.primary.withAlpha(10),
+                child: Padding(padding: padding, child: child),
+              ),
+            ),
           ),
         ),
       ),
@@ -233,12 +253,7 @@ class AppPageHeader extends StatelessWidget {
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.muted,
-                  ),
+                  AppRollingText(subtitle!, style: AppText.muted),
                 ],
               ],
             ),
@@ -285,6 +300,196 @@ class AppIconButton extends StatelessWidget {
   }
 }
 
+/// Compact circular refresh button. Spins with a gradient ring while
+/// [loading], finishes its turn when loading ends and briefly shows a check.
+class AppRefreshButton extends StatefulWidget {
+  final bool loading;
+  final VoidCallback? onTap;
+  final String tooltip;
+  final double size;
+  const AppRefreshButton({
+    super.key,
+    required this.loading,
+    required this.onTap,
+    this.tooltip = 'Refresh',
+    this.size = 36,
+  });
+
+  @override
+  State<AppRefreshButton> createState() => _AppRefreshButtonState();
+}
+
+class _AppRefreshButtonState extends State<AppRefreshButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _spin = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 850),
+  );
+  Timer? _doneTimer;
+  bool _done = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.loading) _spin.repeat();
+  }
+
+  @override
+  void didUpdateWidget(AppRefreshButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.loading == widget.loading) return;
+    if (widget.loading) {
+      _doneTimer?.cancel();
+      _done = false;
+      _spin.repeat();
+    } else {
+      _finish();
+    }
+  }
+
+  Future<void> _finish() async {
+    final remaining = 1 - _spin.value;
+    await _spin.animateTo(
+      1,
+      duration: Duration(milliseconds: 200 + (500 * remaining).round()),
+      curve: Curves.easeOutCubic,
+    );
+    if (!mounted || widget.loading) return;
+    _spin.value = 0;
+    setState(() => _done = true);
+    _doneTimer = Timer(const Duration(milliseconds: 1100), () {
+      if (mounted) setState(() => _done = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _doneTimer?.cancel();
+    _spin.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.loading;
+    final still = reduceMotion(context);
+    final turns = still ? const AlwaysStoppedAnimation(0.0) : _spin;
+    final iconSize = widget.size * 0.5;
+    const duration = Duration(milliseconds: 250);
+    return Tooltip(
+      message: widget.tooltip,
+      child: AppPressScale(
+        enabled: !active,
+        scale: 0.9,
+        child: AnimatedContainer(
+          duration: duration,
+          curve: Curves.easeOut,
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: active ? AppColors.primary.withAlpha(20) : AppColors.fill,
+            border: Border.all(
+              color: active
+                  ? Colors.transparent
+                  : _done
+                      ? AppColors.success.withAlpha(110)
+                      : AppColors.border,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.violet.withAlpha(active ? 70 : 0),
+                blurRadius: 14,
+              ),
+            ],
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: active ? null : widget.onTap,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: AnimatedOpacity(
+                      opacity: active ? 1 : 0,
+                      duration: duration,
+                      child: RotationTransition(
+                        turns: turns,
+                        child: const CustomPaint(painter: _RefreshArcPainter()),
+                      ),
+                    ),
+                  ),
+                  AnimatedSwitcher(
+                    duration: duration,
+                    switchInCurve: Curves.easeOutBack,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(scale: animation, child: child),
+                    ),
+                    child: _done
+                        ? Icon(
+                            Icons.check_rounded,
+                            key: const ValueKey('done'),
+                            size: iconSize,
+                            color: AppColors.success,
+                          )
+                        : RotationTransition(
+                            key: const ValueKey('idle'),
+                            turns: turns,
+                            child: TweenAnimationBuilder<Color?>(
+                              tween: ColorTween(
+                                end: active ? AppColors.primary : Colors.white,
+                              ),
+                              duration: duration,
+                              builder: (context, color, _) => Icon(
+                                Icons.autorenew_rounded,
+                                size: iconSize,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RefreshArcPainter extends CustomPainter {
+  const _RefreshArcPainter();
+
+  static const _stroke = 2.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = (Offset.zero & size).deflate(_stroke / 2);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _stroke
+      ..strokeCap = StrokeCap.round
+      ..shader = SweepGradient(
+        colors: [
+          AppColors.primary.withAlpha(0),
+          AppColors.primary,
+          AppColors.violet,
+        ],
+        stops: const [0, 0.45, 0.7],
+      ).createShader(rect);
+    canvas.drawArc(rect, 0, math.pi * 1.4, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(_RefreshArcPainter oldDelegate) => false;
+}
+
 /// Full-width primary action with a loading state.
 class AppPrimaryButton extends StatelessWidget {
   final String label;
@@ -306,14 +511,26 @@ class AppPrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fg = foreground ?? AppColors.onColor(color ?? AppColors.primary);
+    final useGradient = color == null && onPressed != null;
+    return AppGradientShell(
+      enabled: useGradient,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: _button(fg, useGradient),
+    );
+  }
+
+  Widget _button(Color fg, bool useGradient) {
     return FilledButton(
       onPressed: loading ? null : onPressed,
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(52),
-        backgroundColor: color ?? AppColors.primary,
+        backgroundColor:
+            useGradient ? Colors.transparent : (color ?? AppColors.primary),
         foregroundColor: fg,
         disabledBackgroundColor: loading
-            ? (color ?? AppColors.primary).withAlpha(150)
+            ? (useGradient
+                ? Colors.transparent
+                : (color ?? AppColors.primary).withAlpha(150))
             : Colors.white.withAlpha(18),
         disabledForegroundColor: loading ? fg : Colors.white.withAlpha(90),
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -339,6 +556,47 @@ class AppPrimaryButton extends StatelessWidget {
                 ),
               ],
             ),
+    );
+  }
+}
+
+/// Paints the brand gradient and a soft glow behind a transparent button.
+class AppGradientShell extends StatelessWidget {
+  final Widget child;
+  final bool enabled;
+  final BorderRadius borderRadius;
+  final Gradient gradient;
+  const AppGradientShell({
+    super.key,
+    required this.child,
+    required this.borderRadius,
+    this.enabled = true,
+    this.gradient = AppGradients.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return AppPressScale(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: borderRadius,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.violet.withAlpha(70),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: AppColors.primary.withAlpha(40),
+              blurRadius: 12,
+              offset: const Offset(-4, 0),
+            ),
+          ],
+        ),
+        child: child,
+      ),
     );
   }
 }
@@ -459,48 +717,74 @@ class AppEmptyState extends StatelessWidget {
         horizontal: 32,
         vertical: compact ? 16 : 40,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: compact ? 52 : 72,
-            height: compact ? 52 : 72,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(24),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary.withAlpha(60)),
-            ),
-            child: Icon(
-              icon,
-              size: compact ? 24 : 32,
-              color: AppColors.primary,
-            ),
-          ),
-          SizedBox(height: compact ? 12 : 18),
-          Text(title, textAlign: TextAlign.center, style: AppText.cardTitle),
-          if (message != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              message!,
-              textAlign: TextAlign.center,
-              style: AppText.muted.copyWith(height: 1.4),
-            ),
-          ],
-          if (onAction != null) ...[
-            const SizedBox(height: 18),
-            FilledButton(
-              onPressed: onAction,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
+      child: AppEntrance(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBreathing(
+              period: const Duration(milliseconds: 2800),
+              builder: (context, v) => Transform.translate(
+                offset: Offset(0, 3 - 6 * v),
+                child: _badge(v),
               ),
-              child: Text(actionLabel ?? 'Try again'),
             ),
+            SizedBox(height: compact ? 12 : 18),
+            Text(title, textAlign: TextAlign.center, style: AppText.cardTitle),
+            if (message != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: AppText.muted.copyWith(height: 1.4),
+              ),
+            ],
+            if (onAction != null) ...[
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: onAction,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                ),
+                child: Text(actionLabel ?? 'Try again'),
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _badge(double glow) {
+    return Container(
+      width: compact ? 52 : 72,
+      height: compact ? 52 : 72,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withAlpha(46),
+            AppColors.violet.withAlpha(46),
+            AppColors.magenta.withAlpha(36),
+          ],
+        ),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.violet.withAlpha(80)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.violet.withAlpha(36 + (36 * glow).round()),
+            blurRadius: 20 + 10 * glow,
+          ),
         ],
+      ),
+      child: Icon(
+        icon,
+        size: compact ? 24 : 32,
+        color: AppColors.primary,
       ),
     );
   }

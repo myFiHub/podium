@@ -29,12 +29,13 @@ class AllOutpostsView extends GetView<AllOutpostsController> {
                   subtitle: "Live and upcoming conversations",
                   padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
                   actions: [
-                    AppIconButton(
-                      icon: Icons.refresh_rounded,
-                      tooltip: 'Refresh',
-                      onTap: () {
-                        controller.refresh();
-                      },
+                    Obx(
+                      () => AppRefreshButton(
+                        loading: Get.find<OutpostsController>()
+                            .isGettingAllOutposts
+                            .value,
+                        onTap: controller.refresh,
+                      ),
                     ),
                   ],
                 ),

@@ -144,13 +144,16 @@ class SearchView extends GetView<SearchPageController> {
                         itemCount: tagsList.length,
                         itemBuilder: (context, index) {
                           final tag = tagsList[index];
-                          return _TagTile(
+                          return AppEntrance(
                             key: Key(tag.name),
-                            tag: tag,
-                            loading: loadingName == tag.name,
-                            onTap: () {
-                              controller.tagClicked(tag);
-                            },
+                            index: index,
+                            child: _TagTile(
+                              tag: tag,
+                              loading: loadingName == tag.name,
+                              onTap: () {
+                                controller.tagClicked(tag);
+                              },
+                            ),
                           );
                         },
                       );
@@ -184,8 +187,15 @@ class _SearchTabs extends GetView<SearchPageController> {
         indicatorSize: TabBarIndicatorSize.tab,
         dividerHeight: 0,
         indicator: BoxDecoration(
-          color: AppColors.primary,
+          gradient: AppGradients.primary,
           borderRadius: BorderRadius.circular(AppRadius.sm - 2),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.violet.withAlpha(60),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         labelColor: AppColors.onPrimary,
         unselectedLabelColor: AppColors.textMuted,
@@ -225,10 +235,9 @@ class _TabLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tab(
-      child: Text(
+      child: AppRollingText(
         count == 0 ? label : '$label ($count)',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        alignment: Alignment.center,
       ),
     );
   }
@@ -248,29 +257,38 @@ class _SearchEmpty extends GetView<SearchPageController> {
     return Obx(() {
       final hasQuery = controller.searchValue.value.isNotEmpty;
       final isSearching = controller.isSearching.value;
+      final Widget state;
+      if (!hasQuery) {
+        state = AppEmptyState(
+          key: const ValueKey('idle'),
+          icon: icon,
+          title: 'Find your next conversation',
+          message: 'Search outposts, people and tags across Podium.',
+          compact: true,
+        );
+      } else if (isSearching) {
+        state = const AppEmptyState(
+          key: ValueKey('searching'),
+          icon: Icons.manage_search_rounded,
+          title: 'Searching…',
+          compact: true,
+        );
+      } else {
+        state = AppEmptyState(
+          key: const ValueKey('none'),
+          icon: icon,
+          title: noResultsTitle,
+          message: 'Try a different keyword.',
+          compact: true,
+        );
+      }
       return ListView(
         padding: const EdgeInsets.only(top: 24, bottom: 32),
         children: [
-          if (!hasQuery)
-            AppEmptyState(
-              icon: icon,
-              title: 'Find your next conversation',
-              message: 'Search outposts, people and tags across Podium.',
-              compact: true,
-            )
-          else if (isSearching)
-            const AppEmptyState(
-              icon: Icons.manage_search_rounded,
-              title: 'Searching…',
-              compact: true,
-            )
-          else
-            AppEmptyState(
-              icon: icon,
-              title: noResultsTitle,
-              message: 'Try a different keyword.',
-              compact: true,
-            ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: state,
+          ),
         ],
       );
     });
@@ -279,7 +297,6 @@ class _SearchEmpty extends GetView<SearchPageController> {
 
 class _TagTile extends StatelessWidget {
   const _TagTile({
-    super.key,
     required this.tag,
     required this.loading,
     required this.onTap,

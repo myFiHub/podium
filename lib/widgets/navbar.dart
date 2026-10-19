@@ -8,6 +8,7 @@ import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/navigation/navigation.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 const navbarHeight = 60.0;
 const _routesWithoutNavbar = [
@@ -81,15 +82,35 @@ class PodiumNavbar extends GetView<GlobalController> {
       final bottomSpace = MediaQuery.viewInsetsOf(context).bottom;
       return Container(
         height: bottomSpace == 0 ? navbarHeight : 0,
-        decoration: const BoxDecoration(
-          color: ColorName.navbarBackground,
-          border: Border(top: BorderSide(color: ColorName.cardBorder)),
-        ),
-        child: MediaQuery.withClampedTextScaling(
-          maxScaleFactor: 1.15,
-          child: BottomNav(
-            activeRoute: activeRoute,
-          ),
+        color: ColorName.navbarBackground,
+        child: Stack(
+          children: [
+            MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.15,
+              child: BottomNav(
+                activeRoute: activeRoute,
+              ),
+            ),
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0x0054E4EF),
+                      Color(0x8054E4EF),
+                      Color(0x808B5CF6),
+                      Color(0x80FF4FD8),
+                      Color(0x00FF4FD8),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     });
@@ -154,13 +175,16 @@ Widget _buildNavItem({
           route: route,
         );
       },
-      child: _NavItemBody(
-        isActive: isActive,
-        icon: icon,
-        activeIcon: activeIcon,
-        label: label,
-        color: color,
-        overlay: overlay,
+      child: AppPressScale(
+        scale: 0.92,
+        child: _NavItemBody(
+          isActive: isActive,
+          icon: icon,
+          activeIcon: activeIcon,
+          label: label,
+          color: color,
+          overlay: overlay,
+        ),
       ),
     ),
   );
@@ -194,17 +218,40 @@ class _NavItemBody extends StatelessWidget {
             width: isActive ? 56 : 44,
             height: 30,
             decoration: BoxDecoration(
-              color: isActive
-                  ? ColorName.primaryBlue.withAlpha(46)
-                  : Colors.transparent,
+              gradient: LinearGradient(
+                colors: isActive
+                    ? [
+                        ColorName.primaryBlue.withAlpha(56),
+                        ColorName.auroraViolet.withAlpha(56),
+                      ]
+                    : [
+                        ColorName.primaryBlue.withAlpha(0),
+                        ColorName.auroraViolet.withAlpha(0),
+                      ],
+              ),
               borderRadius: BorderRadius.circular(999),
+              boxShadow: [
+                BoxShadow(
+                  color: ColorName.auroraViolet.withAlpha(isActive ? 50 : 0),
+                  blurRadius: 14,
+                ),
+              ],
             ),
             child: Stack(
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
                 AnimatedSwitcher(
-                  duration: _animationDuration,
+                  duration: const Duration(milliseconds: 320),
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween(begin: 0.6, end: 1.0).animate(animation),
+                      child: child,
+                    ),
+                  ),
                   child: Icon(
                     isActive ? (activeIcon ?? icon) : icon,
                     key: ValueKey(isActive),
@@ -299,40 +346,48 @@ class NotificationBadge extends GetWidget<NotificationsController> {
     return Obx(() {
       final numberOfUnreadNotifications =
           controller.numberOfUnreadNotifications.value;
-      return numberOfUnreadNotifications > 0
-          ? Positioned(
-              right: 2,
-              top: -4,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                decoration: BoxDecoration(
-                  color: _badgeColor,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: ColorName.navbarBackground,
-                    width: 2,
+      return Positioned(
+        right: 2,
+        top: -4,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) =>
+              ScaleTransition(scale: animation, child: child),
+          child: numberOfUnreadNotifications > 0
+              ? Container(
+                  key: const ValueKey('badge'),
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  decoration: BoxDecoration(
+                    color: _badgeColor,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: ColorName.navbarBackground,
+                      width: 2,
+                    ),
                   ),
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 20,
-                  minHeight: 18,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  numberOfUnreadNotifications > 99
-                      ? '99+'
-                      : numberOfUnreadNotifications.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    height: 1.1,
-                    fontWeight: FontWeight.w700,
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 18,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          : const SizedBox.shrink();
+                  alignment: Alignment.center,
+                  child: AppRollingText(
+                    numberOfUnreadNotifications > 99
+                        ? '99+'
+                        : numberOfUnreadNotifications.toString(),
+                    alignment: Alignment.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      height: 1.1,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(key: ValueKey('none')),
+        ),
+      );
     });
   }
 }

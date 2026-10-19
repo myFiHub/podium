@@ -6,8 +6,10 @@ import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_sheet.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:pulsator/pulsator.dart';
 
 class MemberAvatar extends StatelessWidget {
@@ -53,7 +55,6 @@ class MemberAvatar extends StatelessWidget {
           _VoiceRing(
             uuid: member.uuid,
             ring: ring,
-            size: size,
             speaking: speaking,
             child: Img(
               src: memberAvatar(member),
@@ -78,11 +79,13 @@ class MemberAvatar extends StatelessWidget {
             Positioned(
               bottom: 0,
               right: 0,
-              child: _Badge(
-                color: speaking ? callSpeakingColor : ColorName.cardBackground,
-                icon: speaking ? Icons.mic_rounded : Icons.mic_off_rounded,
-                iconColor: speaking ? Colors.black : ColorName.greyText,
-              ),
+              child: speaking
+                  ? _LiveMicBadge(uuid: member.uuid)
+                  : const _Badge(
+                      color: ColorName.cardBackground,
+                      icon: Icons.mic_off_rounded,
+                      iconColor: ColorName.greyText,
+                    ),
             ),
         ],
       ),
@@ -93,45 +96,31 @@ class MemberAvatar extends StatelessWidget {
 class _VoiceRing extends StatelessWidget {
   final String uuid;
   final double ring;
-  final double size;
   final bool speaking;
   final Widget child;
   const _VoiceRing({
     required this.uuid,
     required this.ring,
-    required this.size,
     required this.speaking,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    final room = findCallRoom();
-    Widget ringFor(double level) => AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: EdgeInsets.all(ring),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: speaking || level > 0.05
-                  ? callSpeakingColor
-                  : ColorName.cardBorder,
-              width: ring,
-            ),
-            boxShadow: level > 0.05
-                ? [
-                    BoxShadow(
-                      color: callSpeakingColor.withAlpha(140),
-                      blurRadius: 6 + level * size * 0.3,
-                      spreadRadius: level * size * 0.12,
-                    ),
-                  ]
-                : const [],
-          ),
-          child: child,
-        );
-    if (room == null) return ringFor(0);
-    return Obx(() => ringFor(room.levelOf(uuid)));
+    return VoiceLevelBuilder(
+      uuid: uuid,
+      builder: (context, level) => CustomPaint(
+        painter: VoiceHaloPainter(level: level, inset: ring * 2),
+        foregroundPainter: RingPainter(
+          strokeWidth: ring,
+          gradient: speaking || level > 0.05 ? AppGradients.ring : null,
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(ring * 2),
+          child: Transform.scale(scale: 1 + 0.05 * level, child: child),
+        ),
+      ),
+    );
   }
 }
 
@@ -144,15 +133,30 @@ class _HandBadge extends StatelessWidget {
     final room = findCallRoom();
     if (room == null) return const SizedBox.shrink();
     return Obx(() {
-      if (!room.isHandRaised(uuid)) return const SizedBox.shrink();
-      return Container(
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: callAccentColor,
-          shape: BoxShape.circle,
-          border: Border.all(color: ColorName.pageBackground, width: 2),
+      final raised = room.isHandRaised(uuid);
+      return AnimatedSwitcher(
+        duration: reduceMotion(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 320),
+        switchInCurve: Curves.elasticOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) => ScaleTransition(
+          scale: animation,
+          alignment: Alignment.bottomLeft,
+          child: child,
         ),
-        child: const Text('✋', style: TextStyle(fontSize: 11)),
+        child: raised
+            ? Container(
+                key: const ValueKey('hand'),
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: callAccentColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: ColorName.pageBackground, width: 2),
+                ),
+                child: const Text('✋', style: TextStyle(fontSize: 11)),
+              )
+            : const SizedBox.shrink(key: ValueKey('none')),
       );
     });
   }
@@ -178,6 +182,34 @@ class _Badge extends StatelessWidget {
         border: Border.all(color: ColorName.pageBackground, width: 2),
       ),
       child: Icon(icon, size: 12, color: iconColor),
+    );
+  }
+}
+
+/// Mic badge for an unmuted stage member: live voice bars instead of an icon.
+class _LiveMicBadge extends StatelessWidget {
+  final String uuid;
+  const _LiveMicBadge({required this.uuid});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: callSpeakingColor,
+        shape: BoxShape.circle,
+        border: Border.all(color: ColorName.pageBackground, width: 2),
+      ),
+      child: VoiceLevelBuilder(
+        uuid: uuid,
+        builder: (context, level) => VoiceBars(
+          level: level,
+          color: Colors.black,
+          height: 10,
+        ),
+      ),
     );
   }
 }
@@ -215,24 +247,55 @@ class MemberTile extends StatelessWidget {
                 showMicBadge: onStage,
               ),
               const SizedBox(height: 4),
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: onStage ? FontWeight.w600 : FontWeight.w400,
-                  color: isMe ? ColorName.primaryBlue : Colors.white,
-                ),
+              _MemberName(
+                uuid: member.uuid,
+                name: name,
+                onStage: onStage,
+                isMe: isMe,
               ),
-              if (onStage)
-                _TalkTimeLabel(member: member, isCreator: isCreator),
+              if (onStage) _TalkTimeLabel(member: member, isCreator: isCreator),
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+/// Name under an avatar; lights up while this member is the dominant speaker.
+class _MemberName extends StatelessWidget {
+  final String uuid;
+  final String name;
+  final bool onStage;
+  final bool isMe;
+  const _MemberName({
+    required this.uuid,
+    required this.name,
+    required this.onStage,
+    required this.isMe,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final room = findCallRoom();
+    final baseColor = isMe ? ColorName.primaryBlue : Colors.white;
+    Widget label(bool dominant) => AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: onStage || dominant ? FontWeight.w600 : FontWeight.w400,
+            color: dominant ? callSpeakingColor : baseColor,
+          ),
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+        );
+    if (room == null) return label(false);
+    return Obx(() => label(room.dominantSpeakerUuid.value == uuid));
   }
 }
 

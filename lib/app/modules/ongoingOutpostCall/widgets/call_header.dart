@@ -6,6 +6,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpos
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/control_dock.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:pulsator/pulsator.dart';
 
@@ -192,6 +193,7 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
       final String subtitle;
       final Color color;
       String? trailing;
+      var liveMic = false;
 
       if (!controller.isConferenceJoined.value) {
         icon = Icons.wifi_tethering_rounded;
@@ -222,6 +224,7 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
       } else {
         final low = session.remaining_time < 120;
         final idle = muted && !sharing;
+        liveMic = !muted && !sharing;
         icon = sharing
             ? Icons.screen_share_rounded
             : muted
@@ -241,8 +244,10 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
         trailing = formatTalkTime(session.remaining_time);
       }
 
-      return Container(
+      return AnimatedContainer(
         key: controller.timerKey,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
@@ -252,13 +257,34 @@ class MyStatusCard extends GetView<OngoingOutpostCallController> {
         ),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: color.withAlpha(30),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 20, color: color),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(scale: animation, child: child),
+                ),
+                child: liveMic
+                    ? VoiceLevelBuilder(
+                        key: const ValueKey('bars'),
+                        uuid: myId,
+                        builder: (context, level) => VoiceBars(
+                          level: level,
+                          color: color,
+                          height: 16,
+                          bars: 4,
+                        ),
+                      )
+                    : Icon(icon, key: ValueKey(icon), size: 20, color: color),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(

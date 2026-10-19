@@ -71,11 +71,15 @@ class OutpostsList extends GetView<OutpostsController> {
           addAutomaticKeepAlives: false,
           itemBuilder: (context, index) {
             final outpost = listToShow[index];
-            return _SingleOutpost(
+            return AppEntrance(
               key: ValueKey(outpost.uuid),
-              controller: controller,
-              amICreator: outpost.creator_user_uuid == myId,
-              outpost: outpost,
+              id: outpost.uuid,
+              index: index,
+              child: _SingleOutpost(
+                controller: controller,
+                amICreator: outpost.creator_user_uuid == myId,
+                outpost: outpost,
+              ),
             );
           },
         );
@@ -162,11 +166,15 @@ class _PaginatedOutpostsState extends State<_PaginatedOutposts> {
           addAutomaticKeepAlives: false,
           itemBuilder: (context, index) {
             final outpost = items[index];
-            return _SingleOutpost(
+            return AppEntrance(
               key: ValueKey(outpost.uuid),
-              controller: widget.controller,
-              amICreator: outpost.creator_user_uuid == myId,
-              outpost: outpost,
+              id: outpost.uuid,
+              index: index,
+              child: _SingleOutpost(
+                controller: widget.controller,
+                amICreator: outpost.creator_user_uuid == myId,
+                outpost: outpost,
+              ),
             );
           },
         ),
@@ -189,7 +197,6 @@ Future<void> _openOutpost(
 
 class _SingleOutpost extends StatelessWidget {
   const _SingleOutpost({
-    super.key,
     required this.controller,
     required this.amICreator,
     required this.outpost,
@@ -598,8 +605,7 @@ class _CardIconAction extends StatelessWidget {
         style: IconButton.styleFrom(
           fixedSize: const Size.square(38),
           minimumSize: const Size.square(38),
-          backgroundColor:
-              color == null ? AppColors.fill : fg.withAlpha(20),
+          backgroundColor: color == null ? AppColors.fill : fg.withAlpha(20),
           disabledBackgroundColor: AppColors.fill,
           foregroundColor: fg,
           disabledForegroundColor: fg.withAlpha(90),
@@ -625,16 +631,24 @@ class _EnterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AppGradientShell(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: _button(),
+    );
+  }
+
+  Widget _button() {
     return FilledButton(
       onPressed: loading ? null : onPressed,
       style: FilledButton.styleFrom(
         minimumSize: const Size(96, 38),
         padding: const EdgeInsets.symmetric(horizontal: 18),
         visualDensity: VisualDensity.compact,
-        backgroundColor: AppColors.primary,
+        backgroundColor: Colors.transparent,
         foregroundColor: AppColors.onPrimary,
-        disabledBackgroundColor: AppColors.primary.withAlpha(150),
+        disabledBackgroundColor: Colors.transparent,
         disabledForegroundColor: AppColors.onPrimary,
+        shadowColor: Colors.transparent,
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -677,68 +691,89 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
       final liveNumberOfActiveUsers =
           controller.mapOfOnlineUsersInOutposts.value[outpost.uuid];
 
-      if ((liveNumberOfActiveUsers ?? 0) == 0 && numberOfActiveUsers == 0) {
-        return const SizedBox.shrink();
-      }
-
+      final isLive =
+          (liveNumberOfActiveUsers ?? 0) != 0 || numberOfActiveUsers != 0;
       final count = liveNumberOfActiveUsers ?? numberOfActiveUsers;
-      return Padding(
-        padding: EdgeInsets.only(top: topGap),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(4, 3, 10, 3),
-          decoration: BoxDecoration(
-            color: AppColors.live.withAlpha(26),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.live.withAlpha(70)),
+      return AnimatedSwitcher(
+        duration: reduceMotion(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 260),
+        switchInCurve: Curves.easeOutBack,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: animation,
+            alignment: Alignment.centerRight,
+            child: child,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: RepaintBoundary(
-                  child: Pulsator(
-                    style: PulseStyle(color: AppColors.live),
-                    duration: Duration(seconds: 2),
-                    count: 2,
-                    repeat: 0,
-                    startFromScratch: false,
-                    autoStart: true,
-                    fit: PulseFit.contain,
-                    child: Icon(
-                      Icons.circle,
-                      size: 6,
-                      color: AppColors.live,
-                    ),
+        ),
+        child: isLive
+            ? _liveBadge(count)
+            : const SizedBox.shrink(key: ValueKey('offline')),
+      );
+    });
+  }
+
+  Widget _liveBadge(int count) {
+    return Padding(
+      key: const ValueKey('live'),
+      padding: EdgeInsets.only(top: topGap),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(4, 3, 10, 3),
+        decoration: BoxDecoration(
+          color: AppColors.live.withAlpha(26),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.live.withAlpha(70)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: RepaintBoundary(
+                child: Pulsator(
+                  style: PulseStyle(color: AppColors.live),
+                  duration: Duration(seconds: 2),
+                  count: 2,
+                  repeat: 0,
+                  startFromScratch: false,
+                  autoStart: true,
+                  fit: PulseFit.contain,
+                  child: Icon(
+                    Icons.circle,
+                    size: 6,
+                    color: AppColors.live,
                   ),
                 ),
               ),
-              const SizedBox(width: 3),
-              const Text(
-                'LIVE',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.6,
-                  color: AppColors.live,
-                ),
+            ),
+            const SizedBox(width: 3),
+            const Text(
+              'LIVE',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+                color: AppColors.live,
               ),
-              const SizedBox(width: 6),
-              Text(
-                '$count',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
+            ),
+            const SizedBox(width: 6),
+            AppRollingText(
+              '$count',
+              alignment: Alignment.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    });
+      ),
+    );
   }
 }
 
@@ -770,9 +805,8 @@ class _ScheduledBanner extends StatelessWidget {
           final isStarted =
               outpost.scheduled_for < DateTime.now().millisecondsSinceEpoch;
           final color = isStarted ? AppColors.success : AppColors.accent;
-          final text = isStarted
-              ? remaining
-              : 'In ${remaining.replaceAll(' d,', 'd ')}';
+          final text =
+              isStarted ? remaining : 'In ${remaining.replaceAll(' d,', 'd ')}';
           // Ticks every second; keep its repaints off the card.
           return RepaintBoundary(
             child: Container(
@@ -928,24 +962,36 @@ class SingleTag extends StatelessWidget {
     super.key,
   });
 
+  static const _palette = [
+    AppColors.primary,
+    Color(0xFFB79BFF),
+    Color(0xFFFF8AE6),
+  ];
+
+  Color get _color {
+    final sum = tagName.codeUnits.fold<int>(0, (a, b) => a + b);
+    return _palette[sum % _palette.length];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final color = _color;
     return Container(
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       margin: const EdgeInsets.only(right: 6),
       decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha(18),
+        color: color.withAlpha(22),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.primary.withAlpha(45)),
+        border: Border.all(color: color.withAlpha(55)),
       ),
       child: Text(
         tagName,
         maxLines: 1,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppColors.primary,
+          color: color,
         ),
       ),
     );

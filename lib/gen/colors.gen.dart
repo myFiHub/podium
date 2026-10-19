@@ -14,6 +14,12 @@ import 'package:flutter/material.dart';
 class ColorName {
   ColorName._();
 
+  /// Color: #FF4FD8
+  static const Color auroraMagenta = Color(0xFFFF4FD8);
+
+  /// Color: #8B5CF6
+  static const Color auroraViolet = Color(0xFF8B5CF6);
+
   /// Color: #000000
   static const Color black = Color(0xFF000000);
 
@@ -32,11 +38,11 @@ class ColorName {
   /// Color: #C1C1C4
   static const Color greyText = Color(0xFFC1C1C4);
 
-  /// Color: #161D2C
-  static const Color navbarBackground = Color(0xFF161D2C);
+  /// Color: #0E0E26
+  static const Color navbarBackground = Color(0xFF0E0E26);
 
-  /// Color: #141422
-  static const Color pageBackground = Color(0xFF141422);
+  /// Color: #0B0B1E
+  static const Color pageBackground = Color(0xFF0B0B1E);
 
   /// Color: #151523
   static const Color pageBgGradientEnd = Color(0xFF151523);
@@ -122,8 +128,8 @@ class ColorName {
   /// Color: #3DDC97
   static const Color success = Color(0xFF3DDC97);
 
-  /// Color: #245A6C
-  static const Color systemTrayBackground = Color(0xFF245A6C);
+  /// Color: #0B0B1E
+  static const Color systemTrayBackground = Color(0xFF0B0B1E);
 
   /// Color: #FFC857
   static const Color warning = Color(0xFFFFC857);

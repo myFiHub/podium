@@ -1,13 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/chat_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/more_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/voice_level.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -195,7 +199,7 @@ class MicButton extends GetView<OngoingOutpostCallController> {
       final Color foreground = disabled
           ? ColorName.greyText
           : live
-              ? Colors.black
+              ? Colors.white
               : ColorName.pageBackground;
       final label = connecting
           ? 'Connecting'
@@ -207,76 +211,104 @@ class MicButton extends GetView<OngoingOutpostCallController> {
                       ? 'Live'
                       : 'Tap to talk';
 
+      final button = AnimatedContainer(
+        key: controller.muteUnmuteKey,
+        duration: const Duration(milliseconds: 200),
+        width: 68,
+        height: 68,
+        decoration: BoxDecoration(
+          color: live ? null : background,
+          gradient: live ? AppGradients.aurora : null,
+          shape: BoxShape.circle,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              if (connecting) {
+                Toast.info(
+                  title: 'Connecting…',
+                  message: 'You can talk as soon as you are connected',
+                );
+                return;
+              }
+              if (!canTalk) {
+                Toast.info(
+                  title: "You're a listener",
+                  message: "You can't speak in this outpost",
+                );
+                return;
+              }
+              if (outOfTime && muted) {
+                Toast.error(
+                  title: "You've run out of time",
+                  message: 'Likes and cheers add more talk time',
+                );
+                return;
+              }
+              controller.setMutedState(!muted);
+            },
+            child: connecting
+                ? const Center(
+                    child: SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: ColorName.greyText,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    disabled || muted
+                        ? Icons.mic_off_rounded
+                        : Icons.mic_rounded,
+                    size: 30,
+                    color: foreground,
+                  ),
+          ),
+        ),
+      );
+
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AnimatedContainer(
-            key: controller.muteUnmuteKey,
-            duration: const Duration(milliseconds: 200),
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: background,
-              shape: BoxShape.circle,
-              boxShadow: live
-                  ? [
-                      BoxShadow(
-                        color: callSpeakingColor.withAlpha(110),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : const [],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () {
-                  HapticFeedback.mediumImpact();
-                  if (connecting) {
-                    Toast.info(
-                      title: 'Connecting…',
-                      message: 'You can talk as soon as you are connected',
-                    );
-                    return;
-                  }
-                  if (!canTalk) {
-                    Toast.info(
-                      title: "You're a listener",
-                      message: "You can't speak in this outpost",
-                    );
-                    return;
-                  }
-                  if (outOfTime && muted) {
-                    Toast.error(
-                      title: "You've run out of time",
-                      message: 'Likes and cheers add more talk time',
-                    );
-                    return;
-                  }
-                  controller.setMutedState(!muted);
-                },
-                child: connecting
-                    ? const Center(
-                        child: SizedBox(
-                          width: 26,
-                          height: 26,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: ColorName.greyText,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        disabled || muted
-                            ? Icons.mic_off_rounded
-                            : Icons.mic_rounded,
-                        size: 30,
-                        color: foreground,
-                      ),
-              ),
+          VoiceLevelBuilder(
+            uuid: myId,
+            builder: (context, level) => AppBreathing(
+              active: live,
+              builder: (context, breath) {
+                final v = live ? math.max(breath * 0.5, level * 1.4) : 0.0;
+                final glow = v.clamp(0.0, 1.0);
+                return Transform.scale(
+                  scale: 1 + (live ? 0.06 * level : 0),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: live
+                          ? [
+                              BoxShadow(
+                                color: AppColors.violet
+                                    .withAlpha(70 + (90 * glow).round()),
+                                blurRadius: 16 + 18 * glow,
+                                spreadRadius: 1 + 6 * glow,
+                              ),
+                              BoxShadow(
+                                color: AppColors.primary
+                                    .withAlpha(40 + (60 * glow).round()),
+                                blurRadius: 12,
+                                offset: const Offset(-4, -2),
+                              ),
+                            ]
+                          : const [],
+                    ),
+                    child: button,
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 4),
@@ -285,7 +317,7 @@ class MicButton extends GetView<OngoingOutpostCallController> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: live ? callSpeakingColor : ColorName.greyText,
+              color: live ? const Color(0xFFB79BFF) : ColorName.greyText,
             ),
           ),
         ],

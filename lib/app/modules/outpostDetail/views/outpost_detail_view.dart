@@ -145,24 +145,35 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
                 child: CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(
-                      child: _HeroCard(outpost: outpost, iAmOwner: iAmOwner),
+                      child: AppEntrance(
+                        child: _HeroCard(outpost: outpost, iAmOwner: iAmOwner),
+                      ),
                     ),
                     if (isScheduled && iAmOwner)
                       const SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                          child: ScheduledTimer(),
+                        child: AppEntrance(
+                          index: 1,
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                            child: ScheduledTimer(),
+                          ),
                         ),
                       ),
                     const SliverToBoxAdapter(
-                      child: AppSectionHeader(title: 'About this outpost'),
+                      child: AppEntrance(
+                        index: 2,
+                        child: AppSectionHeader(title: 'About this outpost'),
+                      ),
                     ),
                     SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: _AccessInfo(
-                          outpost: outpost,
-                          iAmOwner: iAmOwner,
+                      child: AppEntrance(
+                        index: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _AccessInfo(
+                            outpost: outpost,
+                            iAmOwner: iAmOwner,
+                          ),
                         ),
                       ),
                     ),
@@ -412,8 +423,7 @@ class _InfoTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(label.toUpperCase(),
-                    style: AppText.label),
+                Text(label.toUpperCase(), style: AppText.label),
                 const SizedBox(height: 3),
                 Text(
                   value,
@@ -793,9 +803,8 @@ class SetReminderButton extends GetView<OutpostDetailController> {
           color: AppColors.accent,
         ),
         title: text,
-        subtitle: isSet
-            ? 'Tap to change'
-            : 'Get notified before the outpost starts',
+        subtitle:
+            isSet ? 'Tap to change' : 'Get notified before the outpost starts',
         trailing: isSettingReminder ? const LoadingWidget(size: 14) : null,
       );
     });
@@ -837,19 +846,29 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
               }
             }
           : null;
+      final useGradient = !isRegistered && (enabled || isJoining);
       final background = isRegistered
           ? AppColors.success.withAlpha(36)
-          : AppColors.primary;
+          : useGradient
+              ? Colors.transparent
+              : AppColors.primary;
+      final radius = BorderRadius.circular(AppRadius.lg);
 
-      return FilledButton(
+      final button = FilledButton(
         onPressed: isJoining ? null : onPressed,
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           backgroundColor: background,
-          foregroundColor: isRegistered ? AppColors.success : Colors.white,
-          disabledBackgroundColor:
-              isJoining ? background.withAlpha(150) : AppColors.fill,
+          foregroundColor: isRegistered
+              ? AppColors.success
+              : useGradient
+                  ? AppColors.onPrimary
+                  : Colors.white,
+          shadowColor: Colors.transparent,
+          disabledBackgroundColor: isJoining
+              ? (useGradient ? Colors.transparent : background.withAlpha(150))
+              : AppColors.fill,
           disabledForegroundColor: Colors.white.withAlpha(150),
           side: isRegistered
               ? BorderSide(color: AppColors.success.withAlpha(140))
@@ -860,12 +879,12 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
           ),
         ),
         child: isJoining
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.2,
-                  color: Colors.white,
+                  color: useGradient ? AppColors.onPrimary : Colors.white,
                 ),
               )
             : Row(
@@ -909,6 +928,11 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
                   ],
                 ],
               ),
+      );
+      if (!useGradient) return button;
+      return AppGradientShell(
+        borderRadius: radius,
+        child: AppSheen(borderRadius: radius, child: button),
       );
     });
   }

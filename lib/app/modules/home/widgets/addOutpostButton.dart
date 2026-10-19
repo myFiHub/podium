@@ -26,50 +26,60 @@ class _AddOutpostButtonState extends State<AddOutpostButton> {
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppRadius.md);
     return Tooltip(
       message: 'Start new outpost',
-      child: Material(
-        color: AppColors.primary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            Navigate.to(
-              type: NavigationTypes.toNamed,
-              route: Routes.CREATE_OUTPOST,
-            );
-          },
-          child: SizedBox(
-            height: 40,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: AnimatedSize(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeInOutCubic,
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.add_rounded,
-                        color: AppColors.onPrimary, size: 20),
-                    if (_showText) ...[
-                      const SizedBox(width: 6),
-                      const Text(
-                        "Start new outpost",
-                        maxLines: 1,
-                        overflow: TextOverflow.fade,
-                        softWrap: false,
-                        style: TextStyle(
-                          color: AppColors.onPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+      child: AppGradientShell(
+        borderRadius: radius,
+        child: AppSheen(
+          borderRadius: radius,
+          child: Material(
+            color: Colors.transparent,
+            shape: RoundedRectangleBorder(borderRadius: radius),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                Navigate.to(
+                  type: NavigationTypes.toNamed,
+                  route: Routes.CREATE_OUTPOST,
+                );
+              },
+              child: SizedBox(
+                height: 36,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOutCubic,
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AnimatedRotation(
+                          turns: _showText ? 0 : 0.25,
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeInOutCubic,
+                          child: const Icon(Icons.add_rounded,
+                              color: AppColors.onPrimary, size: 20),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                  ],
+                        if (_showText) ...[
+                          const SizedBox(width: 6),
+                          const Text(
+                            "Start new outpost",
+                            maxLines: 1,
+                            overflow: TextOverflow.fade,
+                            softWrap: false,
+                            style: TextStyle(
+                              color: AppColors.onPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),

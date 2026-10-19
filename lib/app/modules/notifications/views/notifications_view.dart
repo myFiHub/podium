@@ -21,9 +21,8 @@ class NotificationsView extends GetView<NotificationsController> {
               final unread = controller.numberOfUnreadNotifications.value;
               return AppPageHeader(
                 title: 'Alerts',
-                subtitle: unread == 0
-                    ? "You're all caught up"
-                    : '$unread unread',
+                subtitle:
+                    unread == 0 ? "You're all caught up" : '$unread unread',
                 padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
               );
             }),
@@ -39,10 +38,14 @@ class NotificationsView extends GetView<NotificationsController> {
                   itemCount: notifications.length,
                   itemBuilder: (context, index) {
                     final notif = notifications[index];
-                    return NotificationCard(
+                    return AppEntrance(
                       key: ValueKey(notif.uuid),
-                      notification: notif,
-                      controller: controller,
+                      id: 'notification_${notif.uuid}',
+                      index: index,
+                      child: NotificationCard(
+                        notification: notif,
+                        controller: controller,
+                      ),
                     );
                   },
                 );
@@ -149,14 +152,21 @@ class NotificationCard extends StatelessWidget {
               ),
             ],
           ),
-          if (!isRead || isInvite) ...[
-            const SizedBox(height: 12),
-            NotificationActions(
-              key: ValueKey('actions_${notification.uuid}'),
-              notification: notification,
-              controller: controller,
-            ),
-          ],
+          AnimatedSize(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: !isRead || isInvite
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: NotificationActions(
+                      key: ValueKey('actions_${notification.uuid}'),
+                      notification: notification,
+                      controller: controller,
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
         ],
       ),
     );
@@ -240,10 +250,21 @@ class NotificationHeader extends StatelessWidget {
             title: title,
           ),
         ),
-        if (!isRead) ...[
-          const SizedBox(width: 8),
-          const AppPill(label: 'NEW', color: AppColors.primary),
-        ],
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 240),
+          switchInCurve: Curves.easeOutBack,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(scale: animation, child: child),
+          ),
+          child: isRead
+              ? const SizedBox.shrink(key: ValueKey('read'))
+              : const Padding(
+                  key: ValueKey('new'),
+                  padding: EdgeInsets.only(left: 8),
+                  child: AppPill(label: 'NEW', color: AppColors.primary),
+                ),
+        ),
       ],
     );
   }

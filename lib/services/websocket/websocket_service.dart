@@ -48,6 +48,8 @@ class WebSocketService {
   static const int _maxReconnectAttempts = 20;
   static const Duration _baseReconnectDelay = Duration(seconds: 1);
   static const Duration _maxReconnectDelay = Duration(seconds: 30);
+  static const Duration _connectTimeout = Duration(seconds: 10);
+  static const Duration _closeTimeout = Duration(seconds: 2);
 
   WebSocketService._();
 
@@ -79,7 +81,7 @@ class WebSocketService {
       l.d('Connecting to WebSocket: ${uri.toString().replaceAll(token, '***')}');
 
       _channel = WebSocketChannel.connect(uri);
-      await _channel!.ready;
+      await _channel!.ready.timeout(_connectTimeout);
 
       _setState(WebSocketState.connected);
       _reconnectAttempts = 0;
@@ -354,13 +356,14 @@ class WebSocketService {
   }
 
   Future<void> _closeChannel() async {
-    if (_channel != null) {
-      try {
-        await _channel!.sink.close();
-      } catch (e) {
-        l.w('Error closing channel: $e');
-      }
-      _channel = null;
+    final channel = _channel;
+    if (channel == null) return;
+    _channel = null;
+    try {
+      // sink.close() never completes on a channel that failed to connect.
+      await channel.sink.close().timeout(_closeTimeout);
+    } catch (e) {
+      l.w('Error closing channel: $e');
     }
   }
 

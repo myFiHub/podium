@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/services/server_features.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -201,19 +202,27 @@ class HostDashboardButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: AppSettingsRow(
-        icon: Icons.insights_rounded,
-        iconColor: AppColors.violet,
-        title: 'Host dashboard',
-        subtitle: 'Listeners, retention, earnings and best time to go live',
-        onTap: () => Navigate.to(
-          type: NavigationTypes.toNamed,
-          route: Routes.HOST_DASHBOARD,
+    return Obx(() {
+      if (!Get.find<ServerFeatures>().discovery.value) {
+        return const SizedBox.shrink();
+      }
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: AppCard(
+          padding: EdgeInsets.zero,
+          child: AppSettingsRow(
+            icon: Icons.insights_rounded,
+            iconColor: AppColors.violet,
+            title: 'Host dashboard',
+            subtitle: 'Listeners, retention, earnings and best time to go live',
+            onTap: () => Navigate.to(
+              type: NavigationTypes.toNamed,
+              route: Routes.HOST_DASHBOARD,
+            ),
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
 

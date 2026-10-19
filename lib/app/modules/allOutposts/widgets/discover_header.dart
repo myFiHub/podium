@@ -6,6 +6,7 @@ import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/providers/api/podium/models/discovery/discovery_models.dart';
+import 'package:podium/services/server_features.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
@@ -19,16 +20,21 @@ class DiscoverHeader extends GetView<DiscoverController> {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _TagsRail(),
-        _FollowingRail(),
-        _LiveRail(),
-        _TrendingRail(),
-        AppSectionHeader(title: 'All outposts'),
-      ],
-    );
+    return Obx(() {
+      if (!Get.find<ServerFeatures>().discovery.value) {
+        return const SizedBox.shrink();
+      }
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TagsRail(),
+          _FollowingRail(),
+          _LiveRail(),
+          _TrendingRail(),
+          AppSectionHeader(title: 'All outposts'),
+        ],
+      );
+    });
   }
 }
 

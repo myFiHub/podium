@@ -10,6 +10,7 @@ import 'package:podium/app/services/image_service.dart';
 import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/services/call_overlay/call_overlay.dart';
+import 'package:podium/services/server_features.dart';
 
 // Repositories are stateless; fenix lets smart management drop and recreate
 // them freely. They must come before the controllers that find them.
@@ -34,6 +35,7 @@ final globalBindings = [
     ),
     fenix: true,
   ),
+  Bind.put<ServerFeatures>(ServerFeatures(), permanent: true),
   Bind.put<GlobalController>(GlobalController(), permanent: true),
   Bind.put<OutpostsController>(OutpostsController(), permanent: true),
   Bind.put<UsersController>(UsersController(), permanent: true),

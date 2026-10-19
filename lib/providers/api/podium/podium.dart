@@ -425,6 +425,17 @@ class PodiumApi {
     );
   }
 
+  /// Whether the server has the discovery and host analytics endpoints:
+  /// `false` on a 404, `null` when the server couldn't be asked.
+  Future<bool?> probeDiscovery() async {
+    try {
+      await _attempt(() => _getData('/discover/tags', query: {'limit': 1}));
+      return true;
+    } on ApiFailure catch (e) {
+      return e.statusCode == 404 ? false : null;
+    }
+  }
+
   /// Skips items that fail to parse, so one bad row can't empty a rail.
   Future<List<DiscoveredOutpost>> _getDiscovered(
     String path, {

@@ -13,6 +13,7 @@ import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart'
 import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/services/server_features.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:shimmer/shimmer.dart';
@@ -249,20 +250,25 @@ class OutpostAnalyticsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _OutpostActionRow(
-      onTap: () => openHostOutpostAnalytics(
-        uuid: outpost.uuid,
-        name: outpost.name,
-      ),
-      leading: AppIconTile(
-        size: 36,
-        circle: true,
-        icon: Icons.insights_rounded,
-        color: AppColors.violet,
-      ),
-      title: 'Outpost analytics',
-      subtitle: 'Listeners, retention and earnings per session',
-    );
+    return Obx(() {
+      if (!Get.find<ServerFeatures>().discovery.value) {
+        return const SizedBox.shrink();
+      }
+      return _OutpostActionRow(
+        onTap: () => openHostOutpostAnalytics(
+          uuid: outpost.uuid,
+          name: outpost.name,
+        ),
+        leading: AppIconTile(
+          size: 36,
+          circle: true,
+          icon: Icons.insights_rounded,
+          color: AppColors.violet,
+        ),
+        title: 'Outpost analytics',
+        subtitle: 'Listeners, retention and earnings per session',
+      );
+    });
   }
 }
 

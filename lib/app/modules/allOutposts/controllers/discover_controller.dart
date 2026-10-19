@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/discovery/discovery_models.dart';
+import 'package:podium/services/server_features.dart';
 
 /// The Explore route is rebuilt on every navbar visit, so results outlive the
 /// controller to avoid refetching on each tab switch.
@@ -31,6 +32,7 @@ class DiscoverController extends GetxController {
 
   final _repo = Get.find<OutpostRepository>();
   final _global = Get.find<GlobalController>();
+  final _features = Get.find<ServerFeatures>();
 
   final liveFromFollowings = Rx<List<DiscoveredOutpost>>(_cache.following);
   final liveNow = Rx<List<DiscoveredOutpost>>(_cache.live);
@@ -45,10 +47,12 @@ class DiscoverController extends GetxController {
   Timer? _pollTimer;
   Worker? _lifecycleWorker;
   Worker? _loginWorker;
+  Worker? _featureWorker;
   bool _liveInFlight = false;
   int _trendingRequest = 0;
 
   bool get _loggedIn => _global.myUserInfo.value != null;
+  bool get _supported => _features.discovery.value;
 
   @override
   void onInit() {
@@ -67,6 +71,9 @@ class DiscoverController extends GetxController {
       },
     );
     _loginWorker = ever(_global.myUserInfo, (_) => _loadLive(force: true));
+    _featureWorker = ever<bool>(_features.discovery, (supported) {
+      if (supported) _loadAll(force: true);
+    });
     _loadAll();
     _startPolling();
   }
@@ -76,6 +83,7 @@ class DiscoverController extends GetxController {
     _pollTimer?.cancel();
     _lifecycleWorker?.dispose();
     _loginWorker?.dispose();
+    _featureWorker?.dispose();
     super.onClose();
   }
 
@@ -85,6 +93,10 @@ class DiscoverController extends GetxController {
   }
 
   Future<void> _loadAll({bool force = false}) async {
+    if (!_supported) {
+      isFirstLoad.value = false;
+      return;
+    }
     await Future.wait([
       _loadLive(force: force),
       _loadTrending(force: force),
@@ -94,13 +106,20 @@ class DiscoverController extends GetxController {
   }
 
   /// Pull-to-refresh and the page refresh button.
-  Future<void> refreshAll() => _loadAll(force: true);
+  Future<void> refreshAll() async {
+    if (!_supported) await _features.probe();
+    await _loadAll(force: true);
+  }
 
   bool _fresh(DateTime? at, Duration ttl) =>
       at != null && DateTime.now().difference(at) < ttl;
 
   Future<void> _loadLive({bool force = false}) async {
-    if (_liveInFlight || (!force && _fresh(_cache.liveAt, _liveTtl))) return;
+    if (!_supported ||
+        _liveInFlight ||
+        (!force && _fresh(_cache.liveAt, _liveTtl))) {
+      return;
+    }
     _liveInFlight = true;
     try {
       final results = await Future.wait([

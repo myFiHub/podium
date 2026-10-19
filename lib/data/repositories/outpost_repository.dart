@@ -45,6 +45,8 @@ class OutpostRepository {
   }) =>
       _api.fetchOutpostsByTagId(id: id, page: page, page_size: page_size);
 
+  Future<bool?> probeDiscovery() => _api.probeDiscovery();
+
   Future<List<DiscoveredOutpost>> getLiveOutposts({int? limit}) =>
       _api.getLiveOutposts(limit: limit);
 

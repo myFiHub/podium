@@ -4,20 +4,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
+import 'package:podium/app/modules/createOutpost/luma_event.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/join_outpost_flow.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/data/repositories/repositories.dart';
-import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
 import 'package:podium/providers/api/luma/models/addHost.dart';
-import 'package:podium/providers/api/luma/models/createEvent.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
@@ -304,59 +302,6 @@ class OutpostsController extends GetxController {
     );
   }
 
-  Future<String?> _createLumaEvent({
-    required String outpostId,
-    required int scheduledFor,
-    required String outpostName,
-    required List<AddHostModel> lumaHosts,
-    required List<AddGuestModel> lumaGuests,
-  }) async {
-    try {
-      final isoDate = DateTime.fromMillisecondsSinceEpoch(scheduledFor)
-          .toUtc()
-          .toIso8601String();
-      final oneHourAfter =
-          DateTime.fromMillisecondsSinceEpoch(scheduledFor + 60 * 60 * 1000)
-              .toUtc()
-              .toIso8601String();
-      final lumaEvent = LumaCreateEvent(
-        name: outpostName,
-        start_at: isoDate,
-        end_at: oneHourAfter,
-        timezone: 'UTC',
-        meeting_url: generateOutpostShareUrl(outpostId: outpostId),
-      );
-      final createdEvent = await HttpApis.lumaApi.createEvent(event: lumaEvent);
-      if (createdEvent != null) {
-        final eventId = createdEvent.event.api_id;
-        final Map<String, Future<bool?>> addHostsCallMap = {};
-        for (var host in lumaHosts) {
-          addHostsCallMap[host.email] = HttpApis.lumaApi.addHost(
-            host: AddHostModel(
-              event_api_id: eventId,
-              email: host.email,
-              name: host.name,
-            ),
-          );
-        }
-        // since we are adding hosts and guests in parallel, we need to wait for all of them to finish,
-        // ignoring the failed ones, since we always can add them later
-        await allSettled(addHostsCallMap);
-        final GuestsAdded = await HttpApis.lumaApi.addGuests(
-          eventId: eventId,
-          guests: lumaGuests,
-        );
-        if (GuestsAdded == true) {
-          Toast.success(message: 'Luma Event Created');
-          return eventId;
-        }
-      }
-    } catch (e) {
-      l.e(e);
-    }
-    return null;
-  }
-
   Future<OutpostModel?> createOutpost({
     required String name,
     required String accessType,
@@ -407,12 +352,12 @@ class OutpostsController extends GetxController {
 
       if (response != null) {
         if (shouldCreateLumaEvent) {
-          final lumaEventId = await _createLumaEvent(
+          final lumaEventId = await createLumaEventForOutpost(
             outpostId: response.uuid,
-            scheduledFor: scheduledFor,
             outpostName: name,
-            lumaHosts: lumaHosts,
-            lumaGuests: lumaGuests,
+            scheduledFor: scheduledFor,
+            hosts: lumaHosts,
+            guests: lumaGuests,
           );
           if (lumaEventId == null) {
             Toast.error(message: 'Failed to create Luma Event');

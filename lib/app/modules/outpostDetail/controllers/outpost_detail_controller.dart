@@ -446,6 +446,7 @@ class OutpostDetailController extends GetxController {
     if (globalController.loggedIn.value) {
       groupsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: id,
+        joiningByLink: true,
       );
     } else {
       Get.offAllNamed(Routes.LOGIN);
@@ -453,6 +454,7 @@ class OutpostDetailController extends GetxController {
       loginController.afterLogin = () {
         groupsController.joinOutpostAndOpenOutpostDetailPage(
           outpostId: id,
+          joiningByLink: true,
         );
       };
     }

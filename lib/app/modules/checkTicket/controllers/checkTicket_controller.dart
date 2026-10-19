@@ -98,6 +98,7 @@ class CheckticketController extends GetxController {
 
   final loadingUsers = false.obs;
   final outpost = Rxn<OutpostModel>();
+  bool joiningByLink = false;
 
   @override
   void onInit() {
@@ -711,7 +712,7 @@ class CheckticketController extends GetxController {
 
   bool get canEnterWithoutTicket {
     final g = outpost.value!;
-    return canEnterWithoutATicket(g);
+    return canEnterWithoutATicket(g, joiningByLink: joiningByLink);
   }
 
   Future<OutpostAccesses> checkIfIveBoughtTheTicketFromUser(
@@ -868,22 +869,23 @@ speakIsBuyableByTicket(OutpostModel group) {
       groupSpeakType == BuyableTicketTypes.onlyPodiumPassHolders;
 }
 
-canEnterWithoutATicket(OutpostModel group) {
-  final globalController = Get.find<GlobalController>();
+bool canEnterWithoutATicket(OutpostModel group, {bool joiningByLink = false}) {
   final g = group;
-  final amIInvited = g.i_am_member;
-  final link = globalController.deepLinkRoute;
-  final cameHereByLink = g.enter_type == FreeOutpostAccessTypes.onlyLink &&
-      link.isNotEmpty &&
-      link.contains(g.uuid);
-  if (g.enter_type == FreeOutpostAccessTypes.onlyLink) {
-    return cameHereByLink;
-  }
-  if (g.enter_type == FreeOutpostAccessTypes.invited_users) {
-    return amIInvited;
+  if (g.i_am_member) {
+    return true;
   }
   if (g.enter_type == FreeOutpostAccessTypes.public) {
     return true;
   }
+  if (g.enter_type == FreeOutpostAccessTypes.onlyLink) {
+    return joiningByLink;
+  }
+  if (g.enter_type == FreeOutpostAccessTypes.invited_users) {
+    return isInvitedToOutpost(g);
+  }
   return false;
+}
+
+bool isInvitedToOutpost(OutpostModel group) {
+  return group.invites?.any((e) => e.invitee_uuid == myId) ?? false;
 }

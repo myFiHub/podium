@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -219,27 +218,36 @@ class OutpostCallController extends GetxController {
     reactions[userAddress]![type] = (reactions[userAddress]![type] ?? 0) + 1;
   }
 
+  /// Bumped when the local countdown changes talk times. Times are updated in
+  /// place, so widgets showing them listen to this instead of [members],
+  /// which keeps the whole member grid from rebuilding every second.
+  final talkTimeTick = 0.obs;
+
   void handleTimerTick() {
     final creatorUuid = outpost.value?.creator_user_uuid;
-    final talkingMembers =
-        members.value.where((member) => member.is_speaking == true);
-    talkingMembers.forEach((member) {
-      final userIndex = members.value.indexWhere((m) => m.uuid == member.uuid);
-      if (member.remaining_time > 0 && member.uuid != creatorUuid) {
-        members.value[userIndex].remaining_time--;
-        members.refresh();
+    var changed = false;
+    for (final member in members.value) {
+      if (member.is_speaking == true &&
+          member.remaining_time > 0 &&
+          member.uuid != creatorUuid) {
+        member.remaining_time--;
+        changed = true;
       }
-      // REVIEW: the rest is handled in ongoing_outpost_call_controller.dart , listening to members list
-    });
+    }
+    // REVIEW: running out of time is handled in ongoing_outpost_call_controller.dart
+    if (changed) talkTimeTick.value++;
   }
 
   /// don't use withRetry, use withJoin only, if needed
   void fetchLiveData({bool? withRetry = true, bool? withJoin = false}) async {
     if (outpost.value == null) return;
 
+    final seq = ++_liveDataSeq;
     final liveData =
         await HttpApis.podium.getLatestLiveData(outpostId: outpost.value!.uuid);
     if (liveData == null) {
+      // A newer request is in flight and will decide.
+      if (seq != _liveDataSeq && withJoin != true) return;
       final isOutpostCallControllerRegistered =
           Get.isRegistered<OutpostCallController>();
       if (isOutpostCallControllerRegistered) {
@@ -290,9 +298,14 @@ class OutpostCallController extends GetxController {
           }
         }
       }
+      // Responses can arrive out of order; an older one must not overwrite
+      // the members of a newer one.
+      if (seq != _liveDataSeq) return;
       members.value = tmp.where((member) => member.is_present == true).toList();
     }
   }
+
+  int _liveDataSeq = 0;
 
   void updateUserIsTalking({required String address, required bool isTalking}) {
     final membersList = [...members.value];
@@ -315,14 +328,10 @@ class OutpostCallController extends GetxController {
     }
   }
 
+  /// Keeps the server's order. Sorting by [LiveMember.last_speaked_at_timestamp]
+  /// would reorder the stage whenever someone starts talking.
   List<LiveMember> sortMembers({required List<LiveMember> members}) {
-    final sorted = [...members];
-    if (sortType.value == SortTypes.recentlyTalked) {
-      sorted.sortedByDescending((a) => a.last_speaked_at_timestamp ?? 0);
-    } else if (sortType.value == SortTypes.timeJoined) {
-      sorted.sortedByDescending((a) => a.last_speaked_at_timestamp ?? 0);
-    }
-    return sorted;
+    return [...members];
   }
 
   cleanupAfterCall() async {

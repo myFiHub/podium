@@ -126,7 +126,7 @@ class AllOutpostsList extends GetWidget<OutpostsController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final isGettingAllOutposts = controller.isGettingAllOutposts.value;
-      if (isGettingAllOutposts) {
+      if (isGettingAllOutposts && controller.outposts.value.isEmpty) {
         return ListView.builder(
           padding: const EdgeInsets.only(top: 4),
           physics: const NeverScrollableScrollPhysics(),

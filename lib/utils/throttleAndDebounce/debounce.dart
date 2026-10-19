@@ -30,12 +30,17 @@ final class Debouncing<T> extends Stream<DebouncingStatus>
   ///  Debouncing
   ///  Have method [debounce]
   /// Must be closed with [close] method
-  Debouncing({Duration duration = const Duration(seconds: 1)})
+  /// With [maxWait], a pending call runs at most that long after the first
+  /// call of a burst, even if calls keep coming.
+  Debouncing({Duration duration = const Duration(seconds: 1), this.maxWait})
       : assert(!duration.isNegative, 'Duration must be positive'),
         _duration = duration {
     _stateSC.sink.add(DebouncingStatus.idle);
   }
   Duration _duration;
+
+  final Duration? maxWait;
+  DateTime? _pendingSince;
 
   /// Get current duration
   Duration get duration => _duration;
@@ -72,9 +77,16 @@ final class Debouncing<T> extends Stream<DebouncingStatus>
     if (isIdle) _stateSC.sink.add(DebouncingStatus.busy);
     final completer = _completer ??= Completer<T?>();
     _timer?.cancel();
-    _timer = Timer(_duration, () {
+    final pendingSince = _pendingSince ??= DateTime.now();
+    var delay = _duration;
+    if (maxWait != null) {
+      final left = maxWait! - DateTime.now().difference(pendingSince);
+      if (left < delay) delay = left.isNegative ? Duration.zero : left;
+    }
+    _timer = Timer(delay, () {
       _completer = null;
       _timer = null;
+      _pendingSince = null;
       try {
         final result = func();
         completer.complete(result);
@@ -115,6 +127,7 @@ final class Debouncing<T> extends Stream<DebouncingStatus>
       _completer?.completeError(StateError('closed'));
       _timer = null;
       _completer = null;
+      _pendingSince = null;
     }
     // coverage:ignore-end
     _stateSC.close().ignore();

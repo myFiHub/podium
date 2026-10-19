@@ -118,7 +118,9 @@ class OutpostsController extends GetxController {
       if (loggedIn) {
         fetchAllOutpostsPage(0);
         fetchMyOutpostsPage(0);
-      } else {}
+      } else {
+        clearOutposts();
+      }
     });
   }
 
@@ -134,64 +136,71 @@ class OutpostsController extends GetxController {
     _loggedInListener?.cancel();
   }
 
+  static const _onlineCountMaxAge = Duration(seconds: 15);
+  final _onlineCountFetchedAt = <String, DateTime>{};
+
   void addOutpostToView(String outpostId) {
     mapOfOutpostsInView.value[outpostId] = true;
-    final List<String> ids = mapOfOutpostsInView.value.keys
-        .where((String e) => mapOfOutpostsInView.value[e] == true)
-        .toList();
     debounceForFetchingNumberOfOnlineMembers.debounce(() async {
-      final Map<String, Future<int>> calls = <String, Future<int>>{};
-      for (String id in ids) {
-        calls[id] = HttpApis.podium.getNumberOfOnlineMembers(id);
+      final now = DateTime.now();
+      final ids = mapOfOutpostsInView.value.keys.where((id) {
+        final fetchedAt = _onlineCountFetchedAt[id];
+        return fetchedAt == null ||
+            now.difference(fetchedAt) > _onlineCountMaxAge;
+      }).toList();
+      if (ids.isEmpty) return;
+      for (final id in ids) {
+        _onlineCountFetchedAt[id] = now;
       }
-      final results = await allSettled(calls);
-      final Map<String, int> map = <String, int>{};
-      for (String id in ids) {
+      final results = await allSettled({
+        for (final id in ids) id: HttpApis.podium.getNumberOfOnlineMembers(id),
+      });
+      // Merge, so outposts scrolled out of view keep their last live count.
+      final map = {...mapOfOnlineUsersInOutposts.value};
+      for (final id in ids) {
         final result = results[id];
-        if (result?.isFulfilled == true && result?.value != 0) {
-          map[id] = result!.value!;
+        if (result?.isFulfilled != true) continue;
+        if (result!.value != 0) {
+          map[id] = result.value!;
+        } else {
+          map.remove(id);
         }
       }
-
-      mapOfOutpostsInView.value = <String, bool>{};
       mapOfOnlineUsersInOutposts.value = map;
     });
   }
 
   void removeOutpostFromView(String outpostId) {
-    mapOfOutpostsInView.value[outpostId] = false;
+    mapOfOutpostsInView.value.remove(outpostId);
   }
 
-  fetchAllOutpostsPage(int pageKey) async {
+  /// Page 0 replaces the list once the response arrives, so a refresh keeps
+  /// showing the current outposts instead of flashing skeletons.
+  Future<void> fetchAllOutpostsPage(int pageKey) async {
     try {
       if (pageKey == 0) {
         isGettingAllOutposts.value = true;
-        outposts.value = {};
-        lastPageReachedForAllOutposts.value = false;
       }
       final newItems = await HttpApis.podium.getOutposts(
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
       );
-      if (newItems.length < numberOfOutpostsPerPage) {
-        lastPageReachedForAllOutposts.value = true;
-      }
-      final previousOutposts = outposts.value.values.toList();
-      final outpostsMap = Map<String, OutpostModel>.fromEntries(
+      final previousOutposts =
+          pageKey == 0 ? <OutpostModel>[] : outposts.value.values.toList();
+      outposts.value = Map<String, OutpostModel>.fromEntries(
         [...previousOutposts, ...newItems].map((e) => MapEntry(e.uuid, e)),
       );
-      outposts.value = outpostsMap;
+      lastPageReachedForAllOutposts.value =
+          newItems.length < numberOfOutpostsPerPage;
     } catch (error) {
     } finally {
       isGettingAllOutposts.value = false;
     }
   }
 
-  fetchMyOutpostsPage(int pageKey) async {
+  Future<void> fetchMyOutpostsPage(int pageKey) async {
     try {
       if (pageKey == 0) {
-        myOutposts.value = {};
-        lastPageReachedForMyOutposts.value = false;
         isGettingMyOutposts.value = true;
       }
       final showArchived = showArchivedOutposts.value;
@@ -200,22 +209,27 @@ class OutpostsController extends GetxController {
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
       );
-      if (newItems.length < numberOfOutpostsPerPage) {
-        lastPageReachedForMyOutposts.value = true;
-      }
-      final previousOutposts = myOutposts.value.values.toList();
-      final outpostsMap = Map<String, OutpostModel>.fromEntries(
+      final previousOutposts =
+          pageKey == 0 ? <OutpostModel>[] : myOutposts.value.values.toList();
+      myOutposts.value = Map<String, OutpostModel>.fromEntries(
         [...previousOutposts, ...newItems].map((e) => MapEntry(e.uuid, e)),
       );
-      myOutposts.value = outpostsMap;
-
-      if (pageKey == 0) {
-        isGettingMyOutposts.value = false;
-      }
+      lastPageReachedForMyOutposts.value =
+          newItems.length < numberOfOutpostsPerPage;
     } catch (error) {
     } finally {
       isGettingMyOutposts.value = false;
     }
+  }
+
+  /// Drops the previous account's lists so they never show for the next one.
+  void clearOutposts() {
+    outposts.value = {};
+    myOutposts.value = {};
+    lastPageReachedForAllOutposts.value = false;
+    lastPageReachedForMyOutposts.value = false;
+    mapOfOnlineUsersInOutposts.value = {};
+    _onlineCountFetchedAt.clear();
   }
 
   getPresentUsersInGroup(String groupId) {

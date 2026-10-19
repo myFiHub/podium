@@ -77,7 +77,6 @@ dependencies:
   gap: ^3.0.1
   json_annotation: ^4.9.0
   copy_with_extension_gen: ^11.0.0
-  enhanced_paginated_view: ^2.0.3
   flutter_timezone: ^4.1.1
   permission_handler: ^12.0.0
   app_settings: ^6.1.1

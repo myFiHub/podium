@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 const _handleColor = AppColors.accent;
@@ -126,7 +127,7 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
         }
       }
     } catch (e) {
-      print('Error loading waveform: $e');
+      l.d('Error loading waveform: $e');
       setState(() {
         _isLoading = false;
       });

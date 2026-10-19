@@ -134,15 +134,15 @@ class CreateOutpostController extends GetxController {
           saveIntroAsDone(true);
         },
         onClickTarget: (target) {
-          print('onClickTarget: $target');
+          l.d('onClickTarget: $target');
         },
         onClickTargetWithTapPosition: (target, tapDetails) {
-          print("target: $target");
-          print(
+          l.d("target: $target");
+          l.d(
               "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
         },
         onClickOverlay: (target) {
-          print('onClickOverlay: $target');
+          l.d('onClickOverlay: $target');
         },
         onSkip: () {
           saveIntroAsDone(true);

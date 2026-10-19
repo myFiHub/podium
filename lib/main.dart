@@ -115,7 +115,7 @@ processLink(String? link) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Env.ensureConfigured();
-  print("ENVIRONMENT: ${Env.environment}");
+  l.i("ENVIRONMENT: ${Env.environment}");
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,
     DeviceOrientation.portraitUp,
@@ -134,11 +134,17 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// Only what the first (login) screen shows; the rest load on demand.
 preCache(BuildContext context) {
-  Assets.images.values.forEach((asset) {
-    if (!asset.path.contains('.svg'))
-      precacheImage(AssetImage(asset.path), context);
-  });
+  [
+    Assets.images.logo,
+    Assets.images.xPlatform,
+    Assets.images.apple,
+    Assets.images.gIcon,
+    Assets.images.facebook,
+    Assets.images.linkedin,
+    Assets.images.github,
+  ].forEach((asset) => precacheImage(asset.provider(), context));
 }
 
 class MyApp extends StatefulWidget {

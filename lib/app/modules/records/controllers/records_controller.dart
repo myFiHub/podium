@@ -7,6 +7,7 @@ import 'package:just_waveform/just_waveform.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -145,7 +146,7 @@ class RecordsController extends GetxController {
       recordingFiles.sort((a, b) => b.date.compareTo(a.date));
       recordings.value = recordingFiles;
     } catch (e) {
-      print('Error loading recordings: $e');
+      l.d('Error loading recordings: $e');
     }
   }
 
@@ -156,7 +157,7 @@ class RecordsController extends GetxController {
         subject: '${file.name}',
       );
     } catch (e) {
-      print('Error sharing file: $e');
+      l.d('Error sharing file: $e');
     }
   }
 
@@ -203,7 +204,7 @@ class RecordsController extends GetxController {
         subject: '${trimmedFile.name}',
       );
     } catch (e) {
-      print('Error sharing selected portion: $e');
+      l.d('Error sharing selected portion: $e');
     }
   }
 

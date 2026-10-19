@@ -142,12 +142,12 @@ class MyProfileController extends GetxController {
           _scrollIfNeeded();
         },
         onClickTargetWithTapPosition: (target, tapDetails) {
-          print("target: $target");
-          print(
+          l.d("target: $target");
+          l.d(
               "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
         },
         onClickOverlay: (target) {
-          print('onClickOverlay: $target');
+          l.d('onClickOverlay: $target');
           _scrollIfNeeded();
         },
         onSkip: () {

@@ -408,6 +408,10 @@ class _TalkTimeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return TalkTimeBuilder(builder: _build);
+  }
+
+  Widget _build(BuildContext context) {
     final time = member.remaining_time;
     final value = isCreator
         ? 'Unlimited'

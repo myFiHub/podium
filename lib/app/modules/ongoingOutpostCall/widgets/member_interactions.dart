@@ -45,17 +45,28 @@ String formatTalkTime(int seconds) {
   return hh == '0' ? '$mm:$ss' : '$hh:$mm:$ss';
 }
 
-class ConfettiDetector extends StatelessWidget {
+class ConfettiDetector extends StatefulWidget {
   final String userId;
   const ConfettiDetector({super.key, required this.userId});
 
   @override
+  State<ConfettiDetector> createState() => _ConfettiDetectorState();
+}
+
+class _ConfettiDetectorState extends State<ConfettiDetector> {
+  /// Each event is a new [Reaction]; remembering the last one keeps unrelated
+  /// rebuilds from firing the same confetti again.
+  Reaction? _lastShot;
+
+  @override
   Widget build(BuildContext context) {
     return GetBuilder<OngoingOutpostCallController>(
-      id: 'confetti' + userId,
+      id: 'confetti' + widget.userId,
       builder: (controller) {
         final lastReaction = controller.lastReaction.value;
-        if (lastReaction.targetId == userId) {
+        if (lastReaction.targetId == widget.userId &&
+            !identical(lastReaction, _lastShot)) {
+          _lastShot = lastReaction;
           _shootReaction(context: context, reaction: lastReaction);
         }
         return const IgnorePointer(child: SizedBox.expand());

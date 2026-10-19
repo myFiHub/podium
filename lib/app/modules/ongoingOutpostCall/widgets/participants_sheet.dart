@@ -193,7 +193,6 @@ class _ParticipantRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMe = member.uuid == myId;
-    final time = member.remaining_time;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -221,18 +220,21 @@ class _ParticipantRow extends StatelessWidget {
           else if (member.is_speaking)
             const Icon(Icons.graphic_eq_rounded,
                 color: callSpeakingColor, size: 18),
-          Text(
-            isCreator ? 'Host' : formatTalkTime(time),
-            style: TextStyle(
-              fontSize: 12,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              color: isCreator
-                  ? callAccentColor
-                  : time < 120
-                      ? callDangerColor
-                      : ColorName.greyText,
-            ),
-          ),
+          TalkTimeBuilder(builder: (context) {
+            final time = member.remaining_time;
+            return Text(
+              isCreator ? 'Host' : formatTalkTime(time),
+              style: TextStyle(
+                fontSize: 12,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: isCreator
+                    ? callAccentColor
+                    : time < 120
+                        ? callDangerColor
+                        : ColorName.greyText,
+              ),
+            );
+          }),
         ],
       ),
     );

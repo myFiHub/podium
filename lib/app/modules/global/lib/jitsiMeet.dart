@@ -17,7 +17,10 @@ import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 
 final jitsiMeet = JitsiMeet();
 const MethodChannel jitsiMethodChannel = MethodChannel('jitsi_meet_wrapper');
-final joinOrLeftDebounce = Debouncing(duration: const Duration(seconds: 1));
+final joinOrLeftDebounce = Debouncing(
+  duration: const Duration(seconds: 1),
+  maxWait: const Duration(seconds: 3),
+);
 
 CallRoomController? get _room => findCallRoom();
 

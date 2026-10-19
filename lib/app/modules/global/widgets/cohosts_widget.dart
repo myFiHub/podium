@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -514,6 +515,16 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasImage = image != null && image!.isNotEmpty;
+    final placeholderName = hasImage ? placeholderAvatarName(image!) : null;
+    if (placeholderName != null) {
+      return SizedBox.square(
+        dimension: radius * 2,
+        child: InitialsAvatar(
+          name: placeholderName,
+          borderRadius: BorderRadius.circular(radius),
+        ),
+      );
+    }
     return CircleAvatar(
       radius: radius,
       backgroundColor: ColorName.cardBorder,

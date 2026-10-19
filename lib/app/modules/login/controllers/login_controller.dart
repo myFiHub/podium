@@ -535,18 +535,20 @@ class LoginController extends GetxController {
     required String myAptosAddress,
   }) async {
     try {
-      final users = await HttpApis.podium.getUserByAptosAddresses(
-        podiumTeamMembersAptosAddresses,
-      );
-      podiumUsersToBuyEntryTicketFrom.value = users;
-      final aptosAddresses = users.map((user) => user.aptos_address!).toList();
-      final callArray = aptosAddresses.map(
-        (address) => AptosMovement.getMyBalanceOnPodiumPass(
-          sellerAddress: address,
-          myAddress: myAptosAddress,
+      final (users, balances) = await (
+        HttpApis.podium.getUserByAptosAddresses(
+          podiumTeamMembersAptosAddresses,
         ),
-      );
-      final balances = await Future.wait(callArray);
+        Future.wait(
+          podiumTeamMembersAptosAddresses.map(
+            (address) => AptosMovement.getMyBalanceOnPodiumPass(
+              sellerAddress: address,
+              myAddress: myAptosAddress,
+            ),
+          ),
+        ),
+      ).wait;
+      podiumUsersToBuyEntryTicketFrom.value = users;
       final hasTicket =
           balances.any((balance) => balance != null && balance > BigInt.zero);
       return hasTicket;

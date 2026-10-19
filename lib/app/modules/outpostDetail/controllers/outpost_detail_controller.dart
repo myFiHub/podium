@@ -121,7 +121,8 @@ class OutpostDetailController extends GetxController {
     // final remoteGroup = await getGroupInfoById(groupId);
     outpost.value = outpostInfo;
     gotOutpostInfo = true;
-    fetchInvitedMembers();
+    // outpostInfo was just fetched by joinOutpostAndOpenOutpostDetailPage.
+    _setInvitedMembers(outpostInfo.invites);
     scheduleChecks();
     _getLumaData();
     loadCohostsData();
@@ -297,17 +298,9 @@ class OutpostDetailController extends GetxController {
   }
 
   // Load cohosts data when outpost is first loaded
+  /// Cohost details load in the CohostsSearchBottomSheet; nothing to wait for.
   Future<void> loadCohostsData() async {
-    if (outpost.value?.cohost_user_uuids?.isNotEmpty ?? false) {
-      isLoadingCohosts.value = true;
-      try {
-        // Simulate loading time to show the loading state
-        await Future.delayed(const Duration(milliseconds: 500));
-        // The actual loading would happen in the CohostsSearchBottomSheet
-      } finally {
-        isLoadingCohosts.value = false;
-      }
-    }
+    isLoadingCohosts.value = false;
   }
 
   onCreatorJoined(IncomingMessage incomingMessage) {
@@ -432,8 +425,12 @@ class OutpostDetailController extends GetxController {
     if (outpost.value == null) return;
     final res = await HttpApis.podium.getOutpost(outpost.value!.uuid);
     if (res == null) return;
+    _setInvitedMembers(res.invites);
+  }
+
+  void _setInvitedMembers(List<InviteModel>? invites) {
     Map<String, InviteModel> map = {};
-    (res.invites ?? []).forEach((value) {
+    (invites ?? []).forEach((value) {
       map[value.invitee_uuid] = value;
     });
 

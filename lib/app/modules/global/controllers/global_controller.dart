@@ -141,9 +141,10 @@ class GlobalController extends GetxController {
 
     startTicker();
     isFirebaseInitialized = true;
-    final res = await analytics.getSessionId();
-
-    l.d('analytics session id: $res');
+    analytics
+        .getSessionId()
+        .then((id) => l.d('analytics session id: $id'))
+        .catchError((e) => l.e('analytics session id unavailable: $e'));
     if (storage.read<String?>(StorageKeys.loginType) != null) {
       await web3AuthReady;
     }
@@ -216,7 +217,11 @@ class GlobalController extends GetxController {
     _tickerTimer?.cancel();
     _tickerTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       ticker.value++;
-      update([GlobalUpdateIds.ticker]);
+      // Countdowns read the clock when built, so skipping UI updates while
+      // backgrounded loses nothing.
+      if (appLifecycleState.value == AppLifecycleState.resumed) {
+        update([GlobalUpdateIds.ticker]);
+      }
     });
   }
 
@@ -294,9 +299,35 @@ class GlobalController extends GetxController {
     l.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
   }
 
+  StreamSubscription<InternetStatus>? _internetStatusSubscription;
+  InternetStatus? _lastInternetStatus;
+  Worker? _internetLifecycleWorker;
+
+  /// Probing stops while the app is in the background (no network pings every
+  /// few seconds) and resumes when it comes back.
   Future<void> initializeInternetConnectionChecker() async {
-    connectionCheckerInstance.onStatusChange
+    _listenToInternetStatus();
+    _internetLifecycleWorker ??= ever<AppLifecycleState>(
+      appLifecycleState,
+      (state) {
+        if (state == AppLifecycleState.resumed) {
+          _listenToInternetStatus();
+        } else if (state == AppLifecycleState.hidden ||
+            state == AppLifecycleState.paused) {
+          _internetStatusSubscription?.cancel();
+          _internetStatusSubscription = null;
+        }
+      },
+    );
+  }
+
+  void _listenToInternetStatus() {
+    if (_internetStatusSubscription != null) return;
+    _internetStatusSubscription = connectionCheckerInstance.onStatusChange
         .listen((InternetStatus status) async {
+      // The checker re-emits the current status on every new subscription.
+      if (status == _lastInternetStatus) return;
+      _lastInternetStatus = status;
       switch (status) {
         case InternetStatus.connected:
           isConnectedToInternet.value = true;
@@ -832,6 +863,7 @@ class GlobalController extends GetxController {
       final callArray = <Future<void>>[];
 
       final outpostsController = Get.find<OutpostsController>();
+      outpostsController.clearOutposts();
       final isProfileRegistered = Get.isRegistered<MyProfileController>();
 
       final isNotificationsRegistered =

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
@@ -35,15 +36,18 @@ class MemberAvatar extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           if (speaking)
+            // Animates every frame; keep it from repainting the avatar.
             const Positioned.fill(
-              child: Pulsator(
-                style: PulseStyle(color: callSpeakingColor),
-                duration: Duration(seconds: 2),
-                count: 2,
-                repeat: 0,
-                startFromScratch: false,
-                autoStart: true,
-                fit: PulseFit.contain,
+              child: RepaintBoundary(
+                child: Pulsator(
+                  style: PulseStyle(color: callSpeakingColor),
+                  duration: Duration(seconds: 2),
+                  count: 2,
+                  repeat: 0,
+                  startFromScratch: false,
+                  autoStart: true,
+                  fit: PulseFit.contain,
+                ),
               ),
             ),
           _VoiceRing(
@@ -237,15 +241,34 @@ class _TalkTimeLabel extends StatelessWidget {
         style: TextStyle(fontSize: 10, color: callAccentColor),
       );
     }
-    final time = member.remaining_time;
-    final low = time < 120;
-    return Text(
-      time <= 0 ? 'time up' : formatTalkTime(time),
-      style: TextStyle(
-        fontSize: 10,
-        fontFeatures: const [FontFeature.tabularFigures()],
-        color: low ? callDangerColor : ColorName.greyText,
-      ),
-    );
+    return TalkTimeBuilder(builder: (context) {
+      final time = member.remaining_time;
+      final low = time < 120;
+      return Text(
+        time <= 0 ? 'time up' : formatTalkTime(time),
+        style: TextStyle(
+          fontSize: 10,
+          fontFeatures: const [FontFeature.tabularFigures()],
+          color: low ? callDangerColor : ColorName.greyText,
+        ),
+      );
+    });
+  }
+}
+
+/// Rebuilds [builder] on every local talk-time countdown tick, since
+/// [LiveMember.remaining_time] is decremented in place.
+class TalkTimeBuilder extends StatelessWidget {
+  final WidgetBuilder builder;
+  const TalkTimeBuilder({super.key, required this.builder});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Get.isRegistered<OutpostCallController>()) return builder(context);
+    final tick = Get.find<OutpostCallController>().talkTimeTick;
+    return Obx(() {
+      tick.value;
+      return builder(context);
+    });
   }
 }

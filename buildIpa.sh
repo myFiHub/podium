@@ -46,4 +46,4 @@ else
     exit 1
 fi
 
-flutter build ipa --release  --dart-define-from-file="$ENV_FILE"
+flutter build ipa --release --obfuscate --split-debug-info=./debug-info --dart-define-from-file="$ENV_FILE"

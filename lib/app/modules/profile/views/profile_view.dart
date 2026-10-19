@@ -574,31 +574,34 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    final overContent = shrinkOffset > 0 || overlapsContent;
+    final bar = Container(
+      color: ColorName.pageBackground.withAlpha(overContent ? 170 : 0),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceGlass,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const TabBar(
+          labelPadding: EdgeInsets.zero,
+          tabs: [
+            Tab(text: 'Pass Holders', height: 36),
+            Tab(text: 'Followers', height: 36),
+            Tab(text: 'Following', height: 36),
+          ],
+        ),
+      ),
+    );
+    // Blurring the plain page background is invisible; only pay for it once
+    // content scrolls underneath.
     return ClipRect(
       child: BackdropFilter(
+        enabled: overContent,
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          color: ColorName.pageBackground.withAlpha(
-            shrinkOffset > 0 || overlapsContent ? 170 : 0,
-          ),
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceGlass,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const TabBar(
-              labelPadding: EdgeInsets.zero,
-              tabs: [
-                Tab(text: 'Pass Holders', height: 36),
-                Tab(text: 'Followers', height: 36),
-                Tab(text: 'Following', height: 36),
-              ],
-            ),
-          ),
-        ),
+        child: bar,
       ),
     );
   }

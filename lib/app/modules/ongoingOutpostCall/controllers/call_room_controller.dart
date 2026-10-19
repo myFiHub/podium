@@ -92,7 +92,8 @@ class CallRoomController extends GetxController
   String? _localJitsiId;
 
   final _raisedHands = <({String jitsiId, int timestamp})>[].obs;
-  final audioLevels = <String, double>{}.obs;
+  final _audioLevels = <String, double>{};
+  final _shownLevels = <String, RxDouble>{};
   final dominantSpeakerUuid = RxnString();
 
   final chat = <CallChatMessage>[].obs;
@@ -188,7 +189,7 @@ class CallRoomController extends GetxController
     if (participantId == null) return;
     final uuid = uuidOf(participantId);
     peers.remove(participantId);
-    if (uuid != null) audioLevels.remove(uuid);
+    if (uuid != null) _setLevel(uuid, 0);
     _onPollPeerLeft(uuid);
   }
 
@@ -344,15 +345,31 @@ class CallRoomController extends GetxController
 
   // Audio levels --------------------------------------------------------------
 
-  double levelOf(String uuid) => audioLevels[uuid] ?? 0;
+  /// One observable per member so a level change only rebuilds that member's
+  /// ring. Entries are never removed: a ring may still be listening to one.
+  RxDouble _levelRx(String uuid) => _shownLevels.putIfAbsent(uuid, () => 0.0.obs);
+
+  double levelOf(String uuid) => _levelRx(uuid).value;
+
+  void _setLevel(String uuid, double level) {
+    if (level > 0.02) {
+      _audioLevels[uuid] = level;
+    } else {
+      _audioLevels.remove(uuid);
+      level = 0;
+    }
+    // Rx only notifies on change, so steps of 0.1 skip imperceptible updates.
+    _levelRx(uuid).value = (level * 10).round() / 10;
+  }
 
   void _onAudioLevels(dynamic raw) {
     if (raw is! Map) return;
     raw.forEach((jitsiId, level) {
       final uuid = uuidOf(jitsiId.toString());
       if (uuid == null || level is! num) return;
-      audioLevels[uuid] = level.toDouble().clamp(0, 1);
+      _setLevel(uuid, level.toDouble().clamp(0, 1));
     });
+    if (_audioLevels.isEmpty) return;
     _levelDecayTimer ??= Timer.periodic(
       const Duration(milliseconds: 150),
       (_) => _decayLevels(),
@@ -360,13 +377,10 @@ class CallRoomController extends GetxController
   }
 
   void _decayLevels() {
-    final next = <String, double>{};
-    audioLevels.forEach((uuid, level) {
-      final decayed = level * 0.75;
-      if (decayed > 0.02) next[uuid] = decayed;
-    });
-    audioLevels.assignAll(next);
-    if (next.isEmpty) {
+    for (final entry in _audioLevels.entries.toList()) {
+      _setLevel(entry.key, entry.value * 0.75);
+    }
+    if (_audioLevels.isEmpty) {
       _levelDecayTimer?.cancel();
       _levelDecayTimer = null;
     }

@@ -18,7 +18,7 @@ class ArenaApi {
         return userInformation;
       } else {
         // Failed to get the response
-        print('Failed to fetch data: ${response.statusCode}');
+        l.d('Failed to fetch data: ${response.statusCode}');
         return null;
       }
     } catch (e) {
@@ -37,7 +37,7 @@ class ArenaApi {
         return userInformation;
       } else {
         // Failed to get the response
-        print('Failed to fetch data: ${response.statusCode}');
+        l.d('Failed to fetch data: ${response.statusCode}');
         return null;
       }
     } catch (e) {

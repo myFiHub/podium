@@ -80,6 +80,7 @@ class OngoingOutpostCallController extends GetxController {
   );
 
   StreamSubscription<List<LiveMember>>? membersListener;
+  StreamSubscription<int>? talkTimeListener;
 
   @override
   void onInit() async {
@@ -111,11 +112,12 @@ class OngoingOutpostCallController extends GetxController {
       if (my_user.length == 0) return;
       mySession.value = (my_user[0]);
       mySession.refresh();
-      if (mySession.value!.remaining_time <= 0 &&
-          outpostCallController.outpost.value!.creator_user_uuid != myId) {
-        jitsiMeet.setAudioMuted(true);
-        if (isSharingScreen.value) jitsiMeet.toggleScreenShare(false);
-      }
+      _enforceTimeUp();
+    });
+    talkTimeListener = outpostCallController.talkTimeTick.listen((_) {
+      if (mySession.value == null) return;
+      mySession.refresh();
+      _enforceTimeUp();
     });
     Future.delayed(const Duration(seconds: 10)).then((value) {
       if (members.value.length == 0) {
@@ -135,12 +137,32 @@ class OngoingOutpostCallController extends GetxController {
     });
   }
 
+  bool _timeUpEnforced = false;
+
+  /// Mutes (and stops screen sharing) once when talk time runs out, instead of
+  /// re-sending the commands to Jitsi on every member update.
+  void _enforceTimeUp() {
+    final session = mySession.value;
+    if (session == null) return;
+    final timeUp = session.remaining_time <= 0 &&
+        outpostCallController.outpost.value?.creator_user_uuid != myId;
+    if (!timeUp) {
+      _timeUpEnforced = false;
+      return;
+    }
+    if (_timeUpEnforced && amIMuted.value && !isSharingScreen.value) return;
+    _timeUpEnforced = true;
+    jitsiMeet.setAudioMuted(true);
+    if (isSharingScreen.value) jitsiMeet.toggleScreenShare(false);
+  }
+
   @override
   void onClose() async {
     super.onClose();
     stopRecording();
     recordingListeners?.cancel();
     membersListener?.cancel();
+    talkTimeListener?.cancel();
     sessionData.value = null;
   }
 

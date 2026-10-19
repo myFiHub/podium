@@ -1,4 +1,3 @@
-import 'package:enhanced_paginated_view/enhanced_paginated_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
@@ -81,54 +80,14 @@ class OutpostsList extends GetView<OutpostsController> {
           },
         );
       } else {
-        final listToShow = pageOutposts.values.toList();
-
-        listWidget = EnhancedPaginatedView(
+        listWidget = _PaginatedOutposts(
+          items: pageOutposts.values.toList(),
           hasReachedMax: lastPageReached,
-          onLoadMore: (int page) {
-            listPage == ListPage.all
-                ? controller.fetchAllOutpostsPage(page - 1)
-                : controller.fetchMyOutpostsPage(page - 1);
-          },
-          onRefresh: () async {
-            listPage == ListPage.all
-                ? controller.fetchAllOutpostsPage(0)
-                : controller.fetchMyOutpostsPage(0);
-          },
-          refreshBuilder: (context, onRefresh, child) {
-            return RefreshIndicator(
-              color: Colors.white,
-              backgroundColor: ColorName.primaryBlue,
-              onRefresh: onRefresh,
-              child: child,
-            );
-          },
-          itemsPerPage: numberOfOutpostsPerPage,
-          delegate: EnhancedDelegate(
-            listOfData: listToShow,
-            status: EnhancedStatus.loaded,
-          ),
-          builder: (items, physics, reverse, shrinkWrap) {
-            return ListView.builder(
-              cacheExtent: 200,
-              controller: scrollController,
-              padding: _listPadding,
-              itemCount: items.length,
-              physics: physics,
-              reverse: reverse,
-              shrinkWrap: shrinkWrap,
-              addAutomaticKeepAlives: false,
-              itemBuilder: (context, index) {
-                final outpost = items[index];
-                return _SingleOutpost(
-                  key: ValueKey(outpost.uuid),
-                  controller: controller,
-                  amICreator: outpost.creator_user_uuid == myId,
-                  outpost: outpost,
-                );
-              },
-            );
-          },
+          scrollController: scrollController,
+          controller: controller,
+          fetchPage: listPage == ListPage.all
+              ? controller.fetchAllOutpostsPage
+              : controller.fetchMyOutpostsPage,
         );
       }
 
@@ -140,6 +99,79 @@ class OutpostsList extends GetView<OutpostsController> {
         child: listWidget,
       );
     });
+  }
+}
+
+/// Lazily built list that asks for the next page when the user nears the end.
+class _PaginatedOutposts extends StatefulWidget {
+  const _PaginatedOutposts({
+    required this.items,
+    required this.hasReachedMax,
+    required this.scrollController,
+    required this.controller,
+    required this.fetchPage,
+  });
+
+  final List<OutpostModel> items;
+  final bool hasReachedMax;
+  final ScrollController? scrollController;
+  final OutpostsController controller;
+  final Future<void> Function(int page) fetchPage;
+
+  @override
+  State<_PaginatedOutposts> createState() => _PaginatedOutpostsState();
+}
+
+class _PaginatedOutpostsState extends State<_PaginatedOutposts> {
+  static const _loadMoreThreshold = 400.0;
+  bool _loadingMore = false;
+
+  Future<void> _loadMore() async {
+    if (_loadingMore || widget.hasReachedMax || widget.items.isEmpty) return;
+    _loadingMore = true;
+    try {
+      await widget.fetchPage(widget.items.length ~/ numberOfOutpostsPerPage);
+    } finally {
+      _loadingMore = false;
+    }
+  }
+
+  bool _onScroll(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification &&
+        notification.metrics.axis == Axis.vertical &&
+        notification.metrics.extentAfter <= _loadMoreThreshold) {
+      _loadMore();
+    }
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = widget.items;
+    return RefreshIndicator(
+      color: Colors.white,
+      backgroundColor: ColorName.primaryBlue,
+      onRefresh: () async => await widget.fetchPage(0),
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _onScroll,
+        child: ListView.builder(
+          controller: widget.scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: _listPadding,
+          itemCount: items.length,
+          addAutomaticKeepAlives: false,
+          itemBuilder: (context, index) {
+            final outpost = items[index];
+            return _SingleOutpost(
+              key: ValueKey(outpost.uuid),
+              controller: widget.controller,
+              amICreator: outpost.creator_user_uuid == myId,
+              outpost: outpost,
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 

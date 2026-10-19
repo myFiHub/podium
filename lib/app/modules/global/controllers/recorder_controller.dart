@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/utils/logger.dart';
 import 'package:record/record.dart';
 
 class RecorderController extends GetxController {
@@ -36,20 +37,20 @@ class RecorderController extends GetxController {
         return true;
       }
 
-      print('Initializing recorder...');
+      l.d('Initializing recorder...');
 
       // First check if we have permission
       final hasPermission = await _audioRecorder.hasPermission();
-      print('Initial permission check: $hasPermission');
+      l.d('Initial permission check: $hasPermission');
 
       if (!hasPermission) {
-        print('Requesting permission...');
+        l.d('Requesting permission...');
         // Request permission explicitly
         final permissionGranted = await _audioRecorder.hasPermission();
-        print('Permission request result: $permissionGranted');
+        l.d('Permission request result: $permissionGranted');
 
         if (!permissionGranted) {
-          print('Permission denied');
+          l.d('Permission denied');
           _hasPermission.value = false;
           _isInitialized.value = false;
           _isBusy.value = false;
@@ -59,11 +60,11 @@ class RecorderController extends GetxController {
 
       _hasPermission.value = true;
       _isInitialized.value = true;
-      print('Recorder initialized successfully');
+      l.d('Recorder initialized successfully');
       return true;
     } catch (e, stackTrace) {
-      print('Error initializing recorder: $e');
-      print('Stack trace: $stackTrace');
+      l.d('Error initializing recorder: $e');
+      l.d('Stack trace: $stackTrace');
       _hasPermission.value = false;
       _isInitialized.value = false;
       return false;
@@ -112,7 +113,7 @@ class RecorderController extends GetxController {
             'podium_${prefix != null ? '${prefix}_' : ''}${DateTime.now().millisecondsSinceEpoch}.m4a';
         final filePath = '${directory.path}/$fileName';
 
-        print('Starting recording to: $filePath');
+        l.d('Starting recording to: $filePath');
 
         // Add a small delay before starting to ensure previous operations are complete
         await Future.delayed(const Duration(milliseconds: 200));
@@ -128,43 +129,43 @@ class RecorderController extends GetxController {
         );
 
         isRecording.value = true;
-        print('Recording started, isRecording: ${isRecording.value}');
+        l.d('Recording started, isRecording: ${isRecording.value}');
       } else {
         // Only stop if we're actually recording
         if (isRecording.value == false) {
-          print('Not currently recording, nothing to stop');
+          l.d('Not currently recording, nothing to stop');
           _lastRecordedPath.value = null;
           _isBusy.value = false;
           return;
         }
 
         // Stop recording
-        print('Stopping recording...');
+        l.d('Stopping recording...');
         isRecording.value =
             false; // Set to false before stopping to prevent race conditions
         final path = await _audioRecorder.stop();
 
         if (path != null) {
-          print('Audio saved to: $path');
+          l.d('Audio saved to: $path');
           _lastRecordedPath.value = path;
 
           // Verify the file exists after recording
           final file = File(path);
           if (await file.exists()) {
-            print('File exists and size: ${await file.length()} bytes');
+            l.d('File exists and size: ${await file.length()} bytes');
           } else {
-            print('File does not exist after recording!');
+            l.d('File does not exist after recording!');
           }
         }
 
-        print('Recording stopped, isRecording: ${isRecording.value}');
+        l.d('Recording stopped, isRecording: ${isRecording.value}');
 
         // Add a small delay after stopping to ensure cleanup
         await Future.delayed(const Duration(milliseconds: 200));
       }
     } catch (e, stackTrace) {
-      print('Error during recording: $e');
-      print('Stack trace: $stackTrace');
+      l.d('Error during recording: $e');
+      l.d('Stack trace: $stackTrace');
       isRecording.value = false;
       _isInitialized.value = false;
       Toast.error(message: 'Recording failed: ${e.toString()}');
@@ -179,7 +180,7 @@ class RecorderController extends GetxController {
     try {
       final file = File(_lastRecordedPath.value!);
       if (!await file.exists()) {
-        print('Audio file does not exist at path: ${_lastRecordedPath.value}');
+        l.d('Audio file does not exist at path: ${_lastRecordedPath.value}');
         return;
       }
 
@@ -188,7 +189,7 @@ class RecorderController extends GetxController {
       await _audioPlayer.play();
       _isPlaying.value = true;
     } catch (e) {
-      print('Error playing audio: $e');
+      l.d('Error playing audio: $e');
       _isPlaying.value = false;
     }
   }
@@ -198,7 +199,7 @@ class RecorderController extends GetxController {
       await _audioPlayer.stop();
       _isPlaying.value = false;
     } catch (e) {
-      print('Error stopping audio: $e');
+      l.d('Error stopping audio: $e');
     }
   }
 

@@ -92,10 +92,11 @@ class PodiumApi {
       if (response.statusCode == 200) {
         try {
           _token = response.data['data']['token'];
-          await connectToWebSocket();
-          final myUserData = await getMyUserData(
-            additionalData: additionalData,
-          );
+          final results = await Future.wait<Object?>([
+            connectToWebSocket(),
+            getMyUserData(additionalData: additionalData),
+          ]);
+          final myUserData = results[1] as UserModel?;
 
           return (myUserData, null, response.statusCode);
         } catch (e) {

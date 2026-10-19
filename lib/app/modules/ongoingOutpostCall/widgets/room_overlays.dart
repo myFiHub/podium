@@ -185,7 +185,9 @@ class _FloatingReactions extends GetView<CallRoomController> {
   }
 }
 
-class _FloatingEmoji extends StatelessWidget {
+/// Moves with transforms over a fixed position, so each frame only repaints
+/// the emoji instead of laying out the whole overlay stack again.
+class _FloatingEmoji extends StatefulWidget {
   final FloatingReaction reaction;
   final double height;
   const _FloatingEmoji({
@@ -195,42 +197,80 @@ class _FloatingEmoji extends StatelessWidget {
   });
 
   @override
+  State<_FloatingEmoji> createState() => _FloatingEmojiState();
+}
+
+class _FloatingEmojiState extends State<_FloatingEmoji>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2600),
+  )..forward();
+  late final Animation<double> _t =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+  late final Animation<double> _opacity = _t.drive(const _EmojiOpacity());
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 2600),
-      curve: Curves.easeOut,
-      builder: (context, t, child) {
-        final opacity = t < 0.1 ? t * 10 : (t > 0.7 ? (1 - t) / 0.3 : 1.0);
-        return Positioned(
-          right: 20 + reaction.lane * 90 + sin(t * pi * 3) * 12,
-          bottom: 70 + t * height * 0.55,
-          child: Opacity(
-            opacity: opacity.clamp(0.0, 1.0),
-            child:
-                Transform.scale(scale: 0.6 + min(t * 4, 1) * 0.5, child: child),
-          ),
-        );
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(reaction.emoji, style: const TextStyle(fontSize: 34)),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(8),
+    final reaction = widget.reaction;
+    return Positioned(
+      right: 20 + reaction.lane * 90,
+      bottom: 70,
+      child: AnimatedBuilder(
+        animation: _t,
+        builder: (context, child) {
+          final t = _t.value;
+          return Transform.translate(
+            offset: Offset(-sin(t * pi * 3) * 12, -t * widget.height * 0.55),
+            child: Transform.scale(
+              scale: 0.6 + min(t * 4, 1) * 0.5,
+              child: child,
             ),
-            child: Text(
-              reaction.senderName,
-              maxLines: 1,
-              style: const TextStyle(fontSize: 10, color: Colors.white),
+          );
+        },
+        child: FadeTransition(
+          opacity: _opacity,
+          child: RepaintBoundary(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(reaction.emoji, style: const TextStyle(fontSize: 34)),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    reaction.senderName,
+                    maxLines: 1,
+                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
+  }
+}
+
+/// Fades in over the first 10% and out over the last 30%.
+class _EmojiOpacity extends Animatable<double> {
+  const _EmojiOpacity();
+
+  @override
+  double transform(double t) {
+    final opacity = t < 0.1 ? t * 10 : (t > 0.7 ? (1 - t) / 0.3 : 1.0);
+    return opacity.clamp(0.0, 1.0);
   }
 }
 

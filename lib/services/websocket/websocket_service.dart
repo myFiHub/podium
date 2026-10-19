@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
@@ -117,7 +118,7 @@ class WebSocketService {
       json['data'] ??= {};
       final jsonString = jsonEncode(json);
 
-      l.d('Sending message: $jsonString');
+      if (kDebugMode) l.d('Sending message: $jsonString');
       _channel!.sink.add(jsonString);
       return true;
     } catch (e) {
@@ -160,7 +161,7 @@ class WebSocketService {
     _joinRequests[joinId] = completer;
 
     // Set timeout for join request
-    Timer(const Duration(seconds: 10), () {
+    final timeout = Timer(const Duration(seconds: 10), () {
       if (_joinRequests.containsKey(joinId)) {
         l.w('Join request timed out for outpost: $outpostId');
         _joinRequests[joinId]!.complete(false);
@@ -185,6 +186,8 @@ class WebSocketService {
       l.e('Error joining outpost: $e');
       _joinRequests.remove(joinId);
       return false;
+    } finally {
+      timeout.cancel();
     }
   }
 
@@ -254,7 +257,9 @@ class WebSocketService {
   void _handleMessage(dynamic message) {
     try {
       final messageStr = message.toString();
-      l.d('Received message: ${messageStr.length > 100 ? '${messageStr.substring(0, 100)}...' : messageStr}');
+      if (kDebugMode) {
+        l.d('Received message: ${messageStr.length > 100 ? '${messageStr.substring(0, 100)}...' : messageStr}');
+      }
 
       final json = jsonDecode(messageStr);
       if (json['name'] == 'error') {
@@ -406,7 +411,7 @@ class WebSocketService {
 
   // Simplified message routing
   void _routeMessage(IncomingMessage message) {
-    l.d('Routing message: ${message.name}');
+    if (kDebugMode) l.d('Routing message: ${message.name}');
 
     switch (message.name) {
       case IncomingMessageType.userJoined:
@@ -469,7 +474,7 @@ class WebSocketService {
   void _handleUserLeft(IncomingMessage message) {
     _withController<OutpostCallController>((controller) {
       if (message.data.address != myUser.address) {
-        controller.fetchLiveData();
+        joinOrLeftDebounce.debounce(() => controller.fetchLiveData());
       }
     });
   }

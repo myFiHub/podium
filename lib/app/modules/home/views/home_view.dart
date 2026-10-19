@@ -1,19 +1,15 @@
-import 'package:animated_icon/animated_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/home/widgets/addOutpostButton.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-import 'package:podium/utils/styles.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../controllers/home_controller.dart';
 
@@ -26,65 +22,27 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       body: PageWrapper(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            space16,
-            const Row(
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Text(
-                    "Home",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Spacer(),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  child: AddOutpostButton(),
-                ),
-              ],
+            const AppPageHeader(
+              title: "Home",
+              padding: EdgeInsets.fromLTRB(20, 16, 16, 4),
+              actions: [AddOutpostButton()],
             ),
-            space14,
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "My Outposts",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Tooltip(
-                    message: 'Refresh',
-                    child: AnimateIcon(
-                      key: UniqueKey(),
-                      onTap: () {
-                        controller.refreshOutposts();
-                      },
-                      color: Colors.blueAccent,
-                      iconType: IconType.animatedOnTap,
-                      height: 20,
-                      width: 20,
-                      animateIcon: AnimateIcons.refresh,
-                    ),
-                  )
-                ],
+            AppSectionHeader(
+              title: "My Outposts",
+              padding: const EdgeInsets.fromLTRB(20, 14, 12, 8),
+              trailing: AppIconButton(
+                icon: Icons.refresh_rounded,
+                tooltip: 'Refresh',
+                size: 34,
+                onTap: () {
+                  controller.refreshOutposts();
+                },
               ),
             ),
-            space10,
-            Expanded(
-              child: Container(
-                width: Get.width,
-                child: const _MyOutpostsList(),
-              ),
+            const Expanded(
+              child: _MyOutpostsList(),
             ),
           ],
         ),
@@ -104,65 +62,72 @@ class _MyOutpostsList extends GetWidget<OutpostsController> {
         final isGettingMyOutposts = controller.isGettingMyOutposts.value;
         List<OutpostModel> outposts = myOutposts.values.toList();
         if (outposts.isEmpty && isGettingMyOutposts) {
-          return const Center(
-            child: LoadingWidget(),
+          return ListView.builder(
+            padding: const EdgeInsets.only(top: 4),
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 3,
+            itemBuilder: (context, index) => const OutpostCardSkeleton(),
           );
         }
 
         if (outposts.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  height: 200,
-                  child: Assets.images.explore.image(),
-                ),
-                Text(
-                  "Hi ${myUser.name},",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Text(
-                  "You haven't participated yet. Try joining an outpost and enjoy! ✨",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14.0,
-                  ),
-                ),
-                space10,
-                GestureDetector(
-                  onTap: () {
-                    Navigate.to(
-                      type: NavigationTypes.offAllNamed,
-                      route: Routes.ALL_OUTPOSTS,
-                    );
-                  },
-                  child: Shimmer.fromColors(
-                    baseColor: Colors.white,
-                    highlightColor: ColorName.primaryBlue,
-                    child: const Text(
-                      "Explore Outposts >",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
+          return const _MyOutpostsEmpty();
         }
         return OutpostsList(
           scrollController: _scrollController,
           listPage: ListPage.my,
         );
       },
+    );
+  }
+}
+
+class _MyOutpostsEmpty extends StatelessWidget {
+  const _MyOutpostsEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        child: AppCard(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 150,
+                child: Assets.images.explore.image(),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "Hi ${myUser.name},",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppText.title,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "You haven't participated yet. Try joining an outpost and enjoy! ✨",
+                textAlign: TextAlign.center,
+                style: AppText.muted.copyWith(height: 1.45),
+              ),
+              const SizedBox(height: 20),
+              AppPrimaryButton(
+                label: "Explore Outposts",
+                icon: Icons.explore_rounded,
+                onPressed: () {
+                  Navigate.to(
+                    type: NavigationTypes.offAllNamed,
+                    route: Routes.ALL_OUTPOSTS,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

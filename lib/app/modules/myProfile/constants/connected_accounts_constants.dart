@@ -3,16 +3,16 @@ import 'package:podium/gen/colors.gen.dart';
 
 class ConnectedAccountsConstants {
   static const double containerPadding = 16.0;
-  static const double borderRadius = 12.0;
+  static const double borderRadius = 18.0;
   static const double iconSize = 20.0;
-  static const double headerIconSize = 24.0;
-  static const double headerFontSize = 14.0;
-  static const double identifierFontSize = 10.0;
+  static const double headerIconSize = 22.0;
+  static const double headerFontSize = 15.0;
+  static const double identifierFontSize = 12.0;
 
-  static const Color headerBackgroundColor = ColorName.black;
-  static const int headerBackgroundAlpha = 26;
-  static const Color successColor = Colors.green;
-  static const Color identifierColor = Colors.indigo;
+  static const Color headerBackgroundColor = Color(0xFF3DDC97);
+  static const int headerBackgroundAlpha = 22;
+  static const Color successColor = Color(0xFF3DDC97);
+  static const Color identifierColor = ColorName.greyText;
   static const Color primaryBlue = ColorName.primaryBlue;
 
   static const EdgeInsets defaultPadding = EdgeInsets.all(containerPadding);

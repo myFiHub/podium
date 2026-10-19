@@ -16,6 +16,7 @@ const _routesWithoutNavbar = [
 class NavbarItem {
   final String route;
   final IconData icon;
+  final IconData? activeIcon;
   final String label;
   final Widget? overlay;
 
@@ -23,6 +24,7 @@ class NavbarItem {
     required this.route,
     required this.icon,
     required this.label,
+    this.activeIcon,
     this.overlay,
   });
 }
@@ -31,27 +33,32 @@ final List<NavbarItem> navbarItems = [
   NavbarItem(
     route: Routes.HOME,
     icon: Icons.home_outlined,
+    activeIcon: Icons.home_rounded,
     label: 'Home',
   ),
   NavbarItem(
     route: Routes.ALL_OUTPOSTS,
     icon: Icons.group_outlined,
+    activeIcon: Icons.group_rounded,
     label: 'Groups',
   ),
   NavbarItem(
     route: Routes.SEARCH,
     icon: Icons.search_outlined,
+    activeIcon: Icons.search_rounded,
     label: 'Search',
   ),
   NavbarItem(
     route: Routes.NOTIFICATIONS,
     icon: Icons.notifications_outlined,
-    label: 'Notifications',
+    activeIcon: Icons.notifications_rounded,
+    label: 'Alerts',
     overlay: const NotificationBadge(),
   ),
   NavbarItem(
     route: Routes.MY_PROFILE,
     icon: Icons.person_outline,
+    activeIcon: Icons.person_rounded,
     label: 'Profile',
     overlay: const ProfileBadge(),
   ),
@@ -73,7 +80,10 @@ class PodiumNavbar extends GetView<GlobalController> {
       final bottomSpace = MediaQuery.viewInsetsOf(context).bottom;
       return Container(
         height: bottomSpace == 0 ? navbarHeight : 0,
-        color: ColorName.navbarBackground,
+        decoration: const BoxDecoration(
+          color: ColorName.navbarBackground,
+          border: Border(top: BorderSide(color: ColorName.cardBorder)),
+        ),
         child: BottomNav(
           activeRoute: activeRoute,
         ),
@@ -89,15 +99,18 @@ class BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
+      color: Colors.transparent,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.from(
           navbarItems.map(
-            (item) => _buildNavItem(
-              route: item.route,
-              icon: item.icon,
-              label: item.label,
-              overlay: item.overlay,
+            (item) => Expanded(
+              child: _buildNavItem(
+                route: item.route,
+                icon: item.icon,
+                activeIcon: item.activeIcon,
+                label: item.label,
+                overlay: item.overlay,
+              ),
             ),
           ),
         ),
@@ -106,16 +119,19 @@ class BottomNav extends StatelessWidget {
   }
 }
 
-final _animationDuration = const Duration(milliseconds: 200);
+final _animationDuration = const Duration(milliseconds: 220);
 Widget _buildNavItem({
   required String route,
   required IconData icon,
+  IconData? activeIcon,
   required String label,
   Widget? overlay,
 }) {
   final activeRoute = Get.find<GlobalController>().activeRoute.value;
   final isActive = activeRoute == route;
+  final color = isActive ? Colors.white : ColorName.secondaryText;
   return GestureDetector(
+    behavior: HitTestBehavior.opaque,
     onTap: () async {
       final canNavigateToNewRoute = await canNavigate();
       if (canNavigateToNewRoute != true) {
@@ -127,54 +143,55 @@ Widget _buildNavItem({
         route: route,
       );
     },
-    child: Column(
-      children: [
-        AnimatedContainer(
-          duration: _animationDuration,
-          width: 24,
-          padding: const EdgeInsets.only(bottom: 8, top: 18),
-          decoration: isActive
-              ? const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Colors.blue,
-                      width: 2,
-                    ),
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(10),
-                    bottomLeft: Radius.circular(10),
-                  ),
-                )
-              : const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Colors.transparent,
-                      width: 0,
-                    ),
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(0),
-                    bottomLeft: Radius.circular(0),
+    child: ClipRect(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedContainer(
+            duration: _animationDuration,
+            curve: Curves.easeOutCubic,
+            width: isActive ? 56 : 44,
+            height: 30,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? ColorName.primaryBlue.withAlpha(46)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedSwitcher(
+                  duration: _animationDuration,
+                  child: Icon(
+                    isActive ? (activeIcon ?? icon) : icon,
+                    key: ValueKey(isActive),
+                    size: 22,
+                    color: isActive ? ColorName.primaryBlue : color,
                   ),
                 ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              AnimatedScale(
-                scale: isActive ? 1.3 : 1,
-                child: Icon(
-                  icon,
-                  color: isActive ? Colors.blue : Colors.grey,
-                ),
-                duration: _animationDuration,
-              ),
-              if (overlay != null) overlay,
-            ],
+                if (overlay != null) overlay,
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 5),
-      ],
+          const SizedBox(height: 3),
+          AnimatedDefaultTextStyle(
+            duration: _animationDuration,
+            style: TextStyle(
+              fontSize: 10.5,
+              height: 1.2,
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+              color: color,
+            ),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.clip,
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -206,22 +223,27 @@ class ProfileBadge extends GetView<GlobalController> {
           primaryAccount.address == currentUser.address;
       return !isThisAccountPrimary
           ? Positioned(
-              right: 0,
-              top: 0,
+              right: 8,
+              top: 2,
               child: Container(
-                  width: 10,
-                  height: 10,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: _badgeColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: ColorName.navbarBackground,
+                    width: 2,
                   ),
-                  child: const SizedBox()),
+                ),
+              ),
             )
-          : Container();
+          : const SizedBox.shrink();
     });
   }
 }
+
+const _badgeColor = Color(0xFFF04141);
 
 class NotificationBadge extends GetWidget<NotificationsController> {
   const NotificationBadge({super.key});
@@ -233,29 +255,38 @@ class NotificationBadge extends GetWidget<NotificationsController> {
           controller.numberOfUnreadNotifications.value;
       return numberOfUnreadNotifications > 0
           ? Positioned(
-              right: 0,
-              top: 0,
+              right: 2,
+              top: -4,
               child: Container(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.symmetric(horizontal: 5),
                 decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(10),
+                  color: _badgeColor,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: ColorName.navbarBackground,
+                    width: 2,
+                  ),
                 ),
                 constraints: const BoxConstraints(
                   minWidth: 20,
-                  minHeight: 20,
+                  minHeight: 18,
                 ),
+                alignment: Alignment.center,
                 child: Text(
-                  numberOfUnreadNotifications.toString(),
+                  numberOfUnreadNotifications > 99
+                      ? '99+'
+                      : numberOfUnreadNotifications.toString(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
+                    height: 1.1,
+                    fontWeight: FontWeight.w700,
                   ),
                   textAlign: TextAlign.center,
                 ),
               ),
             )
-          : Container();
+          : const SizedBox.shrink();
     });
   }
 }

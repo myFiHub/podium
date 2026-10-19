@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:podium/gen/colors.gen.dart';
 
 /// Creates a image widget with shaded overlay.
 class ImageOverlay extends StatelessWidget {
@@ -81,17 +82,22 @@ class ImageOverlay extends StatelessWidget {
         width: width ?? MediaQuery.of(context).size.width,
         margin: margin,
         padding: padding,
-        child: child,
+        clipBehavior: shape == BoxShape.circle || borderRadius != null
+            ? Clip.antiAlias
+            : Clip.none,
         decoration: BoxDecoration(
           shape: shape,
-          borderRadius: borderRadius,
-          border: border,
-          color: color,
-          image: DecorationImage(
-            fit: boxFit,
-            colorFilter: colorFilter,
-            image: image!,
-          ),
+          borderRadius: shape == BoxShape.circle ? null : borderRadius,
+          border: border ?? Border.all(color: ColorName.cardBorder),
+          color: color ?? ColorName.cardBackground,
+          image: image == null
+              ? null
+              : DecorationImage(
+                  fit: boxFit,
+                  colorFilter: colorFilter,
+                  image: image!,
+                ),
         ),
+        child: child,
       );
 }

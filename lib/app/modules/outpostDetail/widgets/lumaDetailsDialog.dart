@@ -6,66 +6,83 @@ import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_cont
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
-import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
+
+bool _hasStarted(String? startAt) {
+  final start = DateTime.tryParse(startAt ?? '');
+  if (start == null) return false;
+  return DateTime.now().isAfter(start);
+}
 
 class LumaDetailsDialog extends GetView<OutpostDetailController> {
   const LumaDetailsDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final mycurrentIsoTime = DateTime.now().toIso8601String();
     final eventStartAt = controller.lumaEventDetails.value?.event.start_at;
-    final isStarted = DateTime.parse(mycurrentIsoTime)
-        .isAfter(DateTime.parse(eventStartAt ?? ''));
-    return SafeArea(
-      child: Material(
-        child: Container(
-          color: ColorName.cardBackground,
-          padding: const EdgeInsets.all(20),
-          height: Get.height * 0.5,
+    final isStarted = _hasStarted(eventStartAt);
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.72,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
-                  const Text(
-                    'Luma Details',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4),
+                    child: Text('Luma Details', style: AppText.title),
                   ),
                   if (isStarted) ...[
-                    space10,
-                    Shimmer.fromColors(
-                      baseColor: Colors.white,
-                      highlightColor: Colors.green,
-                      child: const Text(
-                        "Started",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withAlpha(28),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppColors.success.withAlpha(70),
+                        ),
+                      ),
+                      child: Shimmer.fromColors(
+                        baseColor: Colors.white,
+                        highlightColor: AppColors.success,
+                        child: const Text(
+                          "Started",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
                   ],
                   const Spacer(),
-                  IconButton(
-                    onPressed: () {
+                  AppIconButton(
+                    icon: Icons.close_rounded,
+                    tooltip: 'Close',
+                    size: 36,
+                    onTap: () {
                       Get.close();
                     },
-                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
               const _Info(),
-              space10,
+              const SizedBox(height: 12),
               const _Contents(),
-              space10,
+              const SizedBox(height: 12),
               const _DoneButton(),
             ],
           ),
@@ -75,198 +92,125 @@ class LumaDetailsDialog extends GetView<OutpostDetailController> {
   }
 }
 
-class _Info extends StatefulWidget {
+class _Info extends GetView<OutpostDetailController> {
   const _Info();
 
   @override
-  State<_Info> createState() => _InfoState();
-}
-
-class _InfoState extends State<_Info> {
-  late final ScrollController eventNameController;
-  late final ScrollController descriptionController;
-  final OutpostDetailController controller =
-      Get.find<OutpostDetailController>();
-
-  @override
-  void initState() {
-    super.initState();
-    eventNameController = ScrollController();
-    descriptionController = ScrollController();
-  }
-
-  @override
-  void dispose() {
-    eventNameController.dispose();
-    descriptionController.dispose();
-    super.dispose();
-  }
-
-  void startAutoScroll(ScrollController controller) {
-    if (!mounted) return;
-
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
-      if (controller.hasClients) {
-        final maxScroll = controller.position.maxScrollExtent;
-        if (maxScroll > 0) {
-          controller
-              .animateTo(
-            maxScroll,
-            duration: const Duration(seconds: 3),
-            curve: Curves.linear,
-          )
-              .then((_) {
-            if (!mounted) return;
-            Future.delayed(const Duration(seconds: 1), () {
-              if (!mounted) return;
-              controller
-                  .animateTo(
-                0,
-                duration: const Duration(seconds: 3),
-                curve: Curves.linear,
-              )
-                  .then((_) {
-                if (mounted) {
-                  startAutoScroll(controller);
-                }
-              });
-            });
-          });
-        }
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      margin: const EdgeInsets.only(bottom: 5, top: 5),
-      decoration: BoxDecoration(
-        color: ColorName.cardBackground,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: ColorName.primaryBlue),
-      ),
-      width: Get.width - 10,
-      child: Obx(() {
-        final event = controller.lumaEventDetails.value;
-        final outpost = controller.outpost.value;
-        final mycurrentIsoTime = DateTime.now().toIso8601String();
-        final eventStartAt = controller.lumaEventDetails.value?.event.start_at;
-        final isStarted = DateTime.parse(mycurrentIsoTime)
-            .isAfter(DateTime.parse(eventStartAt ?? ''));
+    return Obx(() {
+      final event = controller.lumaEventDetails.value;
+      final outpost = controller.outpost.value;
+      final isStarted = _hasStarted(event?.event.start_at);
+      final cover = event?.event.cover_url;
 
-        // Start auto-scrolling when the widget is built
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          startAutoScroll(eventNameController);
-          startAutoScroll(descriptionController);
-        });
-
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+      return AppCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Text(
-                  'Event Name:',
-                  style: TextStyle(
-                    fontSize: 12,
+                if (cover != null && cover.isNotEmpty) ...[
+                  Img(
+                    src: cover,
+                    size: 44,
+                    alt: 'luma event',
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
-                ),
-                space10,
+                  const SizedBox(width: 12),
+                ],
                 Expanded(
-                  child: SingleChildScrollView(
-                    controller: eventNameController,
-                    scrollDirection: Axis.horizontal,
-                    child: Text(
-                      event?.event.name ?? '',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'EVENT NAME',
+                        style: AppText.label.copyWith(fontSize: 10),
                       ),
-                    ),
+                      const SizedBox(height: 2),
+                      Text(
+                        event?.event.name ?? '',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.cardTitle.copyWith(fontSize: 14),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
             if (outpost?.subject.isNotEmpty ?? false) ...[
-              space10,
-              Row(
-                children: [
-                  const Text(
-                    'Description:',
-                    style: TextStyle(
-                      fontSize: 12,
-                    ),
-                  ),
-                  space10,
-                  Expanded(
-                    child: SingleChildScrollView(
-                      controller: descriptionController,
-                      scrollDirection: Axis.horizontal,
-                      child: Text(
-                        outpost?.subject ?? '',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 10),
+              Text(
+                outpost?.subject ?? '',
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.muted,
               ),
             ],
-            space10,
-            Row(
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                const Text(
-                  'Time Zone:',
-                  style: TextStyle(
-                    fontSize: 12,
-                  ),
+                _MetaChip(
+                  icon: Icons.public_rounded,
+                  text: event?.event.timezone ?? '',
                 ),
-                space10,
-                Text(
-                  event?.event.timezone ?? '',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                if (!isStarted)
+                  _MetaChip(
+                    icon: Icons.schedule_rounded,
+                    text: _isoStringToDate(event?.event.start_at ?? ''),
                   ),
-                ),
               ],
             ),
-            if (!isStarted) ...[
-              space10,
-              Row(
-                children: [
-                  const Text(
-                    'Start Time:',
-                    style: TextStyle(
-                      fontSize: 12,
-                    ),
-                  ),
-                  space10,
-                  Text(
-                    _isoStringToDate(event?.event.start_at ?? ''),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ]
           ],
-        );
-      }),
+        ),
+      );
+    });
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _MetaChip({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.fill,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: ColorName.greyText),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 String _isoStringToDate(String isoString) {
-  final date = DateTime.parse(isoString);
+  final date = DateTime.tryParse(isoString);
+  if (date == null) return '';
   return DateFormat('yyyy/MM/dd hh:mm a').format(date);
 }
 
@@ -278,50 +222,145 @@ class _Contents extends GetView<OutpostDetailController> {
     return Expanded(
       child: DefaultTabController(
         length: 2,
-        child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            toolbarHeight: 0,
-            bottom: TabBar(
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicatorColor: ColorName.primaryBlue,
-              labelColor: ColorName.primaryBlue,
-              unselectedLabelColor: Colors.grey,
-              tabs: [
-                Obx(() {
-                  final hosts = controller.lumaHosts.value;
-                  return Tab(text: "Hosts (${hosts.length})");
-                }),
-                Obx(() {
-                  final guests = controller.lumaEventGuests.value;
-                  return Tab(text: "Guests (${guests.length})");
-                }),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: 42,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppColors.fill,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: TabBar(
+                indicator: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: Colors.white,
+                unselectedLabelColor: ColorName.greyText,
+                dividerColor: Colors.transparent,
+                tabs: [
+                  Obx(() {
+                    final hosts = controller.lumaHosts.value;
+                    return Tab(text: "Hosts (${hosts.length})");
+                  }),
+                  Obx(() {
+                    final guests = controller.lumaEventGuests.value;
+                    return Tab(text: "Guests (${guests.length})");
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  Obx(() {
+                    final hosts = controller.lumaHosts.value;
+                    if (hosts.isEmpty) {
+                      return const _EmptyTab(title: 'No hosts');
+                    }
+                    return ListView.separated(
+                      itemBuilder: (context, index) {
+                        return _HostItem(host: hosts[index]);
+                      },
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemCount: hosts.length,
+                    );
+                  }),
+                  Obx(() {
+                    final guests = controller.lumaEventGuests.value;
+                    if (guests.isEmpty) {
+                      return const _EmptyTab(title: 'No guests yet');
+                    }
+                    return ListView.separated(
+                      itemBuilder: (context, index) {
+                        return _GuestItem(guest: guests[index]);
+                      },
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemCount: guests.length,
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyTab extends StatelessWidget {
+  final String title;
+  const _EmptyTab({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: AppEmptyState(
+        icon: Icons.people_outline_rounded,
+        title: title,
+        compact: true,
+      ),
+    );
+  }
+}
+
+class _PersonRow extends StatelessWidget {
+  final Widget? leading;
+  final String? name;
+  final String? email;
+  final Widget? trailing;
+  const _PersonRow({this.leading, this.name, this.email, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.fill,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          if (leading != null) ...[
+            leading!,
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (name?.isNotEmpty ?? false)
+                  Text(
+                    name!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                Text(
+                  email ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.caption,
+                ),
               ],
             ),
           ),
-          body: TabBarView(
-            children: [
-              Obx(() {
-                final hosts = controller.lumaHosts.value;
-                return ListView.builder(
-                  itemBuilder: (context, index) {
-                    return _HostItem(host: hosts[index]);
-                  },
-                  itemCount: hosts.length,
-                );
-              }),
-              Obx(() {
-                final guests = controller.lumaEventGuests.value;
-                return ListView.builder(
-                  itemBuilder: (context, index) {
-                    return _GuestItem(guest: guests[index]);
-                  },
-                  itemCount: guests.length,
-                );
-              }),
-            ],
-          ),
-        ),
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ],
+        ],
       ),
     );
   }
@@ -332,41 +371,15 @@ class _HostItem extends StatelessWidget {
   const _HostItem({required this.host});
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      margin: const EdgeInsets.only(bottom: 5, top: 5),
-      decoration: BoxDecoration(
-        color: ColorName.cardBackground,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: ColorName.primaryBlue),
+    return _PersonRow(
+      leading: Img(
+        src: host.avatar_url,
+        size: 38,
+        alt: host.name,
+        borderRadius: const BorderRadius.all(Radius.circular(19)),
       ),
-      width: Get.width - 10,
-      child: Row(
-        children: [
-          Img(src: host.avatar_url),
-          space10,
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (host.name.isNotEmpty)
-                Text(
-                  host.name ?? '',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              Text(
-                truncate(host.email) ?? '',
-                style: const TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      name: host.name,
+      email: truncate(host.email),
     );
   }
 }
@@ -378,57 +391,27 @@ class _GuestItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = guest.approval_status;
-    return Container(
-      padding: const EdgeInsets.all(10),
-      margin: const EdgeInsets.only(bottom: 5, top: 5),
-      decoration: BoxDecoration(
-        color: ColorName.cardBackground,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: ColorName.primaryBlue,
-        ),
-      ),
-      width: Get.width - 10,
-      child: Row(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (guest.user_name?.isNotEmpty ?? false)
-                Text(
-                  guest.user_name ?? '',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              Text(
-                truncate(guest.user_email) ?? '',
-                style: const TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-            ],
+    return _PersonRow(
+      name: guest.user_name,
+      email: truncate(guest.user_email),
+      trailing: switch (status) {
+        'pending' => const AppPill(
+            label: 'Pending',
+            color: AppColors.accent,
+            icon: Icons.schedule_rounded,
           ),
-          const Spacer(),
-          if (status == 'pending')
-            const Icon(
-              Icons.pending,
-              color: Colors.yellow,
-            ),
-          if (status == 'approved')
-            const Icon(
-              Icons.check,
-              color: Colors.green,
-            ),
-          if (status == 'rejected')
-            const Icon(
-              Icons.close,
-              color: Colors.red,
-            ),
-        ],
-      ),
+        'approved' => const AppPill(
+            label: 'Approved',
+            color: AppColors.success,
+            icon: Icons.check_rounded,
+          ),
+        'rejected' => const AppPill(
+            label: 'Rejected',
+            color: AppColors.danger,
+            icon: Icons.close_rounded,
+          ),
+        _ => null,
+      },
     );
   }
 }
@@ -439,37 +422,24 @@ class _DoneButton extends GetView<OutpostDetailController> {
   Widget build(BuildContext context) {
     final eventLink = controller.lumaEventDetails.value?.event.url;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        SizedBox(
-          width: Get.width / 2 - 25,
-          child: Button(
-            type: ButtonType.outline,
-            size: ButtonSize.LARGE,
-            color: ColorName.primaryBlue,
-            textStyle: const TextStyle(
-              fontSize: 12,
-              color: ColorName.primaryBlue,
-            ),
-            text: 'Share Luma Link',
+        Expanded(
+          child: AppSecondaryButton(
+            label: 'Close',
+            onPressed: () {
+              Get.close();
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: AppPrimaryButton(
+            label: 'Share Luma Link',
+            icon: Icons.ios_share_rounded,
             onPressed: () {
               Share.share(
                 eventLink ?? '',
               );
-            },
-          ),
-        ),
-        space10,
-        SizedBox(
-          width: Get.width / 2 - 25,
-          child: Button(
-            type: ButtonType.outline,
-            size: ButtonSize.LARGE,
-            textColor: Colors.red,
-            color: Colors.red,
-            text: 'Close',
-            onPressed: () {
-              Get.close();
             },
           ),
         ),

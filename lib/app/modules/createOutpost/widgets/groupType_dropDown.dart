@@ -1,6 +1,5 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:podium/gen/colors.gen.dart';
 
 class DropDownItem {
@@ -70,36 +69,36 @@ class DropDown extends StatelessWidget {
         },
         buttonStyleData: ButtonStyleData(
           height: 50,
-          width: Get.width - 20,
-          padding: const EdgeInsets.only(left: 10, right: 10),
+          padding: const EdgeInsets.only(left: 14, right: 12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: ColorName.cardBorder,
             ),
-            color: ColorName.pageBackground,
+            color: Colors.white.withAlpha(10),
           ),
           elevation: 0,
         ),
         iconStyleData: const IconStyleData(
           icon: Icon(
-            Icons.arrow_forward_ios_outlined,
+            Icons.expand_more_rounded,
           ),
-          iconSize: 14,
+          iconSize: 20,
           iconEnabledColor: ColorName.greyText,
           iconDisabledColor: Colors.grey,
         ),
         dropdownStyleData: DropdownStyleData(
           maxHeight: 220,
-          width: Get.width - 20,
+          offset: const Offset(0, -6),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: ColorName.pageBackground,
+            borderRadius: BorderRadius.circular(14),
+            color: ColorName.cardBackground,
+            border: Border.all(color: ColorName.cardBorder),
           ),
           // offset: const Offset(-10, 0),
           scrollbarTheme: ScrollbarThemeData(
             radius: const Radius.circular(8),
-            thickness: WidgetStateProperty.all(6),
+            thickness: WidgetStateProperty.all(4),
             thumbVisibility: WidgetStateProperty.all(true),
           ),
         ),

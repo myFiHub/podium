@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:podium/utils/styles.dart';
+import 'package:podium/gen/colors.gen.dart';
 
 class FollowerBadge extends StatelessWidget {
   const FollowerBadge({
@@ -10,12 +10,12 @@ class FollowerBadge extends StatelessWidget {
   final int followerCount;
 
   Color get _badgeColor => followerCount >= 1000
-      ? Colors.purple
+      ? const Color(0xFFFFC857)
       : followerCount >= 100
-          ? Colors.blue
+          ? ColorName.primaryBlue
           : followerCount >= 10
-              ? Colors.green
-              : Colors.grey;
+              ? const Color(0xFF3DDC97)
+              : ColorName.greyText;
 
   String get _badgeText => followerCount >= 1000
       ? 'Elite'
@@ -27,43 +27,46 @@ class FollowerBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = _badgeColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
       decoration: BoxDecoration(
-        color: _badgeColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _badgeColor),
+        color: color.withAlpha(24),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withAlpha(70)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.people,
-            color: _badgeColor,
-            size: 16,
+            Icons.people_alt_rounded,
+            color: color,
+            size: 15,
           ),
-          space5,
+          const SizedBox(width: 6),
           Text(
             '$followerCount followers',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: _badgeColor,
+            maxLines: 1,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
           ),
-          space5,
+          const SizedBox(width: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: _badgeColor,
-              borderRadius: BorderRadius.circular(12),
+              color: color.withAlpha(46),
+              borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              _badgeText,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+              _badgeText.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10,
+                letterSpacing: 0.8,
+                fontWeight: FontWeight.w800,
+                color: color,
               ),
             ),
           ),

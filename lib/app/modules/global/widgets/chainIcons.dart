@@ -35,7 +35,7 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
       return Tooltip(
         message: externalChain.name,
         preferBelow: false,
-        child: Container(
+        child: SizedBox(
           height: size.toDouble(),
           child: externalChainNetworkIcon == ''
               ? Assets.images.movementLogo.svg(

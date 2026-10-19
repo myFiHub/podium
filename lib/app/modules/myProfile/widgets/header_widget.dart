@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:podium/app/modules/myProfile/constants/connected_accounts_constants.dart';
 import 'package:podium/utils/loginType.dart';
-import 'package:podium/utils/styles.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 /// A widget that displays the currently logged-in account type with a success indicator.
 class HeaderWidget extends StatelessWidget {
@@ -14,31 +14,46 @@ class HeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: ConnectedAccountsConstants.defaultPadding,
-      decoration: BoxDecoration(
-        color: ConnectedAccountsConstants.headerBackgroundColor
-            .withAlpha(ConnectedAccountsConstants.headerBackgroundAlpha),
-        borderRadius: ConnectedAccountsConstants.containerBorderRadius,
-      ),
+    return AppCard(
+      color: ConnectedAccountsConstants.headerBackgroundColor
+          .withAlpha(ConnectedAccountsConstants.headerBackgroundAlpha),
+      borderColor: ConnectedAccountsConstants.successColor.withAlpha(70),
       child: Row(
         children: [
           Semantics(
             label: 'Success indicator',
-            child: const Icon(
-              Icons.check_circle,
-              color: ConnectedAccountsConstants.successColor,
-              size: ConnectedAccountsConstants.headerIconSize,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: ConnectedAccountsConstants.successColor.withAlpha(36),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_rounded,
+                color: ConnectedAccountsConstants.successColor,
+                size: ConnectedAccountsConstants.headerIconSize,
+              ),
             ),
           ),
-          space12,
+          const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              'Currently Logged in with ${loginTypeToDisplayName(loginType)}',
-              style: const TextStyle(
-                fontSize: ConnectedAccountsConstants.headerFontSize,
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Currently logged in with', style: AppText.caption),
+                const SizedBox(height: 2),
+                Text(
+                  loginTypeToDisplayName(loginType),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: ConnectedAccountsConstants.headerFontSize,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../widgets/record_list_item.dart';
 
@@ -13,24 +14,31 @@ class Records extends GetView<RecordsController> {
       body: Obx(() {
         if (controller.recordings.isEmpty) {
           return const Center(
-            child: Text('No recordings found'),
+            child: SingleChildScrollView(
+              child: AppEmptyState(
+                icon: Icons.mic_none_rounded,
+                title: 'No recordings found',
+                message: 'Recordings you make in outposts will show up here.',
+              ),
+            ),
           );
         }
 
-        return Stack(
-          children: [
-            ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              itemCount: controller.recordings.length,
-              itemBuilder: (context, index) {
-                final recording = controller.recordings[index];
-                return RecordListItem(
-                  recording: recording,
-                  controller: controller,
-                );
-              },
-            ),
-          ],
+        return ListView.builder(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            8,
+            16,
+            24 + MediaQuery.of(context).padding.bottom,
+          ),
+          itemCount: controller.recordings.length,
+          itemBuilder: (context, index) {
+            final recording = controller.recordings[index];
+            return RecordListItem(
+              recording: recording,
+              controller: controller,
+            );
+          },
         );
       }),
     );

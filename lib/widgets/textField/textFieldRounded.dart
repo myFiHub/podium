@@ -6,19 +6,19 @@ import 'package:podium/widgets/textField/textField.dart';
 class Input extends StatefulWidget {
   const Input(
       {Key? key,
-      this.editingbordercolor = ColorName.systemTrayBackground,
+      this.editingbordercolor = ColorName.primaryBlue,
       this.idlebordercolor = ColorName.cardBorder,
       this.borderwidth = 1,
-      this.cornerradius = 8,
+      this.cornerradius = 14,
       required this.hintText,
       this.iconPrefix,
       this.suffixIcon,
       this.formField = true,
-      this.backgroundcolor = ColorName.pageBackground,
-      this.normalbordercolor = Colors.white,
-      this.focusedbordercolor = Colors.green,
-      this.errorbordercolor = Colors.red,
-      this.disabledbordercolor = Colors.black,
+      this.backgroundcolor = const Color(0x0DFFFFFF),
+      this.normalbordercolor = ColorName.cardBorder,
+      this.focusedbordercolor = ColorName.primaryBlue,
+      this.errorbordercolor = const Color(0xFFF04141),
+      this.disabledbordercolor = const Color(0x0FFFFFFF),
       this.paddingvertical = 3,
       this.paddinghorizontal = 4,
       this.marginvertical = 3,
@@ -158,6 +158,17 @@ class _InputState extends State<Input> {
             suffixIcon: widget.suffixIcon,
             fillColor: widget.backgroundcolor,
             hintText: widget.hintText,
+            hintStyle: const TextStyle(
+              color: ColorName.secondaryText,
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+            errorStyle: const TextStyle(
+              color: Color(0xFFF04141),
+              fontSize: 12,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderSide: BorderSide(
                 color: widget.normalbordercolor,
@@ -168,7 +179,7 @@ class _InputState extends State<Input> {
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
                 color: widget.editingbordercolor,
-                width: widget.borderwidth,
+                width: widget.borderwidth + 0.4,
               ),
               borderRadius: BorderRadius.circular(widget.cornerradius),
             ),
@@ -196,7 +207,7 @@ class _InputState extends State<Input> {
             focusedErrorBorder: OutlineInputBorder(
               borderSide: BorderSide(
                 color: widget.errorbordercolor,
-                width: widget.borderwidth,
+                width: widget.borderwidth + 0.4,
               ),
               borderRadius: BorderRadius.circular(widget.cornerradius),
             ),

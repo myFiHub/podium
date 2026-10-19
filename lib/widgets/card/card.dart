@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/buttonBar/buttonBar.dart';
 import 'package:podium/widgets/imageOverlay/imageOverlay.dart';
@@ -113,7 +114,9 @@ class Card extends StatelessWidget {
   /// defines the gradient background
   final LinearGradient? gradient;
 
-  static const double _defaultElevation = 1;
+  static const double _defaultElevation = 0;
+  static const BorderRadius _defaultRadius =
+      BorderRadius.all(Radius.circular(18));
   static const Clip _defaultClipBehavior = Clip.none;
 
   @override
@@ -130,7 +133,7 @@ class Card extends StatelessWidget {
                   ? ClipRRect(
                       // ignore: avoid_as
                       borderRadius: borderRadius as BorderRadius? ??
-                          const BorderRadius.vertical(top: Radius.circular(4)),
+                          const BorderRadius.vertical(top: Radius.circular(18)),
                       child: image,
                     )
                   : Container(),
@@ -151,12 +154,12 @@ class Card extends StatelessWidget {
     final Widget overlayImage = ImageOverlay(
       width: MediaQuery.of(context).size.width,
       child: cardChild,
-      color: color ?? cardTheme.color ?? Theme.of(context).cardColor,
+      color: color ?? ColorName.cardBackground.withAlpha(200),
       image: imageOverlay,
       boxFit: boxFit,
       colorFilter: colorFilter,
       border: border,
-      borderRadius: borderRadius ?? const BorderRadius.all(Radius.circular(4)),
+      borderRadius: borderRadius ?? _defaultRadius,
     );
 
     return Container(
@@ -165,19 +168,18 @@ class Card extends StatelessWidget {
       decoration: gradient != null
           ? BoxDecoration(
               gradient: gradient,
-              borderRadius:
-                  borderRadius ?? const BorderRadius.all(Radius.circular(4)),
+              borderRadius: borderRadius ?? _defaultRadius,
             )
           : null,
       child: gradient == null
           ? Material(
               type: MaterialType.card,
-              color: color ?? cardTheme.color ?? Theme.of(context).cardColor,
-              elevation: elevation ?? cardTheme.elevation ?? _defaultElevation,
+              color: color ?? ColorName.cardBackground.withAlpha(200),
+              elevation: elevation ?? _defaultElevation,
               shape: shape ??
-                  cardTheme.shape ??
-                  const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(4)),
+                  RoundedRectangleBorder(
+                    borderRadius: borderRadius ?? _defaultRadius,
+                    side: const BorderSide(color: ColorName.cardBorder),
                   ),
               borderOnForeground: borderOnForeground,
               clipBehavior: clipBehavior ??

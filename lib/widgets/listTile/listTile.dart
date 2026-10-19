@@ -13,7 +13,7 @@ class PodiumListTile extends StatelessWidget {
     this.subTitle,
     this.description,
     this.icon,
-    this.padding = const EdgeInsets.all(8),
+    this.padding = const EdgeInsets.all(12),
     this.margin = const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
     this.listItemTextColor = ColorName.white,
     this.enabled = true,
@@ -127,104 +127,124 @@ class PodiumListTile extends StatelessWidget {
   final BoxShadow? shadow;
 
   @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: enabled ? onTap : null,
-        onLongPress: enabled ? onLongPress : null,
-        canRequestFocus: enabled,
-        focusNode: focusNode,
-        focusColor: focusColor,
-        hoverColor: hoverColor,
-        autofocus: autofocus,
-        child: Semantics(
-          selected: selected,
-          enabled: enabled,
-          child: Container(
-            // constraints: const BoxConstraints(minHeight: 50),
-            padding: padding,
-            margin: margin,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.all(Radius.circular(radius ?? 8)),
-              boxShadow: color != null
-                  ? [
-                      shadow ??
-                          BoxShadow(
-                            color: Colors.grey.withValues(alpha: 0.5),
-
-                            spreadRadius: 4,
-                            blurRadius: 7,
-                            offset: const Offset(
-                                2, 4), // changes position of shadow
-                          ),
-                    ]
-                  : [],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    avatar ?? Container(),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            titleText != null
-                                ? Text(
-                                    titleText!,
-                                    style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w500,
-                                        color: listItemTextColor),
-                                  )
-                                : title ?? Container(),
-                            subTitleText != null
-                                ? Text(
+  Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(radius ?? 14);
+    final hasButtons = (firstButtonTitle?.isNotEmpty ?? false) ||
+        (secondButtonTitle?.isNotEmpty ?? false);
+    return Padding(
+      padding: margin,
+      child: Material(
+        color: color ?? Colors.transparent,
+        borderRadius: borderRadius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          onLongPress: enabled ? onLongPress : null,
+          canRequestFocus: enabled,
+          focusNode: focusNode,
+          focusColor: focusColor,
+          hoverColor: hoverColor,
+          autofocus: autofocus,
+          child: Semantics(
+            selected: selected,
+            enabled: enabled,
+            child: Container(
+              padding: padding,
+              decoration: BoxDecoration(
+                borderRadius: borderRadius,
+                border: color != null
+                    ? Border.all(color: ColorName.cardBorder)
+                    : null,
+                boxShadow: shadow != null ? [shadow!] : null,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: <Widget>[
+                      if (avatar != null) avatar!,
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              if (titleText != null)
+                                Text(
+                                  titleText!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: listItemTextColor,
+                                  ),
+                                )
+                              else if (title != null)
+                                title!,
+                              if (subTitleText != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
                                     subTitleText!,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      fontSize: 14.5,
-                                      color: ColorName.white,
+                                      fontSize: 13,
+                                      color: ColorName.greyText,
                                     ),
-                                  )
-                                : subTitle ?? Container(),
-                            description ?? Container()
-                          ],
+                                  ),
+                                )
+                              else if (subTitle != null)
+                                subTitle!,
+                              if (description != null) description!,
+                            ],
+                          ),
                         ),
+                      ),
+                      if (icon != null) icon!,
+                    ],
+                  ),
+                  if (hasButtons)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (firstButtonTitle?.isNotEmpty ?? false)
+                            TextButton(
+                              onPressed: onFirstButtonTap,
+                              style: TextButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                foregroundColor: ColorName.greyText,
+                              ),
+                              child: Text(
+                                firstButtonTitle ?? '',
+                                style: firstButtonTextStyle,
+                              ),
+                            ),
+                          if (secondButtonTitle?.isNotEmpty ?? false)
+                            TextButton(
+                              onPressed: onSecondButtonTap,
+                              style: TextButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                foregroundColor: ColorName.primaryBlue,
+                              ),
+                              child: Text(
+                                secondButtonTitle ?? '',
+                                style: secondButtonTextStyle,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    icon ?? Container(),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (firstButtonTitle?.isNotEmpty ?? false)
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: InkWell(
-                          onTap: onFirstButtonTap,
-                          child: Text(firstButtonTitle ?? '',
-                              style: firstButtonTextStyle),
-                        ),
-                      ),
-                    if (secondButtonTitle?.isNotEmpty ?? false)
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: InkWell(
-                          onTap: onSecondButtonTap,
-                          child: Text(
-                            secondButtonTitle ?? '',
-                            style: secondButtonTextStyle,
-                          ),
-                        ),
-                      )
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }

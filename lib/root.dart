@@ -52,32 +52,72 @@ class InternetConnectionChecker extends GetView<GlobalController> {
       final AppLifecycleState state = controller.appLifecycleState.value;
       return connected && state != AppLifecycleState.paused
           ? const SizedBox()
-          : Positioned(
-              child: Material(
-                child: Container(
-                  color: Colors.black.withAlpha(77),
-                  child: Row(
-                    children: [
-                      Text(
-                        'connection issue',
-                        style: TextStyle(
-                          color: Colors.red[700],
-                          fontSize: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Icon(
-                        Icons.wifi_off,
-                        color: Colors.red,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              bottom: 70,
-              left: Get.width / 2 - 100,
+          : const Positioned(
+              bottom: 76,
+              left: 16,
+              right: 16,
+              child: Center(child: _ConnectionIssueBanner()),
             );
     });
+  }
+}
+
+class _ConnectionIssueBanner extends StatelessWidget {
+  const _ConnectionIssueBanner();
+
+  static const _danger = Color(0xFFF04141);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+        decoration: BoxDecoration(
+          color: ColorName.cardBackground.withAlpha(240),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _danger.withAlpha(90)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(90),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: _danger.withAlpha(36),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.wifi_off_rounded,
+                color: _danger,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Flexible(
+              child: Text(
+                'Connection issue',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
-import 'package:podium/app/modules/global/widgets/loading_widget.dart';
-import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/root.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
-import 'package:podium/widgets/button/button.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../controllers/notifications_controller.dart';
 
@@ -19,34 +14,41 @@ class NotificationsView extends GetView<NotificationsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageWrapper(
-        child: Container(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Container(
-                  child: Obx(() {
-                    final notifications = controller.notifications;
-                    if (notifications.isEmpty) {
-                      return const EmptyNotificationsWidget();
-                    }
-                    return ListView.builder(
-                      key: const PageStorageKey('notifications_list'),
-                      itemCount: notifications.length,
-                      itemBuilder: (context, index) {
-                        final notif = notifications[index];
-                        return NotificationCard(
-                          key: ValueKey(notif.uuid),
-                          notification: notif,
-                          controller: controller,
-                        );
-                      },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Obx(() {
+              final unread = controller.numberOfUnreadNotifications.value;
+              return AppPageHeader(
+                title: 'Notifications',
+                subtitle: unread == 0
+                    ? "You're all caught up"
+                    : '$unread unread',
+                padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+              );
+            }),
+            Expanded(
+              child: Obx(() {
+                final notifications = controller.notifications;
+                if (notifications.isEmpty) {
+                  return const EmptyNotificationsWidget();
+                }
+                return ListView.builder(
+                  key: const PageStorageKey('notifications_list'),
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 32),
+                  itemCount: notifications.length,
+                  itemBuilder: (context, index) {
+                    final notif = notifications[index];
+                    return NotificationCard(
+                      key: ValueKey(notif.uuid),
+                      notification: notif,
+                      controller: controller,
                     );
-                  }),
-                ),
-              ),
-            ],
-          ),
+                  },
+                );
+              }),
+            ),
+          ],
         ),
       ),
     );
@@ -58,18 +60,13 @@ class EmptyNotificationsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Assets.images.bell.image(
-            width: 64,
-            height: 64,
-          ),
-          const SizedBox(height: 10),
-          const Text('No notifications'),
-        ],
+    return const Center(
+      child: SingleChildScrollView(
+        child: AppEmptyState(
+          icon: Icons.notifications_none_rounded,
+          title: 'No notifications',
+          message: 'Invitations and new followers will show up here.',
+        ),
       ),
     );
   }
@@ -102,61 +99,117 @@ class NotificationCard extends StatelessWidget {
         notification.notification_type.name == NotificationTypes.invite.name
             ? 'Outpost Invitation'
             : 'New Follower';
+    final isRead = notification.is_read;
 
-    return Column(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: ColorName.cardBackground,
-            border: Border.all(
-              color: ColorName.cardBorder,
+    return AppCard(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.all(14),
+      borderColor: isRead ? null : AppColors.primary.withAlpha(90),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NotificationAvatar(
+                key: ValueKey('img_${imageSrc}'),
+                imageSrc: imageSrc,
+                alt: alt,
+                isInvite: isInvite,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    NotificationHeader(
+                      key: ValueKey('${imageSrc}_${alt}'),
+                      imageSrc: imageSrc,
+                      alt: alt,
+                      title: title,
+                      isInvite: isInvite,
+                      isRead: isRead,
+                    ),
+                    const SizedBox(height: 4),
+                    NotificationMessage(
+                      key: ValueKey('message_${notification.uuid}'),
+                      message: notification.message,
+                    ),
+                    const SizedBox(height: 10),
+                    NotificationIdSection(
+                      key: ValueKey('${notifierId}_${notification.uuid}'),
+                      idPrefix: idPrefix,
+                      notifierId: notifierId,
+                      isInvite: isInvite,
+                      notificationId: notification.uuid,
+                      controller: controller,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (!isRead || isInvite) ...[
+            const SizedBox(height: 12),
+            NotificationActions(
+              key: ValueKey('actions_${notification.uuid}'),
+              notification: notification,
+              controller: controller,
             ),
-            borderRadius: const BorderRadius.all(
-              Radius.circular(8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificationAvatar extends StatelessWidget {
+  final String imageSrc;
+  final String alt;
+  final bool isInvite;
+
+  const _NotificationAvatar({
+    super.key,
+    required this.imageSrc,
+    required this.alt,
+    required this.isInvite,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isInvite ? AppColors.accent : AppColors.success;
+    return SizedBox(
+      width: 46,
+      height: 46,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Img(
+            src: imageSrc,
+            alt: alt,
+            size: 44,
+            borderRadius: const BorderRadius.all(Radius.circular(22)),
+          ),
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surface, width: 2),
+              ),
+              child: Icon(
+                isInvite ? Icons.mail_rounded : Icons.person_add_alt_1_rounded,
+                size: 10,
+                color: Colors.black,
+              ),
             ),
           ),
-          margin: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 4,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                NotificationHeader(
-                  key: ValueKey('${imageSrc}_${alt}'),
-                  imageSrc: imageSrc,
-                  alt: alt,
-                  title: title,
-                  isInvite: isInvite,
-                  isRead: notification.is_read,
-                ),
-                space5,
-                NotificationMessage(
-                  key: ValueKey('message_${notification.uuid}'),
-                  message: notification.message,
-                ),
-                space5,
-                NotificationIdSection(
-                  key: ValueKey('${notifierId}_${notification.uuid}'),
-                  idPrefix: idPrefix,
-                  notifierId: notifierId,
-                  isInvite: isInvite,
-                  notificationId: notification.uuid,
-                  controller: controller,
-                ),
-                space5,
-                NotificationActions(
-                  key: ValueKey('actions_${notification.uuid}'),
-                  notification: notification,
-                  controller: controller,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -181,30 +234,16 @@ class NotificationHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Img(
-          key: ValueKey('img_${imageSrc}'),
-          src: imageSrc,
-          alt: alt,
-          width: 24,
-          height: 24,
-        ),
-        space10,
-        if (isInvite && !isRead)
-          Shimmer.fromColors(
-            key: ValueKey('shimmer_${title}'),
-            loop: 5,
-            baseColor: Colors.white,
-            highlightColor: Colors.blueAccent,
-            child: NotifTitleWidget(
-              key: ValueKey('title_${title}'),
-              title: title,
-            ),
-          )
-        else
-          NotifTitleWidget(
+        Flexible(
+          child: NotifTitleWidget(
             key: ValueKey('title_${title}'),
             title: title,
           ),
+        ),
+        if (!isRead) ...[
+          const SizedBox(width: 8),
+          const AppPill(label: 'NEW', color: AppColors.primary),
+        ],
       ],
     );
   }
@@ -220,16 +259,11 @@ class NotificationMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: Get.width - 60,
-      child: Text(
-        message,
-        style: const TextStyle(
-          fontSize: 14,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+    return Text(
+      message,
+      style: AppText.muted.copyWith(height: 1.35),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }
@@ -252,88 +286,73 @@ class NotificationIdSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        controller.openUserProfile(
-          id: notifierId,
-          notifId: notificationId,
-        );
-      },
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.symmetric(
-            vertical: 6,
-            horizontal: 10,
-          ),
-          decoration: BoxDecoration(
-            color: ColorName.primaryBlue.withAlpha(25),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: ColorName.primaryBlue.withAlpha(77),
-              width: 1,
-            ),
-          ),
+    return Material(
+      color: AppColors.primary.withAlpha(22),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(color: AppColors.primary.withAlpha(60)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          controller.openUserProfile(
+            id: notifierId,
+            notifId: notificationId,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 5, 8, 5),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              RichText(
-                key: ValueKey('richText_${notifierId}'),
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
+              Flexible(
+                child: Text.rich(
+                  key: ValueKey('richText_${notifierId}'),
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '$idPrefix ',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      TextSpan(
+                        text: truncate(
+                          notifierId,
+                          length: 15,
+                        ),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ],
                   ),
-                  children: [
-                    TextSpan(
-                      text: '$idPrefix ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: isInvite
-                            ? ColorName.primaryBlue
-                            : ColorName.primaryBlue,
-                      ),
-                    ),
-                    TextSpan(
-                      text: truncate(
-                        notifierId,
-                        length: 15,
-                      ),
-                      style: TextStyle(
-                        color: isInvite
-                            ? ColorName.primaryBlue
-                            : ColorName.primaryBlue,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
-              space5,
-              const Icon(
-                Icons.arrow_forward_ios,
-                size: 10,
-                color: ColorName.primaryBlue,
-              ),
+              const SizedBox(width: 4),
+              Obx(() {
+                final loadingUserId = controller.loadingUserId.value;
+                return loadingUserId == notifierId + notificationId
+                    ? const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.6,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 14,
+                        color: AppColors.primary,
+                      );
+              }),
             ],
           ),
         ),
-        Obx(() {
-          final loadingUserId = controller.loadingUserId.value;
-          return loadingUserId == notifierId + notificationId
-              ? const Padding(
-                  padding: EdgeInsets.only(
-                    left: 6,
-                  ),
-                  child: SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: LoadingWidget(
-                      color: Colors.blue,
-                    ),
-                  ))
-              : emptySpace;
-        })
-      ]),
+      ),
     );
   }
 }
@@ -350,72 +369,146 @@ class NotificationActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        if (!notification.is_read)
-          Obx(
-            () {
-              final loadingInviteId = controller.loadingInviteId.value;
-              return Button(
-                key: ValueKey('read_${notification.uuid}'),
-                loading: loadingInviteId == notification.uuid + 'read',
-                size: ButtonSize.SMALL,
-                onPressed: () {
-                  controller.markNotificationAsRead(id: notification.uuid);
-                },
-                type: ButtonType.outline,
-                text: 'Mark as read',
-              );
-            },
-          ),
-        space10,
-        if (notification.notification_type == NotificationTypes.invite)
-          Row(
-            children: [
-              Obx(
-                () {
-                  final loadingInviteId = controller.loadingInviteId.value;
-                  return Button(
-                    key: ValueKey('reject_${notification.uuid}'),
-                    loading: loadingInviteId == notification.uuid + 'reject',
-                    size: ButtonSize.SMALL,
-                    onPressed: () {
-                      controller.rejectOutpostInvitation(
-                        notif: notification,
-                      );
-                    },
-                    color: Colors.red[200]!,
-                    textColor: Colors.red[200]!,
-                    type: ButtonType.outline,
-                    text: 'Reject',
-                  );
-                },
-              ),
-              space10,
-              Obx(
-                () {
-                  final loadingInviteId = controller.loadingInviteId.value;
-                  return Button(
-                    key: ValueKey('accept_${notification.uuid}'),
-                    loading: loadingInviteId == notification.uuid + 'accept',
-                    size: ButtonSize.SMALL,
-                    onPressed: () {
-                      controller.acceptOutpostInvitation(
-                        notif: notification,
-                      );
-                    },
-                    color: Colors.green[200]!,
-                    textColor: Colors.green[200]!,
-                    type: ButtonType.outline,
-                    text: 'Accept',
-                  );
-                },
-              ),
-            ],
-          )
-      ],
+    final isInvite = notification.notification_type == NotificationTypes.invite;
+    return Obx(() {
+      final loadingInviteId = controller.loadingInviteId.value;
+      return Row(
+        children: [
+          if (!notification.is_read)
+            _NotifActionButton(
+              key: ValueKey('read_${notification.uuid}'),
+              label: 'Mark as read',
+              loading: loadingInviteId == notification.uuid + 'read',
+              style: _NotifActionStyle.text,
+              onPressed: () {
+                controller.markNotificationAsRead(id: notification.uuid);
+              },
+            ),
+          const Spacer(),
+          if (isInvite) ...[
+            _NotifActionButton(
+              key: ValueKey('reject_${notification.uuid}'),
+              label: 'Reject',
+              loading: loadingInviteId == notification.uuid + 'reject',
+              style: _NotifActionStyle.danger,
+              onPressed: () {
+                controller.rejectOutpostInvitation(
+                  notif: notification,
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            _NotifActionButton(
+              key: ValueKey('accept_${notification.uuid}'),
+              label: 'Accept',
+              loading: loadingInviteId == notification.uuid + 'accept',
+              style: _NotifActionStyle.primary,
+              onPressed: () {
+                controller.acceptOutpostInvitation(
+                  notif: notification,
+                );
+              },
+            ),
+          ],
+        ],
+      );
+    });
+  }
+}
+
+enum _NotifActionStyle { text, danger, primary }
+
+class _NotifActionButton extends StatelessWidget {
+  final String label;
+  final bool loading;
+  final _NotifActionStyle style;
+  final VoidCallback onPressed;
+
+  const _NotifActionButton({
+    super.key,
+    required this.label,
+    required this.loading,
+    required this.style,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
     );
+    const padding = EdgeInsets.symmetric(horizontal: 16);
+    const minimumSize = Size(0, 36);
+    const textStyle = TextStyle(fontSize: 13, fontWeight: FontWeight.w700);
+    final fg = switch (style) {
+      _NotifActionStyle.text => AppColors.textMuted,
+      _NotifActionStyle.danger => AppColors.danger,
+      _NotifActionStyle.primary => Colors.white,
+    };
+    final child = loading
+        ? SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2, color: fg),
+          )
+        : Text(label);
+    final onTap = loading ? null : onPressed;
+
+    switch (style) {
+      case _NotifActionStyle.text:
+        return TextButton.icon(
+          onPressed: onTap,
+          icon: loading ? child : const Icon(Icons.done_all_rounded, size: 16),
+          label: Text(label),
+          style: TextButton.styleFrom(
+            foregroundColor: fg,
+            disabledForegroundColor: fg,
+            minimumSize: minimumSize,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            textStyle: textStyle,
+            shape: shape,
+          ),
+        );
+      case _NotifActionStyle.danger:
+        return OutlinedButton(
+          onPressed: onTap,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: fg,
+            disabledForegroundColor: fg,
+            backgroundColor: fg.withAlpha(18),
+            side: BorderSide(color: fg.withAlpha(90)),
+            minimumSize: minimumSize,
+            padding: padding,
+            textStyle: textStyle,
+            shape: shape,
+          ),
+          child: child,
+        );
+      case _NotifActionStyle.primary:
+        return FilledButton(
+          onPressed: onTap,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.success,
+            foregroundColor: Colors.black,
+            disabledBackgroundColor: AppColors.success.withAlpha(150),
+            disabledForegroundColor: Colors.black,
+            minimumSize: minimumSize,
+            padding: padding,
+            textStyle: textStyle,
+            shape: shape,
+          ),
+          child: loading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.black,
+                  ),
+                )
+              : Text(label),
+        );
+    }
   }
 }
 
@@ -428,11 +521,7 @@ class NotifTitleWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
+      style: AppText.cardTitle,
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
     );

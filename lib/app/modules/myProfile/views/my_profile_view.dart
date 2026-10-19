@@ -25,6 +25,7 @@ import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:shimmer/shimmer.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
@@ -40,20 +41,28 @@ class MyProfileView extends GetView<MyProfileController> {
         body: PageWrapper(
           child: SingleChildScrollView(
             controller: controller.scrollController,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 const ContextSaver(),
                 const NonPrimaryAccountWarning(),
                 const UserInfo(),
-                const ConnectedAccountsButton(),
-                space10,
-                ReferalSystem(
-                  key: controller.referalSystemKey,
+                const _SectionLabel('Account'),
+                AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      const ConnectedAccountsButton(),
+                      const _RowDivider(),
+                      ReferalSystem(
+                        key: controller.referalSystemKey,
+                      ),
+                    ],
+                  ),
                 ),
+                const _SectionLabel('Wallets'),
                 const DefaultWallet(),
-                space10,
                 InternalWallet(
                   key: controller.internalWalletKey,
                 ),
@@ -61,23 +70,206 @@ class MyProfileView extends GetView<MyProfileController> {
                 WalletConnect(
                   key: controller.walletConnectKey,
                 ),
-                space10,
+                const _SectionLabel('Activity'),
                 _Statistics(
                   key: controller.statisticsKey,
                 ),
-                space10,
-                const ToggleShowArchivedGroups(),
-                space10,
-                const BugsAndFeedbacks(),
-                space10,
+                const _SectionLabel('Preferences'),
+                const AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      ToggleShowArchivedGroups(),
+                      _RowDivider(),
+                      BugsAndFeedbacks(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
                 const LogoutButton(),
-                space10,
+                const SizedBox(height: 10),
                 const DeleteAccountButton(),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String title;
+  const _SectionLabel(this.title);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSectionHeader(
+      title: title,
+      padding: const EdgeInsets.fromLTRB(4, 24, 4, 10),
+    );
+  }
+}
+
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      indent: 68,
+      color: AppColors.border,
+    );
+  }
+}
+
+class _IconTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final double size;
+  const _IconTile({
+    required this.icon,
+    this.color = AppColors.primary,
+    this.size = 38,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: color.withAlpha(50)),
+      ),
+      child: Icon(icon, size: size * 0.5, color: color),
+    );
+  }
+}
+
+class _SettingsRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final bool dimmed;
+  const _SettingsRow({
+    required this.icon,
+    required this.title,
+    this.iconColor = AppColors.primary,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+    this.dimmed = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            _IconTile(
+              icon: icon,
+              color: dimmed ? AppColors.textMuted : iconColor,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.cardTitle.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: dimmed ? AppColors.textMuted : Colors.white,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.caption,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            trailing ??
+                (onTap != null
+                    ? const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.textMuted,
+                      )
+                    : const SizedBox.shrink()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DangerButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool loading;
+  final bool subtle;
+  final VoidCallback onPressed;
+  const _DangerButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.loading = false,
+    this.subtle = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final background =
+        subtle ? Colors.transparent : AppColors.danger.withAlpha(30);
+    return FilledButton(
+      onPressed: loading ? null : onPressed,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(52),
+        backgroundColor: background,
+        foregroundColor: AppColors.danger,
+        disabledBackgroundColor: background,
+        disabledForegroundColor: AppColors.danger,
+        side: BorderSide(color: AppColors.danger.withAlpha(subtle ? 60 : 90)),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+      ),
+      child: loading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                color: AppColors.danger,
+              ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 20),
+                const SizedBox(width: 8),
+                Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+              ],
+            ),
     );
   }
 }
@@ -89,17 +281,14 @@ class DeleteAccountButton extends GetView<MyProfileController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final isDeactivatingAccount = controller.isDeactivatingAccount.value;
-      return Button(
+      return _DangerButton(
         loading: isDeactivatingAccount,
-        type: ButtonType.outline,
-        color: ButtonColors.DANGER,
-        borderSide: const BorderSide(color: Colors.red),
-        blockButton: true,
-        textColor: Colors.red,
+        subtle: true,
+        icon: Icons.delete_outline_rounded,
         onPressed: () {
           controller.showDeactivationDialog();
         },
-        text: 'Delete Account',
+        label: 'Delete Account',
       );
     });
   }
@@ -121,64 +310,27 @@ class ReferalSystem extends GetView<ReferalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        space10,
-        Obx(() {
-          final myProfileData = controller.myProfile.value;
-          // final usedReferrals = myProfileData?.referrals_count ?? 0;
-          final remainingReferrals =
-              myProfileData?.remaining_referrals_count ?? 0;
-          final totalReferrals =
-              (myProfileData?.referrals_count ?? 0) + remainingReferrals;
-          return Button(
-            onPressed: remainingReferrals == 0
-                ? null
-                : () {
-                    controller.referButtonClicked();
-                  },
-            blockButton: true,
-            type: ButtonType.outline,
-            child: RichText(
-                text: TextSpan(
-              children: [
-                TextSpan(
-                  text: remainingReferrals > 0
-                      ? 'Refer a friend'
-                      : 'All referrals used',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: remainingReferrals == 0 ? Colors.grey : Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (remainingReferrals > 0)
-                  const WidgetSpan(
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 10),
-                      child: Icon(
-                        Icons.person_add,
-                        size: 20,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ),
-                if (remainingReferrals > 0)
-                  WidgetSpan(
-                      child: Text(
-                    '$remainingReferrals/$totalReferrals remaining',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ))
-              ],
-            )),
-          );
-        }),
-      ],
-    );
+    return Obx(() {
+      final myProfileData = controller.myProfile.value;
+      final remainingReferrals = myProfileData?.remaining_referrals_count ?? 0;
+      final totalReferrals =
+          (myProfileData?.referrals_count ?? 0) + remainingReferrals;
+      final hasRemaining = remainingReferrals > 0;
+      return _SettingsRow(
+        icon: Icons.person_add_alt_1_rounded,
+        iconColor: AppColors.success,
+        title: hasRemaining ? 'Refer a friend' : 'All referrals used',
+        subtitle: hasRemaining
+            ? '$remainingReferrals/$totalReferrals remaining'
+            : 'No invites left',
+        dimmed: !hasRemaining,
+        onTap: hasRemaining
+            ? () {
+                controller.referButtonClicked();
+              }
+            : null,
+      );
+    });
   }
 }
 
@@ -187,40 +339,14 @@ class BugsAndFeedbacks extends GetView<MyProfileController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        space10,
-        Button(
-          onPressed: () {
-            controller.openFeedbackPage();
-          },
-          blockButton: true,
-          type: ButtonType.outline,
-          child: RichText(
-              text: const TextSpan(
-            children: [
-              TextSpan(
-                text: 'Report a bug or give feedback',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const WidgetSpan(
-                child: const Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: const Icon(
-                    Icons.bug_report,
-                    size: 20,
-                    color: Colors.red,
-                  ),
-                ),
-              ),
-            ],
-          )),
-        ),
-      ],
+    return _SettingsRow(
+      icon: Icons.bug_report_outlined,
+      iconColor: AppColors.accent,
+      title: 'Report a bug or give feedback',
+      subtitle: 'Help us make Podium better',
+      onTap: () {
+        controller.openFeedbackPage();
+      },
     );
   }
 }
@@ -230,15 +356,13 @@ class ToggleShowArchivedGroups extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: const Text(
-        'Show My Archived Outposts',
-        style: const TextStyle(
-          fontSize: 18,
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+    return _SettingsRow(
+      icon: Icons.archive_outlined,
+      title: 'Show My Archived Outposts',
+      subtitle: 'Include archived outposts in your lists',
+      onTap: () {
+        controller.toggleShowArchivedOutposts();
+      },
       trailing: Obx(() {
         final value = controller.showArchivedOutposts.value;
         return Switch(
@@ -270,47 +394,85 @@ class _DefaultWalletState extends State<DefaultWallet> {
       visible = true;
     }
     if (visible == false) {
-      return Container();
-    } else {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      return const SizedBox.shrink();
+    }
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      child: Row(
         children: [
-          Row(
-            children: [
-              const Text(
-                'Default Wallet:',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              space10,
-              Text(
-                defaultWallet,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.purple[200],
-                ),
-              ),
-            ],
+          const _IconTile(
+            icon: Icons.star_outline_rounded,
+            color: AppColors.accent,
           ),
-          space10,
-          Button(
-            size: ButtonSize.SMALL,
-            borderSide: const BorderSide(color: Colors.red),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Default wallet', style: AppText.caption),
+                const SizedBox(height: 2),
+                Text(
+                  defaultWallet,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.cardTitle,
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
             onPressed: () {
               store.remove(StorageKeys.selectedWalletName);
               setState(() {
                 visible = false;
               });
             },
-            type: ButtonType.outline,
-            text: 'Forget',
+            child: const Text('Forget'),
           ),
         ],
-      );
-    }
+      ),
+    );
+  }
+}
+
+class _BalanceRow extends StatelessWidget {
+  final String iconSrc;
+  final String label;
+  final String price;
+  final bool isLoading;
+  const _BalanceRow({
+    required this.iconSrc,
+    required this.label,
+    required this.price,
+    required this.isLoading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Img(
+          src: iconSrc,
+          size: 20,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.muted,
+          ),
+        ),
+        _PriceSkeleton(
+          isLoading: isLoading,
+          price: price,
+        ),
+      ],
+    );
   }
 }
 
@@ -323,93 +485,22 @@ class EvmBalances extends GetView<MyProfileController> {
       final balances = controller.balances.value;
       final loading = controller.isGettingBalances.value;
 
-      return Container(
-        // add a top border
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: ColorName.greyText,
-              width: 1,
-            ),
+      return Column(
+        children: [
+          _BalanceRow(
+            iconSrc: chainIconUrlByChainId(baseChainId),
+            label: 'Base ETH',
+            price: balances.Base,
+            isLoading: loading,
           ),
-        ),
-        padding: const EdgeInsets.only(top: 12),
-        width: Get.width - 24,
-        height: 48,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Column(
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'Base ETH',
-                      style: TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                    space5,
-                    Img(
-                      src: chainIconUrlByChainId(baseChainId),
-                      size: 16,
-                    ),
-                  ],
-                ),
-                _PriceSkeleton(
-                  isLoading: loading,
-                  price: balances.Base,
-                ),
-              ],
-            ),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'AVAX',
-                      style: TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                    space5,
-                    Img(
-                      src: chainIconUrlByChainId(avalancheChainId),
-                      size: 16,
-                    ),
-                  ],
-                ),
-                _PriceSkeleton(
-                  isLoading: loading,
-                  price: balances.Avalanche,
-                ),
-              ],
-            ),
-            // Column(
-            //   children: [
-            //     Row(
-            //       children: [
-            //         const Text(
-            //           'MOVE',
-            //           style: TextStyle(
-            //             fontSize: 12,
-            //           ),
-            //         ),
-            //         space5,
-            //         Img(
-            //           src: chainIconUrlByChainId(movementEVMChain.chainId),
-            //           size: 16,
-            //         ),
-            //       ],
-            //     ),
-            //     _PriceSkeleton(
-            //       enabled: loading,
-            //       price: balances.Movement,
-            //     ),
-            //   ],
-            // ),
-          ],
-        ),
+          const SizedBox(height: 10),
+          _BalanceRow(
+            iconSrc: chainIconUrlByChainId(avalancheChainId),
+            label: 'AVAX',
+            price: balances.Avalanche,
+            isLoading: loading,
+          ),
+        ],
       );
     });
   }
@@ -420,49 +511,48 @@ class InternalWallet extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: ColorName.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+    return AppCard(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Row(
-                children: [
-                  Assets.images.logo.image(
-                    width: 30,
-                    height: 30,
-                  ),
-                  space10,
-                  Text(
-                    'Podium Wallet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.blue[100],
-                    ),
-                  ),
-                  space5,
-                  Icon(Icons.link, color: Colors.blue[100]),
-                  space5,
-                ],
+              Container(
+                width: 44,
+                height: 44,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.fill,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Assets.images.logo.image(),
               ),
-              space10,
-              const AptosAddressAndBalance(),
-              space10,
-              const EvmAddressAndBalances(),
-              space10,
-              const PrivateKeyButton(),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Podium Wallet', style: AppText.cardTitle),
+                    SizedBox(height: 2),
+                    Text('Your built-in wallet', style: AppText.caption),
+                  ],
+                ),
+              ),
+              const AppPill(
+                label: 'Linked',
+                icon: Icons.link_rounded,
+                color: AppColors.primary,
+              ),
             ],
           ),
-          // FriendTeckActivationButton()
+          const SizedBox(height: 16),
+          const AptosAddressAndBalance(),
+          const SizedBox(height: 10),
+          const EvmAddressAndBalances(),
+          const SizedBox(height: 14),
+          const PrivateKeyButton(),
         ],
       ),
     );
@@ -482,7 +572,7 @@ class AptosAddressAndBalance extends GetView<GlobalController> {
       return AddressAndBalanceWidget(
         address: aptosWalletAddress,
         balanceWidget: const AptosBalance(),
-        addressPrefix: 'Movement: ',
+        label: 'Movement',
       );
     });
   }
@@ -491,70 +581,94 @@ class AptosAddressAndBalance extends GetView<GlobalController> {
 class AddressAndBalanceWidget extends StatelessWidget {
   const AddressAndBalanceWidget({
     super.key,
-    required String this.address,
-    required Widget this.balanceWidget,
-    required String this.addressPrefix,
+    required this.address,
+    required this.label,
+    this.balanceWidget,
   });
 
   final String address;
-  final Widget balanceWidget;
-  final String addressPrefix;
+  final Widget? balanceWidget;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: Get.width - 16,
-      decoration: const BoxDecoration(
-        color: ColorName.cardBorder,
-        borderRadius: const BorderRadius.all(
-          const Radius.circular(12),
-        ),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        children: [
-          space10,
-          GestureDetector(
-            onTap: () async {
-              await Clipboard.setData(
-                ClipboardData(
-                  text: address,
-                ),
-              );
-              Toast.neutral(
-                title: 'Copied',
-                message: 'Wallet address copied to clipboard',
-              );
-            },
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.account_balance_wallet,
-                  color: ColorName.greyText,
-                ),
-                space10,
-                Text(
-                  '${addressPrefix}${truncate(
-                    address,
-                    length: 9,
-                  )}',
-                  style: const TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.w700,
-                    color: ColorName.greyText,
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              onTap: () async {
+                await Clipboard.setData(
+                  ClipboardData(
+                    text: address,
                   ),
+                );
+                Toast.neutral(
+                  title: 'Copied',
+                  message: 'Wallet address copied to clipboard',
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label.toUpperCase(),
+                            style: AppText.label.copyWith(fontSize: 10),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            truncate(address, length: 16),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: AppColors.fill,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.copy_rounded,
+                        size: 16,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
-                space10,
-                const Icon(
-                  Icons.copy,
-                  color: Colors.grey,
-                )
-              ],
+              ),
             ),
-          ),
-          space10,
-          balanceWidget,
-          space10,
-        ],
+            if (balanceWidget != null) ...[
+              const Divider(height: 1, thickness: 1, color: AppColors.border),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: balanceWidget,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -574,7 +688,7 @@ class EvmAddressAndBalances extends GetView<GlobalController> {
       return AddressAndBalanceWidget(
         address: walletAddress,
         balanceWidget: const EvmBalances(),
-        addressPrefix: 'EVM: ',
+        label: 'EVM',
       );
     });
   }
@@ -589,47 +703,11 @@ class AptosBalance extends GetView<MyProfileController> {
       final balances = controller.balances.value;
       final loading = controller.isGettingBalances.value;
 
-      return Container(
-        // add a top border
-        height: 48,
-        width: Get.width - 16,
-        decoration: const BoxDecoration(
-          border: const Border(
-            top: const BorderSide(
-              color: ColorName.greyText,
-              width: 1,
-            ),
-          ),
-        ),
-        padding: const EdgeInsets.only(top: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Column(
-              children: [
-                Row(
-                  children: [
-                    _PriceSkeleton(
-                      isLoading: loading,
-                      price: balances.movementAptos,
-                    ),
-                    const Text(
-                      ' MOVE',
-                      style: const TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                    space5,
-                    Img(
-                      src: chainIconUrlByChainId(movementEVMChain.chainId),
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+      return _BalanceRow(
+        iconSrc: chainIconUrlByChainId(movementEVMChain.chainId),
+        label: 'MOVE',
+        price: balances.movementAptos,
+        isLoading: loading,
       );
     });
   }
@@ -723,86 +801,51 @@ class ExternalWallet extends GetView<GlobalController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final connectedWalletAddress = controller.connectedWalletAddress.value;
-      return connectedWalletAddress == ''
-          ? Container()
-          : Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: ColorName.greyText,
-                  width: 1,
+      if (connectedWalletAddress == '') {
+        return const SizedBox.shrink();
+      }
+      return AppCard(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Row(
+              children: [
+                _IconTile(
+                  icon: Icons.link_rounded,
+                  color: AppColors.success,
+                  size: 44,
                 ),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            'External Wallet',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.green[100],
-                            ),
-                          ),
-                          space5,
-                          Icon(Icons.link, color: Colors.green[100]),
-                          space5,
-                          const ExternalWalletChainIcon(
-                            size: 20,
-                          ),
-                        ],
+                      Text('External Wallet', style: AppText.cardTitle),
+                      SizedBox(height: 2),
+                      Text(
+                        'Connected',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.success,
+                        ),
                       ),
-                      space10,
-                      GestureDetector(
-                          onTap: () async {
-                            await Clipboard.setData(
-                              ClipboardData(
-                                text: connectedWalletAddress,
-                              ),
-                            );
-                            Toast.neutral(
-                              title: 'Copied',
-                              message: 'Wallet address copied to clipboard',
-                            );
-                          },
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.account_balance_wallet,
-                                color: ColorName.greyText,
-                              ),
-                              space10,
-                              Text(
-                                truncate(
-                                  connectedWalletAddress,
-                                  length: 12,
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w700,
-                                  color: ColorName.greyText,
-                                ),
-                              ),
-                              space10,
-                              const Icon(
-                                Icons.copy,
-                                color: Colors.grey,
-                              )
-                            ],
-                          )),
                     ],
                   ),
-                  // FriendTechExternalWalletActivationButton()
-                ],
-              ));
+                ),
+                ExternalWalletChainIcon(
+                  size: 22,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            AddressAndBalanceWidget(
+              address: connectedWalletAddress,
+              label: 'Address',
+            ),
+          ],
+        ),
+      );
     });
   }
 }
@@ -815,31 +858,22 @@ class WalletConnect extends GetView<GlobalController> {
     return Obx(
       () {
         final walletConnected = controller.connectedWalletAddress.value;
-        return Column(
-          children: [
-            walletConnected != ''
-                ? Button(
-                    onPressed: () {
-                      controller.disconnect();
-                    },
-                    type: ButtonType.outline,
-                    color: ButtonColors.WARNING,
-                    textColor: Colors.red,
-                    borderSide: const BorderSide(color: Colors.red),
-                    blockButton: true,
-                    text: 'Disconnect External Wallet',
-                  )
-                : Button(
-                    onPressed: () {
-                      controller.connectToWallet();
-                    },
-                    type: ButtonType.gradient,
-                    blockButton: true,
-                    text: 'Connect External Wallet',
-                  ),
-            space10,
-          ],
-        );
+        return walletConnected != ''
+            ? AppSecondaryButton(
+                onPressed: () {
+                  controller.disconnect();
+                },
+                color: AppColors.danger,
+                icon: Icons.link_off_rounded,
+                label: 'Disconnect External Wallet',
+              )
+            : AppPrimaryButton(
+                onPressed: () {
+                  controller.connectToWallet();
+                },
+                icon: Icons.add_link_rounded,
+                label: 'Connect External Wallet',
+              );
       },
     );
   }
@@ -852,18 +886,50 @@ class LogoutButton extends GetView<GlobalController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final isLoggingOut = controller.isLoggingOut.value;
-      return Button(
+      return _DangerButton(
         loading: isLoggingOut,
+        icon: Icons.logout_rounded,
         onPressed: () {
           final globalController = Get.find<GlobalController>();
           globalController.setLoggedIn(false);
         },
-        type: ButtonType.solid,
-        blockButton: true,
-        color: ButtonColors.DANGER,
-        text: 'Logout',
+        label: 'Logout',
       );
     });
+  }
+}
+
+class _AvatarRing extends StatelessWidget {
+  final Widget child;
+  const _AvatarRing({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primary.withAlpha(60)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withAlpha(50),
+            blurRadius: 28,
+          ),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(3),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: ColorName.cardBackground,
+        ),
+        child: child,
+      ),
+    );
   }
 }
 
@@ -872,104 +938,111 @@ class UserInfo extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    String identifier =
-        controller.myUserInfo.value?.login_type_identifier as String;
-    final loginType = GetStorage().read(StorageKeys.loginType);
-
-    final loginTypes = {
-      LoginType.x: 'Logged in with X platform',
-      LoginType.facebook: 'Logged in with Facebook',
-      LoginType.linkedin: 'Logged in with LinkedIn',
-      LoginType.apple: 'Logged in with Apple',
-      LoginType.github: 'Logged in with Github'
-    };
-
-    if (loginTypes.containsKey(loginType)) {
-      identifier = loginTypes[loginType]!;
-    }
-
     return Obx(() {
       final myUser = controller.myUserInfo.value;
       if (myUser == null) {
-        return Container();
+        return const SizedBox.shrink();
       }
+      String identifier = myUser.login_type_identifier ?? '';
+      final loginType = GetStorage().read(StorageKeys.loginType);
+
+      final loginTypes = {
+        LoginType.x: 'Logged in with X platform',
+        LoginType.facebook: 'Logged in with Facebook',
+        LoginType.linkedin: 'Logged in with LinkedIn',
+        LoginType.apple: 'Logged in with Apple',
+        LoginType.github: 'Logged in with Github'
+      };
+
+      if (loginTypes.containsKey(loginType)) {
+        identifier = loginTypes[loginType]!;
+      }
+
       String avatar = myUser.image ?? '';
       if (avatar == defaultAvatar) {
         avatar = avatarPlaceHolder(myUser.name);
       }
 
-      return Container(
-        padding: const EdgeInsets.only(top: 12),
+      return Padding(
+        padding: const EdgeInsets.only(top: 16),
         child: Column(
           children: [
-            Hero(
-              tag: 'profile_avatar_${myUser.uuid}',
-              child: Img(
-                src: avatar,
-                size: 100,
-                alt: myUser.name,
+            _AvatarRing(
+              child: Hero(
+                tag: 'profile_avatar_${myUser.uuid}',
+                child: Img(
+                  src: avatar,
+                  size: 96,
+                  alt: myUser.name,
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
             ),
-            space10,
+            const SizedBox(height: 16),
             Text(
               myUser.name ?? '',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.pageTitle.copyWith(fontSize: 24),
             ),
-            space10,
-            Text(
-              identifier,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: ColorName.greyText,
+            if (identifier.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                identifier,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.muted,
               ),
-            ),
-            space10,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: Get.width - 120,
-                  child: RichText(
-                    overflow: TextOverflow.ellipsis,
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: ColorName.greyText,
-                      ),
-                      children: [
-                        const TextSpan(
-                          text: 'ID: ',
-                        ),
-                        TextSpan(
-                          text: myUser.uuid,
-                        ),
-                      ],
-                    ),
-                  ),
+            ],
+            const SizedBox(height: 14),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 300),
+              child: Material(
+                color: AppColors.fill,
+                shape: const StadiumBorder(
+                  side: BorderSide(color: AppColors.border),
                 ),
-                space5,
-                IconButton(
-                  onPressed: () {
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
                     Clipboard.setData(ClipboardData(text: myUser.uuid));
                     Toast.neutral(
                       title: 'Copied',
                       message: 'ID copied to clipboard',
                     );
                   },
-                  icon: const Icon(
-                    Icons.copy,
-                    color: Colors.grey,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('ID', style: AppText.label.copyWith(fontSize: 11)),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            myUser.uuid,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.caption,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.copy_rounded,
+                          size: 14,
+                          color: AppColors.textMuted,
+                        ),
+                      ],
+                    ),
                   ),
-                )
-              ],
+                ),
+              ),
             ),
-            space10,
           ],
         ),
       );
@@ -982,23 +1055,61 @@ class PrivateKeyButton extends GetView<MyProfileController> {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
+    return AppSecondaryButton(
       onPressed: () => controller.showPrivateKeyWarning(),
-      type: ButtonType.outline,
-      color: ButtonColors.DANGER,
-      borderSide: const BorderSide(color: Colors.red),
-      blockButton: true,
-      textColor: Colors.red,
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      color: AppColors.danger,
+      icon: Icons.key_rounded,
+      label: 'Copy Private Key',
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final int value;
+  const _StatTile({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.key, color: Colors.red),
-          SizedBox(width: 8),
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.caption,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           Text(
-            'Copy Private Key',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+            value.toString(),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
         ],
@@ -1016,226 +1127,168 @@ class _Statistics extends GetWidget<MyProfileController> {
       final payments = controller.payments.value;
       final loading = controller.isGettingPayments.value;
       if (loading) {
-        return const LoadingWidget();
+        return const AppCard(
+          child: SizedBox(
+            height: 120,
+            child: Center(child: LoadingWidget()),
+          ),
+        );
       }
+      final incomeEntries = payments.income.entries.toList();
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 10,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: ColorName.greyText,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(6),
-            ),
+          AppCard(
+            padding: const EdgeInsets.all(12),
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Column(
-                      children: [
-                        const Text(
-                          'Cheers received',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          payments.numberOfCheersReceived.toString(),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                    Expanded(
+                      child: _StatTile(
+                        icon: Icons.celebration_rounded,
+                        color: AppColors.accent,
+                        label: 'Cheers received',
+                        value: payments.numberOfCheersReceived,
+                      ),
                     ),
-                    Column(
-                      children: [
-                        const Text(
-                          'Boos received',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          payments.numberOfBoosReceived.toString(),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _StatTile(
+                        icon: Icons.thumb_down_alt_rounded,
+                        color: AppColors.danger,
+                        label: 'Boos received',
+                        value: payments.numberOfBoosReceived,
+                      ),
                     ),
                   ],
                 ),
-                space10,
+                const SizedBox(height: 10),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Column(
-                      children: [
-                        const Text(
-                          'Cheers sent',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          payments.numberOfCheersSent.toString(),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                    Expanded(
+                      child: _StatTile(
+                        icon: Icons.celebration_outlined,
+                        color: AppColors.accent,
+                        label: 'Cheers sent',
+                        value: payments.numberOfCheersSent,
+                      ),
                     ),
-                    Column(
-                      children: [
-                        const Text(
-                          'Boos sent',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          payments.numberOfBoosSent.toString(),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _StatTile(
+                        icon: Icons.thumb_down_alt_outlined,
+                        color: AppColors.danger,
+                        label: 'Boos sent',
+                        value: payments.numberOfBoosSent,
+                      ),
                     ),
                   ],
-                ),
-                space10,
-                Button(
-                  text: 'Recorded Audios',
-                  size: ButtonSize.SMALL,
-                  type: ButtonType.outline,
-                  color: ButtonColors.WARNING,
-                  textColor: Colors.white,
-                  borderSide: const BorderSide(color: Colors.white),
-                  onPressed: () {
-                    final isRegistered = Get.isRegistered<RecordsController>();
-                    if (isRegistered) {
-                      final recordsController = Get.find<RecordsController>();
-                      recordsController.loadRecordings();
-                    }
-                    Navigate.to(
-                      type: NavigationTypes.toNamed,
-                      route: Routes.RECORDS,
-                    );
-                  },
                 ),
               ],
             ),
           ),
-          space10,
-          Container(
-            width: Get.width - 2,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 10,
+          const SizedBox(height: 12),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: _SettingsRow(
+              icon: Icons.graphic_eq_rounded,
+              iconColor: AppColors.accent,
+              title: 'Recorded Audios',
+              subtitle: 'Listen back to your outpost recordings',
+              onTap: () {
+                final isRegistered = Get.isRegistered<RecordsController>();
+                if (isRegistered) {
+                  final recordsController = Get.find<RecordsController>();
+                  recordsController.loadRecordings();
+                }
+                Navigate.to(
+                  type: NavigationTypes.toNamed,
+                  route: Routes.RECORDS,
+                );
+              },
             ),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: ColorName.greyText,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Column(children: [
-              Text(
-                'Earned',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.green[200],
+          ),
+          const SizedBox(height: 12),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Row(
+                  children: [
+                    _IconTile(
+                      icon: Icons.account_balance_wallet_outlined,
+                      color: AppColors.success,
+                    ),
+                    SizedBox(width: 14),
+                    Text('Earned', style: AppText.cardTitle),
+                  ],
                 ),
-              ),
-              if (payments.income.entries.isEmpty)
-                const Text(
-                  'Nothing yet',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: ColorName.greyText,
+                const SizedBox(height: 12),
+                if (incomeEntries.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 6),
+                    child: Text('Nothing yet', style: AppText.muted),
                   ),
-                ),
-              ...payments.income.entries.map(
-                (e) {
-                  final chainInfo = chainInfoByChainId(e.key);
-                  final currency = chainInfo.currency;
-                  final chainName = chainInfo.name;
-                  final chainIcon = chainInfo.chainIcon!;
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  chainName,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                space5,
-                                Img(src: chainIcon, size: 20),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Text(
-                                  e.value.toString(),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                space5,
-                                Text(
-                                  currency,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      space5,
-                      // separetor
-                      if (e.key != payments.income.entries.last.key)
-                        Container(
-                          height: 1,
-                          color: ColorName.greyText,
-                        ),
-                    ],
-                  );
-                },
-              ).toList(),
-            ]),
+                for (final e in incomeEntries) ...[
+                  _IncomeRow(chainId: e.key, amount: e.value.toString()),
+                  if (e.key != incomeEntries.last.key)
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AppColors.border,
+                    ),
+                ],
+              ],
+            ),
           ),
         ],
       );
     });
+  }
+}
+
+class _IncomeRow extends StatelessWidget {
+  final String chainId;
+  final String amount;
+  const _IncomeRow({required this.chainId, required this.amount});
+
+  @override
+  Widget build(BuildContext context) {
+    final chainInfo = chainInfoByChainId(chainId);
+    final currency = chainInfo.currency;
+    final chainName = chainInfo.name;
+    final chainIcon = chainInfo.chainIcon!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Img(
+            src: chainIcon,
+            size: 22,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              chainName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.body,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$amount $currency',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.success,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1253,25 +1306,26 @@ class _PriceSkeleton extends StatelessWidget {
     if (!isLoading) {
       return Text(
         price,
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.end,
         style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          fontFeatures: [FontFeature.tabularFigures()],
         ),
       );
     }
 
     return Shimmer.fromColors(
-      baseColor: Colors.grey[900]!.withAlpha(70),
-      highlightColor: Colors.grey[100]!.withAlpha(50),
-      period: const Duration(milliseconds: 500),
+      baseColor: Colors.white.withAlpha(20),
+      highlightColor: Colors.white.withAlpha(50),
+      period: const Duration(milliseconds: 900),
       child: Container(
-        margin: const EdgeInsets.only(top: 2),
         width: 56,
-        height: 12,
+        height: 14,
         decoration: BoxDecoration(
-          color: Colors.grey[900]!.withAlpha(70),
-          borderRadius: BorderRadius.circular(4),
+          color: Colors.white.withAlpha(20),
+          borderRadius: BorderRadius.circular(6),
         ),
       ),
     );
@@ -1293,30 +1347,16 @@ class ConnectedAccountsButton extends GetView<GlobalController> {
       final buttonText = accountCount <= 1
           ? 'Connect Accounts'
           : 'Connected Accounts ($accountCount)';
-      return Button(
-        onPressed: () {
+      return _SettingsRow(
+        icon: Icons.manage_accounts_rounded,
+        title: buttonText,
+        subtitle: 'Manage your sign-in methods',
+        onTap: () {
           Navigate.to(
             type: NavigationTypes.toNamed,
             route: Routes.CONNECTED_ACCOUNTS,
           );
         },
-        blockButton: true,
-        type: ButtonType.outline,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.account_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              buttonText,
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
       );
     });
   }
@@ -1346,62 +1386,45 @@ class NonPrimaryAccountWarning extends GetView<GlobalController> {
               uuid: myUser.uuid),
         );
         final isThisAccountPrimary = primaryAccount.address == myUser.address;
-        return !isThisAccountPrimary
-            ? Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                margin: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.red.withAlpha(26),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Colors.red.withAlpha(77),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
+        if (isThisAccountPrimary) {
+          return const SizedBox.shrink();
+        }
+        return AppCard(
+          margin: const EdgeInsets.only(top: 4, bottom: 8),
+          color: AppColors.danger.withAlpha(22),
+          borderColor: AppColors.danger.withAlpha(80),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _IconTile(
+                icon: Icons.warning_amber_rounded,
+                color: AppColors.danger,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withAlpha(51),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.red,
-                        size: 24,
+                    Text(
+                      'Secondary Account',
+                      style: AppText.cardTitle.copyWith(
+                        color: AppColors.danger,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Secondary Account',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'This is not your primary account. Only the primary account can perform certain actions.',
-                            style: TextStyle(
-                              color: Colors.red.withAlpha(204),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'This is not your primary account. Only the primary account can perform certain actions.',
+                      style: AppText.caption.copyWith(
+                        color: Colors.white.withAlpha(200),
+                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
-              )
-            : const SizedBox.shrink();
+              ),
+            ],
+          ),
+        );
       },
     );
   }

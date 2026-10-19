@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:podium/gen/colors.gen.dart';
 
 /// A utility class for showing toast notifications using GetX snackbar.
 /// Provides various methods for different types of notifications with consistent styling.
@@ -8,17 +9,21 @@ class Toast {
   static const int _defaultDuration = 3;
 
   /// Default animation duration for toast messages
-  static const Duration _defaultAnimationDuration = Duration(milliseconds: 300);
+  static const Duration _defaultAnimationDuration = Duration(milliseconds: 350);
 
   /// Default margin for toast messages
-  static const EdgeInsets _defaultMargin = EdgeInsets.all(10);
+  static const EdgeInsets _defaultMargin =
+      EdgeInsets.symmetric(horizontal: 12, vertical: 8);
+
+  static const Color _success = Color(0xFF3DDC97);
+  static const Color _danger = Color(0xFFF04141);
+  static const Color _warning = Color(0xFFFFC857);
 
   /// Common configuration for all toast messages
   static SnackbarController _showToast({
     required String title,
     required String message,
-    required Color backgroundColor,
-    required Color textColor,
+    required Color accentColor,
     required IconData icon,
     int? duration,
     TextButton? mainButton,
@@ -27,23 +32,61 @@ class Toast {
     return Get.snackbar(
       title,
       message,
-      colorText: textColor,
-      backgroundColor: backgroundColor,
+      titleText: Text(
+        title,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      messageText: message.isEmpty
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                message,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: ColorName.greyText,
+                  fontSize: 13,
+                  height: 1.35,
+                ),
+              ),
+            ),
+      backgroundColor: ColorName.cardBackground.withAlpha(245),
+      borderColor: accentColor.withAlpha(90),
+      borderWidth: 1,
+      borderRadius: 18,
       snackStyle: SnackStyle.floating,
       animationDuration: _defaultAnimationDuration,
       duration: Duration(seconds: duration ?? _defaultDuration),
       margin: _defaultMargin,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       mainButton: mainButton,
-      shouldIconPulse: true,
-      icon: Icon(icon, color: textColor),
-      forwardAnimationCurve: Curves.elasticInOut,
+      shouldIconPulse: false,
+      icon: Center(
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: accentColor.withAlpha(36),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: accentColor, size: 18),
+        ),
+      ),
+      forwardAnimationCurve: Curves.easeOutCubic,
+      reverseAnimationCurve: Curves.easeInCubic,
       snackPosition: position,
       boxShadows: [
         BoxShadow(
-          color: backgroundColor.withAlpha(128),
-          spreadRadius: 1,
-          blurRadius: 2,
-          offset: const Offset(0, 1),
+          color: Colors.black.withAlpha(90),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
         ),
       ],
     );
@@ -64,9 +107,8 @@ class Toast {
     return _showToast(
       title: title ?? 'Success',
       message: message ?? 'Operation successful',
-      backgroundColor: Colors.green,
-      textColor: Colors.white,
-      icon: Icons.check_circle,
+      accentColor: _success,
+      icon: Icons.check_circle_rounded,
       duration: duration,
       position: position,
     );
@@ -89,9 +131,8 @@ class Toast {
     return _showToast(
       title: title ?? 'Error',
       message: message ?? 'Operation failed',
-      backgroundColor: Colors.red,
-      textColor: Colors.white,
-      icon: Icons.error,
+      accentColor: _danger,
+      icon: Icons.error_rounded,
       duration: duration,
       mainButton: mainButton,
       position: position,
@@ -113,9 +154,8 @@ class Toast {
     return _showToast(
       title: title ?? 'Info',
       message: message ?? 'Information',
-      backgroundColor: Colors.blue,
-      textColor: Colors.white,
-      icon: Icons.info,
+      accentColor: ColorName.primaryBlue,
+      icon: Icons.info_rounded,
       duration: duration,
       position: position,
     );
@@ -136,9 +176,8 @@ class Toast {
     return _showToast(
       title: title ?? 'Warning',
       message: message ?? 'Warning',
-      backgroundColor: Colors.orange,
-      textColor: Colors.white,
-      icon: Icons.warning,
+      accentColor: _warning,
+      icon: Icons.warning_rounded,
       duration: duration,
       position: position,
     );
@@ -159,9 +198,8 @@ class Toast {
     return _showToast(
       title: title ?? 'Neutral',
       message: message ?? 'Neutral',
-      backgroundColor: Colors.grey,
-      textColor: Colors.black,
-      icon: Icons.info,
+      accentColor: ColorName.greyText,
+      icon: Icons.notifications_none_rounded,
       duration: duration,
       position: position,
     );

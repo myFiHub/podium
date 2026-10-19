@@ -10,9 +10,8 @@ import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
-import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 final _options = const LiveOptions(
   // Start animation after (default zero)
@@ -66,15 +65,7 @@ class UserList extends StatelessWidget {
         final image = liveUsersList != null
             ? liveUsersList![index].image
             : userModelsList![index].image;
-        String avatar = image ?? '';
-        if (avatar.contains("https://ui-avatars.com/api/?name=Oo")) {
-          avatar = '';
-        }
-        if (avatar.isEmpty) {
-          avatar = avatarPlaceHolder(name);
-        }
         final userId = uuid;
-        final isItME = uuid == myUser.uuid;
         return FadeTransition(
           opacity: Tween<double>(
             begin: 0,
@@ -87,13 +78,12 @@ class UserList extends StatelessWidget {
                 end: Offset.zero,
               ).animate(animation),
               // Paste you Widget
-              child: _SingleUser(
+              child: UserListTile(
                 key: Key(userId),
-                isItME: isItME,
                 uuid: uuid,
-                name: name ?? '',
-                avatar: avatar,
-                followed_by_me: followed_by_me ?? false,
+                name: name,
+                image: image,
+                followed_by_me: followed_by_me,
                 onRequestUpdate: () {
                   onRequestUpdate?.call(userId);
                 },
@@ -101,6 +91,42 @@ class UserList extends StatelessWidget {
         );
       },
     ));
+  }
+}
+
+class UserListTile extends StatelessWidget {
+  final String uuid;
+  final String? name;
+  final String? image;
+  final bool? followed_by_me;
+  final VoidCallback? onRequestUpdate;
+  const UserListTile({
+    super.key,
+    required this.uuid,
+    this.name,
+    this.image,
+    this.followed_by_me,
+    this.onRequestUpdate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String avatar = image ?? '';
+    if (avatar.contains("https://ui-avatars.com/api/?name=Oo")) {
+      avatar = '';
+    }
+    if (avatar.isEmpty) {
+      avatar = avatarPlaceHolder(name);
+    }
+    return _SingleUser(
+      key: Key(uuid),
+      isItME: uuid == myUser.uuid,
+      uuid: uuid,
+      name: name ?? '',
+      avatar: avatar,
+      followed_by_me: followed_by_me ?? false,
+      onRequestUpdate: onRequestUpdate,
+    );
   }
 }
 
@@ -119,124 +145,117 @@ class _SingleUser extends GetView<UsersController> {
     required this.uuid,
     required this.followed_by_me,
     required this.avatar,
-    // ignore: unused_element
     this.onRequestUpdate,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        final usersController = Get.find<UsersController>();
-        usersController.openUserProfile(uuid);
-      },
-      child: Stack(
-        children: [
-          Obx(() {
-            final gettingUserInfo_uuid = controller.gettingUserInfo_uuid.value;
-            return GlowContainer(
-              glowRadius: 4,
-              gradientColors: const [
-                ColorName.primaryBlue,
-                ColorName.secondaryBlue
-              ],
-              rotationDuration: const Duration(seconds: 1),
-              glowLocation: GlowLocation.outerOnly,
-              containerOptions: ContainerOptions(
-                width: Get.width - 4,
-                borderRadius: 8,
-                margin: const EdgeInsets.only(left: 2, bottom: 8),
-                backgroundColor: ColorName.cardBackground,
-                borderSide: const BorderSide(
-                  width: 1.0,
-                  color: ColorName.cardBackground,
-                ),
-              ),
-              transitionDuration: const Duration(milliseconds: 200),
-              showAnimatedBorder: gettingUserInfo_uuid == uuid,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: ColorName.cardBackground,
-                  borderRadius: BorderRadius.all(Radius.circular(8)),
-                ),
-                // margin: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
-                padding: const EdgeInsets.all(10),
-                key: Key(uuid),
-                child: Stack(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 40,
-                                  height: 40,
-                                  child: Hero(
-                                    tag: 'profile_avatar_$uuid',
-                                    child: Img(
-                                      src: avatar,
-                                      alt: name,
-                                    ),
-                                  ),
-                                ),
-                                space10,
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 176,
-                                      ),
-                                      child: Text(
-                                        name,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      truncate(uuid, length: 10),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        color: ColorName.greyText,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                        if (isItME)
-                          const Icon(
-                            Icons.check_circle,
-                            color: Colors.green,
-                          )
-                        else
-                          FollowButton(
-                            uuid: uuid,
-                            followed_by_me: followed_by_me ?? false,
-                            fullWidth: false,
-                            small: true,
-                            key: Key(uuid),
-                            onFollowStatusChanged: onRequestUpdate,
-                          ),
-                      ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Obx(() {
+        final gettingUserInfo_uuid = controller.gettingUserInfo_uuid.value;
+        return GlowContainer(
+          glowRadius: 4,
+          gradientColors: const [
+            ColorName.primaryBlue,
+            ColorName.secondaryBlue
+          ],
+          rotationDuration: const Duration(seconds: 1),
+          glowLocation: GlowLocation.outerOnly,
+          containerOptions: const ContainerOptions(
+            borderRadius: AppRadius.md,
+            backgroundColor: Colors.transparent,
+            borderSide: BorderSide(
+              width: 1.0,
+              color: Colors.transparent,
+            ),
+          ),
+          transitionDuration: const Duration(milliseconds: 200),
+          showAnimatedBorder: gettingUserInfo_uuid == uuid,
+          child: AppCard(
+            key: Key(uuid),
+            radius: AppRadius.md,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            onTap: () {
+              final usersController = Get.find<UsersController>();
+              usersController.openUserProfile(uuid);
+            },
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: Hero(
+                    tag: 'profile_avatar_$uuid',
+                    child: Img(
+                      src: avatar,
+                      alt: name,
+                      size: 42,
+                      borderRadius: const BorderRadius.all(Radius.circular(21)),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            );
-          })
-        ],
-      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          if (isItME) ...[
+                            const SizedBox(width: 6),
+                            const AppPill(
+                              label: 'You',
+                              color: AppColors.success,
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        truncate(uuid, length: 10),
+                        maxLines: 1,
+                        style: AppText.caption.copyWith(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (isItME)
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.success,
+                    size: 22,
+                  )
+                else
+                  SizedBox(
+                    height: 32,
+                    child: FollowButton(
+                      uuid: uuid,
+                      followed_by_me: followed_by_me,
+                      fullWidth: false,
+                      small: true,
+                      key: Key(uuid),
+                      onFollowStatusChanged: onRequestUpdate,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -263,46 +282,47 @@ class FollowButton extends GetView<UsersController> {
       final loadingIds = controller.followingsInProgress;
       final isLoading = loadingIds[uuid] != null;
       final isFollowing = followed_by_me;
-      return Button(
-          size: small ? ButtonSize.SMALL : ButtonSize.LARGE,
-          onPressed: () async {
-            final isFollowing = followed_by_me;
-            final success = await controller.followUnfollow(uuid, !isFollowing);
-            if (success) {
-              onFollowStatusChanged?.call();
-            }
-          },
-          type: isFollowing ? ButtonType.outline : ButtonType.solid,
-          shape: ButtonShape.pills,
-          blockButton: fullWidth,
-          textColor: isFollowing ? Colors.white : ColorName.cardBackground,
-          color: Colors.white,
-          /* borderSide: BorderSide(
-            color: isFollowing ? Colors.red : Colors.green,
-          ),  */
-          child: isLoading
-              ? const Center(
-                  child: LoadingWidget(
-                    size: 12,
-                    color: ColorName.secondaryBlue,
-                  ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${isFollowing ? "Unfollow" : "Follow"}',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500, fontSize: 12),
-                    ),
-                    if (!isFollowing)
-                      const Icon(
-                        Icons.add,
-                        color: ColorName.cardBackground,
-                        size: 12,
-                      ),
+      final foreground = isFollowing ? Colors.white : ColorName.cardBackground;
+      final style = FilledButton.styleFrom(
+        minimumSize: Size(fullWidth ? double.infinity : 0, small ? 32 : 44),
+        padding: EdgeInsets.symmetric(horizontal: small ? 14 : 18),
+        visualDensity: VisualDensity.compact,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        backgroundColor: isFollowing ? AppColors.fill : Colors.white,
+        foregroundColor: foreground,
+        side: isFollowing ? const BorderSide(color: AppColors.border) : null,
+        shape: const StadiumBorder(),
+        textStyle: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: small ? 12 : 14,
+        ),
+      );
+      return FilledButton(
+        style: style,
+        onPressed: () async {
+          final isFollowing = followed_by_me;
+          final success = await controller.followUnfollow(uuid, !isFollowing);
+          if (success) {
+            onFollowStatusChanged?.call();
+          }
+        },
+        child: isLoading
+            ? const LoadingWidget(
+                size: 12,
+                color: ColorName.secondaryBlue,
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isFollowing) ...[
+                    Icon(Icons.add_rounded,
+                        color: foreground, size: small ? 14 : 18),
+                    const SizedBox(width: 4),
                   ],
-                ));
+                  Text(isFollowing ? "Unfollow" : "Follow"),
+                ],
+              ),
+      );
     });
   }
 }

@@ -33,24 +33,25 @@ class Img extends StatelessWidget {
     // Decode near display size; 1.5x leaves room for non-square sources.
     final cacheSize =
         (boxSize * MediaQuery.devicePixelRatioOf(context) * 1.5).round();
-    return Container(
+    return SizedBox(
       width: size ?? width ?? 70,
       height: size ?? height ?? 70,
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-      ),
       child: isEmptyAndHasIfEmpty
-          ? Image.asset(
-              ifEmpty!,
-              width: size ?? width ?? 70,
-              height: size ?? height ?? 70,
-              fit: BoxFit.cover,
+          ? ClipRRect(
+              borderRadius: borderRadius ?? BorderRadius.zero,
+              child: Image.asset(
+                ifEmpty!,
+                width: size ?? width ?? 70,
+                height: size ?? height ?? 70,
+                fit: BoxFit.cover,
+              ),
             )
           : CachedNetworkImage(
               imageUrl: isUrl ? src : avatarPlaceHolder(alt ?? "OO"),
               memCacheWidth: cacheSize,
+              fadeInDuration: const Duration(milliseconds: 250),
               placeholder: (context, url) => GFShimmer(
-                secondaryColor: ColorName.pageBackground,
+                secondaryColor: ColorName.cardBackground,
                 mainColor: ColorName.cardBorder,
                 child: Container(
                   width: size ?? width ?? 70,

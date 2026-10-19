@@ -7,25 +7,26 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
-import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
-import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 class CheckTicketView extends GetWidget<CheckticketController> {
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Material(
-        child: Container(
-          color: ColorName.cardBackground,
-          padding: const EdgeInsets.all(20),
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.8,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Header(),
               // space10,
               // TicketBuyObserver(),
-              space10,
+              const SizedBox(height: 14),
               Expanded(
                 child: Obx(
                   () {
@@ -35,24 +36,24 @@ class CheckTicketView extends GetWidget<CheckticketController> {
                     final allUsersList =
                         allUsersToBuyTicketFrom.values.toList();
                     return isLoading
-                        ? const LoadingWidget()
-                        : Container(
-                            height: Get.height - 190,
-                            child: Scrollbar(
-                              child: ListView.builder(
-                                itemCount: allUsersList.length,
-                                itemBuilder: (context, index) {
-                                  final ticketSeller = allUsersList[index];
-                                  return SingleTicketHolder(
-                                      ticketSeller: ticketSeller,
-                                      controller: controller);
-                                },
-                              ),
+                        ? const Center(child: LoadingWidget())
+                        : Scrollbar(
+                            child: ListView.separated(
+                              itemCount: allUsersList.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 10),
+                              itemBuilder: (context, index) {
+                                final ticketSeller = allUsersList[index];
+                                return SingleTicketHolder(
+                                    ticketSeller: ticketSeller,
+                                    controller: controller);
+                              },
                             ),
                           );
                   },
                 ),
               ),
+              const SizedBox(height: 14),
               const EnterButton(),
             ],
           ),
@@ -98,44 +99,81 @@ class EnterButton extends GetView<CheckticketController> {
 
       if (canEnter) {
         return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Button(
-              type: ButtonType.gradient,
-              blockButton: true,
+            if (!canSpeak && canSpeakThough) ...[
+              const _Notice(
+                icon: Icons.mic_off_rounded,
+                color: AppColors.accent,
+                text:
+                    'you will be able to speak if you buy 1 the ticket to Speak',
+              ),
+              const SizedBox(height: 10),
+            ],
+            AppPrimaryButton(
+              icon: canSpeak ? Icons.mic_rounded : Icons.login_rounded,
               onPressed: () {
                 Navigator.pop(
                   context,
                   OutpostAccesses(canEnter: true, canSpeak: canSpeak),
                 );
               },
-              text: text,
+              label: text,
             ),
-            space5,
-            if (!canSpeak && canSpeakThough)
-              const Text(
-                'you will be able to speak if you buy 1 the ticket to Speak',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                ),
-              )
           ],
         );
       }
-      return const Button(
-        onPressed: null,
-        blockButton: true,
-        child: Text(
-            'you will be able to Enter if you buy 1 ticket required for Entering the room',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.red,
-              fontSize: 14,
-            )),
-        color: Colors.grey,
+      return const Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Notice(
+            icon: Icons.confirmation_number_outlined,
+            color: AppColors.danger,
+            text:
+                'you will be able to Enter if you buy 1 ticket required for Entering the room',
+          ),
+          SizedBox(height: 10),
+          AppPrimaryButton(
+            label: 'Enter',
+            icon: Icons.lock_outline_rounded,
+            onPressed: null,
+          ),
+        ],
       );
     });
+  }
+}
+
+class _Notice extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String text;
+  const _Notice({required this.icon, required this.color, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withAlpha(24),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: color.withAlpha(70)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 12, color: color, height: 1.35),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -166,54 +204,26 @@ class TicketBuyObserver extends GetView<CheckticketController> {
       final canSpeak =
           remainingTicketsToSpeak == 0 && controller.isSpeakBuyableByTicket;
 
-      return Column(
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: [
-          Row(
-            children: [
-              RichText(
-                  text: TextSpan(children: [
-                const TextSpan(
-                    text: 'Remaining Tickets to ',
-                    style: TextStyle(fontSize: 16, color: ColorName.greyText)),
-                const TextSpan(
-                    text: 'Enter: ',
-                    style: const TextStyle(
-                        color: Colors.green, fontWeight: FontWeight.bold)),
-                TextSpan(
-                    text: '$remainingTicketsToEnter  ',
-                    style: const TextStyle(
-                        color: ColorName.greyText,
-                        fontWeight: FontWeight.bold)),
-                if (!canSpeak && !showRawSpeakerType)
-                  TextSpan(
-                      text: 'Speak: ',
-                      style: TextStyle(
-                          color: canSpeak ? Colors.green : Colors.blue,
-                          fontWeight: FontWeight.bold)),
-                if (!canSpeak && !showRawSpeakerType)
-                  TextSpan(
-                      text: '$remainingTicketsToSpeak',
-                      style: const TextStyle(
-                          color: ColorName.greyText,
-                          fontWeight: FontWeight.bold)),
-              ])),
-            ],
+          AppPill(
+            label: 'Enter: $remainingTicketsToEnter left',
+            color: AppColors.success,
+            icon: Icons.login_rounded,
           ),
+          if (!canSpeak && !showRawSpeakerType)
+            AppPill(
+              label: 'Speak: $remainingTicketsToSpeak left',
+              color: AppColors.primary,
+              icon: Icons.mic_rounded,
+            ),
           if (showRawSpeakerType)
-            RichText(
-              text: TextSpan(
-                children: [
-                  const TextSpan(
-                      text: 'Speakers: ',
-                      style: const TextStyle(
-                          fontSize: 16, color: ColorName.greyText)),
-                  TextSpan(
-                      text: parseSpeakerType(outpost.speak_type),
-                      style: TextStyle(
-                          color: canSpeak ? Colors.green : Colors.blue,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
+            AppPill(
+              label: 'Speakers: ${parseSpeakerType(outpost.speak_type)}',
+              color: canSpeak ? AppColors.success : AppColors.primary,
+              icon: Icons.mic_rounded,
             ),
         ],
       );
@@ -243,62 +253,68 @@ class SingleTicketHolder extends StatelessWidget {
     }
     final accessPriceFullString = ticketSeller.accessPriceFullString;
     final speakPriceFullString = ticketSeller.speakPriceFullString;
-    return Container(
+    final showAccessPrice =
+        accessPriceFullString != null && !ticketSeller.boughtTicketToAccess;
+    final showSpeakPrice =
+        speakPriceFullString != null && !ticketSeller.boughtTicketToSpeak;
+    return AppCard(
       key: ValueKey(ticketSeller.userInfo.uuid),
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(10),
-      decoration: const BoxDecoration(
-        color: ColorName.pageBackground,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-      ),
+      radius: AppRadius.md,
+      color: AppColors.fill,
+      padding: const EdgeInsets.all(12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: Get.width - 170,
+          Img(
+            src: userInfo.image ?? '',
+            size: 40,
+            alt: userInfo.name,
+            borderRadius: const BorderRadius.all(Radius.circular(20)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    if ((userInfo.image ?? '').isNotEmpty)
-                      Img(
-                        src: userInfo.image!,
-                        size: 30,
-                      ),
-                    if ((userInfo.image ?? '').isNotEmpty) space10,
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 170),
-                      child: Text(userInfo.name ?? '',
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-                space10,
                 Text(
-                    truncate(
-                      address,
-                      length: 16,
-                    ),
-                    style: const TextStyle(
-                        fontSize: 16, color: ColorName.greyText)),
-                if (accessPriceFullString != null &&
-                    !ticketSeller.boughtTicketToAccess)
-                  Text(
-                    accessPriceFullString + ' (access)',
-                    style: const TextStyle(fontSize: 10, color: Colors.yellow),
+                  userInfo.name ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.cardTitle,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  truncate(
+                    address,
+                    length: 16,
                   ),
-                if (speakPriceFullString != null &&
-                    !ticketSeller.boughtTicketToSpeak)
-                  Text(
-                    speakPriceFullString + ' (speak)',
-                    style: const TextStyle(fontSize: 10, color: Colors.yellow),
+                  maxLines: 1,
+                  style: AppText.caption,
+                ),
+                if (showAccessPrice || showSpeakPrice) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (showAccessPrice)
+                        AppPill(
+                          label: accessPriceFullString + ' (access)',
+                          color: AppColors.accent,
+                          icon: Icons.login_rounded,
+                        ),
+                      if (showSpeakPrice)
+                        AppPill(
+                          label: speakPriceFullString + ' (speak)',
+                          color: AppColors.accent,
+                          icon: Icons.mic_rounded,
+                        ),
+                    ],
                   ),
+                ],
               ],
             ),
           ),
+          const SizedBox(width: 10),
           Actions(
             ticketSeller: ticketSeller,
             controller: controller,
@@ -316,29 +332,52 @@ class Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      const Row(
-        children: [
-          Text('Buy Tickets to:',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          space10,
-          Text('Enter',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          space10,
-          Icon(Icons.login, color: Colors.red),
-          space10,
-          Text('and Speak',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          space10,
-          Icon(Icons.mic, color: Colors.red)
-        ],
-      ),
-      IconButton(
-          onPressed: () {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(left: 4, top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tickets required', style: AppText.title),
+                SizedBox(height: 4),
+                Text(
+                  'Buy tickets to enter and speak',
+                  style: AppText.caption,
+                ),
+                SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    AppPill(
+                      label: 'Enter',
+                      color: AppColors.success,
+                      icon: Icons.login_rounded,
+                    ),
+                    AppPill(
+                      label: 'Speak',
+                      color: AppColors.primary,
+                      icon: Icons.mic_rounded,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        AppIconButton(
+          icon: Icons.close_rounded,
+          tooltip: 'Close',
+          size: 36,
+          onTap: () {
             Get.close();
           },
-          icon: const Icon(Icons.close))
-    ]);
+        ),
+      ],
+    );
   }
 }
 
@@ -375,44 +414,62 @@ class Actions extends StatelessWidget {
     final speakTicketType = ticketSeller.speakTicketType;
     final accessTicketType = ticketSeller.accessTicketType;
 
-    return Container(
-      child: checking || buying
-          ? const LoadingWidget(
-              size: 20,
-            )
-          : alreadyBoughtRequiredTickets
-              ? const Icon(Icons.check, color: Colors.green)
-              : Tooltip(
-                  message: actionButtonText,
-                  child: GestureDetector(
-                    onTap: () {
-                      controller.buyTicket(
-                        ticketSeller: ticketSeller,
-                      );
-                    },
-                    child: Container(
-                      decoration: const BoxDecoration(
-                          color: Colors.green,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(5))),
-                      padding: const EdgeInsets.all(5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (shouldBuyTicketToAccess &&
-                              accessTicketType != null)
-                            const Icon(
-                              Icons.login,
-                            ),
-                          if (shouldBuyTicketToSpeak && speakTicketType != null)
-                            const Icon(
-                              Icons.mic,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+    if (checking || buying) {
+      return const SizedBox(
+        width: 40,
+        height: 40,
+        child: Center(child: LoadingWidget(size: 20)),
+      );
+    }
+    if (alreadyBoughtRequiredTickets) {
+      return Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.success.withAlpha(30),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.check_rounded,
+          color: AppColors.success,
+          size: 20,
+        ),
+      );
+    }
+    return Tooltip(
+      message: actionButtonText,
+      child: FilledButton(
+        onPressed: () {
+          controller.buyTicket(
+            ticketSeller: ticketSeller,
+          );
+        },
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.success,
+          foregroundColor: Colors.black,
+          minimumSize: const Size(0, 36),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          visualDensity: VisualDensity.compact,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Buy'),
+            if (shouldBuyTicketToAccess && accessTicketType != null) ...[
+              const SizedBox(width: 4),
+              const Icon(Icons.login_rounded, size: 16),
+            ],
+            if (shouldBuyTicketToSpeak && speakTicketType != null) ...[
+              const SizedBox(width: 4),
+              const Icon(Icons.mic_rounded, size: 16),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

@@ -6,6 +6,73 @@ import 'package:just_waveform/just_waveform.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
+import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
+
+const _handleColor = AppColors.accent;
+
+class _TrimHandle extends StatelessWidget {
+  final bool isStart;
+  const _TrimHandle({required this.isStart});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 20,
+      decoration: BoxDecoration(
+        color: _handleColor,
+        borderRadius: BorderRadius.horizontal(
+          left: isStart ? const Radius.circular(14) : Radius.zero,
+          right: isStart ? Radius.zero : const Radius.circular(14),
+        ),
+      ),
+      child: Center(
+        child: Container(
+          width: 3,
+          height: 26,
+          decoration: BoxDecoration(
+            color: Colors.black.withAlpha(140),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TimeChip extends StatelessWidget {
+  final String label;
+  final String value;
+  const _TimeChip({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.fill,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label.toUpperCase(), style: AppText.label.copyWith(fontSize: 10)),
+          const SizedBox(width: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class AudioTrimmerView extends StatefulWidget {
   final File audioFile;
@@ -76,24 +143,28 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          height: 100,
+          height: 110,
           width: double.infinity,
           margin: const EdgeInsets.symmetric(horizontal: 16),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(8),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ColorName.cardBorder),
+          ),
           child: Stack(
             children: [
               // Waveform
-              Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: CustomPaint(
-                  painter: WaveformPainter(
-                    waveform: _waveform,
-                    start: Duration.zero,
-                    duration: _waveform.duration,
-                    waveColor: Colors.blue[700]!,
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: CustomPaint(
+                    painter: WaveformPainter(
+                      waveform: _waveform,
+                      start: Duration.zero,
+                      duration: _waveform.duration,
+                      waveColor: ColorName.primaryBlue,
+                    ),
                   ),
                 ),
               ),
@@ -113,23 +184,20 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
                               _endPosition * _duration);
                         });
                       },
-                      child: Container(
-                        width: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.3),
-                          border: const Border(
-                            right: BorderSide(
-                              color: Colors.red,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
+                      child: const _TrimHandle(isStart: true),
                     ),
                     // Middle (selected area)
                     Expanded(
                       child: Container(
-                        color: Colors.blue.withValues(alpha: 0.3),
+                        decoration: BoxDecoration(
+                          color: ColorName.primaryBlue.withAlpha(30),
+                          border: const Border.symmetric(
+                            horizontal: BorderSide(
+                              color: _handleColor,
+                              width: 2,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     // End handle
@@ -144,18 +212,7 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
                               _endPosition * _duration);
                         });
                       },
-                      child: Container(
-                        width: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.3),
-                          border: const Border(
-                            left: BorderSide(
-                              color: Colors.red,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
+                      child: const _TrimHandle(isStart: false),
                     ),
                   ],
                 ),
@@ -169,32 +226,38 @@ class _AudioTrimmerViewState extends State<AudioTrimmerView> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Start: ${_formatDuration(Duration(milliseconds: (_startPosition * _duration).toInt()))}',
-                style: const TextStyle(fontWeight: FontWeight.w500),
+              _TimeChip(
+                label: 'Start',
+                value: _formatDuration(Duration(
+                    milliseconds: (_startPosition * _duration).toInt())),
               ),
-              Text(
-                'End: ${_formatDuration(Duration(milliseconds: (_endPosition * _duration).toInt()))}',
-                style: const TextStyle(fontWeight: FontWeight.w500),
+              _TimeChip(
+                label: 'End',
+                value: _formatDuration(Duration(
+                    milliseconds: (_endPosition * _duration).toInt())),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: widget.onCancel,
-                child: const Text('Cancel'),
+              Expanded(
+                child: AppSecondaryButton(
+                  label: 'Cancel',
+                  onPressed: widget.onCancel,
+                ),
               ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => widget.onSave(
-                    _startPosition * _duration, _endPosition * _duration),
-                child: const Text('Save'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppPrimaryButton(
+                  label: 'Save',
+                  icon: Icons.check_rounded,
+                  onPressed: () => widget.onSave(
+                      _startPosition * _duration, _endPosition * _duration),
+                ),
               ),
             ],
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:podium/gen/colors.gen.dart';
 
 class PodiumTextField extends FormField<String> {
   PodiumTextField(
@@ -290,7 +291,7 @@ class _GfTextFieldStateState extends State<_GfTextFieldState>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Container(
+    return SizedBox(
       height: widget.formField ? 87 : 59,
       child: TextFormField(
         controller: widget.controller ?? controller,
@@ -336,7 +337,7 @@ class _GfTextFieldStateState extends State<_GfTextFieldState>
         cursorWidth: widget.cursorWidth ?? 1,
         cursorHeight: widget.cursorHeight,
         cursorRadius: widget.cursorRadius,
-        cursorColor: widget.cursorColor,
+        cursorColor: widget.cursorColor ?? ColorName.primaryBlue,
         scrollPadding: widget.scrollPadding,
         scrollPhysics: widget.scrollPhysics,
         keyboardAppearance: widget.keyboardAppearance,

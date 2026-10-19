@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:podium/app/modules/records/views/records.dart';
 import 'package:podium/root.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 class RecordsPage extends StatelessWidget {
   const RecordsPage({super.key});
@@ -9,43 +10,51 @@ class RecordsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return PageWrapper(
       child: Scaffold(
-        body: Column(
-          children: [
-            const Text(
-              'Records',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AppPageHeader(
+                title: 'Records',
+                subtitle: 'Your saved outpost recordings',
+                showBack: true,
               ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.amber.withAlpha(25),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.amber[700]),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Recordings are saved locally on your device',
-                      style: TextStyle(
-                        color: Colors.amber[700],
-                        fontSize: 14,
+              Container(
+                margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withAlpha(20),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.accent.withAlpha(60)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.phone_iphone_rounded,
+                      color: AppColors.accent,
+                      size: 18,
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Recordings are saved locally on your device',
+                        style: TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Expanded(
-              child: Records(),
-            ),
-          ],
+              const Expanded(
+                child: Records(),
+              ),
+            ],
+          ),
         ),
       ),
     );

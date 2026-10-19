@@ -7,6 +7,6 @@ class Emptyinitializer extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return const SizedBox.shrink();
   }
 }

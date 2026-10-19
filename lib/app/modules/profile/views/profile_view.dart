@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -6,109 +8,96 @@ import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
-import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
-import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../controllers/profile_controller.dart';
 
-/// Shows a dialog with options for managing podium passes
+/// Shows a sheet with options for managing podium passes
 void showPodiumPassOptionsDialog(
   int numberOfPasses,
   ProfileController controller,
 ) {
   final buyPrice = controller.podiumPassBuyPrice.value;
   final sellPrice = controller.podiumPassSellPrice.value;
-  Get.dialog(
-    AlertDialog(
-      backgroundColor: ColorName.cardBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      title: const Text(
-        'Podium Pass Options',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      content: Column(
+  showAppSheet(
+    AppSheet(
+      title: 'Podium Pass',
+      child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'You already have $numberOfPasses podium pass${numberOfPasses > 1 ? 'es' : ''}.',
-            style: const TextStyle(fontSize: 16),
-          ),
-          space16,
-          const Text(
-            'What would you like to do?',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withAlpha(20),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.accent.withAlpha(60)),
             ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.confirmation_number_outlined,
+                  color: AppColors.accent,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'You already have $numberOfPasses podium pass${numberOfPasses > 1 ? 'es' : ''}.',
+                        style: AppText.body.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'What would you like to do?',
+                        style: AppText.caption,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          AppPrimaryButton(
+            onPressed: () {
+              Get.closeOverlay();
+              controller.buyPodiumPass();
+            },
+            icon: Icons.add_rounded,
+            label: 'Buy Another Pass: ${buyPrice.toString()} MOV',
+          ),
+          const SizedBox(height: 10),
+          AppSecondaryButton(
+            onPressed: () {
+              Get.closeOverlay();
+              controller.sellPodiumPass();
+            },
+            color: AppColors.danger,
+            icon: Icons.sell_outlined,
+            label: 'Sell 1 Pass: ${sellPrice.toString()} MOV',
+          ),
+          const SizedBox(height: 6),
+          TextButton(
+            onPressed: () => Get.closeOverlay(),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textMuted,
+              minimumSize: const Size.fromHeight(46),
+            ),
+            child: const Text('Cancel'),
           ),
         ],
       ),
-      actions: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Button(
-            onPressed: () {
-              Get.close();
-              controller.buyPodiumPass();
-            },
-            type: ButtonType.gradient,
-            child: Text(
-              'Buy Another Pass: ${buyPrice.toString()} MOV',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            blockButton: true,
-          ),
-        ),
-        const SizedBox(
-          height: 16,
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Button(
-            onPressed: () {
-              Get.close();
-              controller.sellPodiumPass();
-            },
-            type: ButtonType.outline,
-            borderSide: const BorderSide(color: Colors.red),
-            textColor: Colors.red,
-            child: Text(
-              'Sell 1 Pass: ${sellPrice.toString()} MOV',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            blockButton: true,
-          ),
-        ),
-        const SizedBox(
-          height: 16,
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Button(
-            onPressed: () => Get.close(),
-            type: ButtonType.transparent,
-            child: const Text(
-              'Cancel',
-              style: TextStyle(fontSize: 16),
-            ),
-            blockButton: true,
-          ),
-        ),
-      ],
     ),
   );
 }
@@ -119,22 +108,89 @@ class ProfileView extends GetView<ProfileController> {
   Widget build(BuildContext context) {
     return PageWrapper(
       child: Scaffold(
-        body: Container(
-          padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
-          width: double.infinity,
-          child: const Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              _ProfileHeader(),
-              space5,
-              _Statistics(),
-              space5,
-              _SocialStats(),
-              space5,
-            ],
-          ),
+        body: Column(
+          children: [
+            const AppPageHeader(
+              title: 'Profile',
+              showBack: true,
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+            ),
+            Expanded(
+              child: DefaultTabController(
+                length: 3,
+                initialIndex: 0,
+                child: NestedScrollView(
+                  headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _ProfileHeader(),
+                            SizedBox(height: 12),
+                            _Statistics(),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverOverlapAbsorber(
+                      handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                        context,
+                      ),
+                      sliver: const SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _TabBarDelegate(),
+                      ),
+                    ),
+                  ],
+                  body: const TabBarView(
+                    physics: NeverScrollableScrollPhysics(),
+                    children: [
+                      PassHoldersTab(),
+                      FollowersTab(),
+                      FollowingTab(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _AvatarRing extends StatelessWidget {
+  final Widget child;
+  const _AvatarRing({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(2.5),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primary.withAlpha(60)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withAlpha(45),
+            blurRadius: 22,
+          ),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(2.5),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: ColorName.cardBackground,
+        ),
+        child: child,
       ),
     );
   }
@@ -150,11 +206,13 @@ class _ProfileHeader extends GetWidget<ProfileController> {
     return Obx(() {
       final user = controller.userInfo.value;
       if (user == null) {
-        return const SizedBox(
-          height: 150,
-          width: double.infinity,
-          child: Center(
-            child: LoadingWidget(),
+        return const AppCard(
+          child: SizedBox(
+            height: 150,
+            width: double.infinity,
+            child: Center(
+              child: LoadingWidget(),
+            ),
           ),
         );
       }
@@ -164,87 +222,107 @@ class _ProfileHeader extends GetWidget<ProfileController> {
         avatar = avatarPlaceHolder(user.name ?? '');
       }
 
-      // Get wallet address from user object
       final walletAddress = user.aptos_address!;
       final shortWalletAddress = truncate(walletAddress, length: 18);
 
       final followedByMe = user.followed_by_me ?? false;
 
-      return Container(
+      return AppCard(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Profile Image
-                Hero(
-                  tag: '${_profileHeroTagPrefix}${user.uuid}',
-                  child: Img(
-                    src: avatar,
-                    alt: user.name ?? '',
-                    size: 90,
+                _AvatarRing(
+                  child: Hero(
+                    tag: '${_profileHeroTagPrefix}${user.uuid}',
+                    child: Img(
+                      src: avatar,
+                      alt: user.name ?? '',
+                      size: 72,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
                 ),
-                space16,
-                // Profile info
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Name
                       Text(
                         user.name ?? '',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.title.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      space5,
-                      // Wallet address with copy button
-                      Row(
-                        children: [
-                          Text(
-                            shortWalletAddress,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+                      const SizedBox(height: 8),
+                      Material(
+                        color: AppColors.fill,
+                        shape: const StadiumBorder(
+                          side: BorderSide(color: AppColors.border),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () {
+                            Clipboard.setData(
+                                ClipboardData(text: walletAddress));
+                            Toast.info(
+                              message: 'Wallet address copied to clipboard',
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.account_balance_wallet_outlined,
+                                  size: 13,
+                                  color: AppColors.textMuted,
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    shortWalletAddress,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppText.caption,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.copy_rounded,
+                                  size: 13,
+                                  color: AppColors.textMuted,
+                                ),
+                              ],
                             ),
                           ),
-                          IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(Icons.copy,
-                                size: 16, color: Colors.grey),
-                            onPressed: () {
-                              // Copy wallet address
-                              Clipboard.setData(
-                                  ClipboardData(text: walletAddress));
-                              Toast.info(
-                                message: 'Wallet address copied to clipboard',
-                              );
-                            },
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            space16,
-            // Action buttons
+            const SizedBox(height: 16),
+            const _SocialCounts(),
+            const SizedBox(height: 16),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Buy Ticket Button
                 Expanded(
                   flex: 2,
                   child: _TicketButton(),
                 ),
-                space8,
-                // Follow Button
+                const SizedBox(width: 10),
                 Expanded(
                   flex: 1,
                   child: FollowButton(
@@ -253,7 +331,6 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                     fullWidth: true,
                     onFollowStatusChanged: () {
                       controller.updateMyFollowState(user);
-                      //  controller.getFollowers(silent: true);
                     },
                   ),
                 ),
@@ -263,6 +340,79 @@ class _ProfileHeader extends GetWidget<ProfileController> {
         ),
       );
     });
+  }
+}
+
+class _SocialCounts extends GetWidget<ProfileController> {
+  const _SocialCounts();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final holders = controller.podiumPassBuyers.value.length;
+      final followers = controller.followers.value.length;
+      final followings = controller.followings.value.length;
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(8),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(child: _CountCell(value: holders, label: 'Holders')),
+              const VerticalDivider(
+                width: 1,
+                thickness: 1,
+                color: AppColors.border,
+              ),
+              Expanded(child: _CountCell(value: followers, label: 'Followers')),
+              const VerticalDivider(
+                width: 1,
+                thickness: 1,
+                color: AppColors.border,
+              ),
+              Expanded(
+                child: _CountCell(value: followings, label: 'Following'),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _CountCell extends StatelessWidget {
+  final int value;
+  final String label;
+  const _CountCell({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value.toString(),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppText.caption,
+        ),
+      ],
+    );
   }
 }
 
@@ -278,29 +428,45 @@ class _TicketButton extends GetWidget<ProfileController> {
       final isGettingPodiumPassPrice = controller.loadingPodiumPassPrice.value;
       final numberOfBoughtTicketsByMe =
           controller.mySharesOfPodiumPassFromThisUser.value;
+      final busy = isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass;
 
-      return Button(
-        loading: isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass,
-        onPressed: (isGettingPrice || isBuyingPodiumPass || isSellingPodiumPass)
+      return FilledButton(
+        onPressed: busy
             ? null
             : () {
                 if (numberOfBoughtTicketsByMe > 0) {
-                  // Show confirmation dialog when user already has a pass
                   showPodiumPassOptionsDialog(
                       numberOfBoughtTicketsByMe, controller);
                 } else {
-                  // Original functionality for users without a pass
                   controller.buyPodiumPass();
                 }
               },
-        type: ButtonType.gradient,
-        blockButton: true,
-        child: _TicketButtonContent(
-          numberOfPasses: numberOfBoughtTicketsByMe,
-          podiumPassBuyPrice: podiumPassBuyPrice,
-          podiumPassSellPrice: podiumPassSellPrice,
-          isLoading: isGettingPodiumPassPrice,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(50),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: AppColors.primary.withAlpha(150),
+          disabledForegroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
         ),
+        child: busy
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: Colors.white,
+                ),
+              )
+            : _TicketButtonContent(
+                numberOfPasses: numberOfBoughtTicketsByMe,
+                podiumPassBuyPrice: podiumPassBuyPrice,
+                podiumPassSellPrice: podiumPassSellPrice,
+                isLoading: isGettingPodiumPassPrice,
+              ),
       );
     });
   }
@@ -329,21 +495,20 @@ class _TicketButtonContent extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Img(
-                src: chainInfoByChainId(movementAptosNetwork.chainId)
-                        .chainIcon ??
-                    Assets.images.movementLogo.path,
-                size: 20),
-            space8,
+              src: chainInfoByChainId(movementAptosNetwork.chainId).chainIcon ??
+                  Assets.images.movementLogo.path,
+              size: 18,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            const SizedBox(width: 8),
             Flexible(
-              child: RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
+              child: Text.rich(
+                TextSpan(
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                   children: [
@@ -355,13 +520,13 @@ class _TicketButtonContent extends StatelessWidget {
                     if (numberOfPasses == 0)
                       TextSpan(
                         text: " ${podiumPassBuyPrice.toString()} MOV",
-                        style: const TextStyle(
-                          color: Colors.amber,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(color: AppColors.accent),
                       ),
                   ],
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ),
             if (isLoading)
@@ -375,23 +540,15 @@ class _TicketButtonContent extends StatelessWidget {
         ),
         if (numberOfPasses > 0)
           Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.yellow,
-                ),
-                children: [
-                  const TextSpan(text: "You own "),
-                  TextSpan(
-                    text: numberOfPasses.toString(),
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                  TextSpan(text: " pass${numberOfPasses > 1 ? 'es' : ''}"),
-                ],
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              "You own $numberOfPasses pass${numberOfPasses > 1 ? 'es' : ''}",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColors.accent.withAlpha(230),
               ),
             ),
           ),
@@ -400,78 +557,111 @@ class _TicketButtonContent extends StatelessWidget {
   }
 }
 
-/// A component that displays the social statistics for a user profile
-/// including followers and following counts in a tab layout
-class _SocialStats extends GetWidget<ProfileController> {
-  const _SocialStats();
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  const _TabBarDelegate();
+
+  static const double _height = 64;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          color: ColorName.pageBackground.withAlpha(
+            shrinkOffset > 0 || overlapsContent ? 170 : 0,
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceGlass,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const TabBar(
+              labelPadding: EdgeInsets.zero,
+              tabs: [
+                Tab(text: 'Pass Holders', height: 36),
+                Tab(text: 'Followers', height: 36),
+                Tab(text: 'Following', height: 36),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _TabBarDelegate oldDelegate) => false;
+}
+
+class _TabScroll extends StatelessWidget {
+  final String storageKey;
+  final Widget sliver;
+  const _TabScroll({required this.storageKey, required this.sliver});
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final user = controller.userInfo.value;
-      if (user == null) {
-        return const SizedBox(height: 80);
-      }
-
-      // Get the counts from the controller
-
-      return Expanded(
-        child: DefaultTabController(
-          length: 3,
-          initialIndex: 0, // Start with Followers tab
-          child: Column(
-            children: [
-              TabBar(
-                indicatorColor: Colors.cyan,
-                // indicatorWeight: 4,
-                labelColor: Colors.cyan,
-                unselectedLabelColor: Colors.white,
-                indicatorSize: TabBarIndicatorSize.tab,
-                labelPadding: const EdgeInsets.only(right: 0),
-                tabs: [
-                  Obx(() {
-                    final buyersCount =
-                        controller.podiumPassBuyers.value.length;
-                    final appendix = buyersCount > 0 ? ' ($buyersCount)' : '';
-                    return Tab(
-                      text: 'Pass Holders$appendix',
-                    );
-                  }),
-                  Obx(() {
-                    final followersCount = controller.followers.value.length;
-                    final appendix =
-                        followersCount > 0 ? ' ($followersCount)' : '';
-                    return Tab(text: 'Followers$appendix');
-                  }),
-                  Obx(() {
-                    final followingCount = controller.followings.value.length;
-                    final appendix =
-                        followingCount > 0 ? ' ($followingCount)' : '';
-                    return Tab(text: 'Following$appendix');
-                  }),
-                ],
-              ),
-              const Expanded(
-                child: TabBarView(
-                  physics: NeverScrollableScrollPhysics(), // Prevent swiping
-                  children: [
-                    PassHoldersTab(),
-
-                    // Followers tab content
-                    FollowersTab(),
-
-                    // Following tab content
-                    FollowingTab(),
-                  ],
-                ),
-              ),
-            ],
-          ),
+    return CustomScrollView(
+      key: PageStorageKey<String>(storageKey),
+      slivers: [
+        SliverOverlapInjector(
+          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
         ),
-      );
-    });
+        sliver,
+      ],
+    );
   }
 }
+
+class _TabMessage extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  const _TabMessage({required this.icon, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: AppEmptyState(icon: icon, title: title, compact: true),
+      ),
+    );
+  }
+}
+
+class _TabLoading extends StatelessWidget {
+  const _TabLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SliverFillRemaining(
+      hasScrollBody: false,
+      child: Padding(
+        padding: EdgeInsets.only(top: 32),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: LoadingWidget(),
+        ),
+      ),
+    );
+  }
+}
+
+const _listPadding = EdgeInsets.fromLTRB(16, 4, 16, 24);
 
 class FollowersTab extends GetWidget<ProfileController> {
   const FollowersTab();
@@ -479,28 +669,81 @@ class FollowersTab extends GetWidget<ProfileController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller.isGettingFollowers.value) {
-        return const Center(child: LoadingWidget());
-      }
-
+      final loading = controller.isGettingFollowers.value;
       final followers = controller.followers.value;
-      if (followers.isEmpty) {
-        return const Center(
-          child: Text(
-            'No followers yet',
-            style: TextStyle(color: Colors.white70),
-          ),
-        );
-      }
-
-      return ListView.builder(
-        itemCount: followers.length,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemBuilder: (context, index) {
-          return UserListItem(user: followers[index]);
-        },
+      return _TabScroll(
+        storageKey: 'profile_followers',
+        sliver: loading
+            ? const _TabLoading()
+            : followers.isEmpty
+                ? const _TabMessage(
+                    icon: Icons.people_outline_rounded,
+                    title: 'No followers yet',
+                  )
+                : SliverPadding(
+                    padding: _listPadding,
+                    sliver: SliverList.builder(
+                      itemCount: followers.length,
+                      itemBuilder: (context, index) {
+                        return UserListItem(user: followers[index]);
+                      },
+                    ),
+                  ),
       );
     });
+  }
+}
+
+class _PersonRow extends StatelessWidget {
+  final String name;
+  final String avatar;
+  final Widget trailing;
+  final VoidCallback? onTap;
+  const _PersonRow({
+    required this.name,
+    required this.avatar,
+    required this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      radius: AppRadius.md,
+      onTap: onTap,
+      child: Row(
+        children: [
+          Img(
+            src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
+            alt: name,
+            size: 42,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.cardTitle.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 8),
+          trailing,
+        ],
+      ),
+    );
+  }
+}
+
+class _YouPill extends StatelessWidget {
+  const _YouPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppPill(label: 'You', color: AppColors.success);
   }
 }
 
@@ -512,76 +755,40 @@ class PassHoldersTab extends GetWidget<ProfileController> {
     return Obx(() {
       final passHolders = controller.podiumPassBuyers.value;
       final isLoading = controller.isGettingPassBuyers.value;
-      if (isLoading) {
-        return const Center(child: LoadingWidget());
-      }
-      if (passHolders.isEmpty) {
-        return const Center(
-          child: Text(
-            'No pass holders yet',
-            style: TextStyle(color: Colors.white70),
-          ),
-        );
-      }
-
-      return ListView.builder(
-        itemCount: passHolders.length,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemBuilder: (context, index) {
-          final holder = passHolders[index];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                // User avatar
-                Img(
-                  src: holder.image == defaultAvatar
-                      ? avatarPlaceHolder(holder.name)
-                      : holder.image,
-                  alt: holder.name,
-                  size: 40,
-                ),
-                const SizedBox(width: 12),
-                // User name
-                Expanded(
-                  child: Text(
-                    holder.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                // Follow button
-                if (holder.uuid != myId)
-                  SizedBox(
-                    height: 32,
-                    child: FollowButton(
-                      uuid: holder.uuid,
-                      followed_by_me: holder.followed_by_me,
-                      onFollowStatusChanged: () {
-                        controller.getPassBuyers();
+      return _TabScroll(
+        storageKey: 'profile_pass_holders',
+        sliver: isLoading
+            ? const _TabLoading()
+            : passHolders.isEmpty
+                ? const _TabMessage(
+                    icon: Icons.confirmation_number_outlined,
+                    title: 'No pass holders yet',
+                  )
+                : SliverPadding(
+                    padding: _listPadding,
+                    sliver: SliverList.builder(
+                      itemCount: passHolders.length,
+                      itemBuilder: (context, index) {
+                        final holder = passHolders[index];
+                        return _PersonRow(
+                          name: holder.name,
+                          avatar: holder.image,
+                          trailing: holder.uuid != myId
+                              ? SizedBox(
+                                  height: 32,
+                                  child: FollowButton(
+                                    uuid: holder.uuid,
+                                    followed_by_me: holder.followed_by_me,
+                                    onFollowStatusChanged: () {
+                                      controller.getPassBuyers();
+                                    },
+                                  ),
+                                )
+                              : const _YouPill(),
+                        );
                       },
                     ),
-                  )
-                else
-                  const SizedBox(
-                    height: 32,
-                    child: Text(
-                      'You',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
-              ],
-            ),
-          );
-        },
       );
     });
   }
@@ -593,26 +800,26 @@ class FollowingTab extends GetWidget<ProfileController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller.isGettingFollowings.value) {
-        return const Center(child: LoadingWidget());
-      }
-
+      final loading = controller.isGettingFollowings.value;
       final followings = controller.followings.value;
-      if (followings.isEmpty) {
-        return const Center(
-          child: Text(
-            'Not following anyone yet',
-            style: TextStyle(color: Colors.white70),
-          ),
-        );
-      }
-
-      return ListView.builder(
-        itemCount: followings.length,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemBuilder: (context, index) {
-          return UserListItem(user: followings[index]);
-        },
+      return _TabScroll(
+        storageKey: 'profile_followings',
+        sliver: loading
+            ? const _TabLoading()
+            : followings.isEmpty
+                ? const _TabMessage(
+                    icon: Icons.person_search_outlined,
+                    title: 'Not following anyone yet',
+                  )
+                : SliverPadding(
+                    padding: _listPadding,
+                    sliver: SliverList.builder(
+                      itemCount: followings.length,
+                      itemBuilder: (context, index) {
+                        return UserListItem(user: followings[index]);
+                      },
+                    ),
+                  ),
       );
     });
   }
@@ -634,73 +841,37 @@ class UserListItem extends GetView<ProfileController> {
     final String uuid = user.uuid;
     final bool followedByMe = user.followed_by_me;
 
-    return GestureDetector(
+    return _PersonRow(
+      name: name,
+      avatar: avatar,
       onTap: () {
         controller.openUserProfilePage(uuid: uuid);
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            // User avatar
-            Img(
-              src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
-              alt: name,
-              size: 40,
-            ),
-            const SizedBox(width: 12),
-            // User name
-            Expanded(
-              child: Text(
-                name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            // Follow button
-            if (uuid != myId)
-              Obx(
-                () {
-                  final lodinguserId = controller.loadingUserID.value;
-                  if (lodinguserId == uuid) {
-                    return const SizedBox(
-                      height: 32,
-                      child: LoadingWidget(
-                        size: 16,
-                      ),
-                    );
-                  }
-                  return SizedBox(
+      trailing: uuid != myId
+          ? Obx(
+              () {
+                final lodinguserId = controller.loadingUserID.value;
+                if (lodinguserId == uuid) {
+                  return const SizedBox(
                     height: 32,
-                    child: FollowButton(
-                      uuid: uuid,
-                      followed_by_me: followedByMe,
-                      onFollowStatusChanged: () {
-                        controller.updateFollowState(user);
-                      },
+                    child: LoadingWidget(
+                      size: 16,
                     ),
                   );
-                },
-              )
-            else
-              const SizedBox(
-                height: 32,
-                child: Text(
-                  'You',
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                }
+                return SizedBox(
+                  height: 32,
+                  child: FollowButton(
+                    uuid: uuid,
+                    followed_by_me: followedByMe,
+                    onFollowStatusChanged: () {
+                      controller.updateFollowState(user);
+                    },
                   ),
-                ),
-              ),
-          ],
-        ),
-      ),
+                );
+              },
+            )
+          : const _YouPill(),
     );
   }
 }
@@ -716,99 +887,41 @@ class _Statistics extends GetWidget<ProfileController> {
       if (loading) {
         return const SizedBox();
       }
-      return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey.shade300, width: 1),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 10,
-        ),
-        child: Column(
+      return AppCard(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+        child: Row(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    const Text(
-                      'Cheers received',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      payments.numberOfCheersReceived.toString(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text(
-                      'Boos received',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      payments.numberOfBoosReceived.toString(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            Expanded(
+              child: _ActivityCell(
+                icon: Icons.celebration_rounded,
+                color: AppColors.accent,
+                value: payments.numberOfCheersReceived,
+                label: 'Cheers received',
+              ),
             ),
-            space10,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    const Text(
-                      'Cheers sent',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      payments.numberOfCheersSent.toString(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text(
-                      'Boos sent',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      payments.numberOfBoosSent.toString(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            Expanded(
+              child: _ActivityCell(
+                icon: Icons.thumb_down_alt_rounded,
+                color: AppColors.danger,
+                value: payments.numberOfBoosReceived,
+                label: 'Boos received',
+              ),
+            ),
+            Expanded(
+              child: _ActivityCell(
+                icon: Icons.celebration_outlined,
+                color: AppColors.accent,
+                value: payments.numberOfCheersSent,
+                label: 'Cheers sent',
+              ),
+            ),
+            Expanded(
+              child: _ActivityCell(
+                icon: Icons.thumb_down_alt_outlined,
+                color: AppColors.danger,
+                value: payments.numberOfBoosSent,
+                label: 'Boos sent',
+              ),
             ),
           ],
         ),
@@ -817,183 +930,51 @@ class _Statistics extends GetWidget<ProfileController> {
   }
 }
 
-class _BuyArenaTicketButton extends GetWidget<ProfileController> {
-  const _BuyArenaTicketButton();
+class _ActivityCell extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final int value;
+  final String label;
+  const _ActivityCell({
+    required this.icon,
+    required this.color,
+    required this.value,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final user = controller.userInfo.value;
-      final isGettingPrice = controller.isGettingTicketPrice.value;
-      final isBuyingArenaTicket = controller.isBuyingArenaTicket.value;
-      final arenaTicketPrice = controller.arenaTicketPrice.value;
-      final isGettingArenaPrice = controller.loadingArenaPrice.value;
-      final numberOfBoughtTicketsByMe =
-          controller.mySharesOfArenaFromThisUser.value;
-      if (user == null) {
-        return Container();
-      }
-      return Button(
-        loading: isGettingPrice || isBuyingArenaTicket,
-        onPressed: (isGettingPrice || isBuyingArenaTicket)
-            ? null
-            : () {
-                controller.buyArenaTicket();
-              },
-        type: ButtonType.gradient,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Buy Arena ticket ${arenaTicketPrice.toString()} ${chainInfoByChainId(avalancheChainId).currency}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (isGettingArenaPrice)
-                  const SizedBox(
-                    width: 10,
-                    height: 10,
-                    child: LoadingWidget(
-                      size: 10,
-                    ),
-                  )
-                else
-                  const SizedBox(width: 10, height: 10),
-              ],
-            ),
-            if (numberOfBoughtTicketsByMe > 0)
-              RichText(
-                text: TextSpan(
-                  text: 'owned ',
-                  style: const TextStyle(
-                    color: Colors.yellow,
-                    fontSize: 14,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: '$numberOfBoughtTicketsByMe',
-                      style: const TextStyle(
-                        color: Colors.red,
-                      ),
-                    ),
-                    const TextSpan(
-                      text: ' Arena tickets',
-                      style: TextStyle(
-                        color: Colors.yellow,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: color.withAlpha(28),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 16, color: color),
         ),
-        blockButton: true,
-        icon: Img(
-            src: chainInfoByChainId(avalancheChainId).chainIcon ??
-                Assets.images.movementLogo.path,
-            size: 20),
-      );
-    });
-  }
-}
-
-class _BuyFriendTechTicket extends GetWidget<ProfileController> {
-  const _BuyFriendTechTicket();
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final user = controller.userInfo.value;
-      final isFriendTechActive = controller.isFriendTechActive.value;
-      final isGettingPrice = controller.isGettingTicketPrice.value;
-      final friendTechPrice = controller.friendTechPrice.value;
-      final isGettingFriendTechPrice = controller.loadingFriendTechPrice.value;
-      final isBuyingFriendTechTicket =
-          controller.isBuyingFriendTechTicket.value;
-      final numberOfBoughtTicketsByMe =
-          controller.mySharesOfFriendTechFromThisUser.value;
-      if (user == null) {
-        return Container();
-      }
-      return Button(
-        blockButton: true,
-        icon: Img(
-          src: chainInfoByChainId(baseChainId).chainIcon ??
-              Assets.images.movementLogo.path,
-          size: 20,
+        const SizedBox(height: 6),
+        Text(
+          value.toString(),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
         ),
-        loading: isGettingPrice || isBuyingFriendTechTicket,
-        onPressed:
-            (!isFriendTechActive || isGettingPrice || isBuyingFriendTechTicket)
-                ? null
-                : () {
-                    controller.buyFriendTechTicket();
-                  },
-        type: ButtonType.gradient,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            !isFriendTechActive
-                ? const Text(
-                    'Friendtech address is not active',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.red,
-                    ),
-                  )
-                : Row(
-                    children: [
-                      Text(
-                        'Buy Friendtech share ${friendTechPrice.toString()} ${chainInfoByChainId(baseChainId).currency}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (isGettingFriendTechPrice)
-                        const SizedBox(
-                          width: 10,
-                          height: 10,
-                          child: LoadingWidget(
-                            size: 10,
-                          ),
-                        )
-                      else
-                        const SizedBox(width: 10, height: 10),
-                    ],
-                  ),
-            if (numberOfBoughtTicketsByMe > 0)
-              RichText(
-                text: TextSpan(
-                  text: 'owned ',
-                  style: const TextStyle(
-                    color: Colors.yellow,
-                    fontSize: 14,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: '$numberOfBoughtTicketsByMe',
-                      style: const TextStyle(
-                        color: Colors.red,
-                      ),
-                    ),
-                    const TextSpan(
-                      text: ' Friendtech share',
-                      style: TextStyle(
-                        color: Colors.yellow,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+        const SizedBox(height: 2),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: AppText.caption.copyWith(fontSize: 10, height: 1.2),
         ),
-      );
-    });
+      ],
+    );
   }
 }

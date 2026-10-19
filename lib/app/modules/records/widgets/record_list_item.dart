@@ -4,6 +4,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/records/controllers/records_controller.dart';
 import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../widgets/bottom_sheet_body.dart';
 
@@ -19,23 +20,26 @@ class RecordListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Slidable(
-      key: ValueKey(recording.name),
-      endActionPane: ActionPane(
-        motion: const StretchMotion(),
-        extentRatio: 0.4,
-        dragDismissible: true,
-        dismissible: DismissiblePane(
-          onDismissed: () => controller.deleteRecording(recording),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Slidable(
+        key: ValueKey(recording.name),
+        endActionPane: ActionPane(
+          motion: const StretchMotion(),
+          extentRatio: 0.4,
+          dragDismissible: true,
+          dismissible: DismissiblePane(
+            onDismissed: () => controller.deleteRecording(recording),
+          ),
+          children: [
+            _ShareAction(recording: recording, controller: controller),
+            _DeleteAction(recording: recording, controller: controller),
+          ],
         ),
-        children: [
-          _ShareAction(recording: recording, controller: controller),
-          _DeleteAction(recording: recording, controller: controller),
-        ],
-      ),
-      child: _RecordCard(
-        recording: recording,
-        controller: controller,
+        child: _RecordCard(
+          recording: recording,
+          controller: controller,
+        ),
       ),
     );
   }
@@ -54,14 +58,13 @@ class _ShareAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return SlidableAction(
       onPressed: (context) => controller.shareRecording(recording),
-      backgroundColor: Colors.blue,
+      backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
-      icon: Icons.share,
+      icon: Icons.ios_share_rounded,
       label: 'Share',
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(12),
-        bottomLeft: Radius.circular(12),
+      borderRadius: const BorderRadius.horizontal(
+        left: Radius.circular(AppRadius.lg),
       ),
       autoClose: true,
     );
@@ -77,44 +80,29 @@ class _DeleteAction extends StatelessWidget {
     required this.controller,
   });
 
-  void _showDeleteConfirmationDialog() {
-    Get.dialog(
-      AlertDialog(
-        backgroundColor: ColorName.cardBackground,
-        title: const Text('Delete Recording'),
-        content: const Text('Are you sure you want to delete this recording?'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.close(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              controller.deleteRecording(recording);
-              Get.close();
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+  Future<void> _showDeleteConfirmationDialog() async {
+    final confirmed = await showAppConfirm(
+      title: 'Delete Recording',
+      message: 'Are you sure you want to delete this recording?',
+      confirmLabel: 'Delete',
+      destructive: true,
     );
+    if (confirmed) {
+      controller.deleteRecording(recording);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return SlidableAction(
       onPressed: (context) => _showDeleteConfirmationDialog(),
-      backgroundColor: Colors.red,
+      backgroundColor: AppColors.danger,
       foregroundColor: Colors.white,
-      icon: Icons.delete,
+      icon: Icons.delete_outline_rounded,
       label: 'Delete',
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      borderRadius: const BorderRadius.only(
-        topRight: Radius.circular(12),
-        bottomRight: Radius.circular(12),
+      borderRadius: const BorderRadius.horizontal(
+        right: Radius.circular(AppRadius.lg),
       ),
       autoClose: true,
     );
@@ -146,26 +134,59 @@ class _RecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppCard(
       onTap: _showBottomSheet,
-      child: Card(
-        color: ColorName.cardBackground,
-        margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _RecordName(recording: recording),
-              const SizedBox(height: 8),
-              _RecordDate(recording: recording),
-            ],
+      padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary.withAlpha(70),
+                  AppColors.primary.withAlpha(25),
+                ],
+              ),
+              border: Border.all(color: AppColors.primary.withAlpha(60)),
+            ),
+            child: const Icon(
+              Icons.graphic_eq_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
           ),
-        ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _RecordName(recording: recording),
+                const SizedBox(height: 4),
+                _RecordDate(recording: recording),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.fill,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -180,10 +201,8 @@ class _RecordName extends StatelessWidget {
   Widget build(BuildContext context) {
     return AutoSizeText(
       recording.name,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
+      style: AppText.cardTitle,
+      minFontSize: 12,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
@@ -197,12 +216,23 @@ class _RecordDate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      recording.date.toString().split('.')[0],
-      style: TextStyle(
-        fontSize: 14,
-        color: Colors.grey[600],
-      ),
+    return Row(
+      children: [
+        const Icon(
+          Icons.schedule_rounded,
+          size: 13,
+          color: ColorName.greyText,
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            recording.date.toString().split('.')[0],
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.caption,
+          ),
+        ),
+      ],
     );
   }
 }

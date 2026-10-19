@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:marquee/marquee.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
@@ -23,21 +22,20 @@ import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/navigation/navigation.dart';
-import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/button/button.dart';
-import 'package:podium/widgets/textField/textFieldRounded.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../controllers/outpost_detail_controller.dart';
 
 class OutpostImage extends GetView<OutpostDetailController> {
-  const OutpostImage({super.key});
+  final double height;
+  const OutpostImage({super.key, this.height = 190});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       final outpost = controller.outpost.value;
-      if (outpost == null) return const SizedBox();
+      if (outpost == null) return SizedBox(height: height);
 
       final imageUrl =
           outpost.image.isEmpty ? Constants.logoUrl : outpost.image;
@@ -48,132 +46,74 @@ class OutpostImage extends GetView<OutpostDetailController> {
             outpost: outpost,
           );
         },
-        child: Img(
-          src: imageUrl,
-          size: 40,
-          alt: outpost.name,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+                Img(
+                  src: imageUrl,
+                  width: constraints.maxWidth,
+                  height: height,
+                  alt: outpost.name,
+                  borderRadius: BorderRadius.zero,
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: const [0.45, 1],
+                          colors: [
+                            Colors.transparent,
+                            ColorName.cardBackground.withAlpha(230),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(110),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.open_in_full_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       );
     });
   }
 }
 
-class _OutpostName extends StatelessWidget {
-  final String name;
-  const _OutpostName({required this.name});
-
-  bool _isTextOverflowing(String text, double maxWidth) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      maxLines: 1,
-      textDirection: TextDirection.ltr,
-    )..layout();
-    return textPainter.width > maxWidth;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Flexible(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isOverflowing = _isTextOverflowing(name, constraints.maxWidth);
-
-          return SizedBox(
-            width: constraints.maxWidth,
-            height: 24,
-            child: isOverflowing
-                ? Marquee(
-                    text: name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    scrollAxis: Axis.horizontal,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    blankSpace: 20.0,
-                    velocity: 50.0,
-                    pauseAfterRound: const Duration(seconds: 1),
-                    startPadding: 10.0,
-                    accelerationDuration: const Duration(seconds: 1),
-                    accelerationCurve: Curves.linear,
-                    decelerationDuration: const Duration(milliseconds: 500),
-                    decelerationCurve: Curves.easeOut,
-                  )
-                : Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _NameAndImageWrapper extends StatelessWidget {
-  final String name;
-  final bool hasLumaEvent;
-  const _NameAndImageWrapper({
-    required this.name,
-    required this.hasLumaEvent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final label = TextPainter(
-      text: TextSpan(
-        text: name + '  ',
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      maxLines: 1,
-      textDirection: TextDirection.ltr,
-    )..layout();
-    final labelWidth = label.width + 60;
-    final isLarge = labelWidth > (Get.width - (hasLumaEvent ? 110 : 0));
-
-    return SizedBox(
-      width: isLarge ? Get.width - (hasLumaEvent ? 110 : 0) : labelWidth,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          _OutpostName(name: name),
-          space8,
-          const OutpostImage(),
-        ],
-      ),
-    );
-  }
-}
-
 class ShareIconButton extends StatelessWidget {
   final OutpostModel outpost;
-  const ShareIconButton({required this.outpost});
+  const ShareIconButton({super.key, required this.outpost});
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: () {
+    return AppIconButton(
+      icon: Icons.ios_share_rounded,
+      tooltip: 'Copy link',
+      onTap: () {
         final url = generateOutpostShareUrl(outpostId: outpost.uuid);
         // copy to clipboard and toast
         Clipboard.setData(ClipboardData(text: url));
         Toast.info(title: 'Copied!', message: 'URL copied to clipboard');
       },
-      icon: const Icon(
-        Icons.share,
-        color: Colors.white,
-      ),
     );
   }
 }
@@ -184,170 +124,76 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageWrapper(
-        child: Column(
-          children: [
-            Obx(() {
-              final exists = Get.isRegistered<OutpostDetailController>();
-              if (!exists) return const SizedBox();
-              final outpost = controller.outpost.value;
-              final accesses = controller.outpostAccesses.value;
-              if (outpost == null || accesses == null) {
-                return Container(
-                  width: Get.width,
-                  height: Get.height - 110,
-                  child: const Center(child: LoadingWidget()),
-                );
-              }
-              final iAmOwner = outpost.creator_user_uuid == myId;
-              final lumaEventId = outpost.luma_event_id;
-              final hasLumaEvent =
-                  lumaEventId != null && lumaEventId.isNotEmpty;
-              final isScheduled = outpost.scheduled_for > 0;
-              return Expanded(
-                child: Stack(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        space16,
-                        SizedBox(
-                          width: Get.width,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    isScheduled && iAmOwner
-                                        ? const ScheduledTimer()
-                                        : const Text(
-                                            "Joining:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                              overflow: TextOverflow.visible,
-                                            ),
-                                          ),
-                                    if (canShareOutpostUrl(outpost: outpost))
-                                      ShareIconButton(outpost: outpost),
-                                  ],
-                                ),
-                                space5,
-                                _NameAndImageWrapper(
-                                  name: outpost.name,
-                                  hasLumaEvent: hasLumaEvent,
-                                ),
-                                if (outpost.subject.trim().isNotEmpty)
-                                  Text(
-                                    outpost.subject,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                    ),
-                                  )
-                                else
-                                  emptySpace,
-                                if (iAmOwner)
-                                  Text(
-                                    "Access Type: ${parseAccessType(outpost.enter_type)}",
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[400],
-                                    ),
-                                  ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      "Speakers: ${parseSpeakerType(outpost.speak_type)}",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey[400],
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    // AnimateIcon(
-                                    //   key: UniqueKey(),
-                                    //   onTap: () async {
-                                    //     await controller.getMembers(outpost);
-                                    //   },
-                                    //   color: Colors.blueAccent,
-                                    //   iconType: IconType.animatedOnTap,
-                                    //   height: 20,
-                                    //   width: 20,
-                                    //   animateIcon: AnimateIcons.refresh,
-                                    // ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        space10,
-                        if ((outpost.cohost_user_uuids?.isNotEmpty ?? false) ||
-                            iAmOwner)
-                          Obx(() => CohostsWidget(
-                                cohostUserUuids:
-                                    outpost.cohost_user_uuids ?? [],
-                                isCreator: outpost.creator_user_uuid == myId,
-                                isLoading: controller.isLoadingCohosts.value,
-                                onTap: () {
-                                  _showCohostsBottomSheet();
-                                },
-                              )),
-                        space10,
-                        const MembersList(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            if (canInvite(
-                              outpost: outpost,
-                              currentUserId: myId,
-                            ))
-                              Container(
-                                width: (Get.width / 2) - 20,
-                                child: Button(
-                                  type: ButtonType.outline,
-                                  onPressed: () {
-                                    openInviteBottomSheet(
-                                        canInviteToSpeak: canInviteToSpeak(
-                                      outpost: outpost,
-                                      currentUserId: myId,
-                                    ));
-                                  },
-                                  child: const Text('Invite users'),
-                                ),
-                              ),
-                            Container(
-                              width: (Get.width / 2) - 20,
-                              child: const JoinTheOutpostButton(),
-                            ),
-                          ],
-                        ),
-                        space10,
-                        space10,
-                        if (outpost.scheduled_for != 0)
-                          const SetReminderButton(),
-                        // if (group.scheduledFor != 0 && iAmOwner) ...[
-                        //   space10,
-                        //   const ChangeScheduleButton()
-                        // ],
-                      ],
+        child: Obx(() {
+          final exists = Get.isRegistered<OutpostDetailController>();
+          if (!exists) return const SizedBox();
+          final outpost = controller.outpost.value;
+          final accesses = controller.outpostAccesses.value;
+          if (outpost == null || accesses == null) {
+            return const Center(child: LoadingWidget());
+          }
+          final iAmOwner = outpost.creator_user_uuid == myId;
+          final isScheduled = outpost.scheduled_for > 0;
+          final showInvite = canInvite(
+            outpost: outpost,
+            currentUserId: myId,
+          );
+          return Column(
+            children: [
+              _TopBar(outpost: outpost),
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: _HeroCard(outpost: outpost, iAmOwner: iAmOwner),
                     ),
+                    if (isScheduled && iAmOwner)
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          child: ScheduledTimer(),
+                        ),
+                      ),
+                    const SliverToBoxAdapter(
+                      child: AppSectionHeader(title: 'About this outpost'),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _AccessInfo(
+                          outpost: outpost,
+                          iAmOwner: iAmOwner,
+                        ),
+                      ),
+                    ),
+                    if ((outpost.cohost_user_uuids?.isNotEmpty ?? false) ||
+                        iAmOwner)
+                      SliverToBoxAdapter(
+                        child: Obx(() => CohostsWidget(
+                              cohostUserUuids: outpost.cohost_user_uuids ?? [],
+                              isCreator: outpost.creator_user_uuid == myId,
+                              isLoading: controller.isLoadingCohosts.value,
+                              onTap: () {
+                                _showCohostsBottomSheet();
+                              },
+                            )),
+                      ),
                     if (outpost.luma_event_id != null)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: _LumaIconButton(),
-                      )
+                      const SliverToBoxAdapter(child: _LumaIconButton()),
+                    if (outpost.scheduled_for != 0)
+                      const SliverToBoxAdapter(child: SetReminderButton()),
+                    const MembersList(),
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
                   ],
                 ),
-              );
-            }),
-          ],
-        ),
+              ),
+              _BottomActionBar(
+                outpost: outpost,
+                showInvite: showInvite,
+              ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -367,7 +213,338 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
         },
       ),
       isScrollControlled: true,
-      backgroundColor: ColorName.cardBackground,
+      backgroundColor: Colors.transparent,
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  final OutpostModel outpost;
+  const _TopBar({required this.outpost});
+
+  @override
+  Widget build(BuildContext context) {
+    final canShare = canShareOutpostUrl(outpost: outpost) == true;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: Row(
+        children: [
+          AppIconButton(
+            icon: Icons.arrow_back_rounded,
+            tooltip: 'Back',
+            onTap: () => Navigator.of(context).maybePop(),
+          ),
+          const Expanded(
+            child: Text(
+              'OUTPOST',
+              textAlign: TextAlign.center,
+              style: AppText.label,
+            ),
+          ),
+          if (canShare)
+            ShareIconButton(outpost: outpost)
+          else
+            const SizedBox(width: 40),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroCard extends StatelessWidget {
+  final OutpostModel outpost;
+  final bool iAmOwner;
+  const _HeroCard({required this.outpost, required this.iAmOwner});
+
+  @override
+  Widget build(BuildContext context) {
+    final isUpcoming =
+        outpost.scheduled_for > DateTime.now().millisecondsSinceEpoch;
+    final pills = <Widget>[
+      if (outpost.creator_joined)
+        const AppPill(
+          label: 'Host is live',
+          color: AppColors.success,
+          icon: Icons.circle,
+        ),
+      if (isUpcoming)
+        const AppPill(
+          label: 'Scheduled',
+          color: AppColors.accent,
+          icon: Icons.event_rounded,
+        ),
+      if (outpost.is_recordable)
+        const AppPill(
+          label: 'Recordable',
+          color: AppColors.danger,
+          icon: Icons.fiber_manual_record_rounded,
+        ),
+      if (outpost.has_adult_content)
+        const AppPill(
+          label: '18+',
+          color: AppColors.danger,
+          icon: Icons.explicit_rounded,
+        ),
+    ];
+    final creatorName = outpost.creator_user_name ?? '';
+    return AppCard(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const OutpostImage(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (pills.isNotEmpty) ...[
+                  Wrap(spacing: 6, runSpacing: 6, children: pills),
+                  const SizedBox(height: 12),
+                ],
+                Text(
+                  outpost.name,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.pageTitle.copyWith(fontSize: 24),
+                ),
+                if (outpost.subject.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    outpost.subject,
+                    maxLines: 6,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.body.copyWith(color: ColorName.greyText),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Img(
+                      src: outpost.creator_user_image,
+                      size: 32,
+                      alt: creatorName.isEmpty ? 'OO' : creatorName,
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Hosted by', style: AppText.caption),
+                          Text(
+                            iAmOwner ? 'You' : creatorName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.cardTitle.copyWith(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccessInfo extends StatelessWidget {
+  final OutpostModel outpost;
+  final bool iAmOwner;
+  const _AccessInfo({required this.outpost, required this.iAmOwner});
+
+  @override
+  Widget build(BuildContext context) {
+    final speakers = _InfoTile(
+      icon: Icons.mic_rounded,
+      color: AppColors.success,
+      label: 'Speakers',
+      value: parseSpeakerType(outpost.speak_type),
+    );
+    if (!iAmOwner) return speakers;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _InfoTile(
+              icon: Icons.lock_open_rounded,
+              color: AppColors.primary,
+              label: 'Access',
+              value: parseAccessType(outpost.enter_type),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: speakers),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String value;
+  const _InfoTile({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          _IconBadge(icon: icon, color: color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(label.toUpperCase(),
+                    style: AppText.label.copyWith(fontSize: 10)),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.cardTitle.copyWith(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  const _IconBadge({required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 18, color: color),
+    );
+  }
+}
+
+class _ActionRow extends StatelessWidget {
+  final Widget leading;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  const _ActionRow({
+    required this.leading,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      onTap: onTap,
+      child: Row(
+        children: [
+          leading,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.cardTitle.copyWith(fontSize: 14),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.caption,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          trailing ??
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: ColorName.greyText,
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomActionBar extends StatelessWidget {
+  final OutpostModel outpost;
+  final bool showInvite;
+  const _BottomActionBar({required this.outpost, required this.showInvite});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: ColorName.cardBackground.withAlpha(235),
+        border: const Border(top: BorderSide(color: ColorName.cardBorder)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Row(
+        children: [
+          if (showInvite) ...[
+            Expanded(
+              flex: 2,
+              child: AppSecondaryButton(
+                label: 'Invite',
+                icon: Icons.person_add_alt_1_rounded,
+                onPressed: () {
+                  openInviteBottomSheet(
+                      canInviteToSpeak: canInviteToSpeak(
+                    outpost: outpost,
+                    currentUserId: myId,
+                  ));
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          const Expanded(
+            flex: 3,
+            child: JoinTheOutpostButton(),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -393,50 +570,53 @@ class ScheduledTimer extends GetView<OutpostDetailController> {
           final time = remainintTimeUntilMilSecondsFormated(
             time: scheduledTime,
           ).replaceAll('d,', 'day, ');
-          return GestureDetector(
+          final color = hasTimePassed ? AppColors.accent : AppColors.primary;
+          return AppCard(
             onTap: openRescheduleOutpostDialog,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            borderColor: color.withAlpha(80),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(38),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.white.withAlpha(64),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                _IconBadge(
+                  icon: hasTimePassed
+                      ? Icons.update_rounded
+                      : Icons.schedule_rounded,
+                  color: color,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.edit,
-                        size: 16,
-                        color: Colors.white,
+                      Text(
+                        hasTimePassed ? 'START TIME PASSED' : 'STARTS IN',
+                        style: AppText.label.copyWith(fontSize: 10),
                       ),
-                      space8,
-                      if (hasTimePassed)
-                        const Text(
-                          "Reschedule?",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        )
-                      else
-                        Text(
-                          time,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                      const SizedBox(height: 3),
+                      Text(
+                        hasTimePassed ? 'Reschedule?' : time,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
+                      ),
                     ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.fill,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    size: 16,
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -471,26 +651,51 @@ class MembersList extends GetView<OutpostDetailController> {
       // add my user to the top if it doesn't exist in the list
 
       if (members.length == 0) {
-        return const Expanded(
-          child: const Center(
-            child: const LoadingWidget(),
+        return const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: LoadingWidget()),
           ),
         );
       }
 
-      return Expanded(
-        child: UserList(
-          liveUsersList: members,
-          onRequestUpdate: (userId) {
-            controller.updatedFollowDataForMember(userId);
-          },
-        ),
+      return SliverMainAxisGroup(
+        slivers: [
+          SliverToBoxAdapter(
+            child: AppSectionHeader(
+              title: 'Members',
+              count: members.length,
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverList.builder(
+              itemCount: members.length,
+              itemBuilder: (context, index) {
+                final member = members[index];
+                return UserListTile(
+                  key: Key(member.uuid),
+                  uuid: member.uuid,
+                  name: member.name,
+                  image: member.image,
+                  followed_by_me: member.followed_by_me,
+                  onRequestUpdate: () {
+                    controller.updatedFollowDataForMember(member.uuid);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       );
     });
   }
 }
 
 class _LumaIconButton extends GetView<OutpostDetailController> {
+  const _LumaIconButton();
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -500,26 +705,32 @@ class _LumaIconButton extends GetView<OutpostDetailController> {
           controller.isGettingLumaEventGuests.value;
       final lumaEventDetails = controller.lumaEventDetails.value;
       final image = lumaEventDetails?.event.cover_url;
-      return IconButton(
-        onPressed: () {
-          if (isGettingLumaEventDetails || isGettingLumaEventGuests) return;
+      final isLoading = isGettingLumaEventDetails || isGettingLumaEventGuests;
+      return _ActionRow(
+        onTap: () {
+          if (isLoading) return;
           openLumaDetailsDialog();
         },
-        icon: isGettingLumaEventDetails || isGettingLumaEventGuests
-            ? const SizedBox(
-                width: 80,
-                height: 80,
-                child: LoadingWidget(
-                  size: 14,
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: image != null
+              ? Img(
+                  src: image,
+                  size: 40,
+                  alt: 'luma event',
+                  borderRadius: BorderRadius.zero,
+                )
+              : Assets.images.lumaPng.image(
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
                 ),
-              )
-            : image != null
-                ? Img(
-                    src: image,
-                    size: 80,
-                    alt: 'luma event',
-                  )
-                : Assets.images.lumaPng.image(width: 80, height: 80),
+        ),
+        title: 'Luma event',
+        subtitle: isLoading
+            ? 'Loading event details…'
+            : 'Hosts, guests and event details',
+        trailing: isLoading ? const LoadingWidget(size: 14) : null,
       );
     });
   }
@@ -530,17 +741,13 @@ class ChangeScheduleButton extends GetView<OutpostDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      type: ButtonType.outline,
+    return AppSecondaryButton(
+      label: 'Change Schedule',
+      icon: Icons.edit_calendar_rounded,
       color: ColorName.primaryBlue,
-      blockButton: true,
       onPressed: () async {
         controller.reselectScheduleTime();
       },
-      child: const Text(
-        'Change Schedule',
-        textAlign: TextAlign.center,
-      ),
     );
   }
 }
@@ -555,7 +762,7 @@ class SetReminderButton extends GetView<OutpostDetailController> {
       final remindMeBefore = outpost?.reminder_offset_minutes;
       final isSettingReminder = controller.isSettingReminder.value;
       if (outpost == null) {
-        return Container();
+        return const SizedBox();
       }
       int? reminderIsSetForInMinotes = null;
       if (remindMeBefore != null) {
@@ -573,19 +780,23 @@ class SetReminderButton extends GetView<OutpostDetailController> {
       if (isPassed) {
         return const SizedBox();
       }
+      final isSet = reminderIsSetForInMinotes != null;
 
-      return Button(
-        loading: isSettingReminder,
-        type: ButtonType.outline,
-        color: ColorName.primaryBlue,
-        blockButton: true,
-        onPressed: () {
+      return _ActionRow(
+        onTap: () {
           controller.setReminderForOutpost();
         },
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
+        leading: _IconBadge(
+          icon: isSet
+              ? Icons.notifications_active_rounded
+              : Icons.notifications_none_rounded,
+          color: AppColors.accent,
         ),
+        title: text,
+        subtitle: isSet
+            ? 'Tap to change'
+            : 'Get notified before the outpost starts',
+        trailing: isSettingReminder ? const LoadingWidget(size: 14) : null,
       );
     });
   }
@@ -611,60 +822,93 @@ class JoinTheOutpostButton extends GetView<OutpostDetailController> {
       final enabled = isRegistered || joinButtonContent.enabled;
       final text = isRegistered ? 'Return to Outpost' : joinButtonContent.text;
       if (accesses == null || outpost == null) {
-        return Container();
+        return const SizedBox();
       }
 
-      return Button(
-        loading: isJoining,
-        type: isRegistered ? ButtonType.outline : ButtonType.gradient,
-        borderSide:
-            BorderSide(color: isRegistered ? Colors.green : Colors.transparent),
-        onPressed: enabled
-            ? () {
-                if (isRegistered &&
-                    Get.isRegistered<OutpostDetailController>()) {
-                  Navigate.to(
-                    type: NavigationTypes.toNamed,
-                    route: Routes.ONGOING_OUTPOST_CALL,
-                  );
-                } else {
-                  controller.startTheCall(accesses: accesses);
-                }
+      final onPressed = enabled
+          ? () {
+              if (isRegistered && Get.isRegistered<OutpostDetailController>()) {
+                Navigate.to(
+                  type: NavigationTypes.toNamed,
+                  route: Routes.ONGOING_OUTPOST_CALL,
+                );
+              } else {
+                controller.startTheCall(accesses: accesses);
               }
-            : null,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: isRegistered
-                  ? Shimmer.fromColors(
-                      baseColor: Colors.white,
-                      highlightColor: Colors.green,
-                      child: Text(
-                        text,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.green,
-                        ),
-                      ),
-                    )
-                  : Text(
-                      text,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-            ),
-            space8,
-            if (isRegistered)
-              const Icon(Icons.arrow_forward, color: Colors.green),
-          ],
+            }
+          : null;
+      final background = isRegistered
+          ? AppColors.success.withAlpha(36)
+          : AppColors.primary;
+
+      return FilledButton(
+        onPressed: isJoining ? null : onPressed,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          backgroundColor: background,
+          foregroundColor: isRegistered ? AppColors.success : Colors.white,
+          disabledBackgroundColor:
+              isJoining ? background.withAlpha(150) : AppColors.fill,
+          disabledForegroundColor: Colors.white.withAlpha(150),
+          side: isRegistered
+              ? BorderSide(color: AppColors.success.withAlpha(140))
+              : null,
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
         ),
+        child: isJoining
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: Colors.white,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (!isRegistered) ...[
+                    Icon(
+                      enabled
+                          ? Icons.podcasts_rounded
+                          : Icons.hourglass_top_rounded,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Flexible(
+                    child: isRegistered
+                        ? Shimmer.fromColors(
+                            baseColor: Colors.white,
+                            highlightColor: AppColors.success,
+                            child: Text(
+                              text,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )
+                        : Text(
+                            text,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: text.contains('\n') ? 12 : 15,
+                              height: 1.25,
+                            ),
+                          ),
+                  ),
+                  if (isRegistered) ...[
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_rounded, size: 20),
+                  ],
+                ],
+              ),
       );
     });
   }
@@ -713,147 +957,214 @@ class UserInvitationBottomSheetContent
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Material(
-        child: Container(
-          color: ColorName.cardBackground,
-          padding: const EdgeInsets.all(20),
-          height: Get.height * 0.5,
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.65,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 4),
+              child: Row(
                 children: [
-                  const Text(
-                    'Invite Users',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Invite users', style: AppText.title),
+                        SizedBox(height: 2),
+                        Text(
+                          'Find people and invite them in',
+                          style: AppText.caption,
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {
+                  AppIconButton(
+                    icon: Icons.close_rounded,
+                    tooltip: 'Close',
+                    size: 36,
+                    onTap: () {
                       Get.close();
                       controller.listOfSearchedUsersToInvite.value = [];
                     },
-                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
-              space10,
-              Input(
-                hintText: 'Enter User\'s Name',
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: TextField(
+                autofocus: true,
                 onChanged: (value) {
                   controller.searchUsers(value);
                 },
-                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Enter User\'s Name',
+                  prefixIcon: Icon(Icons.search_rounded),
+                ),
               ),
-              Expanded(child: Container(
-                child: Obx(() {
-                  final users = controller.listOfSearchedUsersToInvite.value;
-                  final loadingInviteId = controller.loadingInviteId.value;
-                  final liveInvitedMembers =
-                      controller.liveInvitedMembers.value;
-                  return ListView.builder(
-                    itemCount: users.length,
-                    itemBuilder: (context, index) {
-                      final user = users[index];
-                      final userInInvitedList = liveInvitedMembers[user.uuid];
-                      if (userInInvitedList != null) {
-                        final invitedToSpeak = userInInvitedList.can_speak;
-                        return Column(
-                          children: [
-                            ListTile(
-                              title: Text(
-                                user.name ?? '',
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              trailing: Text(
-                                'Invited ${invitedToSpeak ? 'to speak' : 'to listen'}',
-                                style: TextStyle(
-                                  color: invitedToSpeak
-                                      ? Colors.green[200]
-                                      : Colors.blue[200],
-                                ),
+            ),
+            Expanded(
+              child: Obx(() {
+                final users = controller.listOfSearchedUsersToInvite.value;
+                final loadingInviteId = controller.loadingInviteId.value;
+                final liveInvitedMembers = controller.liveInvitedMembers.value;
+                if (users.isEmpty) {
+                  return const SingleChildScrollView(
+                    child: AppEmptyState(
+                      icon: Icons.person_search_rounded,
+                      title: 'Search for people',
+                      message: 'Type a name to find users to invite',
+                      compact: true,
+                    ),
+                  );
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  itemCount: users.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final user = users[index];
+                    final userInInvitedList = liveInvitedMembers[user.uuid];
+                    final invitedToSpeak = userInInvitedList?.can_speak;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.fill,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Img(
+                            src: user.image ?? '',
+                            size: 36,
+                            alt: user.name,
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(18)),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              user.name ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: invitedToSpeak == null
+                                    ? Colors.white
+                                    : ColorName.greyText,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            Divider(
-                              color: Colors.grey[900],
+                          ),
+                          const SizedBox(width: 8),
+                          if (invitedToSpeak != null)
+                            AppPill(
+                              label:
+                                  'Invited ${invitedToSpeak ? 'to speak' : 'to listen'}',
+                              color: invitedToSpeak
+                                  ? AppColors.success
+                                  : AppColors.primary,
+                              icon: Icons.check_rounded,
+                            )
+                          else ...[
+                            if (canInviteToSpeak) ...[
+                              _InviteChipButton(
+                                label: 'Speak',
+                                tooltip: 'Invite to speak',
+                                icon: Icons.mic_rounded,
+                                color: AppColors.success,
+                                loading: loadingInviteId == user.uuid + 'true',
+                                onPressed: () {
+                                  controller.inviteUserToJoinThisOutpost(
+                                    userId: user.uuid,
+                                    inviteToSpeak: true,
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            _InviteChipButton(
+                              label: 'Listen',
+                              tooltip: 'Invite to listen',
+                              icon: Icons.headphones_rounded,
+                              color: AppColors.primary,
+                              loading: loadingInviteId == user.uuid + 'false',
+                              onPressed: () {
+                                controller.inviteUserToJoinThisOutpost(
+                                  userId: user.uuid,
+                                  inviteToSpeak: false,
+                                );
+                              },
                             ),
                           ],
-                        );
-                      }
-                      return Column(
-                        children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: Img(
-                              src: user.image ?? '',
-                              size: 32,
-                              alt: user.name,
-                            ),
-                            title: Text(
-                              user.name ?? '',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (canInviteToSpeak)
-                                  SizedBox(
-                                      width: 100,
-                                      child: Button(
-                                        loading: loadingInviteId ==
-                                            user.uuid + 'true',
-                                        type: ButtonType.outline,
-                                        size: ButtonSize.SMALL,
-                                        onPressed: () {
-                                          controller
-                                              .inviteUserToJoinThisOutpost(
-                                            userId: user.uuid,
-                                            inviteToSpeak: true,
-                                          );
-                                        },
-                                        text: 'Invite to speak',
-                                      )),
-                                space5,
-                                SizedBox(
-                                  width: 100,
-                                  child: Button(
-                                    loading:
-                                        loadingInviteId == user.uuid + 'false',
-                                    type: ButtonType.outline,
-                                    size: ButtonSize.SMALL,
-                                    text: 'Invite to listen',
-                                    onPressed: () {
-                                      controller.inviteUserToJoinThisOutpost(
-                                        userId: user.uuid,
-                                        inviteToSpeak: false,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Divider(
-                            color: Colors.grey[900],
-                          ),
                         ],
-                      );
-                    },
-                  );
-                }),
-              ))
-            ],
-          ),
+                      ),
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _InviteChipButton extends StatelessWidget {
+  final String label;
+  final String tooltip;
+  final IconData icon;
+  final Color color;
+  final bool loading;
+  final VoidCallback onPressed;
+  const _InviteChipButton({
+    required this.label,
+    required this.tooltip,
+    required this.icon,
+    required this.color,
+    required this.loading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: OutlinedButton(
+        onPressed: loading ? null : onPressed,
+        style: OutlinedButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          minimumSize: const Size(0, 34),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          foregroundColor: color,
+          backgroundColor: color.withAlpha(24),
+          side: BorderSide(color: color.withAlpha(90)),
+          shape: const StadiumBorder(),
+          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        ),
+        child: loading
+            ? SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2, color: color),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 14),
+                  const SizedBox(width: 4),
+                  Text(label),
+                ],
+              ),
       ),
     );
   }

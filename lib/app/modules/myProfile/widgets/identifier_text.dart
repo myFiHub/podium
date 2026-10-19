@@ -17,6 +17,8 @@ class IdentifierText extends StatelessWidget {
       label: 'Account identifier',
       child: Text(
         identifier != null ? truncate(identifier!) : '',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: const TextStyle(
           fontSize: ConnectedAccountsConstants.identifierFontSize,
           color: ConnectedAccountsConstants.identifierColor,

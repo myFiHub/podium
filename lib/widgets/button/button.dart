@@ -60,9 +60,9 @@ class ButtonSize {
 class ButtonColors {
   static const Color PRIMARY = ColorName.primaryBlue;
   static const Color SECONDARY = Color(0xffAA66CC);
-  static const Color SUCCESS = Color(0xff10DC60);
+  static const Color SUCCESS = Color(0xff3DDC97);
   static const Color INFO = Color(0xff33B5E5);
-  static const Color WARNING = Color(0xffFFBB33);
+  static const Color WARNING = Color(0xffFFC857);
   static const Color DANGER = Color(0xffF04141);
   static const Color LIGHT = Color(0xffE0E0E0);
   static const Color DARK = Color(0xff222428);
@@ -71,6 +71,9 @@ class ButtonColors {
   static const Color ALT = Color(0xff794c8a);
   static const Color TRANSPARENT = Colors.transparent;
 }
+
+const double _standardRadius = 14;
+const Color _outlineBorder = Color(0x33FFFFFF);
 
 class Button extends StatefulWidget {
   /// Create buttons of all types. check out [GFIconButton] for icon buttons, and [GFBadge] for badges
@@ -87,9 +90,9 @@ class Button extends StatefulWidget {
     this.highlightColor,
     this.splashColor,
     this.elevation = 0.0,
-    this.focusElevation = 4.0,
-    this.hoverElevation = 4.0,
-    this.highlightElevation = 1.0,
+    this.focusElevation = 0.0,
+    this.hoverElevation = 0.0,
+    this.highlightElevation = 0.0,
     this.disabledElevation = 0.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 8),
     this.constraints,
@@ -438,45 +441,52 @@ class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
     ShapeBorder shapeBorderType;
+    final bool isOutline = widget.type == ButtonType.outline ||
+        widget.type == ButtonType.outline2x;
+    final bool hasCustomColor = widget.color != ColorName.buttonOutlineBorder;
 
     Color getBorderColor() {
       if (widget.enabled) {
         final Color fillColor = color;
-        if (widget.color != ColorName.buttonOutlineBorder) {
-          return widget.color;
+        if (hasCustomColor) {
+          return isOutline ? widget.color.withAlpha(150) : widget.color;
         }
-        if (widget.type == ButtonType.outline ||
-            widget.type == ButtonType.outline2x) {
-          return ColorName.buttonOutlineBorder;
+        if (isOutline) {
+          return _outlineBorder;
         }
         return fillColor;
       } else {
         if (disabledColor != null) {
           return disabledColor!;
         } else {
-          return color.withValues(alpha: 0.48);
+          return isOutline ? _outlineBorder.withAlpha(20) : color.withAlpha(60);
         }
       }
     }
 
     Color getDisabledFillColor() {
       if (widget.type == ButtonType.transparent ||
-          widget.type == ButtonType.outline ||
-          widget.type == ButtonType.outline2x) {
+          (widget.type == ButtonType.gradient && disabledColor == null)) {
         return Colors.transparent;
+      }
+      if (isOutline) {
+        return Colors.white.withAlpha(6);
       }
       if (disabledColor != null) {
         return disabledColor!;
       } else {
-        return color.withValues(alpha: 0.48);
+        return Colors.white.withAlpha(18);
       }
     }
 
     Color getColor() {
-      if (widget.type == ButtonType.transparent ||
-          widget.type == ButtonType.outline ||
-          widget.type == ButtonType.outline2x) {
+      if (widget.type == ButtonType.transparent) {
         return Colors.transparent;
+      }
+      if (isOutline) {
+        return hasCustomColor && widget.color.a > 0
+            ? widget.color.withAlpha(22)
+            : Colors.white.withAlpha(10);
       }
       if (widget.type == ButtonType.gradient) {
         return Colors.transparent;
@@ -488,12 +498,8 @@ class _ButtonState extends State<Button> {
     Color getDisabledTextColor() {
       if (disabledTextColor != null) {
         return disabledTextColor!;
-      } else if (widget.type == ButtonType.outline ||
-          widget.type == ButtonType.outline2x ||
-          widget.type == ButtonType.transparent) {
-        return color;
       } else {
-        return ButtonColors.DARK;
+        return Colors.white.withAlpha(100);
       }
     }
 
@@ -570,7 +576,7 @@ class _ButtonState extends State<Button> {
       );
     } else if (shape == ButtonShape.standard) {
       shapeBorderType = RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(_standardRadius),
         side: shapeBorder,
       );
     } else {
@@ -594,7 +600,7 @@ class _ButtonState extends State<Button> {
             borderRadius: widget.shape == ButtonShape.pills
                 ? BorderRadius.circular(50)
                 : widget.shape == ButtonShape.standard
-                    ? BorderRadius.circular(8)
+                    ? BorderRadius.circular(_standardRadius)
                     : BorderRadius.zero,
             boxShadow: [
               widget.boxShadow == null && widget.buttonBoxShadow == true
@@ -624,44 +630,48 @@ class _ButtonState extends State<Button> {
         return TextStyle(
           color: widget.enabled ? getTextColor() : getDisabledTextColor(),
           fontSize: 12,
+          fontWeight: FontWeight.w600,
         );
       } else if (widget.size == ButtonSize.MEDIUM) {
         return TextStyle(
           color: widget.enabled ? getTextColor() : getDisabledTextColor(),
           fontSize: 13,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
         );
       } else if (widget.size == ButtonSize.LARGE) {
         return TextStyle(
           color: widget.enabled ? getTextColor() : getDisabledTextColor(),
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
         );
       }
       return TextStyle(
         color: widget.enabled ? getTextColor() : getDisabledTextColor(),
         fontSize: 13,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
       );
     }
 
     _gradientBoxDecoration(bool disabled) => BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              disabled
-                  ? ColorName.primaryBlue.withValues(alpha: 0.3)
-                  : ColorName.primaryBlue,
-              disabled
-                  ? ColorName.secondaryBlue.withValues(alpha: 0.3)
-                  : ColorName.secondaryBlue,
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          gradient: disabled
+              ? null
+              : const LinearGradient(
+                  colors: [
+                    ColorName.primaryBlue,
+                    ColorName.secondaryBlue,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          color: disabled ? Colors.white.withAlpha(18) : null,
+          border: disabled
+              ? Border.all(color: Colors.white.withAlpha(16))
+              : null,
           borderRadius: widget.shape == ButtonShape.pills
               ? BorderRadius.circular(50)
               : widget.shape == ButtonShape.standard
-                  ? BorderRadius.circular(8)
+                  ? BorderRadius.circular(_standardRadius)
                   : BorderRadius.zero,
         );
     final Widget result = Container(
@@ -687,7 +697,7 @@ class _ButtonState extends State<Button> {
         clipBehavior: widget.clipBehavior,
         child: InkWell(
           borderRadius: widget.type == ButtonType.transparent
-              ? BorderRadius.circular(8)
+              ? BorderRadius.circular(_standardRadius)
               : BorderRadius.circular(0),
           focusNode: widget.focusNode,
           canRequestFocus: widget.enabled,

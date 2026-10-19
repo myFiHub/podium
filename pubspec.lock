@@ -379,7 +379,7 @@ packages:
     source: hosted
     version: "11.0.0"
   copy_with_extension_gen:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: copy_with_extension_gen
       sha256: "4af72c664b7b4cb4c467c084602a1cb87aa0d5ba06d7a06038500e8398810ce1"
@@ -482,16 +482,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  dropdown_button2:
-    dependency: "direct main"
-    description:
-      name: dropdown_button2
-      sha256: b0fe8d49a030315e9eef6c7ac84ca964250155a6224d491c1365061bc974a9e1
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.3.9"
   ed25519_edwards:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: ed25519_edwards
       sha256: "6ce0112d131327ec6d42beede1e5dfd526069b18ad45dcf654f15074ad9276cd"
@@ -514,14 +506,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
-  emoji_picker_flutter:
-    dependency: "direct main"
-    description:
-      name: emoji_picker_flutter
-      sha256: "7c6681783e06710608df27be0e38aa4ba73ca1ccac370bb0e7a1320723ae4bca"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.1"
   equatable:
     dependency: "direct main"
     description:
@@ -650,30 +634,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  firebase_messaging:
-    dependency: "direct main"
-    description:
-      name: firebase_messaging
-      sha256: "10272b553a49c13a6cedfd00121047157521f82a5d3f2a1706b9dd28342cc482"
-      url: "https://pub.dev"
-    source: hosted
-    version: "16.0.0"
-  firebase_messaging_platform_interface:
-    dependency: transitive
-    description:
-      name: firebase_messaging_platform_interface
-      sha256: b846a305feb3f74ee3f0aace447f65a4696bc6550bc828ecf5a84a1b77473d16
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.7.0"
-  firebase_messaging_web:
-    dependency: transitive
-    description:
-      name: firebase_messaging_web
-      sha256: "28714749880f7242c5fb3b1ee6c66b41f61453f02ae348b43c82957df80b87ae"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.0.0"
   firebase_storage:
     dependency: "direct main"
     description:
@@ -796,30 +756,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
-  flutter_sound:
-    dependency: "direct main"
-    description:
-      name: flutter_sound
-      sha256: ef89477f6e8ce2fa395158ebc4a8b11982e3ada440b4021c06fd97a4e771554b
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.28.0"
-  flutter_sound_platform_interface:
-    dependency: transitive
-    description:
-      name: flutter_sound_platform_interface
-      sha256: "3394d7e664a09796818014ff85a81db0dec397f4c286cbe52f8783886fa5a497"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.28.0"
-  flutter_sound_web:
-    dependency: transitive
-    description:
-      name: flutter_sound_web
-      sha256: "4e10c94a8574bd93bb8668af59bf76f5312a890bccd3778d73168a7133217dc5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.28.0"
   flutter_spinkit:
     dependency: "direct main"
     description:
@@ -1269,14 +1205,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  lint:
-    dependency: "direct main"
-    description:
-      name: lint
-      sha256: "68d71111816dc7c1de358281e506efe574bb5072eae4a19f8a57484bf96825f5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.6.1"
   lints:
     dependency: transitive
     description:

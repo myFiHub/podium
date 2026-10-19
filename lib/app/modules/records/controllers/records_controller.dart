@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter_sound/flutter_sound.dart';
 import 'package:get/get.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:just_waveform/just_waveform.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -24,62 +24,42 @@ class RecordingFile {
 }
 
 class RecordsController extends GetxController {
-  late final FlutterSoundPlayer _audioPlayer;
+  final _audioPlayer = AudioPlayer();
   final recordings = <RecordingFile>[].obs;
   final isPlaying = false.obs;
   final selectedFile = Rxn<RecordingFile>();
   final currentPosition = Duration.zero.obs;
   final trimStartTime = Duration.zero.obs;
   final trimEndTime = Duration.zero.obs;
-  final _isInitialized = false.obs;
-  StreamSubscription? _positionSubscription;
+  StreamSubscription<Duration>? _positionSubscription;
+  StreamSubscription<PlayerState>? _stateSubscription;
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
-    _audioPlayer = FlutterSoundPlayer();
-    await _initializeAudioPlayer();
+    _positionSubscription = _audioPlayer.positionStream.listen((position) {
+      if (isPlaying.value) currentPosition.value = position;
+    });
+    _stateSubscription = _audioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        isPlaying.value = false;
+        currentPosition.value = Duration.zero;
+      }
+    });
     loadRecordings();
   }
 
-  Future<void> _initializeAudioPlayer() async {
-    await _audioPlayer.openPlayer();
-    _audioPlayer.setSubscriptionDuration(const Duration(milliseconds: 10));
-    _isInitialized.value = true;
-  }
-
   Future<void> playRecording(RecordingFile file) async {
-    if (!_isInitialized.value) return;
-
     try {
-      if (_audioPlayer.isPlaying) {
-        await stopPlayback();
-      }
-
+      if (isPlaying.value) await stopPlayback();
       final startPosition = currentPosition.value;
-      isPlaying.value = true;
-
-      await _audioPlayer.startPlayer(
-        fromURI: file.path,
-        codec: Codec.aacADTS,
-        whenFinished: () {
-          isPlaying.value = false;
-          currentPosition.value = Duration.zero;
-          _positionSubscription?.cancel();
-        },
-      );
-
-      // Seek to the desired position after starting playback
+      await _audioPlayer.setFilePath(file.path);
       if (startPosition > Duration.zero) {
-        await _audioPlayer.seekToPlayer(startPosition);
+        await _audioPlayer.seek(startPosition);
       }
-
-      // Start position tracking
-      _positionSubscription?.cancel();
-      _positionSubscription = _audioPlayer.onProgress?.listen((e) {
-        if (!isPlaying.value) return; // Don't update if not playing
-        currentPosition.value = e.position;
-      });
+      isPlaying.value = true;
+      // Completes only when playback stops, so it isn't awaited.
+      unawaited(_audioPlayer.play());
     } catch (e) {
       Get.snackbar('Error', 'Failed to play recording: $e');
       isPlaying.value = false;
@@ -87,11 +67,8 @@ class RecordsController extends GetxController {
   }
 
   Future<void> stopPlayback() async {
-    if (!_isInitialized.value) return;
-
     try {
-      await _audioPlayer.stopPlayer();
-      _positionSubscription?.cancel();
+      await _audioPlayer.stop();
       isPlaying.value = false;
       currentPosition.value = Duration.zero;
     } catch (e) {
@@ -100,10 +77,8 @@ class RecordsController extends GetxController {
   }
 
   Future<void> seekToPosition(Duration position) async {
-    if (!_isInitialized.value) return;
-
     try {
-      await _audioPlayer.seekToPlayer(position);
+      await _audioPlayer.seek(position);
       currentPosition.value = position;
     } catch (e) {
       Get.snackbar('Error', 'Failed to seek to position');
@@ -111,10 +86,11 @@ class RecordsController extends GetxController {
   }
 
   @override
-  void onClose() async {
+  void onClose() {
     _positionSubscription?.cancel();
+    _stateSubscription?.cancel();
     _disposeWaveform();
-    await _audioPlayer.closePlayer();
+    _audioPlayer.dispose();
     super.onClose();
   }
 

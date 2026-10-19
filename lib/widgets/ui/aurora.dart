@@ -65,9 +65,17 @@ class _AuroraBackgroundState extends State<AuroraBackground> {
   /// display rate at a fraction of the paint cost.
   static const _frameInterval = Duration(milliseconds: 50);
 
-  /// Position in the drift cycle, 0..1.
-  final _phase = ValueNotifier<double>(0);
-  final _clock = Stopwatch();
+  /// Shared by every page's background so a route transition shows the same
+  /// glows on both pages. Runs while at least one background is animating.
+  static final _clock = Stopwatch();
+  static int _running = 0;
+
+  /// Drift cycles elapsed. Not wrapped to 0..1 because the painter's
+  /// non-integer harmonics would jump at the wrap.
+  static double get _cycles =>
+      _clock.elapsedMilliseconds / _period.inMilliseconds;
+
+  final _phase = ValueNotifier<double>(_cycles);
   Timer? _timer;
   late final AppLifecycleListener _lifecycle;
   bool _tickerEnabled = true;
@@ -95,21 +103,23 @@ class _AuroraBackgroundState extends State<AuroraBackground> {
         state == AppLifecycleState.inactive;
     final run = _tickerEnabled && !_reduceMotion && foreground;
     if (run && _timer == null) {
-      _clock.start();
-      _timer = Timer.periodic(_frameInterval, (_) {
-        final periodMs = _period.inMilliseconds;
-        _phase.value = (_clock.elapsedMilliseconds % periodMs) / periodMs;
-      });
+      if (_running++ == 0) _clock.start();
+      _phase.value = _cycles;
+      _timer = Timer.periodic(_frameInterval, (_) => _phase.value = _cycles);
     } else if (!run && _timer != null) {
-      _clock.stop();
-      _timer!.cancel();
-      _timer = null;
+      _stop();
     }
+  }
+
+  void _stop() {
+    _timer!.cancel();
+    _timer = null;
+    if (--_running == 0) _clock.stop();
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    if (_timer != null) _stop();
     _lifecycle.dispose();
     _phase.dispose();
     super.dispose();

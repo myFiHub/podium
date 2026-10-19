@@ -9,7 +9,7 @@ import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
-const navbarHeight = 60.0;
+const navbarHeight = 64.0;
 const _routesWithoutNavbar = [
   Routes.LOGIN,
 ];
@@ -21,7 +21,7 @@ class NavbarItem {
   final String label;
   final Widget? overlay;
 
-  NavbarItem({
+  const NavbarItem({
     required this.route,
     required this.icon,
     required this.label,
@@ -30,7 +30,7 @@ class NavbarItem {
   });
 }
 
-final List<NavbarItem> navbarItems = [
+const List<NavbarItem> navbarItems = [
   NavbarItem(
     route: Routes.HOME,
     icon: Icons.home_outlined,
@@ -54,14 +54,14 @@ final List<NavbarItem> navbarItems = [
     icon: Icons.notifications_outlined,
     activeIcon: Icons.notifications_rounded,
     label: 'Alerts',
-    overlay: const NotificationBadge(),
+    overlay: NotificationBadge(),
   ),
   NavbarItem(
     route: Routes.MY_PROFILE,
     icon: Icons.person_outline,
     activeIcon: Icons.person_rounded,
     label: 'Profile',
-    overlay: const ProfileBadge(),
+    overlay: ProfileBadge(),
   ),
 ];
 
@@ -81,35 +81,17 @@ class PodiumNavbar extends GetView<GlobalController> {
       final bottomSpace = MediaQuery.viewInsetsOf(context).bottom;
       return Container(
         height: bottomSpace == 0 ? navbarHeight : 0,
-        color: ColorName.navbarBackground,
-        child: Stack(
-          children: [
-            MediaQuery.withClampedTextScaling(
-              maxScaleFactor: 1.15,
-              child: BottomNav(
-                activeRoute: activeRoute,
-              ),
-            ),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 1,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      ColorName.primaryBlue.withAlpha(0),
-                      ColorName.primaryBlue.withAlpha(0x80),
-                      ColorName.auroraViolet.withAlpha(0x80),
-                      ColorName.auroraMagenta.withAlpha(0x80),
-                      ColorName.auroraMagenta.withAlpha(0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+        decoration: BoxDecoration(
+          color: ColorName.navbarBackground,
+          border: Border(
+            top: BorderSide(color: ColorName.white.withAlpha(16)),
+          ),
+        ),
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.15,
+          child: BottomNav(
+            activeRoute: activeRoute,
+          ),
         ),
       );
     });
@@ -122,66 +104,125 @@ class BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: Row(
-        children: List.from(
-          navbarItems.map(
-            (item) => Expanded(
-              child: _buildNavItem(
-                route: item.route,
-                icon: item.icon,
-                activeIcon: item.activeIcon,
-                label: item.label,
-                overlay: item.overlay,
+    final activeIndex =
+        navbarItems.indexWhere((item) => item.route == activeRoute);
+    final motion = reduceMotion(context) ? Duration.zero : _animationDuration;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth / navbarItems.length;
+        return Stack(
+          children: [
+            if (activeIndex >= 0)
+              AnimatedPositioned(
+                duration: motion,
+                curve: Curves.easeOutCubic,
+                left: activeIndex * itemWidth + _indicatorInset,
+                width: itemWidth - _indicatorInset * 2,
+                top: _indicatorTop,
+                height: _indicatorHeight,
+                child: const _ActiveIndicator(),
               ),
+            Row(
+              children: [
+                for (final item in navbarItems)
+                  Expanded(
+                    child: _NavItem(
+                      item: item,
+                      isActive: item.route == activeRoute,
+                    ),
+                  ),
+              ],
             ),
-          ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+const _animationDuration = Duration(milliseconds: 240);
+const _indicatorInset = 10.0;
+const _indicatorTop = 6.0;
+const _indicatorHeight = 32.0;
+
+class _ActiveIndicator extends StatelessWidget {
+  const _ActiveIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        gradient: LinearGradient(
+          colors: [
+            ColorName.primaryBlue.withAlpha(46),
+            ColorName.auroraViolet.withAlpha(46),
+          ],
         ),
       ),
     );
   }
 }
 
-const _animationDuration = Duration(milliseconds: 220);
-Widget _buildNavItem({
-  required String route,
-  required IconData icon,
-  IconData? activeIcon,
-  required String label,
-  Widget? overlay,
-}) {
-  final activeRoute = Get.find<GlobalController>().activeRoute.value;
-  final isActive = activeRoute == route;
-  final color = isActive ? ColorName.white : ColorName.secondaryText;
-  return Semantics(
-    button: true,
-    selected: isActive,
-    label: label,
-    excludeSemantics: true,
-    child: InkWell(
-      splashColor: ColorName.primaryBlue.withAlpha(30),
-      highlightColor: Colors.transparent,
-      onTap: () async {
-        HapticFeedback.selectionClick();
-        Navigate.to(
-          type: NavigationTypes.offAllNamed,
-          route: route,
-        );
-      },
+class _NavItem extends StatelessWidget {
+  final NavbarItem item;
+  final bool isActive;
+  const _NavItem({
+    required this.item,
+    required this.isActive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive ? ColorName.primaryBlue : ColorName.secondaryText;
+    return Semantics(
+      button: true,
+      selected: isActive,
+      label: item.label,
+      excludeSemantics: true,
       child: AppPressScale(
-        scale: 0.92,
-        child: _NavItemBody(
-          isActive: isActive,
-          icon: icon,
-          activeIcon: activeIcon,
-          label: label,
-          color: color,
-          overlay: overlay,
+        scale: 0.96,
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Material(
+                color: Colors.transparent,
+                shape: const StadiumBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  customBorder: const StadiumBorder(),
+                  splashFactory: InkRipple.splashFactory,
+                  splashColor: ColorName.primaryBlue.withAlpha(42),
+                  highlightColor: Colors.transparent,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigate.to(
+                      type: NavigationTypes.offAllNamed,
+                      route: item.route,
+                    );
+                  },
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+            IgnorePointer(
+              child: _NavItemBody(
+                isActive: isActive,
+                icon: item.icon,
+                activeIcon: item.activeIcon,
+                label: item.label,
+                color: color,
+                overlay: item.overlay,
+              ),
+            ),
+          ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _NavItemBody extends StatelessWidget {
@@ -202,83 +243,60 @@ class _NavItemBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedContainer(
-            duration: _animationDuration,
-            curve: Curves.easeOutCubic,
-            width: isActive ? 56 : 44,
-            height: 30,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isActive
-                    ? [
-                        ColorName.primaryBlue.withAlpha(56),
-                        ColorName.auroraViolet.withAlpha(56),
-                      ]
-                    : [
-                        ColorName.primaryBlue.withAlpha(0),
-                        ColorName.auroraViolet.withAlpha(0),
-                      ],
-              ),
-              borderRadius: BorderRadius.circular(999),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorName.auroraViolet.withAlpha(isActive ? 50 : 0),
-                  blurRadius: 14,
-                ),
-              ],
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              clipBehavior: Clip.none,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 320),
-                  switchInCurve: Curves.easeOutBack,
-                  switchOutCurve: Curves.easeIn,
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(
-                      scale: Tween(begin: 0.6, end: 1.0).animate(animation),
-                      child: child,
-                    ),
-                  ),
-                  child: Icon(
-                    isActive ? (activeIcon ?? icon) : icon,
-                    key: ValueKey(isActive),
-                    size: 22,
-                    color: isActive ? ColorName.primaryBlue : color,
+    final motion = reduceMotion(context) ? Duration.zero : _animationDuration;
+    return Column(
+      children: [
+        const SizedBox(height: _indicatorTop),
+        SizedBox(
+          width: 44,
+          height: _indicatorHeight,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedSwitcher(
+                duration: motion,
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween(begin: 0.72, end: 1.0).animate(animation),
+                    child: child,
                   ),
                 ),
-                if (overlay != null) overlay!,
-              ],
-            ),
-          ),
-          const SizedBox(height: 3),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: AnimatedDefaultTextStyle(
-                duration: _animationDuration,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.2,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                child: Icon(
+                  isActive ? (activeIcon ?? icon) : icon,
+                  key: ValueKey(isActive),
+                  size: 22,
                   color: color,
                 ),
-                child: Text(
-                  label,
-                  maxLines: 1,
-                ),
+              ),
+              if (overlay != null) overlay!,
+            ],
+          ),
+        ),
+        const SizedBox(height: 2),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: AnimatedDefaultTextStyle(
+              duration: motion,
+              style: TextStyle(
+                fontSize: 11,
+                height: 1.1,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
+              child: Text(
+                label,
+                maxLines: 1,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -310,7 +328,7 @@ class ProfileBadge extends GetView<GlobalController> {
           primaryAccount.address == currentUser.address;
       return !isThisAccountPrimary
           ? Positioned(
-              right: 8,
+              right: 2,
               top: 2,
               child: Container(
                 width: 10,
@@ -341,7 +359,7 @@ class NotificationBadge extends GetWidget<NotificationsController> {
       final numberOfUnreadNotifications =
           controller.numberOfUnreadNotifications.value;
       return Positioned(
-        right: 2,
+        right: -6,
         top: -4,
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),

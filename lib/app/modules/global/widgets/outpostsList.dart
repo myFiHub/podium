@@ -28,11 +28,13 @@ class OutpostsList extends GetView<OutpostsController> {
   final List<OutpostModel>? outpostsList;
   final ScrollController? scrollController;
   final ListPage listPage;
+  final EdgeInsets padding;
   const OutpostsList({
     super.key,
     this.outpostsList,
     this.scrollController,
     required this.listPage,
+    this.padding = _listPadding,
   });
 
   @override
@@ -50,7 +52,7 @@ class OutpostsList extends GetView<OutpostsController> {
       if (listPage != ListPage.search && pageOutposts.isEmpty) {
         return ListView.builder(
           controller: scrollController,
-          padding: _listPadding,
+          padding: padding,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 3,
           addAutomaticKeepAlives: false,
@@ -64,7 +66,7 @@ class OutpostsList extends GetView<OutpostsController> {
 
         listWidget = ListView.builder(
           controller: scrollController,
-          padding: _listPadding,
+          padding: padding,
           itemCount: listToShow.length,
           addAutomaticKeepAlives: false,
           itemBuilder: (context, index) {
@@ -87,6 +89,7 @@ class OutpostsList extends GetView<OutpostsController> {
           hasReachedMax: lastPageReached,
           scrollController: scrollController,
           controller: controller,
+          padding: padding,
           fetchPage: listPage == ListPage.all
               ? controller.fetchAllOutpostsPage
               : controller.fetchMyOutpostsPage,
@@ -112,6 +115,7 @@ class _PaginatedOutposts extends StatefulWidget {
     required this.scrollController,
     required this.controller,
     required this.fetchPage,
+    required this.padding,
   });
 
   final List<OutpostModel> items;
@@ -119,6 +123,7 @@ class _PaginatedOutposts extends StatefulWidget {
   final ScrollController? scrollController;
   final OutpostsController controller;
   final Future<void> Function(int page) fetchPage;
+  final EdgeInsets padding;
 
   @override
   State<_PaginatedOutposts> createState() => _PaginatedOutpostsState();
@@ -159,7 +164,7 @@ class _PaginatedOutpostsState extends State<_PaginatedOutposts> {
         child: ListView.builder(
           controller: widget.scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: _listPadding,
+          padding: widget.padding,
           itemCount: items.length,
           addAutomaticKeepAlives: false,
           itemBuilder: (context, index) {

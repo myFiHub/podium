@@ -14,9 +14,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
-import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -24,6 +22,7 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -493,16 +492,7 @@ class MyProfileController extends GetxController {
 
   void showDeactivationDialog() {
     Get.dialog(
-      Dialog(
-        backgroundColor: ColorName.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: DeactivationForm(),
-        ),
-      ),
+      const DeactivationForm(),
     );
   }
 
@@ -532,74 +522,48 @@ class MyProfileController extends GetxController {
 
   void showPrivateKeyWarning() {
     Get.dialog(
-      AlertDialog(
-        backgroundColor: ColorName.cardBackground,
-        title: const Text(
-          '⚠️ WARNING: Private Key Access',
-          style: TextStyle(
-            color: Colors.red,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      AppDialog(
+        icon: Icons.warning_amber_rounded,
+        iconColor: AppColors.danger,
+        title: 'WARNING: Private Key Access',
+        message:
+            'IMPORTANT: Your private key is the key to your account. Anyone with access to it can control your account and steal your assets.',
         content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'IMPORTANT: Your private key is the key to your account. Anyone with access to it can control your account and steal your assets.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              '⚠️ NEVER share your private key with anyone',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            AppCallout(
+              text: 'NEVER share your private key with anyone',
+              color: AppColors.danger,
+              icon: Icons.block_rounded,
             ),
             SizedBox(height: 8),
-            Text(
-              '⚠️ NEVER enter it on any website',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            AppCallout(
+              text: 'NEVER enter it on any website',
+              color: AppColors.danger,
+              icon: Icons.block_rounded,
             ),
             SizedBox(height: 8),
-            Text(
-              '⚠️ NEVER store it in plain text',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            AppCallout(
+              text: 'NEVER store it in plain text',
+              color: AppColors.danger,
+              icon: Icons.block_rounded,
             ),
           ],
         ),
+        stackActions: true,
         actions: [
-          TextButton(
-            onPressed: () => Get.close(),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+          AppPrimaryButton(
+            label: 'Copy Private Key',
+            icon: Icons.copy_rounded,
+            color: AppColors.danger,
             onPressed: () {
               Navigator.pop(Get.context!);
               _copyPrivateKey();
             },
-            child: const Text('Copy Private Key'),
+          ),
+          AppSecondaryButton(
+            label: 'Cancel',
+            onPressed: () => Get.close(),
           ),
         ],
       ),
@@ -638,7 +602,7 @@ class MyProfileController extends GetxController {
 }
 
 class DeactivationForm extends GetView<MyProfileController> {
-  DeactivationForm({super.key});
+  const DeactivationForm({super.key});
   @override
   Widget build(BuildContext context) {
     final TextEditingController _deactivationController =
@@ -646,94 +610,61 @@ class DeactivationForm extends GetView<MyProfileController> {
     final _formKey = GlobalKey<FormState>();
     return Form(
       key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          RichText(
-            text: const TextSpan(
+      child: AppDialog(
+        icon: Icons.delete_outline_rounded,
+        iconColor: AppColors.danger,
+        title: 'Delete Account',
+        message:
+            'You are about to delete your account. Your account will be deactivated and you will not be able to use it anymore. Are you sure you want to delete your account? This action cannot be undone.',
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Type "delete" to confirm.',
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: ColorName.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.danger,
               ),
-              children: [
-                TextSpan(text: 'Delete Account'),
-              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(
-                height: 1.5,
-                fontSize: 14,
-                color: ColorName.secondaryText,
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _deactivationController,
+              style: AppText.body,
+              decoration: const InputDecoration(
+                hintText: 'Type "delete" to confirm',
               ),
-              children: [
-                TextSpan(
-                  text:
-                      'You are about to delete your account.\nYour account will be deactivated and \nyou will not be able to use it anymore. \nAre you sure you want to delete your account? This action cannot be undone. \n',
-                ),
-                TextSpan(
-                  text: 'Type "delete" to confirm.',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter "delete" to confirm';
+                }
+                if (value.toLowerCase() != 'delete') {
+                  return 'Please enter exactly "delete"';
+                }
+                return null;
+              },
             ),
+          ],
+        ),
+        actions: [
+          AppSecondaryButton(
+            label: 'Cancel',
+            onPressed: () => Get.close(),
           ),
-          const SizedBox(height: 24),
-          TextFormField(
-            controller: _deactivationController,
-            decoration: const InputDecoration(
-              hintText: 'Type "delete" to confirm',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter "delete" to confirm';
-              }
-              if (value.toLowerCase() != 'delete') {
-                return 'Please enter exactly "delete"';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              SizedBox(
-                width: 100,
-                child: TextButton(
-                  onPressed: () => Get.close(),
-                  child: const Text('Cancel'),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Obx(() {
-                final isDeactivatingAccount =
-                    controller.isDeactivatingAccount.value;
-                return Expanded(
-                    child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      controller.deactivateAccount();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: isDeactivatingAccount
-                      ? const LoadingWidget()
-                      : const Text('Delete Account'),
-                ));
-              }),
-            ],
-          ),
+          Obx(() {
+            final isDeactivatingAccount =
+                controller.isDeactivatingAccount.value;
+            return AppPrimaryButton(
+              label: 'Delete',
+              color: AppColors.danger,
+              loading: isDeactivatingAccount,
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  controller.deactivateAccount();
+                }
+              },
+            );
+          }),
         ],
       ),
     );

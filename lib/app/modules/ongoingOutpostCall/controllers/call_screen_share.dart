@@ -42,7 +42,7 @@ mixin _CallScreenShare on GetxController {
 
   String? _stageKey;
 
-  bool get screenShareSupported => Platform.isAndroid;
+  bool get screenShareSupported => Platform.isAndroid || Platform.isIOS;
 
   String get sharerName => displayNameOf(
         uuid: remoteShare.value?.ownerUuid,

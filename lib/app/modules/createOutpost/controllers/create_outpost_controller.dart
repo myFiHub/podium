@@ -32,6 +32,7 @@ import 'package:podium/utils/throttleAndDebounce/debounce.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:uuid/uuid.dart';
@@ -819,36 +820,31 @@ class CreateOutpostController extends GetxController {
 
 Future<bool?> showActivatePopup() async {
   return await Get.dialog<bool>(
-    AlertDialog(
-      backgroundColor: ColorName.cardBackground,
-      title: const Text('Activate Wallet'),
-      content: RichText(
-        text: TextSpan(
-          text:
-              'You need to activate your wallet to buy tickets for this event. Do you want to activate it now?',
-          style: const TextStyle(color: Colors.white),
-          children: [
-            if (externalWalletAddress == null)
-              const TextSpan(
-                text:
-                    '\n(your external wallet is disconnected\n we checked against your Podium wallet address)',
-                style: const TextStyle(color: Colors.red),
-              ),
-          ],
-        ),
-      ),
+    AppDialog(
+      icon: Icons.account_balance_wallet_outlined,
+      title: 'Activate Wallet',
+      message:
+          'You need to activate your wallet to buy tickets for this event. Do you want to activate it now?',
+      content: externalWalletAddress == null
+          ? const AppCallout(
+              text:
+                  'Your external wallet is disconnected, we checked against your Podium wallet address',
+              color: AppColors.danger,
+              icon: Icons.link_off_rounded,
+            )
+          : null,
       actions: [
-        TextButton(
+        AppSecondaryButton(
+          label: 'Cancel',
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(false);
           },
-          child: const Text('Cancel'),
         ),
-        TextButton(
+        AppPrimaryButton(
+          label: 'Activate',
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(true);
           },
-          child: const Text('Activate'),
         ),
       ],
     ),
@@ -892,34 +888,35 @@ class SelectUsersToBuyTicketFromBottomSheetContent
   @override
   Widget build(BuildContext context) {
     final inputController = TextEditingController();
-    return SafeArea(
-      child: Material(
-        child: Container(
-          color: ColorName.cardBackground,
-          padding: const EdgeInsets.all(20),
-          height: Get.height * 0.5,
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: Get.height * 0.5,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Search user',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  const Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 4),
+                      child: Text('Search user', style: AppText.title),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {
+                  AppIconButton(
+                    icon: Icons.close_rounded,
+                    tooltip: 'Close',
+                    size: 36,
+                    onTap: () {
                       controller.listOfSearchedUsersToBuyTicketFrom.value = [];
                       Get.close();
                     },
-                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
-              space10,
+              const SizedBox(height: 12),
               Obx(() {
                 final searchValue = controller.searchValueForSeletTickets.value;
                 final loadingAddresses = controller.loadingAddresses.value;
@@ -1182,7 +1179,7 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                     ],
                                   ),
                                 ),
-                                Divider(color: Colors.grey[900]),
+                                const Divider(color: AppColors.border),
                               ],
                             );
                           }
@@ -1316,8 +1313,8 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                                   ],
                                 ),
                               ),
-                              Divider(
-                                color: Colors.grey[900],
+                              const Divider(
+                                color: AppColors.border,
                               ),
                             ],
                           );
@@ -1337,22 +1334,25 @@ class SelectUsersToBuyTicketFromBottomSheetContent
                   ready = !controller.shouldSelectTicketHolersForAccess;
                 }
                 if (!ready) {
-                  return Container(
-                    child: const Center(
-                      child: const Text(
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: Center(
+                      child: Text(
                         'Select Users, or Enter Address',
                         textAlign: TextAlign.center,
+                        style: AppText.muted,
                       ),
                     ),
                   );
                 }
-                return Button(
-                  blockButton: true,
-                  type: ButtonType.gradient,
-                  onPressed: () {
-                    Get.close();
-                  },
-                  child: const Text('Done'),
+                return Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: AppPrimaryButton(
+                    label: 'Done',
+                    onPressed: () {
+                      Get.close();
+                    },
+                  ),
                 );
               })
             ],

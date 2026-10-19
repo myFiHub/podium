@@ -568,6 +568,145 @@ Future<T?> showAppSheet<T>(Widget sheet) {
   );
 }
 
+/// Tinted circular icon shown at the top of a dialog.
+class AppDialogIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  const AppDialogIcon({
+    super.key,
+    required this.icon,
+    this.color = AppColors.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withAlpha(70)),
+      ),
+      child: Icon(icon, color: color),
+    );
+  }
+}
+
+/// Tinted box with an icon for warnings and side notes inside dialogs.
+class AppCallout extends StatelessWidget {
+  final String text;
+  final Color color;
+  final IconData icon;
+  const AppCallout({
+    super.key,
+    required this.text,
+    this.color = AppColors.accent,
+    this.icon = Icons.info_outline_rounded,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withAlpha(22),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: color.withAlpha(70)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Dialog chrome: optional icon badge, title, message/content and a row (or
+/// stack) of actions, usually [AppSecondaryButton] and [AppPrimaryButton].
+class AppDialog extends StatelessWidget {
+  final String title;
+  final String? message;
+  final Widget? content;
+  final IconData? icon;
+  final Color iconColor;
+  final List<Widget> actions;
+  final bool stackActions;
+  const AppDialog({
+    super.key,
+    required this.title,
+    this.message,
+    this.content,
+    this.icon,
+    this.iconColor = AppColors.primary,
+    this.actions = const [],
+    this.stackActions = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (icon != null) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: AppDialogIcon(icon: icon!, color: iconColor),
+              ),
+              const SizedBox(height: 14),
+            ],
+            Text(title, style: AppText.title),
+            if (message != null) ...[
+              const SizedBox(height: 8),
+              Text(message!, style: AppText.muted.copyWith(height: 1.45)),
+            ],
+            if (content != null) ...[
+              SizedBox(height: message == null ? 12 : 16),
+              Flexible(child: SingleChildScrollView(child: content!)),
+            ],
+            if (actions.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              if (stackActions)
+                for (var i = 0; i < actions.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 10),
+                  actions[i],
+                ]
+              else
+                Row(
+                  children: [
+                    for (var i = 0; i < actions.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 12),
+                      Expanded(child: actions[i]),
+                    ],
+                  ],
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Confirmation dialog. Resolves to true when confirmed.
 Future<bool> showAppConfirm({
   required String title,

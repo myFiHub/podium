@@ -77,6 +77,10 @@
 		<key>NSLocalNetworkUsageDescription</key>
 		<string>Local network access is required for optimal connection quality</string>
 		<!-- Keeps the background Jitsi conference audio alive when the app is not in the foreground -->
+		<key>RTCAppGroupIdentifier</key>
+		<string>group.com.web3podium</string>
+		<key>RTCScreenSharingExtension</key>
+		<string>com.web3podium.broadcast</string>
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>audio</string>

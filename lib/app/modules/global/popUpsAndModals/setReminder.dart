@@ -6,12 +6,12 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/setReminder.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 Future<bool> createCalendarEventForScheduledGroup({
   String? eventUrl,
@@ -91,51 +91,50 @@ Future<int?> setReminder({
     return null;
   }
 
-  final int? alarmMeBefore = await Get.dialog<int>(AlertDialog(
-    backgroundColor: ColorName.pageBackground,
-    title: const Text('Set a Reminder?'),
-    content: const Text('Do you want Podium to remind you for this event?'),
-    actionsAlignment: MainAxisAlignment.center,
-    actions: [
-      Container(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            for (var i = 0; i < timesList.length; i++)
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(Get.context!, timesList![i]['time']);
-                },
-                child: Text(timesList[i]['text'] as String,
-                    style: TextStyle(color: Colors.red[i * 100])),
-              ),
-            TextButton(
-              onPressed: () async {
-                await createCalendarEventForScheduledGroup(
-                  eventUrl: eventUrl,
-                  scheduledFor: scheduledFor,
-                  title: outpost.name,
-                  subject: outpost.subject,
-                );
-                Navigator.pop<int>(Get.context!, -1);
-              },
-              child: Text(
-                  Platform.isAndroid
-                      ? 'use my calendar instead'
-                      : 'set reminder on calendar',
-                  style: TextStyle(color: Colors.green[400])),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(Get.context!, -2);
-              },
-              child: const Text('NO REMINDER!',
-                  style: TextStyle(color: Colors.red)),
-            ),
-          ],
+  final int? alarmMeBefore = await Get.dialog<int>(AppDialog(
+    icon: Icons.notifications_active_outlined,
+    title: 'Set a Reminder?',
+    message: 'Do you want Podium to remind you for this event?',
+    content: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < timesList.length; i++) ...[
+          AppSecondaryButton(
+            label: timesList[i]['text'] as String,
+            icon: Icons.schedule_rounded,
+            onPressed: () {
+              Navigator.pop(Get.context!, timesList![i]['time']);
+            },
+          ),
+          const SizedBox(height: 10),
+        ],
+        AppSecondaryButton(
+          label: Platform.isAndroid
+              ? 'Use my calendar instead'
+              : 'Set reminder on calendar',
+          icon: Icons.event_rounded,
+          color: AppColors.success,
+          onPressed: () async {
+            await createCalendarEventForScheduledGroup(
+              eventUrl: eventUrl,
+              scheduledFor: scheduledFor,
+              title: outpost.name,
+              subject: outpost.subject,
+            );
+            Navigator.pop<int>(Get.context!, -1);
+          },
         ),
-      )
-    ],
+        const SizedBox(height: 10),
+        AppSecondaryButton(
+          label: 'No reminder',
+          icon: Icons.notifications_off_outlined,
+          color: AppColors.danger,
+          onPressed: () async {
+            Navigator.pop(Get.context!, -2);
+          },
+        ),
+      ],
+    ),
   ));
   // -2 means remove reminder
   if (alarmMeBefore == -2) {

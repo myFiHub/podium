@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 /// Shows a dialog to score the outpost call quality and returns the selected score (1-5)
 /// Returns null if user cancels or closes the dialog
@@ -17,79 +17,47 @@ Future<int?> showScoreOutpostPrompt() async {
   final emojis = emojiScoreMap.keys.toList();
 
   final int? selectedScore = await Get.dialog<int>(
-    AlertDialog(
-      backgroundColor: ColorName.pageBackground,
-      title: const Text(
-        'Rate Call Quality',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'How was your outpost call experience?',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
+    AppDialog(
+      icon: Icons.star_rounded,
+      iconColor: AppColors.accent,
+      title: 'Rate Call Quality',
+      message: 'How was your outpost call experience?',
+      content: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        alignment: WrapAlignment.center,
+        children: emojis.map((emoji) {
+          return Material(
+            color: AppColors.fill,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              side: const BorderSide(color: AppColors.border),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-
-          // Emoji Selection
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            alignment: WrapAlignment.center,
-            children: emojis.map((emoji) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.pop(Get.context!, emojiScoreMap[emoji]);
-                },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.transparent,
-                      width: 2,
-                    ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                Navigator.pop(Get.context!, emojiScoreMap[emoji]);
+              },
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Center(
+                  child: Text(
+                    emoji,
+                    style: const TextStyle(fontSize: 24),
                   ),
-                  child: Center(
-                    child: Text(
-                      emoji,
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-      actionsAlignment: MainAxisAlignment.center,
-      actions: [
-        Container(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(Get.context!, null);
-                },
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.grey),
                 ),
               ),
-            ],
-          ),
+            ),
+          );
+        }).toList(),
+      ),
+      actions: [
+        AppSecondaryButton(
+          label: 'Cancel',
+          onPressed: () {
+            Navigator.pop(Get.context!, null);
+          },
         ),
       ],
     ),

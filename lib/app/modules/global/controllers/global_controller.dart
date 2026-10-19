@@ -19,7 +19,6 @@ import 'package:podium/app/modules/notifications/controllers/notifications_contr
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/env.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
@@ -33,6 +32,7 @@ import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web3auth_flutter/enums.dart';
@@ -473,26 +473,21 @@ class GlobalController extends GetxController {
       l.e('New version available: $version (current: $currentVersion)');
       Get.dialog(
         barrierDismissible: false,
-        AlertDialog(
-          title: const Text('New version available'),
-          content: Text('A new version of Podium ($version) is available',
-              style: const TextStyle(color: ColorName.black)),
-          titleTextStyle: const TextStyle(
-            color: ColorName.black,
-          ),
+        AppDialog(
+          icon: Icons.system_update_rounded,
+          title: 'New version available',
+          message: 'A new version of Podium ($version) is available',
           actions: [
             if (!forceUpdate)
-              TextButton(
+              AppSecondaryButton(
+                label: 'Later',
                 onPressed: () {
                   storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
                   Get.close();
                 },
-                child: const Text(
-                  'Later',
-                  style: TextStyle(color: ColorName.black),
-                ),
               ),
-            TextButton(
+            AppPrimaryButton(
+              label: 'Update',
               onPressed: () async {
                 if (!forceUpdate) {
                   storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
@@ -507,7 +502,6 @@ class GlobalController extends GetxController {
                   l.e("error launching url $e");
                 }
               },
-              child: const Text('Update'),
             ),
           ],
         ),

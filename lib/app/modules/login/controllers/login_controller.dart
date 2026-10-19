@@ -13,7 +13,6 @@ import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
@@ -24,9 +23,8 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
-import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
@@ -563,21 +561,20 @@ class LoginController extends GetxController {
     String fullName = '';
     await Get.bottomSheet(
       isDismissible: false,
-      Container(
-        width: Get.width,
-        height: 300,
-        color: ColorName.cardBackground,
-        padding: const EdgeInsets.all(12),
+      isScrollControlled: true,
+      AppSheet(
+        title: 'Full Name',
         child: FormBuilder(
           key: _formKey,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'the name you want to use in the platform',
-                style: TextStyle(
-                  color: ColorName.greyText,
-                ),
+                'The name you want to use in the platform',
+                style: AppText.muted,
               ),
+              const SizedBox(height: 12),
               FormBuilderField(
                 builder: (FormFieldState<String?> field) {
                   return Input(
@@ -593,10 +590,9 @@ class LoginController extends GetxController {
                 },
                 name: 'fullName',
               ),
-              Button(
-                text: 'SUBMIT',
-                blockButton: true,
-                type: ButtonType.gradient,
+              const SizedBox(height: 16),
+              AppPrimaryButton(
+                label: 'Submit',
                 onPressed: () {
                   final re = _formKey.currentState?.saveAndValidate();
                   if (re == true) {
@@ -628,20 +624,20 @@ Future<String?> showDialogToGetTheEmail() async {
   final _formKey = GlobalKey<FormBuilderState>();
   String email = '';
   final String? enteredEmail = await Get.bottomSheet(
-    Container(
-      height: 400,
-      color: ColorName.cardBackground,
+    isScrollControlled: true,
+    AppSheet(
+      title: 'Email',
       child: FormBuilder(
         key: _formKey,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            space10,
             const Text(
               'Please enter your email address',
-              style: TextStyle(
-                color: ColorName.greyText,
-              ),
+              style: AppText.muted,
             ),
+            const SizedBox(height: 12),
             FormBuilderField(
               name: 'email',
               builder: (FormFieldState<String?> field) {
@@ -656,10 +652,9 @@ Future<String?> showDialogToGetTheEmail() async {
                 );
               },
             ),
-            Button(
-              text: 'SUBMIT',
-              blockButton: true,
-              type: ButtonType.gradient,
+            const SizedBox(height: 16),
+            AppPrimaryButton(
+              label: 'Submit',
               onPressed: () {
                 final re = _formKey.currentState?.saveAndValidate();
                 if (re == true) {

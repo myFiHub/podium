@@ -18,8 +18,6 @@ class OneSignalService extends GetxService {
     super.onInit();
   }
 
-
-
   /// Get the OneSignal device ID
   Future<String?> getOneSignalId() async {
     try {

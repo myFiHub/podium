@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -17,6 +17,8 @@ import 'package:podium/widgets/ui/app_ui.dart';
 final _deb = Debouncing(duration: const Duration(milliseconds: 600));
 
 class SearchPageController extends GetxController {
+  final _outpostRepository = Get.find<OutpostRepository>();
+  final _userRepository = Get.find<UserRepository>();
   final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final searchValue = ''.obs;
@@ -58,9 +60,9 @@ class SearchPageController extends GetxController {
         }
 
         final [outposts, users, tags] = await Future.wait([
-          HttpApis.podium.searchOutpostByName(name: value),
-          HttpApis.podium.searchUserByName(name: value),
-          HttpApis.podium.searchTag(tagName: value),
+          _outpostRepository.searchOutpostByName(name: value),
+          _userRepository.searchUserByName(name: value),
+          _outpostRepository.searchTag(tagName: value),
         ]);
         searchedOutposts.value = outposts as Map<String, OutpostModel>;
         searchedUsers.value = users as Map<String, UserModel>;
@@ -69,7 +71,6 @@ class SearchPageController extends GetxController {
       });
     });
   }
-
 
   @override
   void onClose() {
@@ -125,7 +126,8 @@ class SearchPageController extends GetxController {
 
   Future<void> tagClicked(TagModel tag) async {
     loadingTag_name.value = tag.name;
-    final foundOutposts = await HttpApis.podium.getOutpostsByTagId(id: tag.id);
+    final foundOutposts =
+        await _outpostRepository.getOutpostsByTagId(id: tag.id);
     if (foundOutposts.isEmpty) {
       l.e('No groups found for tag: ${tag.name}');
       return;
@@ -170,7 +172,7 @@ class SearchPageController extends GetxController {
       searchedUsers.value = {};
       return;
     }
-    final foundUsers = await HttpApis.podium.searchUserByName(name: v);
+    final foundUsers = await _userRepository.searchUserByName(name: v);
     searchedUsers.value = foundUsers;
   }
 

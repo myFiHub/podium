@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/permissions.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/setReminder.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -81,7 +81,7 @@ Future<int?> setReminder({
     return null;
   }
 
-  final outpost = await HttpApis.podium.getOutpost(uuid);
+  final outpost = await Get.find<OutpostRepository>().getOutpost(uuid);
   if (outpost == null) {
     Toast.error(
       message: 'Outpost not found',
@@ -140,7 +140,8 @@ Future<int?> setReminder({
       final request = SetOrRemoveReminderRequest(
         uuid: uuid,
       );
-      final success = await HttpApis.podium.setOrRemoveReminder(request);
+      final success =
+          await Get.find<OutpostRepository>().setOrRemoveReminder(request);
       if (success) {
         Toast.success(message: 'Reminder removed');
         final updatedOutpost = outpost.copyWith.reminder_offset_minutes(null);
@@ -159,7 +160,8 @@ Future<int?> setReminder({
       uuid: uuid,
       reminder_offset_minutes: alarmMeBefore,
     );
-    final isSet = await HttpApis.podium.setOrRemoveReminder(request);
+    final isSet =
+        await Get.find<OutpostRepository>().setOrRemoveReminder(request);
     if (isSet) {
       Toast.success(
         message:

@@ -364,7 +364,8 @@ class CallRoomController extends GetxController
 
   /// One observable per member so a level change only rebuilds that member's
   /// ring. Entries are never removed: a ring may still be listening to one.
-  RxDouble _levelRx(String uuid) => _shownLevels.putIfAbsent(uuid, () => 0.0.obs);
+  RxDouble _levelRx(String uuid) =>
+      _shownLevels.putIfAbsent(uuid, () => 0.0.obs);
 
   double levelOf(String uuid) => _levelRx(uuid).value;
 

@@ -10,15 +10,15 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
 import 'package:podium/app/modules/global/services/oneSignal.dart';
-import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
+import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
-import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
@@ -61,6 +61,8 @@ class GlobalUpdateIds {
 }
 
 class GlobalController extends GetxController {
+  final _authRepository = Get.find<AuthRepository>();
+  final _userRepository = Get.find<UserRepository>();
   static final storage = GetStorage();
   final oneSignalService =
       Get.put<OneSignalService>(OneSignalService(), permanent: true);
@@ -154,7 +156,6 @@ class GlobalController extends GetxController {
     initializeInternetConnectionChecker();
   }
 
-
   @override
   void onClose() {
     _tickerTimer?.cancel();
@@ -165,7 +166,7 @@ class GlobalController extends GetxController {
   }
 
   Future<void> _getAndSetMetadata() async {
-    final metadata = await HttpApis.podium.appMetadata();
+    final metadata = await _authRepository.appMetadata();
     appMetadata = metadata;
     jitsiServerAddress = appMetadata.va;
   }
@@ -270,14 +271,12 @@ class GlobalController extends GetxController {
     // Initialize the Web3AuthFlutter instance.
     await Web3AuthFlutter.init(
       Web3AuthOptions(
-        clientId:
-            Env.web3AuthClientId,
+        clientId: Env.web3AuthClientId,
         sessionTime: 60 * 60 * 24 * 7,
         network: Network.sapphire_mainnet,
         redirectUrl: resolveRedirectUrl(),
         whiteLabel: WhiteLabelData(
-          appName:
-              "Podium",
+          appName: "Podium",
           mode: ThemeModes.dark,
         ),
       ),
@@ -368,7 +367,7 @@ class GlobalController extends GetxController {
   }
 
   Future<void> saveUserWalletAddressOnFirebase(String walletAddress) async {
-    await HttpApis.podium.updateMyUserData({
+    await _userRepository.updateMyUserData({
       "external_wallet_address": walletAddress,
     });
     l.d("new wallet address SAVED $walletAddress");
@@ -721,7 +720,7 @@ class GlobalController extends GetxController {
   }
 
   Future<void> disconnect() async {
-    final removed = await HttpApis.podium
+    final removed = await _userRepository
         .updateMyUserData({'external_wallet_address': null});
     if (removed != null) {
       try {
@@ -798,7 +797,7 @@ class GlobalController extends GetxController {
           new_address: newAccountAddress,
           new_address_signature: newAccountAddressSignedByCurrentAccount,
         );
-        final connected = await HttpApis.podium.connectNewAccount(request);
+        final connected = await _authRepository.connectNewAccount(request);
         if (connected) {
           final (signature, timestamp) =
               signMessageWithTimestamp(newAccountPrivateKey, newAccountAddress);
@@ -848,7 +847,7 @@ class GlobalController extends GetxController {
       login_type_identifier: newWeb3AuthUserInfo.verifierId ?? '',
       referrer_user_uuid: null,
     );
-    final (loginResponse, error, statusCode) = await HttpApis.podium.login(
+    final (loginResponse, error, statusCode) = await _authRepository.login(
       request: request,
       additionalData: AdditionalDataForLogin(),
     );

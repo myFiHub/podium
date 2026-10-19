@@ -13,7 +13,8 @@ class ColorThemeSheet extends StatelessWidget {
     return AppSheet(
       title: 'Color theme',
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: AppSheet.maxHeight(context, 0.7)),
+        constraints:
+            BoxConstraints(maxHeight: AppSheet.maxHeight(context, 0.7)),
         child: ListView.separated(
           shrinkWrap: true,
           itemCount: AppPalette.all.length,

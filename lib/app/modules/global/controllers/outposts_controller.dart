@@ -14,6 +14,7 @@ import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
 import 'package:podium/providers/api/luma/models/addHost.dart';
@@ -74,6 +75,8 @@ final debounceForFetchingNumberOfOnlineMembers =
     Debouncing(duration: const Duration(seconds: 2));
 
 class OutpostsController extends GetxController {
+  final _outpostRepository = Get.find<OutpostRepository>();
+  final _userRepository = Get.find<UserRepository>();
   final showCreateButton = true.obs;
 
   final globalController = Get.find<GlobalController>();
@@ -113,7 +116,6 @@ class OutpostsController extends GetxController {
     });
   }
 
-
   @override
   void onClose() {
     super.onClose();
@@ -138,7 +140,8 @@ class OutpostsController extends GetxController {
         _onlineCountFetchedAt[id] = now;
       }
       final results = await allSettled({
-        for (final id in ids) id: HttpApis.podium.getNumberOfOnlineMembers(id),
+        for (final id in ids)
+          id: _outpostRepository.getNumberOfOnlineMembers(id),
       });
       // Merge, so outposts scrolled out of view keep their last live count.
       final map = {...mapOfOnlineUsersInOutposts.value};
@@ -160,14 +163,15 @@ class OutpostsController extends GetxController {
   }
 
   /// Page 0 replaces the list once the response arrives, so a refresh keeps
-  /// showing the current outposts instead of flashing skeletons.
+  /// showing the current outposts instead of flashing skeletons. A failed
+  /// request leaves the list as it was.
   Future<void> fetchAllOutpostsPage(int pageKey) {
     return _fetchPage(
       pageKey: pageKey,
       target: outposts,
       isLoading: isGettingAllOutposts,
       lastPageReached: lastPageReachedForAllOutposts,
-      fetch: () => HttpApis.podium.getOutposts(
+      fetch: () => _outpostRepository.getOutposts(
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
       ),
@@ -180,7 +184,7 @@ class OutpostsController extends GetxController {
       target: myOutposts,
       isLoading: isGettingMyOutposts,
       lastPageReached: lastPageReachedForMyOutposts,
-      fetch: () => HttpApis.podium.getMyOutposts(
+      fetch: () => _outpostRepository.getMyOutposts(
         include_archived: showArchivedOutposts.value,
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
@@ -205,6 +209,11 @@ class OutpostsController extends GetxController {
         for (final outpost in newItems) outpost.uuid: outpost,
       };
       lastPageReached.value = newItems.length < numberOfOutpostsPerPage;
+    } on ApiFailure catch (e) {
+      // Load-more retries on every scroll, so only a refresh is worth a toast.
+      if (pageKey == 0) {
+        Toast.error(message: e.message);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -224,7 +233,7 @@ class OutpostsController extends GetxController {
     try {
       final userWantsToLeave = await _showModalToLeaveGroup(outpost: outpost);
       if (userWantsToLeave != true) return;
-      final success = await HttpApis.podium.leaveOutpost(outpost.uuid);
+      final success = await _outpostRepository.leaveOutpost(outpost.uuid);
       if (success) {
         //  update existing outpost in all outposts page controller and set i_am_member to false
         OutpostModel updatedOutpost = outpost.copyWith.i_am_member(false);
@@ -246,7 +255,7 @@ class OutpostsController extends GetxController {
   Future<String?> uploadOutpostImage(
       OutpostModel outpost, String newImageUrl) async {
     try {
-      final updated = await HttpApis.podium.updateOutpost(
+      final updated = await _outpostRepository.updateOutpost(
         request: UpdateOutpostRequest(
           image: newImageUrl,
           uuid: outpost.uuid,
@@ -271,7 +280,7 @@ class OutpostsController extends GetxController {
     if (canContinue == null || canContinue == false) return;
     final archive = !outpost.is_archived;
     final success =
-        await HttpApis.podium.toggleOutpostArchive(outpost.uuid, archive);
+        await _outpostRepository.toggleOutpostArchive(outpost.uuid, archive);
     if (success != true) {
       Toast.error(
         message: "Failed to toggle archive",
@@ -391,7 +400,7 @@ class OutpostsController extends GetxController {
     );
     try {
       OutpostModel? response;
-      response = await HttpApis.podium.createOutpost(
+      response = await _outpostRepository.createOutpost(
         createOutpostRequest,
       );
 
@@ -408,7 +417,7 @@ class OutpostsController extends GetxController {
             Toast.error(message: 'Failed to create Luma Event');
             return response;
           } else {
-            final success = await HttpApis.podium.updateOutpost(
+            final success = await _outpostRepository.updateOutpost(
               request: UpdateOutpostRequest(
                 uuid: response.uuid,
                 luma_event_id: lumaEventId,
@@ -443,7 +452,7 @@ class OutpostsController extends GetxController {
     if (joiningOutpostId.value.isNotEmpty) return;
     try {
       joiningOutpostId.value = outpostId;
-      final outpost = await HttpApis.podium.getOutpost(outpostId);
+      final outpost = await _outpostRepository.getOutpost(outpostId);
       if (outpost == null) {
         Toast.error(
           title: "Error-455",
@@ -475,7 +484,7 @@ class OutpostsController extends GetxController {
       }
       final isAlreadyMember = outpost.i_am_member;
       if (!isAlreadyMember) {
-        final added = await HttpApis.podium.addMeAsMember(
+        final added = await _outpostRepository.addMeAsMember(
           outpostId: outpost.uuid,
         );
         if (!added) {
@@ -753,7 +762,7 @@ class OutpostsController extends GetxController {
             foreground: AppColors.onColor(AppColors.accent),
             onPressed: () {
               globalController.setIsMyUserOver18(true);
-              HttpApis.podium.updateMyUserData({'is_over_18': true});
+              _userRepository.updateMyUserData({'is_over_18': true});
               Navigator.of(Get.overlayContext!).pop(true);
             },
           ),
@@ -770,7 +779,8 @@ class OutpostsController extends GetxController {
   }
 }
 
-Future<dynamic> _showModalToToggleArchiveGroup({required OutpostModel outpost}) async {
+Future<dynamic> _showModalToToggleArchiveGroup(
+    {required OutpostModel outpost}) async {
   final isCurrentlyArchived = outpost.is_archived;
   final result = await Get.dialog(
     AppDialog(

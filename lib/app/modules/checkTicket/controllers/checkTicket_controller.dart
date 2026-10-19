@@ -8,6 +8,7 @@ import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/contracts/chainIds.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
@@ -47,7 +48,8 @@ class TicketSeller {
 
   bool get shouldBuyAccessTicket =>
       accessTicketType != null && !boughtTicketToAccess;
-  bool get shouldBuySpeakTicket => speakTicketType != null && !boughtTicketToSpeak;
+  bool get shouldBuySpeakTicket =>
+      speakTicketType != null && !boughtTicketToSpeak;
 
   TicketSeller({
     required this.userInfo,
@@ -90,6 +92,7 @@ class TicketSeller {
 }
 
 class CheckticketController extends GetxController {
+  final _userRepository = Get.find<UserRepository>();
   final globalController = Get.find<GlobalController>();
   final OutpostsController outpostsController = Get.find<OutpostsController>();
   final Map<String, UserModel> usersToBuyTicketFromInOrderToHaveAccess = {};
@@ -104,7 +107,6 @@ class CheckticketController extends GetxController {
   void onInit() {
     super.onInit();
   }
-
 
   @override
   void onClose() {
@@ -181,8 +183,8 @@ class CheckticketController extends GetxController {
         .where((e) => e.isNotEmpty)
         .toList();
     final [usersForAccess, usersForSpeak] = await Future.wait([
-      HttpApis.podium.getUsersByIds(accessIds),
-      HttpApis.podium.getUsersByIds(speakIds),
+      _userRepository.getUsersByIds(accessIds),
+      _userRepository.getUsersByIds(speakIds),
     ]);
 // when we were saving a user that was added by handle, we added $arenaUserIdPrefix at the start ot the user id
 // now we should fetch them separately and add them to ticket list
@@ -524,7 +526,8 @@ class CheckticketController extends GetxController {
       } else {
         Toast.warning(
           title: "Can't buy together",
-          message: "These tickets are on different chains. Buy them separately.",
+          message:
+              "These tickets are on different chains. Buy them separately.",
         );
       }
     } catch (e) {
@@ -549,7 +552,7 @@ class CheckticketController extends GetxController {
 
     final myReferrer = myUser.referrer_user_uuid;
     if (myReferrer != null) {
-      final referrerInfo = await HttpApis.podium.getUserData(myReferrer);
+      final referrerInfo = await _userRepository.getUserData(myReferrer);
       if (referrerInfo != null) {
         referrer = referrerInfo.aptos_address!;
       }
@@ -657,7 +660,7 @@ class CheckticketController extends GetxController {
     String referrer = '';
     final myReferrer = myUser.referrer_user_uuid;
     if (myReferrer != null) {
-      final referrerInfo = await HttpApis.podium.getUserData(myReferrer);
+      final referrerInfo = await _userRepository.getUserData(myReferrer);
       if (referrerInfo != null) {
         referrer = referrerInfo.defaultWalletAddress;
       }
@@ -738,7 +741,8 @@ class CheckticketController extends GetxController {
           access.canEnter = true;
         } else {
           final priceDouble = bigIntWeiToDouble(price ?? BigInt.zero);
-          final priceStringFull = '$priceDouble ${chainInfoByChainId(avalancheChainId).currency}';
+          final priceStringFull =
+              '$priceDouble ${chainInfoByChainId(avalancheChainId).currency}';
           access.accessPriceFullString = priceStringFull;
         }
       } else if (outpost.value!.enter_type ==
@@ -756,7 +760,8 @@ class CheckticketController extends GetxController {
           access.canEnter = true;
         } else {
           final priceDouble = bigIntWeiToDouble(price ?? BigInt.zero);
-          final priceStringFull = '$priceDouble ${chainInfoByChainId(baseChainId).currency}';
+          final priceStringFull =
+              '$priceDouble ${chainInfoByChainId(baseChainId).currency}';
           access.accessPriceFullString = priceStringFull;
         }
       } else if (outpost.value!.enter_type ==
@@ -773,7 +778,8 @@ class CheckticketController extends GetxController {
           access.canEnter = true;
         } else {
           final p = price ?? BigInt.zero;
-          final priceStringFull = '$p ${chainInfoByChainId(movementAptosNetwork.chainId).currency}';
+          final priceStringFull =
+              '$p ${chainInfoByChainId(movementAptosNetwork.chainId).currency}';
           access.accessPriceFullString = priceStringFull;
         }
       } else {
@@ -798,7 +804,8 @@ class CheckticketController extends GetxController {
           access.canSpeak = true;
         } else {
           final priceDouble = bigIntWeiToDouble(price ?? BigInt.zero);
-          final priceStringFull = '$priceDouble ${chainInfoByChainId(avalancheChainId).currency}';
+          final priceStringFull =
+              '$priceDouble ${chainInfoByChainId(avalancheChainId).currency}';
           access.speakPriceFullString = priceStringFull;
         }
       } else if (outpost.value!.speak_type ==
@@ -816,7 +823,8 @@ class CheckticketController extends GetxController {
           access.canSpeak = true;
         } else {
           final priceDouble = bigIntWeiToDouble(price ?? BigInt.zero);
-          final priceStringFull = '$priceDouble ${chainInfoByChainId(baseChainId).currency}';
+          final priceStringFull =
+              '$priceDouble ${chainInfoByChainId(baseChainId).currency}';
           access.speakPriceFullString = priceStringFull;
         }
       } else if (outpost.value!.speak_type ==
@@ -833,7 +841,8 @@ class CheckticketController extends GetxController {
           access.canSpeak = true;
         } else {
           final p = price ?? BigInt.zero;
-          final priceStringFull = '$p ${chainInfoByChainId(movementAptosNetwork.chainId).currency}';
+          final priceStringFull =
+              '$p ${chainInfoByChainId(movementAptosNetwork.chainId).currency}';
           access.speakPriceFullString = priceStringFull;
         }
       } else {

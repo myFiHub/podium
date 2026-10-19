@@ -8,12 +8,12 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/utils/palette.dart';
-import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/analytics.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:pulsator/pulsator.dart';
 import 'package:share_plus/share_plus.dart';
@@ -186,7 +186,7 @@ Future<void> _openOutpost(
   OutpostModel outpost,
 ) async {
   if (!wsClient.connected) {
-    await HttpApis.podium.connectToWebSocket();
+    await Get.find<AuthRepository>().reconnectSocket();
   }
   controller.joinOutpostAndOpenOutpostDetailPage(
     outpostId: outpost.uuid,

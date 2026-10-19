@@ -8,8 +8,8 @@ part of 'eventModel.dart';
 
 LumaEventModel _$LumaEventModelFromJson(Map<String, dynamic> json) =>
     LumaEventModel(
-      event: LumaEventDetailsModel.fromJson(
-          json['event'] as Map<String, dynamic>),
+      event:
+          LumaEventDetailsModel.fromJson(json['event'] as Map<String, dynamic>),
       hosts: (json['hosts'] as List<dynamic>)
           .map((e) => LumaHostModel.fromJson(e as Map<String, dynamic>))
           .toList(),

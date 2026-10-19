@@ -196,7 +196,6 @@ class BlockChainUtils {
     final connectedChain = session!.chainId;
     String chainId = connectedChain;
 
-
     final accounts = session.getAccounts();
     final currentNamespace = '${Env.chainNamespace}:$chainId';
     if (accounts != null && accounts.isNotEmpty) {
@@ -214,5 +213,4 @@ class BlockChainUtils {
       return '';
     }
   }
-
 }

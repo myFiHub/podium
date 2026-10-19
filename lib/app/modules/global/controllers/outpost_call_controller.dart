@@ -15,8 +15,8 @@ import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/constants/meeting.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/models/jitsi_member.dart';
-import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -27,6 +27,7 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 class OutpostCallController extends GetxController {
+  final _outpostRepository = Get.find<OutpostRepository>();
   final storage = GetStorage();
   final outpostsController = Get.find<OutpostsController>();
   final globalController = Get.find<GlobalController>();
@@ -49,10 +50,10 @@ class OutpostCallController extends GetxController {
   final Map<String, RxBool> _speaking = {};
 
   /// Per-member speaking flag, so an avatar rebuilds only for its own member.
-  RxBool speakingOf(String uuid) => _speaking.putIfAbsent(uuid, () => false.obs);
+  RxBool speakingOf(String uuid) =>
+      _speaking.putIfAbsent(uuid, () => false.obs);
 
-  final reactionsMap = Rx<Map<String, Map<OutgoingMessageTypeEnums, int>>>({
-  });
+  final reactionsMap = Rx<Map<String, Map<OutgoingMessageTypeEnums, int>>>({});
   final haveOngoingCall = false.obs;
 
   CallSession? _session;
@@ -282,7 +283,7 @@ class OutpostCallController extends GetxController {
 
     final seq = ++_liveDataSeq;
     final liveData =
-        await HttpApis.podium.getLatestLiveData(outpostId: outpostId);
+        await _outpostRepository.getLatestLiveData(outpostId: outpostId);
     if (!callSession.isActive) return;
     if (liveData == null) {
       // A newer request is in flight and will decide.
@@ -413,7 +414,7 @@ class OutpostCallController extends GetxController {
     await WidgetsBinding.instance.endOfFrame;
     final score = await showScoreOutpostPrompt();
     if (score != null) {
-      await HttpApis.podium.scoreOutpost(
+      await _outpostRepository.scoreOutpost(
         outpostId: outpostId,
         score: score,
       );
@@ -425,7 +426,7 @@ class OutpostCallController extends GetxController {
     final isScheduled = outpostToJoin.scheduled_for > 0;
     if (!iAmCreator && isScheduled) {
       try {
-        final remoteOutpostData = await HttpApis.podium.getOutpost(
+        final remoteOutpostData = await _outpostRepository.getOutpost(
           outpostToJoin.uuid,
         );
 

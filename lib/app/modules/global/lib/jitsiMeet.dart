@@ -1,4 +1,3 @@
-
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:jitsi_meet_flutter_sdk/jitsi_meet_flutter_sdk.dart';
@@ -7,7 +6,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
@@ -78,7 +77,8 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       final outpostCreator = outpost.creator_user_uuid;
       final iAmCreator = outpostCreator == myUserId;
       if (outpost.creator_joined != true && iAmCreator) {
-        await HttpApis.podium.setCreatorJoinedToTrue(outpost.uuid);
+        await Get.find<OutpostRepository>()
+            .setCreatorJoinedToTrue(outpost.uuid);
       }
       if (!callSession.isActive) return;
       outpostCallController.haveOngoingCall.value = true;
@@ -126,7 +126,6 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
     chatMessageReceived: (senderId, message, isPrivate, timestamp) {
       _room?.onChatMessage(senderId, message, isPrivate);
     },
-
     conferenceTerminated: (url, error) async {
       l.f("conferenceTerminated: url: $url, error: $error");
       if (!callSession.isActive) return;

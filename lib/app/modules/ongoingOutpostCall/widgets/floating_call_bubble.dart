@@ -414,7 +414,8 @@ class _FanItemState extends State<_FanItem> {
           ),
         );
       },
-      child: _ActionButton(look: widget.action.look, onTap: widget.action.onTap),
+      child:
+          _ActionButton(look: widget.action.look, onTap: widget.action.onTap),
     );
   }
 }

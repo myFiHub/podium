@@ -7,19 +7,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:http/http.dart' as http;
-import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
-import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 class AptosMovement {
+  static UserRepository get _userRepository => Get.find();
   AptosMovement._internal();
   static final AptosMovement _instance = AptosMovement._internal();
   factory AptosMovement() => _instance;
@@ -330,7 +331,7 @@ class AptosMovement {
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
 
-      final success = await HttpApis.podium.buySellPodiumPass(
+      final success = await _userRepository.buySellPodiumPass(
         BuySellPodiumPassRequest(
           count: numberOfTickets,
           podium_pass_owner_address: sellerAddress,
@@ -428,7 +429,7 @@ class AptosMovement {
       final res = await client.submitSignedBCSTransaction(signedTransaction);
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
-      await HttpApis.podium.buySellPodiumPass(
+      await _userRepository.buySellPodiumPass(
         BuySellPodiumPassRequest(
           count: numberOfTickets,
           podium_pass_owner_address: sellerAddress,

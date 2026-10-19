@@ -332,8 +332,7 @@ class _DynamicMultilineTagsState extends State<DynamicMultilineTags> {
                                                 color: Color.fromARGB(
                                                     255, 0, 0, 0)),
                                           ),
-                                          onTap: () {
-                                          },
+                                          onTap: () {},
                                         ),
                                         const SizedBox(width: 4.0),
                                         InkWell(
@@ -603,8 +602,7 @@ class _DynamicAutoCompleteTagsState extends State<DynamicAutoCompleteTags> {
                                                   color: Color.fromARGB(
                                                       255, 0, 0, 0)),
                                             ),
-                                            onTap: () {
-                                            },
+                                            onTap: () {},
                                           ),
                                           const SizedBox(width: 4.0),
                                           InkWell(

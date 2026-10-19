@@ -9,7 +9,7 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -34,6 +34,7 @@ class Payments {
 }
 
 class ProfileController extends GetxController {
+  final _userRepository = Get.find<UserRepository>();
   final userInfo = Rxn<UserModel>();
   final globalController = Get.find<GlobalController>();
   final groupsController = Get.find<OutpostsController>();
@@ -79,8 +80,6 @@ class ProfileController extends GetxController {
     updateTheData();
   }
 
-
-
   Future<void> updateTheData() async {
     mySharesOfPodiumPassFromThisUser.value = 0;
     await Future.wait<void>([
@@ -95,7 +94,7 @@ class ProfileController extends GetxController {
     if (!silent) {
       isGettingFollowers.value = true;
     }
-    final followersList = await HttpApis.podium.getFollowersOfUser(
+    final followersList = await _userRepository.getFollowersOfUser(
       uuid: userInfo.value!.uuid,
     );
     followers.value = followersList;
@@ -108,7 +107,7 @@ class ProfileController extends GetxController {
     if (!silent) {
       isGettingFollowings.value = true;
     }
-    final followingsList = await HttpApis.podium.getFollowingsOfUser(
+    final followingsList = await _userRepository.getFollowingsOfUser(
       uuid: userInfo.value!.uuid,
     );
     followings.value = followingsList;
@@ -118,7 +117,7 @@ class ProfileController extends GetxController {
   }
 
   Future<void> getUserInfo() async {
-    final info = await HttpApis.podium.getUserData(userInfo.value!.uuid);
+    final info = await _userRepository.getUserData(userInfo.value!.uuid);
     if (info != null) {
       userInfo.value = info;
       payments.value = Payments(
@@ -143,7 +142,7 @@ class ProfileController extends GetxController {
       );
       return;
     }
-    final user = await HttpApis.podium.getUserData(uuid);
+    final user = await _userRepository.getUserData(uuid);
     if (user != null) {
       userInfo.value = user;
       await updateTheData();
@@ -384,7 +383,7 @@ class ProfileController extends GetxController {
       final myReferrerUuid = userInfo.value!.referrer_user_uuid;
       String referrer = '';
       if (myReferrerUuid != null) {
-        final myReferrer = await HttpApis.podium.getUserData(myReferrerUuid);
+        final myReferrer = await _userRepository.getUserData(myReferrerUuid);
         referrer = myReferrer?.aptos_address ?? '';
       }
 
@@ -487,7 +486,7 @@ class ProfileController extends GetxController {
 
   Future<void> getPassBuyers() async {
     isGettingPassBuyers.value = true;
-    final buyers = await HttpApis.podium.podiumPassBuyers(
+    final buyers = await _userRepository.podiumPassBuyers(
       uuid: userInfo.value!.uuid,
     );
     podiumPassBuyers.value = buyers;

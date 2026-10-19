@@ -4,13 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
-import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 
 class ReferalController extends GetxController {
+  final _userRepository = Get.find<UserRepository>();
   final GlobalController globalController = Get.find<GlobalController>();
   final myProfile = Rxn<UserModel>();
   StreamSubscription<bool>? loggedInListener;
@@ -19,14 +19,12 @@ class ReferalController extends GetxController {
     super.onInit();
     loggedInListener = globalController.loggedIn.listen((loggedIn) async {
       if (loggedIn) {
-        final profile = await HttpApis.podium
-            .getMyUserData(additionalData: AdditionalDataForLogin());
+        final profile = await _userRepository.getMyUserData();
 
         myProfile.value = profile;
       } else {}
     });
   }
-
 
   @override
   void onClose() {

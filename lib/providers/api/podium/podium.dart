@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/env.dart';
 import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/api_failure.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
@@ -41,12 +40,31 @@ class PodiumApi {
 
   PodiumApi(this.dio);
 
+  /// Session token from the last successful [authenticate].
+  String? get token => _token;
+
+  /// Surfaces every error as an [ApiFailure], so callers can tell a failed
+  /// request from an empty result.
+  Future<T> _attempt<T>(Future<T> Function() request) async {
+    try {
+      return await request();
+    } on DioException catch (e) {
+      l.e(e);
+      throw ApiFailure(
+        _errorMessage(e) ?? 'Network error, please try again',
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      l.e(e);
+      throw const ApiFailure('Unexpected response from server');
+    }
+  }
+
   /// Returns [fallback] instead of throwing, so callers never see network errors.
   Future<T> _guard<T>(Future<T> Function() request, T fallback) async {
     try {
-      return await request();
-    } catch (e) {
-      l.e(e);
+      return await _attempt(request);
+    } on ApiFailure {
       return fallback;
     }
   }
@@ -71,15 +89,24 @@ class PodiumApi {
     );
   }
 
+  /// Throws [ApiFailure].
+  Future<List<T>> _fetchList<T>(
+    String path,
+    _FromJson<T> fromJson, {
+    Map<String, dynamic>? query,
+  }) {
+    return _attempt(() async {
+      final data = await _getData(path, query: query) as List;
+      return data.map((e) => fromJson(e)).toList();
+    });
+  }
+
   Future<List<T>> _getList<T>(
     String path,
     _FromJson<T> fromJson, {
     Map<String, dynamic>? query,
   }) {
-    return _guard(() async {
-      final data = await _getData(path, query: query) as List;
-      return data.map((e) => fromJson(e)).toList();
-    }, <T>[]);
+    return _guard(() => _fetchList(path, fromJson, query: query), <T>[]);
   }
 
   Future<Map<String, T>> _getMap<T>(
@@ -108,11 +135,6 @@ class PodiumApi {
         if (page != null) 'page': page,
         if (pageSize != null) 'page_size': pageSize,
       };
-
-  Future<bool> connectToWebSocket() async {
-    final globalController = Get.find<GlobalController>();
-    return await globalController.initializeWebSocket(token: _token!);
-  }
 
   Future<PodiumAppMetadata> appMetadata() async {
     final storage = GetStorage();
@@ -151,43 +173,44 @@ class PodiumApi {
     }
   }
 
-  Future<(UserModel?, String?, int?)> login({
-    required LoginRequest request,
-    required AdditionalDataForLogin additionalData,
-  }) async {
-    LoginRequest loginRequest = request;
-    loginRequest.referrer_user_uuid =
-        loginRequest.referrer_user_uuid?.replaceAll('/', '');
+  /// Exchanges a signed login [request] for a session token. On failure the
+  /// token is null and [error] carries the server's message when it sent one.
+  Future<({String? token, String? error, int? statusCode})> authenticate(
+    LoginRequest request,
+  ) async {
+    request.referrer_user_uuid =
+        request.referrer_user_uuid?.replaceAll('/', '');
     try {
       final response =
-          await dio.post('$_baseUrl/auth/login', data: loginRequest.toJson());
-      if (response.statusCode == 200) {
-        try {
-          _token = response.data['data']['token'];
-          final results = await Future.wait<Object?>([
-            connectToWebSocket(),
-            getMyUserData(additionalData: additionalData),
-          ]);
-          final myUserData = results[1] as UserModel?;
-
-          return (myUserData, null, response.statusCode);
-        } catch (e) {
-          return (
-            null,
-            'Login error, try again in a few minutes',
-            response.statusCode
-          );
-        }
-      } else {
-        return (null, 'User not found', response.statusCode);
+          await dio.post('$_baseUrl/auth/login', data: request.toJson());
+      if (response.statusCode != 200) {
+        return (
+          token: null,
+          error: 'User not found',
+          statusCode: response.statusCode,
+        );
       }
+      try {
+        _token = response.data['data']['token'] as String;
+      } catch (e) {
+        l.e(e);
+        return (
+          token: null,
+          error: 'Login error, try again in a few minutes',
+          statusCode: response.statusCode,
+        );
+      }
+      return (token: _token, error: null, statusCode: response.statusCode);
     } on DioException catch (e) {
       l.d('e: ${e.response}');
-      final message = _errorMessage(e);
-      return (null, message, e.response?.statusCode);
+      return (
+        token: null,
+        error: _errorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     } catch (e) {
       l.e(e);
-      return (null, 'User not found', null);
+      return (token: null, error: 'User not found', statusCode: null);
     }
   }
 
@@ -316,22 +339,6 @@ class PodiumApi {
     );
   }
 
-  Future<List<FollowerModel>> getMyFollowers({int? page, int? page_size}) {
-    return _getList(
-      '/users/followers',
-      FollowerModel.fromJson,
-      query: _paging(page, page_size),
-    );
-  }
-
-  Future<List<FollowerModel>> getMyFollowings({int? page, int? page_size}) {
-    return _getList(
-      '/users/followings',
-      FollowerModel.fromJson,
-      query: _paging(page, page_size),
-    );
-  }
-
   Future<OutpostModel?> getOutpost(String id) {
     return _getOne(
       '/outposts/detail',
@@ -381,8 +388,9 @@ class PodiumApi {
     }, null);
   }
 
+  /// Throws [ApiFailure].
   Future<List<OutpostModel>> getOutposts({int? page, int? page_size}) {
-    return _getList(
+    return _fetchList(
       '/outposts',
       OutpostModel.fromJson,
       query: _paging(page, page_size),
@@ -402,12 +410,13 @@ class PodiumApi {
     );
   }
 
+  /// Throws [ApiFailure].
   Future<List<OutpostModel>> getMyOutposts({
     bool include_archived = true,
     int? page,
     int? page_size,
   }) {
-    return _getList(
+    return _fetchList(
       '/outposts/my-outposts',
       OutpostModel.fromJson,
       query: {
@@ -486,17 +495,6 @@ class PodiumApi {
 
   Future<bool> buySellPodiumPass(BuySellPodiumPassRequest request) {
     return _send('/podium-passes/trade', data: request.toJson());
-  }
-
-  Future<List<PodiumPassBuyerModel>> myPodiumPasses({
-    int? page,
-    int? page_size,
-  }) {
-    return _getList(
-      '/podium-passes/my-passes',
-      PodiumPassBuyerModel.fromJson,
-      query: _paging(page, page_size),
-    );
   }
 
   Future<List<PodiumPassBuyerModel>> podiumPassBuyers({

@@ -4,10 +4,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
-import 'package:podium/utils/palette.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
@@ -116,6 +116,7 @@ class CohostsSearchBottomSheet extends StatefulWidget {
 }
 
 class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
+  final _userRepository = Get.find<UserRepository>();
   final TextEditingController _searchController = TextEditingController();
   final RxList<UserModel> _searchedUsers = <UserModel>[].obs;
   final RxList<UserModel> _selectedCohosts = <UserModel>[].obs;
@@ -146,7 +147,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
     _isLoadingInitialCohosts.value = true;
     try {
       final users =
-          await HttpApis.podium.getUsersByIds(widget.initialCohostUuids);
+          await _userRepository.getUsersByIds(widget.initialCohostUuids);
       _selectedCohosts.value = users;
     } catch (e) {
       l.e('Failed to load cohosts: $e');
@@ -498,7 +499,7 @@ class _CohostsSearchBottomSheetState extends State<CohostsSearchBottomSheet> {
   Future<void> _runSearch(String query) async {
     final seq = ++_searchSeq;
     try {
-      final users = await HttpApis.podium.searchUserByName(name: query);
+      final users = await _userRepository.searchUserByName(name: query);
       if (seq != _searchSeq || !mounted) return;
       _searchedUsers.value = users.values.toList();
     } catch (e) {

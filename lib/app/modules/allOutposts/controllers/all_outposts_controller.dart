@@ -9,8 +9,6 @@ class AllOutpostsController extends GetxController {
     super.onInit();
   }
 
-
-
   @override
   Future<void> refresh() async {
     await outpostsController.fetchAllOutpostsPage(0);

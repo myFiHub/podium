@@ -37,7 +37,8 @@ class _CheerBooBottomSheetState extends State<CheerBooBottomSheet> {
       // convert to min and sec
       final min = calculatedSecondsToAdd ~/ 60;
       final sec = calculatedSecondsToAdd % 60;
-      parsedValue = 'will ${widget.isCheer ? "add" : "reduce"} $min min${sec > 0 ? ' $sec sec' : ''} to selected user\'s time';
+      parsedValue =
+          'will ${widget.isCheer ? "add" : "reduce"} $min min${sec > 0 ? ' $sec sec' : ''} to selected user\'s time';
     } else {
       parsedValue = 'enter a valid amount';
     }

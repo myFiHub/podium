@@ -9,8 +9,6 @@ class HomeController extends GetxController {
     super.onInit();
   }
 
-
-
   Future<void> refreshOutposts() async {
     await outpostsController.fetchMyOutpostsPage(0);
   }

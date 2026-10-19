@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -17,14 +16,15 @@ import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/cheerBooBottomSheet.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
-import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:record/record.dart';
@@ -41,6 +41,7 @@ class Reaction {
 }
 
 class OngoingOutpostCallController extends GetxController {
+  final _outpostRepository = Get.find<OutpostRepository>();
   BuildContext? contextForIntro;
   final shouldShowIntro = false.obs;
   bool introStartCalled = false;
@@ -176,7 +177,7 @@ class OngoingOutpostCallController extends GetxController {
     if (reason.isEmpty) {
       return;
     }
-    final success = await HttpApis.podium.reportOutpost(
+    final success = await _outpostRepository.reportOutpost(
       outpostId: outpostCallController.outpost.value!.uuid,
       reasons: [reason],
     );
@@ -656,7 +657,7 @@ class OngoingOutpostCallController extends GetxController {
     loadingWalletAddressForUser
         .add("$targetUserUuid-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final liveData = await HttpApis.podium.getLatestLiveData(
+    final liveData = await _outpostRepository.getLatestLiveData(
       outpostId: outpostCallController.outpost.value!.uuid,
     );
     if (liveData == null) {

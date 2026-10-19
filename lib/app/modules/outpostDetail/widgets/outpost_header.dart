@@ -138,7 +138,8 @@ class OutpostTopBar extends StatelessWidget {
 class OutpostHeroCard extends StatelessWidget {
   final OutpostModel outpost;
   final bool iAmOwner;
-  const OutpostHeroCard({super.key, required this.outpost, required this.iAmOwner});
+  const OutpostHeroCard(
+      {super.key, required this.outpost, required this.iAmOwner});
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +241,8 @@ class OutpostHeroCard extends StatelessWidget {
 class OutpostAccessInfo extends StatelessWidget {
   final OutpostModel outpost;
   final bool iAmOwner;
-  const OutpostAccessInfo({super.key, required this.outpost, required this.iAmOwner});
+  const OutpostAccessInfo(
+      {super.key, required this.outpost, required this.iAmOwner});
 
   @override
   Widget build(BuildContext context) {

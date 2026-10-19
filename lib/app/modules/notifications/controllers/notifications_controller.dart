@@ -4,13 +4,15 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 class NotificationsController extends GetxController {
+  final _notificationRepository = Get.find<NotificationRepository>();
+  final _outpostRepository = Get.find<OutpostRepository>();
   final GlobalController globalController = Get.find<GlobalController>();
   final OutpostsController outpostsController = Get.find<OutpostsController>();
   final notifications = <NotificationModel>[].obs;
@@ -32,7 +34,6 @@ class NotificationsController extends GetxController {
     });
   }
 
-
   @override
   void onClose() {
     loggedInListener?.cancel();
@@ -40,7 +41,7 @@ class NotificationsController extends GetxController {
   }
 
   Future<void> getNotifications() async {
-    final notifs = await HttpApis.podium.getNotifications();
+    final notifs = await _notificationRepository.getNotifications();
     int numberOfUnread = 0;
     for (final notif in notifs) {
       if (!notif.is_read) {
@@ -53,14 +54,16 @@ class NotificationsController extends GetxController {
 
   Future<void> markNotificationAsRead({required String id}) async {
     loadingInviteId.value = '${id}read';
-    final success = await HttpApis.podium.markNotificationAsRead(id: id);
+    final success =
+        await _notificationRepository.markNotificationAsRead(id: id);
     if (success) {
       await getNotifications();
     }
     loadingInviteId.value = '';
   }
 
-  Future<void> openUserProfile({required String id, required String notifId}) async {
+  Future<void> openUserProfile(
+      {required String id, required String notifId}) async {
     loadingUserId.value = id + notifId;
     final usersController = Get.find<UsersController>();
     await usersController.openUserProfile(id);
@@ -77,7 +80,8 @@ class NotificationsController extends GetxController {
         outpostId: outpostId,
       );
       await markNotificationAsRead(id: notif.uuid);
-      final success = await HttpApis.podium.deleteNotification(notif.uuid);
+      final success =
+          await _notificationRepository.deleteNotification(notif.uuid);
       if (success) {
         await getNotifications();
       }
@@ -93,7 +97,7 @@ class NotificationsController extends GetxController {
   }) async {
     try {
       loadingInviteId.value = '${notif.uuid}reject';
-      final success = await HttpApis.podium.rejectInvitation(
+      final success = await _outpostRepository.rejectInvitation(
         RejectInvitationRequest(
           inviter_uuid: notif.invite_metadata!.inviter_uuid,
           outpost_uuid: notif.invite_metadata!.outpost_uuid,
@@ -101,7 +105,8 @@ class NotificationsController extends GetxController {
       );
       if (success) {
         Toast.success(message: 'Invitation rejected');
-        final success = await HttpApis.podium.deleteNotification(notif.uuid);
+        final success =
+            await _notificationRepository.deleteNotification(notif.uuid);
         if (success) {
           await getNotifications();
         }

@@ -12,7 +12,8 @@ class RemoteScreenShare {
     required this.trackId,
   });
 
-  static RemoteScreenShare? fromEvent(dynamic raw, String? Function(String?) uuidOf) {
+  static RemoteScreenShare? fromEvent(
+      dynamic raw, String? Function(String?) uuidOf) {
     if (raw is! Map) return null;
     final owner = raw['participantId']?.toString();
     final pcId = raw['pcId'];
@@ -65,7 +66,8 @@ mixin _CallScreenShare on GetxController {
     if (notify && previous == null) {
       Toast.info(
         title: 'Screen share',
-        message: '${displayNameOf(uuid: next.ownerUuid, jitsiId: next.ownerJitsiId)} '
+        message:
+            '${displayNameOf(uuid: next.ownerUuid, jitsiId: next.ownerJitsiId)} '
             'is sharing their screen',
       );
     }
@@ -113,7 +115,8 @@ mixin _CallScreenShare on GetxController {
     final top = visible ? (rect.top * devicePixelRatio).round() : 0;
     final width = visible ? (rect.width * devicePixelRatio).round() : 0;
     final height = visible ? (rect.height * devicePixelRatio).round() : 0;
-    final key = '$visible:$left:$top:$width:$height:${share?.pcId}:${share?.trackId}';
+    final key =
+        '$visible:$left:$top:$width:$height:${share?.pcId}:${share?.trackId}';
     if (key == _stageKey) return;
     _stageKey = key;
     jitsiMeet.setStage(

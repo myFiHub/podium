@@ -157,9 +157,7 @@ class RecordsController extends GetxController {
   /// extraction decodes the whole file.
   Stream<WaveformProgress> getWaveformProgress(RecordingFile recording) {
     final cached = _waveform;
-    if (cached != null &&
-        !cached.hasError &&
-        _waveformPath == recording.path) {
+    if (cached != null && !cached.hasError && _waveformPath == recording.path) {
       return cached;
     }
     _disposeWaveform();
@@ -201,7 +199,8 @@ class RecordsController extends GetxController {
         return;
       }
       await SharePlus.instance.share(
-        ShareParams(files: [XFile(trimmedFile.path)], subject: trimmedFile.name),
+        ShareParams(
+            files: [XFile(trimmedFile.path)], subject: trimmedFile.name),
       );
     } catch (e) {
       l.d('Error sharing selected portion: $e');

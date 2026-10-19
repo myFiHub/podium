@@ -16,7 +16,7 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/contracts/chainIds.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
-import 'package:podium/utils/palette.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/arena/models/user.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
@@ -25,6 +25,7 @@ import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
@@ -56,6 +57,7 @@ class SearchedUser {
 }
 
 class CreateOutpostController extends GetxController {
+  final _userRepository = Get.find<UserRepository>();
   final outpostsController = Get.find<OutpostsController>();
   final storage = GetStorage();
   final isCreatingNewOutpost = false.obs;
@@ -233,7 +235,6 @@ class CreateOutpostController extends GetxController {
     );
     return targets;
   }
-
 
   TargetFocus _createStep({
     required GlobalKey targetId,
@@ -635,7 +636,7 @@ class CreateOutpostController extends GetxController {
       try {
         checkIfValueIsDirectAddress(value);
         final (users, arenaUser) = await (
-          HttpApis.podium.searchUserByName(name: value),
+          _userRepository.searchUserByName(name: value),
           ticketType == BuyableTicketTypes.onlyArenaTicketHolders
               ? HttpApis.arenaApi.getUserFromStarsArenaByHandle(value)
               : Future.value(null)
@@ -1245,8 +1246,7 @@ class _SelectUsersToBuyTicketFromBottomSheetContentState
                                       Row(
                                         children: [
                                           Text(
-                                            "user ID: ${truncate(element.user!.uuid,
-                                                    length: 12)}",
+                                            "user ID: ${truncate(element.user!.uuid, length: 12)}",
                                             style: TextStyle(
                                               color: ColorName.secondaryText,
                                               fontSize: 12,

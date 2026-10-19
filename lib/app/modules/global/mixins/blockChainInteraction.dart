@@ -581,7 +581,6 @@ Future<bool> internal_buyFriendTechTicket({
     );
 
     if (signature != null && signature.length > 10) {
-
       return true;
     }
     return false;

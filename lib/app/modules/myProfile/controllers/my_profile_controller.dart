@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
@@ -16,11 +15,11 @@ import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -57,6 +56,8 @@ class Balances {
 }
 
 class MyProfileController extends GetxController {
+  final _authRepository = Get.find<AuthRepository>();
+  final _userRepository = Get.find<UserRepository>();
   BuildContext? contextForIntro;
   late TutorialCoachMark tutorialCoachMark;
   final GlobalKey referalSystemKey = GlobalKey();
@@ -225,8 +226,7 @@ class MyProfileController extends GetxController {
   }
 
   Future<void> getMyProfile() async {
-    final profile = await HttpApis.podium
-        .getMyUserData(additionalData: AdditionalDataForLogin());
+    final profile = await _userRepository.getMyUserData();
     if (profile == null) {
       return;
     }
@@ -479,7 +479,7 @@ class MyProfileController extends GetxController {
   Future<void> deactivateAccount() async {
     isDeactivatingAccount.value = true;
     Get.close();
-    final success = await HttpApis.podium.deactivateAccount();
+    final success = await _authRepository.deactivateAccount();
     if (success) {
       globalController.setLoggedIn(false);
     }
@@ -574,7 +574,7 @@ class MyProfileController extends GetxController {
   Future<void> setAccountAsPrimary(String address) async {
     addressThatIsBeningMadePrimary.value = address;
     try {
-      final res = await HttpApis.podium.setAccountAsPrimary(address: address);
+      final res = await _authRepository.setAccountAsPrimary(address: address);
       if (res) {
         final myAccounts = globalController.myUserInfo.value?.accounts ?? [];
         final updatedAccounts = myAccounts.map((account) {

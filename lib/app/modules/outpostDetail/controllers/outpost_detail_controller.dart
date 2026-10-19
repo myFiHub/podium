@@ -3,8 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:podium/widgets/ui/app_ui.dart';
-import 'package:podium/utils/palette.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
@@ -15,6 +13,7 @@ import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/app/services/image_service.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
@@ -27,7 +26,9 @@ import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
@@ -46,6 +47,8 @@ class GroupDetailsParametersKeys {
 }
 
 class OutpostDetailController extends GetxController {
+  final _outpostRepository = Get.find<OutpostRepository>();
+  final _userRepository = Get.find<UserRepository>();
   final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;
@@ -172,8 +175,8 @@ class OutpostDetailController extends GetxController {
 
     final hasTimePassed = scheduledTime < DateTime.now().millisecondsSinceEpoch;
     if (hasTimePassed) {
-      final numberOfOnlineUsersInOutpost =
-          await HttpApis.podium.getNumberOfOnlineMembers(outpost.value!.uuid);
+      final numberOfOnlineUsersInOutpost = await _outpostRepository
+          .getNumberOfOnlineMembers(outpost.value!.uuid);
       if (numberOfOnlineUsersInOutpost > 0) {
         Toast.error(message: 'The outpost is not empty');
         return;
@@ -236,7 +239,7 @@ class OutpostDetailController extends GetxController {
       );
       if (dateTime != null) {
         final newTime = dateTime.millisecondsSinceEpoch;
-        final res = await HttpApis.podium.updateOutpost(
+        final res = await _outpostRepository.updateOutpost(
           request: UpdateOutpostRequest(
             uuid: outpost.value!.uuid,
             scheduled_for: newTime,
@@ -263,7 +266,7 @@ class OutpostDetailController extends GetxController {
     if (outpost.value == null) return;
 
     try {
-      final success = await HttpApis.podium.updateOutpost(
+      final success = await _outpostRepository.updateOutpost(
         request: UpdateOutpostRequest(
           uuid: outpost.value!.uuid,
           cohost_user_uuids:
@@ -411,7 +414,7 @@ class OutpostDetailController extends GetxController {
 
   Future<void> fetchInvitedMembers() async {
     if (outpost.value == null) return;
-    final res = await HttpApis.podium.getOutpost(outpost.value!.uuid);
+    final res = await _outpostRepository.getOutpost(outpost.value!.uuid);
     if (res == null) return;
     _setInvitedMembers(res.invites);
   }
@@ -452,7 +455,7 @@ class OutpostDetailController extends GetxController {
   Future<void> refetchMembers() async {
     final data = outpost.value;
     if (data == null) return;
-    final outpostData = await HttpApis.podium.getOutpost(data.uuid);
+    final outpostData = await _outpostRepository.getOutpost(data.uuid);
     if (outpostData == null) return;
     membersList.value = outpostData.members ?? [];
   }
@@ -487,7 +490,7 @@ class OutpostDetailController extends GetxController {
         listOfSearchedUsersToInvite.value = [];
         return;
       }
-      final users = await HttpApis.podium.searchUserByName(name: value);
+      final users = await _userRepository.searchUserByName(name: value);
       if (value.isEmpty) {
         membersList.value = [];
       } else {
@@ -517,7 +520,7 @@ class OutpostDetailController extends GetxController {
         invitee_user_uuid: userId,
         outpost_uuid: outpost.value!.uuid,
       );
-      final success = await HttpApis.podium.inviteUserToJoinOutpost(request);
+      final success = await _outpostRepository.inviteUserToJoinOutpost(request);
       if (success) {
         Toast.success(message: 'Invite sent');
         final newMap = {

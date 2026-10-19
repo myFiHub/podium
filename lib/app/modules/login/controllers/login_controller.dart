@@ -13,7 +13,7 @@ import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.dart';
@@ -37,6 +37,8 @@ class LoginParametersKeys {
 }
 
 class LoginController extends GetxController {
+  final _authRepository = Get.find<AuthRepository>();
+  final _userRepository = Get.find<UserRepository>();
   final globalController = Get.find<GlobalController>();
   final storage = GetStorage();
   final isLoggingIn = false.obs;
@@ -174,7 +176,7 @@ class LoginController extends GetxController {
       referrerId =
           id ?? _extractReferrerId(globalController.deepLinkRoute.value);
       if (referrerId.isNotEmpty) {
-        referrer.value = await HttpApis.podium.getUserData(referrerId);
+        referrer.value = await _userRepository.getUserData(referrerId);
         storage.write(StorageKeys.referrerId, referrerId);
 
         if (referrer.value?.remaining_referrals_count == 0) {
@@ -425,7 +427,7 @@ class LoginController extends GetxController {
     );
     storage.remove(StorageKeys.referrerId);
     final (userLoginResponse, errorMessage, responseCode) =
-        await HttpApis.podium.login(
+        await _authRepository.login(
       request: request,
       additionalData: temporaryAdditionalData!,
     );
@@ -528,7 +530,7 @@ class LoginController extends GetxController {
   }) async {
     try {
       final (users, balances) = await (
-        HttpApis.podium.getUserByAptosAddresses(
+        _userRepository.getUserByAptosAddresses(
           podiumTeamMembersAptosAddresses,
         ),
         Future.wait(
@@ -599,7 +601,7 @@ class LoginController extends GetxController {
         ),
       ),
     );
-    final user = await HttpApis.podium.updateMyUserData(
+    final user = await _userRepository.updateMyUserData(
       {
         'name': fullName,
       },

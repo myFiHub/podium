@@ -43,7 +43,6 @@ class CustomTimerPainter extends CustomPainter {
     double progress = (animation!.value) * 2 * math.pi;
     double startAngle = math.pi * 1.5;
 
-
     if (fillGradient != null) {
       final rect = Rect.fromCircle(
           center: size.center(Offset.zero), radius: size.width / 2);

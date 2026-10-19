@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:podium/app/modules/checkTicket/ticket_access.dart';
 import 'package:podium/app/modules/createOutpost/outpost_types.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/blockchain/blockchain.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';

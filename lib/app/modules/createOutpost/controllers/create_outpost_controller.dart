@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:podium/app/modules/createOutpost/widgets/activate_wallet_dialog.dart';
 import 'package:podium/app/modules/createOutpost/widgets/ticket_sellers_dialog.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/blockchain/blockchain.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/setReminder.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';

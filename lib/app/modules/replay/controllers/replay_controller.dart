@@ -98,7 +98,7 @@ class ReplayController extends GetxController {
       final eventsFile = File(p.join(_dir.path, ReplayFormat.events));
       final content =
           await eventsFile.exists() ? await eventsFile.readAsString() : '';
-      final events = await Isolate.run(() => ReplayEvent.parseLines(content));
+      final events = await _parseReplayEvents(content);
 
       final audioDuration = await _player.setFilePath(
         p.join(_dir.path, ReplayFormat.audio),
@@ -264,4 +264,11 @@ class ReplayController extends GetxController {
       sharing.value = false;
     }
   }
+}
+
+/// Parses off the UI isolate. The closure has to be created here: one created
+/// inside [ReplayController] captures the controller, and its audio player
+/// cannot be sent to another isolate.
+Future<List<ReplayEvent>> _parseReplayEvents(String content) {
+  return Isolate.run(() => ReplayEvent.parseLines(content));
 }

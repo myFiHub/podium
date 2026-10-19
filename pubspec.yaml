@@ -29,7 +29,6 @@ dependencies:
   # Audio & Media
   just_audio: ^0.10.1
   just_waveform: ^0.0.7
-  record: ^6.0.0
   siri_wave: ^2.3.0
 
   # Storage & File Management

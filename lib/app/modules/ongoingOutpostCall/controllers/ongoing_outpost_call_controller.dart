@@ -27,7 +27,6 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:record/record.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
@@ -74,6 +73,7 @@ class OngoingOutpostCallController extends GetxController {
   final recorderUserId = Rx<String>('');
   final isStartingToRecord = false.obs;
   void Function()? _disposeRecordingListener;
+  void Function()? _disposeMicListener;
   final loadingWalletAddressForUser = RxList<String>([]);
 
   final lastReaction = Rx<Reaction>(
@@ -94,6 +94,9 @@ class OngoingOutpostCallController extends GetxController {
     isRecording.value = recorderController.isRecording.value;
     _disposeRecordingListener = recorderController.isRecording.addListener(() {
       isRecording.value = recorderController.isRecording.value;
+    });
+    _disposeMicListener = amIMuted.addListener(() {
+      if (isRecording.value) recorderController.setMicEnabled(!amIMuted.value);
     });
     final ongoingOutpost = outpostCallController.outpost.value!;
     final myUser = globalController.myUserInfo.value!;
@@ -171,6 +174,7 @@ class OngoingOutpostCallController extends GetxController {
     super.onClose();
     stopRecording();
     _disposeRecordingListener?.call();
+    _disposeMicListener?.call();
     membersListener?.cancel();
     _disposeTalkTimeListener?.call();
     _disposeSpeakingListener?.call();
@@ -546,48 +550,35 @@ class OngoingOutpostCallController extends GetxController {
     return membersList.firstWhere((m) => m.uuid == id);
   }
 
-  Future<void> recordFile(
-      AudioRecorder recorder, RecordConfig config, String path) async {
-    await recorder.start(config, path: path);
-  }
-
   Future<void> _setIsRecording(bool recording) async {
-    final canRecord = await recorderController.initializeRecorder();
-    if (!canRecord) {
-      return;
-    }
-    if (recorderController.hasPermission) {
-      if (recording) {
-        isStartingToRecord.value = true;
-        await recorderController.startRecording(
-          true,
-          prefix: outpostCallController.outpost.value!.name,
+    final outpost = outpostCallController.outpost.value;
+    if (outpost == null) return;
+    if (recording) {
+      isStartingToRecord.value = true;
+      final started = await recorderController.startRecording(
+        prefix: outpost.name,
+        micEnabled: !amIMuted.value,
+      );
+      isStartingToRecord.value = false;
+      if (!started) return;
+      sendOutpostEvent(
+        outpostId: outpost.uuid,
+        eventType: OutgoingMessageTypeEnums.start_recording,
+      );
+    } else {
+      if (!recorderController.isRecording.value) return;
+      final path = await recorderController.stopRecording();
+      sendOutpostEvent(
+        outpostId: outpost.uuid,
+        eventType: OutgoingMessageTypeEnums.stop_recording,
+      );
+      if (path != null) {
+        Toast.success(
+          title: 'Recording saved',
+          message: 'to $path',
         );
-        isStartingToRecord.value = false;
-        sendOutpostEvent(
-          outpostId: outpostCallController.outpost.value!.uuid,
-          eventType: OutgoingMessageTypeEnums.start_recording,
-        );
-      } else {
-        await recorderController.startRecording(
-          false,
-          prefix: outpostCallController.outpost.value!.name,
-        );
-        sendOutpostEvent(
-          outpostId: outpostCallController.outpost.value!.uuid,
-          eventType: OutgoingMessageTypeEnums.stop_recording,
-        );
-        final path = recorderController.lastRecordedPath;
-        if (path != null) {
-          Toast.success(
-            title: 'Recording saved',
-            message: 'to $path',
-          );
-        }
       }
     }
-
-    // use recorder controller to record the file
   }
 
   void handleInteractionEvent({

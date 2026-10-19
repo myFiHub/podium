@@ -101,6 +101,9 @@ class AppCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? color;
   final Color? borderColor;
+
+  /// Hairline gradient; ignored when [borderColor] is set.
+  final Gradient? borderGradient;
   final double radius;
   final Gradient? gradient;
   const AppCard({
@@ -111,6 +114,7 @@ class AppCard extends StatelessWidget {
     this.onTap,
     this.color,
     this.borderColor,
+    this.borderGradient,
     this.radius = AppRadius.lg,
     this.gradient,
   });
@@ -130,7 +134,7 @@ class AppCard extends StatelessWidget {
           foregroundPainter: GradientBorderPainter(
             radius: radius,
             gradient: borderColor == null
-                ? null
+                ? borderGradient
                 : LinearGradient(colors: [borderColor!, borderColor!]),
           ),
           child: Material(
@@ -252,7 +256,8 @@ class AppSettingsRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 10 : 14),
+        padding:
+            EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 10 : 14),
         child: Row(
           children: [
             AppIconTile(
@@ -832,7 +837,8 @@ class AppPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 13, color: filled ? AppColors.onColor(_color) : _color),
+            Icon(icon,
+                size: 13, color: filled ? AppColors.onColor(_color) : _color),
             const SizedBox(width: 4),
           ],
           Flexible(

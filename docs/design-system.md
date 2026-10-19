@@ -45,7 +45,7 @@ Derived colors:
 - **Fill** (inputs, chips, icon buttons on a surface): white at `withAlpha(12)` = `rgba(255,255,255,0.047)`. Inputs use `withAlpha(10)`.
 - **On primary**: text/icons on a cyan or cyan→violet fill use `#14142B`, not white (white on cyan is illegible).
 - **Tinted chips/pills**: background = color at alpha 22–28 (~0.09–0.11), border = color at alpha 55–70 (~0.22–0.27), text = the color.
-- **Tag palette**: tags pick by hash of the name from cyan `#54E4EF`, lilac `#B79BFF`, pink `#FF8AE6`.
+- **Tags**: neutral fill chips, `#` in `text-faint` followed by the tag in `text-muted` 12/600.
 
 ## Gradients
 
@@ -137,6 +137,22 @@ Numbers that change (timers, counts) use tabular figures
   selected tab is `--grad-primary` radius 10 with a violet glow, label `#14142B`.
 - **Bottom sheet**: `surface-raised`, top radius 24, top border `card-border`,
   40×4 grabber.
+- **Outpost card**: glass card whose fill glows from the top-left with a
+  "tone" (alpha 30 dark / 18 light, fading out by 60%) and whose gradient
+  border uses the same tone. Tone is `live` when people are online, `text-faint`
+  when archived, otherwise the access color: public = primary (globe),
+  link only = lilac (link), invite only = pink (person lock), ticket gated =
+  warning (Arena: ticket, Friendtech: key, Podium Pass: badge). Lilac and pink
+  are violet/magenta lerped 35% toward white on dark palettes. The access icon
+  sits in a 24px badge on the thumbnail's bottom-right corner and leads the
+  meta row as a tinted pill; members and speakers follow as plain
+  icon + caption, and recordable/Luma/18+ are 24px icon-only circles.
+  Scheduled outposts show a strip (warning tint, green once started) with a
+  38px date tile, "Today/Tomorrow/weekday · time" and a countdown
+  ("in 2d 3h", "in 12m 5s", "18m ago"); hidden two hours after the start.
+  Archived cards greyscale the thumbnail and show an "Archived" pill. The
+  creator line reads "Hosted by you" in success for your own outposts, with a
+  small "JOINED" primary badge when you're a member.
 - **Dialog**: `surface-raised`, radius 24, optional 52px tinted circular icon.
 - **Empty state**: 72px circle with a cyan→violet→magenta tint at alpha ~46,
   violet border, soft violet glow; title + muted message, optional action.

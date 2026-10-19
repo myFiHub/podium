@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
+import 'package:podium/app/modules/createOutpost/outpost_types.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/outpostImage.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/data/repositories/repositories.dart';
@@ -242,23 +243,30 @@ class _OutpostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Built outside the Obx so a join state change only rebuilds the frame
-    // and the actions row.
+    final access = _AccessStyle.of(outpost.enter_type);
+    // Built outside the Obx so a join or live state change only rebuilds the
+    // frame and the actions row.
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _OutpostHeader(outpost: outpost, amICreator: amICreator),
+        _OutpostHeader(
+            outpost: outpost, amICreator: amICreator, access: access),
         if (outpost.subject.isNotEmpty) ...[
           const SizedBox(height: 10),
           Text(
             outpost.subject,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: AppText.muted.copyWith(height: 1.35),
+            style: AppText.muted.copyWith(height: 1.4),
           ),
         ],
+        if (outpost.scheduled_for != 0)
+          _ScheduleStrip(
+            outpost: outpost,
+            key: Key('${outpost.uuid}scheduledBanner'),
+          ),
         const SizedBox(height: 12),
-        _OutpostMeta(outpost: outpost),
+        _OutpostMeta(outpost: outpost, access: access),
         if (outpost.tags.isNotEmpty) ...[
           const SizedBox(height: 10),
           TagsWrapper(outpost: outpost),
@@ -270,10 +278,18 @@ class _OutpostCard extends StatelessWidget {
     );
     return Obx(() {
       final isJoining = controller.joiningOutpostId.value == outpost.uuid;
+      final isLive = _onlineCount(controller, outpost) > 0;
+      final tone = outpost.is_archived
+          ? AppColors.textFaint
+          : isLive
+              ? AppColors.live
+              : access.color;
       return AppCard(
         key: Key("${outpost.uuid}OutpostCard"),
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        gradient: _cardWash(tone),
+        borderGradient: _cardBorder(tone),
         borderColor: isJoining ? AppColors.primary.withAlpha(140) : null,
         onTap: isJoining ? null : () => _openOutpost(controller, outpost),
         child: Column(
@@ -285,6 +301,7 @@ class _OutpostCard extends StatelessWidget {
               controller: controller,
               amICreator: amICreator,
               isJoining: isJoining,
+              isLive: isLive,
             ),
           ],
         ),
@@ -293,85 +310,237 @@ class _OutpostCard extends StatelessWidget {
   }
 }
 
+int _onlineCount(OutpostsController controller, OutpostModel outpost) =>
+    controller.mapOfOnlineUsersInOutposts.value[outpost.uuid] ??
+    outpost.online_users_count ??
+    0;
+
+/// Glass fill with a soft glow of [tone] from the top-left corner.
+LinearGradient _cardWash(Color tone) {
+  final base = AppColors.surfaceGlass;
+  final glow = AppPalette.current.isLight ? 18 : 30;
+  return LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color.alphaBlend(tone.withAlpha(glow), base), base],
+    stops: const [0, 0.6],
+  );
+}
+
+LinearGradient _cardBorder(Color tone) => LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        tone.withAlpha(160),
+        tone.withAlpha(40),
+        ColorName.white.withAlpha(14),
+        tone.withAlpha(70),
+      ],
+      stops: const [0, 0.35, 0.7, 1],
+    );
+
+Color _softenOnDark(Color color) =>
+    AppPalette.current.isLight ? color : Color.lerp(color, Colors.white, 0.35)!;
+
+/// Icon, label and tint that identify how an outpost is entered.
+class _AccessStyle {
+  const _AccessStyle(this.icon, this.label, this.color);
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  static _AccessStyle of(String? enterType) => switch (enterType) {
+        FreeOutpostAccessTypes.onlyLink => _AccessStyle(
+            Icons.link_rounded,
+            'Link only',
+            _softenOnDark(AppColors.violet),
+          ),
+        FreeOutpostAccessTypes.invited_users => _AccessStyle(
+            Icons.lock_person_rounded,
+            'Invite only',
+            _softenOnDark(AppColors.magenta),
+          ),
+        BuyableTicketTypes.onlyArenaTicketHolders => _AccessStyle(
+            Icons.confirmation_number_rounded,
+            'Arena ticket',
+            AppColors.accent,
+          ),
+        BuyableTicketTypes.onlyFriendTechTicketHolders => _AccessStyle(
+            Icons.key_rounded,
+            'Friendtech key',
+            AppColors.accent,
+          ),
+        BuyableTicketTypes.onlyPodiumPassHolders => _AccessStyle(
+            Icons.workspace_premium_rounded,
+            'Podium Pass',
+            AppColors.accent,
+          ),
+        _ => _AccessStyle(Icons.public_rounded, 'Public', AppColors.primary),
+      };
+}
+
+String _speakLabel(String? speakType) => switch (speakType) {
+      FreeOutpostSpeakerTypes.invited_users => 'Invited speakers',
+      BuyableTicketTypes.onlyArenaTicketHolders ||
+      BuyableTicketTypes.onlyFriendTechTicketHolders ||
+      BuyableTicketTypes.onlyPodiumPassHolders =>
+        'Holders speak',
+      _ => 'Open mic',
+    };
+
 class _OutpostHeader extends StatelessWidget {
   const _OutpostHeader({
     required this.outpost,
     required this.amICreator,
+    required this.access,
   });
 
   final OutpostModel outpost;
   final bool amICreator;
+  final _AccessStyle access;
 
   @override
   Widget build(BuildContext context) {
-    final isScheduled = outpost.scheduled_for != 0;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _OutpostThumb(outpost: outpost),
-        const SizedBox(width: 12),
+        _OutpostThumb(outpost: outpost, access: access),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                outpost.name,
-                key: ValueKey('outpost_name_${outpost.uuid}'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.cardTitle.copyWith(fontSize: 16, height: 1.25),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      outpost.name,
+                      key: ValueKey('outpost_name_${outpost.uuid}'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.cardTitle
+                          .copyWith(fontSize: 16, height: 1.25),
+                    ),
+                  ),
+                  if (outpost.is_archived)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: _ArchivedPill(),
+                    )
+                  else
+                    _NumberOfActiveUsers(
+                      outpost: outpost,
+                      key: Key('${outpost.uuid}numberOfActiveUsers'),
+                    ),
+                ],
               ),
               const SizedBox(height: 6),
               _OutpostCreator(outpost: outpost, amICreator: amICreator),
             ],
           ),
         ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (isScheduled)
-              _ScheduledBanner(
-                outpost: outpost,
-                key: Key('${outpost.uuid}scheduledBanner'),
-              ),
-            _NumberOfActiveUsers(
-              outpost: outpost,
-              topGap: isScheduled ? 6 : 0,
-              key: Key('${outpost.uuid}numberOfActiveUsers'),
-            ),
-          ],
-        ),
       ],
     );
   }
 }
 
+const _greyscale = ColorFilter.matrix(<double>[
+  0.2126, 0.7152, 0.0722, 0, 0, //
+  0.2126, 0.7152, 0.0722, 0, 0, //
+  0.2126, 0.7152, 0.0722, 0, 0, //
+  0, 0, 0, 1, 0,
+]);
+
 class _OutpostThumb extends StatelessWidget {
-  const _OutpostThumb({required this.outpost});
+  const _OutpostThumb({required this.outpost, required this.access});
 
   final OutpostModel outpost;
+  final _AccessStyle access;
 
   @override
   Widget build(BuildContext context) {
+    final color = outpost.is_archived ? AppColors.textFaint : access.color;
+    Widget image = Img(
+      src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
+      alt: outpost.name,
+      ifEmpty: Assets.images.logo.path,
+      size: 56,
+      borderRadius: const BorderRadius.all(Radius.circular(AppRadius.md)),
+    );
+    if (outpost.is_archived) {
+      image = ColorFiltered(colorFilter: _greyscale, child: image);
+    }
     return GestureDetector(
       onTap: () {
         openOutpostImageDialog(
           outpost: outpost,
         );
       },
-      child: Container(
-        foregroundDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: ColorName.white.withAlpha(20)),
-        ),
-        child: Img(
-          src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
-          alt: outpost.name,
-          ifEmpty: Assets.images.logo.path,
-          size: 56,
-          borderRadius: const BorderRadius.all(Radius.circular(AppRadius.md)),
-        ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            foregroundDecoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: color.withAlpha(70)),
+            ),
+            child: image,
+          ),
+          Positioned(
+            right: -6,
+            bottom: -6,
+            child: Tooltip(
+              message: access.label,
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Color.alphaBlend(
+                    color.withAlpha(56),
+                    AppColors.surface,
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surface, width: 2),
+                ),
+                child: Icon(access.icon, size: 12, color: color),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArchivedPill extends StatelessWidget {
+  const _ArchivedPill();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = AppColors.textFaint;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(26),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withAlpha(70)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.inventory_2_outlined, size: 13, color: color),
+          const SizedBox(width: 4),
+          Text(
+            'Archived',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -402,120 +571,217 @@ class _OutpostCreator extends StatelessWidget {
         Flexible(
           child: Text.rich(
             TextSpan(
-              children: [
-                const TextSpan(text: 'by '),
-                TextSpan(
-                  text: amICreator ? 'You' : outpost.creator_user_name ?? '',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: amICreator ? AppColors.success : ColorName.greyText,
-                  ),
-                ),
-              ],
+              children: amICreator
+                  ? [
+                      TextSpan(
+                        text: 'Hosted by you',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ]
+                  : [
+                      const TextSpan(text: 'by '),
+                      TextSpan(
+                        text: outpost.creator_user_name ?? '',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppText.caption,
           ),
         ),
+        if (!amICreator && outpost.i_am_member) ...[
+          const SizedBox(width: 6),
+          const _JoinedBadge(),
+        ],
       ],
     );
   }
 }
 
-class _OutpostMeta extends StatelessWidget {
-  const _OutpostMeta({required this.outpost});
-
-  final OutpostModel outpost;
+class _JoinedBadge extends StatelessWidget {
+  const _JoinedBadge();
 
   @override
   Widget build(BuildContext context) {
-    final members = outpost.members_count ?? 0;
-    final isPublic = outpost.enter_type == FreeOutpostAccessTypes.public;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        _MetaChip(
-          leading: const Icon(Icons.people_alt_rounded),
-          text: '$members ${members == 1 ? 'Member' : 'Members'}',
-        ),
-        _MetaChip(
-          leading: Icon(isPublic ? Icons.public_rounded : Icons.lock_rounded),
-          text: parseAccessType(outpost.enter_type),
-        ),
-        _MetaChip(
-          leading: const Icon(Icons.mic_rounded),
-          text: parseSpeakerType(outpost.speak_type),
-        ),
-        if (outpost.is_recordable)
-          _MetaChip(
-            leading: const Icon(Icons.fiber_manual_record_rounded),
-            text: 'Recordable by creator',
-            color: AppColors.danger,
-          ),
-        if (outpost.luma_event_id != null)
-          _MetaChip(
-            leading: Assets.images.lumaPng.image(width: 13, height: 13),
-            text: 'Available on Luma',
-          ),
-        if (outpost.has_adult_content)
-          _MetaChip(
-            leading: Assets.images.ageRestricted.image(width: 14, height: 14),
-            text: 'Adult content',
-            color: AppColors.accent,
-          ),
-        if (outpost.is_archived)
-          const _MetaChip(
-            leading: Icon(Icons.inventory_2_outlined),
-            text: 'Archived',
-          ),
-      ],
-    );
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({
-    required this.leading,
-    required this.text,
-    this.color,
-  });
-
-  final Widget leading;
-  final String text;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = color ?? AppColors.textMuted;
+    final color = AppColors.primary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      height: 18,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        color: color == null ? ColorName.white.withAlpha(10) : fg.withAlpha(22),
+        color: color.withAlpha(26),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconTheme.merge(
-            data: IconThemeData(size: 13, color: fg),
-            child: leading,
-          ),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: fg,
-              ),
+          Icon(Icons.check_rounded, size: 11, color: color),
+          const SizedBox(width: 3),
+          Text(
+            'JOINED',
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+              color: color,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OutpostMeta extends StatelessWidget {
+  const _OutpostMeta({required this.outpost, required this.access});
+
+  final OutpostModel outpost;
+  final _AccessStyle access;
+
+  @override
+  Widget build(BuildContext context) {
+    final members = outpost.members_count ?? 0;
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        _AccessPill(
+          access: access,
+          muted: outpost.is_archived,
+        ),
+        _MetaItem(
+          icon: Icons.people_alt_rounded,
+          text: '$members ${members == 1 ? 'member' : 'members'}',
+        ),
+        _MetaItem(
+          icon: Icons.mic_rounded,
+          text: _speakLabel(outpost.speak_type),
+        ),
+        if (outpost.is_recordable ||
+            outpost.luma_event_id != null ||
+            outpost.has_adult_content)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (outpost.is_recordable)
+                _FlagIcon(
+                  tooltip: 'Recordable by creator',
+                  color: AppColors.danger,
+                  child: Icon(
+                    Icons.radio_button_checked_rounded,
+                    size: 13,
+                    color: AppColors.danger,
+                  ),
+                ),
+              if (outpost.luma_event_id != null)
+                _FlagIcon(
+                  tooltip: 'Available on Luma',
+                  child: Assets.images.lumaPng.image(width: 13, height: 13),
+                ),
+              if (outpost.has_adult_content)
+                _FlagIcon(
+                  tooltip: 'Adult content',
+                  color: AppColors.accent,
+                  child:
+                      Assets.images.ageRestricted.image(width: 14, height: 14),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+class _AccessPill extends StatelessWidget {
+  const _AccessPill({required this.access, required this.muted});
+
+  final _AccessStyle access;
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = muted ? AppColors.textFaint : access.color;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(7, 4, 9, 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(24),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withAlpha(64)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(access.icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            access.label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaItem extends StatelessWidget {
+  const _MetaItem({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: AppColors.textFaint),
+        const SizedBox(width: 5),
+        Text(
+          text,
+          maxLines: 1,
+          style: AppText.caption.copyWith(fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+}
+
+class _FlagIcon extends StatelessWidget {
+  const _FlagIcon({
+    required this.tooltip,
+    required this.child,
+    this.color,
+  });
+
+  final String tooltip;
+  final Widget child;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: Tooltip(
+        message: tooltip,
+        child: Container(
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: color?.withAlpha(24) ?? AppColors.fill,
+            shape: BoxShape.circle,
+          ),
+          child: child,
+        ),
       ),
     );
   }
@@ -527,12 +793,14 @@ class _OutpostActions extends StatelessWidget {
     required this.controller,
     required this.amICreator,
     required this.isJoining,
+    required this.isLive,
   });
 
   final OutpostModel outpost;
   final OutpostsController controller;
   final bool amICreator;
   final bool isJoining;
+  final bool isLive;
 
   @override
   Widget build(BuildContext context) {
@@ -586,6 +854,7 @@ class _OutpostActions extends StatelessWidget {
         const Spacer(),
         _EnterButton(
           label: amICreator || outpost.i_am_member ? 'Enter' : 'Join',
+          icon: isLive ? Icons.graphic_eq_rounded : Icons.arrow_forward_rounded,
           loading: isJoining,
           onPressed: () => _openOutpost(controller, outpost),
         ),
@@ -635,11 +904,13 @@ class _CardIconAction extends StatelessWidget {
 class _EnterButton extends StatelessWidget {
   const _EnterButton({
     required this.label,
+    required this.icon,
     required this.loading,
     required this.onPressed,
   });
 
   final String label;
+  final IconData icon;
   final bool loading;
   final VoidCallback onPressed;
 
@@ -682,7 +953,7 @@ class _EnterButton extends StatelessWidget {
               children: [
                 Text(label),
                 const SizedBox(width: 6),
-                const Icon(Icons.arrow_forward_rounded, size: 16),
+                Icon(icon, size: 16),
               ],
             ),
     );
@@ -691,23 +962,16 @@ class _EnterButton extends StatelessWidget {
 
 class _NumberOfActiveUsers extends GetView<OutpostsController> {
   final OutpostModel outpost;
-  final double topGap;
   const _NumberOfActiveUsers({
     super.key,
     required this.outpost,
-    this.topGap = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final numberOfActiveUsers = outpost.online_users_count ?? 0;
-      final liveNumberOfActiveUsers =
-          controller.mapOfOnlineUsersInOutposts.value[outpost.uuid];
-
-      final isLive =
-          (liveNumberOfActiveUsers ?? 0) != 0 || numberOfActiveUsers != 0;
-      final count = liveNumberOfActiveUsers ?? numberOfActiveUsers;
+      final count = _onlineCount(controller, outpost);
+      final isLive = count > 0;
       return AnimatedSwitcher(
         duration: reduceMotion(context)
             ? Duration.zero
@@ -730,10 +994,10 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
   }
 
   Widget _liveBadge(int count) {
-    return Padding(
+    return KeyedSubtree(
       key: const ValueKey('live'),
-      padding: EdgeInsets.only(top: topGap),
       child: Container(
+        margin: const EdgeInsets.only(left: 8),
         padding: const EdgeInsets.fromLTRB(4, 3, 10, 3),
         decoration: BoxDecoration(
           color: AppColors.live.withAlpha(26),
@@ -795,67 +1059,180 @@ String generateOutpostShareUrl({required String outpostId}) {
   return "${Env.baseDeepLinkUrl}/?link=${Env.baseDeepLinkUrl}${Routes.OUTPOST_DETAIL}?id=$outpostId&apn=com.web3podium&ibi=com.web3podium";
 }
 
-class _ScheduledBanner extends StatelessWidget {
+/// Calendar strip for scheduled outposts: the date, a friendly day/time and a
+/// live countdown. Hidden two hours after the start time.
+class _ScheduleStrip extends StatelessWidget {
   final OutpostModel outpost;
-  const _ScheduledBanner({
+  const _ScheduleStrip({
     super.key,
     required this.outpost,
   });
 
+  static const _hideAfter = Duration(hours: 2);
+
   @override
   Widget build(BuildContext context) {
-    final passedAtLeast2h =
-        outpost.scheduled_for < DateTime.now().millisecondsSinceEpoch - 7200000;
-    if (passedAtLeast2h) {
+    final at = DateTime.fromMillisecondsSinceEpoch(outpost.scheduled_for);
+    if (DateTime.now().difference(at) > _hideAfter) {
       return const SizedBox.shrink();
     }
     return GetBuilder<GlobalController>(
         id: GlobalUpdateIds.ticker,
         builder: (globalController) {
-          final remaining = remainintTimeUntilMilSecondsFormated(
-            time: outpost.scheduled_for,
-            textIfAlreadyPassed: "Started",
-          );
-          final isStarted =
-              outpost.scheduled_for < DateTime.now().millisecondsSinceEpoch;
+          final now = DateTime.now();
+          if (now.difference(at) > _hideAfter) {
+            return const SizedBox.shrink();
+          }
+          final isStarted = !at.isAfter(now);
           final color = isStarted ? AppColors.success : AppColors.accent;
-          final text =
-              isStarted ? remaining : 'In ${remaining.replaceAll(' d,', 'd ')}';
           // Ticks every second; keep its repaints off the card.
-          return RepaintBoundary(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withAlpha(26),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: color.withAlpha(70)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isStarted
-                        ? Icons.play_circle_outline_rounded
-                        : Icons.schedule_rounded,
-                    size: 13,
-                    color: color,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+          return Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: RepaintBoundary(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(18),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  border: Border.all(color: color.withAlpha(50)),
+                ),
+                child: Row(
+                  children: [
+                    _DateTile(at: at, color: color),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isStarted ? 'STARTED' : 'SCHEDULED',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: color,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _whenLabel(at, now),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: ColorName.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isStarted
+                              ? Icons.play_circle_outline_rounded
+                              : Icons.hourglass_bottom_rounded,
+                          size: 14,
+                          color: color,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isStarted
+                              ? _agoLabel(now.difference(at))
+                              : 'in ${_countdownLabel(at.difference(now))}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: color,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         });
   }
+}
+
+class _DateTile extends StatelessWidget {
+  const _DateTile({required this.at, required this.color});
+
+  final DateTime at;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            DateFormat.MMM().format(at).toUpperCase(),
+            style: TextStyle(
+              fontSize: 9,
+              height: 1.1,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: color,
+            ),
+          ),
+          Text(
+            '${at.day}',
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.1,
+              fontWeight: FontWeight.w800,
+              color: ColorName.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _whenLabel(DateTime at, DateTime now) {
+  final time = DateFormat.jm().format(at);
+  // Rounded so a DST shift between the two dates can't skew the day count.
+  final days =
+      (DateUtils.dateOnly(at).difference(DateUtils.dateOnly(now)).inHours / 24)
+          .round();
+  final day = switch (days) {
+    0 => 'Today',
+    1 => 'Tomorrow',
+    -1 => 'Yesterday',
+    > 1 && < 7 => DateFormat.EEEE().format(at),
+    _ when at.year == now.year => DateFormat.MMMd().format(at),
+    _ => DateFormat.yMMMd().format(at),
+  };
+  return '$day · $time';
+}
+
+String _countdownLabel(Duration d) {
+  if (d.inDays > 0) return '${d.inDays}d ${d.inHours.remainder(24)}h';
+  if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes.remainder(60)}m';
+  final seconds = d.inSeconds.remainder(60);
+  if (d.inMinutes > 0) return '${d.inMinutes}m ${seconds}s';
+  return '${seconds}s';
+}
+
+String _agoLabel(Duration d) {
+  if (d.inMinutes < 1) return 'just now';
+  if (d.inHours < 1) return '${d.inMinutes}m ago';
+  return '${d.inHours}h ${d.inMinutes.remainder(60)}m ago';
 }
 
 /// Placeholder card shown while outposts are loading.
@@ -976,40 +1353,31 @@ class SingleTag extends StatelessWidget {
     super.key,
   });
 
-  static List<Color> get _palette => [
-        AppColors.primary,
-        _soften(AppColors.violet),
-        _soften(AppColors.magenta),
-      ];
-
-  static Color _soften(Color color) => AppPalette.current.isLight
-      ? color
-      : Color.lerp(color, Colors.white, 0.35)!;
-
-  Color get _color {
-    final sum = tagName.codeUnits.fold<int>(0, (a, b) => a + b);
-    return _palette[sum % _palette.length];
-  }
-
   @override
   Widget build(BuildContext context) {
-    final color = _color;
     return Container(
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       margin: const EdgeInsets.only(right: 6),
       decoration: BoxDecoration(
-        color: color.withAlpha(22),
+        color: AppColors.fill,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withAlpha(55)),
       ),
-      child: Text(
-        tagName,
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '#',
+              style: TextStyle(color: AppColors.textFaint),
+            ),
+            TextSpan(text: tagName),
+          ],
+        ),
         maxLines: 1,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: color,
+          color: AppColors.textMuted,
         ),
       ),
     );

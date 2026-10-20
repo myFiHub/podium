@@ -170,6 +170,12 @@ void main() {
         'rooms': [],
       })!;
       expect(elsewhere.orKnownRooms(known).rooms, isEmpty);
+      final backInMain = BreakoutState.tryParse({
+        'supported': true,
+        'currentRoomId': 'outpost',
+        'rooms': [],
+      })!;
+      expect(backInMain.orKnownRooms(known).rooms, isEmpty);
     });
 
     test('rejects a non-map payload', () {

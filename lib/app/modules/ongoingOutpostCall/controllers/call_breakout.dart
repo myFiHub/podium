@@ -67,8 +67,9 @@ class BreakoutState {
   }
 
   /// Jitsi clears its room list while switching rooms and may not send it
-  /// again. While the current room is one of the rooms known before, those
-  /// rooms are kept, so the way back to the main room stays visible.
+  /// again. While in one of the breakout rooms known before, those rooms are
+  /// kept, so the way back to the main room stays visible. In the main room an
+  /// empty list is real: the server forgets the rooms if the main room empties.
   BreakoutState orKnownRooms(BreakoutState known) {
     if (rooms.isNotEmpty || !supported || known.rooms.isEmpty) return this;
     final kept = _derive(
@@ -77,7 +78,8 @@ class BreakoutState {
       isInBreakoutRoom: isInBreakoutRoom,
       rooms: known.rooms,
     );
-    return kept.currentRoom == null ? this : kept;
+    final current = kept.currentRoom;
+    return current == null || current.isMainRoom ? this : kept;
   }
 
   /// Jitsi learns a room is a breakout room only after joining it, so being

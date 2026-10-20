@@ -14,6 +14,14 @@ IconData audioRouteIcon(String? type) => switch (type) {
       _ => Icons.volume_up_rounded,
     };
 
+IconData audioInputIcon(String? type) => switch (type) {
+      'WIRED' => Icons.headset_mic_rounded,
+      'BLUETOOTH' => Icons.bluetooth_audio_rounded,
+      'USB' => Icons.usb_rounded,
+      'CAR' => Icons.directions_car_rounded,
+      _ => Icons.mic_rounded,
+    };
+
 void openAudioRouteSheet() {
   if (findCallRoom() == null) return;
   Get.bottomSheet(
@@ -23,7 +31,7 @@ void openAudioRouteSheet() {
   );
 }
 
-/// Shows where the call audio plays; hidden until Jitsi reports its devices.
+/// Opens the audio sheet; hidden until Jitsi reports its devices.
 class AudioRouteButton extends StatelessWidget {
   const AudioRouteButton({super.key});
 
@@ -32,10 +40,16 @@ class AudioRouteButton extends StatelessWidget {
     final room = findCallRoom();
     if (room == null) return const SizedBox.shrink();
     return Obx(() {
-      if (room.audioRoutes.isEmpty) return const SizedBox.shrink();
+      if (room.audioRoutes.isEmpty && room.audioInputs.isEmpty) {
+        return const SizedBox.shrink();
+      }
       final selected = room.selectedAudioRoute;
+      final mic = room.activeAudioInput;
       return IconButton(
-        tooltip: 'Audio output: ${selected?.label ?? 'Speaker'}',
+        tooltip: [
+          'Audio output: ${selected?.label ?? 'Speaker'}',
+          if (mic != null) 'Microphone: ${mic.label}',
+        ].join('\n'),
         visualDensity: VisualDensity.compact,
         icon: Icon(audioRouteIcon(selected?.type), size: 22),
         onPressed: openAudioRouteSheet,
@@ -50,42 +64,99 @@ class AudioRouteSheet extends GetView<CallRoomController> {
   @override
   Widget build(BuildContext context) {
     return CallSheet(
-      title: 'Audio output',
-      subtitle: 'Choose where you hear the room',
+      title: 'Audio',
+      subtitle: 'Choose where you hear the room and which mic you use',
       icon: Icons.speaker_group_rounded,
       child: Obx(() {
         final routes = controller.audioRoutes.toList();
-        if (routes.isEmpty) {
+        final inputs = controller.audioInputs.toList();
+        if (routes.isEmpty && inputs.isEmpty) {
           return const AppEmptyState(
             compact: true,
             icon: Icons.speaker_rounded,
-            title: 'No audio outputs found',
+            title: 'No audio devices found',
           );
         }
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final (i, route) in routes.indexed)
-              AppEntrance(
-                index: i,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _RouteOption(
+        final automatic = controller.isAutomaticAudioInput;
+        final active = controller.activeAudioInput;
+        var index = 0;
+        Widget entry(Widget child) => AppEntrance(
+              index: index++,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: child,
+              ),
+            );
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (routes.isNotEmpty) ...[
+                const _SectionLabel('Output'),
+                for (final route in routes)
+                  entry(_RouteOption(
                     icon: audioRouteIcon(route.type),
                     label: route.label,
                     selected: route.selected,
                     onTap: () {
                       HapticFeedback.selectionClick();
                       controller.selectAudioRoute(route);
-                      Get.closeOverlay();
                     },
-                  ),
-                ),
-              ),
-          ],
+                  )),
+              ],
+              if (inputs.isNotEmpty) ...[
+                if (routes.isNotEmpty) const SizedBox(height: 8),
+                const _SectionLabel('Microphone'),
+                entry(_RouteOption(
+                  icon: Icons.auto_awesome_rounded,
+                  label: 'Automatic',
+                  subtitle: active != null ? 'Using ${active.label}' : null,
+                  selected: automatic,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    controller.selectAudioInput(null);
+                  },
+                )),
+                for (final input in inputs)
+                  entry(_RouteOption(
+                    icon: audioInputIcon(input.type),
+                    label: input.label,
+                    subtitle: !automatic && input.selected && !input.preferred
+                        ? 'In use'
+                        : null,
+                    selected: input.preferred,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      controller.selectAudioInput(input);
+                    },
+                  )),
+              ],
+            ],
+          ),
         );
       }),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.8,
+          color: ColorName.greyText,
+        ),
+      ),
     );
   }
 }
@@ -93,11 +164,13 @@ class AudioRouteSheet extends GetView<CallRoomController> {
 class _RouteOption extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? subtitle;
   final bool selected;
   final VoidCallback onTap;
   const _RouteOption({
     required this.icon,
     required this.label,
+    this.subtitle,
     required this.selected,
     required this.onTap,
   });
@@ -120,15 +193,31 @@ class _RouteOption extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? tint : ColorName.white,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected ? tint : ColorName.white,
+                  ),
+                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: ColorName.greyText,
+                    ),
+                  ),
+              ],
             ),
           ),
           AnimatedContainer(

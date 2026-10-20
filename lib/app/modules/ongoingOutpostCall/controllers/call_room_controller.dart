@@ -374,6 +374,9 @@ class CallRoomController extends GetxController
         if (data.containsKey('audioDevices')) {
           _onAudioDevices(data['audioDevices']);
         }
+        if (data.containsKey('audioInputs')) {
+          _onAudioInputs(data['audioInputs']);
+        }
         _onBreakoutCapabilities(data);
         if (data.containsKey('breakoutRooms')) {
           _onBreakoutRooms(data['breakoutRooms']);
@@ -432,6 +435,8 @@ class CallRoomController extends GetxController
         }
       case 'audioDevices':
         _onAudioDevices(data['devices']);
+      case 'audioInputs':
+        _onAudioInputs(data['inputs']);
       case 'connection':
         _onConnectionState(data);
       case 'connectionQuality':

@@ -35,6 +35,7 @@ const _$IncomingMessageTypeEnumMap = {
   IncomingMessageType.creatorJoined: 'creator.joined',
   IncomingMessageType.userStartedRecording: 'user.started_recording',
   IncomingMessageType.userStoppedRecording: 'user.stopped_recording',
+  IncomingMessageType.userRemoved: 'user.removed',
 };
 
 IncomingMessageData _$IncomingMessageDataFromJson(Map<String, dynamic> json) =>
@@ -47,6 +48,9 @@ IncomingMessageData _$IncomingMessageDataFromJson(Map<String, dynamic> json) =>
       amount: (json['amount'] as num?)?.toInt(),
       remaining_time: (json['remaining_time'] as num?)?.toInt(),
       outpost_uuid: json['outpost_uuid'] as String?,
+      kind: json['kind'] as String?,
+      expires_at: (json['expires_at'] as num?)?.toInt(),
+      removed_by_uuid: json['removed_by_uuid'] as String?,
     );
 
 Map<String, dynamic> _$IncomingMessageDataToJson(
@@ -60,4 +64,7 @@ Map<String, dynamic> _$IncomingMessageDataToJson(
       'outpost_uuid': instance.outpost_uuid,
       'amount': instance.amount,
       'remaining_time': instance.remaining_time,
+      'kind': instance.kind,
+      'expires_at': instance.expires_at,
+      'removed_by_uuid': instance.removed_by_uuid,
     };

@@ -1,6 +1,7 @@
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost_ban.dart';
 
 part 'outpost.g.dart';
 
@@ -38,6 +39,9 @@ class OutpostModel {
   @JsonKey(defaultValue: false)
   final bool is_music_mode;
 
+  /// Set while a host has removed or blocked me from this outpost.
+  final OutpostBanInfo? my_ban;
+
   OutpostModel({
     required this.uuid,
     required this.created_at,
@@ -68,6 +72,7 @@ class OutpostModel {
     required this.reminder_offset_minutes,
     this.cohost_user_uuids = const [],
     this.is_music_mode = false,
+    this.my_ban,
   });
 
   factory OutpostModel.fromJson(Map<String, dynamic> json) =>

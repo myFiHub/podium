@@ -4,10 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/outpost_moderation.dart';
+import 'package:podium/app/modules/global/widgets/outpost_ban_dialogs.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost_ban.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_personal_actions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_tile.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -46,16 +50,20 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
             ),
           );
         }
-        final creatorId =
-            controller.outpostCallController.outpost.value?.creator_user_uuid;
+        final outpost = controller.outpostCallController.outpost.value;
+        final creatorId = outpost?.creator_user_uuid;
         final isCreator = member.uuid == creatorId;
         final isMe = member.uuid == myId;
+        final isCohost =
+            outpost?.cohost_user_uuids?.contains(member.uuid) ?? false;
         final room = findCallRoom();
         final handRaised = room?.isHandRaised(member.uuid) ?? false;
+        // Only the creator can act on cohosts; nobody can act on the creator.
         final canModerate = !isMe &&
+            !isCreator &&
             room != null &&
-            room.canModerate &&
-            room.jitsiIdOf(member.uuid) != null;
+            room.amIHost &&
+            (!isCohost || creatorId == myId);
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -72,6 +80,9 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
                 member: member,
                 room: room,
                 handRaised: handRaised,
+                isCohost: isCohost,
+                jitsiControls:
+                    room.canModerate && room.jitsiIdOf(member.uuid) != null,
               ),
             ],
             const SizedBox(height: 16),
@@ -112,6 +123,10 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
                 ),
               ),
             const SizedBox(height: 16),
+            if (!isMe) ...[
+              MemberPersonalActions(member: member),
+              const SizedBox(height: 8),
+            ],
             AppSecondaryButton(
               label: 'View profile',
               icon: Icons.person_outline_rounded,
@@ -127,45 +142,60 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
   }
 }
 
-class _ModerationRow extends StatelessWidget {
+class _ModerationRow extends StatefulWidget {
   final LiveMember member;
   final CallRoomController room;
   final bool handRaised;
+  final bool isCohost;
+
+  /// Mute and lower hand go through Jitsi and need its moderator role.
+  final bool jitsiControls;
   const _ModerationRow({
     required this.member,
     required this.room,
     required this.handRaised,
+    required this.isCohost,
+    required this.jitsiControls,
   });
 
-  Future<void> _confirmRemove() async {
-    final remove = await Get.dialog<bool>(
-      AppDialog(
-        title: 'Remove ${member.name ?? 'this member'}?',
-        message: 'They will be disconnected from this outpost.',
-        icon: Icons.person_remove_rounded,
-        iconColor: AppColors.danger,
-        urgent: true,
-        actions: [
-          AppSecondaryButton(
-            label: 'Cancel',
-            onPressed: () => Get.closeOverlay(result: false),
-          ),
-          AppPrimaryButton(
-            label: 'Remove',
-            color: AppColors.danger,
-            onPressed: () => Get.closeOverlay(result: true),
-          ),
-        ],
-      ),
+  @override
+  State<_ModerationRow> createState() => _ModerationRowState();
+}
+
+class _ModerationRowState extends State<_ModerationRow> {
+  bool _busy = false;
+
+  LiveMember get member => widget.member;
+
+  Future<void> _ban(OutpostBanKind kind) async {
+    final name = member.name ?? 'this member';
+    final confirmed = await confirmOutpostBan(
+      name: name,
+      kind: kind,
+      isCohost: widget.isCohost,
     );
-    if (remove == true) {
-      room.removeParticipant(member.uuid);
-      Get.closeOverlay();
-    }
+    if (confirmed == null || !mounted) return;
+    setState(() => _busy = true);
+    final done = await widget.room.removeFromOutpost(
+      member.uuid,
+      kind: kind,
+      reason: confirmed.reason,
+    );
+    if (mounted) setState(() => _busy = false);
+    if (!done) return;
+    if (mounted) Get.closeOverlay();
+    Toast.success(
+      title: kind == OutpostBanKind.ban ? 'Blocked' : 'Removed',
+      message: kind == OutpostBanKind.ban
+          ? '$name is blocked from this outpost'
+          : "$name can't rejoin for ${kickDuration.inMinutes} minutes",
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final room = widget.room;
+    final handRaised = widget.handRaised;
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -192,37 +222,49 @@ class _ModerationRow extends StatelessWidget {
           ),
           Row(
             children: [
-              Expanded(
-                child: _ModButton(
-                  icon: Icons.mic_off_rounded,
-                  label: 'Mute',
-                  onPressed: member.is_speaking
-                      ? () {
-                          room.muteParticipant(member.uuid);
-                          Toast.info(
-                            title: 'Muted',
-                            message: '${member.name ?? 'Member'} was muted',
-                          );
-                        }
-                      : null,
+              if (widget.jitsiControls) ...[
+                Expanded(
+                  child: _ModButton(
+                    icon: Icons.mic_off_rounded,
+                    label: 'Mute',
+                    onPressed: member.is_speaking && !_busy
+                        ? () {
+                            room.muteParticipant(member.uuid);
+                            Toast.info(
+                              title: 'Muted',
+                              message: '${member.name ?? 'Member'} was muted',
+                            );
+                          }
+                        : null,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ModButton(
-                  icon: Icons.back_hand_outlined,
-                  label: 'Lower hand',
-                  onPressed:
-                      handRaised ? () => room.lowerHand(member.uuid) : null,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _ModButton(
+                    icon: Icons.back_hand_outlined,
+                    label: 'Lower hand',
+                    onPressed: handRaised && !_busy
+                        ? () => room.lowerHand(member.uuid)
+                        : null,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: _ModButton(
                   icon: Icons.person_remove_outlined,
                   label: 'Remove',
                   color: callDangerColor,
-                  onPressed: _confirmRemove,
+                  onPressed: _busy ? null : () => _ban(OutpostBanKind.kick),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ModButton(
+                  icon: Icons.block_rounded,
+                  label: 'Block',
+                  color: callDangerColor,
+                  onPressed: _busy ? null : () => _ban(OutpostBanKind.ban),
                 ),
               ),
             ],

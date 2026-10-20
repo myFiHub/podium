@@ -44,6 +44,10 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
                             outpost: outpost, iAmOwner: iAmOwner),
                       ),
                     ),
+                    if (outpost.my_ban?.isActive ?? false)
+                      SliverToBoxAdapter(
+                        child: MyOutpostBanBanner(ban: outpost.my_ban!),
+                      ),
                     if (isScheduled && iAmOwner)
                       const SliverToBoxAdapter(
                         child: AppEntrance(
@@ -89,10 +93,14 @@ class OutpostDetailView extends GetView<OutpostDetailController> {
                     if (outpost.scheduled_for != 0)
                       const SliverToBoxAdapter(child: SetReminderButton()),
                     if (iAmOwner ||
-                        (outpost.cohost_user_uuids?.contains(myId) ?? false))
+                        (outpost.cohost_user_uuids?.contains(myId) ?? false)) ...[
                       SliverToBoxAdapter(
                         child: OutpostAnalyticsButton(outpost: outpost),
                       ),
+                      SliverToBoxAdapter(
+                        child: OutpostBansButton(outpost: outpost),
+                      ),
+                    ],
                     const MembersList(),
                     const SliverToBoxAdapter(child: SizedBox(height: 24)),
                   ],

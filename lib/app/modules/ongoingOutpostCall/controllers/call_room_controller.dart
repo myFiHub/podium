@@ -10,18 +10,27 @@ import 'package:get_storage/get_storage.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/global/services/blocked_users_service.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/utils/outpost_moderation.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/breakout_sheet.dart'
+    show enterBreakoutRoom;
 import 'package:podium/app/services/replay/replay_recorder.dart';
 import 'package:podium/constants/meeting.dart';
+import 'package:podium/data/repositories/repositories.dart';
+import 'package:podium/providers/api/podium/models/breakout/breakout_access.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost_ban.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 part 'call_audio_route.dart';
 part 'call_breakout.dart';
 part 'call_connection.dart';
+part 'call_moderation.dart';
 part 'call_music.dart';
 part 'call_polls.dart';
+part 'call_private_chat.dart';
 part 'call_screen_share.dart';
 
 class CallPeer {
@@ -45,6 +54,9 @@ class CallChatMessage {
 
   /// A notice from the app (e.g. a room switch) rather than a person.
   final bool system;
+
+  /// Only shown as a preview of a private message from [senderUuid].
+  final bool private;
   bool pending;
   CallChatMessage({
     required this.id,
@@ -54,6 +66,7 @@ class CallChatMessage {
     required this.at,
     required this.mine,
     this.system = false,
+    this.private = false,
     this.pending = false,
   });
 }
@@ -85,7 +98,9 @@ class CallRoomController extends GetxController
         _CallAudioRoute,
         _CallConnection,
         _CallBreakout,
-        _CallMusic {
+        _CallMusic,
+        _CallModeration,
+        _CallPrivateChat {
   static const reactionEmojis = [
     '❤️',
     '🔥',
@@ -105,6 +120,7 @@ class CallRoomController extends GetxController
   /// builds don't have it, so hands and moderation stay hidden there.
   final channelAvailable = false.obs;
   final peers = <String, CallPeer>{}.obs;
+  @override
   final localRole = RxnString();
   String? _localJitsiId;
 
@@ -142,12 +158,14 @@ class CallRoomController extends GetxController
     _disposePollRecording = activePoll.addListener(
       () => ReplayRecorder.instance.onPoll(activePoll.value),
     );
+    Get.find<BlockedUsersService>().ensureLoaded();
   }
 
   @override
   void onReady() {
     super.onReady();
     jitsiMeet.sendPodiumCommand('requestState');
+    refreshBreakoutAccess();
     if (Get.isRegistered<OngoingOutpostCallController>()) {
       _mutedWorker = ever<bool>(
         Get.find<OngoingOutpostCallController>().amIMuted,
@@ -171,6 +189,8 @@ class CallRoomController extends GetxController
     _disposePollRecording?.call();
     _disposeStage();
     _disposeMusic();
+    _disposePrivateChat();
+    _disposeBreakout();
     super.onClose();
   }
 
@@ -191,6 +211,7 @@ class CallRoomController extends GetxController
   }
 
   /// Like [uuidOf], but also knows peers that have left this room.
+  @override
   String? knownUuidOf(String jitsiId) => uuidOf(jitsiId) ?? _seenUuids[jitsiId];
 
   void _rememberPeer(CallPeer peer) {
@@ -249,6 +270,7 @@ class CallRoomController extends GetxController
     });
     peers[participantId] = peer;
     _rememberPeer(peer);
+    _onModerationPeerJoined(peer.uuid);
     _retryUnverifiedPoll();
     _onPollPeerJoined(participantId);
     _onMusicPeerJoined(participantId);
@@ -310,6 +332,9 @@ class CallRoomController extends GetxController
   @override
   bool get amIHost => isHostUuid(myId);
 
+  @override
+  String? get _callOutpostId => _callController.session?.outpostId;
+
   /// Moderation needs both a Podium host and a Jitsi moderator, since Jitsi
   /// enforces the latter on its side.
   @override
@@ -349,6 +374,7 @@ class CallRoomController extends GetxController
         if (data.containsKey('audioDevices')) {
           _onAudioDevices(data['audioDevices']);
         }
+        _onBreakoutCapabilities(data);
         if (data.containsKey('breakoutRooms')) {
           _onBreakoutRooms(data['breakoutRooms']);
         }
@@ -396,10 +422,14 @@ class CallRoomController extends GetxController
           );
         }
       case 'kicked':
-        Toast.warning(
-          title: 'Removed from the outpost',
-          message: 'The host removed you from this outpost',
-        );
+        // A removal through Podium already explains itself in a dialog.
+        final outpostId = _callOutpostId;
+        if (outpostId == null || wsClient.joinRejectionFor(outpostId) == null) {
+          Toast.warning(
+            title: 'Removed from the outpost',
+            message: 'The host removed you from this outpost',
+          );
+        }
       case 'audioDevices':
         _onAudioDevices(data['devices']);
       case 'connection':
@@ -408,8 +438,21 @@ class CallRoomController extends GetxController
         _onConnectionQuality(data);
       case 'breakoutRooms':
         _onBreakoutRooms(data);
+      case 'breakoutMoveRequested':
+        _onProtectedMoveRequested(data);
+      case 'breakoutJoinDenied':
+        _onBreakoutJoinDenied(data);
       default:
         l.d('unhandled podium event $name');
+    }
+  }
+
+  /// Podium server events about this call that aren't outpost updates.
+  void onServerEvent(String name, Map<String, dynamic> data) {
+    if (name.startsWith('private_message.')) {
+      _onPrivateMessageEvent(name, data);
+    } else if (name == 'breakout_rooms.updated') {
+      _onBreakoutAccessEvent(data);
     }
   }
 
@@ -487,10 +530,25 @@ class CallRoomController extends GetxController
 
   void muteEveryone() => jitsiMeet.sendPodiumCommand('muteEveryone');
 
-  void removeParticipant(String uuid) {
-    final id = jitsiIdOf(uuid);
-    if (id == null) return;
-    jitsiMeet.sendPodiumCommand('kickParticipant', {'participantId': id});
+  /// Removes (for [kickDuration]) or blocks [uuid] on the server, which
+  /// disconnects them everywhere, then takes them out of the Jitsi room.
+  /// False if the server refused; the host has been told why.
+  Future<bool> removeFromOutpost(
+    String uuid, {
+    required OutpostBanKind kind,
+    String? reason,
+  }) async {
+    final outpostId = _callOutpostId;
+    if (outpostId == null) return false;
+    final ban = await banFromOutpost(
+      outpostId: outpostId,
+      userId: uuid,
+      kind: kind,
+      reason: reason,
+    );
+    if (ban == null || isClosed) return ban != null;
+    _markRemovedByMe(uuid, ban);
+    return true;
   }
 
   // Audio levels --------------------------------------------------------------
@@ -617,12 +675,56 @@ class CallRoomController extends GetxController
 
   // Chat ----------------------------------------------------------------------
 
+  /// Room chat and private messages not seen yet, for badges.
+  int get unreadTotal => unreadChat.value + unreadPrivate.value;
+
   void setChatOpen(bool open) {
     _chatOpen = open;
     if (open) {
       unreadChat.value = 0;
       chatPreview.value = null;
+    } else {
+      setOpenPrivateThread(null);
     }
+  }
+
+  @override
+  void _showPrivatePreview(String peerUuid, String name, String text) {
+    if (_chatOpen) return;
+    final message = CallChatMessage(
+      id: 'pm-$peerUuid-${DateTime.now().microsecondsSinceEpoch}',
+      senderUuid: peerUuid,
+      senderName: name,
+      text: text,
+      at: DateTime.now(),
+      mine: false,
+      private: true,
+    );
+    _showChatPreview(message);
+  }
+
+  void _showChatPreview(CallChatMessage message) {
+    chatPreview.value = message;
+    _chatPreviewTimer?.cancel();
+    _chatPreviewTimer = Timer(const Duration(seconds: 4), () {
+      if (chatPreview.value?.id == message.id) chatPreview.value = null;
+    });
+  }
+
+  /// Blocks [uuid] and drops what they said in this call.
+  Future<bool> blockUser(String uuid) async {
+    final member =
+        _callController.members.value.firstOrNullWhere((m) => m.uuid == uuid);
+    final ok = await Get.find<BlockedUsersService>().block(
+      uuid,
+      name: member?.name ?? displayNameOf(uuid: uuid),
+      image: member?.image,
+    );
+    if (!ok || isClosed) return ok;
+    chat.removeWhere((m) => m.senderUuid == uuid && !m.mine);
+    clearPrivateThread(uuid);
+    if (chatPreview.value?.senderUuid == uuid) chatPreview.value = null;
+    return true;
   }
 
   void sendChat(String raw) {
@@ -661,6 +763,7 @@ class CallRoomController extends GetxController
     }
     if (fromMe) return;
     final uuid = uuidOf(senderId);
+    if (Get.find<BlockedUsersService>().isBlocked(uuid)) return;
     final message = CallChatMessage(
       id: '$senderId-${DateTime.now().microsecondsSinceEpoch}',
       senderUuid: uuid,
@@ -677,11 +780,7 @@ class CallRoomController extends GetxController
     );
     if (!_chatOpen) {
       unreadChat.value++;
-      chatPreview.value = message;
-      _chatPreviewTimer?.cancel();
-      _chatPreviewTimer = Timer(const Duration(seconds: 4), () {
-        if (chatPreview.value?.id == message.id) chatPreview.value = null;
-      });
+      _showChatPreview(message);
     }
   }
 }

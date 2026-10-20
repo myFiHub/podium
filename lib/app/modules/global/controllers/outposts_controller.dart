@@ -8,6 +8,7 @@ import 'package:podium/app/modules/createOutpost/luma_event.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/join_outpost_flow.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/outpostBanNotice.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
@@ -410,6 +411,13 @@ class OutpostsController extends GetxController {
           type: NavigationTypes.offAllNamed,
           route: Routes.HOME,
         );
+        return;
+      }
+
+      final ban = outpost.my_ban;
+      if (ban != null && ban.isActive) {
+        updateOutpost_local(outpost);
+        showOutpostBanNotice(ban, outpostName: outpost.name);
         return;
       }
 

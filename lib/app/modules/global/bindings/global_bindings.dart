@@ -4,6 +4,7 @@ import 'package:podium/app/modules/global/controllers/outpost_call_controller.da
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/controllers/referral_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
+import 'package:podium/app/modules/global/services/blocked_users_service.dart';
 import 'package:podium/app/modules/global/services/oneSignal.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/services/image_service.dart';
@@ -27,6 +28,10 @@ final globalBindings = [
     () => NotificationRepository(HttpApis.podium),
     fenix: true,
   ),
+  Bind.lazyPut<CallAccessRepository>(
+    () => CallAccessRepository(HttpApis.podium),
+    fenix: true,
+  ),
   Bind.lazyPut<AuthRepository>(
     () => AuthRepository(
       HttpApis.podium,
@@ -36,6 +41,7 @@ final globalBindings = [
     fenix: true,
   ),
   Bind.put<ServerFeatures>(ServerFeatures(), permanent: true),
+  Bind.put<BlockedUsersService>(BlockedUsersService(), permanent: true),
   Bind.put<GlobalController>(GlobalController(), permanent: true),
   Bind.put<OutpostsController>(OutpostsController(), permanent: true),
   Bind.put<UsersController>(UsersController(), permanent: true),

@@ -9,6 +9,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/music_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/utils/palette.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 /// Overlays drawn above the member grid: floating reactions, the reaction
 /// tray and the incoming chat preview.
@@ -115,7 +116,9 @@ class _ChatPreview extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: GestureDetector(
-        onTap: openChatSheet,
+        onTap: () => openChatSheet(
+          privateWith: message.private ? message.senderUuid : null,
+        ),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 320),
           padding: const EdgeInsets.fromLTRB(6, 6, 14, 6),
@@ -140,11 +143,27 @@ class _ChatPreview extends StatelessWidget {
                 child: Text.rich(
                   TextSpan(
                     children: [
+                      if (message.private)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.lock_rounded,
+                              size: 12,
+                              color: AppColors.violet,
+                            ),
+                          ),
+                        ),
                       TextSpan(
-                        text: '${message.senderName}  ',
+                        text: message.private
+                            ? '${message.senderName} (private)  '
+                            : '${message.senderName}  ',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          color: ColorName.primaryBlue,
+                          color: message.private
+                              ? AppColors.violet
+                              : ColorName.primaryBlue,
                         ),
                       ),
                       TextSpan(text: message.text),

@@ -7,6 +7,7 @@ import 'package:podium/providers/api/podium/models/analytics/host_analytics.dart
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/discovery/discovery_models.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
+import 'package:podium/providers/api/podium/models/breakout/breakout_access.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/providers/api/podium/models/home/home_feed.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
@@ -15,12 +16,14 @@ import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost_ban.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/setReminder.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/providers/api/podium/models/pass/buyer.dart';
 import 'package:podium/providers/api/podium/models/tag/tag.dart';
+import 'package:podium/providers/api/podium/models/users/blocked_user.dart';
 import 'package:podium/providers/api/podium/models/users/connect_new_account_request.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
@@ -601,6 +604,61 @@ class PodiumApi {
     return _send('/outposts/leave', data: {'uuid': id});
   }
 
+  /// Returns the restriction now in force, which stays a ban when kicking
+  /// someone already blocked. Throws [ApiFailure] with the server's reason.
+  Future<OutpostBanInfo> banUserFromOutpost({
+    required String outpostId,
+    required String userId,
+    required OutpostBanKind kind,
+    String? reason,
+    int? durationMinutes,
+  }) {
+    return _attempt(() async {
+      final response = await dio.post(
+        '$_baseUrl/outposts/bans/create',
+        data: {
+          'outpost_uuid': outpostId,
+          'user_uuid': userId,
+          'kind': kind.wire,
+          if (reason != null && reason.trim().isNotEmpty)
+            'reason': reason.trim(),
+          if (durationMinutes != null) 'duration_minutes': durationMinutes,
+        },
+        options: _options,
+      );
+      return OutpostBanInfo.fromJson(
+        Map<String, dynamic>.from(response.data['data']),
+      );
+    });
+  }
+
+  /// Throws [ApiFailure] with the server's reason.
+  Future<void> unbanUserFromOutpost({
+    required String outpostId,
+    required String userId,
+  }) {
+    return _attempt(() async {
+      await dio.post(
+        '$_baseUrl/outposts/bans/delete',
+        data: {'outpost_uuid': outpostId, 'user_uuid': userId},
+        options: _options,
+      );
+    });
+  }
+
+  /// Hosts only. Throws [ApiFailure].
+  Future<List<OutpostBanItem>> getOutpostBans({
+    required String outpostId,
+    int? page,
+    int? pageSize,
+  }) {
+    return _fetchList(
+      '/outposts/bans',
+      OutpostBanItem.fromJson,
+      query: {'uuid': outpostId, ..._paging(page, pageSize)},
+    );
+  }
+
   Future<List<NotificationModel>> getNotifications() {
     return _getList('/notifications', _notificationFromJson);
   }
@@ -639,6 +697,114 @@ class PodiumApi {
 
   Future<bool> connectNewAccount(ConnectNewAccountRequest request) {
     return _send('/users/accounts/connect', data: request.toJson());
+  }
+
+  /// Throws [ApiFailure].
+  Future<void> blockUser(String uuid, {required bool block}) {
+    return _attempt(() => dio.post(
+          '$_baseUrl/users/block',
+          data: {'uuid': uuid, 'action': block ? 'block' : 'unblock'},
+          options: _options,
+        ));
+  }
+
+  /// Throws [ApiFailure]; a 404 means the server can't block yet.
+  Future<List<BlockedUserModel>> getBlockedUsers() {
+    return _fetchList('/users/blocked', BlockedUserModel.fromJson);
+  }
+
+  /// Throws [ApiFailure]; a 404 means the server has no breakout access rules.
+  Future<BreakoutRoomsAccessList> getBreakoutRooms(String outpostUuid) {
+    return _attempt(() async {
+      final data = await _getData(
+        '/outposts/breakout-rooms',
+        query: {'outpost_uuid': outpostUuid},
+      );
+      return BreakoutRoomsAccessList.fromJson(Map<String, dynamic>.from(data));
+    });
+  }
+
+  Future<Map<String, dynamic>> _postData(String path, Object data) async {
+    final response = await dio.post(
+      '$_baseUrl$path',
+      data: data,
+      options: _options,
+    );
+    return Map<String, dynamic>.from(response.data['data']);
+  }
+
+  /// Throws [ApiFailure].
+  Future<CreatedBreakoutRoom> createBreakoutRoom({
+    required String outpostUuid,
+    required String name,
+    required BreakoutAccessType accessType,
+    String? password,
+    List<String> invitedUserUuids = const [],
+  }) {
+    return _attempt(() async => CreatedBreakoutRoom.fromJson(
+          await _postData('/outposts/breakout-rooms/create', {
+            'outpost_uuid': outpostUuid,
+            'name': name,
+            'access_type': accessType.value,
+            if (password != null) 'password': password,
+            'invited_user_uuids': invitedUserUuids,
+          }),
+        ));
+  }
+
+  /// Fields left null stay as they are. Throws [ApiFailure].
+  Future<BreakoutRoomAccess> updateBreakoutRoom({
+    required String roomUuid,
+    String? name,
+    BreakoutAccessType? accessType,
+    String? password,
+    List<String>? invitedUserUuids,
+  }) {
+    return _attempt(() async => BreakoutRoomAccess.fromJson(
+          await _postData('/outposts/breakout-rooms/update', {
+            'uuid': roomUuid,
+            if (name != null) 'name': name,
+            if (accessType != null) 'access_type': accessType.value,
+            if (password != null) 'password': password,
+            if (invitedUserUuids != null)
+              'invited_user_uuids': invitedUserUuids,
+          }),
+        ));
+  }
+
+  /// Adds to the invite list without replacing it. Throws [ApiFailure].
+  Future<BreakoutRoomAccess> inviteToBreakoutRoom({
+    required String roomUuid,
+    required List<String> userUuids,
+  }) {
+    return _attempt(() async => BreakoutRoomAccess.fromJson(
+          await _postData('/outposts/breakout-rooms/invite', {
+            'uuid': roomUuid,
+            'user_uuids': userUuids,
+          }),
+        ));
+  }
+
+  Future<bool> deleteBreakoutRoom(String roomUuid) {
+    return _send('/outposts/breakout-rooms/delete', data: {'uuid': roomUuid});
+  }
+
+  /// A short-lived pass for [jid] to enter the room. Throws [ApiFailure]:
+  /// 428 password required, 401 wrong password, 403 not invited, 429 too many
+  /// attempts.
+  Future<String> getBreakoutRoomPass({
+    required String roomUuid,
+    required String jid,
+    String? password,
+  }) {
+    return _attempt(() async {
+      final data = await _postData('/outposts/breakout-rooms/pass', {
+        'uuid': roomUuid,
+        'jid': jid,
+        if (password != null) 'password': password,
+      });
+      return data['token'] as String;
+    });
   }
 
   Future<bool> setAccountAsPrimary({required String address}) async {

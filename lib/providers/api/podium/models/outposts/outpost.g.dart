@@ -65,6 +65,8 @@ abstract class _$OutpostModelCWProxy {
 
   OutpostModel is_music_mode(bool is_music_mode);
 
+  OutpostModel my_ban(OutpostBanInfo? my_ban);
+
   /// Creates a new instance with the provided field values.
   /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `OutpostModel(...).copyWith.fieldName(value)`.
   ///
@@ -102,6 +104,7 @@ abstract class _$OutpostModelCWProxy {
     int? reminder_offset_minutes,
     List<String>? cohost_user_uuids,
     bool is_music_mode,
+    OutpostBanInfo? my_ban,
   });
 }
 
@@ -217,6 +220,9 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
       call(is_music_mode: is_music_mode);
 
   @override
+  OutpostModel my_ban(OutpostBanInfo? my_ban) => call(my_ban: my_ban);
+
+  @override
 
   /// Creates a new instance with the provided field values.
   /// Passing `null` to a nullable field nullifies it, while `null` for a non-nullable field is ignored. To update a single field use `OutpostModel(...).copyWith.fieldName(value)`.
@@ -255,6 +261,7 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
     Object? reminder_offset_minutes = const $CopyWithPlaceholder(),
     Object? cohost_user_uuids = const $CopyWithPlaceholder(),
     Object? is_music_mode = const $CopyWithPlaceholder(),
+    Object? my_ban = const $CopyWithPlaceholder(),
   }) {
     return OutpostModel(
       uuid: uuid == const $CopyWithPlaceholder() || uuid == null
@@ -387,6 +394,10 @@ class _$OutpostModelCWProxyImpl implements _$OutpostModelCWProxy {
               ? _value.is_music_mode
               // ignore: cast_nullable_to_non_nullable
               : is_music_mode as bool,
+      my_ban: my_ban == const $CopyWithPlaceholder()
+          ? _value.my_ban
+          // ignore: cast_nullable_to_non_nullable
+          : my_ban as OutpostBanInfo?,
     );
   }
 }
@@ -444,6 +455,9 @@ OutpostModel _$OutpostModelFromJson(Map<String, dynamic> json) => OutpostModel(
               .toList() ??
           const [],
       is_music_mode: json['is_music_mode'] as bool? ?? false,
+      my_ban: json['my_ban'] == null
+          ? null
+          : OutpostBanInfo.fromJson(json['my_ban'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
@@ -477,6 +491,7 @@ Map<String, dynamic> _$OutpostModelToJson(OutpostModel instance) =>
       'reminder_offset_minutes': instance.reminder_offset_minutes,
       'cohost_user_uuids': instance.cohost_user_uuids,
       'is_music_mode': instance.is_music_mode,
+      'my_ban': instance.my_ban,
     };
 
 TicketToEnterModel _$TicketToEnterModelFromJson(Map<String, dynamic> json) =>

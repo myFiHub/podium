@@ -4,15 +4,18 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/outpostBanNotice.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/time.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
+import 'package:podium/app/modules/global/widgets/outpost_bans_sheet.dart';
 import 'package:podium/app/modules/hostAnalytics/views/host_outpost_analytics_view.dart';
 import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/lumaDetailsDialog.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost_ban.dart';
 import 'package:podium/services/server_features.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
@@ -269,6 +272,55 @@ class OutpostAnalyticsButton extends StatelessWidget {
         subtitle: 'Listeners, retention and earnings per session',
       );
     });
+  }
+}
+
+class OutpostBansButton extends StatelessWidget {
+  const OutpostBansButton({super.key, required this.outpost});
+
+  final OutpostModel outpost;
+
+  @override
+  Widget build(BuildContext context) {
+    return _OutpostActionRow(
+      onTap: () => openOutpostBansSheet(
+        outpostId: outpost.uuid,
+        creatorUuid: outpost.creator_user_uuid,
+      ),
+      leading: AppIconTile(
+        size: 36,
+        circle: true,
+        icon: Icons.block_rounded,
+        color: AppColors.danger,
+      ),
+      title: 'Removed & blocked',
+      subtitle: 'See who is kept out and let them back in',
+    );
+  }
+}
+
+/// Tells a visitor a host removed or blocked them from this outpost.
+class MyOutpostBanBanner extends StatelessWidget {
+  const MyOutpostBanBanner({super.key, required this.ban});
+
+  final OutpostBanInfo ban;
+
+  @override
+  Widget build(BuildContext context) {
+    final until = ban.expiresAt;
+    final isKick = ban.banKind == OutpostBanKind.kick && until != null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: AppCallout(
+        icon: isKick ? Icons.logout_rounded : Icons.block_rounded,
+        color: AppColors.danger,
+        text: isKick
+            ? 'A host removed you from this outpost. You can join again in '
+                '${formatTimeUntil(until)}.'
+            : "A host blocked you from this outpost. You can't join it "
+                'unless a host lets you back in.',
+      ),
+    );
   }
 }
 

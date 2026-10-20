@@ -9,10 +9,12 @@ import 'package:podium/app/modules/global/controllers/outpost_call_controller.da
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/services/replay/replay_recorder.dart';
 import 'package:podium/env.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost_ban.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
@@ -101,7 +103,30 @@ class WebSocketService {
   }
 
   /// Send a message through the websocket
-  Future<bool> send(WsOutgoingMessage message) async {
+  Future<bool> send(WsOutgoingMessage message) {
+    final json = message.toJson();
+    json['data'] ??= {};
+    return sendJson(json);
+  }
+
+  /// Sends a private message to someone present in [outpostId]. The server
+  /// answers with `private_message.sent` or `private_message.rejected`
+  /// carrying [clientId].
+  Future<bool> sendPrivateMessage({
+    required String outpostId,
+    required String toUuid,
+    required String text,
+    required String clientId,
+  }) {
+    return sendJson({
+      'message_type': 'private_message',
+      'outpost_uuid': outpostId,
+      'data': {'to_uuid': toUuid, 'text': text, 'client_id': clientId},
+    });
+  }
+
+  /// Sends [json] as is, reconnecting first if needed.
+  Future<bool> sendJson(Map<String, dynamic> json) async {
     if (!isConnected) {
       l.w('Cannot send message: not connected. Attempting to reconnect...');
       if (_token.isEmpty) {
@@ -117,8 +142,6 @@ class WebSocketService {
     }
 
     try {
-      final json = message.toJson();
-      json['data'] ??= {};
       final jsonString = jsonEncode(json);
 
       if (kDebugMode) l.d('Sending message: $jsonString');
@@ -153,6 +176,20 @@ class WebSocketService {
 
   final Map<String, Future<bool>> _inflightJoins = {};
 
+  /// Outposts that refused our join because a host removed or blocked us.
+  /// Retrying would only be refused again.
+  final Map<String, OutpostBanInfo> _joinRejections = {};
+
+  /// Why the last join of [outpostId] was refused, while that still applies.
+  OutpostBanInfo? joinRejectionFor(String outpostId) {
+    final rejection = _joinRejections[outpostId];
+    if (rejection != null && !rejection.isActive) {
+      _joinRejections.remove(outpostId);
+      return null;
+    }
+    return rejection;
+  }
+
   /// Join an outpost with simplified logic. A join already in flight for the
   /// same outpost is shared: the server only answers the first join, so a
   /// second one would just time out.
@@ -160,6 +197,7 @@ class WebSocketService {
       {bool force = false, bool withRetry = false}) {
     final inflight = _inflightJoins[outpostId];
     if (inflight != null) return inflight;
+    _joinRejections.remove(outpostId);
 
     final join = withRetry
         ? _joinOutpostWithRetry(outpostId, force: force)
@@ -230,6 +268,7 @@ class WebSocketService {
           l.d('Join succeeded on attempt $attempt for outpost: $outpostId');
           return true;
         }
+        if (_joinRejections.containsKey(outpostId)) return false;
 
         if (attempt < maxRetries) {
           l.w('Join attempt $attempt failed, will retry in 1 second...');
@@ -293,7 +332,23 @@ class WebSocketService {
 
       final json = jsonDecode(messageStr);
       if (json['name'] == 'error') {
-        l.e('WebSocket error: ${json['data']['message']}');
+        final data = json['data'];
+        l.e('WebSocket error: ${data['message']}');
+        if (data is Map && data['code'] == 'outpost_ban') {
+          _handleJoinRefused(Map<String, dynamic>.from(data));
+        }
+        return;
+      }
+
+      // Not outpost events, so IncomingMessage can't parse them.
+      final name = json['name'];
+      if (name is String &&
+          (name.startsWith('private_message.') ||
+              name == 'breakout_rooms.updated')) {
+        final data = json['data'];
+        if (data is Map) {
+          findCallRoom()?.onServerEvent(name, Map<String, dynamic>.from(data));
+        }
         return;
       }
 
@@ -484,6 +539,54 @@ class WebSocketService {
       case IncomingMessageType.userStoppedRecording:
         _handleUserRecording(message, false);
         break;
+      case IncomingMessageType.userRemoved:
+        _handleUserRemoved(message);
+        break;
+    }
+  }
+
+  /// Fails the outpost's pending joins right away instead of letting them
+  /// time out and retry.
+  void _rejectJoins(String outpostId, OutpostBanInfo ban) {
+    _joinRejections[outpostId] = ban;
+    final pending =
+        _joinRequests.keys.where((id) => id.startsWith('$outpostId#')).toList();
+    for (final id in pending) {
+      final completer = _joinRequests.remove(id);
+      if (completer != null && !completer.isCompleted) completer.complete(false);
+    }
+  }
+
+  void _handleJoinRefused(Map<String, dynamic> data) {
+    final outpostId = data['outpost_uuid'] as String?;
+    if (outpostId == null) return;
+    final ban = OutpostBanInfo.fromJson(data);
+    _rejectJoins(outpostId, ban);
+    _withController<OutpostCallController>((controller) {
+      controller.onRemovedFromOutpost(outpostId, ban);
+    });
+  }
+
+  void _handleUserRemoved(IncomingMessage message) {
+    final data = message.data;
+    final outpostId = data.outpost_uuid;
+    final uuid = data.uuid;
+    if (outpostId == null || uuid == null) return;
+    final ban = OutpostBanInfo(kind: data.kind ?? 'ban', expires_at: data.expires_at);
+    if (uuid == myId) {
+      _rejectJoins(outpostId, ban);
+      _withController<OutpostCallController>((controller) {
+        controller.onRemovedFromOutpost(outpostId, ban);
+      });
+      return;
+    }
+    if (Get.isRegistered<CallRoomController>()) {
+      Get.find<CallRoomController>().onUserRemoved(
+        outpostId: outpostId,
+        uuid: uuid,
+        ban: ban,
+        removedByUuid: data.removed_by_uuid,
+      );
     }
   }
 

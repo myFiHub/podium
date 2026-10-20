@@ -8,6 +8,7 @@ import 'package:podium/app/modules/checkTicket/ticket_access.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/outpostBanNotice.dart';
 import 'package:podium/app/modules/global/popUpsAndModals/scoreOutpostPrompt.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/live_members.dart';
@@ -21,6 +22,7 @@ import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/models/jitsi_member.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost_ban.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
@@ -131,6 +133,7 @@ class OutpostCallController extends GetxController {
       withRetry: true,
     );
     if (joined || !callSession.isActive) return;
+    if (wsClient.joinRejectionFor(callSession.outpostId) != null) return;
     if (wsClient.isConnecting) {
       Toast.error(
         title: 'Connecting…',
@@ -319,6 +322,7 @@ class OutpostCallController extends GetxController {
           return;
         }
       }
+      if (wsClient.joinRejectionFor(outpostId) != null) return;
       leaveCall(askForScore: false);
       Toast.error(
         title: 'Could not join the outpost',
@@ -349,6 +353,7 @@ class OutpostCallController extends GetxController {
           }
           if (!callSession.isActive) return;
           if (!joined) {
+            if (wsClient.joinRejectionFor(outpostId) != null) return;
             final reconnecting = wsClient.isConnecting;
             if (reconnecting) {
               Toast.error(
@@ -513,6 +518,11 @@ class OutpostCallController extends GetxController {
   Future<void> startCall(
       {required OutpostModel outpostToJoin,
       OutpostAccesses? accessOverRides}) async {
+    final ban = outpostToJoin.my_ban;
+    if (ban != null && ban.isActive) {
+      showOutpostBanNotice(ban, outpostName: outpostToJoin.name);
+      return;
+    }
     if (!await _leaveOtherOutpostFirst(outpostToJoin)) return;
     // The previous conference's late readyToClose would otherwise reach the
     // new call's listeners and end it.
@@ -587,6 +597,33 @@ class OutpostCallController extends GetxController {
     } catch (e) {
       l.f(e.toString());
     }
+  }
+
+  /// A host removed or blocked us from [outpostId], or the server refused our
+  /// join for that reason. Leaves the call if it's that outpost's.
+  Future<void> onRemovedFromOutpost(
+    String outpostId,
+    OutpostBanInfo ban,
+  ) async {
+    final known = outpost.value?.uuid == outpostId
+        ? outpost.value
+        : outpostsController.outposts.value[outpostId] ??
+            outpostsController.myOutposts.value[outpostId];
+    if (known != null) {
+      var updated = known.copyWith.my_ban(ban);
+      if (ban.banKind == OutpostBanKind.ban) {
+        updated = updated.copyWith.i_am_member(false);
+      }
+      outpostsController.updateOutpost_local(updated);
+    }
+    if (ban.banKind == OutpostBanKind.ban) {
+      outpostsController.fetchMyOutpostsPage(0);
+    }
+
+    if (session?.outpostId != outpostId) return;
+    final name = outpost.value?.name;
+    await leaveCall(askForScore: false);
+    showOutpostBanNotice(ban, outpostName: name);
   }
 
   /// Ends the call and takes the call page out of the stack, leaving whatever

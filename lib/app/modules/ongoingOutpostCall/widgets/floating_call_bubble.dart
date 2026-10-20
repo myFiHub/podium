@@ -244,7 +244,7 @@ class _FloatingCallBubbleState extends State<FloatingCallBubble>
     final muted = ongoing.amIMuted.value;
     final usable = ongoing.canUseMic;
     final raised = room?.myHandRaised ?? false;
-    final unread = room?.unreadChat.value ?? 0;
+    final unread = room?.unreadTotal ?? 0;
     return [
       if (canTalk)
         _BubbleAction(
@@ -532,7 +532,7 @@ class _BubbleFace extends StatelessWidget {
         final outpost = call.outpost.value;
         final muted = ongoing.amIMuted.value;
         final live = !muted && ongoing.canUseMic;
-        final unread = room?.unreadChat.value ?? 0;
+        final unread = room?.unreadTotal ?? 0;
         final showMutedBadge = muted && call.canTalk.value;
         // Built once per Obx pass and reused by the level builder below, so
         // voice level changes don't rebuild the image.

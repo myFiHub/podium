@@ -5,6 +5,7 @@ import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/outpost_ban.dart';
 import 'package:podium/providers/api/podium/models/outposts/rejectInvitationRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/setReminder.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
@@ -137,4 +138,35 @@ class OutpostRepository {
 
   Future<bool> rejectInvitation(RejectInvitationRequest request) =>
       _api.rejectInvitation(request);
+
+  /// Throws [ApiFailure] with the server's reason.
+  Future<OutpostBanInfo> banUserFromOutpost({
+    required String outpostId,
+    required String userId,
+    required OutpostBanKind kind,
+    String? reason,
+    int? durationMinutes,
+  }) =>
+      _api.banUserFromOutpost(
+        outpostId: outpostId,
+        userId: userId,
+        kind: kind,
+        reason: reason,
+        durationMinutes: durationMinutes,
+      );
+
+  /// Throws [ApiFailure] with the server's reason.
+  Future<void> unbanUserFromOutpost({
+    required String outpostId,
+    required String userId,
+  }) =>
+      _api.unbanUserFromOutpost(outpostId: outpostId, userId: userId);
+
+  /// Throws [ApiFailure].
+  Future<List<OutpostBanItem>> getOutpostBans({
+    required String outpostId,
+    int? page,
+    int? pageSize,
+  }) =>
+      _api.getOutpostBans(outpostId: outpostId, page: page, pageSize: pageSize);
 }

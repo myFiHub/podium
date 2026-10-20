@@ -344,7 +344,7 @@ class _ChatButton extends GetView<CallRoomController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final unread = controller.unreadChat.value;
+      final unread = controller.unreadTotal;
       return DockButton(
         icon: Icons.chat_bubble_outline_rounded,
         label: 'Chat',

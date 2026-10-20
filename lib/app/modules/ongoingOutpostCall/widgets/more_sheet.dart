@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/global/widgets/outpost_bans_sheet.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
@@ -217,6 +218,18 @@ class MoreSheet extends GetView<OngoingOutpostCallController> {
           badge: '$hands',
           color: callAccentColor,
           onTap: () => _runAfterClose(room!.lowerAllHands),
+        ),
+      if (room?.amIHost ?? false)
+        _MoreTile(
+          icon: Icons.block_rounded,
+          label: 'Blocked',
+          color: callDangerColor,
+          onTap: () => _runAfterClose(
+            () => openOutpostBansSheet(
+              outpostId: outpost.uuid,
+              creatorUuid: outpost.creator_user_uuid,
+            ),
+          ),
         ),
     ];
 

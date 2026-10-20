@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/app/modules/myProfile/widgets/blocked_users_sheet.dart';
 import 'package:podium/app/modules/myProfile/widgets/profile_settings.dart';
 import 'package:podium/app/modules/myProfile/widgets/profile_statistics.dart';
 import 'package:podium/app/modules/myProfile/widgets/profile_user_info.dart';
@@ -64,6 +65,8 @@ class MyProfileView extends GetView<MyProfileController> {
                       ColorThemeSetting(),
                       AppRowDivider(indent: 68, endIndent: 0),
                       ToggleShowArchivedGroups(),
+                      AppRowDivider(indent: 68, endIndent: 0),
+                      BlockedUsersSetting(),
                       AppRowDivider(indent: 68, endIndent: 0),
                       BugsAndFeedbacks(),
                     ],

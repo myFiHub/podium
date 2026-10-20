@@ -56,6 +56,7 @@ class Img extends StatelessWidget {
                 assetPath,
                 width: size ?? width ?? 70,
                 height: size ?? height ?? 70,
+                cacheWidth: cacheSize,
                 fit: BoxFit.cover,
               ),
             )
@@ -66,16 +67,20 @@ class Img extends StatelessWidget {
                   imageUrl: src,
                   memCacheWidth: cacheSize,
                   fadeInDuration: const Duration(milliseconds: 250),
-                  placeholder: (context, url) => GFShimmer(
-                    secondaryColor: ColorName.cardBackground,
-                    mainColor: ColorName.cardBorder,
-                    child: Container(
-                      width: size ?? width ?? 70,
-                      height: size ?? height ?? 70,
-                      decoration: BoxDecoration(
-                        color: ColorName.cardBorder,
-                        borderRadius: borderRadius,
-                        shape: BoxShape.rectangle,
+                  // The shimmer repaints every frame; keep that off the
+                  // surrounding card.
+                  placeholder: (context, url) => RepaintBoundary(
+                    child: GFShimmer(
+                      secondaryColor: ColorName.cardBackground,
+                      mainColor: ColorName.cardBorder,
+                      child: Container(
+                        width: size ?? width ?? 70,
+                        height: size ?? height ?? 70,
+                        decoration: BoxDecoration(
+                          color: ColorName.cardBorder,
+                          borderRadius: borderRadius,
+                          shape: BoxShape.rectangle,
+                        ),
                       ),
                     ),
                   ),

@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/discovery/discovery_models.dart';
 import 'package:podium/services/server_features.dart';
 
-/// The Explore route is rebuilt on every navbar visit, so results outlive the
-/// controller to avoid refetching on each tab switch.
+/// Results outlive the controller so a rebuilt tabs page (e.g. after logging
+/// in again) doesn't refetch everything.
 class _DiscoverCache {
   List<DiscoveredOutpost> following = const [];
   List<DiscoveredOutpost> live = const [];
@@ -46,6 +47,7 @@ class DiscoverController extends GetxController {
 
   Timer? _pollTimer;
   Worker? _lifecycleWorker;
+  Worker? _tabWorker;
   Worker? _loginWorker;
   Worker? _featureWorker;
   bool _liveInFlight = false;
@@ -59,36 +61,37 @@ class DiscoverController extends GetxController {
     super.onInit();
     trending.value = _cache.trending[trendingWindow.value] ?? const [];
     isFirstLoad.value = _cache.liveAt == null;
-    _lifecycleWorker = ever<AppLifecycleState>(
-      _global.appLifecycleState,
-      (state) {
-        if (state == AppLifecycleState.resumed) {
-          _startPolling();
-          _loadLive();
-        } else {
-          _pollTimer?.cancel();
-        }
-      },
-    );
+    _lifecycleWorker = ever(_global.appLifecycleState, (_) => _syncPolling());
+    _tabWorker = ever(_global.activeRoute, (_) => _syncPolling());
     _loginWorker = ever(_global.myUserInfo, (_) => _loadLive(force: true));
     _featureWorker = ever<bool>(_features.discovery, (supported) {
       if (supported) _loadAll(force: true);
     });
     _loadAll();
-    _startPolling();
+    _syncPolling();
   }
 
   @override
   void onClose() {
     _pollTimer?.cancel();
     _lifecycleWorker?.dispose();
+    _tabWorker?.dispose();
     _loginWorker?.dispose();
     _featureWorker?.dispose();
     super.onClose();
   }
 
-  void _startPolling() {
-    _pollTimer?.cancel();
+  /// Polls only while the Explore tab is on screen and the app is resumed.
+  void _syncPolling() {
+    final visible = _global.activeRoute.value == Routes.ALL_OUTPOSTS &&
+        _global.appLifecycleState.value == AppLifecycleState.resumed;
+    if (!visible) {
+      _pollTimer?.cancel();
+      _pollTimer = null;
+      return;
+    }
+    if (_pollTimer != null) return;
+    _loadLive();
     _pollTimer = Timer.periodic(_livePollInterval, (_) => _loadLive());
   }
 

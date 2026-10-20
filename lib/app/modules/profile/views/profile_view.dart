@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -573,8 +571,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final overContent = shrinkOffset > 0 || overlapsContent;
-    final bar = Container(
-      color: ColorName.pageBackground.withAlpha(overContent ? 170 : 0),
+    // Near-opaque instead of a backdrop blur, which would re-blur everything
+    // underneath on every scroll frame.
+    return Container(
+      color: ColorName.pageBackground.withAlpha(overContent ? 240 : 0),
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Container(
         padding: const EdgeInsets.all(4),
@@ -591,15 +591,6 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
             Tab(text: 'Following', height: 36),
           ],
         ),
-      ),
-    );
-    // Blurring the plain page background is invisible; only pay for it once
-    // content scrolls underneath.
-    return ClipRect(
-      child: BackdropFilter(
-        enabled: overContent,
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: bar,
       ),
     );
   }

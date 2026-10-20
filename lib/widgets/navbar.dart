@@ -186,27 +186,15 @@ class _NavItem extends StatelessWidget {
           fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              child: Material(
-                color: Colors.transparent,
-                shape: const StadiumBorder(),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  customBorder: const StadiumBorder(),
-                  splashFactory: InkRipple.splashFactory,
-                  splashColor: ColorName.primaryBlue.withAlpha(42),
-                  highlightColor: Colors.transparent,
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    Navigate.to(
-                      type: NavigationTypes.offAllNamed,
-                      route: item.route,
-                    );
-                  },
-                  child: const SizedBox.expand(),
-                ),
-              ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigate.to(
+                  type: NavigationTypes.offAllNamed,
+                  route: item.route,
+                );
+              },
             ),
             IgnorePointer(
               child: _NavItemBody(

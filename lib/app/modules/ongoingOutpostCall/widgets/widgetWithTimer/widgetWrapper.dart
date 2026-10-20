@@ -5,7 +5,7 @@ import 'package:podium/utils/throttleAndDebounce/throttle.dart';
 
 final thr = Throttling(duration: const Duration(seconds: 1));
 
-class WidgetWithTimer extends StatelessWidget {
+class WidgetWithTimer extends StatefulWidget {
   final double size;
   final double? timerThickness;
   final double? fontSize;
@@ -25,29 +25,34 @@ class WidgetWithTimer extends StatelessWidget {
     this.timerThickness,
   });
 
-  int duration(int finishTime) {
+  @override
+  State<WidgetWithTimer> createState() => _WidgetWithTimerState();
+}
+
+class _WidgetWithTimerState extends State<WidgetWithTimer> {
+  final _controller = CountDownController();
+
+  /// Whole seconds left; a finished timer completes through its own
+  /// onComplete, so nothing is called from build.
+  int _secondsLeft(int finishTime) {
     final remaining = finishTime - DateTime.now().millisecondsSinceEpoch;
-    if (remaining <= 0) {
-      onComplete!();
-      return 0;
-    }
-    return int.parse((remaining / 1000).toString().split(".")[0]);
+    return remaining <= 0 ? 0 : remaining ~/ 1000;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (finishAt == null) {
-      return child;
+    final finishTime = widget.finishAt;
+    if (finishTime == null || finishTime <= 0) {
+      return widget.child;
     }
-    int finishTime = finishAt ?? DateTime.now().millisecondsSinceEpoch + 10000;
-    if (finishTime <= 0) {
-      return child;
-    }
+    final size = widget.size;
+    final onComplete = widget.onComplete;
+    final onProgress = widget.onProgress;
 
     return CircularCountDownTimer(
-      duration: duration(finishTime),
+      duration: _secondsLeft(finishTime),
       initialDuration: 0,
-      controller: CountDownController(),
+      controller: _controller,
       width: size,
       height: size,
       ringColor: Colors.grey[300]!,
@@ -56,10 +61,10 @@ class WidgetWithTimer extends StatelessWidget {
       fillGradient: null,
       backgroundColor: Colors.transparent,
       backgroundGradient: null,
-      strokeWidth: timerThickness ?? 4.0,
+      strokeWidth: widget.timerThickness ?? 4.0,
       strokeCap: StrokeCap.round,
       textStyle: TextStyle(
-        fontSize: fontSize ?? 12.0,
+        fontSize: widget.fontSize ?? 12.0,
         color: ColorName.white,
         fontWeight: FontWeight.bold,
       ),
@@ -69,18 +74,9 @@ class WidgetWithTimer extends StatelessWidget {
       isReverseAnimation: false,
       isTimerTextShown: true,
       autoStart: true,
-      onComplete: () {
-        if (onComplete != null) {
-          onComplete!();
-        }
-      },
+      onComplete: onComplete,
       onChange: (String timeStamp) {
-        if (onProgress != null) {
-          thr.throttle(() {
-            onProgress!();
-          });
-        }
-        if (finishAt != null) {}
+        if (onProgress != null) thr.throttle(onProgress);
       },
       timeFormatterFunction: (defaultFormatterFunction, duration) {
         if (duration.inSeconds == 0) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/allOutposts/controllers/discover_controller.dart';
 import 'package:podium/app/modules/allOutposts/widgets/discover_header.dart';
@@ -10,9 +11,6 @@ import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
 import '../controllers/all_outposts_controller.dart';
-
-final _scrollController = ScrollController();
-// listen to scroll controller to show or hide the bottom button
 
 class AllOutpostsView extends GetView<AllOutpostsController> {
   const AllOutpostsView({super.key});
@@ -41,11 +39,7 @@ class AllOutpostsView extends GetView<AllOutpostsController> {
                     ),
                   ],
                 ),
-                Expanded(
-                  child: AllOutpostsList(
-                    scrollController: _scrollController,
-                  ),
-                ),
+                const Expanded(child: AllOutpostsList()),
               ],
             ),
             const _FloatingCreateOutpostButton(),
@@ -116,14 +110,22 @@ class _FloatingCreateOutpostButton extends GetWidget<OutpostsController> {
   }
 }
 
-int _lastPosition = 0;
+class AllOutpostsList extends StatefulWidget {
+  const AllOutpostsList({super.key});
 
-class AllOutpostsList extends GetWidget<OutpostsController> {
-  final ScrollController scrollController;
-  const AllOutpostsList({
-    super.key,
-    required this.scrollController,
-  });
+  @override
+  State<AllOutpostsList> createState() => _AllOutpostsListState();
+}
+
+class _AllOutpostsListState extends State<AllOutpostsList> {
+  final controller = Get.find<OutpostsController>();
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,22 +139,22 @@ class AllOutpostsList extends GetWidget<OutpostsController> {
           itemBuilder: (context, index) => const OutpostCardSkeleton(),
         );
       }
-      return GestureDetector(
-        onVerticalDragDown: (details) {
-          final difference = details.localPosition.dy - _lastPosition;
-          // detect direction of the drag
-          if (difference > 0 && difference > 20) {
-            // up
-            _lastPosition = details.localPosition.dy.toInt();
-            controller.showCreateButton.value = false;
-          } else {
-            // down
-            _lastPosition = details.localPosition.dy.toInt();
-            controller.showCreateButton.value = true;
+      return NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          if (notification.depth == 0) {
+            switch (notification.direction) {
+              case ScrollDirection.reverse:
+                controller.showCreateButton.value = false;
+              case ScrollDirection.forward:
+                controller.showCreateButton.value = true;
+              case ScrollDirection.idle:
+                break;
+            }
           }
+          return false;
         },
         child: OutpostsList(
-          scrollController: scrollController,
+          scrollController: _scrollController,
           listPage: ListPage.all,
           header: const DiscoverHeader(),
           onRefresh: Get.find<DiscoverController>().refreshAll,

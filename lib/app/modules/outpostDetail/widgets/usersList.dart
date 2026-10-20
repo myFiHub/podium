@@ -1,4 +1,3 @@
-import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:glow_container/glow_container.dart';
@@ -11,27 +10,8 @@ import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/truncate.dart';
+import 'package:podium/widgets/rx_selector.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
-
-const _options = LiveOptions(
-  // Start animation after (default zero)
-  // delay: Duration(seconds: 0),
-
-  // Show each item through (default 250)
-  showItemInterval: Duration(milliseconds: 50),
-
-  // Animation duration (default 250)
-  // showItemDuration: Duration(seconds: 1),
-
-  // Animations starts at 0.05 visible
-  // item fraction in sight (default 0.025)
-  visibleFraction: 0.05,
-
-  // Repeat the animation of the appearance
-  // when scrolling in the opposite direction (default false)
-  // To get the effect as in a showcase for ListView, set true
-  reAnimateOnVisibility: false,
-);
 
 class UserList extends StatelessWidget {
   final List<LiveMember>? liveUsersList;
@@ -49,10 +29,9 @@ class UserList extends StatelessWidget {
     final usersList = liveUsersList ?? userModelsList ?? [];
 
     return Scrollbar(
-        child: LiveList.options(
-      options: _options,
+        child: ListView.builder(
       itemCount: usersList.length,
-      itemBuilder: (context, index, animation) {
+      itemBuilder: (context, index) {
         final name = liveUsersList != null
             ? liveUsersList![index].name
             : userModelsList![index].name;
@@ -66,28 +45,18 @@ class UserList extends StatelessWidget {
             ? liveUsersList![index].image
             : userModelsList![index].image;
         final userId = uuid;
-        return FadeTransition(
-          opacity: Tween<double>(
-            begin: 0,
-            end: 1,
-          ).animate(animation),
-          // And slide transition
-          child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, -0.1),
-                end: Offset.zero,
-              ).animate(animation),
-              // Paste you Widget
-              child: UserListTile(
-                key: Key(userId),
-                uuid: uuid,
-                name: name,
-                image: image,
-                followed_by_me: followed_by_me,
-                onRequestUpdate: () {
-                  onRequestUpdate?.call(userId);
-                },
-              )),
+        return AppEntrance(
+          key: ValueKey(userId),
+          index: index,
+          child: UserListTile(
+            uuid: uuid,
+            name: name,
+            image: image,
+            followed_by_me: followed_by_me,
+            onRequestUpdate: () {
+              onRequestUpdate?.call(userId);
+            },
+          ),
         );
       },
     ));
@@ -152,9 +121,10 @@ class _SingleUser extends GetView<UsersController> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Obx(() {
-        final gettingUserInfo_uuid = controller.gettingUserInfo_uuid.value;
-        return GlowContainer(
+      child: RxSelector<bool>(
+        sources: [controller.gettingUserInfo_uuid],
+        select: () => controller.gettingUserInfo_uuid.value == uuid,
+        builder: (context, isOpening, _) => GlowContainer(
           glowRadius: 4,
           gradientColors: [ColorName.primaryBlue, ColorName.secondaryBlue],
           rotationDuration: const Duration(seconds: 1),
@@ -168,7 +138,7 @@ class _SingleUser extends GetView<UsersController> {
             ),
           ),
           transitionDuration: const Duration(milliseconds: 200),
-          showAnimatedBorder: gettingUserInfo_uuid == uuid,
+          showAnimatedBorder: isOpening,
           child: AppCard(
             key: Key(uuid),
             radius: AppRadius.md,
@@ -251,8 +221,8 @@ class _SingleUser extends GetView<UsersController> {
               ],
             ),
           ),
-        );
-      }),
+        ),
+      ),
     );
   }
 }
@@ -275,52 +245,54 @@ class FollowButton extends GetView<UsersController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final loadingIds = controller.followingsInProgress;
-      final isLoading = loadingIds[uuid] != null;
-      final isFollowing = followed_by_me;
-      final foreground =
-          isFollowing ? ColorName.white : ColorName.cardBackground;
-      final style = FilledButton.styleFrom(
-        minimumSize: Size(fullWidth ? double.infinity : 0, small ? 32 : 44),
-        padding: EdgeInsets.symmetric(horizontal: small ? 14 : 18),
-        visualDensity: VisualDensity.compact,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        backgroundColor: isFollowing ? AppColors.fill : ColorName.white,
-        foregroundColor: foreground,
-        side: isFollowing ? BorderSide(color: AppColors.border) : null,
-        shape: const StadiumBorder(),
-        textStyle: TextStyle(
-          fontWeight: FontWeight.w700,
-          fontSize: small ? 12 : 14,
-        ),
-      );
-      return FilledButton(
-        style: style,
-        onPressed: () async {
+    return RxSelector<bool>(
+        sources: [controller.followingsInProgress],
+        select: () => controller.followingsInProgress[uuid] != null,
+        builder: (context, isLoading, _) {
           final isFollowing = followed_by_me;
-          final success = await controller.followUnfollow(uuid, !isFollowing);
-          if (success) {
-            onFollowStatusChanged?.call();
-          }
-        },
-        child: isLoading
-            ? LoadingWidget(
-                size: 12,
-                color: ColorName.secondaryBlue,
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!isFollowing) ...[
-                    Icon(Icons.add_rounded,
-                        color: foreground, size: small ? 14 : 18),
-                    const SizedBox(width: 4),
-                  ],
-                  Text(isFollowing ? "Unfollow" : "Follow"),
-                ],
-              ),
-      );
-    });
+          final foreground =
+              isFollowing ? ColorName.white : ColorName.cardBackground;
+          final style = FilledButton.styleFrom(
+            minimumSize: Size(fullWidth ? double.infinity : 0, small ? 32 : 44),
+            padding: EdgeInsets.symmetric(horizontal: small ? 14 : 18),
+            visualDensity: VisualDensity.compact,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            backgroundColor: isFollowing ? AppColors.fill : ColorName.white,
+            foregroundColor: foreground,
+            side: isFollowing ? BorderSide(color: AppColors.border) : null,
+            shape: const StadiumBorder(),
+            textStyle: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: small ? 12 : 14,
+            ),
+          );
+          return FilledButton(
+            style: style,
+            onPressed: () async {
+              final isFollowing = followed_by_me;
+              final success =
+                  await controller.followUnfollow(uuid, !isFollowing);
+              if (success) {
+                onFollowStatusChanged?.call();
+              }
+            },
+            child: isLoading
+                ? LoadingWidget(
+                    size: 12,
+                    color: ColorName.secondaryBlue,
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isFollowing) ...[
+                        Icon(Icons.add_rounded,
+                            color: foreground, size: small ? 14 : 18),
+                        const SizedBox(width: 4),
+                      ],
+                      Text(isFollowing ? "Unfollow" : "Follow"),
+                    ],
+                  ),
+          );
+        });
   }
 }

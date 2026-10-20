@@ -16,6 +16,7 @@ import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/styles.dart';
+import 'package:podium/widgets/rx_selector.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -83,53 +84,58 @@ class _CallBody extends GetView<OutpostCallController> {
   @override
   Widget build(BuildContext context) {
     final callController = Get.find<OngoingOutpostCallController>();
-    return Obx(() {
-      final showIntro = callController.shouldShowIntro.value;
-      final hasMembers = controller.members.value.isNotEmpty;
-
-      return RefreshIndicator(
-        onRefresh: () async => controller.fetchLiveData(withJoin: true),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            const SliverToBoxAdapter(child: MyStatusCard()),
-            const SliverToBoxAdapter(child: RaisedHandsBanner()),
-            const SliverToBoxAdapter(child: PollCard()),
-            if (showIntro) const SliverToBoxAdapter(child: _IntroDemoCard()),
-            if (!hasMembers)
-              const SliverFillRemaining(
-                hasScrollBody: false,
-                child: _JoiningPlaceholder(),
-              )
-            else ...[
-              SliverToBoxAdapter(
-                child: Obx(() {
-                  final talking = controller.talkingCount.value;
-                  return _SectionHeader(
-                    title: 'On stage',
-                    count: controller.stageMembers.value.length,
-                    extra: talking > 0 ? '$talking talking' : null,
-                  );
-                }),
-              ),
-              const _MemberGrid(onStage: true),
-              SliverToBoxAdapter(
-                child: Obx(() {
-                  final count = controller.audienceMembers.value.length;
-                  return _SectionHeader(
-                    title: 'Listening',
-                    count: count,
-                    onSeeAll: count == 0 ? null : openParticipantsSheet,
-                  );
-                }),
-              ),
-              const _MemberGrid(onStage: false),
-              const SliverToBoxAdapter(child: SizedBox(height: 96)),
+    return RxSelector<(bool, bool)>(
+      sources: [callController.shouldShowIntro, controller.members],
+      select: () => (
+        callController.shouldShowIntro.value,
+        controller.members.value.isNotEmpty,
+      ),
+      builder: (context, state, _) {
+        final (showIntro, hasMembers) = state;
+        return RefreshIndicator(
+          onRefresh: () async => controller.fetchLiveData(withJoin: true),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              const SliverToBoxAdapter(child: MyStatusCard()),
+              const SliverToBoxAdapter(child: RaisedHandsBanner()),
+              const SliverToBoxAdapter(child: PollCard()),
+              if (showIntro) const SliverToBoxAdapter(child: _IntroDemoCard()),
+              if (!hasMembers)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _JoiningPlaceholder(),
+                )
+              else ...[
+                SliverToBoxAdapter(
+                  child: Obx(() {
+                    final talking = controller.talkingCount.value;
+                    return _SectionHeader(
+                      title: 'On stage',
+                      count: controller.stageMembers.value.length,
+                      extra: talking > 0 ? '$talking talking' : null,
+                    );
+                  }),
+                ),
+                const _MemberGrid(onStage: true),
+                SliverToBoxAdapter(
+                  child: Obx(() {
+                    final count = controller.audienceMembers.value.length;
+                    return _SectionHeader(
+                      title: 'Listening',
+                      count: count,
+                      onSeeAll: count == 0 ? null : openParticipantsSheet,
+                    );
+                  }),
+                ),
+                const _MemberGrid(onStage: false),
+                const SliverToBoxAdapter(child: SizedBox(height: 96)),
+              ],
             ],
-          ],
-        ),
-      );
-    });
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -162,11 +168,18 @@ class _MemberGrid extends GetView<OutpostCallController> {
           mainAxisSpacing: 8,
         ),
         itemCount: members.length,
+        // Speakers move to the front; this lets moved tiles keep their state
+        // and animations instead of being rebuilt from scratch.
+        findChildIndexCallback: (key) {
+          final uuid = (key as ValueKey<String>).value;
+          final index = members.indexWhere((m) => m.uuid == uuid);
+          return index == -1 ? null : index;
+        },
         itemBuilder: (context, index) {
           final member = members[index];
           return RepaintBoundary(
+            key: ValueKey(member.uuid),
             child: MemberTile(
-              key: ValueKey(member.uuid),
               member: member,
               isCreator: member.uuid == creatorId,
               onStage: onStage,

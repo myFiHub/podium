@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:podium/utils/palette.dart';
 
@@ -248,7 +249,7 @@ class _AppEntranceState extends State<AppEntrance>
     if (_controller.isAnimating || _controller.isCompleted) return;
     final id = widget.id;
     final alreadyPlayed = id != null && !AppEntrance._played.add(id);
-    if (alreadyPlayed || reduceMotion(context)) {
+    if (alreadyPlayed || reduceMotion(context) || _revealedByScroll()) {
       _controller.value = 1;
       return;
     }
@@ -256,6 +257,19 @@ class _AppEntranceState extends State<AppEntrance>
     Future.delayed(delay, () {
       if (mounted) _controller.forward();
     });
+  }
+
+  /// Items scrolled into view appear in place; animating them would make the
+  /// list look like it stutters under the finger.
+  bool _revealedByScroll() {
+    final position = Scrollable.maybeOf(context)?.position;
+    if (position == null ||
+        !position.hasPixels ||
+        !position.hasContentDimensions) {
+      return false;
+    }
+    return position.pixels > position.minScrollExtent ||
+        position.isScrollingNotifier.value;
   }
 
   @override
@@ -430,9 +444,24 @@ class AppPressScale extends StatefulWidget {
 
 class _AppPressScaleState extends State<AppPressScale> {
   bool _pressed = false;
+  Offset? _downAt;
 
   void _set(bool value) {
     if (_pressed != value) setState(() => _pressed = value);
+  }
+
+  void _onDown(PointerDownEvent event) {
+    _downAt = event.position;
+    _set(true);
+  }
+
+  /// A drag that starts on this widget is a scroll, not a press.
+  void _onMove(PointerMoveEvent event) {
+    final downAt = _downAt;
+    if (!_pressed || downAt == null) return;
+    final slop =
+        computeHitSlop(event.kind, MediaQuery.maybeGestureSettingsOf(context));
+    if ((event.position - downAt).distance > slop) _set(false);
   }
 
   @override
@@ -440,7 +469,8 @@ class _AppPressScaleState extends State<AppPressScale> {
     // Keep the same widget tree when disabled so the child isn't remounted.
     final active = widget.enabled && !reduceMotion(context);
     return Listener(
-      onPointerDown: active ? (_) => _set(true) : null,
+      onPointerDown: active ? _onDown : null,
+      onPointerMove: active ? _onMove : null,
       onPointerUp: (_) => _set(false),
       onPointerCancel: (_) => _set(false),
       child: AnimatedScale(

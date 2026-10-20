@@ -149,7 +149,7 @@ void _shootCheer(BuildContext context) {
   );
   Confetti.launch(
     context,
-    options: options.copyWith(particleCount: 50, scalar: 1),
+    options: options.copyWith(particleCount: _burstParticles, scalar: 1),
   );
 }
 
@@ -173,9 +173,17 @@ void _shootBoo(BuildContext context) {
   );
   Confetti.launch(
     context,
-    options: options.copyWith(particleCount: 50, gravity: 2, startVelocity: 5),
+    options: options.copyWith(
+      particleCount: _burstParticles,
+      gravity: 2,
+      startVelocity: 5,
+    ),
   );
 }
+
+/// Each particle is painted every frame for the burst's lifetime, and
+/// reactions can overlap.
+const _burstParticles = 24;
 
 void _shootReaction({
   required BuildContext context,

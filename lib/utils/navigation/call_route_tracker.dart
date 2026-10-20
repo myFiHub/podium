@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/utils/navigation/navigation.dart';
 
 /// Follows the root page stack to know where the call page is. Get 5 keeps
 /// its own page list in the root delegate, so that is the source of truth.
@@ -48,7 +49,7 @@ class CallRouteTracker {
       if (pages.length > 1) {
         Get.back();
       } else {
-        Get.offAllNamed(Routes.HOME);
+        Navigate.to(type: NavigationTypes.offAllNamed, route: Routes.HOME);
       }
       return;
     }

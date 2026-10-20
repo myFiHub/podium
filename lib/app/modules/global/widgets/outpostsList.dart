@@ -15,6 +15,7 @@ import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/palette.dart';
+import 'package:podium/widgets/rx_selector.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:pulsator/pulsator.dart';
 import 'package:share_plus/share_plus.dart';
@@ -331,37 +332,46 @@ class _OutpostCard extends StatelessWidget {
         const SizedBox(height: 10),
       ],
     );
-    return Obx(() {
-      final isJoining = controller.joiningOutpostId.value == outpost.uuid;
-      final isLive = _onlineCount(controller, outpost) > 0;
-      final tone = outpost.is_archived
-          ? AppColors.textFaint
-          : isLive
-              ? AppColors.live
-              : access.color;
-      return AppCard(
-        key: Key("${outpost.uuid}OutpostCard"),
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-        gradient: _cardWash(tone),
-        borderGradient: _cardBorder(tone),
-        borderColor: isJoining ? AppColors.primary.withAlpha(140) : null,
-        onTap: isJoining ? null : () => _openOutpost(controller, outpost),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            body,
-            _OutpostActions(
-              outpost: outpost,
-              controller: controller,
-              amICreator: amICreator,
-              isJoining: isJoining,
-              isLive: isLive,
-            ),
-          ],
-        ),
-      );
-    });
+    return RxSelector<(bool, bool)>(
+      sources: [
+        controller.joiningOutpostId,
+        controller.mapOfOnlineUsersInOutposts,
+      ],
+      select: () => (
+        controller.joiningOutpostId.value == outpost.uuid,
+        _onlineCount(controller, outpost) > 0,
+      ),
+      builder: (context, state, _) {
+        final (isJoining, isLive) = state;
+        final tone = outpost.is_archived
+            ? AppColors.textFaint
+            : isLive
+                ? AppColors.live
+                : access.color;
+        return AppCard(
+          key: Key("${outpost.uuid}OutpostCard"),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+          gradient: _cardWash(tone),
+          borderGradient: _cardBorder(tone),
+          borderColor: isJoining ? AppColors.primary.withAlpha(140) : null,
+          onTap: isJoining ? null : () => _openOutpost(controller, outpost),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              body,
+              _OutpostActions(
+                outpost: outpost,
+                controller: controller,
+                amICreator: amICreator,
+                isJoining: isJoining,
+                isLive: isLive,
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -1024,28 +1034,31 @@ class _NumberOfActiveUsers extends GetView<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final count = _onlineCount(controller, outpost);
-      final isLive = count > 0;
-      return AnimatedSwitcher(
-        duration: reduceMotion(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 260),
-        switchInCurve: Curves.easeOutBack,
-        switchOutCurve: Curves.easeIn,
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: animation,
-            alignment: Alignment.centerRight,
-            child: child,
+    return RxSelector<int>(
+      sources: [controller.mapOfOnlineUsersInOutposts],
+      select: () => _onlineCount(controller, outpost),
+      builder: (context, count, _) {
+        final isLive = count > 0;
+        return AnimatedSwitcher(
+          duration: reduceMotion(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 260),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: animation,
+              alignment: Alignment.centerRight,
+              child: child,
+            ),
           ),
-        ),
-        child: isLive
-            ? _liveBadge(count)
-            : const SizedBox.shrink(key: ValueKey('offline')),
-      );
-    });
+          child: isLive
+              ? _liveBadge(count)
+              : const SizedBox.shrink(key: ValueKey('offline')),
+        );
+      },
+    );
   }
 
   Widget _liveBadge(int count) {

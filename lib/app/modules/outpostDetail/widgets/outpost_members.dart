@@ -15,9 +15,10 @@ class MembersList extends GetView<OutpostDetailController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final members = controller.membersList.value;
-      final doIExistInTheList = members.any((element) => element.uuid == myId);
-      if (!doIExistInTheList) {
+      // A local copy: mutating the observable list while building would
+      // notify listeners mid-frame.
+      final members = [...controller.membersList.value];
+      if (!members.any((element) => element.uuid == myId)) {
         members.insert(
           0,
           LiveMember(
@@ -29,7 +30,6 @@ class MembersList extends GetView<OutpostDetailController> {
               aptos_address: myUser.aptos_address!),
         );
       }
-      // add my user to the top if it doesn't exist in the list
 
       if (members.isEmpty) {
         return const SliverToBoxAdapter(

@@ -24,9 +24,14 @@ const _tabViews = <String, Widget>{
 /// A second back press within this window closes the app.
 const _exitWindow = Duration(seconds: 2);
 
+/// Tabs built in the background shortly after launch, so their data and
+/// images are ready on first visit instead of showing placeholders.
+const _warmTabs = [Routes.ALL_OUTPOSTS];
+const _warmDelay = Duration(seconds: 2);
+
 /// Every navbar tab, kept alive in one page so switching tabs keeps scroll
-/// positions and loaded data. Tabs are built on first visit; hidden tabs stop
-/// their animations.
+/// positions and loaded data. Tabs are built on first visit, except
+/// [_warmTabs]; hidden tabs stop their animations.
 class TabsView extends StatefulWidget {
   const TabsView({super.key});
 
@@ -62,6 +67,15 @@ class _TabsViewState extends State<TabsView>
       } else {
         _enter.forward(from: 0);
       }
+    });
+    Future.delayed(_warmDelay, () {
+      if (!mounted) return;
+      setState(() {
+        for (final route in _warmTabs) {
+          final index = _indexOf(route);
+          if (index != -1) _visited.add(index);
+        }
+      });
     });
   }
 

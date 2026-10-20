@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:podium/app/modules/allOutposts/controllers/discover_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/controllers/users_controller.dart';
@@ -133,6 +134,7 @@ class HomeController extends GetxController {
     if (!force && !feedSupported.value) return;
     _feedInFlight = true;
     isLoadingFeed.value = feed.value == null;
+    _prefetchExplore();
     try {
       final result = await _repo.getHomeFeed(
         utcOffsetMinutes: DateTime.now().timeZoneOffset.inMinutes,
@@ -157,6 +159,17 @@ class HomeController extends GetxController {
     } finally {
       _feedInFlight = false;
       if (!isClosed) isLoadingFeed.value = false;
+    }
+  }
+
+  /// Warms the Explore tab alongside the feed so opening it rarely shows
+  /// placeholders. Creating [DiscoverController] starts its loads, and its
+  /// cache TTLs keep repeat calls cheap.
+  void _prefetchExplore() {
+    if (Get.isRegistered<DiscoverController>()) Get.find<DiscoverController>();
+    if (outpostsController.outposts.value.isEmpty &&
+        !outpostsController.isGettingAllOutposts.value) {
+      outpostsController.fetchAllOutpostsPage(0);
     }
   }
 

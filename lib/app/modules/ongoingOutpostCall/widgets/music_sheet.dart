@@ -148,6 +148,20 @@ class _HostNowPlaying extends GetView<CallRoomController> {
               value: controller.roomMusicVolume.value,
               onChanged: controller.setRoomMusicVolume,
             ),
+            _VolumeRow(
+              label: 'Your volume',
+              icon: Icons.headphones_rounded,
+              value: controller.localMusicVolume.value,
+              muted: controller.localMusicMuted.value,
+              onToggleMute: controller.toggleLocalMusicMute,
+              onChanged: controller.setLocalMusicVolume,
+            ),
+            Text(
+              'Room volume changes it for everyone, your volume only on '
+              'this device',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11, color: ColorName.greyText),
+            ),
           ],
         );
       }),
@@ -272,28 +286,44 @@ class _VolumeRow extends StatelessWidget {
   final ValueChanged<double> onChanged;
   final bool muted;
   final VoidCallback? onToggleMute;
+
+  /// Shown instead of the level icon while not muted.
+  final IconData? icon;
   const _VolumeRow({
     required this.label,
     required this.value,
     required this.onChanged,
     this.muted = false,
     this.onToggleMute,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    final icon = muted || value == 0
+    final shown = muted || value == 0
         ? Icons.volume_off_rounded
-        : value < 0.5
-            ? Icons.volume_down_rounded
-            : Icons.volume_up_rounded;
+        : icon ??
+            (value < 0.5
+                ? Icons.volume_down_rounded
+                : Icons.volume_up_rounded);
     return Row(
       children: [
         IconButton(
-          tooltip: onToggleMute == null ? label : (muted ? 'Unmute' : 'Mute'),
+          tooltip: onToggleMute == null
+              ? label
+              : (muted ? 'Unmute for me' : 'Mute for me'),
           visualDensity: VisualDensity.compact,
           onPressed: onToggleMute,
-          icon: Icon(icon, size: 20, color: ColorName.greyText),
+          icon: Icon(shown, size: 20, color: ColorName.greyText),
+        ),
+        SizedBox(
+          width: 84,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, color: ColorName.greyText),
+          ),
         ),
         Expanded(
           child: Slider(

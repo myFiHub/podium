@@ -277,11 +277,13 @@ class CallRoomController extends GetxController
     chat.clear();
     unreadChat.value = 0;
     chatPreview.value = null;
+    final label = room?.label ?? 'another room';
+    Toast.info(title: 'Room changed', message: 'You joined $label');
     chat.add(CallChatMessage(
       id: 'system-${DateTime.now().microsecondsSinceEpoch}',
       senderUuid: null,
       senderName: '',
-      text: 'You joined ${room?.label ?? 'another room'}',
+      text: 'You joined $label',
       at: DateTime.now(),
       mine: false,
       system: true,

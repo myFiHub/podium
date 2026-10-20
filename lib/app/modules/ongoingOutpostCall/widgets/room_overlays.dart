@@ -420,6 +420,18 @@ class MusicChip extends GetView<CallRoomController> {
         onTap: controller.canControlMusic
             ? openMusicSheet
             : openListenerMusicSheet,
+        trailing: IconButton(
+          tooltip: muted ? 'Unmute for me' : 'Mute for me',
+          onPressed: controller.toggleLocalMusicMute,
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 28),
+          icon: Icon(
+            muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+            size: 16,
+            color: callSpeakingColor,
+          ),
+        ),
       );
     });
   }

@@ -137,6 +137,21 @@ void main() {
       expect(none.currentRoom, isNull);
     });
 
+    test('is in a breakout room when the current room is one', () {
+      final unflagged = {...raw, 'isInBreakoutRoom': false};
+      expect(BreakoutState.tryParse(unflagged)!.isInBreakoutRoom, isTrue);
+      final inMain = BreakoutState.tryParse({
+        ...unflagged,
+        'currentRoomId': 'outpost',
+      })!;
+      expect(inMain.isInBreakoutRoom, isFalse);
+      final unknown = BreakoutState.tryParse({
+        ...unflagged,
+        'currentRoomId': 'gone',
+      })!;
+      expect(unknown.isInBreakoutRoom, isFalse);
+    });
+
     test('rejects a non-map payload', () {
       expect(BreakoutState.tryParse('x'), isNull);
       expect(BreakoutState.tryParse(null), isNull);

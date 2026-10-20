@@ -102,10 +102,21 @@ class BreakoutState {
       if (a.isMainRoom != b.isMainRoom) return a.isMainRoom ? -1 : 1;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
-    return BreakoutState(
+    final parsed = BreakoutState(
       supported: raw['supported'] == true,
       currentRoomId: raw['currentRoomId']?.toString(),
       isInBreakoutRoom: raw['isInBreakoutRoom'] == true,
+      rooms: rooms,
+    );
+    // Jitsi learns a room is a breakout room only after joining it.
+    final current = parsed.currentRoom;
+    if (parsed.isInBreakoutRoom || current == null || current.isMainRoom) {
+      return parsed;
+    }
+    return BreakoutState(
+      supported: parsed.supported,
+      currentRoomId: parsed.currentRoomId,
+      isInBreakoutRoom: true,
       rooms: rooms,
     );
   }

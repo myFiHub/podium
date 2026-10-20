@@ -97,7 +97,7 @@ class _HostDashboardViewState extends State<HostDashboardView> {
                   onSelect: _selectWindow,
                 ),
               ),
-              Expanded(child: _body(summary)),
+              Expanded(child: AnalyticsBodySwitcher(child: _body(summary))),
             ],
           ),
         ),
@@ -109,6 +109,7 @@ class _HostDashboardViewState extends State<HostDashboardView> {
     if (summary == null) {
       if (_error != null) {
         return AppEmptyState(
+          key: const ValueKey('error'),
           icon: Icons.insights_rounded,
           title: "Couldn't load your analytics",
           message: _error,
@@ -116,13 +117,15 @@ class _HostDashboardViewState extends State<HostDashboardView> {
         );
       }
       return const SingleChildScrollView(
+        key: ValueKey('loading'),
         physics: NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(16, 4, 16, 24),
-        child: AnalyticsSkeleton(),
+        padding: EdgeInsets.fromLTRB(16, 4, 16, 32),
+        child: AnalyticsSkeleton(showBestTime: true),
       );
     }
     if (summary.outpostsCount == 0) {
       return AppEmptyState(
+        key: const ValueKey('empty'),
         icon: Icons.podcasts_rounded,
         title: 'Host your first outpost',
         message: 'Your audience, retention and earnings show up here once '
@@ -135,6 +138,7 @@ class _HostDashboardViewState extends State<HostDashboardView> {
       );
     }
     return RefreshIndicator(
+      key: const ValueKey('content'),
       onRefresh: () => _load(force: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),

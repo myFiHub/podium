@@ -126,7 +126,7 @@ class _HostOutpostAnalyticsViewState extends State<HostOutpostAnalyticsView> {
                   onSelect: _selectWindow,
                 ),
               ),
-              Expanded(child: _body(data)),
+              Expanded(child: AnalyticsBodySwitcher(child: _body(data))),
             ],
           ),
         ),
@@ -138,6 +138,7 @@ class _HostOutpostAnalyticsViewState extends State<HostOutpostAnalyticsView> {
     if (data == null) {
       if (_error != null) {
         return AppEmptyState(
+          key: const ValueKey('error'),
           icon: Icons.insights_rounded,
           title: "Couldn't load analytics",
           message: _error,
@@ -145,12 +146,14 @@ class _HostOutpostAnalyticsViewState extends State<HostOutpostAnalyticsView> {
         );
       }
       return const SingleChildScrollView(
+        key: ValueKey('loading'),
         physics: NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(16, 4, 16, 24),
+        padding: EdgeInsets.fromLTRB(16, 4, 16, 32),
         child: AnalyticsSkeleton(),
       );
     }
     return RefreshIndicator(
+      key: const ValueKey('content'),
       onRefresh: () => _load(force: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),

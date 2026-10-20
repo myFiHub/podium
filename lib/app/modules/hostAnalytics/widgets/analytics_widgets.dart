@@ -68,6 +68,43 @@ class AnalyticsWindowPicker extends StatelessWidget {
   }
 }
 
+/// Cross-fades between the loading, empty and loaded bodies of a dashboard.
+/// Give each state its own key; same-key updates rebuild in place.
+class AnalyticsBodySwitcher extends StatelessWidget {
+  const AnalyticsBodySwitcher({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      layoutBuilder: (current, previous) => Stack(
+        fit: StackFit.expand,
+        children: [...previous, if (current != null) current],
+      ),
+      child: child,
+    );
+  }
+}
+
+TextStyle get _kpiValueStyle => TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w800,
+      color: ColorName.white,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
+TextStyle get _kpiDetailStyle => AppText.caption.copyWith(fontSize: 11);
+
+TextStyle get _amountStyle => TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w700,
+      color: AppColors.success,
+    );
+
 class KpiTile extends StatelessWidget {
   const KpiTile({
     super.key,
@@ -115,19 +152,14 @@ class KpiTile extends StatelessWidget {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: ColorName.white,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
+            style: _kpiValueStyle,
           ),
           const SizedBox(height: 2),
           Text(
             detail ?? '',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppText.caption.copyWith(fontSize: 11),
+            style: _kpiDetailStyle,
           ),
         ],
       ),
@@ -226,17 +258,22 @@ class AnalyticsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       margin: const EdgeInsets.only(top: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: AppText.cardTitle),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(subtitle!, style: AppText.caption),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.topCenter,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: AppText.cardTitle),
+            if (subtitle != null) ...[
+              const SizedBox(height: 2),
+              Text(subtitle!, style: AppText.caption),
+            ],
+            const SizedBox(height: 14),
+            child,
           ],
-          const SizedBox(height: 14),
-          child,
-        ],
+        ),
       ),
     );
   }
@@ -636,11 +673,7 @@ class _EarningRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             formatAmount(item.totalAmount, chain.currency),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.success,
-            ),
+            style: _amountStyle,
           ),
         ],
       ),
@@ -648,9 +681,13 @@ class _EarningRow extends StatelessWidget {
   }
 }
 
-/// Placeholder shown while a dashboard loads.
+/// Placeholder shown while a dashboard loads. Mirrors the real layout's
+/// paddings and text line heights so swapping in data doesn't shift anything.
 class AnalyticsSkeleton extends StatelessWidget {
-  const AnalyticsSkeleton({super.key});
+  const AnalyticsSkeleton({super.key, this.showBestTime = false});
+
+  /// Whether the loaded page has a [BestTimeToGoLive] section.
+  final bool showBestTime;
 
   @override
   Widget build(BuildContext context) {
@@ -669,6 +706,31 @@ class AnalyticsSkeleton extends StatelessWidget {
         ],
         const _SkeletonSection(child: _SkeletonBars()),
         const _SkeletonSection(child: _SkeletonRetention()),
+        if (showBestTime) const _SkeletonSection(child: _SkeletonBestTime()),
+        const _SkeletonSection(child: _SkeletonEarning()),
+      ],
+    );
+  }
+}
+
+/// A bone as tall as one line of [style], so it occupies exactly the space the
+/// real text will.
+class _TextBone extends StatelessWidget {
+  const _TextBone({required this.style, required this.width});
+
+  final TextStyle style;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: AlignmentDirectional.centerStart,
+      children: [
+        Opacity(
+          opacity: 0,
+          child: Text(' ', maxLines: 1, style: style),
+        ),
+        _Bone(width: width, height: (style.fontSize ?? 14) * 0.75),
       ],
     );
   }
@@ -721,21 +783,21 @@ class _SkeletonTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.border),
       ),
-      child: const _SkeletonShimmer(
+      child: _SkeletonShimmer(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                _Bone(width: 16, height: 16, radius: 999),
-                SizedBox(width: 6),
-                _Bone(width: 72),
+                const _Bone(width: 16, height: 16, radius: 999),
+                const SizedBox(width: 6),
+                _TextBone(style: AppText.caption, width: 72),
               ],
             ),
-            SizedBox(height: 12),
-            _Bone(width: 64, height: 20),
-            SizedBox(height: 8),
-            _Bone(width: 96, height: 9),
+            const SizedBox(height: 8),
+            _TextBone(style: _kpiValueStyle, width: 64),
+            const SizedBox(height: 2),
+            _TextBone(style: _kpiDetailStyle, width: 96),
           ],
         ),
       ),
@@ -756,16 +818,16 @@ class _SkeletonSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
-              child: _Bone(width: 120, height: 14),
+              child: _TextBone(style: AppText.cardTitle, width: 120),
             ),
-            const SizedBox(height: 8),
-            const Align(
+            const SizedBox(height: 2),
+            Align(
               alignment: Alignment.centerLeft,
-              child: _Bone(width: 180, height: 9),
+              child: _TextBone(style: AppText.caption, width: 180),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             child,
           ],
         ),
@@ -805,13 +867,18 @@ class _SkeletonBars extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 8),
-        const Row(
+        const SizedBox(height: 6),
+        Row(
           children: [
-            _Bone(width: 40, height: 9),
-            Spacer(),
-            _Bone(width: 40, height: 9),
+            _TextBone(style: AppText.caption, width: 40),
+            const Spacer(),
+            _TextBone(style: AppText.caption, width: 40),
           ],
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: _TextBone(style: AppText.caption, width: 220),
         ),
       ],
     );
@@ -826,19 +893,118 @@ class _SkeletonRetention extends StatelessWidget {
     return Column(
       children: [
         for (var i = 0; i < 4; i++)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 5),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
               children: [
-                _Bone(width: 44, height: 9),
-                SizedBox(width: 12),
-                Expanded(child: _Bone(height: 8, radius: 999)),
-                SizedBox(width: 12),
-                _Bone(width: 28, height: 9),
+                SizedBox(
+                  width: 56,
+                  child: _TextBone(style: AppText.caption, width: 44),
+                ),
+                const Expanded(child: _Bone(height: 8, radius: 999)),
+                SizedBox(
+                  width: 48,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _TextBone(style: AppText.caption, width: 28),
+                  ),
+                ),
               ],
             ),
           ),
       ],
+    );
+  }
+}
+
+class _SkeletonBestTime extends StatelessWidget {
+  const _SkeletonBestTime();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _PillBone(width: 96),
+            _PillBone(width: 88),
+            _PillBone(width: 92),
+          ],
+        ),
+        const SizedBox(height: 14),
+        const Padding(
+          padding: EdgeInsets.only(left: _Heatmap._labelWidth),
+          child: _Bone(
+            height: 7 * _Heatmap._rowHeight + 6 * _Heatmap._rowGap,
+            radius: 4,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: _Heatmap._labelWidth),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (var i = 0; i < 5; i++)
+                _TextBone(
+                  style: AppText.caption.copyWith(fontSize: 10),
+                  width: 22,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A bone sized by an invisible [AppPill].
+class _PillBone extends StatelessWidget {
+  const _PillBone({required this.width});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: const Stack(
+        children: [
+          Opacity(opacity: 0, child: AppPill(label: ' ')),
+          Positioned.fill(child: _Bone(radius: 999)),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonEarning extends StatelessWidget {
+  const _SkeletonEarning();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          const _Bone(width: 22, height: 22, radius: 999),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _TextBone(style: AppText.body, width: 80),
+                _TextBone(style: AppText.caption, width: 110),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _TextBone(style: _amountStyle, width: 56),
+        ],
+      ),
     );
   }
 }

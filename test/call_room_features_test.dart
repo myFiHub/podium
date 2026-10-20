@@ -152,6 +152,26 @@ void main() {
       expect(unknown.isInBreakoutRoom, isFalse);
     });
 
+    test('keeps the known rooms when a switch clears the list', () {
+      final known = BreakoutState.tryParse(raw)!;
+      final cleared = BreakoutState.tryParse({
+        'supported': true,
+        'currentRoomId': 'zeta',
+        'isInBreakoutRoom': false,
+        'rooms': [],
+      })!;
+      final kept = cleared.orKnownRooms(known);
+      expect(kept.rooms, hasLength(3));
+      expect(kept.currentRoom!.name, 'Zeta');
+      expect(kept.isInBreakoutRoom, isTrue);
+      final elsewhere = BreakoutState.tryParse({
+        'supported': true,
+        'currentRoomId': 'other-outpost',
+        'rooms': [],
+      })!;
+      expect(elsewhere.orKnownRooms(known).rooms, isEmpty);
+    });
+
     test('rejects a non-map payload', () {
       expect(BreakoutState.tryParse('x'), isNull);
       expect(BreakoutState.tryParse(null), isNull);

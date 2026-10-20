@@ -66,6 +66,46 @@ class BreakoutState {
     );
   }
 
+  /// Jitsi clears its room list while switching rooms and may not send it
+  /// again. While the current room is one of the rooms known before, those
+  /// rooms are kept, so the way back to the main room stays visible.
+  BreakoutState orKnownRooms(BreakoutState known) {
+    if (rooms.isNotEmpty || !supported || known.rooms.isEmpty) return this;
+    final kept = _derive(
+      supported: supported,
+      currentRoomId: currentRoomId,
+      isInBreakoutRoom: isInBreakoutRoom,
+      rooms: known.rooms,
+    );
+    return kept.currentRoom == null ? this : kept;
+  }
+
+  /// Jitsi learns a room is a breakout room only after joining it, so being
+  /// in a known breakout room counts too.
+  static BreakoutState _derive({
+    required bool supported,
+    required String? currentRoomId,
+    required bool isInBreakoutRoom,
+    required List<BreakoutRoom> rooms,
+  }) {
+    final state = BreakoutState(
+      supported: supported,
+      currentRoomId: currentRoomId,
+      isInBreakoutRoom: isInBreakoutRoom,
+      rooms: rooms,
+    );
+    final current = state.currentRoom;
+    if (isInBreakoutRoom || current == null || current.isMainRoom) {
+      return state;
+    }
+    return BreakoutState(
+      supported: supported,
+      currentRoomId: currentRoomId,
+      isInBreakoutRoom: true,
+      rooms: rooms,
+    );
+  }
+
   static BreakoutState? tryParse(dynamic raw) {
     if (raw is! Map) return null;
     final rooms = <BreakoutRoom>[];
@@ -102,21 +142,10 @@ class BreakoutState {
       if (a.isMainRoom != b.isMainRoom) return a.isMainRoom ? -1 : 1;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
-    final parsed = BreakoutState(
+    return _derive(
       supported: raw['supported'] == true,
       currentRoomId: raw['currentRoomId']?.toString(),
       isInBreakoutRoom: raw['isInBreakoutRoom'] == true,
-      rooms: rooms,
-    );
-    // Jitsi learns a room is a breakout room only after joining it.
-    final current = parsed.currentRoom;
-    if (parsed.isInBreakoutRoom || current == null || current.isMainRoom) {
-      return parsed;
-    }
-    return BreakoutState(
-      supported: parsed.supported,
-      currentRoomId: parsed.currentRoomId,
-      isInBreakoutRoom: true,
       rooms: rooms,
     );
   }
@@ -140,8 +169,9 @@ mixin _CallBreakout on GetxController {
   BreakoutRoom? get currentBreakoutRoom => breakout.value.currentRoom;
 
   void _onBreakoutRooms(dynamic raw) {
-    final next = BreakoutState.tryParse(raw);
+    var next = BreakoutState.tryParse(raw);
     if (next == null) return;
+    next = next.orKnownRooms(breakout.value);
     breakout.value = next;
     final roomId = next.currentRoomId;
     if (roomId == null || roomId.isEmpty) return;

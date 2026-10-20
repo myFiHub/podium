@@ -8,6 +8,7 @@ import 'package:podium/providers/api/podium/models/analytics/host_analytics.dart
 import 'package:podium/utils/format_amount.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
+import 'package:shimmer/shimmer.dart';
 
 const _dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -654,6 +655,7 @@ class AnalyticsSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var row = 0; row < 3; row++) ...[
           if (row > 0) const SizedBox(height: 10),
@@ -665,9 +667,44 @@ class AnalyticsSkeleton extends StatelessWidget {
             ],
           ),
         ],
-        const SizedBox(height: 12),
-        const AppCard(child: SizedBox(height: 140)),
+        const _SkeletonSection(child: _SkeletonBars()),
+        const _SkeletonSection(child: _SkeletonRetention()),
       ],
+    );
+  }
+}
+
+class _SkeletonShimmer extends StatelessWidget {
+  const _SkeletonShimmer({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: ColorName.white.withAlpha(16),
+      highlightColor: ColorName.white.withAlpha(40),
+      child: child,
+    );
+  }
+}
+
+class _Bone extends StatelessWidget {
+  const _Bone({this.width, this.height = 10, this.radius = 6});
+
+  final double? width;
+  final double height;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: ColorName.white,
+        borderRadius: BorderRadius.circular(radius),
+      ),
     );
   }
 }
@@ -678,12 +715,130 @@ class _SkeletonTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 86,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: ColorName.white.withAlpha(8),
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.border),
       ),
+      child: const _SkeletonShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _Bone(width: 16, height: 16, radius: 999),
+                SizedBox(width: 6),
+                _Bone(width: 72),
+              ],
+            ),
+            SizedBox(height: 12),
+            _Bone(width: 64, height: 20),
+            SizedBox(height: 8),
+            _Bone(width: 96, height: 9),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SkeletonSection extends StatelessWidget {
+  const _SkeletonSection({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      margin: const EdgeInsets.only(top: 12),
+      child: _SkeletonShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: _Bone(width: 120, height: 14),
+            ),
+            const SizedBox(height: 8),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: _Bone(width: 180, height: 9),
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SkeletonBars extends StatelessWidget {
+  const _SkeletonBars();
+
+  static const _heights = [
+    0.35, 0.55, 0.4, 0.7, 0.5, 0.85, 0.45, //
+    0.6, 0.3, 0.75, 0.55, 0.95, 0.5, 0.65,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 110,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              for (final h in _heights)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: FractionallySizedBox(
+                      heightFactor: h,
+                      child: const _Bone(height: double.infinity, radius: 4),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Row(
+          children: [
+            _Bone(width: 40, height: 9),
+            Spacer(),
+            _Bone(width: 40, height: 9),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SkeletonRetention extends StatelessWidget {
+  const _SkeletonRetention();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < 4; i++)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              children: [
+                _Bone(width: 44, height: 9),
+                SizedBox(width: 12),
+                Expanded(child: _Bone(height: 8, radius: 999)),
+                SizedBox(width: 12),
+                _Bone(width: 28, height: 9),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

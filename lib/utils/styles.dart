@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
 ButtonStyle buttonStyle(BuildContext context) {
@@ -55,30 +55,30 @@ BorderRadiusGeometry borderRadius(BuildContext context) {
           : BorderRadius.circular(8.0);
 }
 
-final defaultAppBar = AppBar(
-  iconTheme: const IconThemeData(color: ColorName.primaryBlue),
-  backgroundColor: ColorName.pageBackground,
-);
+AppBar get defaultAppBar => AppBar(
+      iconTheme: IconThemeData(color: ColorName.primaryBlue),
+      backgroundColor: ColorName.pageBackground,
+    );
 
-const space10 = const Gap(
+const space10 = Gap(
   10,
 );
-const space12 = const Gap(
+const space12 = Gap(
   12,
 );
-const space8 = const Gap(
+const space8 = Gap(
   8,
 );
-const space14 = const Gap(
+const space14 = Gap(
   14,
 );
-const space16 = const Gap(
+const space16 = Gap(
   16,
 );
-const space24 = const Gap(
+const space24 = Gap(
   24,
 );
-const space5 = const Gap(
+const space5 = Gap(
   5,
 );
-const emptySpace = const SizedBox.shrink();
+const emptySpace = SizedBox.shrink();

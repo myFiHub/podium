@@ -5,7 +5,7 @@ import "package:http/http.dart";
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/utils/getContract.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -53,12 +53,13 @@ Future<String?> sendTransaction({
     }
     final credentials = await _getCredentials();
     final client = evmClientByChainId(chainId);
-    final transactionSigned = await client.sendTransaction(
+    final txHash = await client.sendTransaction(
       credentials,
       transaction,
       chainId: int.parse(chainId),
     );
-    return transactionSigned;
+    final mined = await waitForEvmReceipt(chainId: chainId, txHash: txHash);
+    return mined ? txHash : null;
   } catch (e) {
     l.e(e);
     final myAddress = await web3AuthWalletAddress();
@@ -85,17 +86,52 @@ Future<String?> sendTransaction({
   }
 }
 
+/// Returns true only once the transaction is mined successfully. A sent but
+/// reverted (or never mined) transaction must not be treated as a payment.
+Future<bool> waitForEvmReceipt({
+  required String chainId,
+  required String txHash,
+  Duration timeout = const Duration(minutes: 2),
+}) async {
+  final client = evmClientByChainId(chainId);
+  final deadline = DateTime.now().add(timeout);
+  try {
+    while (DateTime.now().isBefore(deadline)) {
+      try {
+        final receipt = await client.getTransactionReceipt(txHash);
+        if (receipt != null) {
+          final succeeded = receipt.status ?? true;
+          if (!succeeded) {
+            Toast.error(message: "Transaction failed on chain");
+          }
+          return succeeded;
+        }
+      } catch (e) {
+        l.e(e);
+      }
+      await Future.delayed(const Duration(seconds: 2));
+    }
+    Toast.error(
+      message:
+          "Transaction not confirmed yet. Check your wallet before trying again.",
+    );
+    return false;
+  } finally {
+    await client.dispose();
+  }
+}
+
 void _copyToClipboard(String text, {String? prefix}) async {
   await Get.closeCurrentSnackbar();
   Clipboard.setData(ClipboardData(text: text)).then(
     (_) => Toast.info(
-      title: "${prefix} Copied",
+      title: "$prefix Copied",
       message: text,
     ),
   );
 }
 
-_showTransactionConfirmationDialog({
+Future<dynamic> _showTransactionConfirmationDialog({
   required TransactionMetadata metadata,
   required String chainId,
 }) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:just_waveform/just_waveform.dart';
 
 class AudioWaveformWidget extends StatefulWidget {
@@ -83,6 +84,7 @@ class AudioWaveformPainter extends CustomPainter {
   final double strokeWidth;
   final double pixelsPerStep;
   final Paint wavePaint;
+  final Paint upcomingPaint;
   final Paint positionPaint;
   final Waveform waveform;
   final Duration start;
@@ -103,10 +105,16 @@ class AudioWaveformPainter extends CustomPainter {
           ..strokeWidth = strokeWidth
           ..strokeCap = StrokeCap.round
           ..color = waveColor,
+        upcomingPaint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round
+          ..color = waveColor.withAlpha(currentPosition == null ? 255 : 90),
         positionPaint = Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.0
-          ..color = Colors.red;
+          ..strokeCap = StrokeCap.round
+          ..color = ColorName.white.withAlpha(230);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -136,6 +144,10 @@ class AudioWaveformPainter extends CustomPainter {
       }
     }
 
+    final playedX = currentPosition == null
+        ? width
+        : (currentPosition!.inMilliseconds / duration.inMilliseconds) * width;
+
     // Draw the waveform with normalized amplitude
     for (var i = sampleStart.toDouble();
         i <= waveformPixelsPerWindow + 1.0;
@@ -149,39 +161,23 @@ class AudioWaveformPainter extends CustomPainter {
       canvas.drawLine(
         Offset(x + strokeWidth / 2, minY),
         Offset(x + strokeWidth / 2, maxY),
-        wavePaint,
+        x <= playedX ? wavePaint : upcomingPaint,
       );
     }
 
     // Draw the play position indicator
     if (currentPosition != null) {
-      // Calculate position more accurately
-      final positionX =
-          (currentPosition!.inMilliseconds / duration.inMilliseconds) * width;
-
-      // Draw a slightly thicker line for better visibility
-      final indicatorPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = Colors.red.withAlpha(100);
+      final positionX = playedX;
 
       canvas.drawLine(
         Offset(positionX, 0),
         Offset(positionX, height),
-        indicatorPaint,
+        positionPaint,
       );
 
-      // Add a small circle at the top and bottom for better visual indication
-      canvas.drawCircle(
-        Offset(positionX, 0),
-        2.0,
-        indicatorPaint,
-      );
-      canvas.drawCircle(
-        Offset(positionX, height),
-        2.0,
-        indicatorPaint,
-      );
+      final knobPaint = Paint()..color = positionPaint.color;
+      canvas.drawCircle(Offset(positionX, 0), 3.0, knobPaint);
+      canvas.drawCircle(Offset(positionX, height), 3.0, knobPaint);
     }
   }
 

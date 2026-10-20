@@ -1,59 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
-import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
-import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
-import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
+import 'package:podium/app/modules/createOutpost/outpost_types.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
-import 'package:podium/app/modules/global/widgets/outpostsList.dart';
-import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/utils/styles.dart';
 import 'package:podium/utils/truncate.dart';
-import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
-class CheckTicketView extends GetWidget<CheckticketController> {
+class CheckTicketView extends StatelessWidget {
+  const CheckTicketView({super.key, required this.controller});
+
+  final CheckticketController controller;
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Material(
-        child: Container(
-          color: ColorName.cardBackground,
-          padding: const EdgeInsets.all(20),
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.8,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Header(),
-              // space10,
-              // TicketBuyObserver(),
-              space10,
+              _Header(controller: controller),
+              const SizedBox(height: 14),
               Expanded(
-                child: Obx(
-                  () {
-                    final isLoading = controller.loadingUsers.value;
-                    final allUsersToBuyTicketFrom =
-                        controller.allUsersToBuyTicketFrom.value;
-                    final allUsersList =
-                        allUsersToBuyTicketFrom.values.toList();
-                    return isLoading
-                        ? const LoadingWidget()
-                        : Container(
-                            height: Get.height - 190,
-                            child: Scrollbar(
-                              child: ListView.builder(
-                                itemCount: allUsersList.length,
-                                itemBuilder: (context, index) {
-                                  final ticketSeller = allUsersList[index];
-                                  return SingleTicketHolder(
-                                      ticketSeller: ticketSeller,
-                                      controller: controller);
-                                },
-                              ),
-                            ),
-                          );
-                  },
-                ),
+                child: Obx(() {
+                  if (controller.loadingUsers.value) {
+                    return const Center(child: LoadingWidget());
+                  }
+                  final sellers =
+                      controller.allUsersToBuyTicketFrom.value.values.toList();
+                  return Scrollbar(
+                    child: ListView.separated(
+                      itemCount: sellers.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) => _SellerTile(
+                        controller: controller,
+                        key: ValueKey(sellers[index].userInfo.uuid),
+                        seller: sellers[index],
+                      ),
+                    ),
+                  );
+                }),
               ),
-              const EnterButton(),
+              const SizedBox(height: 14),
+              _EnterButton(controller: controller),
             ],
           ),
         ),
@@ -62,357 +56,358 @@ class CheckTicketView extends GetWidget<CheckticketController> {
   }
 }
 
-class EnterButton extends GetView<CheckticketController> {
-  const EnterButton({super.key});
+class _Header extends StatelessWidget {
+  const _Header({required this.controller});
 
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final canEnter = controller.allUsersToBuyTicketFrom.value.values.any(
-              (element) =>
-                  element.boughtTicketToAccess &&
-                  element.accessTicketType != null) ||
-          controller.canEnterWithoutTicket;
-
-      final canSpeak = controller.allUsersToBuyTicketFrom.value.values.any(
-              (element) =>
-                  element.boughtTicketToSpeak &&
-                  element.speakTicketType != null) ||
-          canISpeakWithoutTicket(outpost: controller.outpost.value!);
-
-      final remainingTicketsToTalk = controller
-          .allUsersToBuyTicketFrom.value.values
-          .where((element) =>
-              !element.boughtTicketToSpeak && element.speakTicketType != null)
-          .toList()
-          .length;
-      final canSpeakThough = !canSpeak && remainingTicketsToTalk > 0;
-
-      String text = "Enter";
-      if (canSpeakThough) {
-        text = 'Enter muted';
-      }
-      if (canSpeak) {
-        text = 'Enter (you can speak)';
-      }
-
-      if (canEnter) {
-        return Column(
-          children: [
-            Button(
-              type: ButtonType.gradient,
-              blockButton: true,
-              onPressed: () {
-                Navigator.pop(
-                  context,
-                  GroupAccesses(canEnter: true, canSpeak: canSpeak),
-                );
-              },
-              text: text,
-            ),
-            space5,
-            if (!canSpeak && canSpeakThough)
-              const Text(
-                'you will be able to speak if you buy 1 the ticket to Speak',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                ),
-              )
-          ],
-        );
-      }
-      return const Button(
-        onPressed: null,
-        blockButton: true,
-        child: Text(
-            'you will be able to Enter if you buy 1 ticket required for Entering the room',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.red,
-              fontSize: 14,
-            )),
-        color: Colors.grey,
-      );
-    });
-  }
-}
-
-class TicketBuyObserver extends GetView<CheckticketController> {
-  const TicketBuyObserver({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final outpost = controller.outpost.value!;
-      bool showRawSpeakerType = !controller.isSpeakBuyableByTicket;
-
-      final allUsersToBuyTicketFrom =
-          controller.allUsersToBuyTicketFrom.value.values.toList();
-
-      final listOfRemainingTicketsToEnter = allUsersToBuyTicketFrom
-          .where((element) =>
-              !element.boughtTicketToAccess && element.accessTicketType != null)
-          .toList();
-      final remainingTicketsToEnter = listOfRemainingTicketsToEnter.length;
-
-      final listOfRemainingTicketsToSpeak = allUsersToBuyTicketFrom
-          .where((element) =>
-              !element.boughtTicketToSpeak && element.speakTicketType != null)
-          .toList();
-      final remainingTicketsToSpeak = listOfRemainingTicketsToSpeak.length;
-
-      final canSpeak =
-          remainingTicketsToSpeak == 0 && controller.isSpeakBuyableByTicket;
-
-      return Column(
-        children: [
-          Row(
-            children: [
-              RichText(
-                  text: TextSpan(children: [
-                const TextSpan(
-                    text: 'Remaining Tickets to ',
-                    style: TextStyle(fontSize: 16, color: ColorName.greyText)),
-                const TextSpan(
-                    text: 'Enter: ',
-                    style: const TextStyle(
-                        color: Colors.green, fontWeight: FontWeight.bold)),
-                TextSpan(
-                    text: '$remainingTicketsToEnter  ',
-                    style: const TextStyle(
-                        color: ColorName.greyText,
-                        fontWeight: FontWeight.bold)),
-                if (!canSpeak && !showRawSpeakerType)
-                  TextSpan(
-                      text: 'Speak: ',
-                      style: TextStyle(
-                          color: canSpeak ? Colors.green : Colors.blue,
-                          fontWeight: FontWeight.bold)),
-                if (!canSpeak && !showRawSpeakerType)
-                  TextSpan(
-                      text: '$remainingTicketsToSpeak',
-                      style: const TextStyle(
-                          color: ColorName.greyText,
-                          fontWeight: FontWeight.bold)),
-              ])),
-            ],
-          ),
-          if (showRawSpeakerType)
-            RichText(
-              text: TextSpan(
-                children: [
-                  const TextSpan(
-                      text: 'Speakers: ',
-                      style: const TextStyle(
-                          fontSize: 16, color: ColorName.greyText)),
-                  TextSpan(
-                      text: parseSpeakerType(outpost.speak_type),
-                      style: TextStyle(
-                          color: canSpeak ? Colors.green : Colors.blue,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-        ],
-      );
-    });
-  }
-}
-
-class SingleTicketHolder extends StatelessWidget {
-  const SingleTicketHolder({
-    super.key,
-    required this.ticketSeller,
-    required this.controller,
-  });
-
-  final TicketSeller ticketSeller;
   final CheckticketController controller;
 
   @override
   Widget build(BuildContext context) {
-    final userInfo = ticketSeller.userInfo;
-    String address = ticketSeller.address;
-    if (ticketSeller.accessTicketType ==
-            BuyableTicketTypes.onlyPodiumPassHolders ||
-        ticketSeller.speakTicketType ==
-            BuyableTicketTypes.onlyPodiumPassHolders) {
-      address = ticketSeller.userInfo.aptos_address!;
-    }
-    final accessPriceFullString = ticketSeller.accessPriceFullString;
-    final speakPriceFullString = ticketSeller.speakPriceFullString;
-    return Container(
-      key: ValueKey(ticketSeller.userInfo.uuid),
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(10),
-      decoration: const BoxDecoration(
-        color: ColorName.pageBackground,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            width: Get.width - 170,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 4, top: 2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    if ((userInfo.image ?? '').isNotEmpty)
-                      Img(
-                        src: userInfo.image!,
-                        size: 30,
+                Text('Tickets', style: AppText.title),
+                const SizedBox(height: 4),
+                Text(_rule, style: AppText.caption),
+                const SizedBox(height: 10),
+                Obx(() {
+                  controller.allUsersToBuyTicketFrom.value;
+                  final access = controller.checkAccess();
+                  return Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      _StatusPill(
+                        label: 'Enter',
+                        icon: Icons.login_rounded,
+                        unlocked: access.canEnter,
                       ),
-                    if ((userInfo.image ?? '').isNotEmpty) space10,
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 170),
-                      child: Text(userInfo.name ?? '',
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-                space10,
-                Text(
-                    truncate(
-                      address,
-                      length: 16,
-                    ),
-                    style: const TextStyle(
-                        fontSize: 16, color: ColorName.greyText)),
-                if (accessPriceFullString != null &&
-                    !ticketSeller.boughtTicketToAccess)
-                  Text(
-                    accessPriceFullString + ' (access)',
-                    style: const TextStyle(fontSize: 10, color: Colors.yellow),
-                  ),
-                if (speakPriceFullString != null &&
-                    !ticketSeller.boughtTicketToSpeak)
-                  Text(
-                    speakPriceFullString + ' (speak)',
-                    style: const TextStyle(fontSize: 10, color: Colors.yellow),
-                  ),
+                      _StatusPill(
+                        label: 'Speak',
+                        icon: Icons.mic_rounded,
+                        unlocked: access.canSpeak,
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
-          Actions(
-            ticketSeller: ticketSeller,
-            controller: controller,
-          )
-        ],
-      ),
+        ),
+        AppIconButton(
+          icon: Icons.close_rounded,
+          tooltip: 'Close',
+          size: 36,
+          onTap: Get.close,
+        ),
+      ],
+    );
+  }
+
+  String get _rule {
+    final enter = controller.isAccessBuyableByTicket;
+    final speak = controller.isSpeakBuyableByTicket;
+    if (enter && speak) {
+      return 'One ticket from anyone below is enough. '
+          'Each one says whether it lets you enter, speak, or both.';
+    }
+    if (enter) return 'Get one ticket from anyone below to enter.';
+    return 'Get one ticket from anyone below to speak.';
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({
+    required this.label,
+    required this.icon,
+    required this.unlocked,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool unlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppPill(
+      label: unlocked ? '$label unlocked' : '$label locked',
+      icon: unlocked ? icon : Icons.lock_outline_rounded,
+      color: unlocked ? AppColors.success : AppColors.textMuted,
     );
   }
 }
 
-class Header extends StatelessWidget {
-  const Header({
+class _SellerTile extends StatelessWidget {
+  const _SellerTile({
     super.key,
+    required this.controller,
+    required this.seller,
   });
+
+  final CheckticketController controller;
+  final TicketSeller seller;
 
   @override
   Widget build(BuildContext context) {
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      const Row(
+    final user = seller.userInfo;
+    final usesAptos =
+        seller.accessTicketType == BuyableTicketTypes.onlyPodiumPassHolders ||
+            seller.speakTicketType == BuyableTicketTypes.onlyPodiumPassHolders;
+    final address = usesAptos ? user.aptos_address ?? '' : seller.address;
+    return AppCard(
+      radius: AppRadius.md,
+      color: AppColors.fill,
+      padding: const EdgeInsets.all(12),
+      child: Row(
         children: [
-          Text('Buy Tickets to:',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          space10,
-          Text('Enter',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          space10,
-          Icon(Icons.login, color: Colors.red),
-          space10,
-          Text('and Speak',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          space10,
-          Icon(Icons.mic, color: Colors.red)
+          Img(
+            src: user.image ?? '',
+            size: 40,
+            alt: user.name,
+            borderRadius: const BorderRadius.all(Radius.circular(20)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.name ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.cardTitle,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  truncate(address, length: 16),
+                  maxLines: 1,
+                  style: AppText.caption,
+                ),
+                const SizedBox(height: 8),
+                ..._offers(),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          _BuyAction(controller: controller, seller: seller),
         ],
       ),
-      IconButton(
-          onPressed: () {
-            Get.close();
-          },
-          icon: const Icon(Icons.close))
-    ]);
+    );
+  }
+
+  /// One line per ticket: what it unlocks and what it costs.
+  List<Widget> _offers() {
+    if (seller.checking) {
+      return [Text('Checking price…', style: AppText.caption)];
+    }
+    if (seller.hasSeparateTickets) {
+      return [
+        _Offer(
+          unlocks: 'Enter',
+          price: seller.accessPriceFullString,
+          owned: seller.boughtTicketToAccess,
+        ),
+        const SizedBox(height: 6),
+        _Offer(
+          unlocks: 'Speak',
+          price: seller.speakPriceFullString,
+          owned: seller.boughtTicketToSpeak,
+        ),
+      ];
+    }
+    final unlocks = seller.oneTicketForBoth
+        ? 'Enter + speak'
+        : seller.grantsAccess
+            ? 'Enter'
+            : 'Speak';
+    return [
+      _Offer(
+        unlocks: unlocks,
+        price: seller.accessPriceFullString ?? seller.speakPriceFullString,
+        owned: seller.alreadyBoughtRequiredTickets,
+      ),
+    ];
   }
 }
 
-class Actions extends StatelessWidget {
-  const Actions({
-    super.key,
-    required this.ticketSeller,
-    required this.controller,
+class _Offer extends StatelessWidget {
+  const _Offer({
+    required this.unlocks,
+    required this.price,
+    required this.owned,
   });
 
-  final TicketSeller ticketSeller;
+  final String unlocks;
+  final String? price;
+  final bool owned;
+
+  @override
+  Widget build(BuildContext context) {
+    final price = this.price;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        AppPill(
+          label: unlocks,
+          icon: unlocks == 'Speak' ? Icons.mic_rounded : Icons.login_rounded,
+          color: owned ? AppColors.success : AppColors.primary,
+        ),
+        if (owned)
+          Text('You hold this ticket', style: AppText.caption)
+        else if (price != null)
+          Text(
+            '1 ticket · $price',
+            style: AppText.caption.copyWith(
+              color: AppColors.accent,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _BuyAction extends StatelessWidget {
+  const _BuyAction({required this.controller, required this.seller});
+
+  final CheckticketController controller;
+
+  final TicketSeller seller;
+
+  @override
+  Widget build(BuildContext context) {
+    if (seller.checking || seller.buying) {
+      return const SizedBox(
+        width: 40,
+        height: 40,
+        child: Center(child: LoadingWidget(size: 20)),
+      );
+    }
+    if (seller.alreadyBoughtRequiredTickets) {
+      return Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.success.withAlpha(30),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.check_rounded, color: AppColors.success, size: 20),
+      );
+    }
+    return FilledButton(
+      onPressed: () => controller.buyTicket(ticketSeller: seller),
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.success,
+        foregroundColor: AppColors.onColor(AppColors.success),
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        visualDensity: VisualDensity.compact,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+      ),
+      child: const Text('Buy'),
+    );
+  }
+}
+
+class _EnterButton extends StatelessWidget {
+  const _EnterButton({required this.controller});
+
   final CheckticketController controller;
 
   @override
   Widget build(BuildContext context) {
-    final boughtTicketToAccess = ticketSeller.boughtTicketToAccess;
-    final boughtTicketToSpeak =
-        ticketSeller.boughtTicketToSpeak || !controller.isSpeakBuyableByTicket;
-    final checking = ticketSeller.checking;
-    final buying = ticketSeller.buying;
-    final shouldBuyTicketToAccess = !boughtTicketToAccess;
-    final shouldBuyTicketToSpeak = !boughtTicketToSpeak;
-    final alreadyBoughtRequiredTickets =
-        ticketSeller.alreadyBoughtRequiredTickets;
-    String actionButtonText = '';
-    if (shouldBuyTicketToSpeak) {
-      actionButtonText = 'Buy ticket to Speak';
-    } else if (shouldBuyTicketToAccess) {
-      actionButtonText = 'Buy ticket to Enter';
-    }
-    if (shouldBuyTicketToSpeak && shouldBuyTicketToAccess) {
-      actionButtonText = 'Buy ticket to Enter and Speak';
-    }
-    final speakTicketType = ticketSeller.speakTicketType;
-    final accessTicketType = ticketSeller.accessTicketType;
+    return Obx(() {
+      controller.allUsersToBuyTicketFrom.value;
+      final access = controller.checkAccess();
 
+      if (!access.canEnter) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _Notice(
+              icon: Icons.confirmation_number_outlined,
+              color: AppColors.danger,
+              text: 'Buy one ticket that unlocks Enter to join this Outpost.',
+            ),
+            const SizedBox(height: 10),
+            const AppPrimaryButton(
+              label: 'Enter',
+              icon: Icons.lock_outline_rounded,
+              onPressed: null,
+            ),
+          ],
+        );
+      }
+
+      final listenerOnly = !access.canSpeak && controller.canStillBuySpeak;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (listenerOnly) ...[
+            _Notice(
+              icon: Icons.mic_off_rounded,
+              color: AppColors.accent,
+              text: "You'll join as a listener. "
+                  'Buy one ticket that unlocks Speak to talk.',
+            ),
+            const SizedBox(height: 10),
+          ],
+          AppPrimaryButton(
+            icon:
+                access.canSpeak ? Icons.mic_rounded : Icons.headphones_rounded,
+            label: access.canSpeak ? 'Enter and speak' : 'Enter as listener',
+            onPressed: () => Navigator.pop(
+              context,
+              OutpostAccesses(canEnter: true, canSpeak: access.canSpeak),
+            ),
+          ),
+        ],
+      );
+    });
+  }
+}
+
+class _Notice extends StatelessWidget {
+  const _Notice({required this.icon, required this.color, required this.text});
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      child: checking || buying
-          ? const LoadingWidget(
-              size: 20,
-            )
-          : alreadyBoughtRequiredTickets
-              ? const Icon(Icons.check, color: Colors.green)
-              : Tooltip(
-                  message: actionButtonText,
-                  child: GestureDetector(
-                    onTap: () {
-                      controller.buyTicket(
-                        ticketSeller: ticketSeller,
-                      );
-                    },
-                    child: Container(
-                      decoration: const BoxDecoration(
-                          color: Colors.green,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(5))),
-                      padding: const EdgeInsets.all(5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (shouldBuyTicketToAccess &&
-                              accessTicketType != null)
-                            const Icon(
-                              Icons.login,
-                            ),
-                          if (shouldBuyTicketToSpeak && speakTicketType != null)
-                            const Icon(
-                              Icons.mic,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withAlpha(24),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: color.withAlpha(70)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 12, color: color, height: 1.35),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

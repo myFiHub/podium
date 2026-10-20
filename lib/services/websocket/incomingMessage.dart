@@ -36,6 +36,19 @@ enum IncomingMessageType {
   userStartedRecording,
   @JsonValue("user.stopped_recording")
   userStoppedRecording,
+  @JsonValue("user.removed")
+  userRemoved,
+}
+
+extension IncomingMessageTypeWire on IncomingMessageType {
+  /// The name the server uses, e.g. `user.joined`.
+  String get wireName => _$IncomingMessageTypeEnumMap[this]!;
+
+  static IncomingMessageType? fromWireName(String name) =>
+      _$IncomingMessageTypeEnumMap.entries
+          .where((e) => e.value == name)
+          .firstOrNull
+          ?.key;
 }
 
 @JsonSerializable()
@@ -65,6 +78,13 @@ class IncomingMessageData {
   final int? amount;
   final int? remaining_time;
 
+  /// `user.removed`: `kick` or `ban`.
+  final String? kind;
+
+  /// `user.removed`: when a kick ends, in milliseconds. Null for a ban.
+  final int? expires_at;
+  final String? removed_by_uuid;
+
   IncomingMessageData({
     this.address,
     this.uuid,
@@ -74,6 +94,9 @@ class IncomingMessageData {
     this.amount,
     this.remaining_time,
     this.outpost_uuid,
+    this.kind,
+    this.expires_at,
+    this.removed_by_uuid,
   });
 
   factory IncomingMessageData.fromJson(Map<String, dynamic> json) =>

@@ -1,8 +1,6 @@
 PODS:
   - add_2_calendar (0.0.1):
     - Flutter
-  - alarm (0.0.1):
-    - Flutter
   - app_links (0.0.2):
     - Flutter
   - app_settings (5.1.1):
@@ -20,149 +18,130 @@ PODS:
     - CoinbaseWalletSDK/Client
   - connectivity_plus (0.0.1):
     - Flutter
-  - curvelib.swift (1.0.1)
-  - downloadsfolder (0.0.1):
+  - curvelib.swift (2.0.0)
+  - Firebase/CoreOnly (12.0.0):
+    - FirebaseCore (~> 12.0.0)
+  - Firebase/Storage (12.0.0):
+    - Firebase/CoreOnly
+    - FirebaseStorage (~> 12.0.0)
+  - firebase_analytics (12.0.0):
+    - firebase_core
+    - FirebaseAnalytics (= 12.0.0)
     - Flutter
-  - Firebase/Analytics (11.10.0):
-    - Firebase/Core
-  - Firebase/Auth (11.10.0):
-    - Firebase/CoreOnly
-    - FirebaseAuth (~> 11.10.0)
-  - Firebase/Core (11.10.0):
-    - Firebase/CoreOnly
-    - FirebaseAnalytics (~> 11.10.0)
-  - Firebase/CoreOnly (11.10.0):
-    - FirebaseCore (~> 11.10.0)
-  - Firebase/Storage (11.10.0):
-    - Firebase/CoreOnly
-    - FirebaseStorage (~> 11.10.0)
-  - firebase_analytics (11.4.5):
-    - Firebase/Analytics (= 11.10.0)
+  - firebase_core (4.0.0):
+    - Firebase/CoreOnly (= 12.0.0)
+    - Flutter
+  - firebase_storage (13.0.0):
+    - Firebase/Storage (= 12.0.0)
     - firebase_core
     - Flutter
-  - firebase_auth (5.5.2):
-    - Firebase/Auth (= 11.10.0)
-    - firebase_core
-    - Flutter
-  - firebase_core (3.13.0):
-    - Firebase/CoreOnly (= 11.10.0)
-    - Flutter
-  - firebase_storage (12.4.5):
-    - Firebase/Storage (= 11.10.0)
-    - firebase_core
-    - Flutter
-  - FirebaseAnalytics (11.10.0):
-    - FirebaseAnalytics/AdIdSupport (= 11.10.0)
-    - FirebaseCore (~> 11.10.0)
-    - FirebaseInstallations (~> 11.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/MethodSwizzler (~> 8.0)
-    - GoogleUtilities/Network (~> 8.0)
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+  - FirebaseAnalytics (12.0.0):
+    - FirebaseAnalytics/Default (= 12.0.0)
+    - FirebaseCore (~> 12.0.0)
+    - FirebaseInstallations (~> 12.0.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
     - nanopb (~> 3.30910.0)
-  - FirebaseAnalytics/AdIdSupport (11.10.0):
-    - FirebaseCore (~> 11.10.0)
-    - FirebaseInstallations (~> 11.0)
-    - GoogleAppMeasurement (= 11.10.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/MethodSwizzler (~> 8.0)
-    - GoogleUtilities/Network (~> 8.0)
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+  - FirebaseAnalytics/Default (12.0.0):
+    - FirebaseCore (~> 12.0.0)
+    - FirebaseInstallations (~> 12.0.0)
+    - GoogleAppMeasurement/Default (= 12.0.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
     - nanopb (~> 3.30910.0)
-  - FirebaseAppCheckInterop (11.11.0)
-  - FirebaseAuth (11.10.0):
-    - FirebaseAppCheckInterop (~> 11.0)
-    - FirebaseAuthInterop (~> 11.0)
-    - FirebaseCore (~> 11.10.0)
-    - FirebaseCoreExtension (~> 11.10.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
-    - RecaptchaInterop (~> 101.0)
-  - FirebaseAuthInterop (11.11.0)
-  - FirebaseCore (11.10.0):
-    - FirebaseCoreInternal (~> 11.10.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GoogleUtilities/Logger (~> 8.0)
-  - FirebaseCoreExtension (11.10.0):
-    - FirebaseCore (~> 11.10.0)
-  - FirebaseCoreInternal (11.10.0):
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
-  - FirebaseInstallations (11.10.0):
-    - FirebaseCore (~> 11.10.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GoogleUtilities/UserDefaults (~> 8.0)
+  - FirebaseAppCheckInterop (12.0.0)
+  - FirebaseAuthInterop (12.0.0)
+  - FirebaseCore (12.0.0):
+    - FirebaseCoreInternal (~> 12.0.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/Logger (~> 8.1)
+  - FirebaseCoreExtension (12.0.0):
+    - FirebaseCore (~> 12.0.0)
+  - FirebaseCoreInternal (12.0.0):
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+  - FirebaseInstallations (12.0.0):
+    - FirebaseCore (~> 12.0.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/UserDefaults (~> 8.1)
     - PromisesObjC (~> 2.4)
-  - FirebaseStorage (11.10.0):
-    - FirebaseAppCheckInterop (~> 11.0)
-    - FirebaseAuthInterop (~> 11.0)
-    - FirebaseCore (~> 11.10.0)
-    - FirebaseCoreExtension (~> 11.10.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
+  - FirebaseStorage (12.0.0):
+    - FirebaseAppCheckInterop (~> 12.0.0)
+    - FirebaseAuthInterop (~> 12.0.0)
+    - FirebaseCore (~> 12.0.0)
+    - FirebaseCoreExtension (~> 12.0.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GTMSessionFetcher/Core (< 6.0, >= 3.4)
   - Flutter (1.0.0)
-  - flutter_fgbg (0.0.1):
-    - Flutter
   - flutter_native_splash (2.4.3):
     - Flutter
-  - flutter_sound (9.28.0):
+  - flutter_timezone (0.0.1):
     - Flutter
-    - flutter_sound_core (= 9.28.0)
-  - flutter_sound_core (9.28.0)
   - Giphy (2.2.12):
     - libwebp
-  - GoogleAppMeasurement (11.10.0):
-    - GoogleAppMeasurement/AdIdSupport (= 11.10.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/MethodSwizzler (~> 8.0)
-    - GoogleUtilities/Network (~> 8.0)
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+  - GoogleAdsOnDeviceConversion (2.1.0):
+    - GoogleUtilities/Logger (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
     - nanopb (~> 3.30910.0)
-  - GoogleAppMeasurement/AdIdSupport (11.10.0):
-    - GoogleAppMeasurement/WithoutAdIdSupport (= 11.10.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/MethodSwizzler (~> 8.0)
-    - GoogleUtilities/Network (~> 8.0)
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+  - GoogleAppMeasurement/Core (12.0.0):
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
     - nanopb (~> 3.30910.0)
-  - GoogleAppMeasurement/WithoutAdIdSupport (11.10.0):
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/MethodSwizzler (~> 8.0)
-    - GoogleUtilities/Network (~> 8.0)
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
+  - GoogleAppMeasurement/Default (12.0.0):
+    - GoogleAdsOnDeviceConversion (= 2.1.0)
+    - GoogleAppMeasurement/Core (= 12.0.0)
+    - GoogleAppMeasurement/IdentitySupport (= 12.0.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
     - nanopb (~> 3.30910.0)
-  - GoogleUtilities/AppDelegateSwizzler (8.0.2):
+  - GoogleAppMeasurement/IdentitySupport (12.0.0):
+    - GoogleAppMeasurement/Core (= 12.0.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/MethodSwizzler (~> 8.1)
+    - GoogleUtilities/Network (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+    - nanopb (~> 3.30910.0)
+  - GoogleUtilities/AppDelegateSwizzler (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
     - GoogleUtilities/Network
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Environment (8.0.2):
+  - GoogleUtilities/Environment (8.1.0):
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Logger (8.0.2):
+  - GoogleUtilities/Logger (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Privacy
-  - GoogleUtilities/MethodSwizzler (8.0.2):
+  - GoogleUtilities/MethodSwizzler (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Network (8.0.2):
+  - GoogleUtilities/Network (8.1.0):
     - GoogleUtilities/Logger
     - "GoogleUtilities/NSData+zlib"
     - GoogleUtilities/Privacy
     - GoogleUtilities/Reachability
-  - "GoogleUtilities/NSData+zlib (8.0.2)":
+  - "GoogleUtilities/NSData+zlib (8.1.0)":
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Privacy (8.0.2)
-  - GoogleUtilities/Reachability (8.0.2):
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/Reachability (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
-  - GoogleUtilities/UserDefaults (8.0.2):
+  - GoogleUtilities/UserDefaults (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
-  - GTMSessionFetcher/Core (4.4.0)
+  - GTMSessionFetcher/Core (5.0.0)
   - image_picker_ios (0.0.1):
     - Flutter
-  - jitsi_meet_flutter_sdk (10.3.0):
+  - jitsi_meet_flutter_sdk (11.5.1):
     - Flutter
+    - Giphy (= 2.2.12)
+    - JitsiWebRTC (~> 124.0)
   - JitsiWebRTC (124.0.2)
   - just_audio (0.0.1):
     - Flutter
@@ -188,12 +167,12 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - onesignal_flutter (5.3.0):
+  - onesignal_flutter (5.3.4):
     - Flutter
-    - OneSignalXCFramework (= 5.2.10)
-  - OneSignalXCFramework (5.2.10):
-    - OneSignalXCFramework/OneSignalComplete (= 5.2.10)
-  - OneSignalXCFramework/OneSignal (5.2.10):
+    - OneSignalXCFramework (= 5.2.14)
+  - OneSignalXCFramework (5.2.14):
+    - OneSignalXCFramework/OneSignalComplete (= 5.2.14)
+  - OneSignalXCFramework/OneSignal (5.2.14):
     - OneSignalXCFramework/OneSignalCore
     - OneSignalXCFramework/OneSignalExtension
     - OneSignalXCFramework/OneSignalLiveActivities
@@ -201,38 +180,38 @@ PODS:
     - OneSignalXCFramework/OneSignalOSCore
     - OneSignalXCFramework/OneSignalOutcomes
     - OneSignalXCFramework/OneSignalUser
-  - OneSignalXCFramework/OneSignalComplete (5.2.10):
+  - OneSignalXCFramework/OneSignalComplete (5.2.14):
     - OneSignalXCFramework/OneSignal
     - OneSignalXCFramework/OneSignalInAppMessages
     - OneSignalXCFramework/OneSignalLocation
-  - OneSignalXCFramework/OneSignalCore (5.2.10)
-  - OneSignalXCFramework/OneSignalExtension (5.2.10):
+  - OneSignalXCFramework/OneSignalCore (5.2.14)
+  - OneSignalXCFramework/OneSignalExtension (5.2.14):
     - OneSignalXCFramework/OneSignalCore
     - OneSignalXCFramework/OneSignalOutcomes
-  - OneSignalXCFramework/OneSignalInAppMessages (5.2.10):
+  - OneSignalXCFramework/OneSignalInAppMessages (5.2.14):
     - OneSignalXCFramework/OneSignalCore
     - OneSignalXCFramework/OneSignalNotifications
     - OneSignalXCFramework/OneSignalOSCore
     - OneSignalXCFramework/OneSignalOutcomes
     - OneSignalXCFramework/OneSignalUser
-  - OneSignalXCFramework/OneSignalLiveActivities (5.2.10):
+  - OneSignalXCFramework/OneSignalLiveActivities (5.2.14):
     - OneSignalXCFramework/OneSignalCore
     - OneSignalXCFramework/OneSignalOSCore
     - OneSignalXCFramework/OneSignalUser
-  - OneSignalXCFramework/OneSignalLocation (5.2.10):
+  - OneSignalXCFramework/OneSignalLocation (5.2.14):
     - OneSignalXCFramework/OneSignalCore
     - OneSignalXCFramework/OneSignalNotifications
     - OneSignalXCFramework/OneSignalOSCore
     - OneSignalXCFramework/OneSignalUser
-  - OneSignalXCFramework/OneSignalNotifications (5.2.10):
+  - OneSignalXCFramework/OneSignalNotifications (5.2.14):
     - OneSignalXCFramework/OneSignalCore
     - OneSignalXCFramework/OneSignalExtension
     - OneSignalXCFramework/OneSignalOutcomes
-  - OneSignalXCFramework/OneSignalOSCore (5.2.10):
+  - OneSignalXCFramework/OneSignalOSCore (5.2.14):
     - OneSignalXCFramework/OneSignalCore
-  - OneSignalXCFramework/OneSignalOutcomes (5.2.10):
+  - OneSignalXCFramework/OneSignalOutcomes (5.2.14):
     - OneSignalXCFramework/OneSignalCore
-  - OneSignalXCFramework/OneSignalUser (5.2.10):
+  - OneSignalXCFramework/OneSignalUser (5.2.14):
     - OneSignalXCFramework/OneSignalCore
     - OneSignalXCFramework/OneSignalNotifications
     - OneSignalXCFramework/OneSignalOSCore
@@ -245,9 +224,6 @@ PODS:
   - permission_handler_apple (9.3.0):
     - Flutter
   - PromisesObjC (2.4.0)
-  - RecaptchaInterop (101.0.0)
-  - record_ios (1.0.0):
-    - Flutter
   - share_plus (0.0.1):
     - Flutter
   - shared_preferences_foundation (0.0.1):
@@ -256,56 +232,54 @@ PODS:
   - sqflite (0.0.3):
     - Flutter
     - FlutterMacOS
-  - TorusSessionManager (4.0.2):
-    - curvelib.swift (~> 1.0.1)
+  - TorusSessionManager (6.0.2):
+    - curvelib.swift (~> 2.0.0)
     - KeychainSwift (~> 20.0.0)
   - url_launcher_ios (0.0.1):
     - Flutter
-  - Web3Auth (9.0.0):
+  - video_player_avfoundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - Web3Auth (11.1.0):
     - BigInt (~> 5.2.0)
-    - curvelib.swift (~> 1.0.1)
+    - curvelib.swift (~> 2.0.0)
     - KeychainSwift (~> 20.0.0)
-    - TorusSessionManager (~> 4.0.2)
+    - TorusSessionManager (~> 6.0.2)
   - web3auth_flutter (2.0.1):
     - Flutter
-    - Web3Auth (~> 9.0.0)
+    - Web3Auth (~> 11.1.0)
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
     - FlutterMacOS
 
 DEPENDENCIES:
   - add_2_calendar (from `.symlinks/plugins/add_2_calendar/ios`)
-  - alarm (from `.symlinks/plugins/alarm/ios`)
   - app_links (from `.symlinks/plugins/app_links/ios`)
   - app_settings (from `.symlinks/plugins/app_settings/ios`)
   - appcheck (from `.symlinks/plugins/appcheck/ios`)
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - coinbase_wallet_sdk (from `.symlinks/plugins/coinbase_wallet_sdk/ios`)
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
-  - downloadsfolder (from `.symlinks/plugins/downloadsfolder/ios`)
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
-  - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
-  - flutter_fgbg (from `.symlinks/plugins/flutter_fgbg/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
-  - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
+  - flutter_timezone (from `.symlinks/plugins/flutter_timezone/ios`)
   - Giphy (= 2.2.12)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - jitsi_meet_flutter_sdk (from `.symlinks/plugins/jitsi_meet_flutter_sdk/ios`)
-  - JitsiWebRTC
   - just_audio (from `.symlinks/plugins/just_audio/darwin`)
   - just_waveform (from `.symlinks/plugins/just_waveform/darwin`)
   - onesignal_flutter (from `.symlinks/plugins/onesignal_flutter/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
-  - record_ios (from `.symlinks/plugins/record_ios/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite (from `.symlinks/plugins/sqflite/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
   - web3auth_flutter (from `.symlinks/plugins/web3auth_flutter/ios`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
@@ -317,15 +291,14 @@ SPEC REPOS:
     - Firebase
     - FirebaseAnalytics
     - FirebaseAppCheckInterop
-    - FirebaseAuth
     - FirebaseAuthInterop
     - FirebaseCore
     - FirebaseCoreExtension
     - FirebaseCoreInternal
     - FirebaseInstallations
     - FirebaseStorage
-    - flutter_sound_core
     - Giphy
+    - GoogleAdsOnDeviceConversion
     - GoogleAppMeasurement
     - GoogleUtilities
     - GTMSessionFetcher
@@ -335,15 +308,12 @@ SPEC REPOS:
     - nanopb
     - OneSignalXCFramework
     - PromisesObjC
-    - RecaptchaInterop
     - TorusSessionManager
     - Web3Auth
 
 EXTERNAL SOURCES:
   add_2_calendar:
     :path: ".symlinks/plugins/add_2_calendar/ios"
-  alarm:
-    :path: ".symlinks/plugins/alarm/ios"
   app_links:
     :path: ".symlinks/plugins/app_links/ios"
   app_settings:
@@ -356,24 +326,18 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/coinbase_wallet_sdk/ios"
   connectivity_plus:
     :path: ".symlinks/plugins/connectivity_plus/ios"
-  downloadsfolder:
-    :path: ".symlinks/plugins/downloadsfolder/ios"
   firebase_analytics:
     :path: ".symlinks/plugins/firebase_analytics/ios"
-  firebase_auth:
-    :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
   firebase_storage:
     :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
     :path: Flutter
-  flutter_fgbg:
-    :path: ".symlinks/plugins/flutter_fgbg/ios"
   flutter_native_splash:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
-  flutter_sound:
-    :path: ".symlinks/plugins/flutter_sound/ios"
+  flutter_timezone:
+    :path: ".symlinks/plugins/flutter_timezone/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   jitsi_meet_flutter_sdk:
@@ -390,8 +354,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
-  record_ios:
-    :path: ".symlinks/plugins/record_ios/ios"
   share_plus:
     :path: ".symlinks/plugins/share_plus/ios"
   shared_preferences_foundation:
@@ -400,6 +362,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sqflite/darwin"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
+  video_player_avfoundation:
+    :path: ".symlinks/plugins/video_player_avfoundation/darwin"
   web3auth_flutter:
     :path: ".symlinks/plugins/web3auth_flutter/ios"
   webview_flutter_wkwebview:
@@ -407,7 +371,6 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   add_2_calendar: e626377f607d055070093cbd56abd1fafa1a02a5
-  alarm: 9ff6d2dae9bd69c4022622f7e0a1e9c1dd70064e
   app_links: 76b66b60cc809390ca1ad69bfd66b998d2387ac7
   app_settings: 5127ae0678de1dcc19f2293271c51d37c89428b2
   appcheck: f3c430f928f9c69ccd8b5d4df04766ac0e57c9aa
@@ -416,56 +379,51 @@ SPEC CHECKSUMS:
   coinbase_wallet_sdk: c893738400ef78bd20e7f4195cbb38266f7d15e8
   CoinbaseWalletSDK: ea1f37512bbc69ebe07416e3b29bf840f5cc3152
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
-  curvelib.swift: d0746ae82bee34016c06da3567a97e493b3c979f
-  downloadsfolder: 7d5c7b5d23e3c4dded522ff2a2ef14a56846378a
-  Firebase: 1fe1c0a7d9aaea32efe01fbea5f0ebd8d70e53a2
-  firebase_analytics: 1998960b8fa16fd0cd9e77a6f9fd35a2009ad65e
-  firebase_auth: 34c515a8fa76a4ef678ac5ad5cfa3bb3120f5ab5
-  firebase_core: 2d4534e7b489907dcede540c835b48981d890943
-  firebase_storage: ce9dee18f1cc73129457d861ae3322656ec41a99
-  FirebaseAnalytics: 4e42333f02cf78ed93703a5c36f36dd518aebdef
-  FirebaseAppCheckInterop: f23709c9ce92d810aa53ff4ce12ad3e666a3c7be
-  FirebaseAuth: c4146bdfdc87329f9962babd24dae89373f49a32
-  FirebaseAuthInterop: ac22ed402c2f4e3a8c63ebd3278af9a06073c1be
-  FirebaseCore: 8344daef5e2661eb004b177488d6f9f0f24251b7
-  FirebaseCoreExtension: 6f357679327f3614e995dc7cf3f2d600bdc774ac
-  FirebaseCoreInternal: ef4505d2afb1d0ebbc33162cb3795382904b5679
-  FirebaseInstallations: 9980995bdd06ec8081dfb6ab364162bdd64245c3
-  FirebaseStorage: e83d1b9c8a5318d46ccfb2955f0d98095e0bf598
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_fgbg: d3da78df78454b1808f0829a5da9cd17dfe16444
+  curvelib.swift: b9223e5cac801effed8a5fe8968e952b3fe427a5
+  Firebase: 800d487043c0557d9faed71477a38d9aafb08a41
+  firebase_analytics: cd56fc56f75c1df30a6ff5290cd56e230996a76d
+  firebase_core: 633e1851ffe1b9ab875f6467a4f574c79cef02e4
+  firebase_storage: 5063abf1ea47bad3df367f24314f4cc6c61a1e16
+  FirebaseAnalytics: 6d790cd1b159b4eb61a99948df0934ce505a34f7
+  FirebaseAppCheckInterop: c848d06a04030c9858ef0ae555b82035dbe470d0
+  FirebaseAuthInterop: 002da671896af5e8879ae117dc604ed240b86e80
+  FirebaseCore: 055f4ab117d5964158c833f3d5e7ec6d91648d4a
+  FirebaseCoreExtension: 639afb3de6abd611952be78a794c54a47fa0f361
+  FirebaseCoreInternal: dedc28e569a4be85f38f3d6af1070a2e12018d55
+  FirebaseInstallations: d4c7c958f99c8860d7fcece786314ae790e2f988
+  FirebaseStorage: 5603c913805b0eacc8e6853395e837ca5742e5f7
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
-  flutter_sound: b9236a5875299aaa4cef1690afd2f01d52a3f890
-  flutter_sound_core: 427465f72d07ab8c3edbe8ffdde709ddacd3763c
+  flutter_timezone: 7c838e17ffd4645d261e87037e5bebf6d38fe544
   Giphy: 83628960ed04e1c3428ff1b4fb2b027f65e82f50
-  GoogleAppMeasurement: 36684bfb3ee034e2b42b4321eb19da3a1b81e65d
-  GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
-  GTMSessionFetcher: 75b671f9e551e4c49153d4c4f8659ef4f559b970
+  GoogleAdsOnDeviceConversion: 2be6297a4f048459e0ae17fad9bfd2844e10cf64
+  GoogleAppMeasurement: 8f6ab04ad6ae493b53fcf56bd26323fb2f1384f3
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
+  GTMSessionFetcher: 02d6e866e90bc236f48a703a041dfe43e6221a29
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
-  jitsi_meet_flutter_sdk: fddce7036a8893f5cef6dbda0323b72aaad151dc
+  jitsi_meet_flutter_sdk: f1d95887e14debb3ff92b748b9752d2d8ab51125
   JitsiWebRTC: b47805ab5668be38e7ee60e2258f49badfe8e1d0
   just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   just_waveform: be2cb6dec86096cb972bf8b73c893fe16bf1cff4
   KeychainSwift: 0ce6a4d13f7228054d1a71bb1b500448fb2ab837
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  onesignal_flutter: 6596144e1f08756a2c402047366c867a62b0f6f1
-  OneSignalXCFramework: 1a3b28dfbff23aabce585796d23c1bef37772774
+  onesignal_flutter: 3a2b51f9262c851166a882a553d71a8ccec4e29c
+  OneSignalXCFramework: 7112f3e89563e41ebc23fe807788f11985ac541c
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
-  record_ios: fee1c924aa4879b882ebca2b4bce6011bcfc3d8b
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   sqflite: c35dad70033b8862124f8337cc994a809fcd9fa3
-  TorusSessionManager: 05a1a8f3265d0949a1a342c4ba2c52882445b614
+  TorusSessionManager: 3c47c2a4c4d6173a10006eb0af4b86317ee45ff8
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
-  Web3Auth: 086b5152a43df347ceff196c0ce67f6330838884
-  web3auth_flutter: 116f2ab45c531c86128359e80616b0ef34dc6ff2
+  video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
+  Web3Auth: fa82260fa6dacdcf647b333d85a923530d045051
+  web3auth_flutter: ecf03bfbcb9ebf1ed8edb24642b5dac6d6b6a980
   webview_flutter_wkwebview: 44d4dee7d7056d5ad185d25b38404436d56c547c
 
-PODFILE CHECKSUM: 6a547c5c55bc651a47a9827502a6ed407c4226d4
+PODFILE CHECKSUM: bcd8c7c46a02cba662a118ffa8082f6f90570367
 
 COCOAPODS: 1.16.2

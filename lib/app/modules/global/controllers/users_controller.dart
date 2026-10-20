@@ -7,7 +7,7 @@ import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/profile/controllers/profile_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/users/follow_unfollow_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
@@ -15,12 +15,12 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 
 class UsersController extends GetxController {
+  final _userRepository = Get.find<UserRepository>();
   final globalController = Get.find<GlobalController>();
   // current user is set by listening to global controller's currentUserInfo
   final currentUserInfo = Rxn<UserModel>();
   final OutpostsController groupsController = Get.find<OutpostsController>();
-  // final users = Map<String, UserInfoModel>();
-  final followingsInProgress = Map<String, String>().obs;
+  final followingsInProgress = <String, String>{}.obs;
   final gettingUserInfo_uuid = ''.obs;
   @override
   void onInit() {
@@ -31,18 +31,8 @@ class UsersController extends GetxController {
     });
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
   Future<UserModel?> getUserById(String id) async {
-    final users = await HttpApis.podium.getUsersByIds([id]);
+    final users = await _userRepository.getUsersByIds([id]);
     if (users.isNotEmpty) {
       return users[0];
     }
@@ -52,10 +42,10 @@ class UsersController extends GetxController {
   Future<bool> followUnfollow(String id, bool startFollowing) async {
     followingsInProgress[id] = id;
     followingsInProgress.refresh();
-    final user = await HttpApis.podium.getUserData(id);
+    final user = await _userRepository.getUserData(id);
     if (user != null) {
       try {
-        final success = await HttpApis.podium.followUnfollow(
+        final success = await _userRepository.followUnfollow(
           id,
           startFollowing
               ? FollowUnfollowAction.follow
@@ -72,7 +62,6 @@ class UsersController extends GetxController {
         return true;
       } catch (e) {
         Toast.error(
-          title: 'Error',
           message: 'Error ${startFollowing ? "" : "un"}following user',
         );
         return false;
@@ -85,6 +74,7 @@ class UsersController extends GetxController {
   }
 
   Future<void> openUserProfile(String userId) async {
+    if (gettingUserInfo_uuid.value.isNotEmpty) return;
     try {
       final isMyUser = userId == myId;
       if (isMyUser) {
@@ -96,7 +86,7 @@ class UsersController extends GetxController {
       }
 
       gettingUserInfo_uuid.value = userId;
-      final user = await HttpApis.podium.getUserData(userId);
+      final user = await _userRepository.getUserData(userId);
       if (user != null) {
         Navigate.to(
           type: NavigationTypes.toNamed,

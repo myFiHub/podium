@@ -5,7 +5,7 @@ part 'addGuest.g.dart';
 @JsonSerializable()
 class AddGuestModel {
   final String email;
-    String? name;
+  String? name;
   AddGuestModel({
     required this.email,
     this.name,

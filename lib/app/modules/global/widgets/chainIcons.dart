@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
@@ -22,11 +23,7 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
       String externalChainNetworkIcon = '';
       if (externalChain != null) {
         final externalChain = chainInfoByChainId(externalWalletChainId);
-        externalChainNetworkIcon =
-            externalChain.chainIcon ?? Assets.images.movementLogo.path;
-      }
-      if (externalChainNetworkIcon == '') {
-        externalChainNetworkIcon = movementEVMChain.chainIcon ?? '';
+        externalChainNetworkIcon = externalChain.chainIcon ?? '';
       }
       if (connectedExternalWalletAddress == '' || externalChain == null) {
         return const SizedBox();
@@ -34,14 +31,19 @@ class ExternalWalletChainIcon extends GetWidget<GlobalController> {
       return Tooltip(
         message: externalChain.name,
         preferBelow: false,
-        child: Container(
+        child: SizedBox(
           height: size.toDouble(),
-          child: externalChainNetworkIcon == ''
-              ? Assets.images.movementLogo.svg(
+          child: externalChainNetworkIcon == '' ||
+                  externalChainNetworkIcon == movementIcon
+              ? Assets.images.movementIcon.image(
                   width: size.toDouble(),
                   height: size.toDouble(),
                 )
-              : Image.network(externalChainNetworkIcon),
+              : CachedNetworkImage(
+                  imageUrl: externalChainNetworkIcon,
+                  height: size.toDouble(),
+                  memCacheHeight: size * 3,
+                ),
         ),
       );
     });

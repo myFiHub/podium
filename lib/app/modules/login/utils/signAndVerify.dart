@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:eth_sig_util/eth_sig_util.dart';
+import 'package:web3dart/web3dart.dart';
 
-String? signMessage(String privateKey, String message) {
+/// signer is the public key of the signer or the private key of the signer
+String? signMessage(String signer, String message) {
   try {
     final signature = EthSigUtil.signPersonalMessage(
       message: utf8.encode(message),
-      privateKey: privateKey,
+      privateKey: signer,
     );
     return signature;
   } catch (e) {
@@ -14,14 +16,38 @@ String? signMessage(String privateKey, String message) {
   }
 }
 
-bool verifySignature(String signature, String message, String address) {
+(String signature, int timestampInSeconds) signMessageWithTimestamp(
+    String signer, String message) {
+  final timestampInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  final signature = signMessage(signer, '$message-$timestampInSeconds');
+  return (signature!, timestampInSeconds);
+}
+
+bool verifySignatureWithTimestamp({
+  required String signature,
+  required String message,
+  required String signer,
+  required int timestamp,
+}) {
+  final messageWithTimestamp = '$message-$timestamp';
+  return verifySignature(signature, messageWithTimestamp, signer);
+}
+
+/// signer is the public key of the signer or the private key of the signer
+bool verifySignature(String signature, String message, String signer) {
   try {
-    final senderAddress = EthSigUtil.recoverPersonalSignature(
+    final retreivedSigner = EthSigUtil.recoverPersonalSignature(
       message: utf8.encode(message),
       signature: signature,
     );
-    return senderAddress == address;
+    return retreivedSigner == signer;
   } catch (e) {
     return false;
   }
+}
+
+String privateKeyToPublicKey(String privateKey) {
+  final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
+  final publicAddress = ethereumKeyPair.address.hex;
+  return publicAddress;
 }

@@ -13,24 +13,28 @@ import 'package:podium/app/modules/login/controllers/login_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/app/services/image_service.dart';
 import 'package:podium/customLibs/omniDatePicker/omni_datetime_picker.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/luma/models/eventModel.dart';
 import 'package:podium/providers/api/luma/models/guest.dart';
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 final _deb = Debouncing(duration: const Duration(seconds: 1));
 
 class JoinButtonProps {
-  final bool enabled;
-  final String text;
+  bool enabled;
+  String text;
   JoinButtonProps({required this.enabled, required this.text});
 }
 
@@ -43,15 +47,16 @@ class GroupDetailsParametersKeys {
 }
 
 class OutpostDetailController extends GetxController {
+  final _outpostRepository = Get.find<OutpostRepository>();
+  final _userRepository = Get.find<UserRepository>();
   final groupsController = Get.find<OutpostsController>();
   final GlobalController globalController = Get.find<GlobalController>();
   final isGettingMembers = false.obs;
-  final forceUpdateIndicator = false.obs;
   final outpost = Rxn<OutpostModel>();
-  final outpostAccesses = Rxn<GroupAccesses>();
+  final outpostAccesses = Rxn<OutpostAccesses>();
   final membersList = Rx<List<LiveMember>>([]);
-  final reminderTime = Rx<DateTime?>(null);
   final isGettingGroupInfo = false.obs;
+  final isSettingReminder = false.obs;
   final jointButtonContentProps =
       Rx<JoinButtonProps>(JoinButtonProps(enabled: false, text: 'Join'));
   bool gotOutpostInfo = false;
@@ -67,18 +72,14 @@ class OutpostDetailController extends GetxController {
   late bool shouldOpenJitsiAfterJoining;
 
   //luma event
-  final lumaEventDetails = Rxn<Luma_EventModel?>(null);
+  final lumaEventDetails = Rxn<LumaEventModel?>(null);
   final isGettingLumaEventDetails = false.obs;
   final isGettingLumaEventGuests = false.obs;
   final lumaEventGuests = Rx<List<GuestDataModel>>([]);
-  final lumaHosts = Rx<List<Luma_HostModel>>([]);
+  final lumaHosts = Rx<List<LumaHostModel>>([]);
 
-// image
-  // final ImagePicker _picker = ImagePicker();
-  // final RxBool isUploadingImage = false.obs;
-  // File? selectedFile;
-  // final RxString fileLocalAddress = ''.obs;
-
+  final isJoining = false.obs;
+  final isLoadingCohosts = false.obs;
   // Inject ImageService
   final OutpostImageService imageService = Get.find();
 
@@ -110,16 +111,17 @@ class OutpostDetailController extends GetxController {
 
     final outpostInfo = OutpostModel.fromJson(jsonDecode(stringedOutpostInfo));
     membersList.value = outpostInfo.members ?? [];
-    outpostAccesses.value = GroupAccesses(
+    outpostAccesses.value = OutpostAccesses(
       canEnter: enterAccess == 'true',
       canSpeak: speakAccess == 'true',
     );
-    // final remoteGroup = await getGroupInfoById(groupId);
     outpost.value = outpostInfo;
     gotOutpostInfo = true;
-    fetchInvitedMembers();
+    // outpostInfo was just fetched by joinOutpostAndOpenOutpostDetailPage.
+    _setInvitedMembers(outpostInfo.invites);
     scheduleChecks();
     _getLumaData();
+    loadCohostsData();
 
     tickerListener = globalController.ticker.listen((event) {
       if (outpost.value != null) {
@@ -155,12 +157,103 @@ class OutpostDetailController extends GetxController {
     super.onClose();
   }
 
-  // Remove pickImage method
-  /*
-  pickImage() async {
-    // ... existing implementation ...
+  Future<void> setReminderForOutpost() async {
+    if (isSettingReminder.value) return;
+    isSettingReminder.value = true;
+    final outpostData = outpost.value;
+    if (outpostData == null) return;
+    await setReminder(
+      uuid: outpostData.uuid,
+      scheduledFor: outpostData.scheduled_for,
+    );
+    isSettingReminder.value = false;
   }
-  */
+
+  Future<void> openRescheduleOutpostDialog() async {
+    final scheduledTime = outpost.value?.scheduled_for;
+    if (scheduledTime == null) return;
+
+    final hasTimePassed = scheduledTime < DateTime.now().millisecondsSinceEpoch;
+    if (hasTimePassed) {
+      final numberOfOnlineUsersInOutpost = await _outpostRepository
+          .getNumberOfOnlineMembers(outpost.value!.uuid);
+      if (numberOfOnlineUsersInOutpost > 0) {
+        Toast.error(message: 'The outpost is not empty');
+        return;
+      }
+    }
+
+    final sure = await showAppConfirm(
+      destructive: true,
+      title: 'Reschedule The Outpost',
+      richMessage: TextSpan(
+        children: [
+          TextSpan(
+            text: 'Are you sure you want to reschedule the outpost?\n\n',
+            style: TextStyle(
+              color: ColorName.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              height: 1.5,
+            ),
+          ),
+          TextSpan(
+            text: '⚠️ Important: ',
+            style: TextStyle(
+              color: ColorName.warning,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.5,
+            ),
+          ),
+          TextSpan(
+            text: 'The outpost will be rescheduled to the new time.\n\n',
+            style: TextStyle(
+              color: ColorName.white,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          TextSpan(
+            text: 'All existing members will be notified of this change.',
+            style: TextStyle(
+              color: ColorName.primaryBlue,
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (sure) {
+      DateTime? dateTime = await showOmniDateTimePicker(
+        context: Get.context!,
+        is24HourMode: true,
+        theme: ThemeData.dark(),
+        type: OmniDateTimePickerType.dateAndTime,
+        firstDate: DateTime.now().add(const Duration(minutes: 5)),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+        minutesInterval: 5,
+      );
+      if (dateTime != null) {
+        final newTime = dateTime.millisecondsSinceEpoch;
+        final res = await _outpostRepository.updateOutpost(
+          request: UpdateOutpostRequest(
+            uuid: outpost.value!.uuid,
+            scheduled_for: newTime,
+          ),
+        );
+        if (res) {
+          outpost.value = outpost.value!.copyWith.scheduled_for(newTime);
+          final outpostsController = Get.find<OutpostsController>();
+          outpostsController.updateOutpost_local(outpost.value!);
+          Toast.success(message: 'Outpost rescheduled');
+        }
+      }
+    }
+  }
 
   // Add updateOutpostImage method
   Future<void> updateOutpostImage(String downloadUrl) async {
@@ -168,19 +261,50 @@ class OutpostDetailController extends GetxController {
     outpost.value = outpost.value?.copyWith.image(downloadUrl);
   }
 
-  onCreatorJoined(IncomingMessage incomingMessage) {
+  // Add updateCohosts method
+  Future<void> updateCohosts(List<String> cohostUuids) async {
+    if (outpost.value == null) return;
+
+    try {
+      final success = await _outpostRepository.updateOutpost(
+        request: UpdateOutpostRequest(
+          uuid: outpost.value!.uuid,
+          cohost_user_uuids:
+              cohostUuids.where((element) => element != myId).toList(),
+        ),
+      );
+
+      if (success) {
+        outpost.value = outpost.value?.copyWith.cohost_user_uuids(cohostUuids);
+        final outpostsController = Get.find<OutpostsController>();
+        outpostsController.updateOutpost_local(outpost.value!);
+        Toast.success(message: 'Cohosts updated successfully');
+      } else {
+        Toast.error(message: 'Failed to update cohosts');
+      }
+    } catch (e) {
+      l.e(e);
+      Toast.error(message: 'Failed to update cohosts');
+    }
+  }
+
+  // Load cohosts data when outpost is first loaded
+  /// Cohost details load in the CohostsSearchBottomSheet; nothing to wait for.
+  Future<void> loadCohostsData() async {
+    isLoadingCohosts.value = false;
+  }
+
+  void onCreatorJoined(IncomingMessage incomingMessage) {
     final outpostData = outpost.value;
     if (incomingMessage.data.outpost_uuid != null &&
         incomingMessage.data.outpost_uuid == outpostData?.uuid) {
-      outpost.value = outpostData?.copyWith(
-        creator_joined: true,
-      );
+      outpost.value = outpostData?.copyWith.creator_joined(true);
       outpost.refresh();
       scheduleChecks();
     }
   }
 
-  updatedFollowDataForMember(String uuid) async {
+  Future<void> updatedFollowDataForMember(String uuid) async {
     final userIndex =
         membersList.value.indexWhere((element) => element.uuid == uuid);
     if (userIndex != -1) {
@@ -195,7 +319,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  onMembersUpdated(IncomingMessage incomingMessage) {
+  void onMembersUpdated(IncomingMessage incomingMessage) {
     final outpostData = outpost.value;
     if (incomingMessage.data.outpost_uuid != null &&
         incomingMessage.data.outpost_uuid == outpostData?.uuid) {
@@ -203,7 +327,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  _getLumaData() async {
+  Future<void> _getLumaData() async {
     if (outpost.value == null) return;
     if (outpost.value!.luma_event_id == null) return;
     try {
@@ -232,11 +356,7 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  void forceUpdate() {
-    forceUpdateIndicator.value = !forceUpdateIndicator.value;
-  }
-
-  reselectScheduleTime() async {
+  Future<void> reselectScheduleTime() async {
     DateTime? dateTime = await showOmniDateTimePicker(
       context: Get.context!,
       is24HourMode: true,
@@ -249,7 +369,7 @@ class OutpostDetailController extends GetxController {
     l.i(dateTime);
   }
 
-  scheduleChecks() async {
+  Future<void> scheduleChecks() async {
     final outpostData = outpost.value;
     if (outpostData == null) return;
     final amICreator = outpostData.creator_user_uuid == myId;
@@ -270,10 +390,6 @@ class OutpostDetailController extends GetxController {
               JoinButtonProps(enabled: false, text: 'Waiting for creator');
         }
       } else {
-        final reminderT = await getReminderTime(outpostData.alarm_id);
-        if (reminderT != null) {
-          reminderTime.value = reminderT;
-        }
         if (amICreator) {
           jointButtonContentProps.value =
               JoinButtonProps(enabled: true, text: 'Enter the Outpost');
@@ -296,62 +412,85 @@ class OutpostDetailController extends GetxController {
     }
   }
 
-  fetchInvitedMembers() async {
+  Future<void> fetchInvitedMembers() async {
     if (outpost.value == null) return;
-    final res = await HttpApis.podium.getOutpost(outpost.value!.uuid);
+    final res = await _outpostRepository.getOutpost(outpost.value!.uuid);
     if (res == null) return;
+    _setInvitedMembers(res.invites);
+  }
+
+  void _setInvitedMembers(List<InviteModel>? invites) {
     Map<String, InviteModel> map = {};
-    (res.invites ?? []).forEach((value) {
+    for (var value in (invites ?? [])) {
       map[value.invitee_uuid] = value;
-    });
+    }
 
     liveInvitedMembers.value = map;
   }
 
-  getOutpostInfo({required String id}) async {
+  Future<void> getOutpostInfo({required String id}) async {
     if (isGettingGroupInfo.value) return;
     isGettingGroupInfo.value = true;
-    final globalController = Get.find<GlobalController>();
     final groupsController = Get.find<OutpostsController>();
     if (globalController.loggedIn.value) {
       groupsController.joinOutpostAndOpenOutpostDetailPage(
         outpostId: id,
+        joiningByLink: true,
       );
     } else {
       Get.offAllNamed(Routes.LOGIN);
-      final loginController = Get.put(LoginController());
+      final loginController = Get.isRegistered<LoginController>()
+          ? Get.find<LoginController>()
+          : Get.put(LoginController());
       loginController.afterLogin = () {
         groupsController.joinOutpostAndOpenOutpostDetailPage(
           outpostId: id,
+          joiningByLink: true,
         );
       };
     }
     isGettingGroupInfo.value = false;
   }
 
-  refetchMembers() async {
+  Future<void> refetchMembers() async {
     final data = outpost.value;
     if (data == null) return;
-    final outpostData = await HttpApis.podium.getOutpost(data.uuid);
+    final outpostData = await _outpostRepository.getOutpost(data.uuid);
     if (outpostData == null) return;
     membersList.value = outpostData.members ?? [];
   }
 
-  startTheCall({required GroupAccesses accesses}) {
-    final groupCallController = Get.find<OutpostCallController>();
-    groupCallController.startCall(
-      outpostToJoin: outpost.value!,
-      accessOverRides: accesses,
-    );
+  Future<void> startTheCall({required OutpostAccesses accesses}) async {
+    if (isJoining.value) return;
+
+    final isWsConnected = wsClient.connected;
+    if (!isWsConnected) {
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess) {
+        Toast.error(message: "Please check your connection. or reopen the app");
+        return;
+      }
+    }
+
+    isJoining.value = true;
+    try {
+      final groupCallController = Get.find<OutpostCallController>();
+      await groupCallController.startCall(
+        outpostToJoin: outpost.value!,
+        accessOverRides: accesses,
+      );
+    } finally {
+      isJoining.value = false;
+    }
   }
 
-  searchUsers(String value) async {
+  Future<void> searchUsers(String value) async {
     _deb.debounce(() async {
       if (value.isEmpty) {
         listOfSearchedUsersToInvite.value = [];
         return;
       }
-      final users = await HttpApis.podium.searchUserByName(name: value);
+      final users = await _userRepository.searchUserByName(name: value);
       if (value.isEmpty) {
         membersList.value = [];
       } else {
@@ -362,11 +501,6 @@ class OutpostDetailController extends GetxController {
                 .map((e) => e.uuid)
                 .contains(element.uuid))
             .toList();
-        // // remove the users that are already invited
-        // final filteredList2 = filteredList
-        //     .where(
-        //         (element) => !liveInvitedMemberIds.value.contains(element.id))
-        //     .toList();
         // remove my user from the list
         final filteredList3 =
             filteredList.where((element) => element.uuid != myId).toList();
@@ -375,7 +509,7 @@ class OutpostDetailController extends GetxController {
     });
   }
 
-  inviteUserToJoinThisOutpost(
+  Future<void> inviteUserToJoinThisOutpost(
       {required String userId, required bool inviteToSpeak}) async {
     if (outpost.value == null) return;
     if (loadingInviteId.value == userId + inviteToSpeak.toString()) return;
@@ -386,7 +520,7 @@ class OutpostDetailController extends GetxController {
         invitee_user_uuid: userId,
         outpost_uuid: outpost.value!.uuid,
       );
-      final success = await HttpApis.podium.inviteUserToJoinOutpost(request);
+      final success = await _outpostRepository.inviteUserToJoinOutpost(request);
       if (success) {
         Toast.success(message: 'Invite sent');
         final newMap = {

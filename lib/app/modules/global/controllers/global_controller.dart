@@ -1,39 +1,42 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:alarm/alarm.dart';
 import 'package:aptos/aptos.dart';
+import 'package:dartx/dartx_io.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:podium/app/modules/global/controllers/oneSignal_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/firebase.dart';
-import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
-import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
+import 'package:podium/app/modules/global/services/app_version_checker.dart';
+import 'package:podium/app/modules/global/services/connectivity_service.dart';
+import 'package:podium/app/modules/global/services/deep_links.dart';
+import 'package:podium/app/modules/global/services/oneSignal.dart';
 import 'package:podium/app/modules/global/utils/web3auth_utils.dart';
+import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/login/controllers/login_controller.dart';
-import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
+import 'package:podium/app/modules/login/utils/signAndVerify.dart';
+import 'package:podium/app/modules/myProfile/controllers/my_profile_controller.dart';
+import 'package:podium/app/modules/notifications/controllers/notifications_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
-import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
+import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
+import 'package:podium/providers/api/podium/models/users/connect_new_account_request.dart';
 import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
-import 'package:podium/services/websocket/client.dart';
+import 'package:podium/services/websocket/websocket_service.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/constants.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:reown_appkit/reown_appkit.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
+import 'package:web3auth_flutter/output.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 PairingMetadata _pairingMetadata = const PairingMetadata(
@@ -48,22 +51,17 @@ PairingMetadata _pairingMetadata = const PairingMetadata(
   ),
 );
 
-final _checkOptions = [
-  // InternetCheckOption(uri: Uri.parse('https://one.one.one.one')),
-  // InternetCheckOption(uri: Uri.parse('https://api.web3modal.com')),
-  // InternetCheckOption(uri: Uri.parse('https://8.8.8.8'))
-  InternetCheckOption(uri: Uri.parse(Env.jitsiServerUrl)),
-];
-
 class GlobalUpdateIds {
   static const showArchivedOutposts = 'showArchivedOutposts';
   static const ticker = 'ticker';
 }
 
 class GlobalController extends GetxController {
+  final _authRepository = Get.find<AuthRepository>();
+  final _userRepository = Get.find<UserRepository>();
   static final storage = GetStorage();
-  final oneSignalController =
-      Get.put<OneSignalController>(OneSignalController());
+  final oneSignalService =
+      Get.put<OneSignalService>(OneSignalService(), permanent: true);
 
   final appLifecycleState = Rx<AppLifecycleState>(AppLifecycleState.resumed);
   final w3serviceInitialized = false.obs;
@@ -73,14 +71,22 @@ class GlobalController extends GetxController {
   final myUserInfo = Rxn<UserModel>();
   final activeRoute = AppPages.INITIAL.obs;
   final isAutoLoggingIn = true.obs;
-  final isConnectedToInternet = true.obs;
+  late final connectivity = ConnectivityService(
+    onConnected: _onInternetConnected,
+    onResumed: () => ws_client?.ensureConnected(),
+  );
+  RxBool get isConnectedToInternet => connectivity.isConnected;
   late ReownAppKitModal web3ModalService;
   AptosAccount? aptosAccount;
   final loggedIn = false.obs;
+  final addingOrSwitchingAccount_provider = Rxn<Provider>();
+
   final initializedOnce = false.obs;
   final isLoggingOut = false.obs;
-  final isFirebaseInitialized = false.obs;
+  bool isFirebaseInitialized = false;
   final ticker = 0.obs;
+  Future<void> web3AuthReady = Future.value();
+  Timer? _tickerTimer;
   final showArchivedOutposts =
       RxBool(storage.read(StorageKeys.showArchivedOutposts) ?? true);
   late PodiumAppMetadata appMetadata;
@@ -88,7 +94,11 @@ class GlobalController extends GetxController {
   late String movementAptosPodiumProtocolAddress;
   late String movementAptosCheerBooAddress;
 
-  final deepLinkRoute = ''.obs;
+  late final deepLinks = DeepLinkHandler(
+    isLoggedIn: () => loggedIn.value,
+    logout: () => setLoggedIn(false),
+  );
+  RxString get deepLinkRoute => deepLinks.route;
 
   final externalWalletChainId = RxString(
       (storage.read(StorageKeys.externalWalletChainId) ??
@@ -104,20 +114,19 @@ class GlobalController extends GetxController {
     return chain;
   }
 
-  final connectionCheckerInstance = InternetConnection.createInstance(
-    checkInterval: const Duration(seconds: 5),
-    customCheckOptions: _checkOptions,
-    useDefaultOptions: false,
-  );
-
   @override
   void onInit() async {
     super.onInit();
     // add movement chain to w3m chains, this should be the first thing to do, since it's needed all through app
 
+    // Takes seconds (network session restore). Only a saved login must wait for
+    // it here; socialLogin awaits web3AuthReady itself.
+    web3AuthReady = initializeWeb3Auth().catchError((e) {
+      l.e("error initializing Web3Auth $e");
+    });
+    final internetCheck = connectivity.hasInternetAccess();
     try {
       await Future.wait<void>([
-        initializeWeb3Auth(),
         _getAndSetMetadata(),
         FirebaseInit.init(),
       ]);
@@ -127,37 +136,37 @@ class GlobalController extends GetxController {
     await _addCustomNetworks();
 
     startTicker();
-    isFirebaseInitialized.value = true;
-    final res = await analytics.getSessionId();
-
-    l.d('analytics session id: $res');
-    bool result = await connectionCheckerInstance.hasInternetAccess;
-    l.d("has internet access: $result");
-    if (result) {
-      initializeApp();
-    } else {
-      l.e("one of the main apis can't be reached: ${_checkOptions.map((e) => e.uri)}");
+    isFirebaseInitialized = true;
+    analytics
+        .getSessionId()
+        .then((id) => l.d('analytics session id: $id'))
+        .catchError((e) => l.e('analytics session id unavailable: $e'));
+    if (storage.read<String?>(StorageKeys.loginType) != null) {
+      await web3AuthReady;
     }
-    initializeInternetConnectionChecker();
-  }
-
-  @override
-  void onReady() async {
-    super.onReady();
+    final reachable = await internetCheck;
+    l.d("has internet access: $reachable");
+    if (reachable) {
+      initializeApp();
+    }
+    connectivity.start(appLifecycleState);
   }
 
   @override
   void onClose() {
+    _tickerTimer?.cancel();
+    connectivity.dispose();
+    _walletAddressSubscription?.cancel();
     super.onClose();
   }
 
-  _getAndSetMetadata() async {
-    final metadata = await HttpApis.podium.appMetadata();
+  Future<void> _getAndSetMetadata() async {
+    final metadata = await _authRepository.appMetadata();
     appMetadata = metadata;
     jitsiServerAddress = appMetadata.va;
   }
 
-  _addCustomNetworks() async {
+  Future<void> _addCustomNetworks() async {
     final movementAptosMetadata = appMetadata.movement_aptos_metadata;
     movementAptosNetwork = ReownAppKitModalNetworkInfo(
       name: movementAptosMetadata.name,
@@ -192,14 +201,18 @@ class GlobalController extends GetxController {
     checkLogin();
     initializeW3MService();
     listenToWalletAddressChange();
-    Alarm.init();
     initializedOnce.value = true;
   }
 
   void startTicker() {
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    _tickerTimer?.cancel();
+    _tickerTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       ticker.value++;
-      update([GlobalUpdateIds.ticker]);
+      // Countdowns read the clock when built, so skipping UI updates while
+      // backgrounded loses nothing.
+      if (appLifecycleState.value == AppLifecycleState.resumed) {
+        update([GlobalUpdateIds.ticker]);
+      }
     });
   }
 
@@ -253,18 +266,12 @@ class GlobalController extends GetxController {
     // Initialize the Web3AuthFlutter instance.
     await Web3AuthFlutter.init(
       Web3AuthOptions(
-        clientId:
-            //
-            // "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ",
-            Env.web3AuthClientId,
+        clientId: Env.web3AuthClientId,
         sessionTime: 60 * 60 * 24 * 7,
         network: Network.sapphire_mainnet,
         redirectUrl: resolveRedirectUrl(),
         whiteLabel: WhiteLabelData(
-          appName:
-              //
-              // "Web3Auth Flutter Playground",
-              "Podium",
+          appName: "Podium",
           mode: ThemeModes.dark,
         ),
       ),
@@ -277,29 +284,12 @@ class GlobalController extends GetxController {
     l.i('\$\$\$\$\$\$\$\$\$\$\$ Web3AuthFlutter initialized');
   }
 
-  Future<void> initializeInternetConnectionChecker() async {
-    connectionCheckerInstance.onStatusChange
-        .listen((InternetStatus status) async {
-      switch (status) {
-        case InternetStatus.connected:
-          isConnectedToInternet.value = true;
-          l.i("Internet connected");
-          final versionResolved = await checkVersion();
-          if (versionResolved && !initializedOnce.value) {
-            await initializeApp();
-          }
-
-          break;
-        case InternetStatus.disconnected:
-          l.f("Internet disconnected");
-          isConnectedToInternet.value = false;
-          break;
-      }
-    });
-  }
+  StreamSubscription<String>? _walletAddressSubscription;
 
   Future<void> listenToWalletAddressChange() async {
-    connectedWalletAddress.listen((newAddress) async {
+    if (_walletAddressSubscription != null) return;
+    _walletAddressSubscription =
+        connectedWalletAddress.listen((newAddress) async {
       // ignore: unnecessary_null_comparison
       if (newAddress != '' && myUserInfo.value != null) {
         _saveExternalWalletAddress(newAddress);
@@ -318,69 +308,23 @@ class GlobalController extends GetxController {
     }
   }
 
-  saveUserWalletAddressOnFirebase(String walletAddress) async {
-    await HttpApis.podium.updateMyUserData({
+  Future<void> saveUserWalletAddressOnFirebase(String walletAddress) async {
+    await _userRepository.updateMyUserData({
       "external_wallet_address": walletAddress,
     });
     l.d("new wallet address SAVED $walletAddress");
     return;
   }
 
-  Future<void> openDeepLinkOutpost(String route) async {
-    if (route.contains(Routes.OUTPOST_DETAIL)) {
-      Navigate.to(
-        type: NavigationTypes.offAllNamed,
-        route: Routes.HOME,
-      );
-      final splited = route.split(Routes.OUTPOST_DETAIL);
-      if (splited.length < 2) {
-        l.f("splited: $splited");
-        return;
-      }
-      final outpostId = splited[1];
-      final outpostsController = Get.put(OutpostsController());
-      Get.put(OutpostDetailController());
-      outpostsController.joinOutpostAndOpenOutpostDetailPage(
-        outpostId: outpostId,
-        joiningByLink: true,
-      );
-      deepLinkRoute.value = '';
+  void setDeepLinkRoute(String route) => deepLinks.handle(route);
 
-      activeRoute.value = Routes.HOME;
-    }
+  Future<void> _onInternetConnected() async {
+    ws_client?.ensureConnected();
+    AppVersionChecker().check(appMetadata);
+    if (!initializedOnce.value) await initializeApp();
   }
 
-  Future<void> setDeepLinkRoute(String route) async {
-    deepLinkRoute.value = route;
-    if (loggedIn.value) {
-      l.e("logged in, opening deep link $route");
-      if (route.contains(Routes.OUTPOST_DETAIL)) {
-        openDeepLinkOutpost(route);
-      } else {
-        l.e("deep link not handled");
-      }
-    } else if (route.contains('referral')) {
-      openLoginPageWithReferral(route);
-    }
-  }
-
-  Future<void> openLoginPageWithReferral(String route) async {
-    l.f("opening login page with referral");
-    final referrerId = _extractReferrerId(route);
-    if (loggedIn.value) {
-      setLoggedIn(false);
-      return;
-    }
-    Navigate.to(
-      type: NavigationTypes.offAllNamed,
-      route: Routes.LOGIN,
-      parameters: {
-        LoginParametersKeys.referrerId: referrerId ?? '',
-      },
-    );
-  }
-
-  cleanStorage() {
+  void cleanStorage() {
     final storage = GetStorage();
     final sawProfileIntro =
         storage.read<bool?>(IntroStorageKeys.viewedMyProfile);
@@ -398,80 +342,7 @@ class GlobalController extends GetxController {
     storage.write(IntroStorageKeys.viewedOngiongCall, sawOngoingCallIntro);
   }
 
-  Future<bool> checkVersion() async {
-    final storage = GetStorage();
-    final ignoredOrAcceptedVersion =
-        storage.read<String>(StorageKeys.ignoredOrAcceptedVersion) ?? '';
-
-    final (
-      shouldCheckVersion,
-      forcetToUpdate,
-      version,
-    ) = (
-      appMetadata.version_check,
-      appMetadata.force_update,
-      appMetadata.version
-    );
-
-    if (shouldCheckVersion == false) {
-      l.d('version check disabled');
-      return true;
-    }
-    // listen to version changes
-
-    final currentVersion = Env.VERSION.split('+')[0];
-    final numberedLocalVersion = int.parse(currentVersion.replaceAll('.', ''));
-    final numberedRemoteVersion = int.parse(version.replaceAll('.', ''));
-    final isRemoteVersionGreater = numberedRemoteVersion > numberedLocalVersion;
-    if (version != currentVersion &&
-        ignoredOrAcceptedVersion != version &&
-        isRemoteVersionGreater) {
-      l.e('New version available');
-      Get.dialog(
-        barrierDismissible: false,
-        AlertDialog(
-          title: const Text('New version available'),
-          content: const Text('A new version of Podium is available',
-              style: TextStyle(color: ColorName.black)),
-          titleTextStyle: const TextStyle(
-            color: ColorName.black,
-          ),
-          actions: [
-            if (!forcetToUpdate)
-              TextButton(
-                onPressed: () {
-                  storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                  Get.backLegacy();
-                },
-                child: const Text(
-                  'Later',
-                  style: TextStyle(color: ColorName.black),
-                ),
-              ),
-            TextButton(
-              onPressed: () {
-                storage.write(StorageKeys.ignoredOrAcceptedVersion, version);
-                launchUrl(
-                  Uri.parse(
-                    Env.appStoreUrl,
-                  ),
-                );
-                SystemNavigator.pop();
-                exit(0);
-              },
-              child: const Text('Update'),
-            ),
-          ],
-        ),
-      );
-      return true;
-    } else {
-      l.d('version is up to date');
-      return true;
-    }
-  }
-
-  checkLogin() async {
+  Future<void> checkLogin() async {
     isAutoLoggingIn.value = true;
     try {
       final loginType = storage.read<String?>(StorageKeys.loginType);
@@ -479,7 +350,9 @@ class GlobalController extends GetxController {
         isAutoLoggingIn.value = false;
         return;
       }
-      final LoginController loginController = Get.put(LoginController());
+      final loginController = Get.isRegistered<LoginController>()
+          ? Get.find<LoginController>()
+          : Get.put(LoginController());
       await loginController.socialLogin(
         loginMethod: loginTypeStringToWeb3AuthProvider(loginType),
         ignoreIfNotLoggedIn: true,
@@ -494,7 +367,7 @@ class GlobalController extends GetxController {
     }
   }
 
-  void setLoggedIn(bool value) async {
+  Future<void> setLoggedIn(bool value) async {
     loggedIn.value = value;
     if (value == false) {
       l.f("logging out");
@@ -506,19 +379,26 @@ class GlobalController extends GetxController {
         },
       );
     } else {
-      oneSignalController.login(myUserInfo.value?.uuid ?? '');
-
       await Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.HOME,
       );
 
-      if (deepLinkRoute.value.isNotEmpty) {
-        final route = deepLinkRoute;
-        openDeepLinkOutpost(route.value);
-        return;
-      }
+      deepLinks.openPendingOutpost();
       isAutoLoggingIn.value = false;
+      await _initializeOneSignal(myUserId: myUserInfo.value?.uuid ?? '');
+    }
+  }
+
+  Future<void> _initializeOneSignal({required String myUserId}) async {
+    try {
+      await oneSignalService.initialize();
+      final initialized = oneSignalService.initialized;
+      if (initialized) {
+        await oneSignalService.login(myUserId);
+      }
+    } catch (e) {
+      l.e("error initializing oneSignal $e");
     }
   }
 
@@ -529,20 +409,10 @@ class GlobalController extends GetxController {
     return await ws_client?.connect(token) ?? false;
   }
 
-  String? _extractReferrerId(String route) {
-    final splited = route.split('referral');
-    if (splited.length < 2) {
-      l.f("splited: $splited");
-      return null;
-    }
-    return splited[1];
-  }
-
   Future<void> _logout() async {
     isLoggingOut.value = true;
     isAutoLoggingIn.value = false;
-    web3AuthAddress = '';
-    oneSignalController.dismiss();
+    oneSignalService.dismiss();
     try {
       await Web3AuthFlutter.logout();
     } catch (e) {
@@ -559,12 +429,7 @@ class GlobalController extends GetxController {
     }
     l.f('Navigating to login page');
 
-    final rerouteWithReferral =
-        deepLinkRoute.isNotEmpty && deepLinkRoute.contains('referral');
-    String referrerId = '';
-    if (rerouteWithReferral) {
-      referrerId = _extractReferrerId(deepLinkRoute.value) ?? '';
-    }
+    final referrerId = deepLinks.pendingReferrerId ?? '';
     Navigate.to(
         type: NavigationTypes.offAllNamed,
         route: Routes.LOGIN,
@@ -615,7 +480,6 @@ class GlobalController extends GetxController {
 
   Future<void> connectToWallet({void Function()? afterConnection}) async {
     try {
-      // web3ModalService.disconnect();
       await web3ModalService.init();
       await web3ModalService.openModalView();
       final address =
@@ -642,7 +506,7 @@ class GlobalController extends GetxController {
   }
 
   Future<void> disconnect() async {
-    final removed = await HttpApis.podium
+    final removed = await _userRepository
         .updateMyUserData({'external_wallet_address': null});
     if (removed != null) {
       try {
@@ -657,5 +521,151 @@ class GlobalController extends GetxController {
     analytics.logEvent(
       name: 'wallet_disconnected',
     );
+  }
+
+  Future<void> addOrSwitchAccount(Provider provider, {String? email}) async {
+    try {
+      final currentPrivateKey = await Web3AuthFlutter.getPrivKey();
+      final currentAccountAddress = privateKeyToPublicKey(currentPrivateKey);
+      addingOrSwitchingAccount_provider.value = provider;
+      if (provider == Provider.email_passwordless) {
+        email ??= await showDialogToGetTheEmail();
+        if (email.isNullOrEmpty) {
+          addingOrSwitchingAccount_provider.value = null;
+          return;
+        }
+      }
+      Web3AuthResponse? res;
+
+      if (email.isNotNullOrEmpty) {
+        res = await Web3AuthFlutter.login(
+          LoginParams(
+            loginProvider: provider,
+            mfaLevel: MFALevel.DEFAULT,
+            extraLoginOptions: ExtraLoginOptions(
+              login_hint: email,
+            ),
+          ),
+        );
+      } else {
+        res = await Web3AuthFlutter.login(
+          LoginParams(
+            loginProvider: provider,
+            mfaLevel: MFALevel.DEFAULT,
+          ),
+        );
+      }
+      if (res.ed25519PrivKey != null) {
+        final newAccountPrivateKey = await Web3AuthFlutter.getPrivKey();
+        final newAccountAddress = privateKeyToPublicKey(newAccountPrivateKey);
+
+        final accountAlreadyExists = myUserInfo.value!.accounts
+            .any((account) => account.address == newAccountAddress);
+
+        final currentAccountAddressSignedByNewAccount =
+            signMessage(newAccountPrivateKey, currentAccountAddress)!;
+        final newAccountAddressSignedByCurrentAccount =
+            signMessage(currentPrivateKey, newAccountAddress)!;
+
+        // aptos account
+        final generatedAptosAccount =
+            AptosAccount.fromPrivateKey(newAccountPrivateKey);
+        aptosAccount = generatedAptosAccount;
+        final newAccountAptosAddress = generatedAptosAccount.address;
+        final newAccountLoginType = web3AuthProviderToLoginTypeString(provider);
+        final newAccountImage = res.userInfo?.profileImage;
+        final request = ConnectNewAccountRequest(
+          aptos_address: newAccountAptosAddress,
+          current_address_signature: currentAccountAddressSignedByNewAccount,
+          image: newAccountImage ?? '',
+          login_type: newAccountLoginType,
+          login_type_identifier: res.userInfo?.verifierId ?? '',
+          new_address: newAccountAddress,
+          new_address_signature: newAccountAddressSignedByCurrentAccount,
+        );
+        final connected = await _authRepository.connectNewAccount(request);
+        if (connected) {
+          final (signature, timestamp) =
+              signMessageWithTimestamp(newAccountPrivateKey, newAccountAddress);
+
+          await _switchToAccount(
+            timestamp: timestamp,
+            newAddress: newAccountAddress,
+            newWeb3AuthUserInfo: res.userInfo!,
+            selfSignedNewWalletAddress: signature,
+            newAptosAddress: newAccountAptosAddress,
+            provider: provider,
+          );
+          Toast.success(
+            message:
+                'Account ${accountAlreadyExists ? 'switched' : 'connected'} successfully',
+          );
+        }
+      }
+    } on UserCancelledException catch (e) {
+      l.e(e);
+    } catch (e) {
+      l.e(e);
+    } finally {
+      addingOrSwitchingAccount_provider.value = null;
+    }
+  }
+
+  Future<UserModel?> _switchToAccount({
+    required TorusUserInfo newWeb3AuthUserInfo,
+    required String selfSignedNewWalletAddress,
+    required String newAptosAddress,
+    required String newAddress,
+    required Provider provider,
+    required int timestamp,
+  }) async {
+    await oneSignalService.dismiss();
+    web3ModalService.disconnect();
+    ws_client?.close();
+    ws_client = null;
+    final request = LoginRequest(
+      signature: selfSignedNewWalletAddress,
+      timestamp: timestamp,
+      username: newAddress,
+      aptos_address: newAptosAddress,
+      has_ticket: false,
+      login_type: web3AuthProviderToLoginTypeString(provider),
+      login_type_identifier: newWeb3AuthUserInfo.verifierId ?? '',
+      referrer_user_uuid: null,
+    );
+    final (loginResponse, error, statusCode) = await _authRepository.login(
+      request: request,
+      additionalData: AdditionalDataForLogin(),
+    );
+    if (loginResponse != null) {
+      myUserInfo.value = loginResponse;
+      await _initializeOneSignal(myUserId: loginResponse.uuid);
+      final callArray = <Future<void>>[];
+
+      final outpostsController = Get.find<OutpostsController>();
+      outpostsController.clearOutposts();
+      final isProfileRegistered = Get.isRegistered<MyProfileController>();
+
+      final isNotificationsRegistered =
+          Get.isRegistered<NotificationsController>();
+      if (isNotificationsRegistered) {
+        final notificationsController = Get.find<NotificationsController>();
+        notificationsController.notifications.clear();
+        notificationsController.numberOfUnreadNotifications.value = 0;
+        callArray.add(notificationsController.getNotifications());
+      }
+
+      if (isProfileRegistered) {
+        final myProfileController = Get.find<MyProfileController>();
+        callArray.add(myProfileController.getMyProfile());
+        callArray.add(myProfileController.getBalances());
+      }
+      await Future.wait<void>([
+        ...callArray,
+        outpostsController.fetchAllOutpostsPage(0),
+        outpostsController.fetchMyOutpostsPage(0)
+      ]);
+    }
+    return loginResponse;
   }
 }

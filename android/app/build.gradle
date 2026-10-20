@@ -16,32 +16,29 @@ plugins {
 
 android {
     namespace = "com.web3podium"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = "26.1.10909125"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
         coreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_17
+        freeCompilerArgs += [
+            "-Xjvm-default=all",
+            "-Xopt-in=kotlin.RequiresOptIn"
+        ]
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.web3podium"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
-        }
     }
     signingConfigs {
         release {
@@ -58,8 +55,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
         }
+        // React Native artifacts (via Jitsi) only publish debug/release variants.
+        profile {
+            matchingFallbacks = ['release']
+        }
     }
 }
+// Jitsi's react-native-video artifact bundles media3's RTSP classes, which clash with the module
+// video_player depends on. Replays only play local files, never RTSP streams.
+configurations.configureEach {
+    exclude group: 'androidx.media3', module: 'media3-exoplayer-rtsp'
+}
+
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
     implementation 'org.slf4j:slf4j-android:1.7.36'

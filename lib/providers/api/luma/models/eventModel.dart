@@ -3,41 +3,41 @@ import 'package:json_annotation/json_annotation.dart';
 part 'eventModel.g.dart';
 
 @JsonSerializable()
-class Luma_EventModel {
-  final Luma_EventDetailsModel event;
-  final List<Luma_HostModel> hosts;
+class LumaEventModel {
+  final LumaEventDetailsModel event;
+  final List<LumaHostModel> hosts;
 
-  Luma_EventModel({
+  LumaEventModel({
     required this.event,
     required this.hosts,
   });
 
-  factory Luma_EventModel.fromJson(Map<String, dynamic> json) =>
-      _$Luma_EventModelFromJson(json);
-  Map<String, dynamic> toJson() => _$Luma_EventModelToJson(this);
+  factory LumaEventModel.fromJson(Map<String, dynamic> json) =>
+      _$LumaEventModelFromJson(json);
+  Map<String, dynamic> toJson() => _$LumaEventModelToJson(this);
 }
 
 @JsonSerializable()
-class Luma_HostModel {
+class LumaHostModel {
   final String api_id;
   final String email;
   String name;
   final String avatar_url;
 
-  Luma_HostModel({
+  LumaHostModel({
     required this.api_id,
     required this.email,
     this.name = '',
     required this.avatar_url,
   });
 
-  factory Luma_HostModel.fromJson(Map<String, dynamic> json) =>
-      _$Luma_HostModelFromJson(json);
-  Map<String, dynamic> toJson() => _$Luma_HostModelToJson(this);
+  factory LumaHostModel.fromJson(Map<String, dynamic> json) =>
+      _$LumaHostModelFromJson(json);
+  Map<String, dynamic> toJson() => _$LumaHostModelToJson(this);
 }
 
 @JsonSerializable()
-class Luma_EventDetailsModel {
+class LumaEventDetailsModel {
   final String api_id;
   final String created_at;
   final String cover_url;
@@ -52,7 +52,7 @@ class Luma_EventDetailsModel {
   final String visibility;
   final String meeting_url;
 
-  Luma_EventDetailsModel({
+  LumaEventDetailsModel({
     required this.api_id,
     required this.created_at,
     required this.cover_url,
@@ -68,7 +68,7 @@ class Luma_EventDetailsModel {
     required this.meeting_url,
   });
 
-  factory Luma_EventDetailsModel.fromJson(Map<String, dynamic> json) =>
-      _$Luma_EventDetailsModelFromJson(json);
-  Map<String, dynamic> toJson() => _$Luma_EventDetailsModelToJson(this);
+  factory LumaEventDetailsModel.fromJson(Map<String, dynamic> json) =>
+      _$LumaEventDetailsModelFromJson(json);
+  Map<String, dynamic> toJson() => _$LumaEventDetailsModelToJson(this);
 }

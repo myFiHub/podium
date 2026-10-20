@@ -1,4 +1,4 @@
-truncate(String text, {int length = 10}) {
+String truncate(String text, {int length = 10}) {
   if (text.length <= length) {
     return text;
   }

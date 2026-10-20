@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 
 /// [ButtonType] is used to change the type of widgets
 enum ButtonType {
@@ -58,11 +58,11 @@ class ButtonSize {
 }
 
 class ButtonColors {
-  static const Color PRIMARY = ColorName.primaryBlue;
+  static Color get PRIMARY => ColorName.primaryBlue;
   static const Color SECONDARY = Color(0xffAA66CC);
-  static const Color SUCCESS = Color(0xff10DC60);
+  static const Color SUCCESS = Color(0xff3DDC97);
   static const Color INFO = Color(0xff33B5E5);
-  static const Color WARNING = Color(0xffFFBB33);
+  static const Color WARNING = Color(0xffFFC857);
   static const Color DANGER = Color(0xffF04141);
   static const Color LIGHT = Color(0xffE0E0E0);
   static const Color DARK = Color(0xff222428);
@@ -72,10 +72,13 @@ class ButtonColors {
   static const Color TRANSPARENT = Colors.transparent;
 }
 
+const double _standardRadius = 14;
+Color get _outlineBorder => ColorName.white.withAlpha(0x33);
+
 class Button extends StatefulWidget {
   /// Create buttons of all types. check out [GFIconButton] for icon buttons, and [GFBadge] for badges
   const Button({
-    Key? key,
+    super.key,
     required this.onPressed,
     this.loading = false,
     this.onHighlightChanged,
@@ -87,9 +90,9 @@ class Button extends StatefulWidget {
     this.highlightColor,
     this.splashColor,
     this.elevation = 0.0,
-    this.focusElevation = 4.0,
-    this.hoverElevation = 4.0,
-    this.highlightElevation = 1.0,
+    this.focusElevation = 0.0,
+    this.hoverElevation = 0.0,
+    this.highlightElevation = 0.0,
     this.disabledElevation = 0.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 8),
     this.constraints,
@@ -102,7 +105,7 @@ class Button extends StatefulWidget {
     this.child,
     this.type = ButtonType.solid,
     this.shape = ButtonShape.standard,
-    this.color = ColorName.buttonOutlineBorder,
+    this.color,
     this.textColor,
     this.position = Position.start,
     this.size = ButtonSize.LARGE,
@@ -118,12 +121,10 @@ class Button extends StatefulWidget {
     this.disabledTextColor,
   })  : materialTapTargetSize =
             materialTapTargetSize ?? MaterialTapTargetSize.padded,
-        // assert(elevation != null && elevation >= 0.0),
         assert(focusElevation >= 0.0),
         assert(hoverElevation >= 0.0),
         assert(highlightElevation >= 0.0),
-        assert(disabledElevation >= 0.0),
-        super(key: key);
+        assert(disabledElevation >= 0.0);
 
   /// Called when the button is tapped or otherwise activated.
   final VoidCallback? onPressed;
@@ -142,16 +143,16 @@ class Button extends StatefulWidget {
   /// The box shadow for the button's [Material], if ButtonType is solid
   final BoxShadow? boxShadow;
 
-  /// Pass [ButtonColors] or [Color]. The color for the button's [Material] when it has the input focus.
+  /// Pass [ButtonColors] or [Color]. The _color for the button's [Material] when it has the input focus.
   final Color? focusColor;
 
-  /// Pass [ButtonColors] or [Color]. The color for the button's [Material] when a pointer is hovering over it.
+  /// Pass [ButtonColors] or [Color]. The _color for the button's [Material] when a pointer is hovering over it.
   final Color? hoverColor;
 
-  /// Pass [ButtonColors] or [Color]. The highlight color for the button's [InkWell].
+  /// Pass [ButtonColors] or [Color]. The highlight _color for the button's [InkWell].
   final Color? highlightColor;
 
-  /// Pass [ButtonColors] or [Color]. The splash color for the button's [InkWell].
+  /// Pass [ButtonColors] or [Color]. The splash _color for the button's [InkWell].
   final Color? splashColor;
 
   /// The elevation for the button's [Material] when the button is [enabled] but not pressed.
@@ -206,27 +207,28 @@ class Button extends StatefulWidget {
   final ButtonShape shape;
 
   /// Pass [ButtonColors] or [Color]
-  final Color color;
+  final Color? color;
+  Color get _color => color ?? ColorName.buttonOutlineBorder;
 
-  /// The fill color of the button when the button is disabled.
+  /// The fill _color of the button when the button is disabled.
   ///
-  /// The default value of this color is the theme's disabled color,
+  /// The default value of this _color is the theme's disabled _color,
   /// [ThemeData.disabledColor].
   ///
   /// See also:
   ///
-  ///  * [color] - the fill color of the button when the button is [enabled].
+  ///  * [_color] - the fill _color of the button when the button is [enabled].
   final Color? disabledColor;
 
   /// Pass [ButtonColors] or [Color]
   final Color? textColor;
 
-  /// The color to use for this button's text when the button is disabled.
+  /// The _color to use for this button's text when the button is disabled.
   ///
   /// The button's [Material.textStyle] will be the current theme's button
-  /// text style, [ThemeData.textTheme.button], configured with this color.
+  /// text style, [ThemeData.textTheme.button], configured with this _color.
   ///
-  /// The default value is the theme's disabled color,
+  /// The default value is the theme's disabled _color,
   /// [ThemeData.disabledColor].
   ///
   /// If [textColor] is a [WidgetStateProperty<Color>], [disabledTextColor]
@@ -234,7 +236,7 @@ class Button extends StatefulWidget {
   ///
   /// See also:
   ///
-  ///  * [textColor] - The color to use for this button's text when the button is [enabled].
+  ///  * [textColor] - The _color to use for this button's text when the button is [enabled].
   final Color? disabledTextColor;
 
   /// size of [double] or [ButtonSize] i.e, 1.2, small, medium, large etc.
@@ -290,7 +292,7 @@ class Button extends StatefulWidget {
   final VoidCallback? onLongPress;
 
   @override
-  _ButtonState createState() => _ButtonState();
+  State<Button> createState() => _ButtonState();
 }
 
 class _ButtonState extends State<Button> {
@@ -311,7 +313,7 @@ class _ButtonState extends State<Button> {
 
   @override
   void initState() {
-    color = widget.color;
+    color = widget._color;
     textColor = widget.textColor;
     child = (widget.text != null && widget.loading == false)
         ? Text(widget.text!)
@@ -393,7 +395,7 @@ class _ButtonState extends State<Button> {
     if (_disabled && _pressed) {
       _handleHighlightChanged(false);
     }
-    color = widget.color;
+    color = widget._color;
     textColor = widget.textColor;
     child = (widget.text != null && widget.loading == false)
         ? Text(widget.text!)
@@ -438,45 +440,52 @@ class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
     ShapeBorder shapeBorderType;
+    final bool isOutline = widget.type == ButtonType.outline ||
+        widget.type == ButtonType.outline2x;
+    final bool hasCustomColor = widget.color != null;
 
     Color getBorderColor() {
       if (widget.enabled) {
         final Color fillColor = color;
-        if (widget.color != ColorName.buttonOutlineBorder) {
-          return widget.color;
+        if (hasCustomColor) {
+          return isOutline ? widget._color.withAlpha(150) : widget._color;
         }
-        if (widget.type == ButtonType.outline ||
-            widget.type == ButtonType.outline2x) {
-          return ColorName.buttonOutlineBorder;
+        if (isOutline) {
+          return _outlineBorder;
         }
         return fillColor;
       } else {
         if (disabledColor != null) {
           return disabledColor!;
         } else {
-          return color.withOpacity(0.48);
+          return isOutline ? _outlineBorder.withAlpha(20) : color.withAlpha(60);
         }
       }
     }
 
     Color getDisabledFillColor() {
       if (widget.type == ButtonType.transparent ||
-          widget.type == ButtonType.outline ||
-          widget.type == ButtonType.outline2x) {
+          (widget.type == ButtonType.gradient && disabledColor == null)) {
         return Colors.transparent;
+      }
+      if (isOutline) {
+        return ColorName.white.withAlpha(6);
       }
       if (disabledColor != null) {
         return disabledColor!;
       } else {
-        return color.withOpacity(0.48);
+        return ColorName.white.withAlpha(18);
       }
     }
 
     Color getColor() {
-      if (widget.type == ButtonType.transparent ||
-          widget.type == ButtonType.outline ||
-          widget.type == ButtonType.outline2x) {
+      if (widget.type == ButtonType.transparent) {
         return Colors.transparent;
+      }
+      if (isOutline) {
+        return hasCustomColor && widget._color.a > 0
+            ? widget._color.withAlpha(22)
+            : ColorName.white.withAlpha(10);
       }
       if (widget.type == ButtonType.gradient) {
         return Colors.transparent;
@@ -488,12 +497,8 @@ class _ButtonState extends State<Button> {
     Color getDisabledTextColor() {
       if (disabledTextColor != null) {
         return disabledTextColor!;
-      } else if (widget.type == ButtonType.outline ||
-          widget.type == ButtonType.outline2x ||
-          widget.type == ButtonType.transparent) {
-        return color;
       } else {
-        return ButtonColors.DARK;
+        return ColorName.white.withAlpha(100);
       }
     }
 
@@ -523,16 +528,14 @@ class _ButtonState extends State<Button> {
     final Color? effectiveTextColor =
         WidgetStateProperty.resolveAs<Color?>(widget.textStyle?.color, _states);
     final Color themeColor =
-        Theme.of(context).colorScheme.onSurface.withOpacity(0.12);
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12);
     final BorderSide outlineBorder = BorderSide(
       color: widget.borderSide == null
           ? getBorderColor()
           : widget.borderSide!.color,
-      width: (widget.borderSide?.width == null
-          ? widget.type == ButtonType.outline2x
+      width: (widget.borderSide?.width ?? (widget.type == ButtonType.outline2x
               ? 2.0
-              : 1.0
-          : widget.borderSide?.width)!,
+              : 1.0)),
     );
 
     Size minSize;
@@ -541,9 +544,6 @@ class _ButtonState extends State<Button> {
         minSize = const Size(48, 48);
         break;
       case MaterialTapTargetSize.shrinkWrap:
-        minSize = Size.zero;
-        break;
-      default:
         minSize = Size.zero;
         break;
     }
@@ -573,7 +573,7 @@ class _ButtonState extends State<Button> {
       );
     } else if (shape == ButtonShape.standard) {
       shapeBorderType = RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(_standardRadius),
         side: shapeBorder,
       );
     } else {
@@ -597,7 +597,7 @@ class _ButtonState extends State<Button> {
             borderRadius: widget.shape == ButtonShape.pills
                 ? BorderRadius.circular(50)
                 : widget.shape == ButtonShape.standard
-                    ? BorderRadius.circular(8)
+                    ? BorderRadius.circular(_standardRadius)
                     : BorderRadius.zero,
             boxShadow: [
               widget.boxShadow == null && widget.buttonBoxShadow == true
@@ -627,44 +627,48 @@ class _ButtonState extends State<Button> {
         return TextStyle(
           color: widget.enabled ? getTextColor() : getDisabledTextColor(),
           fontSize: 12,
+          fontWeight: FontWeight.w600,
         );
       } else if (widget.size == ButtonSize.MEDIUM) {
         return TextStyle(
           color: widget.enabled ? getTextColor() : getDisabledTextColor(),
           fontSize: 13,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
         );
       } else if (widget.size == ButtonSize.LARGE) {
         return TextStyle(
           color: widget.enabled ? getTextColor() : getDisabledTextColor(),
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
         );
       }
       return TextStyle(
         color: widget.enabled ? getTextColor() : getDisabledTextColor(),
         fontSize: 13,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
       );
     }
 
-    _gradientBoxDecoration(bool disabled) => BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              disabled
-                  ? ColorName.primaryBlue.withOpacity(0.3)
-                  : ColorName.primaryBlue,
-              disabled
-                  ? ColorName.secondaryBlue.withOpacity(0.3)
-                  : ColorName.secondaryBlue,
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+    gradientBoxDecoration(bool disabled) => BoxDecoration(
+          gradient: disabled
+              ? null
+              : LinearGradient(
+                  colors: [
+                    ColorName.primaryBlue,
+                    ColorName.secondaryBlue,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          color: disabled ? ColorName.white.withAlpha(18) : null,
+          border: disabled
+              ? Border.all(color: ColorName.white.withAlpha(16))
+              : null,
           borderRadius: widget.shape == ButtonShape.pills
               ? BorderRadius.circular(50)
               : widget.shape == ButtonShape.standard
-                  ? BorderRadius.circular(8)
+                  ? BorderRadius.circular(_standardRadius)
                   : BorderRadius.zero,
         );
     final Widget result = Container(
@@ -675,12 +679,12 @@ class _ButtonState extends State<Button> {
           ? getBoxShadow()
           : type == ButtonType.gradient
               ? widget.onPressed == null
-                  ? _gradientBoxDecoration(true)
-                  : _gradientBoxDecoration(false)
+                  ? gradientBoxDecoration(true)
+                  : gradientBoxDecoration(false)
               : null,
       child: Material(
         elevation: _effectiveElevation,
-        textStyle: widget.textStyle == null ? getTextStyle() : widget.textStyle,
+        textStyle: widget.textStyle ?? getTextStyle(),
         shape: widget.type == ButtonType.transparent
             ? null
             : widget.borderShape ?? shapeBorderType,
@@ -690,7 +694,7 @@ class _ButtonState extends State<Button> {
         clipBehavior: widget.clipBehavior,
         child: InkWell(
           borderRadius: widget.type == ButtonType.transparent
-              ? BorderRadius.circular(8)
+              ? BorderRadius.circular(_standardRadius)
               : BorderRadius.circular(0),
           focusNode: widget.focusNode,
           canRequestFocus: widget.enabled,
@@ -771,13 +775,9 @@ class _ButtonState extends State<Button> {
 /// "tap target", but not its material or its ink splashes.
 class _InputPadding extends SingleChildRenderObjectWidget {
   const _InputPadding({
-    Key? key,
-    Widget? child,
+    super.child,
     this.minSize,
-  }) : super(
-          key: key,
-          child: child,
-        );
+  });
 
   final Size? minSize;
 

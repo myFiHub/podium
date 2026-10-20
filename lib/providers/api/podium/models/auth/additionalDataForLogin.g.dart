@@ -12,7 +12,6 @@ AdditionalDataForLogin _$AdditionalDataForLoginFromJson(
       email: json['email'] as String?,
       name: json['name'] as String?,
       image: json['image'] as String?,
-      loginType: json['loginType'] as String?,
     );
 
 Map<String, dynamic> _$AdditionalDataForLoginToJson(
@@ -21,5 +20,4 @@ Map<String, dynamic> _$AdditionalDataForLoginToJson(
       'email': instance.email,
       'name': instance.name,
       'image': instance.image,
-      'loginType': instance.loginType,
     };

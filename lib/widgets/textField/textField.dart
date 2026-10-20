@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:podium/utils/palette.dart';
 
 class PodiumTextField extends FormField<String> {
   PodiumTextField(
-      {Key? key,
+      {super.key,
       this.controller,
       this.fieldinitialValue,
       this.focusNode,
@@ -54,7 +55,6 @@ class PodiumTextField extends FormField<String> {
       this.autofillHints,
       this.autoValidateMode = AutovalidateMode.disabled})
       : super(
-            key: key,
             builder: (FormFieldState<String> field) => _GfTextFieldState(
                   state: field,
                   formField: formField ?? false,
@@ -155,7 +155,7 @@ class PodiumTextField extends FormField<String> {
   final Radius? cursorRadius;
   final Color? cursorColor;
   final Color? color;
-  final formField;
+  final bool? formField;
   final Radius? borderradius;
   final Brightness? keyboardAppearance;
   final EdgeInsets scrollPadding;
@@ -290,7 +290,7 @@ class _GfTextFieldStateState extends State<_GfTextFieldState>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Container(
+    return SizedBox(
       height: widget.formField ? 87 : 59,
       child: TextFormField(
         controller: widget.controller ?? controller,
@@ -336,7 +336,7 @@ class _GfTextFieldStateState extends State<_GfTextFieldState>
         cursorWidth: widget.cursorWidth ?? 1,
         cursorHeight: widget.cursorHeight,
         cursorRadius: widget.cursorRadius,
-        cursorColor: widget.cursorColor,
+        cursorColor: widget.cursorColor ?? ColorName.primaryBlue,
         scrollPadding: widget.scrollPadding,
         scrollPhysics: widget.scrollPhysics,
         keyboardAppearance: widget.keyboardAppearance,

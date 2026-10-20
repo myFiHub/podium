@@ -52,4 +52,4 @@ else
     echo "Error: $ENV_FILE file not found"
     exit 1
 fi
-flutter build appbundle --obfuscate --split-debug-info=./debug-info  --release  --dart-define=ENVIRONMENT=$ENVIRONMENT_PARAM
+flutter build appbundle --obfuscate --split-debug-info=./debug-info  --release  --dart-define-from-file="$ENV_FILE"

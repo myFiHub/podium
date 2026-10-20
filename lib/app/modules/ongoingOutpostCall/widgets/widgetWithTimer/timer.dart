@@ -1,4 +1,4 @@
-library circular_countdown_timer;
+library;
 
 import 'package:flutter/material.dart';
 
@@ -163,14 +163,6 @@ class CircularCountDownTimerState extends State<CircularCountDownTimer>
   }
 
   void _setAnimationDirection() {
-    // if ((widget.isReverse && !widget.isReverseAnimation) ||
-    //     (widget.isReverse && widget.isReverseAnimation)) {
-    //   _countDownAnimation =
-    //       Tween<double>(begin: 1, end: 0).animate(_controller!);
-    // } else if (!widget.isReverse && widget.isReverseAnimation) {
-    //   _countDownAnimation =
-    //       Tween<double>(begin: 0, end: 1).animate(_controller!);
-    // }
     if ((!widget.isReverse && widget.isReverseAnimation) ||
         (widget.isReverse && !widget.isReverseAnimation)) {
       _countDownAnimation =
@@ -218,7 +210,7 @@ class CircularCountDownTimerState extends State<CircularCountDownTimer>
     }
   }
 
-  _defaultFormat(Duration duration) {
+  String _defaultFormat(Duration duration) {
     if (duration.inHours != 0) {
       return '${duration.inHours.toString().padLeft(2, '0')}:${(duration.inMinutes % 60).toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
     } else if (duration.inMinutes != 0) {
@@ -248,13 +240,9 @@ class CircularCountDownTimerState extends State<CircularCountDownTimer>
     _controller!.addStatusListener((status) {
       switch (status) {
         case AnimationStatus.forward:
-          _onStart();
-          break;
-
         case AnimationStatus.reverse:
           _onStart();
           break;
-
         case AnimationStatus.dismissed:
           _onComplete();
           break;
@@ -264,8 +252,6 @@ class CircularCountDownTimerState extends State<CircularCountDownTimer>
           /// Only call the [_onComplete] block when the animation is not reversed.
           if (!widget.isReverse) _onComplete();
           break;
-        default:
-        // Do nothing
       }
     });
 

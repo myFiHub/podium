@@ -1,2 +1,2 @@
-final baseChainId = '8453';
-final avalancheChainId = '43114';
+const baseChainId = '8453';
+const avalancheChainId = '43114';

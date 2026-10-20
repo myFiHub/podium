@@ -2,27 +2,26 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:aptos/aptos.dart';
-import 'package:aptos/coin_client.dart';
 import 'package:aptos/models/entry_function_payload.dart';
 import 'package:flutter/foundation.dart';
-// import 'package:aptos_sdk_dart/aptos_sdk_dart.dart' as AptosSdkDart;
-// import 'package:built_value/json_object.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/blockchain/blockchain.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/utils/showConfirmPopup.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
-import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/pass/buy_sell_request.dart';
 import 'package:podium/services/toast/toast.dart';
+import 'package:podium/utils/format_amount.dart';
 import 'package:podium/utils/logger.dart';
-// import 'package:web3auth_flutter/web3auth_flutter.dart';
+import 'package:podium/utils/palette.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 class AptosMovement {
+  static UserRepository get _userRepository => Get.find();
   AptosMovement._internal();
   static final AptosMovement _instance = AptosMovement._internal();
   factory AptosMovement() => _instance;
@@ -32,20 +31,19 @@ class AptosMovement {
     final movementAptosProtoTestNetChain =
         globalController.movementAptosNetwork;
     return AptosClient(
-      // movementAptosBardokChain.rpcUrl,
       movementAptosProtoTestNetChain.rpcUrl,
       enableDebugLog: !kReleaseMode, // Env.environment == DEVELOPMENT,
     );
   }
 
   static const _podiumProtocolName = 'PodiumProtocol';
-  static const _cheerBooName = 'CheerOrBoo';
+  static const _cheerBooName = 'CheerOrBooPodium';
 
-  static get podiumProtocolAddress {
+  static String get podiumProtocolAddress {
     return movementAptosPodiumProtocolAddress;
   }
 
-  static get cheerBooAddress {
+  static String get cheerBooAddress {
     return movementAptosCheerBooAddress;
   }
 
@@ -73,15 +71,19 @@ class AptosMovement {
 
   static Future<BigInt> _getBalanceFromIndexer(String address) async {
     try {
-      final String query = '''
+      const String query = '''
         query GetBalance(\$address: String!) {
           current_fungible_asset_balances(
             where: {
               owner_address: {_eq: \$address},
-              asset_type: {_eq: "0x000000000000000000000000000000000000000000000000000000000000000a"}
-            }
-            limit: 1
-          ) {
+              asset_type: {
+                _in: [
+                  "0x1::aptos_coin::AptosCoin",
+                  "0x000000000000000000000000000000000000000000000000000000000000000a"
+                ]
+              }
+             }
+           ) {
             amount
           }
         }
@@ -100,7 +102,10 @@ class AptosMovement {
         final data = jsonDecode(response.body);
         final balances = data['data']['current_fungible_asset_balances'];
         if (balances != null && balances.isNotEmpty) {
-          return BigInt.parse(balances[0]['amount'].toString());
+          final sum = balances.fold(BigInt.zero, (sum, balance) {
+            return sum + BigInt.parse(balance['amount'].toString());
+          });
+          return sum;
         }
       }
       return BigInt.zero;
@@ -127,11 +132,43 @@ class AptosMovement {
     return await getAddressBalance(address);
   }
 
-  static CoinClient get _coinClient {
-    return CoinClient(client);
+  /// Shows an "Insufficient balance" toast (with a copy-address button so the
+  /// user can top up) and returns false when the wallet holds less than
+  /// [amount] MOVE.
+  static Future<bool> _ensureBalance(num amount) async {
+    final b = await balance;
+    if (b >= doubleToBigIntMoveForAptos(amount)) return true;
+    _showInsufficientBalance(
+      message: 'You need ${formatAmount(amount, 'MOVE')}, you have '
+          '${formatAmount(bigIntCoinToMoveOnAptos(b), 'MOVE')}.',
+    );
+    return false;
   }
 
-  static Future<bool?> cheerBoo({
+  static void _showInsufficientBalance({String message = ''}) {
+    Toast.error(
+      title: 'Insufficient balance',
+      message: message,
+      mainButton: TextButton(
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: address));
+          Toast.info(
+            title: 'Copied!',
+            message: 'Address copied to clipboard',
+          );
+        },
+        child: Text(
+          'Copy Address',
+          style: TextStyle(
+              color: ColorName.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  static Future<(bool?, String?)> cheerBoo({
     required String target,
     required List<String> receiverAddresses,
     required num amount,
@@ -139,51 +176,32 @@ class AptosMovement {
     required String outpostId,
   }) async {
     try {
-      final b = await balance;
-      if (b < doubleToBigIntMoveForAptos(amount)) {
-        Toast.error(
-          title: 'Insufficient balance',
-          mainButton: TextButton(
-            onPressed: () {
-              final addr = address;
-              Clipboard.setData(
-                ClipboardData(text: addr),
-              );
-              Toast.info(
-                title: 'Copied!',
-                message: 'Address copied to clipboard',
-              );
-            },
-            child: const Text(
-              'Copy Address',
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold),
-            ),
-          ),
-        );
-        return null;
+      if (!await _ensureBalance(amount)) {
+        return (false, 'Insufficient balance');
       }
 
       final amountToSend = doubleToBigIntMoveForAptos(amount).toString();
-      final isSelfReaction =
-          target == myUser.aptos_address && receiverAddresses.length > 0;
+      final isSelfReaction = !receiverAddresses.contains(target);
       final isBoo = !cheer;
-      int percentage = 100;
+      int percentage = 50;
       if (isSelfReaction) {
         percentage = 0;
       }
       if (isBoo && !isSelfReaction) {
-        percentage = 50;
+        percentage = 30;
+      }
+      if (receiverAddresses.length == 1 && isSelfReaction) {
+        percentage = 100;
+      }
+      if (receiverAddresses.length == 2 && !isSelfReaction) {
+        percentage = 100;
       }
 
       final PercentageString = percentage.toString();
       final payload = EntryFunctionPayload(
-        functionId: "${cheerBooAddress}::$_cheerBooName::cheer_or_boo",
+        functionId: "$cheerBooAddress::$_cheerBooName::cheer_or_boo",
         typeArguments: [],
         arguments: [
-          // address,
           target,
           receiverAddresses,
           cheer,
@@ -197,15 +215,15 @@ class AptosMovement {
         payload,
       );
       final signedTransaction =
-          await client.signTransaction(account, transactionRequest);
+          client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
-      final hash = res['hash'];
+      final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
-      return true;
+      return (true, hash);
     } catch (e) {
       l.e(e);
       Toast.error(message: 'Error submitting transaction');
-      return false;
+      return (false, e.toString());
     }
   }
 
@@ -215,7 +233,7 @@ class AptosMovement {
   }) async {
     try {
       final response = await client.view(
-        "${podiumProtocolAddress}::$_podiumProtocolName::calculate_buy_price_with_fees",
+        "$podiumProtocolAddress::$_podiumProtocolName::calculate_buy_price_with_fees",
         [],
         [
           sellerAddress,
@@ -239,7 +257,7 @@ class AptosMovement {
   }) async {
     try {
       final respone = await client.view(
-        "${podiumProtocolAddress}::$_podiumProtocolName::get_balance",
+        "$podiumProtocolAddress::$_podiumProtocolName::get_balance",
         [],
         [
           myAddress ?? myUser.aptos_address,
@@ -256,29 +274,7 @@ class AptosMovement {
     }
   }
 
-  Future<void> listenToEvents({
-    required String address,
-    required String eventHandle,
-    required String fieldName,
-  }) async {
-    Timer.periodic(const Duration(seconds: 5), (timer) async {
-      try {
-        // Replace with the actual method to fetch events
-        final events = await client.getEventsByEventHandle(
-          address,
-          eventHandle,
-          fieldName,
-          limit: 10, // Adjust the limit as needed
-        );
-
-        l.d(events);
-      } catch (e) {
-        print('Error fetching events: $e');
-      }
-    });
-  }
-
-  static Future<(bool?, String?)> buyTicketFromTicketSellerOnPodiumPass({
+  static Future<(bool?, String?)> buyPodiumPassFromUser({
     required String sellerAddress,
     required String sellerName,
     required String sellerUuid,
@@ -294,42 +290,40 @@ class AptosMovement {
         numberOfTickets: numberOfTickets,
       );
       if (price == null) {
+        Toast.error(message: 'Could not fetch the pass price, try again');
         return (false, 'Error fetching price');
       }
+      if (!await _ensureBalance(price)) {
+        return (false, 'Insufficient balance');
+      }
       final parsedPrice = price;
-      final confirmed = await showConfirmPopup(
+      final confirmed = await showAppConfirm(
         title: 'Buy Podium Pass',
-        richMessage: RichText(
-          text: TextSpan(
-            style: const TextStyle(height: 1.5),
-            children: [
-              const TextSpan(text: 'buy '),
-              TextSpan(
-                  text: numberOfTickets.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              TextSpan(
-                  text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} from '),
-              TextSpan(
-                  text: sellerName,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const TextSpan(text: ' for '),
-              TextSpan(
-                  text: parsedPrice.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const TextSpan(text: ' MOVE?'),
-            ],
-          ),
+        richMessage: TextSpan(
+          children: [
+            const TextSpan(text: 'buy '),
+            TextSpan(
+                text: numberOfTickets.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            TextSpan(
+                text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} from '),
+            TextSpan(
+                text: sellerName,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const TextSpan(text: ' for '),
+            TextSpan(
+                text: parsedPrice.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const TextSpan(text: ' MOVE?'),
+          ],
         ),
-        cancelText: 'Cancel',
-        confirmText: 'Confirm',
-        confirmColor: Colors.green,
       );
 
       if (!confirmed) {
         return (null, 'Cancelled');
       }
       final payload = EntryFunctionPayload(
-        functionId: "${podiumProtocolAddress}::$_podiumProtocolName::buy_pass",
+        functionId: "$podiumProtocolAddress::$_podiumProtocolName::buy_pass",
         typeArguments: [],
         /**
           "params": [
@@ -350,12 +344,12 @@ class AptosMovement {
         payload,
       );
       final signedTransaction =
-          await client.signTransaction(account, transactionRequest);
+          client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
 
-      await HttpApis.podium.buySellPodiumPass(
+      final success = await _userRepository.buySellPodiumPass(
         BuySellPodiumPassRequest(
           count: numberOfTickets,
           podium_pass_owner_address: sellerAddress,
@@ -364,12 +358,20 @@ class AptosMovement {
           tx_hash: hash,
         ),
       );
+      l.d(success);
       return (true, hash);
     } catch (e, stackTrace) {
       l.e(e, stackTrace: stackTrace);
+      // Gas can still push a just-sufficient balance over the edge.
+      if (e.toString().contains('INSUFFICIENT_BALANCE')) {
+        _showInsufficientBalance(
+          message: 'Not enough MOVE to cover the pass and network fee.',
+        );
+        return (false, 'Insufficient balance');
+      }
       final isCopyableError = e.toString().contains('Waiting for transaction');
       Toast.error(
-        title: 'Error',
+        title: 'Purchase failed',
         message: isCopyableError
             ? e.toString()
             : 'Error Submiting Transaction, please try again later',
@@ -392,7 +394,7 @@ class AptosMovement {
   }) async {
     try {
       final response = await client.view(
-        "${podiumProtocolAddress}::$_podiumProtocolName::calculate_sell_price_with_fees",
+        "$podiumProtocolAddress::$_podiumProtocolName::calculate_sell_price_with_fees",
         [],
         [sellerAddress, numberOfTickets.toString()],
       );
@@ -418,33 +420,29 @@ class AptosMovement {
         return (false, 'Error fetching price');
       }
       final parsedPrice = bigIntCoinToMoveOnAptos(price);
-      final confirmed = await showConfirmPopup(
+      final confirmed = await showAppConfirm(
         title: 'Sell Podium Pass',
-        richMessage: RichText(
-          text: TextSpan(
-            children: [
-              const TextSpan(text: 'sell '),
-              TextSpan(
-                  text: numberOfTickets.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              TextSpan(
-                  text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} for '),
-              TextSpan(
-                  text: parsedPrice.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const TextSpan(text: ' MOVE?'),
-            ],
-          ),
+        destructive: true,
+        richMessage: TextSpan(
+          children: [
+            const TextSpan(text: 'sell '),
+            TextSpan(
+                text: numberOfTickets.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            TextSpan(
+                text: ' Podium Pass${numberOfTickets > 1 ? 'es' : ''} for '),
+            TextSpan(
+                text: parsedPrice.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const TextSpan(text: ' MOVE?'),
+          ],
         ),
-        cancelText: 'Cancel',
-        confirmText: 'Confirm',
-        confirmColor: Colors.red,
       );
       if (!confirmed) {
         return (false, 'Cancelled');
       }
       final payload = EntryFunctionPayload(
-        functionId: "${podiumProtocolAddress}::$_podiumProtocolName::sell_pass",
+        functionId: "$podiumProtocolAddress::$_podiumProtocolName::sell_pass",
         typeArguments: [],
         arguments: [sellerAddress, numberOfTickets.toString()],
       );
@@ -453,11 +451,11 @@ class AptosMovement {
         payload,
       );
       final signedTransaction =
-          await client.signTransaction(account, transactionRequest);
+          client.signTransaction(account, transactionRequest);
       final res = await client.submitSignedBCSTransaction(signedTransaction);
       final String hash = res['hash'];
       await client.waitForTransaction(hash, checkSuccess: true);
-      await HttpApis.podium.buySellPodiumPass(
+      await _userRepository.buySellPodiumPass(
         BuySellPodiumPassRequest(
           count: numberOfTickets,
           podium_pass_owner_address: sellerAddress,

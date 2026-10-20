@@ -1,9 +1,7 @@
 import 'dart:convert';
 
-/**
- {participantId=baed24ca, name=mohsen 2, role=moderator, avatarUrl=https://firebasestorage.googleapis.com/v0/b/podium-fbb5b.appspot.com/o/users%2FwpNKlkedLNa4oW7msPSjW0w3NA23?alt=media&token=971c5877-1010-4c4c-861b-e78f6179b509, email=aaa@aaa.aaa, isLocal=true}
- */
-
+/// Parses Jitsi's `toString()`-style member dump, e.g.
+/// `{participantId=baed24ca, name=Jane, role=moderator, avatarUrl=..., email=a@b.c, isLocal=true}`.
 List<JitsiMember> convertJitsiMembersResponseToReadableJson(String res) {
   String result = res.replaceAll('api/?name=', '********************');
   result = result.replaceAll('=', '":"');

@@ -10,18 +10,24 @@ const defaultHeaders = {
   'content-type': 'application/json',
 };
 
-final Dio dio = Dio();
+final Dio dio = Dio(
+  BaseOptions(
+    connectTimeout: const Duration(seconds: 15),
+    sendTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 30),
+  ),
+);
 
 class HttpApis {
   static final HttpApis _instance = HttpApis._internal();
   factory HttpApis() => _instance;
-  HttpApis._internal() {}
+  HttpApis._internal();
 
   static LumaApi lumaApi = LumaApi(dio);
   static ArenaApi arenaApi = ArenaApi(dio);
   static PodiumApi podium = PodiumApi(dio);
 
-  static configure() {
+  static void configure() {
     dio.interceptors.add(
       PrettyDioLogger(
         requestHeader: true,
@@ -31,7 +37,6 @@ class HttpApis {
         error: true,
         compact: true,
         maxWidth: 90,
-        // logPrint: log.d,
         enabled: kDebugMode,
         filter: (options, args) {
           // don't print responses with unit8 list data

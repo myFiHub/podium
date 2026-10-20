@@ -1,5 +1,4 @@
 part of 'app_pages.dart';
-// DO NOT EDIT. This is code generated via package:get_cli/get_cli.dart
 
 abstract class Routes {
   Routes._();
@@ -11,18 +10,18 @@ abstract class Routes {
   static const WEB3AUTH_REDIRECTED_AUTH = _Paths.WEB3AUTH_REDIRECTED_AUTH;
   static const CREATE_OUTPOST = _Paths.CREATE_OUTPOST;
   static const OUTPOST_DETAIL = _Paths.OUTPOST_DETAIL;
-  static const EDIT_OUTPOST = _Paths.EDIT_OUTPOST;
-  static const CHAT = _Paths.CHAT;
-  static const INCOMING_CALL = _Paths.INCOMING_CALL;
   static const ONGOING_OUTPOST_CALL = _Paths.ONGOING_OUTPOST_CALL;
-  static const WALLET = _Paths.WALLET;
   static const PROFILE = _Paths.PROFILE;
   static const MY_PROFILE = _Paths.MY_PROFILE;
+  static const CONNECTED_ACCOUNTS = _Paths.CONNECTED_ACCOUNTS;
   static const SEARCH = _Paths.SEARCH;
   static const NOTIFICATIONS = _Paths.NOTIFICATIONS;
   static const ALL_OUTPOSTS = _Paths.ALL_OUTPOSTS;
-  static const PLAYGROUND = _Paths.PLAYGROUND;
   static const RECORDS = _Paths.RECORDS;
+  static const REPLAY = _Paths.REPLAY;
+  static const TAG_OUTPOSTS = _Paths.TAG_OUTPOSTS;
+  static const HOST_DASHBOARD = _Paths.HOST_DASHBOARD;
+  static const HOST_OUTPOST_ANALYTICS = _Paths.HOST_OUTPOST_ANALYTICS;
 }
 
 abstract class _Paths {
@@ -35,16 +34,16 @@ abstract class _Paths {
   static const WEB3AUTH_REDIRECTED_AUTH = '/auth';
   static const CREATE_OUTPOST = '/create-outpost';
   static const OUTPOST_DETAIL = '/outpost-detail';
-  static const EDIT_OUTPOST = '/edit-outpost';
-  static const CHAT = '/chat';
-  static const INCOMING_CALL = '/incoming-call';
   static const ONGOING_OUTPOST_CALL = '/ongoing-outpost-call';
-  static const WALLET = '/wallet';
   static const PROFILE = '/profile';
   static const MY_PROFILE = '/my-profile';
+  static const CONNECTED_ACCOUNTS = '/connected-accounts';
   static const RECORDS = '/records';
+  static const REPLAY = '/replay';
   static const SEARCH = '/search';
   static const NOTIFICATIONS = '/notifications';
   static const ALL_OUTPOSTS = '/all-outposts';
-  static const PLAYGROUND = '/playground';
+  static const TAG_OUTPOSTS = '/tag-outposts';
+  static const HOST_DASHBOARD = '/host-dashboard';
+  static const HOST_OUTPOST_ANALYTICS = '/host-outpost-analytics';
 }

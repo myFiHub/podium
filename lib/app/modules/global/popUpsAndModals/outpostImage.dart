@@ -4,23 +4,23 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/services/image_service.dart';
-import 'package:podium/gen/colors.gen.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/utils/constants.dart';
-import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 void openOutpostImageDialog({
   required OutpostModel outpost,
   Future<void> Function(String downloadUrl)? onComplete,
 }) {
   Get.dialog(
-    Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 0.0),
-      backgroundColor: Colors.transparent,
-      child: _OpenImageDialogContent(
-        outpost: outpost,
-        onComplete: onComplete,
+    AppDialogMotion(
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+        clipBehavior: Clip.antiAlias,
+        child: _OpenImageDialogContent(
+          outpost: outpost,
+          onComplete: onComplete,
+        ),
       ),
     ),
   );
@@ -31,7 +31,6 @@ class _OpenImageDialogContent extends StatelessWidget {
   final Future<void> Function(String downloadUrl)? onComplete;
 
   const _OpenImageDialogContent({
-    super.key,
     required this.outpost,
     this.onComplete,
   });
@@ -69,38 +68,44 @@ class ImageDialogStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          width: Get.width - 12,
-          decoration: BoxDecoration(
-            color: ColorName.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding:
-              const EdgeInsets.only(top: 65, left: 12, right: 12, bottom: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              EditableImage(
-                imageSrc: imageUrl,
-                imageAlt: imageAlt,
-                iAmOwner: iAmOwner,
-                outpostId: outpostId,
-                onUploadComplete: onUploadComplete,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Text(
+                    imageAlt,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.title,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              AppIconButton(
+                icon: Icons.close_rounded,
+                tooltip: 'Close',
+                size: 36,
+                onTap: () => Get.close(),
               ),
             ],
           ),
-        ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Get.close(),
+          const SizedBox(height: 14),
+          EditableImage(
+            imageSrc: imageUrl,
+            imageAlt: imageAlt,
+            iAmOwner: iAmOwner,
+            outpostId: outpostId,
+            onUploadComplete: onUploadComplete,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -113,7 +118,7 @@ class EditableImage extends StatefulWidget {
   final String outpostId;
   final Future<void> Function(String downloadUrl)? onUploadComplete;
 
-  EditableImage({
+  const EditableImage({
     super.key,
     required this.imageSrc,
     required this.imageAlt,
@@ -141,7 +146,7 @@ class _EditableImageState extends State<EditableImage> {
   @override
   void didUpdateWidget(covariant EditableImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.imageSrc != oldWidget.imageSrc) {
+    if (widget.imageSrc != oldWidget.imageSrc && mounted) {
       setState(() {
         _currentImageSrc = widget.imageSrc;
       });
@@ -152,40 +157,41 @@ class _EditableImageState extends State<EditableImage> {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Img(
-          // Use state variable for image source
-          src: _currentImageSrc,
-          size: Get.width - 24,
-          alt: widget.imageAlt,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Img(
+              // Use state variable for image source
+              src: _currentImageSrc,
+              size: constraints.maxWidth,
+              alt: widget.imageAlt,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            );
+          },
         ),
         if (widget.iAmOwner) ...[
-          space16,
+          const SizedBox(height: 16),
           Obx(
-            () => SizedBox(
-              width: 140,
-              child: Button(
-                blockButton: true,
-                loading: imageService.isUploadingImage.value,
-                type: ButtonType.outline,
-                size: ButtonSize.MEDIUM,
-                onPressed: () async {
-                  final downloadUrl = await imageService.pickAndUploadImage(
-                    outpostId: widget.outpostId,
-                  );
-                  if (downloadUrl != null) {
-                    // Update local state first
-                    setState(() {
-                      _currentImageSrc = downloadUrl;
-                    });
-                    // Then call the provided callback if it exists
-                    if (widget.onUploadComplete != null) {
-                      await widget.onUploadComplete!(downloadUrl);
-                    }
+            () => AppPrimaryButton(
+              label: 'Change Image',
+              icon: Icons.image_outlined,
+              loading: imageService.isUploadingImage.value,
+              onPressed: () async {
+                final downloadUrl = await imageService.pickAndUploadImage(
+                  outpostId: widget.outpostId,
+                );
+                if (downloadUrl != null && mounted) {
+                  // Update local state first
+                  setState(() {
+                    _currentImageSrc = downloadUrl;
+                  });
+                  // Then call the provided callback if it exists
+                  if (widget.onUploadComplete != null) {
+                    await widget.onUploadComplete!(downloadUrl);
                   }
-                },
-                child: const Text('Change Image'),
-              ),
+                }
+              },
             ),
           ),
         ],

@@ -10,13 +10,16 @@ class StorageKeys {
   static const userEmail = 'userEmail';
   static const userAvatar = 'userAvatar';
   static const ignoredOrAcceptedVersion = 'ignoredOrAcceptedVersion';
-  static const ongoingCallSortType = 'ongoingCallSortType';
   static const loginType = 'loginType';
   static const rememberSelectedWallet = 'rememberWallet';
   static const selectedWalletName = 'selectedWalletName';
   static const externalWalletChainId = 'externalWalletChainId';
   static const showArchivedOutposts = 'showArchivedOutposts';
   static const referrerId = 'referrerId';
+  static const lastAppMetadata = 'lastAppMetadata';
+  static const colorTheme = 'colorTheme';
+  static const askedCallOverlayPermission = 'askedCallOverlayPermission';
+  static const serverHasDiscovery = 'serverHasDiscovery';
 }
 
 class IntroStorageKeys {

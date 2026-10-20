@@ -4,13 +4,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
-import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
 class OutpostImageService extends GetxService {
+  final _outpostRepository = Get.find<OutpostRepository>();
   final ImagePicker _picker = ImagePicker();
   final RxBool isUploadingImage = false.obs;
 
@@ -35,16 +34,11 @@ class OutpostImageService extends GetxService {
         final snapshot = await uploadTask.whenComplete(() {});
         final downloadUrl = await snapshot.ref.getDownloadURL();
         final outpostsController = Get.find<OutpostsController>();
-        final outpost = await HttpApis.podium.getOutpost(outpostId);
+        final outpost = await _outpostRepository.getOutpost(outpostId);
         if (outpost != null) {
           final url =
               await outpostsController.uploadOutpostImage(outpost, downloadUrl);
-          if (Get.isRegistered<OutpostDetailController>() && url != null) {
-            final outpostDetailController = Get.find<OutpostDetailController>();
-            final updatedOutpost =
-                outpostDetailController.outpost.value?.copyWith(image: url);
-            outpostDetailController.outpost.value = updatedOutpost;
-          }
+
           return url;
         }
         return null;

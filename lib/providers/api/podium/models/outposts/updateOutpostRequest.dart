@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+
 part 'updateOutpostRequest.g.dart';
 
 @JsonSerializable()
@@ -7,12 +8,16 @@ class UpdateOutpostRequest {
   final int? scheduled_for;
   final String? image;
   final String uuid;
+  final List<String>? cohost_user_uuids;
+  final bool? is_music_mode;
 
   const UpdateOutpostRequest({
     this.luma_event_id,
     this.scheduled_for,
     this.image,
     required this.uuid,
+    this.cohost_user_uuids,
+    this.is_music_mode,
   });
 
   factory UpdateOutpostRequest.fromJson(Map<String, dynamic> json) =>

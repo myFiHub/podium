@@ -34,10 +34,28 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="podium" android:host="group-detail" />
                 <data android:scheme="podium" android:host="referral" />
-                <data android:scheme="podium" android:host="com.web3podium" android:path="/web3auth" />
+                <data android:scheme="podium" android:host="com.web3podium" />
                 <data android:scheme="http" android:host="web3podium.page.link" />
                 <data android:scheme="http" android:host="web3podium.page.link/group-detail" />
                 <data android:scheme="http" android:host="web3podium.page.link/referral" />
+            </intent-filter>
+
+            <!-- Replay (.podium) files. Many apps send them as generic binaries or zips. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/vnd.podium.replay" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/zip" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.podium.replay" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/zip" />
             </intent-filter>
 
             <!-- Specifies an Android theme to apply to this Activity as soon as
@@ -101,6 +119,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- to access notification -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- floating outpost controls over other apps during a call -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- to remove warning in google play -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />

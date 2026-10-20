@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:podium/app/modules/allOutposts/controllers/discover_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 
 class AllOutpostsController extends GetxController {
@@ -10,16 +11,10 @@ class AllOutpostsController extends GetxController {
   }
 
   @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
   Future<void> refresh() async {
-    await outpostsController.fetchAllOutpostsPage(0);
+    await Future.wait([
+      outpostsController.fetchAllOutpostsPage(0),
+      Get.find<DiscoverController>().refreshAll(),
+    ]);
   }
 }

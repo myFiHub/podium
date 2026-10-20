@@ -3,22 +3,25 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
-import "package:device_preview/device_preview.dart";
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/bindings/global_bindings.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
+import 'package:podium/app/modules/login/bindings/login_binding.dart';
+import 'package:podium/app/modules/login/views/login_view.dart';
+import 'package:podium/app/services/replay/replay_import_service.dart';
+import 'package:podium/app/services/replay/replay_processor.dart';
 import 'package:podium/env.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/api.dart';
 import 'package:podium/root.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/navigation/call_route_tracker.dart';
 import 'package:podium/utils/theme.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:web3auth_flutter/web3auth_flutter.dart';
@@ -43,26 +46,16 @@ Future<void> initDeepLinks() async {
   });
 }
 
-_extractLinkForAndroid(String link) {
+String _extractLinkForAndroid(String link) {
   String deepLinkedPage = link.replaceAll(Env.baseDeepLinkUrl, "");
   deepLinkedPage = deepLinkedPage.replaceAll("?id=", "/");
   deepLinkedPage = deepLinkedPage.replaceAll('?referrerId=', '/');
   return deepLinkedPage;
 }
 
-_setSystemUIOverlayStyle() {
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      systemNavigationBarIconBrightness: Brightness.light,
-      statusBarColor: ColorName.systemTrayBackground,
-      systemNavigationBarColor:
-          ColorName.navbarBackground, // Color de la barra de navegación
-      statusBarIconBrightness: Brightness.light, // Iconos claros en la
-    ),
-  );
-}
+void _setSystemUIOverlayStyle() => AppPalette.applySystemUi();
 
-_extractLinkForIOS(String link) {
+String _extractLinkForIOS(String link) {
   late String deepLinkedPage;
   Uri uri = Uri.parse(link);
   String? originalLink = uri.queryParameters['link'];
@@ -82,7 +75,7 @@ _extractLinkForIOS(String link) {
   return deepLinkedPage;
 }
 
-processLink(String? link) async {
+Future<void> processLink(String? link) async {
   if (link != null) {
     l.f('deep link: $link');
     late String deepLinkedPage;
@@ -113,45 +106,32 @@ processLink(String? link) async {
 }
 
 void main() async {
-  // final environment = read from dart-define
-  final environment = const String.fromEnvironment(
-    'ENVIRONMENT',
-    defaultValue: 'development',
-  );
-  print("ENVIRONMENT: $environment");
-  await dotenv.load(fileName: "env/$environment.env");
+  WidgetsFlutterBinding.ensureInitialized();
+  Env.ensureConfigured();
+  l.i("ENVIRONMENT: ${Env.environment}");
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitDown,
     DeviceOrientation.portraitUp,
   ]);
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: ColorName.systemTrayBackground,
-      systemNavigationBarColor:
-          ColorName.navbarBackground, // Color de la barra de navegación
-      statusBarIconBrightness: Brightness.light, // Iconos claros en la
-    ),
-  );
-
   await GetStorage.init();
+  AppPalette.load();
   HttpApis.configure();
-  // runApp(const MyApp());
-  runApp(
-    DevicePreview(
-      enabled:
-          //
-          false,
-      // !kReleaseMode,
-      builder: (context) => const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
-preCache(BuildContext context) {
-  Assets.images.values.forEach((asset) {
-    if (!asset.path.contains('.svg'))
-      precacheImage(AssetImage(asset.path), context);
-  });
+/// Only what the first (login) screen shows; the rest load on demand.
+void preCache(BuildContext context) {
+  for (var asset in [
+    Assets.images.logo,
+    Assets.images.xPlatform,
+    Assets.images.apple,
+    Assets.images.gIcon,
+    Assets.images.facebook,
+    Assets.images.linkedin,
+    Assets.images.github,
+  ]) {
+    precacheImage(asset.provider(), context);
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -161,16 +141,20 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  bool _isDarkMode = true;
+  /// The wallet modal follows the app palette, not the system theme.
+  bool get _isDarkMode => !AppPalette.current.isLight;
   ReownAppKitModalThemeData? _themeData;
 
   late final AppLifecycleListener _listener;
+  bool _imagesPrecached = false;
 
   @override
   void initState() {
     super.initState();
     _setSystemUIOverlayStyle();
     initDeepLinks();
+    ReplayProcessor.instance.recoverInterrupted();
+    ReplayImportService.instance.start();
 
     l.i(SchedulerBinding.instance.lifecycleState);
 
@@ -186,13 +170,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       onExitRequested: _handleExitRequest,
     );
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      setState(() {
-        final platformDispatcher = View.of(context).platformDispatcher;
-        final platformBrightness = platformDispatcher.platformBrightness;
-        _isDarkMode = platformBrightness == Brightness.dark;
-      });
-    });
   }
 
   @override
@@ -230,46 +207,71 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return AppExitResponse.exit;
 
     /// Cancel the exit.
-    // return AppExitResponse.cancel;
   }
 
   @override
-  void didChangePlatformBrightness() {
-    if (mounted) {
-      setState(() {
-        final platformDispatcher = View.of(context).platformDispatcher;
-        final platformBrightness = platformDispatcher.platformBrightness;
-        _isDarkMode = platformBrightness == Brightness.dark;
-      });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_imagesPrecached) {
+      _imagesPrecached = true;
+      preCache(context);
     }
-    super.didChangePlatformBrightness();
   }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    preCache(context);
     return ReownAppKitModalTheme(
       isDarkMode: _isDarkMode,
       themeData: _themeData,
       child: GetMaterialApp(
-        theme: darkThemeData,
+        theme: buildThemeData(),
         defaultTransition: Transition.native,
-        // showPerformanceOverlay: true,
         onDispose: () {
           jitsiMeet.hangUp();
         },
-        builder: (_, child) {
-          return SafeArea(
-            child: Root(
-              child: child!,
+        builder: (context, child) {
+          final insets = MediaQuery.paddingOf(context);
+          return ColoredBox(
+            color: ColorName.black,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: insets.top,
+                  child: ColoredBox(
+                    color: ColorName.systemTrayBackground,
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: insets.bottom,
+                  child: ColoredBox(color: ColorName.navbarBackground),
+                ),
+                SafeArea(
+                  child: Root(
+                    child: child!,
+                  ),
+                ),
+              ],
             ),
           );
         },
+        navigatorObservers: [CallRouteTracker.instance.observer],
         binds: globalBindings,
         debugShowCheckedModeBanner: false,
         initialRoute: AppPages.INITIAL,
         getPages: AppPages.routes,
+        unknownRoute: GetPage(
+          name: Routes.LOGIN,
+          page: () => const LoginView(),
+          binding: LoginBinding(),
+        ),
       ),
     );
   }
@@ -277,10 +279,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 // ignore: unused_element
   void _toggleTheme() => setState(() {
         _themeData = (_themeData == null) ? _customTheme : null;
-      });
-// ignore: unused_element
-  void _toggleBrightness() => setState(() {
-        _isDarkMode = !_isDarkMode;
       });
 
   ReownAppKitModalThemeData get _customTheme => ReownAppKitModalThemeData(

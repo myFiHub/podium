@@ -39,11 +39,12 @@ class WsOutgoingMessageData {
   final double? amount;
   final String react_to_user_address;
   final int? chain_id;
-
+  final String? tx_hash;
   WsOutgoingMessageData({
     required this.amount,
     required this.react_to_user_address,
     this.chain_id,
+    this.tx_hash,
   });
 
   factory WsOutgoingMessageData.fromJson(Map<String, dynamic> json) =>

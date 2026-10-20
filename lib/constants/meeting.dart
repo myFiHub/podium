@@ -25,9 +25,11 @@ class MeetingConstants {
       FeatureFlags.iosRecordingEnabled: iAmCreator,
       FeatureFlags.welcomePageEnabled: false,
       FeatureFlags.preJoinPageEnabled: false,
-      FeatureFlags.pipEnabled: true,
+      // The conference runs hidden (runInBackground), so Jitsi must not enter
+      // PiP or toggle immersive mode on the app's own window.
+      FeatureFlags.pipEnabled: false,
       FeatureFlags.kickOutEnabled: iAmCreator,
-      FeatureFlags.fullScreenEnabled: true,
+      FeatureFlags.fullScreenEnabled: false,
       FeatureFlags.reactionsEnabled: true,
       FeatureFlags.videoMuteEnabled: false,
       FeatureFlags.audioMuteButtonEnabled: allowedToSpeak,
@@ -40,6 +42,13 @@ class MeetingConstants {
       "startWithVideoMuted": true,
       "subject": outpost.name,
       "localSubject": outpost.name,
+      "p2p": {"enabled": false},
+      if (outpost.is_music_mode) ...{
+        "audioQuality": {"stereo": true, "opusMaxAverageBitrate": 128000},
+        "disableNS": true,
+        "disableAGC": true,
+        "disableHPF": true,
+      },
     };
   }
 
@@ -56,7 +65,11 @@ class MeetingConstants {
       avatar = avatarPlaceHolder(myUser.name);
     }
     return JitsiMeetConferenceOptions(
-      serverURL: sa != '' ? sa : Env.jitsiServerUrl,
+      serverURL: outpost.outpost_host_url != null
+          ? outpost.outpost_host_url!
+          : sa != ''
+              ? sa
+              : Env.jitsiServerUrl,
       room: outpost.uuid,
       configOverrides: configOverrides(outpost),
       featureFlags: featureFlags(
@@ -76,13 +89,13 @@ class MeetingConstants {
 }
 
 // transform 054dfc78-c174-49dc-a620-0f0da86d0400 to 054dfc78c17449dca6200f0da86d0400@gmail.com
-transformIdToEmailLike(String id) {
+String transformIdToEmailLike(String id) {
   final rawId = id.replaceAll('-', '');
   return '$rawId@gmail.com';
 }
 
 // transform 054dfc78c17449dca6200f0da86d0400@gmail.com to 054dfc78-c174-49dc-a620-0f0da86d0400
-transformEmailLikeToId(String email) {
+String transformEmailLikeToId(String email) {
   final parts = email.split('@');
   final id = parts[0];
   final idParts = id.split('');

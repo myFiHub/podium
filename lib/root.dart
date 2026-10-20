@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/floating_call_bubble.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/navbar.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 class Root extends StatelessWidget {
   final Widget child;
@@ -23,8 +27,8 @@ class Root extends StatelessWidget {
             const PodiumNavbar(),
           ],
         ),
-        // InternetConnectionChecker(),
-        // ConnectedNetworks(),
+        const InternetConnectionChecker(),
+        const FloatingCallBubble(),
       ],
     );
   }
@@ -42,42 +46,111 @@ class PageWrapper extends StatelessWidget {
   }
 }
 
-class InternetConnectionChecker extends GetView<GlobalController> {
+/// Shows a tiny badge in the top-right corner once the connection has been
+/// down for a few seconds, so brief network hiccups don't flash it.
+class InternetConnectionChecker extends StatefulWidget {
   const InternetConnectionChecker({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final connected = controller.isConnectedToInternet.value;
-      final AppLifecycleState state = controller.appLifecycleState.value;
-      return connected && state != AppLifecycleState.paused
-          ? const SizedBox()
-          : Positioned(
-              child: Material(
-                child: Container(
-                  color: Colors.black.withAlpha(77),
-                  child: Row(
-                    children: [
-                      Text(
-                        'connection issue',
-                        style: TextStyle(
-                          color: Colors.red[700],
-                          fontSize: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Icon(
-                        Icons.wifi_off,
-                        color: Colors.red,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              bottom: 70,
-              left: Get.width / 2 - 100,
-            );
+  State<InternetConnectionChecker> createState() =>
+      _InternetConnectionCheckerState();
+}
+
+class _InternetConnectionCheckerState extends State<InternetConnectionChecker> {
+  static const _showDelay = Duration(seconds: 3);
+
+  Worker? _worker;
+  Timer? _timer;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!Get.isRegistered<GlobalController>()) return;
+    final connection = Get.find<GlobalController>().isConnectedToInternet;
+    _onChange(connection.value);
+    _worker = ever<bool>(connection, _onChange);
+  }
+
+  void _onChange(bool connected) {
+    _timer?.cancel();
+    if (connected) {
+      if (_visible && mounted) setState(() => _visible = false);
+      return;
+    }
+    _timer = Timer(_showDelay, () {
+      if (mounted) setState(() => _visible = true);
     });
+  }
+
+  @override
+  void dispose() {
+    _worker?.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Sits just under the status bar, outside the 12px gutter page headers
+    // keep around their trailing buttons, and never takes touches.
+    return Positioned(
+      top: MediaQuery.paddingOf(context).top + 2,
+      right: 4,
+      child: IgnorePointer(
+        child: Semantics(
+          liveRegion: true,
+          label: _visible ? 'No connection, reconnecting' : null,
+          child: AnimatedScale(
+            scale: _visible ? 1 : 0.4,
+            duration: const Duration(milliseconds: 260),
+            curve: _visible ? Curves.easeOutBack : Curves.easeInCubic,
+            child: AnimatedOpacity(
+              opacity: _visible ? 1 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: _ConnectionIssueBadge(active: _visible),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConnectionIssueBadge extends StatelessWidget {
+  final bool active;
+  const _ConnectionIssueBadge({required this.active});
+
+  static const double _size = 15;
+
+  @override
+  Widget build(BuildContext context) {
+    final danger = ColorName.danger;
+    return AppBreathing(
+      active: active,
+      period: const Duration(milliseconds: 1600),
+      builder: (context, glow) => Container(
+        width: _size,
+        height: _size,
+        decoration: BoxDecoration(
+          color: danger,
+          shape: BoxShape.circle,
+          border: Border.all(color: ColorName.pageBackground, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: danger.withAlpha(60 + (90 * glow).round()),
+              blurRadius: 4 + 6 * glow,
+              spreadRadius: 1 * glow,
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.wifi_off_rounded,
+          size: 9,
+          color: AppColors.onColor(danger),
+        ),
+      ),
+    );
   }
 }
 
@@ -87,32 +160,11 @@ class AnimatedBgbWrapper extends GetView<GlobalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final loggedIn = controller.loggedIn.value;
-      return Container(
-          child: child,
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: loggedIn
-                  ? const Alignment(0, -1)
-                  : const Alignment(-0.0, -0.1),
-              colors: loggedIn ? _linearColors : _cirularColors,
-              radius: loggedIn ? 2.0 : 1.0,
-            ),
-          ));
-    });
+    return Obx(
+      () => AuroraBackground(
+        intensity: controller.loggedIn.value ? 1 : 1.3,
+        child: child,
+      ),
+    );
   }
 }
-
-final _linearColors = [
-  ColorName.pageBgGradientStart,
-  ColorName.pageBgGradientEnd,
-];
-final _cirularColors = [
-  ColorName.pageBgGradientStart.withAlpha(153),
-  ColorName.pageBgGradientStart.withAlpha(128),
-  ColorName.pageBgGradientStart.withAlpha(102),
-  ColorName.pageBgGradientStart.withAlpha(77),
-  ColorName.pageBgGradientStart.withAlpha(51),
-  // ColorName.pageBgGradientStart.withAlpha(26),
-];

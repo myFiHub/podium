@@ -23,13 +23,9 @@ class L {
 
 class CustomFilter extends LogFilter {
   @override
-  bool shouldLog(LogEvent event) {
-    // is krelease
-    if (kReleaseMode) {
-      return false;
-    }
-    return true; //Env.environment == DEVELOPMENT;
-  }
+  // Off in profile builds too: each call captures a stack trace, which would
+  // skew frame timings.
+  bool shouldLog(LogEvent event) => kDebugMode;
 }
 
 final l = L.log;

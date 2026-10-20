@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:podium/gen/colors.gen.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:textfield_tags/textfield_tags.dart';
 
 /*
@@ -16,24 +16,16 @@ class ButtonData {
 class DynamicTags extends StatefulWidget {
   final Function(List<String>) onTagsChanged;
   const DynamicTags({
-    Key? key,
+    super.key,
     required this.onTagsChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<DynamicTags> createState() => _DynamicTagsState();
 }
 
 class _DynamicTagsState extends State<DynamicTags> {
-  late double _distanceToField;
   late DynamicTagController<DynamicTagData<ButtonData>> _dynamicTagController;
-  final random = Random();
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _distanceToField = MediaQuery.of(context).size.width;
-  }
 
   @override
   void dispose() {
@@ -49,138 +41,135 @@ class _DynamicTagsState extends State<DynamicTags> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFieldTags<DynamicTagData<ButtonData>>(
-      textfieldTagsController: _dynamicTagController,
-      initialTags: const [],
-      textSeparators: const [' ', ',', '.', ';', '\n'],
-      letterCase: LetterCase.normal,
-      inputFieldBuilder: (context, inputFieldValues) {
-        return Container(
-          //width: Get.width - 20,
-          height: 50,
-          decoration: BoxDecoration(
-            color: ColorName.pageBackground,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          margin: const EdgeInsets.only(bottom: 12),
-          child: TextField(
-            controller: inputFieldValues.textEditingController,
-            focusNode: inputFieldValues.focusNode,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 10.0,
-                vertical: 10.0,
-              ),
-              border: const OutlineInputBorder(
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                // borderSide: BorderSide(
-                //   width: 1.0,
-                // ),
-              ),
-              enabledBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-                borderSide: const BorderSide(
-                  width: 1.0,
-                  color: ColorName.pageBackground,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxChipsWidth = constraints.maxWidth * 0.72;
+        return TextFieldTags<DynamicTagData<ButtonData>>(
+          textfieldTagsController: _dynamicTagController,
+          initialTags: const [],
+          textSeparators: const [' ', ',', '.', ';', '\n'],
+          letterCase: LetterCase.normal,
+          inputFieldBuilder: (context, inputFieldValues) {
+            final hasTags = inputFieldValues.tags.isNotEmpty;
+            return TextField(
+              controller: inputFieldValues.textEditingController,
+              focusNode: inputFieldValues.focusNode,
+              keyboardAppearance: Brightness.dark,
+              style: TextStyle(fontSize: 14, color: ColorName.white),
+              decoration: InputDecoration(
+                hintText: hasTags ? '' : 'Add tags (optional)',
+                prefixIconConstraints: BoxConstraints(
+                  minWidth: 44,
+                  minHeight: 44,
+                  maxWidth: maxChipsWidth,
                 ),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-                borderSide: const BorderSide(
-                  color: ColorName.secondaryBlue,
-                  width: 1.0,
-                ),
-              ),
-              hintText: inputFieldValues.tags.isNotEmpty
-                  ? ''
-                  : "Enter a tag (optional)...",
-              hintStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w300,
-              ),
-              prefixIconConstraints:
-                  BoxConstraints(maxWidth: _distanceToField * 0.75),
-              prefixIcon: inputFieldValues.tags.isNotEmpty
-                  ? SingleChildScrollView(
-                      controller: inputFieldValues.tagScrollController,
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                          children: inputFieldValues.tags
-                              .map((DynamicTagData<ButtonData> tag) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(8.0),
-                            ),
-                            color: tag.data.buttonColor,
-                          ),
-                          margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10.0, vertical: 5.0),
+                prefixIcon: hasTags
+                    ? Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: SingleChildScrollView(
+                          controller: inputFieldValues.tagScrollController,
+                          scrollDirection: Axis.horizontal,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              InkWell(
-                                child: Text(
-                                  '${tag.data.emoji} ${tag.tag}',
-                                  style: const TextStyle(
-                                      color: Color.fromARGB(255, 0, 0, 0)),
-                                ),
-                                onTap: () {
-                                  // print("${tag.tag} selected");
-                                },
-                              ),
-                              const SizedBox(width: 4.0),
-                              InkWell(
-                                child: const Icon(
-                                  Icons.cancel,
-                                  size: 16.0,
-                                  color: Color.fromARGB(255, 0, 0, 0),
-                                ),
-                                onTap: () {
+                            mainAxisSize: MainAxisSize.min,
+                            children: inputFieldValues.tags
+                                .map((DynamicTagData<ButtonData> tag) {
+                              return _TagChip(
+                                label: tag.tag,
+                                onRemove: () {
                                   inputFieldValues.onTagRemoved(tag);
                                   widget.onTagsChanged(inputFieldValues.tags
                                       .map((e) => e.tag)
                                       .toList());
                                 },
-                              )
-                            ],
+                              );
+                            }).toList(),
                           ),
-                        );
-                      }).toList()),
-                    )
-                  : null,
-              suffixIcon: inputFieldValues.tags.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.red),
-                      onPressed: () {
-                        _dynamicTagController.clearTags();
-                        widget.onTagsChanged([]);
-                      },
-                    ),
-            ),
-            onChanged: (value) {
-              final button = const ButtonData(ColorName.secondaryBlue, '');
-              final tagData = DynamicTagData(value, button);
-              inputFieldValues.onTagChanged(tagData);
-              widget.onTagsChanged(
-                  inputFieldValues.tags.map((e) => e.tag).toList());
-            },
-            onSubmitted: (value) {
-              final button = const ButtonData(ColorName.secondaryBlue, '');
-              final tagData = DynamicTagData(value, button);
-              inputFieldValues.onTagSubmitted(tagData);
-            },
-          ),
+                        ),
+                      )
+                    : const Icon(Icons.tag_rounded, size: 20),
+                suffixIcon: !hasTags
+                    ? null
+                    : IconButton(
+                        tooltip: 'Clear tags',
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        onPressed: () {
+                          _dynamicTagController.clearTags();
+                          widget.onTagsChanged([]);
+                        },
+                      ),
+              ),
+              onChanged: (value) {
+                final button = ButtonData(ColorName.secondaryBlue, '');
+                final tagData = DynamicTagData(value, button);
+                inputFieldValues.onTagChanged(tagData);
+                widget.onTagsChanged(
+                    inputFieldValues.tags.map((e) => e.tag).toList());
+              },
+              onSubmitted: (value) {
+                final button = ButtonData(ColorName.secondaryBlue, '');
+                final tagData = DynamicTagData(value, button);
+                inputFieldValues.onTagSubmitted(tagData);
+              },
+            );
+          },
         );
       },
     );
   }
 }
 
+class _TagChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onRemove;
+  const _TagChip({required this.label, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: ColorName.primaryBlue.withAlpha(36),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: ColorName.primaryBlue.withAlpha(100)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 140),
+            child: Text(
+              '#$label',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: ColorName.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onRemove,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Icon(
+                Icons.close_rounded,
+                size: 14,
+                color: ColorName.greyText,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class DynamicMultilineTags extends StatefulWidget {
-  const DynamicMultilineTags({Key? key}) : super(key: key);
+  const DynamicMultilineTags({super.key});
 
   @override
   State<DynamicMultilineTags> createState() => _DynamicMultilineTagsState();
@@ -343,9 +332,7 @@ class _DynamicMultilineTagsState extends State<DynamicMultilineTags> {
                                                 color: Color.fromARGB(
                                                     255, 0, 0, 0)),
                                           ),
-                                          onTap: () {
-                                            // print("${tag.tag} selected");
-                                          },
+                                          onTap: () {},
                                         ),
                                         const SizedBox(width: 4.0),
                                         InkWell(
@@ -399,9 +386,9 @@ class _DynamicMultilineTagsState extends State<DynamicMultilineTags> {
           onPressed: () {
             _dynamicTagController.clearTags();
           },
-          child: const Text(
+          child: Text(
             'CLEAR TAGS',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: ColorName.white),
           ),
         ),
       ],
@@ -410,7 +397,7 @@ class _DynamicMultilineTagsState extends State<DynamicMultilineTags> {
 }
 
 class DynamicAutoCompleteTags extends StatefulWidget {
-  const DynamicAutoCompleteTags({Key? key}) : super(key: key);
+  const DynamicAutoCompleteTags({super.key});
 
   @override
   State<DynamicAutoCompleteTags> createState() =>
@@ -491,10 +478,10 @@ class _DynamicAutoCompleteTagsState extends State<DynamicAutoCompleteTags> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 74, 137, 92),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Dynamic Tag Autocomplete Demo',
           style: TextStyle(
-            color: Colors.white,
+            color: ColorName.white,
             fontSize: 18.0,
           ),
         ),
@@ -615,9 +602,7 @@ class _DynamicAutoCompleteTagsState extends State<DynamicAutoCompleteTags> {
                                                   color: Color.fromARGB(
                                                       255, 0, 0, 0)),
                                             ),
-                                            onTap: () {
-                                              // print("${tag.tag} selected");
-                                            },
+                                            onTap: () {},
                                           ),
                                           const SizedBox(width: 4.0),
                                           InkWell(
@@ -686,9 +671,9 @@ class _DynamicAutoCompleteTagsState extends State<DynamicAutoCompleteTags> {
               onPressed: () {
                 _dynamicTagController.clearTags();
               },
-              child: const Text(
+              child: Text(
                 'CLEAR TAGS',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: ColorName.white),
               ),
             ),
           ],

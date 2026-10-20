@@ -7,13 +7,11 @@ class AdditionalDataForLogin {
   final String? email;
   final String? name;
   final String? image;
-  final String? loginType;
 
   AdditionalDataForLogin({
     this.email,
     this.name,
     this.image,
-    this.loginType,
   });
 
   factory AdditionalDataForLogin.fromJson(Map<String, dynamic> json) =>

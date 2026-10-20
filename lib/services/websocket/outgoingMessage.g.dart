@@ -44,6 +44,7 @@ WsOutgoingMessageData _$WsOutgoingMessageDataFromJson(
       amount: (json['amount'] as num?)?.toDouble(),
       react_to_user_address: json['react_to_user_address'] as String,
       chain_id: (json['chain_id'] as num?)?.toInt(),
+      tx_hash: json['tx_hash'] as String?,
     );
 
 Map<String, dynamic> _$WsOutgoingMessageDataToJson(
@@ -52,4 +53,5 @@ Map<String, dynamic> _$WsOutgoingMessageDataToJson(
       'amount': instance.amount,
       'react_to_user_address': instance.react_to_user_address,
       'chain_id': instance.chain_id,
+      'tx_hash': instance.tx_hash,
     };

@@ -8,13 +8,13 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/blockchain/blockchain.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/web3AuthProviderToLoginTypeString.dart';
 import 'package:podium/app/modules/login/utils/signAndVerify.dart';
+import 'package:podium/app/modules/global/services/deep_links.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/teamMembers/constantMembers.dart';
@@ -24,9 +24,8 @@ import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/loginType.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/storage.dart';
-import 'package:podium/utils/styles.dart';
-import 'package:podium/widgets/button/button.dart';
 import 'package:podium/widgets/textField/textFieldRounded.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web3auth_flutter/enums.dart';
 import 'package:web3auth_flutter/input.dart';
@@ -38,13 +37,9 @@ class LoginParametersKeys {
   static const referrerId = 'referrerId';
 }
 
-addressToUuid(String address) {
-  final uuid = const Uuid();
-  final uid = uuid.v5(Namespace.url.value, address);
-  return uid;
-}
-
 class LoginController extends GetxController {
+  final _authRepository = Get.find<AuthRepository>();
+  final _userRepository = Get.find<UserRepository>();
   final globalController = Get.find<GlobalController>();
   final storage = GetStorage();
   final isLoggingIn = false.obs;
@@ -54,18 +49,19 @@ class LoginController extends GetxController {
   final web3AuthLogintype = ''.obs;
   final internalWalletAddress = ''.obs;
   final internalWalletBalance = ''.obs;
-  Function? afterLogin = null;
+  Function? afterLogin;
+  String? _privateKeyFromWeb3Auth;
 
   final isReferrerInputExpanded = false.obs;
   final referrerNotFound = false.obs;
 
   final textController = TextEditingController();
 
-  toggleExpanded() {
+  void toggleExpandReferralInput() {
     isReferrerInputExpanded.value = !isReferrerInputExpanded.value;
   }
 
-  handlePaste() async {
+  Future<void> handlePaste() async {
     referrerNotFound.value = false;
     referrerIsFul.value = false;
     referrer.value = null;
@@ -104,14 +100,15 @@ class LoginController extends GetxController {
   StreamSubscription<bool>? isLoggedInListener;
   StreamSubscription<String>? deeplinkRouteListener;
 
-  LoginRequest? temporaryLoginRequest = null;
-  AdditionalDataForLogin? temporaryAdditionalData = null;
+  LoginRequest? temporaryLoginRequest;
+  AdditionalDataForLogin? temporaryAdditionalData;
 
   bool isBeforeLaunchUser = false;
 
   @override
   void onInit() {
     super.onInit();
+
     referrerId = Get.parameters[LoginParametersKeys.referrerId] ?? '';
     l.i('deepLinkRoute: $referrerId');
     if (referrerId.isNotEmpty) {
@@ -125,18 +122,20 @@ class LoginController extends GetxController {
 
   @override
   void onReady() {
-    globalController.deepLinkRoute.listen((v) {
+    super.onReady();
+    deeplinkRouteListener?.cancel();
+    deeplinkRouteListener = globalController.deepLinkRoute.listen((v) {
       if (v.isNotEmpty) {
         initializeReferral(null);
       }
     });
-    super.onReady();
   }
 
   @override
   void onClose() {
     isLoggedInListener?.cancel();
     deeplinkRouteListener?.cancel();
+    textController.dispose();
     super.onClose();
   }
 
@@ -147,8 +146,7 @@ class LoginController extends GetxController {
     loadingBuyTicketId.value = user.uuid;
     bool? bought;
     try {
-      final (success, hash) =
-          await AptosMovement.buyTicketFromTicketSellerOnPodiumPass(
+      final (success, hash) = await AptosMovement.buyPodiumPassFromUser(
         sellerAddress: user.aptos_address!,
         sellerName: user.name!,
         sellerUuid: user.uuid,
@@ -176,10 +174,10 @@ class LoginController extends GetxController {
     referrerIsFul.value = false;
     referrer.value = null;
     Future.delayed(const Duration(seconds: 0), () async {
-      referrerId =
-          id ?? _extractReferrerId(globalController.deepLinkRoute.value);
+      referrerId = id ??
+          (DeepLink.referrerId(globalController.deepLinkRoute.value) ?? '');
       if (referrerId.isNotEmpty) {
-        referrer.value = await HttpApis.podium.getUserData(referrerId);
+        referrer.value = await _userRepository.getUserData(referrerId);
         storage.write(StorageKeys.referrerId, referrerId);
 
         if (referrer.value?.remaining_referrals_count == 0) {
@@ -189,7 +187,8 @@ class LoginController extends GetxController {
           referrerNotFound.value = true;
           Toast.error(message: 'Referrer not found');
         } else {
-          Toast.success(message: 'use ${referrer.value?.name} as referrer');
+          Toast.success(
+              message: 'Using ${referrer.value?.name} as your referrer');
 
           if (temporaryLoginRequest != null) {
             isLoggingIn.value = true;
@@ -203,15 +202,6 @@ class LoginController extends GetxController {
     });
   }
 
-  String _extractReferrerId(String route) {
-    final splited = route.split('referral/');
-    if (splited.length < 2) {
-      l.f("splited: $splited");
-      return '';
-    }
-    return splited[1];
-  }
-
   void removeLogingInState() {
     isLoggingIn.value = false;
     globalController.isAutoLoggingIn.value = false;
@@ -222,19 +212,22 @@ class LoginController extends GetxController {
     ignoreIfNotLoggedIn = false,
   }) async {
     isLoggingIn.value = true;
+    await globalController.web3AuthReady;
     // in case user is backed from referral page(not auto logging in and clickes on a button in login page)
     if (!ignoreIfNotLoggedIn) {
       try {
         await Web3AuthFlutter.logout();
-      } catch (e) {}
+      } catch (e) {
+        // Nobody was logged in.
+      }
     }
     try {
       final (userInfo, privateKey) = await (
         Web3AuthFlutter.getUserInfo(),
         Web3AuthFlutter.getPrivKey()
       ).wait;
-      _continueSocialLoginWithUserInfoAndPrivateKey(
-        privateKey: privateKey,
+      _privateKeyFromWeb3Auth = privateKey;
+      continueSocialLoginWithUserInfoAndPrivateKey(
         userInfo: userInfo,
         loginMethod: loginMethod,
       );
@@ -290,9 +283,8 @@ class LoginController extends GetxController {
         }
         final privateKey = res.privKey!;
         final userInfo = res.userInfo!;
-
-        await _continueSocialLoginWithUserInfoAndPrivateKey(
-          privateKey: privateKey,
+        _privateKeyFromWeb3Auth = privateKey;
+        await continueSocialLoginWithUserInfoAndPrivateKey(
           userInfo: userInfo,
           loginMethod: loginMethod,
         );
@@ -307,20 +299,15 @@ class LoginController extends GetxController {
     }
   }
 
-  Future<void> _continueSocialLoginWithUserInfoAndPrivateKey({
-    required String privateKey,
+  Future<void> continueSocialLoginWithUserInfoAndPrivateKey({
     required TorusUserInfo userInfo,
     required Provider loginMethod,
   }) async {
+    final privateKey = _privateKeyFromWeb3Auth!;
+
     final ethereumKeyPair = EthPrivateKey.fromHex(privateKey);
     final publicAddress = ethereumKeyPair.address.hex;
-    final signature = signMessage(privateKey, publicAddress);
-    if (signature == null) {
-      l.e('Signature is not valid');
-      return;
-    }
 
-    final uid = addressToUuid(publicAddress);
 // aptos account
     final aptosAccount = AptosAccount.fromPrivateKey(privateKey);
     globalController.aptosAccount = aptosAccount;
@@ -330,7 +317,6 @@ class LoginController extends GetxController {
     internalWalletAddress.value = aptosAddress;
 
     await _socialLogin(
-      id: uid,
       name: userInfo.name ?? '',
       email: userInfo.email ?? '',
       avatar: userInfo.profileImage ?? '',
@@ -368,7 +354,6 @@ class LoginController extends GetxController {
   }
 
   Future<void> _socialLogin({
-    required String id,
     required String name,
     required String email,
     required String avatar,
@@ -380,29 +365,26 @@ class LoginController extends GetxController {
   }) async {
     if (email.isEmpty) {
       // just a placeholder for email
-      email = const Uuid().v4().replaceAll('-', '') + '@gmail.com';
+      email = '${const Uuid().v4().replaceAll('-', '')}@gmail.com';
     }
     // this is a bit weird, but we have to reset the value here to false, because it will be used in the next step (_checkIfUserHasPodiumDefinedEntryTicket)
     isBeforeLaunchUser = false;
     // this user will be saved, only if uuid of internal wallet is not registered, so empty local wallet address is fine
-    final signature = signMessage(privateKey, internalEvmWalletAddress);
-    if (signature == null) {
-      l.e('Signature is not valid');
-      Toast.error(
-        message: 'Error logging in',
-      );
-      return;
-    }
 
     final hasTicket = await _checkIfUserHasPodiumDefinedEntryTicket(
       myAptosAddress: internalAptosWalletAddress,
     );
+    final (signature, timestamp) =
+        signMessageWithTimestamp(privateKey, internalEvmWalletAddress);
 
     temporaryLoginRequest = LoginRequest(
       signature: signature,
+      timestamp: timestamp,
+      login_type: loginType,
       username: internalEvmWalletAddress,
       aptos_address: internalAptosWalletAddress,
-      has_ticket: hasTicket,
+      has_ticket: hasTicket ||
+          podiumTeamMembersAptosAddresses.contains(internalAptosWalletAddress),
       login_type_identifier: _fixLoginTypeIdentifier(loginTypeIdentifier),
       referrer_user_uuid: referrer.value?.uuid,
     );
@@ -410,32 +392,34 @@ class LoginController extends GetxController {
       email: email,
       name: name == email ? null : name,
       image: avatar,
-      loginType: loginType,
     );
     _continueLogin(hasTicket: hasTicket);
   }
 
-  _continueLogin({
+  Future<void> _continueLogin({
     required bool hasTicket,
     String? forcedReferrerID,
   }) async {
     final storageReferreId = storage.read<String>(StorageKeys.referrerId);
+    final privateKey = _privateKeyFromWeb3Auth!;
+    final (signature, timestamp) =
+        signMessageWithTimestamp(privateKey, temporaryLoginRequest!.username);
     final request = LoginRequest(
-      signature: temporaryLoginRequest!.signature,
+      signature: signature,
+      timestamp: timestamp,
       username: temporaryLoginRequest!.username,
       aptos_address: temporaryLoginRequest!.aptos_address,
       has_ticket: hasTicket,
+      login_type: temporaryLoginRequest!.login_type,
       login_type_identifier: temporaryLoginRequest!.login_type_identifier,
       referrer_user_uuid: forcedReferrerID ??
           storageReferreId ??
           (referrerId.isEmpty ? null : referrerId) ??
           temporaryLoginRequest?.referrer_user_uuid,
     );
-
     storage.remove(StorageKeys.referrerId);
-    l.d('request: ${request.toJson()}');
     final (userLoginResponse, errorMessage, responseCode) =
-        await HttpApis.podium.login(
+        await _authRepository.login(
       request: request,
       additionalData: temporaryAdditionalData!,
     );
@@ -470,7 +454,8 @@ class LoginController extends GetxController {
 
     //force to add name if field is empty
     String? savedName = userLoginResponse.name;
-    if (userLoginResponse.name == email || userLoginResponse.name == null) {
+    if (userLoginResponse.name == temporaryAdditionalData!.email ||
+        userLoginResponse.name == null) {
       savedName = await forceSaveUserFullName();
       if (savedName == null) {
         Toast.error(
@@ -485,23 +470,36 @@ class LoginController extends GetxController {
     // end force to add name if field is empty
 
     if (savedName != null) {
-      userLoginResponse.name = savedName;
-      globalController.myUserInfo.value = userLoginResponse;
+      final updatedUser = userLoginResponse.copyWith.name(savedName);
+      if (updatedUser.accounts.isEmpty) {
+        final newAccount = ConnectedAccount(
+          address: updatedUser.address,
+          aptos_address: updatedUser.aptos_address!,
+          image: updatedUser.image,
+          is_primary: true,
+          login_type: updatedUser.login_type,
+          login_type_identifier: updatedUser.login_type_identifier ?? '',
+          uuid: updatedUser.uuid,
+        );
+        final updatedUserWithAccount = updatedUser.copyWith(
+          accounts: [newAccount],
+        );
+        globalController.myUserInfo.value = updatedUserWithAccount;
+      } else {
+        globalController.myUserInfo.value = updatedUser;
+      }
       globalController.myUserInfo.refresh();
 
-      LoginTypeService.setLoginType(temporaryAdditionalData?.loginType ?? '');
+      LoginTypeService.setLoginType(temporaryLoginRequest!.login_type);
       globalController.setLoggedIn(true);
-      // newx line is commented because loginController is cleared from memory (offAllNamed in global controller)
-      // removeLogingInState();
       if (afterLogin != null) {
         afterLogin!();
         afterLogin = null;
       }
-      // Navigate.toInitial();
     }
   }
 
-  _redirectToBuyTicketPage() async {
+  Future<void> _redirectToBuyTicketPage() async {
     try {
       await getBalance();
     } catch (e) {
@@ -514,7 +512,7 @@ class LoginController extends GetxController {
     removeLogingInState();
   }
 
-  getBalance() async {
+  Future<void> getBalance() async {
     final balance = await AptosMovement.balance;
     internalWalletBalance.value = bigIntCoinToMoveOnAptos(balance).toString();
   }
@@ -523,18 +521,20 @@ class LoginController extends GetxController {
     required String myAptosAddress,
   }) async {
     try {
-      final users = await HttpApis.podium.getUserByAptosAddresses(
-        podiumTeamMembersAptosAddresses,
-      );
-      podiumUsersToBuyEntryTicketFrom.value = users;
-      final aptosAddresses = users.map((user) => user.aptos_address!).toList();
-      final callArray = aptosAddresses.map(
-        (address) => AptosMovement.getMyBalanceOnPodiumPass(
-          sellerAddress: address,
-          myAddress: myAptosAddress,
+      final (users, balances) = await (
+        _userRepository.getUserByAptosAddresses(
+          podiumTeamMembersAptosAddresses,
         ),
-      );
-      final balances = await Future.wait(callArray);
+        Future.wait(
+          podiumTeamMembersAptosAddresses.map(
+            (address) => AptosMovement.getMyBalanceOnPodiumPass(
+              sellerAddress: address,
+              myAddress: myAptosAddress,
+            ),
+          ),
+        ),
+      ).wait;
+      podiumUsersToBuyEntryTicketFrom.value = users;
       final hasTicket =
           balances.any((balance) => balance != null && balance > BigInt.zero);
       return hasTicket;
@@ -545,25 +545,24 @@ class LoginController extends GetxController {
   }
 
   Future<String?> forceSaveUserFullName() async {
-    final _formKey = GlobalKey<FormBuilderState>();
+    final formKey = GlobalKey<FormBuilderState>();
     String fullName = '';
     await Get.bottomSheet(
       isDismissible: false,
-      Container(
-        width: Get.width,
-        height: 300,
-        color: ColorName.cardBackground,
-        padding: const EdgeInsets.all(12),
+      isScrollControlled: true,
+      AppSheet(
+        title: 'Full Name',
         child: FormBuilder(
-          key: _formKey,
+          key: formKey,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'the name you want to use in the platform',
-                style: TextStyle(
-                  color: ColorName.greyText,
-                ),
+              Text(
+                'The name you want to use in the platform',
+                style: AppText.muted,
               ),
+              const SizedBox(height: 12),
               FormBuilderField(
                 builder: (FormFieldState<String?> field) {
                   return Input(
@@ -579,12 +578,11 @@ class LoginController extends GetxController {
                 },
                 name: 'fullName',
               ),
-              Button(
-                text: 'SUBMIT',
-                blockButton: true,
-                type: ButtonType.gradient,
+              const SizedBox(height: 16),
+              AppPrimaryButton(
+                label: 'Submit',
                 onPressed: () {
-                  final re = _formKey.currentState?.saveAndValidate();
+                  final re = formKey.currentState?.saveAndValidate();
                   if (re == true) {
                     Navigator.pop(Get.context!, fullName);
                   }
@@ -595,7 +593,7 @@ class LoginController extends GetxController {
         ),
       ),
     );
-    final user = await HttpApis.podium.updateMyUserData(
+    final user = await _userRepository.updateMyUserData(
       {
         'name': fullName,
       },
@@ -611,23 +609,23 @@ class LoginController extends GetxController {
 }
 
 Future<String?> showDialogToGetTheEmail() async {
-  final _formKey = GlobalKey<FormBuilderState>();
+  final formKey = GlobalKey<FormBuilderState>();
   String email = '';
   final String? enteredEmail = await Get.bottomSheet(
-    Container(
-      height: 400,
-      color: ColorName.cardBackground,
+    isScrollControlled: true,
+    AppSheet(
+      title: 'Email',
       child: FormBuilder(
-        key: _formKey,
+        key: formKey,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            space10,
-            const Text(
+            Text(
               'Please enter your email address',
-              style: TextStyle(
-                color: ColorName.greyText,
-              ),
+              style: AppText.muted,
             ),
+            const SizedBox(height: 12),
             FormBuilderField(
               name: 'email',
               builder: (FormFieldState<String?> field) {
@@ -642,12 +640,11 @@ Future<String?> showDialogToGetTheEmail() async {
                 );
               },
             ),
-            Button(
-              text: 'SUBMIT',
-              blockButton: true,
-              type: ButtonType.gradient,
+            const SizedBox(height: 16),
+            AppPrimaryButton(
+              label: 'Submit',
               onPressed: () {
-                final re = _formKey.currentState?.saveAndValidate();
+                final re = formKey.currentState?.saveAndValidate();
                 if (re == true) {
                   Navigator.pop(Get.context!, email);
                 }

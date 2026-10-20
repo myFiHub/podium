@@ -4,31 +4,32 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/checkTicket/controllers/checkTicket_controller.dart';
-import 'package:podium/app/modules/checkTicket/views/checkTicket_view.dart';
+import 'package:podium/app/modules/createOutpost/luma_event.dart';
 import 'package:podium/app/modules/createOutpost/controllers/create_outpost_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
+import 'package:podium/app/modules/global/controllers/join_outpost_flow.dart';
+import 'package:podium/app/modules/global/popUpsAndModals/outpostBanNotice.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
-import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/controllers/outpost_detail_controller.dart';
 import 'package:podium/app/modules/search/controllers/search_controller.dart';
 import 'package:podium/app/routes/app_pages.dart';
-import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/providers/api/api.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/providers/api/luma/models/addGuest.dart';
 import 'package:podium/providers/api/luma/models/addHost.dart';
-import 'package:podium/providers/api/luma/models/createEvent.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/outpost.dart';
 import 'package:podium/providers/api/podium/models/outposts/updateOutpostRequest.dart';
-import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/utils/throttleAndDebounce/debounce.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
+
+export 'package:podium/app/modules/checkTicket/ticket_access.dart'
+    show OutpostAccesses;
 
 /// Sends an outpost event to the WebSocket server
 ///
@@ -74,6 +75,8 @@ final debounceForFetchingNumberOfOnlineMembers =
     Debouncing(duration: const Duration(seconds: 2));
 
 class OutpostsController extends GetxController {
+  final _outpostRepository = Get.find<OutpostRepository>();
+  final _joinFlow = JoinOutpostFlow();
   final showCreateButton = true.obs;
 
   final globalController = Get.find<GlobalController>();
@@ -82,17 +85,6 @@ class OutpostsController extends GetxController {
   final myOutposts = Rx<Map<String, OutpostModel>>({});
   final isGettingMyOutposts = false.obs;
   final isGettingAllOutposts = false.obs;
-
-  final presentUsersInGroupsMap = Rx<Map<String, List<String>>>({});
-  final takingUsersInGroupsMap = Rx<Map<String, List<String>>>({});
-  final tmpPresentUsersInGroupsMap = <String, List<String>>{};
-  final tmpTakingUsersInGroupsMap = <String, List<String>>{};
-  final enterListenersMap = {};
-  final updateListenersMap = {};
-  final leaveListenersMap = {};
-  final gettingAllOutposts = true.obs;
-  bool initializedChannels = false;
-  bool gotDetectPresenceTime = false;
 
   final lastPageReachedForAllOutposts = false.obs;
   final lastPageReachedForMyOutposts = false.obs;
@@ -118,13 +110,10 @@ class OutpostsController extends GetxController {
       if (loggedIn) {
         fetchAllOutpostsPage(0);
         fetchMyOutpostsPage(0);
-      } else {}
+      } else {
+        clearOutposts();
+      }
     });
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
   }
 
   @override
@@ -134,99 +123,117 @@ class OutpostsController extends GetxController {
     _loggedInListener?.cancel();
   }
 
+  static const _onlineCountMaxAge = Duration(seconds: 15);
+  final _onlineCountFetchedAt = <String, DateTime>{};
+
   void addOutpostToView(String outpostId) {
     mapOfOutpostsInView.value[outpostId] = true;
-    final List<String> ids = mapOfOutpostsInView.value.keys
-        .where((String e) => mapOfOutpostsInView.value[e] == true)
-        .toList();
     debounceForFetchingNumberOfOnlineMembers.debounce(() async {
-      final Map<String, Future<int>> calls = <String, Future<int>>{};
-      for (String id in ids) {
-        calls[id] = HttpApis.podium.getNumberOfOnlineMembers(id);
+      final now = DateTime.now();
+      final ids = mapOfOutpostsInView.value.keys.where((id) {
+        final fetchedAt = _onlineCountFetchedAt[id];
+        return fetchedAt == null ||
+            now.difference(fetchedAt) > _onlineCountMaxAge;
+      }).toList();
+      if (ids.isEmpty) return;
+      for (final id in ids) {
+        _onlineCountFetchedAt[id] = now;
       }
-      final Map<String, dynamic> results = await allSettled(calls);
-      final Map<String, int> map = <String, int>{};
-      for (String id in ids) {
-        if (results[id]?['status'] == AllSettledStatus.fulfilled &&
-            results[id]?['value'] != 0) {
-          map[id] = results[id]!['value'];
+      final results = await allSettled({
+        for (final id in ids)
+          id: _outpostRepository.getNumberOfOnlineMembers(id),
+      });
+      // Merge, so outposts scrolled out of view keep their last live count.
+      final map = {...mapOfOnlineUsersInOutposts.value};
+      for (final id in ids) {
+        final result = results[id];
+        if (result?.isFulfilled != true) continue;
+        if (result!.value != 0) {
+          map[id] = result.value!;
+        } else {
+          map.remove(id);
         }
       }
-
-      mapOfOutpostsInView.value = <String, bool>{};
       mapOfOnlineUsersInOutposts.value = map;
     });
   }
 
   void removeOutpostFromView(String outpostId) {
-    mapOfOutpostsInView.value[outpostId] = false;
+    mapOfOutpostsInView.value.remove(outpostId);
   }
 
-  fetchAllOutpostsPage(int pageKey) async {
-    try {
-      if (pageKey == 0) {
-        isGettingAllOutposts.value = true;
-        outposts.value = {};
-        lastPageReachedForAllOutposts.value = false;
-      }
-      final newItems = await HttpApis.podium.getOutposts(
+  /// Page 0 replaces the list once the response arrives, so a refresh keeps
+  /// showing the current outposts instead of flashing skeletons. A failed
+  /// request leaves the list as it was.
+  Future<void> fetchAllOutpostsPage(int pageKey) {
+    return _fetchPage(
+      pageKey: pageKey,
+      target: outposts,
+      isLoading: isGettingAllOutposts,
+      lastPageReached: lastPageReachedForAllOutposts,
+      fetch: () => _outpostRepository.getOutposts(
         page: pageKey,
         page_size: numberOfOutpostsPerPage,
-      );
-      if (newItems.length < numberOfOutpostsPerPage) {
-        lastPageReachedForAllOutposts.value = true;
+      ),
+    );
+  }
+
+  Future<void> fetchMyOutpostsPage(int pageKey) {
+    return _fetchPage(
+      pageKey: pageKey,
+      target: myOutposts,
+      isLoading: isGettingMyOutposts,
+      lastPageReached: lastPageReachedForMyOutposts,
+      fetch: () => _outpostRepository.getMyOutposts(
+        include_archived: showArchivedOutposts.value,
+        page: pageKey,
+        page_size: numberOfOutpostsPerPage,
+      ),
+    );
+  }
+
+  Future<void> _fetchPage({
+    required int pageKey,
+    required Rx<Map<String, OutpostModel>> target,
+    required RxBool isLoading,
+    required RxBool lastPageReached,
+    required Future<List<OutpostModel>> Function() fetch,
+  }) async {
+    if (pageKey == 0) {
+      isLoading.value = true;
+    }
+    try {
+      final newItems = await fetch();
+      target.value = {
+        if (pageKey != 0) ...target.value,
+        for (final outpost in newItems) outpost.uuid: outpost,
+      };
+      lastPageReached.value = newItems.length < numberOfOutpostsPerPage;
+    } on ApiFailure catch (e) {
+      // Load-more retries on every scroll, so only a refresh is worth a toast.
+      if (pageKey == 0) {
+        Toast.error(message: e.message);
       }
-      final previousOutposts = outposts.value.values.toList();
-      final outpostsMap = Map<String, OutpostModel>.fromEntries(
-        [...previousOutposts, ...newItems].map((e) => MapEntry(e.uuid, e)),
-      );
-      outposts.value = outpostsMap;
-    } catch (error) {
     } finally {
-      isGettingAllOutposts.value = false;
+      isLoading.value = false;
     }
   }
 
-  fetchMyOutpostsPage(int pageKey) async {
-    try {
-      if (pageKey == 0) {
-        myOutposts.value = {};
-        lastPageReachedForMyOutposts.value = false;
-        isGettingMyOutposts.value = true;
-      }
-      final showArchived = showArchivedOutposts.value;
-      final newItems = await HttpApis.podium.getMyOutposts(
-        include_archived: showArchived,
-        page: pageKey,
-        page_size: numberOfOutpostsPerPage,
-      );
-      if (newItems.length < numberOfOutpostsPerPage) {
-        lastPageReachedForMyOutposts.value = true;
-      }
-      final previousOutposts = myOutposts.value.values.toList();
-      final outpostsMap = Map<String, OutpostModel>.fromEntries(
-        [...previousOutposts, ...newItems].map((e) => MapEntry(e.uuid, e)),
-      );
-      myOutposts.value = outpostsMap;
-
-      if (pageKey == 0) {
-        isGettingMyOutposts.value = false;
-      }
-    } catch (error) {
-    } finally {
-      isGettingMyOutposts.value = false;
-    }
-  }
-
-  getPresentUsersInGroup(String groupId) {
-    return tmpPresentUsersInGroupsMap[groupId] ?? [];
+  /// Drops the previous account's lists so they never show for the next one.
+  void clearOutposts() {
+    outposts.value = {};
+    myOutposts.value = {};
+    lastPageReachedForAllOutposts.value = false;
+    lastPageReachedForMyOutposts.value = false;
+    mapOfOnlineUsersInOutposts.value = {};
+    _onlineCountFetchedAt.clear();
   }
 
   Future<void> leaveOutpost({required OutpostModel outpost}) async {
     try {
       final userWantsToLeave = await _showModalToLeaveGroup(outpost: outpost);
       if (userWantsToLeave != true) return;
-      final success = await HttpApis.podium.leaveOutpost(outpost.uuid);
+      final success = await _outpostRepository.leaveOutpost(outpost.uuid);
       if (success) {
         //  update existing outpost in all outposts page controller and set i_am_member to false
         OutpostModel updatedOutpost = outpost.copyWith.i_am_member(false);
@@ -237,7 +244,6 @@ class OutpostsController extends GetxController {
         fetchMyOutpostsPage(0);
 
         Toast.success(
-          title: "Success",
           message: "You have left the outpost",
         );
       }
@@ -249,7 +255,7 @@ class OutpostsController extends GetxController {
   Future<String?> uploadOutpostImage(
       OutpostModel outpost, String newImageUrl) async {
     try {
-      final updated = await HttpApis.podium.updateOutpost(
+      final updated = await _outpostRepository.updateOutpost(
         request: UpdateOutpostRequest(
           image: newImageUrl,
           uuid: outpost.uuid,
@@ -274,16 +280,14 @@ class OutpostsController extends GetxController {
     if (canContinue == null || canContinue == false) return;
     final archive = !outpost.is_archived;
     final success =
-        await HttpApis.podium.toggleOutpostArchive(outpost.uuid, archive);
+        await _outpostRepository.toggleOutpostArchive(outpost.uuid, archive);
     if (success != true) {
       Toast.error(
-        title: "Error",
         message: "Failed to toggle archive",
       );
       return;
     }
     Toast.success(
-      title: "Success",
       message: "Outpost ${archive ? "archived" : "is available again"}",
     );
 
@@ -299,59 +303,6 @@ class OutpostsController extends GetxController {
     );
   }
 
-  Future<String?> _createLumaEvent({
-    required String outpostId,
-    required int scheduledFor,
-    required String outpostName,
-    required List<AddHostModel> lumaHosts,
-    required List<AddGuestModel> lumaGuests,
-  }) async {
-    try {
-      final isoDate = DateTime.fromMillisecondsSinceEpoch(scheduledFor)
-          .toUtc()
-          .toIso8601String();
-      final oneHourAfter =
-          DateTime.fromMillisecondsSinceEpoch(scheduledFor + 60 * 60 * 1000)
-              .toUtc()
-              .toIso8601String();
-      final lumaEvent = Luma_CreateEvent(
-        name: outpostName,
-        start_at: isoDate,
-        end_at: oneHourAfter,
-        timezone: 'UTC',
-        meeting_url: generateOutpostShareUrl(outpostId: outpostId),
-      );
-      final createdEvent = await HttpApis.lumaApi.createEvent(event: lumaEvent);
-      if (createdEvent != null) {
-        final eventId = createdEvent.event.api_id;
-        final Map<String, Future<bool?>> addHostsCallMap = {};
-        for (var host in lumaHosts) {
-          addHostsCallMap[host.email] = HttpApis.lumaApi.addHost(
-            host: AddHostModel(
-              event_api_id: eventId,
-              email: host.email,
-              name: host.name,
-            ),
-          );
-        }
-        // since we are adding hosts and guests in parallel, we need to wait for all of them to finish,
-        // ignoring the failed ones, since we always can add them later
-        await allSettled(addHostsCallMap);
-        final GuestsAdded = await HttpApis.lumaApi.addGuests(
-          eventId: eventId,
-          guests: lumaGuests,
-        );
-        if (GuestsAdded == true) {
-          Toast.success(message: 'Luma Event Created');
-          return eventId;
-        }
-      }
-    } catch (e) {
-      l.e(e);
-    }
-    return null;
-  }
-
   Future<OutpostModel?> createOutpost({
     required String name,
     required String accessType,
@@ -365,18 +316,20 @@ class OutpostsController extends GetxController {
     required List<String> requiredAddressesToSpeak,
     required List<String> tags,
     required int scheduledFor,
+    required List<String> cohosts,
+    bool musicMode = false,
     String? imageUrl,
     bool shouldCreateLumaEvent = false,
     List<AddHostModel> lumaHosts = const [],
     List<AddGuestModel> lumaGuests = const [],
   }) async {
     final accessAddresses = [
-      ...requiredAddressesToEnter.map((e) => e).toList(),
-      ...requiredTicketsToAccess.map((e) => e.activeAddress).toList(),
+      ...requiredAddressesToEnter,
+      ...requiredTicketsToAccess.map((e) => e.activeAddress),
     ];
     final speakAddresses = [
-      ...requiredAddressesToSpeak.map((e) => e).toList(),
-      ...requiredTicketsToSpeak.map((e) => e.activeAddress).toList(),
+      ...requiredAddressesToSpeak,
+      ...requiredTicketsToSpeak.map((e) => e.activeAddress),
     ];
 
     final createOutpostRequest = CreateOutpostRequest(
@@ -391,27 +344,29 @@ class OutpostsController extends GetxController {
       tags: tags,
       tickets_to_enter: accessAddresses,
       tickets_to_speak: speakAddresses,
+      cohost_user_uuids: cohosts,
+      is_music_mode: musicMode,
     );
     try {
       OutpostModel? response;
-      response = await HttpApis.podium.createOutpost(
+      response = await _outpostRepository.createOutpost(
         createOutpostRequest,
       );
 
       if (response != null) {
         if (shouldCreateLumaEvent) {
-          final lumaEventId = await _createLumaEvent(
+          final lumaEventId = await createLumaEventForOutpost(
             outpostId: response.uuid,
-            scheduledFor: scheduledFor,
             outpostName: name,
-            lumaHosts: lumaHosts,
-            lumaGuests: lumaGuests,
+            scheduledFor: scheduledFor,
+            hosts: lumaHosts,
+            guests: lumaGuests,
           );
           if (lumaEventId == null) {
             Toast.error(message: 'Failed to create Luma Event');
             return response;
           } else {
-            final success = await HttpApis.podium.updateOutpost(
+            final success = await _outpostRepository.updateOutpost(
               request: UpdateOutpostRequest(
                 uuid: response.uuid,
                 luma_event_id: lumaEventId,
@@ -430,7 +385,6 @@ class OutpostsController extends GetxController {
       return response;
     } catch (e) {
       Toast.error(
-        title: "Error",
         message: "Failed to create the Outpost",
       );
       return null;
@@ -444,17 +398,14 @@ class OutpostsController extends GetxController {
   }) async {
     outpostId = outpostId.replaceAll('/', '');
     if (outpostId.isEmpty) return;
-    if (joiningOutpostId != '') {
-      return;
-    }
+    if (joiningOutpostId.value.isNotEmpty) return;
     try {
       joiningOutpostId.value = outpostId;
-      final outpost = await HttpApis.podium.getOutpost(outpostId);
-      l.d("Outpost: $outpost");
+      final outpost = await _outpostRepository.getOutpost(outpostId);
       if (outpost == null) {
         Toast.error(
-          title: "Error",
-          message: "Failed to join the Outpost, Outpost not found",
+          title: "Error-455",
+          message: "Failed to join the Outpost",
         );
         Navigate.to(
           type: NavigationTypes.offAllNamed,
@@ -463,16 +414,23 @@ class OutpostsController extends GetxController {
         return;
       }
 
-      final accesses = await getOutpostAccesses(
+      final ban = outpost.my_ban;
+      if (ban != null && ban.isActive) {
+        updateOutpost_local(outpost);
+        showOutpostBanNotice(ban, outpostName: outpost.name);
+        return;
+      }
+
+      final accesses = await _joinFlow.getOutpostAccesses(
         outpost: outpost,
-        joiningByLink: joiningByLink,
+        joiningByLink: joiningByLink ?? false,
       );
       l.d("Accesses: ${accesses.canEnter} ${accesses.canSpeak}");
       if (accesses.canEnter == false) {
         joiningOutpostId.value = '';
         return;
       }
-      final hasAgeVerified = await _showAreYouOver18Dialog(
+      final hasAgeVerified = await _joinFlow.confirmAge(
         outpost: outpost,
         myUser: myUser,
       );
@@ -482,12 +440,11 @@ class OutpostsController extends GetxController {
       }
       final isAlreadyMember = outpost.i_am_member;
       if (!isAlreadyMember) {
-        final added = await HttpApis.podium.addMeAsMember(
+        final added = await _outpostRepository.addMeAsMember(
           outpostId: outpost.uuid,
         );
         if (!added) {
           Toast.error(
-            title: "Error",
             message: "Failed to join the Outpost, try again or report a bug",
           );
           return;
@@ -499,7 +456,7 @@ class OutpostsController extends GetxController {
             updatedOutpost.copyWith.members_count(numberOfMembers + 1);
         updateOutpost_local(updatedOutpost);
         _openOutpost(
-          outpost: outpost,
+          outpost: updatedOutpost,
           openTheRoomAfterJoining: openTheRoomAfterJoining ?? false,
           accesses: accesses,
           isAlreadyMember: isAlreadyMember,
@@ -515,7 +472,6 @@ class OutpostsController extends GetxController {
       }
     } catch (e) {
       Toast.error(
-        title: "Error",
         message: "Failed to join the Outpost,please try again or report a bug",
       );
       l.f("Error joining outpost: $e");
@@ -526,10 +482,10 @@ class OutpostsController extends GetxController {
     return;
   }
 
-  _openOutpost({
+  Future<void> _openOutpost({
     required OutpostModel outpost,
     required bool openTheRoomAfterJoining,
-    required GroupAccesses accesses,
+    required OutpostAccesses accesses,
     bool? isAlreadyMember,
   }) async {
     final isAlreadyRegistered = Get.isRegistered<OutpostDetailController>();
@@ -560,222 +516,49 @@ class OutpostsController extends GetxController {
 
   /// updates the outpost in the local list of outposts and my outposts and searched outposts, the new outpost is not fetched from the server,
   /// edits most be done before calling this function, then pass the edited outpost to this function
-  updateOutpost_local(OutpostModel outpost) {
-    final outpostIndex = outposts.value.values
-        .toList()
-        .indexWhere((element) => element.uuid == outpost.uuid);
-    if (outpostIndex != -1) {
-      outposts.value[outpost.uuid] = outpost;
-      outposts.refresh();
-    }
-    final myOutpostIndex = myOutposts.value.values
-        .toList()
-        .indexWhere((element) => element.uuid == outpost.uuid);
-    if (myOutpostIndex != -1) {
-      myOutposts.value[outpost.uuid] = outpost;
-      myOutposts.refresh();
+  void updateOutpost_local(OutpostModel updatedOutpost) {
+    for (final list in [outposts, myOutposts]) {
+      if (list.value.containsKey(updatedOutpost.uuid)) {
+        list.value[updatedOutpost.uuid] = updatedOutpost;
+        list.refresh();
+      }
     }
 
     final isSearchRegistered = Get.isRegistered<SearchPageController>();
     if (isSearchRegistered) {
       final searchController = Get.find<SearchPageController>();
-      searchController.updateOutpost_local(outpost);
+      searchController.updateOutpost_local(updatedOutpost);
     }
-  }
-
-  Future<GroupAccesses?> _checkLumaAccess(
-      {required OutpostModel outpost}) async {
-    try {
-      if (outpost.luma_event_id != null && outpost.luma_event_id!.isNotEmpty) {
-        final myLoginType = myUser.login_type;
-        if (myLoginType != null) {
-          if (myLoginType.contains('google') || myLoginType.contains('email')) {
-            final myEmail = myUser.email;
-            final (guests, event) = await (
-              HttpApis.lumaApi.getGuests(eventId: outpost.luma_event_id!),
-              HttpApis.lumaApi.getEvent(eventId: outpost.luma_event_id!)
-            ).wait;
-            final guestsList = guests.map((e) => e.guest).toList();
-            final hostsList = event?.hosts ?? [];
-            final guestEmails = guestsList.map((e) => e.user_email).toList();
-            final hostsEmails = hostsList.map((e) => e.email).toList();
-            final isGuest = guestEmails.contains(myEmail);
-            final isHost = hostsEmails.contains(myEmail);
-            if (isGuest || isHost) {
-              return GroupAccesses(canEnter: true, canSpeak: true);
-            }
-          }
-        }
-      }
-      return null;
-    } catch (e) {
-      l.e(e);
-      return null;
+    final isOutpostDetailRegistered =
+        Get.isRegistered<OutpostDetailController>();
+    if (isOutpostDetailRegistered) {
+      final outpostDetailController = Get.find<OutpostDetailController>();
+      outpostDetailController.outpost.value = updatedOutpost;
     }
-  }
-
-  Future<GroupAccesses> getOutpostAccesses(
-      {required OutpostModel outpost, bool? joiningByLink}) async {
-    final myUser = globalController.myUserInfo.value!;
-    final iAmGroupCreator = outpost.creator_user_uuid == myUser.uuid;
-    if (iAmGroupCreator) return GroupAccesses(canEnter: true, canSpeak: true);
-    final lumaAccessResponse = await _checkLumaAccess(outpost: outpost);
-    if (lumaAccessResponse != null) {
-      return lumaAccessResponse;
-    }
-    if (accessIsBuyableByTicket(outpost) || speakIsBuyableByTicket(outpost)) {
-      final GroupAccesses? accesses = await checkTicket(outpost: outpost);
-      if (accesses?.canEnter == false) {
-        Toast.error(
-          title: "Error",
-          message: "You need a ticket to join this Outpost",
-        );
-        return GroupAccesses(canEnter: false, canSpeak: false);
-      } else {
-        return accesses != null
-            ? accesses
-            : GroupAccesses(canEnter: false, canSpeak: false);
-      }
-    }
-
-    if (outpost.is_archived) {
-      Toast.error(
-        title: "Error",
-        message: "This Outpost is archived",
-      );
-      return GroupAccesses(canEnter: false, canSpeak: false);
-    }
-    if (outpost.i_am_member)
-      return GroupAccesses(
-          canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
-    if (outpost.enter_type == FreeOutpostAccessTypes.public)
-      return GroupAccesses(
-          canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
-    if (outpost.enter_type == FreeOutpostAccessTypes.onlyLink) {
-      if (joiningByLink == true) {
-        return GroupAccesses(
-            canEnter: true, canSpeak: canISpeakWithoutTicket(outpost: outpost));
-      } else {
-        Toast.error(
-          title: "Error",
-          message: "This is a private Outpost, you need an invite link to join",
-        );
-        return GroupAccesses(canEnter: false, canSpeak: false);
-      }
-    }
-
-    final invitedMembers = outpost.invites;
-    if (outpost.enter_type == FreeOutpostAccessTypes.invitees) {
-      if (invitedMembers?.map((e) => e.invitee_uuid).contains(myUser.uuid) ==
-          true) {
-        return GroupAccesses(
-          canEnter: true,
-          canSpeak: canISpeakWithoutTicket(outpost: outpost),
-        );
-      } else {
-        Toast.error(
-          title: "Error",
-          message: "You need an invite to join this Outpost",
-        );
-        return GroupAccesses(canEnter: false, canSpeak: false);
-      }
-    }
-
-    return GroupAccesses(canEnter: false, canSpeak: false);
-  }
-
-  Future<GroupAccesses?> checkTicket({required OutpostModel outpost}) async {
-    joiningOutpostId.value = outpost.uuid;
-    final checkTicketController = Get.put(CheckticketController());
-    checkTicketController.outpost.value = outpost;
-    final accesses = await checkTicketController.checkTickets();
-    if (accesses.canEnter == true && accesses.canSpeak == true) {
-      joiningOutpostId.value = '';
-      return GroupAccesses(
-        canEnter: accesses.canEnter,
-        canSpeak: accesses.canSpeak,
-      );
-    } else {
-      final result = await Get.dialog<GroupAccesses?>(CheckTicketView());
-      l.d("Result: $result. Can enter: ${result?.canEnter}, can speak: ${result?.canSpeak}");
-      Get.delete<CheckticketController>();
-      joiningOutpostId.value = '';
-      return result;
-    }
-  }
-
-  Future<bool> _showAreYouOver18Dialog({
-    required OutpostModel outpost,
-    required UserModel myUser,
-  }) async {
-    final isGroupAgeRestricted = outpost.has_adult_content;
-    final iAmOwner = outpost.creator_user_uuid == myUser.uuid;
-    final iAmMember = outpost.i_am_member;
-    final amIOver18 = myUser.is_over_18;
-    if (iAmMember || iAmOwner || !isGroupAgeRestricted || amIOver18 == true) {
-      return true;
-    }
-
-    final result = await Get.dialog(
-      AlertDialog(
-        backgroundColor: ColorName.cardBackground,
-        title: const Text("Are you over 18?"),
-        content: const Text(
-          "This group is for adults only, are you over 18?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(Get.overlayContext!).pop(false);
-            },
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () {
-              globalController.setIsMyUserOver18(true);
-              HttpApis.podium.updateMyUserData({'is_over_18': true});
-              Navigator.of(Get.overlayContext!).pop(true);
-            },
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
-    );
-    return result;
   }
 }
 
-Map<String, OutpostModel> getOutpostsVisibleToMe(
-    Map<String, OutpostModel> groups, String myId) {
-  return groups;
-  // final filteredGroups = groups.entries.where((element) {
-  //   if (element.value.privacyType == RoomPrivacyTypes.public ||
-  //       element.value.members.contains(myId)) {
-  //     return true;
-  //   }
-  //   return false;
-  // }).toList();
-  // final filteredGroupsConverted = Map<String, FirebaseGroup>.fromEntries(
-  //   filteredGroups,
-  // );
-  // return filteredGroupsConverted;
-}
-
-_showModalToToggleArchiveGroup({required OutpostModel outpost}) async {
+Future<dynamic> _showModalToToggleArchiveGroup(
+    {required OutpostModel outpost}) async {
   final isCurrentlyArchived = outpost.is_archived;
   final result = await Get.dialog(
-    AlertDialog(
-      backgroundColor: ColorName.cardBackground,
-      title: Text("${isCurrentlyArchived ? "Un" : ""}Archive Outpost"),
-      content: RichText(
-        text: TextSpan(
+    AppDialog(
+      icon: isCurrentlyArchived
+          ? Icons.unarchive_outlined
+          : Icons.archive_outlined,
+      iconColor: isCurrentlyArchived ? AppColors.success : AppColors.danger,
+      title: "${isCurrentlyArchived ? "Un" : ""}Archive Outpost",
+      content: Text.rich(
+        TextSpan(
           text: "Are you sure you want to ",
+          style: AppText.muted.copyWith(height: 1.45),
           children: [
             TextSpan(
               text: "${isCurrentlyArchived ? "un" : ""}archive",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: !isCurrentlyArchived ? Colors.red : Colors.green,
+                color:
+                    !isCurrentlyArchived ? AppColors.danger : AppColors.success,
               ),
             ),
             const TextSpan(text: " this Outpost?"),
@@ -783,17 +566,18 @@ _showModalToToggleArchiveGroup({required OutpostModel outpost}) async {
         ),
       ),
       actions: [
-        TextButton(
+        AppSecondaryButton(
+          label: "No",
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(false);
           },
-          child: const Text("No"),
         ),
-        TextButton(
+        AppPrimaryButton(
+          label: "Yes",
+          color: isCurrentlyArchived ? AppColors.primary : AppColors.danger,
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(true);
           },
-          child: const Text("Yes"),
         ),
       ],
     ),
@@ -801,54 +585,34 @@ _showModalToToggleArchiveGroup({required OutpostModel outpost}) async {
   return result;
 }
 
-_showModalToLeaveGroup({required OutpostModel outpost}) async {
+Future<dynamic> _showModalToLeaveGroup({required OutpostModel outpost}) async {
   final result = await Get.dialog(
-    AlertDialog(
-      backgroundColor: ColorName.cardBackground,
-      title: const Text("Leave The Outpost"),
-      content: RichText(
-        text: const TextSpan(
-          text: "Are you sure you want to",
-          children: [
-            const TextSpan(
-              text: " leave",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-            ),
-            const TextSpan(text: " this Outpost?"),
-          ],
-        ),
+    AppDialog(
+      icon: Icons.exit_to_app_rounded,
+      iconColor: AppColors.danger,
+      urgent: true,
+      title: "Leave Outpost",
+      message: "Are you sure you want to leave this outpost?",
+      content: AppCallout(
+        text: "You can rejoin later if you have the required access.",
+        color: AppColors.danger,
       ),
       actions: [
-        TextButton(
+        AppSecondaryButton(
+          label: "Cancel",
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(false);
           },
-          child: const Text("No"),
         ),
-        TextButton(
+        AppPrimaryButton(
+          label: "Leave",
+          color: AppColors.danger,
           onPressed: () {
             Navigator.of(Get.overlayContext!).pop(true);
           },
-          child: const Text("Yes"),
         ),
       ],
     ),
   );
   return result;
-}
-
-class GroupAccesses {
-  bool canEnter;
-  bool canSpeak;
-  String? accessPriceFullString;
-  String? speakPriceFullString;
-  GroupAccesses({
-    required this.canEnter,
-    required this.canSpeak,
-    this.accessPriceFullString,
-    this.speakPriceFullString,
-  });
 }

@@ -2,32 +2,31 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-// import 'package:flutter_recorder/flutter_recorder.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
-import 'package:podium/app/modules/global/controllers/recorder_controller.dart';
+import 'package:podium/app/services/replay/replay_recorder.dart';
 import 'package:podium/app/modules/global/lib/BlockChain.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/blockchain/blockchain.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/utils.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/cheerBooBottomSheet.dart';
+import 'package:podium/data/repositories/repositories.dart';
 import 'package:podium/env.dart';
-import 'package:podium/providers/api/api.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/services/websocket/incomingMessage.dart';
 import 'package:podium/services/websocket/outgoingMessage.dart';
 import 'package:podium/utils/analytics.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
-import 'package:record/record.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 const likeDislikeTimeoutInMilliSeconds = 10 * 1000; // 10 seconds
@@ -41,6 +40,7 @@ class Reaction {
 }
 
 class OngoingOutpostCallController extends GetxController {
+  final _outpostRepository = Get.find<OutpostRepository>();
   BuildContext? contextForIntro;
   final shouldShowIntro = false.obs;
   bool introStartCalled = false;
@@ -50,7 +50,7 @@ class OngoingOutpostCallController extends GetxController {
   final likeDislikeKey = GlobalKey();
   final cheerBooKey = GlobalKey();
   final storage = GetStorage();
-  final recorderController = Get.find<RecorderController>();
+  final recorder = ReplayRecorder.instance;
   final outpostCallController = Get.find<OutpostCallController>();
   final globalController = Get.find<GlobalController>();
   final sessionData = Rxn<OutpostLiveData>();
@@ -59,6 +59,12 @@ class OngoingOutpostCallController extends GetxController {
   final mySession = Rxn<LiveMember>();
   final amIAdmin = false.obs;
   final amIMuted = true.obs;
+
+  /// Sharing the screen counts as speaking: the server timer runs while
+  /// either the mic is open or the screen is shared.
+  final isSharingScreen = false.obs;
+  final isConferenceJoined = false.obs;
+  bool callPageOpened = false;
   final timers = Rx<Map<String, int>>({});
   final talkingIds = Rx<List<String>>([]);
   final reportReasonController = TextEditingController();
@@ -66,7 +72,8 @@ class OngoingOutpostCallController extends GetxController {
   final isRecording = false.obs;
   final recorderUserId = Rx<String>('');
   final isStartingToRecord = false.obs;
-  StreamSubscription<bool>? recordingListeners;
+  void Function()? _disposeRecordingListener;
+  void Function()? _disposeMicListener;
   final loadingWalletAddressForUser = RxList<String>([]);
 
   final lastReaction = Rx<Reaction>(
@@ -74,12 +81,22 @@ class OngoingOutpostCallController extends GetxController {
   );
 
   StreamSubscription<List<LiveMember>>? membersListener;
+  // GetX 5 stops feeding an Rx's stream for good once its last stream
+  // subscriber cancels, so a `listen` on a long-lived Rx from a later call
+  // never fires. `addListener` doesn't go through that stream.
+  void Function()? _disposeTalkTimeListener;
+  void Function()? _disposeSpeakingListener;
 
   @override
   void onInit() async {
     super.onInit();
-    recordingListeners = recorderController.isRecording.listen((recording) {
-      isRecording.value = recording;
+
+    isRecording.value = recorder.isRecording.value;
+    _disposeRecordingListener = recorder.isRecording.addListener(() {
+      isRecording.value = recorder.isRecording.value;
+    });
+    _disposeMicListener = amIMuted.addListener(() {
+      if (isRecording.value) recorder.setMicEnabled(!amIMuted.value);
     });
     final ongoingOutpost = outpostCallController.outpost.value!;
     final myUser = globalController.myUserInfo.value!;
@@ -91,7 +108,6 @@ class OngoingOutpostCallController extends GetxController {
   @override
   void onReady() async {
     super.onReady();
-
     membersListener = outpostCallController.members.listen((listOfMembers) {
       members.value = [...listOfMembers];
       final my_user =
@@ -102,42 +118,85 @@ class OngoingOutpostCallController extends GetxController {
           break;
         }
       }
-      if (my_user.length == 0) return;
+      if (my_user.isEmpty) return;
       mySession.value = (my_user[0]);
       mySession.refresh();
-      if (mySession.value!.remaining_time <= 0) {
-        jitsiMeet.setAudioMuted(true);
-      }
+      _enforceTimeUp();
     });
+    _disposeTalkTimeListener =
+        outpostCallController.talkTimeTick.addListener(() {
+      if (mySession.value == null) return;
+      mySession.refresh();
+      _enforceTimeUp();
+    });
+    _disposeSpeakingListener =
+        outpostCallController.speakingTick.addListener(() {
+      mySession.refresh();
+    });
+    final callSession = outpostCallController.session;
+    callSession?.delayed(const Duration(seconds: 10), () {
+      if (members.value.isEmpty) {
+        outpostCallController.fetchLiveData(withJoin: true);
+      }
+      callSession.delayed(const Duration(seconds: 3), () {
+        if (members.value.isEmpty) {
+          Toast.error(
+            title: 'Could not join the outpost',
+            message: 'Please try again.',
+          );
+          outpostCallController.leaveCall(askForScore: false);
+        }
+      });
+    });
+  }
+
+  bool _timeUpEnforced = false;
+
+  /// Mutes (and stops screen sharing) once when talk time runs out, instead of
+  /// re-sending the commands to Jitsi on every member update.
+  void _enforceTimeUp() {
+    final session = mySession.value;
+    if (session == null) return;
+    final timeUp = session.remaining_time <= 0 &&
+        outpostCallController.outpost.value?.creator_user_uuid != myId;
+    if (!timeUp) {
+      _timeUpEnforced = false;
+      return;
+    }
+    if (_timeUpEnforced && amIMuted.value && !isSharingScreen.value) return;
+    _timeUpEnforced = true;
+    jitsiMeet.setAudioMuted(true);
+    if (isSharingScreen.value) jitsiMeet.toggleScreenShare(false);
   }
 
   @override
   void onClose() async {
     super.onClose();
     stopRecording();
-    recordingListeners?.cancel();
+    _disposeRecordingListener?.call();
+    _disposeMicListener?.call();
     membersListener?.cancel();
+    _disposeTalkTimeListener?.call();
+    _disposeSpeakingListener?.call();
+    reportReasonController.dispose();
     sessionData.value = null;
-    await jitsiMeet.hangUp();
   }
 
-  report() async {
+  Future<void> report() async {
     final reason = reportReason.value;
     if (reason.isEmpty) {
       return;
     }
-    final success = await HttpApis.podium.reportOutpost(
+    final success = await _outpostRepository.reportOutpost(
       outpostId: outpostCallController.outpost.value!.uuid,
       reasons: [reason],
     );
     if (!success) {
       Toast.error(
-        title: 'Error',
         message: 'Failed to report outpost',
       );
     } else {
       Toast.success(
-        title: 'Success',
         message: 'Report submitted successfully',
       );
       reportReason.value = '';
@@ -145,7 +204,7 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  onUserStartedRecording(IncomingMessage incomingMessage) {
+  void onUserStartedRecording(IncomingMessage incomingMessage) {
     final recorderUser = members.value
         .firstWhere((e) => e.address == incomingMessage.data.address!);
     recorderUserId.value = recorderUser.uuid;
@@ -154,7 +213,7 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  onUserStoppedRecording(IncomingMessage incomingMessage) {
+  void onUserStoppedRecording(IncomingMessage incomingMessage) {
     final recorderUser = members.value
         .firstWhere((e) => e.address == incomingMessage.data.address!);
     if (recorderUser.uuid == recorderUserId.value) {
@@ -165,30 +224,86 @@ class OngoingOutpostCallController extends GetxController {
     }
   }
 
-  updateUserRemainingTime(
+  void updateUserRemainingTime(
       {required String address, required int newTimeInSeconds}) {
+    l.d('updateUserRemainingTime: $address, $newTimeInSeconds');
     outpostCallController.updateUserTime(
       address: address,
       newTime: newTimeInSeconds,
     );
   }
 
-  updateUserIsTalking({required String address, required bool isTalking}) {
+  void updateUserIsTalking({required String address, required bool isTalking}) {
     outpostCallController.updateUserIsTalking(
       address: address,
       isTalking: isTalking,
     );
   }
 
-  handleTimeIsUp(IncomingMessage incomingMessage) {
+  /// The server doesn't echo our own start/stop speaking events, so the local
+  /// talk-time countdown needs us marked as speaking here.
+  void _setMeSpeaking(bool isTalking) {
+    updateUserIsTalking(address: myUser.address, isTalking: isTalking);
+  }
+
+  void handleTimeIsUp(IncomingMessage incomingMessage) {
     final address = incomingMessage.data.address!;
     final creatorUuid = outpostCallController.outpost.value!.creator_user_uuid;
     if (address == myUser.address && creatorUuid != myUser.uuid) {
       jitsiMeet.setAudioMuted(true);
+      if (isSharingScreen.value) {
+        jitsiMeet.toggleScreenShare(false);
+        Toast.warning(
+          title: "Time's up",
+          message: 'Screen sharing stopped',
+        );
+      }
     }
   }
 
-  handleIncomingReaction(IncomingMessage incomingMessage) {
+  /// True when the screen can be shared right now, toasting why not otherwise.
+  bool canStartScreenShare() {
+    final session = mySession.value;
+    final creator = outpostCallController.outpost.value?.creator_user_uuid;
+    if (!outpostCallController.canTalk.value) {
+      Toast.info(
+        title: "You're a listener",
+        message: 'Only speakers can share their screen',
+      );
+      return false;
+    }
+    if (session == null || !isConferenceJoined.value) {
+      Toast.info(title: 'Connecting…', message: 'Try again in a moment');
+      return false;
+    }
+    if (session.remaining_time <= 0 && creator != myId) {
+      Toast.error(
+        title: "You've ran out of time",
+        message: 'Sharing your screen uses your talk time',
+      );
+      return false;
+    }
+    return true;
+  }
+
+  void onScreenShareChanged(bool sharing) {
+    if (sharing == isSharingScreen.value) return;
+    isSharingScreen.value = sharing;
+    final outpostId = outpostCallController.outpost.value?.uuid;
+    if (outpostId == null || outpostCallController.callCleanedUp) return;
+    // While the mic is open the server already counts us as speaking.
+    if (!amIMuted.value) return;
+    _setMeSpeaking(sharing);
+    sendOutpostEvent(
+      outpostId: outpostId,
+      requestId: sharing ? outpostId : null,
+      eventType: sharing
+          ? OutgoingMessageTypeEnums.start_speaking
+          : OutgoingMessageTypeEnums.stop_speaking,
+    );
+  }
+
+  void handleIncomingReaction(IncomingMessage incomingMessage) {
     final members = [...outpostCallController.members.value];
     final targetUserIndex = members.indexWhere(
         (item) => item.address == incomingMessage.data.react_to_user_address);
@@ -204,7 +319,7 @@ class OngoingOutpostCallController extends GetxController {
     );
   }
 
-  startIntro() {
+  void startIntro() {
     if (storage.read(IntroStorageKeys.viewedOngiongCall) == null) {
       shouldShowIntro.value = true;
     } else {
@@ -225,9 +340,9 @@ class OngoingOutpostCallController extends GetxController {
           skipWidget: Button(
             size: ButtonSize.SMALL,
             type: ButtonType.outline,
-            color: Colors.red,
+            color: ColorName.danger,
             onPressed: () {
-              saveIntroAsDone(true);
+              introFinished(true);
             },
             child: const Text("Finish"),
           ),
@@ -293,7 +408,7 @@ class OngoingOutpostCallController extends GetxController {
     return targets;
   }
 
-  _createStep({
+  TargetFocus _createStep({
     required GlobalKey targetId,
     required String text,
     bool hasNext = true,
@@ -318,34 +433,34 @@ class OngoingOutpostCallController extends GetxController {
               children: [
                 Text(
                   text,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: ColorName.white,
                   ),
                 ),
                 if (hasNext)
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () {
                       tutorialCoachMark.next();
                     },
-                    child: const Text(
+                    child: Text(
                       "Next",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   )
                 else
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () {
                       introFinished(true);
                     },
-                    child: const Text(
+                    child: Text(
                       "Finish",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   ),
               ],
@@ -358,31 +473,75 @@ class OngoingOutpostCallController extends GetxController {
 
   void introFinished(bool? setAsFinished) {
     saveIntroAsDone(setAsFinished);
+    shouldShowIntro.value = false;
     try {
       tutorialCoachMark.finish();
-      shouldShowIntro.value = false;
-    } catch (e) {}
+    } catch (e) {
+      // The tutorial was never shown.
+    }
   }
 
-  setMutedState(bool muted) async {
+  bool get isOutOfTime {
+    final session = mySession.value;
+    return !amIAdmin.value && session != null && session.remaining_time <= 0;
+  }
+
+  /// False when the mic can't be opened at all right now.
+  bool get canUseMic =>
+      outpostCallController.canTalk.value &&
+      !isOutOfTime &&
+      isConferenceJoined.value;
+
+  /// Flips the mic, toasting the reason when it can't be opened.
+  void toggleMyMic() {
+    final muted = amIMuted.value;
+    if (!isConferenceJoined.value) {
+      Toast.info(
+        title: 'Connecting…',
+        message: 'You can talk as soon as you are connected',
+      );
+      return;
+    }
+    if (!outpostCallController.canTalk.value) {
+      Toast.info(
+        title: "You're a listener",
+        message: "You can't speak in this outpost",
+      );
+      return;
+    }
+    if (isOutOfTime && muted) {
+      Toast.error(
+        title: "You've run out of time",
+        message: 'Likes and cheers add more talk time',
+      );
+      return;
+    }
+    setMutedState(!muted);
+  }
+
+  Future<void> setMutedState(bool muted) async {
     if (!wsClient.connected) {
-      await wsClient.reconnect();
-      if (!wsClient.connected) {
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess || !wsClient.connected) {
         Toast.warning(
           title: 'Connection Error',
           message: 'please check your internet connection',
         );
+        if (!muted) {
+          amIMuted.value = true;
+          jitsiMeet.setAudioMuted(true);
+        }
         return;
       }
     }
     jitsiMeet.setAudioMuted(muted);
   }
 
-  startRecording() {
+  void startRecording() {
     _setIsRecording(true);
   }
 
-  stopRecording() {
+  void stopRecording() {
     _setIsRecording(false);
   }
 
@@ -391,66 +550,51 @@ class OngoingOutpostCallController extends GetxController {
     return membersList.firstWhere((m) => m.uuid == id);
   }
 
-  Future<void> recordFile(
-      AudioRecorder recorder, RecordConfig config, String path) async {
-    await recorder.start(config, path: path);
-  }
-
-  _setIsRecording(bool recording) async {
-    final canRecord = await recorderController.initializeRecorder();
-    if (!canRecord) {
-      return;
-    }
-    if (recorderController.hasPermission) {
-      if (recording) {
-        isStartingToRecord.value = true;
-        await recorderController.startRecording(
-          true,
-          prefix: outpostCallController.outpost.value!.name,
+  Future<void> _setIsRecording(bool recording) async {
+    final outpost = outpostCallController.outpost.value;
+    if (outpost == null) return;
+    if (recording) {
+      isStartingToRecord.value = true;
+      final started = await recorder.start(
+        outpost: outpost,
+        micEnabled: !amIMuted.value,
+      );
+      isStartingToRecord.value = false;
+      if (!started) return;
+      sendOutpostEvent(
+        outpostId: outpost.uuid,
+        eventType: OutgoingMessageTypeEnums.start_recording,
+      );
+    } else {
+      if (!recorder.isRecording.value) return;
+      final id = await recorder.stop();
+      sendOutpostEvent(
+        outpostId: outpost.uuid,
+        eventType: OutgoingMessageTypeEnums.stop_recording,
+      );
+      if (id != null) {
+        Toast.success(
+          title: 'Replay saved',
+          message: 'Find it in your recordings',
         );
-        isStartingToRecord.value = false;
-        sendOutpostEvent(
-          outpostId: outpostCallController.outpost.value!.uuid,
-          eventType: OutgoingMessageTypeEnums.start_recording,
-        );
-      } else {
-        await recorderController.startRecording(
-          false,
-          prefix: outpostCallController.outpost.value!.name,
-        );
-        sendOutpostEvent(
-          outpostId: outpostCallController.outpost.value!.uuid,
-          eventType: OutgoingMessageTypeEnums.stop_recording,
-        );
-        final path = await recorderController.lastRecordedPath;
-        if (path != null) {
-          Toast.success(
-            title: 'Recording saved',
-            message: 'to $path',
-          );
-        }
       }
     }
-
-    // use recorder controller to record the file
   }
 
-  handleInteractionEvent({
+  void handleInteractionEvent({
     required IncomingMessageType action,
     required String initiatorId,
     required String targetId,
   }) {
     lastReaction.value = Reaction(targetId: targetId, reaction: action);
-    update(['confetti' + targetId]);
+    update(['confetti$targetId']);
     Future.delayed(const Duration(milliseconds: 50), () {
       lastReaction.value = Reaction(
           targetId: '', reaction: IncomingMessageType.userStoppedSpeaking);
     });
-    // lastReaction.value = Reaction(targetId: '', reaction: '');
-    // final initiatorUser=groupCallController.
   }
 
-  onLikeClicked({required String userId}) async {
+  Future<void> onLikeClicked({required String userId}) async {
     final user = _getUserById(id: userId);
     sendOutpostEvent(
       outpostId: outpostCallController.outpost.value!.uuid,
@@ -470,7 +614,7 @@ class OngoingOutpostCallController extends GetxController {
     timers.refresh();
   }
 
-  onDislikeClicked({required String userId}) async {
+  Future<void> onDislikeClicked({required String userId}) async {
     final user = _getUserById(id: userId);
 
     sendOutpostEvent(
@@ -491,7 +635,7 @@ class OngoingOutpostCallController extends GetxController {
     timers.refresh();
   }
 
-  _removeLoadingCheerBoo({
+  void _removeLoadingCheerBoo({
     required String userId,
     required bool cheer,
   }) {
@@ -499,29 +643,33 @@ class OngoingOutpostCallController extends GetxController {
     loadingWalletAddressForUser.refresh();
   }
 
-  cheerBoo(
-      {required String userId, required bool cheer, bool? fromMeetPage}) async {
-    // sendOutpostEvent(
-    //   outpostId: outpostCallController.outpost.value!.uuid,
-    //   eventType:
-    //       cheer ? OutgoingMessageTypeEnums.cheer : OutgoingMessageTypeEnums.boo,
-    //   eventData: WsOutgoingMessageData(
-    //     amount: 0.1,
-    //     react_to_user_address: userId,
-    //     chain_id: int.parse(
-    //       globalController.appMetadata.movement_aptos_metadata.chain_id,
-    //     ),
-    //   ),
-    // );
-    // return;
+  Future<void> cheerBoo(
+      {required String targetUserUuid,
+      required bool cheer,
+      bool? fromMeetPage}) async {
+    final isSelfReaction = targetUserUuid == myId;
+    final isBoo = !cheer;
+
     String? targetAddress;
-    loadingWalletAddressForUser.add("$userId-${cheer ? 'cheer' : 'boo'}");
+    loadingWalletAddressForUser
+        .add("$targetUserUuid-${cheer ? 'cheer' : 'boo'}");
     loadingWalletAddressForUser.refresh();
-    final user = await HttpApis.podium.getUserData(userId);
-    if (user == null) {
-      l.e("user is null");
+    final liveData = await _outpostRepository.getLatestLiveData(
+      outpostId: outpostCallController.outpost.value!.uuid,
+    );
+    if (liveData == null) {
+      l.e("live data is null");
       return;
     }
+    final user = liveData.members.firstWhere((m) => m.uuid == targetUserUuid);
+
+    String aptosTargetAddress =
+        user.primary_aptos_address ?? user.aptos_address;
+
+    final myPrimaryAddress = liveData.members
+        .firstWhere((m) => m.uuid == myId)
+        .primary_aptos_address!;
+
     if (user.external_wallet_address != '' &&
         user.external_wallet_address != null) {
       targetAddress = user.external_wallet_address;
@@ -529,65 +677,57 @@ class OngoingOutpostCallController extends GetxController {
       targetAddress = user.address;
     }
 
-    l.d("target address is $targetAddress for user $userId");
+    l.d("target address is $targetAddress for user $targetUserUuid");
     if (targetAddress != '') {
       List<String> receiverAddresses = [];
+
+      /*
+      **aptosReceiverAddresses**: List of addresses that share in the distribution
+   - Important: The target's presence/absence in this list determines if it's a self-cheer
+   - If target is NOT in aptosReceiverAddresses list = self-cheer
+   - If target is in aptosReceiverAddresses list = regular cheer
+       */
       List<String> aptosReceiverAddresses = [];
       final myUser = globalController.myUserInfo.value!;
-      if (myUser.external_wallet_address == targetAddress ||
-          (myUser.address == targetAddress)) {
-        final liveData = await HttpApis.podium.getLatestLiveData(
-          outpostId: outpostCallController.outpost.value!.uuid,
-        );
-        if (liveData == null) {
-          l.e("live data is null");
-          return;
-        }
-        final liveMembers = liveData.members.where((m) => m.is_present == true);
-        final liveMemberIds = liveMembers.map((e) => e.uuid).toList();
-        if (liveMemberIds.length < 2) {
-          // REVIEW: if there is only one user in the session, cheer goes to to fihub account, and time is added to the user's talk time
-          aptosReceiverAddresses.add(Env.fihubAddress_Aptos);
-          // Toast.error(
-          //   title: "Error",
-          //   message: "why are you cheering yourself? for who? t p t . . . why?",
-          // );
-          // _removeLoadingCheerBoo(userId: userId, cheer: cheer);
-          // return;
-        }
-
-        if (user.uuid == myId) {
-          final userAddressesExceptMe = liveMembers
-              .where((m) => m.uuid != myUser.uuid)
-              .map((e) => e.address)
-              .toList();
-          receiverAddresses.addAll(userAddressesExceptMe);
-          final aptosAddressesExceptMe = liveMembers
-              .where((m) => m.uuid != myUser.uuid)
-              .map((e) => e.aptos_address)
-              .toList();
-          aptosReceiverAddresses.addAll(aptosAddressesExceptMe);
-        }
-      } else {
-        receiverAddresses = [targetAddress ?? myUser.address];
+      final liveMembers = liveData.members.where((m) => m.is_present == true);
+      final liveMemberIds = liveMembers.map((e) => e.uuid).toList();
+      if (liveMemberIds.length < 2) {
+        // REVIEW: if there is only one user in the session, cheer goes to to fihub account, and time is added to the user's talk time
+        aptosTargetAddress = Env.fihubAddress_Aptos;
+        aptosReceiverAddresses.add(Env.fihubAddress_Aptos);
       }
-      if (receiverAddresses.length == 0) {
+      final liveAptosAddresses = liveMembers
+          .map((e) => e.primary_aptos_address ?? e.aptos_address)
+          .toList();
+      aptosReceiverAddresses.addAll(liveAptosAddresses);
+      if (isSelfReaction && cheer) {
+        // remove my aptos address from the list, ^^  - If target is NOT in aptosReceiverAddresses list = self-cheer
+        aptosReceiverAddresses.remove(myUser.aptos_address);
+        aptosReceiverAddresses.remove(myPrimaryAddress);
+      }
+
+      if (receiverAddresses.isEmpty &&
+          aptosReceiverAddresses.isEmpty &&
+          (isSelfReaction || isBoo)) {
         l.e("No Users found in session");
         Toast.error(
-          title: "Error",
           message: "No Users found in session",
         );
 
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
         return;
       }
       final String? amount = fromMeetPage == true
           ? Env.minimumCheerBooAmount.toString()
-          : await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
+          : await Get.bottomSheet(
+              CheerBooBottomSheet(isCheer: cheer),
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+            );
       if (amount == null) {
         l.e("Amount not selected");
 
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
         return;
       }
       late double parsedAmount;
@@ -597,20 +737,16 @@ class OngoingOutpostCallController extends GetxController {
       } catch (e) {
         l.e("something went wrong parsing amount");
         Toast.error(
-          title: "Error",
           message: "Amount is not a number",
         );
 
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
         return;
       }
 
       bool? success;
-      final selectedWallet = WalletNames.internal_Aptos;
-      // await choseAWallet(
-      //   chainId: movementEVMChain.chainId,
-      //   supportsAptos: true,
-      // );
+      String? txHash;
+      const selectedWallet = WalletNames.internal_Aptos;
       if (selectedWallet == WalletNames.external) {
         success = await ext_cheerOrBoo(
           groupId: outpostCallController.outpost.value!.uuid,
@@ -631,9 +767,9 @@ class OngoingOutpostCallController extends GetxController {
           chainId: movementEVMChain.chainId,
         );
       } else if (selectedWallet == WalletNames.internal_Aptos) {
-        success = await AptosMovement.cheerBoo(
+        (success, txHash) = await AptosMovement.cheerBoo(
           outpostId: outpostCallController.outpost.value!.uuid,
-          target: user.aptos_address!,
+          target: aptosTargetAddress,
           receiverAddresses: aptosReceiverAddresses,
           amount: parsedAmount.abs(),
           cheer: cheer,
@@ -641,14 +777,13 @@ class OngoingOutpostCallController extends GetxController {
       }
       // success null means error is handled inside called function
       if (success == null) {
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
         return;
       }
       if (success) {
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
 
         Toast.success(
-          title: "Success",
           message: "${cheer ? "Cheer" : "Boo"} successful",
         );
         final ev = cheer
@@ -663,12 +798,13 @@ class OngoingOutpostCallController extends GetxController {
             chain_id: int.parse(
               globalController.appMetadata.movement_aptos_metadata.chain_id,
             ),
+            tx_hash: txHash,
           ),
         );
         analytics.logEvent(name: 'cheerBoo', parameters: {
           'cheer': cheer.toString(),
           'amount': amount,
-          'target': userId,
+          'target': targetUserUuid,
           'groupId': outpostCallController.outpost.value!.uuid,
           'fromUser': myUser.uuid,
         });
@@ -681,27 +817,25 @@ class OngoingOutpostCallController extends GetxController {
       } else {
         l.e("${cheer ? "Cheer" : "Boo"} failed");
         Toast.error(
-          title: "Error",
           message: "${cheer ? "Cheer" : "Boo"} failed",
         );
-        _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+        _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
       }
       ///////////////////////
     } else if (targetAddress == '') {
       l.e("User has not connected wallet for some reason");
-      _removeLoadingCheerBoo(userId: userId, cheer: cheer);
+      _removeLoadingCheerBoo(userId: targetUserUuid, cheer: cheer);
       Toast.error(
-        title: "Error",
         message: "User has not connected wallet for some reason",
       );
       return;
     }
   }
 
-  audioMuteChanged({required bool muted}) async {
+  Future<void> audioMuteChanged({required bool muted}) async {
     if (!wsClient.connected) {
-      await wsClient.reconnect();
-      if (!wsClient.connected) {
+      final reconnectSuccess = await wsClient.reconnect();
+      if (!reconnectSuccess || !wsClient.connected) {
         Toast.warning(
           title: 'Connection Error',
           message: 'please check your internet connection',
@@ -714,19 +848,19 @@ class OngoingOutpostCallController extends GetxController {
       }
     }
     final outpostId = outpostCallController.outpost.value!.uuid;
-    l.d(
-      "audoi mute:$muted",
-    );
 
     if (muted) {
       // REVIEW: it's important not to set amIMuted to true first
       // because on page load, jitsi fires the muted event
       // and an unwanted stop speaking event is sent
       if (!amIMuted.value) {
-        sendOutpostEvent(
-          outpostId: outpostId,
-          eventType: OutgoingMessageTypeEnums.stop_speaking,
-        );
+        if (!isSharingScreen.value) {
+          _setMeSpeaking(false);
+          sendOutpostEvent(
+            outpostId: outpostId,
+            eventType: OutgoingMessageTypeEnums.stop_speaking,
+          );
+        }
         amIMuted.value = true;
       }
     } else {
@@ -743,17 +877,20 @@ class OngoingOutpostCallController extends GetxController {
         jitsiMeet.setAudioMuted(true);
         return;
       }
-      sendOutpostEvent(
-        outpostId: outpostId,
-        requestId: outpostId,
-        eventType: OutgoingMessageTypeEnums.start_speaking,
-      );
+      _setMeSpeaking(true);
+      if (!isSharingScreen.value) {
+        sendOutpostEvent(
+          outpostId: outpostId,
+          requestId: outpostId,
+          eventType: OutgoingMessageTypeEnums.start_speaking,
+        );
+      }
       amIMuted.value = false;
       jitsiMeet.setAudioMuted(false);
     }
   }
 
-  checkWalletConnected({void Function()? afterConnection}) {
+  bool checkWalletConnected({void Function()? afterConnection}) {
     final connectedWalletAddress =
         globalController.connectedWalletAddress.value;
     if (connectedWalletAddress == '') {

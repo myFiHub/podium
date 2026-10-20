@@ -3,28 +3,32 @@ import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
-import 'package:podium/app/modules/global/mixins/blockChainInteraction.dart';
+import 'package:podium/app/modules/global/blockchain/blockchain.dart';
 import 'package:podium/app/modules/global/utils/allSetteled.dart';
 import 'package:podium/app/modules/global/utils/aptosClient.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/utils/getWeb3AuthWalletAddress.dart';
 import 'package:podium/app/modules/global/utils/web3AuthClient.dart';
+import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/app/modules/global/utils/weiToDecimalString.dart';
-import 'package:podium/app/modules/global/widgets/loading_widget.dart';
 import 'package:podium/contracts/chainIds.dart';
-import 'package:podium/gen/colors.gen.dart';
-import 'package:podium/providers/api/api.dart';
-import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.dart';
+import 'package:podium/data/repositories/repositories.dart';
+import 'package:podium/providers/api/podium/models/users/user.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/storage.dart';
 import 'package:podium/widgets/button/button.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3auth_flutter/enums.dart';
+import 'package:web3auth_flutter/web3auth_flutter.dart';
 
 class Payments {
   int numberOfCheersReceived = 0;
@@ -43,18 +47,18 @@ class Payments {
 class Balances {
   String Base = '0.0';
   String Avalanche = '0.0';
-  // String Movement = '0.0';
   String movementAptos = '0.0';
 
   Balances({
     required this.Base,
     required this.Avalanche,
-    // required this.Movement,
     required this.movementAptos,
   });
 }
 
 class MyProfileController extends GetxController {
+  final _authRepository = Get.find<AuthRepository>();
+  final _userRepository = Get.find<UserRepository>();
   BuildContext? contextForIntro;
   late TutorialCoachMark tutorialCoachMark;
   final GlobalKey referalSystemKey = GlobalKey();
@@ -72,11 +76,13 @@ class MyProfileController extends GetxController {
   final isGettingPayments = false.obs;
   final isGettingBalances = false.obs;
   final isDeactivatingAccount = false.obs;
+
+  final addressThatIsBeningMadePrimary = Rxn<String>();
+
   final balances = Rx(
     Balances(
       Base: '0.0',
       Avalanche: '0.0',
-      // Movement: '0.0',
       movementAptos: '0.0',
     ),
   );
@@ -88,6 +94,7 @@ class MyProfileController extends GetxController {
   );
 
   StreamSubscription<String>? externalWalletAddressListener;
+  Worker? _tabWorker;
 
   @override
   void onInit() {
@@ -98,8 +105,14 @@ class MyProfileController extends GetxController {
         checkExternalWalletActivation();
       }
     });
-    _getMyProfile();
-    _getBalances();
+    getMyProfile();
+    getBalances();
+    _tabWorker = ever(globalController.activeRoute, (route) {
+      if (route == Routes.MY_PROFILE) {
+        getMyProfile();
+        getBalances();
+      }
+    });
   }
 
   @override
@@ -119,9 +132,9 @@ class MyProfileController extends GetxController {
         skipWidget: Button(
           size: ButtonSize.SMALL,
           type: ButtonType.outline,
-          color: Colors.red,
+          color: ColorName.danger,
           onPressed: () {
-            saveIntroAsDone(true);
+            introFinished(true);
           },
           child: const Text("Finish"),
         ),
@@ -136,12 +149,11 @@ class MyProfileController extends GetxController {
           _scrollIfNeeded();
         },
         onClickTargetWithTapPosition: (target, tapDetails) {
-          print("target: $target");
-          print(
-              "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+          l.d("target: $target");
+          l.d("clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
         },
         onClickOverlay: (target) {
-          print('onClickOverlay: $target');
+          l.d('onClickOverlay: $target');
           _scrollIfNeeded();
         },
         onSkip: () {
@@ -159,7 +171,7 @@ class MyProfileController extends GetxController {
   }
 
   int _currentStep = 0;
-  _scrollIfNeeded() async {
+  Future<void> _scrollIfNeeded() async {
     _currentStep++;
     if (_currentStep == 1) {
       await scrollController.animateTo(
@@ -218,12 +230,12 @@ class MyProfileController extends GetxController {
   @override
   void onClose() {
     externalWalletAddressListener?.cancel();
+    _tabWorker?.dispose();
     super.onClose();
   }
 
-  _getMyProfile() async {
-    final profile = await HttpApis.podium
-        .getMyUserData(additionalData: AdditionalDataForLogin());
+  Future<void> getMyProfile() async {
+    final profile = await _userRepository.getMyUserData();
     if (profile == null) {
       return;
     }
@@ -236,7 +248,7 @@ class MyProfileController extends GetxController {
     );
   }
 
-  _createStep({
+  TargetFocus _createStep({
     required GlobalKey targetId,
     required String text,
     bool hasNext = true,
@@ -261,35 +273,35 @@ class MyProfileController extends GetxController {
               children: <Widget>[
                 Text(
                   text,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: ColorName.white,
                   ),
                 ),
                 if (hasNext)
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () async {
                       await _scrollIfNeeded();
                       tutorialCoachMark.next();
                     },
-                    child: const Text(
+                    child: Text(
                       "Next",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   )
                 else
                   Button(
                     size: ButtonSize.SMALL,
                     type: ButtonType.outline,
-                    color: Colors.white,
+                    color: ColorName.white,
                     onPressed: () {
                       introFinished(true);
                     },
-                    child: const Text(
+                    child: Text(
                       "Finish",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: ColorName.white),
                     ),
                   ),
               ],
@@ -309,50 +321,51 @@ class MyProfileController extends GetxController {
   void introFinished(bool? setAsFinished) {
     saveIntroAsDone(setAsFinished);
     try {
+      saveIntroAsDone(true);
       tutorialCoachMark.finish();
-    } catch (e) {}
+    } catch (e) {
+      l.e(e);
+    }
   }
 
-  _getBalances() async {
+  Future<void> getBalances() async {
     try {
       isGettingBalances.value = true;
       final baseClient = evmClientByChainId(baseChainId);
       final avalancheClient = evmClientByChainId(avalancheChainId);
-      // final movementClient = evmClientByChainId(movementEVMChain.chainId);
       final myaddress = await web3AuthWalletAddress();
       final callMap = {
         'base': baseClient.getBalance(parseAddress(myaddress!)),
         'avalanche': avalancheClient.getBalance(parseAddress(myaddress)),
-        // 'movement': movementClient.getBalance(parseAddress(myaddress)),
         'movementAptos': AptosMovement.balance,
       };
-      final results = await allSettled(callMap);
-      final baseBalance =
-          results['base']!['status'] == AllSettledStatus.fulfilled
-              ? results['base']!['value']
-              : EtherAmount.zero();
+      final results = await allSettled(callMap, onProgress: (key, status) {
+        l.d('Balance fetch for $key: ${status.name}');
+      });
 
+      final baseBalance =
+          results['base']?.valueOr(EtherAmount.zero()) ?? EtherAmount.zero();
       final avalancheBalance =
-          results['avalanche']!['status'] == AllSettledStatus.fulfilled
-              ? results['avalanche']!['value']
-              : EtherAmount.zero();
-      // final movementBalance =
-      //     results['movement']!['status'] == AllSettledStatus.fulfilled
-      //         ? results['movement']!['value']
-      //         : EtherAmount.zero();
+          results['avalanche']?.valueOr(EtherAmount.zero()) ??
+              EtherAmount.zero();
       final movementAptosBalance =
-          results['movementAptos']!['status'] == AllSettledStatus.fulfilled
-              ? results['movementAptos']!['value']
-              : BigInt.zero;
-      final reason = results['movementAptos']!['reason'];
-      if (reason is DioException) {
-        l.e(reason.response?.data);
+          results['movementAptos']?.valueOr(BigInt.zero) ?? BigInt.zero;
+
+      // Log any errors for debugging
+      results['movementAptos']?.ifRejected((reason) {
+        if (reason is DioException) {
+          l.e(reason.response?.data);
+        }
+      });
+
+      // Log summary of results
+      if (results.hasRejected) {
+        l.w('Some balance fetches failed: ${results.rejectedCount}/${results.length} failed');
       }
 
       balances.value = Balances(
         Base: weiToDecimalString(wei: baseBalance),
         Avalanche: weiToDecimalString(wei: avalancheBalance),
-        // Movement: weiToDecimalString(wei: movementBalance),
         movementAptos: bigIntCoinToMoveOnAptos(movementAptosBalance).toString(),
       );
       isGettingBalances.value = false;
@@ -386,7 +399,7 @@ class MyProfileController extends GetxController {
     return isActivated;
   }
 
-  activateInternalWallet() async {
+  Future<void> activateInternalWallet() async {
     loadingInternalWalletActivation.value = true;
     final isAlreadyActivated = await checkInternalWalletActivation(
       silent: true,
@@ -401,7 +414,7 @@ class MyProfileController extends GetxController {
     isInternalWalletActivatedOnFriendTech.value = activated;
   }
 
-  activateExternalWallet() async {
+  Future<void> activateExternalWallet() async {
     loadingExternalWalletActivation.value = true;
     if (externalWalletChianId != baseChainId) {
       Toast.error(
@@ -464,7 +477,7 @@ class MyProfileController extends GetxController {
     }
   }
 
-  openFeedbackPage() {
+  void openFeedbackPage() {
     launchUrl(
       Uri.parse(
         'https://docs.google.com/forms/u/1/d/1yj3GC6-JkFnWo1UiWj36sMISave9529x2fpqzHv2hIo/edit',
@@ -472,10 +485,10 @@ class MyProfileController extends GetxController {
     );
   }
 
-  deactivateAccount() async {
+  Future<void> deactivateAccount() async {
     isDeactivatingAccount.value = true;
     Get.close();
-    final success = await HttpApis.podium.deactivateAccount();
+    final success = await _authRepository.deactivateAccount();
     if (success) {
       globalController.setLoggedIn(false);
     }
@@ -484,117 +497,194 @@ class MyProfileController extends GetxController {
 
   void showDeactivationDialog() {
     Get.dialog(
-      Dialog(
-        backgroundColor: ColorName.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      const DeactivationForm(),
+    );
+  }
+
+  Future<void> _copyPrivateKey() async {
+    final String privateKey;
+    try {
+      privateKey = await Web3AuthFlutter.getPrivKey();
+    } catch (e) {
+      Toast.error(
+        message: 'Private key not found',
+      );
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: privateKey));
+    Toast.success(
+      title: 'Copied',
+      message:
+          'Private key copied. The clipboard will be cleared in 60 seconds.',
+    );
+    Future.delayed(const Duration(seconds: 60), () async {
+      final current = await Clipboard.getData(Clipboard.kTextPlain);
+      if (current?.text == privateKey) {
+        await Clipboard.setData(const ClipboardData(text: ''));
+      }
+    });
+  }
+
+  void showPrivateKeyWarning() {
+    Get.dialog(
+      AppDialog(
+        icon: Icons.warning_amber_rounded,
+        iconColor: AppColors.danger,
+        urgent: true,
+        title: 'WARNING: Private Key Access',
+        message:
+            'IMPORTANT: Your private key is the key to your account. Anyone with access to it can control your account and steal your assets.',
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppCallout(
+              text: 'NEVER share your private key with anyone',
+              color: AppColors.danger,
+              icon: Icons.block_rounded,
+            ),
+            const SizedBox(height: 8),
+            AppCallout(
+              text: 'NEVER enter it on any website',
+              color: AppColors.danger,
+              icon: Icons.block_rounded,
+            ),
+            const SizedBox(height: 8),
+            AppCallout(
+              text: 'NEVER store it in plain text',
+              color: AppColors.danger,
+              icon: Icons.block_rounded,
+            ),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: DeactivationForm(),
-        ),
+        stackActions: true,
+        actions: [
+          AppPrimaryButton(
+            label: 'Copy Private Key',
+            icon: Icons.copy_rounded,
+            color: AppColors.danger,
+            onPressed: () {
+              Navigator.pop(Get.context!);
+              _copyPrivateKey();
+            },
+          ),
+          AppSecondaryButton(
+            label: 'Cancel',
+            onPressed: () => Get.close(),
+          ),
+        ],
       ),
     );
   }
+
+  void addOrSwitchAccount(Provider provider, {String? email}) {
+    globalController.addOrSwitchAccount(provider, email: email);
+  }
+
+  Future<void> setAccountAsPrimary(String address) async {
+    addressThatIsBeningMadePrimary.value = address;
+    try {
+      final res = await _authRepository.setAccountAsPrimary(address: address);
+      if (res) {
+        final myAccounts = globalController.myUserInfo.value?.accounts ?? [];
+        final updatedAccounts = myAccounts.map((account) {
+          if (account.address == address) {
+            return account.copyWith(is_primary: true);
+          }
+          return account.copyWith(is_primary: false);
+        }).toList();
+        final updatedUser = globalController.myUserInfo.value?.copyWith(
+          accounts: updatedAccounts,
+        );
+        globalController.myUserInfo.value = updatedUser;
+        Toast.success(message: 'Account is set as primary');
+      }
+    } catch (e) {
+      // toast is handled in the api call
+      l.e(e);
+    } finally {
+      addressThatIsBeningMadePrimary.value = null;
+    }
+  }
 }
 
-class DeactivationForm extends GetView<MyProfileController> {
-  DeactivationForm({super.key});
+class DeactivationForm extends StatefulWidget {
+  const DeactivationForm({super.key});
+
+  @override
+  State<DeactivationForm> createState() => _DeactivationFormState();
+}
+
+class _DeactivationFormState extends State<DeactivationForm> {
+  final controller = Get.find<MyProfileController>();
+  final _deactivationController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _deactivationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final TextEditingController _deactivationController =
-        TextEditingController();
-    final _formKey = GlobalKey<FormState>();
     return Form(
       key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          RichText(
-            text: const TextSpan(
+      child: AppDialog(
+        icon: Icons.delete_outline_rounded,
+        iconColor: AppColors.danger,
+        urgent: true,
+        title: 'Delete Account',
+        message:
+            'You are about to delete your account. Your account will be deactivated and you will not be able to use it anymore. Are you sure you want to delete your account? This action cannot be undone.',
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Type "delete" to confirm.',
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: ColorName.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.danger,
               ),
-              children: [
-                TextSpan(text: 'Delete Account'),
-              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(
-                height: 1.5,
-                fontSize: 14,
-                color: ColorName.secondaryText,
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _deactivationController,
+              style: AppText.body,
+              decoration: const InputDecoration(
+                hintText: 'Type "delete" to confirm',
               ),
-              children: [
-                TextSpan(
-                  text:
-                      'You are about to delete your account.\nYour account will be deactivated and \nyou will not be able to use it anymore. \nAre you sure you want to delete your account? This action cannot be undone. \n',
-                ),
-                TextSpan(
-                  text: 'Type "delete" to confirm.',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter "delete" to confirm';
+                }
+                if (value.toLowerCase() != 'delete') {
+                  return 'Please enter exactly "delete"';
+                }
+                return null;
+              },
             ),
+          ],
+        ),
+        actions: [
+          AppSecondaryButton(
+            label: 'Cancel',
+            onPressed: () => Get.close(),
           ),
-          const SizedBox(height: 24),
-          TextFormField(
-            controller: _deactivationController,
-            decoration: const InputDecoration(
-              hintText: 'Type "delete" to confirm',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter "delete" to confirm';
-              }
-              if (value.toLowerCase() != 'delete') {
-                return 'Please enter exactly "delete"';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              SizedBox(
-                width: 100,
-                child: TextButton(
-                  onPressed: () => Get.close(),
-                  child: const Text('Cancel'),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Obx(() {
-                final isDeactivatingAccount =
-                    controller.isDeactivatingAccount.value;
-                return Expanded(
-                    child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      controller.deactivateAccount();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: isDeactivatingAccount
-                      ? const LoadingWidget()
-                      : const Text('Delete Account'),
-                ));
-              }),
-            ],
-          ),
+          Obx(() {
+            final isDeactivatingAccount =
+                controller.isDeactivatingAccount.value;
+            return AppPrimaryButton(
+              label: 'Delete',
+              color: AppColors.danger,
+              loading: isDeactivatingAccount,
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  controller.deactivateAccount();
+                }
+              },
+            );
+          }),
         ],
       ),
     );

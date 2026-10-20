@@ -65,6 +65,35 @@ class RecordableCheckbox extends GetView<CreateOutpostController> {
   }
 }
 
+class MusicModeCheckbox extends GetView<CreateOutpostController> {
+  const MusicModeCheckbox({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        final isChecked = controller.newOutpostIsMusicMode.value;
+        return AppSettingsRow(
+          dense: true,
+          icon: Icons.graphic_eq_rounded,
+          iconColor: AppColors.primary,
+          title: 'Music mode',
+          subtitle: 'Stereo, high-bitrate audio without voice filters',
+          onTap: () {
+            controller.newOutpostIsMusicMode.value = !isChecked;
+          },
+          trailing: Switch(
+            value: isChecked,
+            onChanged: (value) {
+              controller.newOutpostIsMusicMode.value = value;
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
 class SelectCohosts extends GetView<CreateOutpostController> {
   const SelectCohosts({super.key});
 

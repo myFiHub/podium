@@ -70,6 +70,7 @@ class CreateOutpostController extends GetxController {
 
   // luma related end
   final newOutpostIsRecorable = false.obs;
+  final newOutpostIsMusicMode = false.obs;
   final outpostAccessType = FreeOutpostAccessTypes.public.obs;
   final outpostSpeakerType = FreeOutpostSpeakerTypes.everyone.obs;
   // tutorial keys
@@ -708,6 +709,7 @@ class CreateOutpostController extends GetxController {
           tags: tags.value,
           adultContent: newOutpostHasAdultContent.value,
           recordable: newOutpostIsRecorable.value,
+          musicMode: newOutpostIsMusicMode.value,
           requiredTicketsToAccess:
               selectedUsersToBuyTicketFrom_ToAccessRoom.value,
           requiredTicketsToSpeak: selectedUsersToBuyticketFrom_ToSpeak.value,
@@ -764,6 +766,7 @@ class CreateOutpostController extends GetxController {
     tags.value = [];
     newOutpostHasAdultContent.value = false;
     newOutpostIsRecorable.value = false;
+    newOutpostIsMusicMode.value = false;
     selectedUsersToBuyTicketFrom_ToAccessRoom.value = [];
     selectedUsersToBuyticketFrom_ToSpeak.value = [];
     addressesToAddForEntering.value = [];

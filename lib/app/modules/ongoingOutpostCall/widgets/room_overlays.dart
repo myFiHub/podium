@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/breakout_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/chat_sheet.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/music_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/utils/palette.dart';
@@ -271,6 +273,155 @@ class _EmojiOpacity extends Animatable<double> {
   double transform(double t) {
     final opacity = t < 0.1 ? t * 10 : (t > 0.7 ? (1 - t) / 0.3 : 1.0);
     return opacity.clamp(0.0, 1.0);
+  }
+}
+
+/// Chips above the stage for the room this device is in and the music
+/// playing in it.
+class CallRoomStrip extends StatelessWidget {
+  const CallRoomStrip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final room = findCallRoom();
+    if (room == null) return const SizedBox.shrink();
+    return Obx(() {
+      final showBreakout = room.inBreakoutRoom ||
+          (room.breakoutSupported &&
+              room.breakout.value.breakoutRooms.isNotEmpty);
+      final showMusic = room.nowPlaying.value != null;
+      if (!showBreakout && !showMusic) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            if (showBreakout) const BreakoutPill(),
+            if (showMusic) const MusicChip(),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class _StripChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final Widget? trailing;
+  const _StripChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withAlpha(24),
+      shape: StadiumBorder(side: BorderSide(color: color.withAlpha(90))),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(12, 6, trailing == null ? 14 : 4, 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 180),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Which room this device is in, with a shortcut back to the main room.
+class BreakoutPill extends GetView<CallRoomController> {
+  const BreakoutPill({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final inBreakout = controller.inBreakoutRoom;
+      final count = controller.breakout.value.breakoutRooms.length;
+      final label = inBreakout
+          ? "You're in: ${controller.currentBreakoutRoom?.label ?? 'a breakout room'}"
+          : count == 1
+              ? '1 breakout room open'
+              : '$count breakout rooms open';
+      return _StripChip(
+        icon: Icons.meeting_room_rounded,
+        label: label,
+        color: ColorName.primaryBlue,
+        onTap: openBreakoutSheet,
+        trailing: inBreakout
+            ? TextButton(
+                onPressed: () => controller.moveToRoom(),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  foregroundColor: ColorName.primaryBlue,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  'Main room',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              )
+            : null,
+      );
+    });
+  }
+}
+
+/// What's playing in the room; opens the host controls or the listener
+/// volume sheet.
+class MusicChip extends GetView<CallRoomController> {
+  const MusicChip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final track = controller.nowPlaying.value;
+      if (track == null) return const SizedBox.shrink();
+      final playing = controller.musicPlaying.value;
+      final muted = controller.localMusicMuted.value;
+      return _StripChip(
+        icon: muted
+            ? Icons.music_off_rounded
+            : playing
+                ? Icons.graphic_eq_rounded
+                : Icons.pause_rounded,
+        label: track.title,
+        color: callSpeakingColor,
+        onTap: controller.canControlMusic
+            ? openMusicSheet
+            : openListenerMusicSheet,
+      );
+    });
   }
 }
 

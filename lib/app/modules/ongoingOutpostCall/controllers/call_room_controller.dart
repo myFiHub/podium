@@ -6,6 +6,8 @@ import 'dart:ui' show Rect;
 
 import 'package:dartx/dartx.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/lib/jitsiMeet.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
@@ -15,6 +17,10 @@ import 'package:podium/constants/meeting.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/logger.dart';
 
+part 'call_audio_route.dart';
+part 'call_breakout.dart';
+part 'call_connection.dart';
+part 'call_music.dart';
 part 'call_polls.dart';
 part 'call_screen_share.dart';
 
@@ -36,6 +42,9 @@ class CallChatMessage {
   final String text;
   final DateTime at;
   final bool mine;
+
+  /// A notice from the app (e.g. a room switch) rather than a person.
+  final bool system;
   bool pending;
   CallChatMessage({
     required this.id,
@@ -44,6 +53,7 @@ class CallChatMessage {
     required this.text,
     required this.at,
     required this.mine,
+    this.system = false,
     this.pending = false,
   });
 }
@@ -66,10 +76,16 @@ CallRoomController? findCallRoom() => Get.isRegistered<CallRoomController>()
     : null;
 
 /// Room-level state that lives in Jitsi rather than in the Podium backend:
-/// raised hands, audio levels, chat, emoji reactions, polls, screen sharing
-/// and moderation.
+/// raised hands, audio levels, chat, emoji reactions, polls, screen sharing,
+/// moderation, audio routes, connection quality, breakout rooms and music.
 class CallRoomController extends GetxController
-    with _CallPolls, _CallScreenShare {
+    with
+        _CallPolls,
+        _CallScreenShare,
+        _CallAudioRoute,
+        _CallConnection,
+        _CallBreakout,
+        _CallMusic {
   static const reactionEmojis = [
     '❤️',
     '🔥',
@@ -114,9 +130,14 @@ class CallRoomController extends GetxController
   late final Worker _handsWorker;
   void Function()? _disposePollRecording;
 
+  /// Every jitsiId -> uuid seen in this call, kept after a peer leaves so
+  /// people in other breakout rooms can still be matched to members.
+  final _seenUuids = <String, String>{};
+
   @override
   void onInit() {
     super.onInit();
+    _initMusic();
     _handsWorker = everAll([_raisedHands, peers], (_) => _refreshHandUuids());
     _disposePollRecording = activePoll.addListener(
       () => ReplayRecorder.instance.onPoll(activePoll.value),
@@ -132,9 +153,13 @@ class CallRoomController extends GetxController
         Get.find<OngoingOutpostCallController>().amIMuted,
         (muted) {
           if (!muted && myHandRaised) setHandRaised(false);
+          _applyMusicVolume();
         },
       );
     }
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!isClosed && !iControlMusic) _requestMusicState();
+    });
   }
 
   @override
@@ -145,7 +170,15 @@ class CallRoomController extends GetxController
     _handsWorker.dispose();
     _disposePollRecording?.call();
     _disposeStage();
+    _disposeMusic();
     super.onClose();
+  }
+
+  @override
+  bool get _micLive {
+    if (!Get.isRegistered<OngoingOutpostCallController>()) return false;
+    return !Get.find<OngoingOutpostCallController>().amIMuted.value &&
+        _callController.canTalk.value;
   }
 
   // Identity ------------------------------------------------------------------
@@ -155,6 +188,25 @@ class CallRoomController extends GetxController
     if (jitsiId == null) return null;
     if (jitsiId == _localJitsiId) return myId;
     return peers[jitsiId]?.uuid;
+  }
+
+  /// Like [uuidOf], but also knows peers that have left this room.
+  String? knownUuidOf(String jitsiId) => uuidOf(jitsiId) ?? _seenUuids[jitsiId];
+
+  void _rememberPeer(CallPeer peer) {
+    final uuid = peer.uuid;
+    if (uuid != null) _seenUuids[peer.jitsiId] = uuid;
+  }
+
+  /// Uuids of the people in this device's Jitsi room, or null in the main
+  /// room, where everyone in the outpost is shown.
+  Set<String>? get breakoutPresence {
+    if (!inBreakoutRoom) return null;
+    return {
+      myId,
+      for (final peer in peers.values)
+        if (peer.uuid != null) peer.uuid!,
+    };
   }
 
   @override
@@ -189,14 +241,17 @@ class CallRoomController extends GetxController
     String? participantId,
   }) {
     if (participantId == null) return;
-    peers[participantId] = _peerFrom({
+    final peer = _peerFrom({
       'participantId': participantId,
       'email': email,
       'name': name,
       'role': role,
     });
+    peers[participantId] = peer;
+    _rememberPeer(peer);
     _retryUnverifiedPoll();
     _onPollPeerJoined(participantId);
+    _onMusicPeerJoined(participantId);
   }
 
   void onParticipantLeft(String? participantId) {
@@ -204,7 +259,40 @@ class CallRoomController extends GetxController
     final uuid = uuidOf(participantId);
     peers.remove(participantId);
     if (uuid != null) _setLevel(uuid, 0);
+    _forgetQuality(uuid);
     _onPollPeerLeft(uuid);
+  }
+
+  /// Called once this device is in another Jitsi room (breakout or main).
+  /// Chat and polls belong to the room that was left.
+  @override
+  void _onRoomSwitched(BreakoutRoom? room) {
+    for (final uuid in _audioLevels.keys.toList()) {
+      _setLevel(uuid, 0);
+    }
+    final poll = activePoll.value;
+    if (poll != null && poll.isOpen && !iOwnActivePoll) {
+      activePoll.value = poll.copyWith(status: PollStatus.ended);
+    }
+    chat.clear();
+    unreadChat.value = 0;
+    chatPreview.value = null;
+    chat.add(CallChatMessage(
+      id: 'system-${DateTime.now().microsecondsSinceEpoch}',
+      senderUuid: null,
+      senderName: '',
+      text: 'You joined ${room?.label ?? 'another room'}',
+      at: DateTime.now(),
+      mine: false,
+      system: true,
+    ));
+    if (!iControlMusic) {
+      musicControllerUuid.value = null;
+      _stopMusicLocally();
+      Future.delayed(const Duration(seconds: 2), () {
+        if (!isClosed) _requestMusicState();
+      });
+    }
   }
 
   // Permissions ---------------------------------------------------------------
@@ -222,6 +310,7 @@ class CallRoomController extends GetxController
 
   /// Moderation needs both a Podium host and a Jitsi moderator, since Jitsi
   /// enforces the latter on its side.
+  @override
   bool get canModerate =>
       channelAvailable.value && amIHost && localRole.value == 'moderator';
 
@@ -234,13 +323,33 @@ class CallRoomController extends GetxController
         channelAvailable.value = true;
         _localJitsiId = data['localParticipantId']?.toString();
         localRole.value = data['role']?.toString();
+        // A full snapshot, sent again after every room switch: anyone not in
+        // it is in another room now.
+        final next = <String, CallPeer>{};
         for (final p in (data['participants'] as List? ?? const [])) {
           if (p is Map && p['participantId'] != null) {
             final peer = _peerFrom(p);
-            if (peer.jitsiId != _localJitsiId) peers[peer.jitsiId] = peer;
+            if (peer.jitsiId != _localJitsiId) {
+              next[peer.jitsiId] = peer;
+              _rememberPeer(peer);
+            }
           }
         }
+        for (final gone in peers.keys.where((id) => !next.containsKey(id))) {
+          final uuid = uuidOf(gone);
+          if (uuid != null) {
+            _setLevel(uuid, 0);
+            _forgetQuality(uuid);
+          }
+        }
+        peers.assignAll(next);
         _setRaisedHands(data['raisedHands'], notify: false);
+        if (data.containsKey('audioDevices')) {
+          _onAudioDevices(data['audioDevices']);
+        }
+        if (data.containsKey('breakoutRooms')) {
+          _onBreakoutRooms(data['breakoutRooms']);
+        }
         _retryUnverifiedPoll();
         if (data.containsKey('screenShare')) {
           _onScreenShareEvent(data['screenShare'], notify: false);
@@ -289,6 +398,14 @@ class CallRoomController extends GetxController
           title: 'Removed from the outpost',
           message: 'The host removed you from this outpost',
         );
+      case 'audioDevices':
+        _onAudioDevices(data['devices']);
+      case 'connection':
+        _onConnectionState(data);
+      case 'connectionQuality':
+        _onConnectionQuality(data);
+      case 'breakoutRooms':
+        _onBreakoutRooms(data);
       default:
         l.d('unhandled podium event $name');
     }
@@ -475,6 +592,10 @@ class CallRoomController extends GetxController
         _onPollMessage(senderId, data);
       case 'pollVote':
         _onPollVote(senderId, data);
+      case 'music':
+        _onMusicMessage(senderId, data);
+      case 'musicRequest':
+        _onMusicRequest(senderId);
     }
   }
 

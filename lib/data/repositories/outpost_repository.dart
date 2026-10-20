@@ -1,5 +1,6 @@
 import 'package:podium/providers/api/podium/models/analytics/host_analytics.dart';
 import 'package:podium/providers/api/podium/models/discovery/discovery_models.dart';
+import 'package:podium/providers/api/podium/models/home/home_feed.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
 import 'package:podium/providers/api/podium/models/outposts/inviteRequestModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/liveData.dart';
@@ -61,6 +62,10 @@ class OutpostRepository {
 
   Future<List<PopularTagModel>> getPopularTags({int? limit}) =>
       _api.getPopularTags(limit: limit);
+
+  /// Throws [ApiFailure]; a 404 means the server has no home feed yet.
+  Future<HomeFeed> getHomeFeed({required int utcOffsetMinutes}) =>
+      _api.getHomeFeed(utcOffsetMinutes: utcOffsetMinutes);
 
   /// Throws [ApiFailure].
   Future<HostAnalyticsSummary> getHostAnalyticsSummary({

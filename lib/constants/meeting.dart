@@ -43,6 +43,12 @@ class MeetingConstants {
       "subject": outpost.name,
       "localSubject": outpost.name,
       "p2p": {"enabled": false},
+      if (outpost.is_music_mode) ...{
+        "audioQuality": {"stereo": true, "opusMaxAverageBitrate": 128000},
+        "disableNS": true,
+        "disableAGC": true,
+        "disableHPF": true,
+      },
     };
   }
 

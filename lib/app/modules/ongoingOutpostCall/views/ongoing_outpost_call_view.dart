@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_header.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/control_dock.dart';
@@ -46,6 +47,7 @@ class OngoingGroupCallView extends GetView<OngoingOutpostCallController> {
                   children: [
                     ContextSaver(),
                     SafeArea(bottom: false, child: CallTopBar()),
+                    ReconnectingBanner(),
                     ScreenShareArea(),
                     Expanded(
                       child: Stack(
@@ -98,6 +100,7 @@ class _CallBody extends GetView<OutpostCallController> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               const SliverToBoxAdapter(child: MyStatusCard()),
+              const SliverToBoxAdapter(child: CallRoomStrip()),
               const SliverToBoxAdapter(child: RaisedHandsBanner()),
               const SliverToBoxAdapter(child: PollCard()),
               if (showIntro) const SliverToBoxAdapter(child: _IntroDemoCard()),
@@ -112,7 +115,7 @@ class _CallBody extends GetView<OutpostCallController> {
                     final talking = controller.talkingCount.value;
                     return _SectionHeader(
                       title: 'On stage',
-                      count: controller.stageMembers.value.length,
+                      count: _inMyRoom(controller.stageMembers.value).length,
                       extra: talking > 0 ? '$talking talking' : null,
                     );
                   }),
@@ -120,7 +123,8 @@ class _CallBody extends GetView<OutpostCallController> {
                 const _MemberGrid(onStage: true),
                 SliverToBoxAdapter(
                   child: Obx(() {
-                    final count = controller.audienceMembers.value.length;
+                    final count =
+                        _inMyRoom(controller.audienceMembers.value).length;
                     return _SectionHeader(
                       title: 'Listening',
                       count: count,
@@ -139,6 +143,13 @@ class _CallBody extends GetView<OutpostCallController> {
   }
 }
 
+/// Inside a breakout room only the people in that Jitsi room are shown.
+List<LiveMember> _inMyRoom(List<LiveMember> members) {
+  final presence = findCallRoom()?.breakoutPresence;
+  if (presence == null) return members;
+  return members.where((m) => presence.contains(m.uuid)).toList();
+}
+
 class _MemberGrid extends GetView<OutpostCallController> {
   final bool onStage;
   const _MemberGrid({required this.onStage});
@@ -146,9 +157,9 @@ class _MemberGrid extends GetView<OutpostCallController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final members = onStage
+      final members = _inMyRoom(onStage
           ? controller.stageMembers.value
-          : controller.audienceMembers.value;
+          : controller.audienceMembers.value);
       if (!onStage && members.isEmpty) {
         return const SliverToBoxAdapter(child: _EmptyAudience());
       }

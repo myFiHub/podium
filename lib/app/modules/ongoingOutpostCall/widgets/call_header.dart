@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/global/controllers/outpost_call_controller.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/audio_route_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/control_dock.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
@@ -58,6 +60,7 @@ class CallTopBar extends GetView<OngoingOutpostCallController> {
                 ],
               ),
             ),
+            const AudioRouteButton(),
             if (isRecording) const _RecordingPill(),
             _LivePill(count: count),
             const SizedBox(width: 6),
@@ -80,6 +83,60 @@ class CallTopBar extends GetView<OngoingOutpostCallController> {
             ),
           ],
         ),
+      );
+    });
+  }
+}
+
+/// Shown while Jitsi has lost the media connection and is trying to recover.
+class ReconnectingBanner extends StatelessWidget {
+  const ReconnectingBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final room = findCallRoom();
+    if (room == null) return const SizedBox.shrink();
+    return Obx(() {
+      final show = room.reconnecting.value;
+      return AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        child: !show
+            ? const SizedBox(width: double.infinity)
+            : Container(
+                width: double.infinity,
+                margin: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: callAccentColor.withAlpha(28),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: callAccentColor.withAlpha(90)),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: callAccentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Reconnecting… audio will resume shortly',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: callAccentColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
       );
     });
   }

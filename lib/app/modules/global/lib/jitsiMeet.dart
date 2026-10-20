@@ -58,6 +58,9 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
   final outpostCallController = Get.find<OutpostCallController>();
   final callSession =
       outpostCallController.markCallStarted(outpostId: outpost.uuid);
+  // Moving between breakout rooms joins a new conference within the same
+  // call, so conferenceJoined fires again.
+  var joinedBefore = false;
   return JitsiMeetEventListener(
     conferenceJoined: (url) async {
       // Left while still connecting: make sure the native side leaves too
@@ -66,6 +69,11 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
         jitsiMeet.hangUp();
         return;
       }
+      if (joinedBefore) {
+        outpostCallController.fetchLiveData();
+        return;
+      }
+      joinedBefore = true;
       outpostCallController.fetchLiveData(withJoin: true);
 
       if (Get.isRegistered<OngoingOutpostCallController>()) {
@@ -131,12 +139,9 @@ JitsiMeetEventListener jitsiListeners({required OutpostModel outpost}) {
       if (!callSession.isActive) return;
       final joined = Get.isRegistered<OngoingOutpostCallController>() &&
           Get.find<OngoingOutpostCallController>().isConferenceJoined.value;
-      if (error != null && !joined) {
-        Toast.error(
-          title: "Couldn't connect",
-          message: 'Failed to join the outpost, please try again',
-        );
-      }
+      final failure = conferenceErrorMessage(error);
+      if (failure == null || (joined && failure.isGeneric)) return;
+      Toast.error(title: failure.title, message: failure.message);
     },
     participantsInfoRetrieved: (participantsInfo) {
       try {} catch (e) {

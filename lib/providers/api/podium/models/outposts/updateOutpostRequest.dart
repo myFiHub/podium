@@ -9,6 +9,7 @@ class UpdateOutpostRequest {
   final String? image;
   final String uuid;
   final List<String>? cohost_user_uuids;
+  final bool? is_music_mode;
 
   const UpdateOutpostRequest({
     this.luma_event_id,
@@ -16,6 +17,7 @@ class UpdateOutpostRequest {
     this.image,
     required this.uuid,
     this.cohost_user_uuids,
+    this.is_music_mode,
   });
 
   factory UpdateOutpostRequest.fromJson(Map<String, dynamic> json) =>

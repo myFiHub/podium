@@ -85,6 +85,12 @@ class MemberAvatar extends StatelessWidget {
           if (showMicBadge)
             Positioned(
               bottom: 0,
+              left: 0,
+              child: _WeakSignalBadge(uuid: member.uuid),
+            ),
+          if (showMicBadge)
+            Positioned(
+              bottom: 0,
               right: 0,
               child: speaking
                   ? _LiveMicBadge(uuid: member.uuid)
@@ -164,6 +170,31 @@ class _HandBadge extends StatelessWidget {
                 child: const Text('✋', style: TextStyle(fontSize: 11)),
               )
             : const SizedBox.shrink(key: ValueKey('none')),
+      );
+    });
+  }
+}
+
+/// Warns that a speaker may be breaking up for everyone.
+class _WeakSignalBadge extends StatelessWidget {
+  final String uuid;
+  const _WeakSignalBadge({required this.uuid});
+
+  @override
+  Widget build(BuildContext context) {
+    final room = findCallRoom();
+    if (room == null) return const SizedBox.shrink();
+    final quality = room.qualityOf(uuid);
+    return Obx(() {
+      quality.value;
+      if (!room.isWeakConnection(uuid)) return const SizedBox.shrink();
+      return Tooltip(
+        message: 'Weak connection',
+        child: _Badge(
+          color: callAccentColor,
+          icon: Icons.signal_cellular_connected_no_internet_0_bar_rounded,
+          iconColor: Colors.black,
+        ),
       );
     });
   }

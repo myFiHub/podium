@@ -4,9 +4,11 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/home/widgets/addOutpostButton.dart';
+import 'package:podium/app/modules/home/widgets/home_feed.dart';
 import 'package:podium/app/routes/app_pages.dart';
 import 'package:podium/gen/assets.gen.dart';
 import 'package:podium/root.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/navigation/navigation.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
 
@@ -79,7 +81,6 @@ class _HomeBodyState extends State<_HomeBody> {
             ),
           ),
         ),
-        const _HomeSection(),
         Expanded(
           child: _MyOutpostsList(scrollController: _scrollController),
         ),
@@ -120,31 +121,12 @@ class _HomeHeader extends GetView<HomeController> {
         padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
         actions: [
           AppRefreshButton(
-            loading: loading,
+            loading: loading || controller.isLoadingFeed.value,
             onTap: controller.refreshOutposts,
           ),
           const SizedBox(width: 8),
           const AddOutpostButton(),
         ],
-      );
-    });
-  }
-}
-
-class _HomeSection extends GetView<OutpostsController> {
-  const _HomeSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final count = controller.myOutposts.value.length;
-      final loading = controller.isGettingMyOutposts.value;
-      if (count == 0 && !loading) return const SizedBox(height: 8);
-      return const AppSectionHeader(
-        title: 'Your outposts',
-        actionLabel: 'Explore',
-        onAction: _openExplore,
-        padding: EdgeInsets.fromLTRB(20, 6, 8, 2),
       );
     });
   }
@@ -157,27 +139,47 @@ class _MyOutpostsList extends GetView<OutpostsController> {
 
   @override
   Widget build(BuildContext context) {
+    final home = Get.find<HomeController>();
     return Obx(
       () {
         final isEmpty = controller.myOutposts.value.isEmpty;
         final isGettingMyOutposts = controller.isGettingMyOutposts.value;
         final Widget child;
-        if (isEmpty && isGettingMyOutposts) {
-          child = ListView.builder(
-            key: const ValueKey('skeleton'),
-            padding: _homeListPadding,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 3,
-            itemBuilder: (context, index) => const OutpostCardSkeleton(),
+        if (isEmpty && !isGettingMyOutposts) {
+          child = RefreshIndicator(
+            key: const ValueKey('empty'),
+            color: AppColors.onPrimary,
+            backgroundColor: ColorName.primaryBlue,
+            onRefresh: home.refreshOutposts,
+            child: ListView(
+              controller: scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: _homeListPadding,
+              children: const [
+                HomeFeedSections(),
+                _MyOutpostsEmpty(),
+              ],
+            ),
           );
-        } else if (isEmpty) {
-          child = const _MyOutpostsEmpty(key: ValueKey('empty'));
         } else {
+          // While the first page loads this shows the feed above skeletons.
           child = OutpostsList(
             key: const ValueKey('list'),
             scrollController: scrollController,
             listPage: ListPage.my,
             padding: _homeListPadding,
+            onRefresh: home.refreshFeed,
+            header: const Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                HomeFeedSections(),
+                AppSectionHeader(
+                  title: 'Your outposts',
+                  actionLabel: 'Explore',
+                  onAction: openExplore,
+                ),
+              ],
+            ),
           );
         }
         return AnimatedSwitcher(
@@ -198,72 +200,70 @@ class _MyOutpostsList extends GetView<OutpostsController> {
 }
 
 class _MyOutpostsEmpty extends StatelessWidget {
-  const _MyOutpostsEmpty({super.key});
+  const _MyOutpostsEmpty();
 
   @override
   Widget build(BuildContext context) {
     final name =
         _firstName(Get.find<GlobalController>().myUserInfo.value?.name);
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(28, 8, 28, 32),
-        child: AppEntrance(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppBreathing(
-                period: const Duration(milliseconds: 2600),
-                builder: (context, value) => Transform.translate(
-                  offset: Offset(0, 4 - 8 * value),
-                  child: Container(
-                    width: 168,
-                    height: 168,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppColors.primary.withAlpha(36),
-                          AppColors.violet.withAlpha(14),
-                          AppColors.violet.withAlpha(0),
-                        ],
-                      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
+      child: AppEntrance(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBreathing(
+              period: const Duration(milliseconds: 2600),
+              builder: (context, value) => Transform.translate(
+                offset: Offset(0, 4 - 8 * value),
+                child: Container(
+                  width: 168,
+                  height: 168,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.primary.withAlpha(36),
+                        AppColors.violet.withAlpha(14),
+                        AppColors.violet.withAlpha(0),
+                      ],
                     ),
-                    child: SizedBox(
-                      height: 132,
-                      child: Assets.images.explore.image(),
-                    ),
+                  ),
+                  child: SizedBox(
+                    height: 132,
+                    child: Assets.images.explore.image(),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                name.isEmpty ? 'No outposts yet' : 'Hi $name',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: AppText.title,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "You haven't joined a conversation yet. Explore what's live, or start one of your own.",
-                textAlign: TextAlign.center,
-                style: AppText.muted.copyWith(height: 1.45),
-              ),
-              const SizedBox(height: 22),
-              const AppPrimaryButton(
-                label: 'Explore outposts',
-                icon: Icons.explore_rounded,
-                onPressed: _openExplore,
-              ),
-              const SizedBox(height: 10),
-              const AppSecondaryButton(
-                label: 'Start an outpost',
-                icon: Icons.add_rounded,
-                onPressed: _openCreate,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              name.isEmpty ? 'No outposts yet' : 'Hi $name',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppText.title,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "You haven't joined a conversation yet. Explore what's live, or start one of your own.",
+              textAlign: TextAlign.center,
+              style: AppText.muted.copyWith(height: 1.45),
+            ),
+            const SizedBox(height: 22),
+            const AppPrimaryButton(
+              label: 'Explore outposts',
+              icon: Icons.explore_rounded,
+              onPressed: openExplore,
+            ),
+            const SizedBox(height: 10),
+            const AppSecondaryButton(
+              label: 'Start an outpost',
+              icon: Icons.add_rounded,
+              onPressed: _openCreate,
+            ),
+          ],
         ),
       ),
     );
@@ -302,13 +302,6 @@ String _homeSubtitle({
   if (live == 0) return rooms;
   final liveLabel = live == 1 ? '1 live' : '$live live';
   return '$rooms · $liveLabel';
-}
-
-void _openExplore() {
-  Navigate.to(
-    type: NavigationTypes.offAllNamed,
-    route: Routes.ALL_OUTPOSTS,
-  );
 }
 
 void _openCreate() {

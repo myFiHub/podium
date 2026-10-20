@@ -7,8 +7,10 @@ import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/ongoing_outpost_call_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/views/report_form.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/breakout_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
+import 'package:podium/app/modules/ongoingOutpostCall/widgets/music_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/participants_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/poll_sheet.dart';
 import 'package:podium/app/modules/outpostDetail/views/outpost_detail_view.dart';
@@ -104,6 +106,21 @@ class MoreSheet extends GetView<OngoingOutpostCallController> {
                             ? controller.stopRecording
                             : controller.startRecording,
                       ),
+            ),
+          if (room != null &&
+              room.breakoutSupported &&
+              (canModerate || room.breakout.value.breakoutRooms.isNotEmpty))
+            _MoreTile(
+              icon: Icons.meeting_room_outlined,
+              label: 'Rooms',
+              onTap: () => _runAfterClose(openBreakoutSheet),
+            ),
+          if (room != null && room.canControlMusic)
+            _MoreTile(
+              icon: Icons.library_music_outlined,
+              label: 'Music',
+              color: room.nowPlaying.value != null ? callSpeakingColor : null,
+              onTap: () => _runAfterClose(openMusicSheet),
             ),
           if (canStartPoll)
             _MoreTile(

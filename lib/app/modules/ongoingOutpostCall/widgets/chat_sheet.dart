@@ -65,7 +65,14 @@ class _ChatSheetState extends State<ChatSheet> {
                     final older = index + 1 < messages.length
                         ? messages[index + 1]
                         : null;
+                    if (message.system) {
+                      return _SystemNotice(
+                        key: ValueKey(message.id),
+                        text: message.text,
+                      );
+                    }
                     final grouped = older != null &&
+                        !older.system &&
                         older.senderUuid == message.senderUuid &&
                         older.senderName == message.senderName &&
                         message.at.difference(older.at).inMinutes < 2;
@@ -204,6 +211,32 @@ class ChatAvatar extends StatelessWidget {
         alt: member?.name ?? name,
         size: size,
         borderRadius: BorderRadius.circular(size),
+      ),
+    );
+  }
+}
+
+class _SystemNotice extends StatelessWidget {
+  final String text;
+  const _SystemNotice({super.key, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          decoration: BoxDecoration(
+            color: ColorName.white.withAlpha(10),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: ColorName.greyText),
+          ),
+        ),
       ),
     );
   }

@@ -8,6 +8,7 @@ import 'package:podium/providers/api/podium/models/auth/additionalDataForLogin.d
 import 'package:podium/providers/api/podium/models/discovery/discovery_models.dart';
 import 'package:podium/providers/api/podium/models/auth/loginRequest.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
+import 'package:podium/providers/api/podium/models/home/home_feed.dart';
 import 'package:podium/providers/api/podium/models/metadata/metadata.dart';
 import 'package:podium/providers/api/podium/models/notifications/notificationModel.dart';
 import 'package:podium/providers/api/podium/models/outposts/createOutpostRequest.dart';
@@ -485,6 +486,17 @@ class PodiumApi {
       PopularTagModel.fromJson,
       query: {if (limit != null) 'limit': limit},
     );
+  }
+
+  /// Throws [ApiFailure]; a 404 means the server has no home feed yet.
+  Future<HomeFeed> getHomeFeed({required int utcOffsetMinutes}) {
+    return _attempt(() async {
+      final data = await _getData(
+        '/home',
+        query: {'utc_offset_minutes': utcOffsetMinutes},
+      );
+      return HomeFeed.fromJson(Map<String, dynamic>.from(data));
+    });
   }
 
   /// Throws [ApiFailure].

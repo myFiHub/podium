@@ -99,6 +99,8 @@ class CreateGroupView extends GetView<CreateOutpostController> {
                             AdultsCheckbox(),
                             AppRowDivider(),
                             RecordableCheckbox(),
+                            AppRowDivider(),
+                            MusicModeCheckbox(),
                           ],
                         ),
                       ),

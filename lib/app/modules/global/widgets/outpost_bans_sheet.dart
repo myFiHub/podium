@@ -127,7 +127,7 @@ class _OutpostBansSheetState extends State<OutpostBansSheet> {
       if (_loading) {
         return const Padding(
           padding: EdgeInsets.symmetric(vertical: 40),
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(heightFactor: 1, child: CircularProgressIndicator()),
         );
       }
       if (_error != null) {

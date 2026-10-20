@@ -830,25 +830,29 @@ class _RoomDialogState extends State<_RoomDialog> {
             ),
           ),
           if (!_editing) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             ValueListenableBuilder(
               valueListenable: _name,
-              builder: (context, value, _) => Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  for (final name in _suggestions)
-                    _SuggestionChip(
-                      label: name,
-                      selected: value.text == name,
-                      onTap: () => _suggest(name),
-                    ),
-                ],
+              builder: (context, value, _) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final name in _suggestions)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: _SuggestionChip(
+                          label: name,
+                          selected: value.text == name,
+                          onTap: () => _suggest(name),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],
           if (canProtect) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             Text('WHO CAN JOIN', style: AppText.label),
             const SizedBox(height: 8),
             AppSegmented<BreakoutAccessType>(
@@ -1104,7 +1108,7 @@ class _SuggestionChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
           decoration: BoxDecoration(
             color: selected ? tint.withAlpha(36) : AppColors.fill,
             borderRadius: BorderRadius.circular(999),
@@ -1115,7 +1119,7 @@ class _SuggestionChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
               color: selected ? tint : ColorName.white,
             ),

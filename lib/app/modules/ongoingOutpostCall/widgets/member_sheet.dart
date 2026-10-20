@@ -112,21 +112,13 @@ class MemberSheet extends GetView<OngoingOutpostCallController> {
                 ),
               ),
             const SizedBox(height: 16),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: ColorName.white,
-                side: BorderSide(color: ColorName.cardBorder),
-                minimumSize: const Size.fromHeight(46),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
+            AppSecondaryButton(
+              label: 'View profile',
+              icon: Icons.person_outline_rounded,
               onPressed: () {
                 Get.closeOverlay();
                 Get.find<UsersController>().openUserProfile(member.uuid);
               },
-              icon: const Icon(Icons.person_outline_rounded, size: 18),
-              label: const Text('View profile'),
             ),
           ],
         );
@@ -178,22 +170,24 @@ class _ModerationRow extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: ColorName.white.withAlpha(6),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorName.cardBorder),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(
-              'HOST CONTROLS',
-              style: TextStyle(
-                fontSize: 12,
-                letterSpacing: 1.1,
-                fontWeight: FontWeight.w700,
-                color: ColorName.greyText,
-              ),
+            padding: const EdgeInsets.fromLTRB(4, 2, 4, 10),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.shield_outlined,
+                  size: 14,
+                  color: ColorName.greyText,
+                ),
+                const SizedBox(width: 6),
+                Text('HOST CONTROLS', style: AppText.label),
+              ],
             ),
           ),
           Row(
@@ -256,27 +250,39 @@ class _ModButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
-    return Material(
-      color: ColorName.white.withAlpha(enabled ? 12 : 4),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onPressed,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Column(
-            children: [
-              Icon(icon,
-                  size: 20, color: enabled ? _color : ColorName.greyText),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: enabled ? _color : ColorName.greyText,
+    final fg = enabled ? _color : ColorName.greyText;
+    return AppPressScale(
+      enabled: enabled,
+      child: Material(
+        color: fg.withAlpha(enabled ? 22 : 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          side: BorderSide(color: fg.withAlpha(enabled ? 60 : 20)),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          onTap: onPressed == null
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  onPressed!();
+                },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              children: [
+                Icon(icon, size: 20, color: fg),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: fg,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -386,21 +392,7 @@ class _RoleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withAlpha(30),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-      ),
-    );
+    return AppPill(label: label, color: color);
   }
 }
 
@@ -427,16 +419,20 @@ class _TalkTimeRow extends StatelessWidget {
             ? callDangerColor
             : ColorName.white;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
       decoration: BoxDecoration(
         color: ColorName.white.withAlpha(8),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorName.cardBorder),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
-          Icon(Icons.timer_outlined, size: 18, color: ColorName.greyText),
-          const SizedBox(width: 8),
+          AppIconTile(
+            icon: Icons.timer_outlined,
+            color: isCreator ? callAccentColor : ColorName.greyText,
+            size: 34,
+          ),
+          const SizedBox(width: 10),
           Text(
             'Talk time left',
             style: TextStyle(color: ColorName.greyText, fontSize: 13),

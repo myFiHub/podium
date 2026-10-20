@@ -8,6 +8,7 @@ import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_interactions.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/member_sheet.dart';
 import 'package:podium/utils/palette.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 Future<void> openChatSheet() async {
   final room = findCallRoom();
@@ -49,6 +50,8 @@ class _ChatSheetState extends State<ChatSheet> {
       height: CallSheet.maxHeight(context, 0.75),
       child: CallSheet(
         title: 'Chat',
+        subtitle: 'Visible to everyone in this outpost',
+        icon: Icons.chat_bubble_rounded,
         padding: EdgeInsets.zero,
         child: Column(
           children: [
@@ -86,11 +89,13 @@ class _ChatSheetState extends State<ChatSheet> {
               }),
             ),
             Container(
-              padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: ColorName.cardBorder)),
+                color: Colors.black.withAlpha(24),
+                border: Border(top: BorderSide(color: AppColors.border)),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: TextField(
@@ -99,34 +104,59 @@ class _ChatSheetState extends State<ChatSheet> {
                       maxLines: 4,
                       maxLength: 1000,
                       keyboardAppearance: Brightness.dark,
+                      textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
                       decoration: InputDecoration(
-                        isDense: true,
                         counterText: '',
                         hintText: 'Say something to the room',
-                        filled: true,
-                        fillColor: ColorName.white.withAlpha(10),
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
+                          horizontal: 16,
+                          vertical: 12,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(22),
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(22),
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(22),
+                          borderSide: BorderSide(
+                            color: AppColors.primary.withAlpha(150),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 8),
                   ValueListenableBuilder(
                     valueListenable: input,
-                    builder: (context, value, _) => IconButton(
-                      tooltip: 'Send',
-                      onPressed: value.text.trim().isEmpty ? null : _send,
-                      icon: const Icon(Icons.send_rounded),
-                      color: ColorName.primaryBlue,
-                    ),
+                    builder: (context, value, _) {
+                      final canSend = value.text.trim().isNotEmpty;
+                      return AnimatedScale(
+                        scale: canSend ? 1 : 0.9,
+                        duration: const Duration(milliseconds: 160),
+                        child: AppGradientShell(
+                          enabled: canSend,
+                          borderRadius: BorderRadius.circular(22),
+                          child: IconButton(
+                            tooltip: 'Send',
+                            onPressed: canSend ? _send : null,
+                            icon: const Icon(Icons.arrow_upward_rounded),
+                            style: IconButton.styleFrom(
+                              fixedSize: const Size.square(44),
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: AppColors.onPrimary,
+                              disabledBackgroundColor: AppColors.fill,
+                              disabledForegroundColor: ColorName.greyText,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

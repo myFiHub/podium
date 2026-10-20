@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/controllers/call_room_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/call_sheet.dart';
 import 'package:podium/utils/palette.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 IconData audioRouteIcon(String? type) => switch (type) {
       'EARPIECE' => Icons.phone_in_talk_rounded,
@@ -49,52 +50,109 @@ class AudioRouteSheet extends GetView<CallRoomController> {
   @override
   Widget build(BuildContext context) {
     return CallSheet(
-      title: 'Play audio through',
+      title: 'Audio output',
+      subtitle: 'Choose where you hear the room',
+      icon: Icons.speaker_group_rounded,
       child: Obx(() {
         final routes = controller.audioRoutes.toList();
         if (routes.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Text(
-              'No audio outputs found',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: ColorName.greyText),
-            ),
+          return const AppEmptyState(
+            compact: true,
+            icon: Icons.speaker_rounded,
+            title: 'No audio outputs found',
           );
         }
         return Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final route in routes)
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                leading: Icon(
-                  audioRouteIcon(route.type),
-                  color:
-                      route.selected ? ColorName.primaryBlue : ColorName.white,
-                ),
-                title: Text(
-                  route.label,
-                  style: TextStyle(
-                    fontWeight:
-                        route.selected ? FontWeight.w700 : FontWeight.w400,
-                    color: route.selected
-                        ? ColorName.primaryBlue
-                        : ColorName.white,
+            for (final (i, route) in routes.indexed)
+              AppEntrance(
+                index: i,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _RouteOption(
+                    icon: audioRouteIcon(route.type),
+                    label: route.label,
+                    selected: route.selected,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      controller.selectAudioRoute(route);
+                      Get.closeOverlay();
+                    },
                   ),
                 ),
-                trailing: route.selected
-                    ? Icon(Icons.check_rounded, color: ColorName.primaryBlue)
-                    : null,
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  controller.selectAudioRoute(route);
-                  Get.closeOverlay();
-                },
               ),
           ],
         );
       }),
+    );
+  }
+}
+
+class _RouteOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _RouteOption({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = AppColors.primary;
+    return AppCard(
+      onTap: selected ? null : onTap,
+      padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+      radius: AppRadius.lg,
+      color: selected ? tint.withAlpha(20) : ColorName.white.withAlpha(6),
+      borderColor: selected ? tint.withAlpha(150) : AppColors.border,
+      child: Row(
+        children: [
+          AppIconTile(
+            icon: icon,
+            color: selected ? tint : ColorName.greyText,
+            size: 40,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? tint : ColorName.white,
+              ),
+            ),
+          ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected ? tint : Colors.transparent,
+              border: Border.all(
+                color: selected ? tint : ColorName.greyText.withAlpha(120),
+                width: 1.5,
+              ),
+            ),
+            child: selected
+                ? Icon(
+                    Icons.check_rounded,
+                    size: 14,
+                    color: AppColors.onColor(tint),
+                  )
+                : null,
+          ),
+        ],
+      ),
     );
   }
 }

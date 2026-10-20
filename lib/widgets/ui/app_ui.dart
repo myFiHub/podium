@@ -957,19 +957,28 @@ class AppEmptyState extends StatelessWidget {
   }
 }
 
-/// Bottom sheet chrome: grabber, optional title row, safe-area padding.
+/// Bottom sheet chrome: grabber, optional title row (with leading [icon] and
+/// [subtitle]), a soft brand glow along the top edge and safe-area padding.
 class AppSheet extends StatelessWidget {
   final Widget child;
   final String? title;
+  final String? subtitle;
+  final IconData? icon;
+  final Color? iconColor;
   final Widget? trailing;
   final EdgeInsets padding;
   const AppSheet({
     super.key,
     required this.child,
     this.title,
+    this.subtitle,
+    this.icon,
+    this.iconColor,
     this.trailing,
     this.padding = const EdgeInsets.fromLTRB(20, 0, 20, 20),
   });
+
+  static const double _radius = 28;
 
   /// Max height for a sheet opened with [Get.bottomSheet], which already lifts
   /// its content above the keyboard.
@@ -982,42 +991,280 @@ class AppSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
-        border: Border(top: BorderSide(color: ColorName.cardBorder)),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 10),
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: ColorName.cardBorder,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+    const shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(_radius)),
+    );
+    return CustomPaint(
+      foregroundPainter: const _SheetEdgePainter(radius: _radius),
+      child: DecoratedBox(
+        decoration: ShapeDecoration(
+          shape: shape,
+          color: AppColors.surfaceRaised,
+          shadows: [
+            BoxShadow(
+              color: Colors.black.withAlpha(70),
+              blurRadius: 30,
+              offset: const Offset(0, -6),
             ),
-            const SizedBox(height: 14),
-            if (title != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 12, 12),
-                child: Row(
+          ],
+        ),
+        child: ClipPath(
+          clipper: const ShapeBorderClipper(shape: shape),
+          child: Stack(
+            fit: StackFit.passthrough,
+            children: [
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 140,
+                child: IgnorePointer(child: _SheetGlow()),
+              ),
+              SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: Text(title!, style: AppText.title)),
-                    if (trailing != null) trailing!,
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: ColorName.white.withAlpha(46),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    if (title != null) _header(),
+                    Flexible(child: Padding(padding: padding, child: child)),
                   ],
                 ),
               ),
-            Flexible(child: Padding(padding: padding, child: child)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 12, 16),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            AppIconTile(
+              icon: icon!,
+              color: iconColor,
+              size: 40,
+              bordered: true,
+            ),
+            const SizedBox(width: 12),
           ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.title,
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.caption,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
+      ),
+    );
+  }
+}
+
+/// Faint cyan/violet light pooling under the sheet's top edge.
+class _SheetGlow extends StatelessWidget {
+  const _SheetGlow();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(-0.6, -1.4),
+          radius: 1.6,
+          colors: [
+            AppColors.primary.withAlpha(26),
+            AppColors.violet.withAlpha(14),
+            AppColors.violet.withAlpha(0),
+          ],
+          stops: const [0, 0.45, 1],
+        ),
+      ),
+    );
+  }
+}
+
+/// Hairline along the sheet's rounded top edge that fades out down the sides.
+class _SheetEdgePainter extends CustomPainter {
+  final double radius;
+  const _SheetEdgePainter({required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(0.5, radius * 2.5)
+      ..lineTo(0.5, radius)
+      ..arcToPoint(Offset(radius, 0.5), radius: Radius.circular(radius - 0.5))
+      ..lineTo(size.width - radius, 0.5)
+      ..arcToPoint(
+        Offset(size.width - 0.5, radius),
+        radius: Radius.circular(radius - 0.5),
+      )
+      ..lineTo(size.width - 0.5, radius * 2.5);
+    final bounds = Rect.fromLTWH(0, 0, size.width, radius * 2.5);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [ColorName.white.withAlpha(36), ColorName.white.withAlpha(0)],
+      ).createShader(bounds);
+    canvas.drawPath(path, paint);
+    final highlight = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..shader = LinearGradient(
+        colors: [
+          AppColors.primary.withAlpha(0),
+          AppColors.primary.withAlpha(110),
+          AppColors.violet.withAlpha(90),
+          AppColors.violet.withAlpha(0),
+        ],
+        stops: const [0.08, 0.35, 0.65, 0.92],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, 1));
+    canvas.drawLine(
+      Offset(radius, 0.5),
+      Offset(size.width - radius, 0.5),
+      highlight,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SheetEdgePainter oldDelegate) =>
+      oldDelegate.radius != radius;
+}
+
+/// Segmented control for switching views inside sheets and cards. The
+/// selected segment slides between positions.
+class AppSegmented<T> extends StatelessWidget {
+  final List<(T value, String label, IconData? icon)> segments;
+  final T value;
+  final ValueChanged<T> onChanged;
+  final Color? color;
+  const AppSegmented({
+    super.key,
+    required this.segments,
+    required this.value,
+    required this.onChanged,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = color ?? AppColors.primary;
+    final found = segments.indexWhere((s) => s.$1 == value);
+    final index = found < 0 ? 0 : found;
+    return Container(
+      height: 42,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.fill,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth / segments.length;
+          return Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                left: width * index,
+                top: 0,
+                bottom: 0,
+                width: width,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: tint.withAlpha(36),
+                    borderRadius: BorderRadius.circular(AppRadius.sm - 2),
+                    border: Border.all(color: tint.withAlpha(110)),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  for (final (segment, label, icon) in segments)
+                    Expanded(
+                      child: _segment(segment, label, icon, tint),
+                    ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _segment(T segment, String label, IconData? icon, Color tint) {
+    final selected = segment == value;
+    final fg = selected ? tint : ColorName.greyText;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.sm - 2),
+        onTap: selected ? null : () => onChanged(segment),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 16, color: fg),
+                const SizedBox(width: 6),
+              ],
+              Flexible(
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: fg,
+                  ),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

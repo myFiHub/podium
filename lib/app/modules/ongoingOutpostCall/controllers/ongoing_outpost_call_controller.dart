@@ -719,7 +719,11 @@ class OngoingOutpostCallController extends GetxController {
       }
       final String? amount = fromMeetPage == true
           ? Env.minimumCheerBooAmount.toString()
-          : await Get.bottomSheet(CheerBooBottomSheet(isCheer: cheer));
+          : await Get.bottomSheet(
+              CheerBooBottomSheet(isCheer: cheer),
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+            );
       if (amount == null) {
         l.e("Amount not selected");
 

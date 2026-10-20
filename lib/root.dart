@@ -6,7 +6,7 @@ import 'package:podium/app/modules/global/controllers/global_controller.dart';
 import 'package:podium/app/modules/ongoingOutpostCall/widgets/floating_call_bubble.dart';
 import 'package:podium/utils/palette.dart';
 import 'package:podium/widgets/navbar.dart';
-import 'package:podium/widgets/ui/aurora.dart';
+import 'package:podium/widgets/ui/app_ui.dart';
 
 class Root extends StatelessWidget {
   final Widget child;
@@ -46,8 +46,8 @@ class PageWrapper extends StatelessWidget {
   }
 }
 
-/// Shows a banner once the connection has been down for a few seconds, so
-/// brief network hiccups don't flash it.
+/// Shows a tiny badge in the top-right corner once the connection has been
+/// down for a few seconds, so brief network hiccups don't flash it.
 class InternetConnectionChecker extends StatefulWidget {
   const InternetConnectionChecker({super.key});
 
@@ -92,19 +92,24 @@ class _InternetConnectionCheckerState extends State<InternetConnectionChecker> {
 
   @override
   Widget build(BuildContext context) {
+    // Sits just under the status bar, outside the 12px gutter page headers
+    // keep around their trailing buttons, and never takes touches.
     return Positioned(
-      bottom: navbarHeight + 16,
-      left: 16,
-      right: 16,
+      top: MediaQuery.paddingOf(context).top + 2,
+      right: 4,
       child: IgnorePointer(
-        child: AnimatedSlide(
-          offset: _visible ? Offset.zero : const Offset(0, 0.4),
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
-          child: AnimatedOpacity(
-            opacity: _visible ? 1 : 0,
-            duration: const Duration(milliseconds: 250),
-            child: const Center(child: _ConnectionIssueBanner()),
+        child: Semantics(
+          liveRegion: true,
+          label: _visible ? 'No connection, reconnecting' : null,
+          child: AnimatedScale(
+            scale: _visible ? 1 : 0.4,
+            duration: const Duration(milliseconds: 260),
+            curve: _visible ? Curves.easeOutBack : Curves.easeInCubic,
+            child: AnimatedOpacity(
+              opacity: _visible ? 1 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: _ConnectionIssueBadge(active: _visible),
+            ),
           ),
         ),
       ),
@@ -112,59 +117,37 @@ class _InternetConnectionCheckerState extends State<InternetConnectionChecker> {
   }
 }
 
-class _ConnectionIssueBanner extends StatelessWidget {
-  const _ConnectionIssueBanner();
+class _ConnectionIssueBadge extends StatelessWidget {
+  final bool active;
+  const _ConnectionIssueBadge({required this.active});
 
-  static Color get _danger => ColorName.danger;
+  static const double _size = 15;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+    final danger = ColorName.danger;
+    return AppBreathing(
+      active: active,
+      period: const Duration(milliseconds: 1600),
+      builder: (context, glow) => Container(
+        width: _size,
+        height: _size,
         decoration: BoxDecoration(
-          color: ColorName.cardBackground.withAlpha(240),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: _danger.withAlpha(90)),
+          color: danger,
+          shape: BoxShape.circle,
+          border: Border.all(color: ColorName.pageBackground, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(90),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
+              color: danger.withAlpha(60 + (90 * glow).round()),
+              blurRadius: 4 + 6 * glow,
+              spreadRadius: 1 * glow,
             ),
           ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: _danger.withAlpha(36),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.wifi_off_rounded,
-                color: _danger,
-                size: 16,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                'No connection. Reconnecting…',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: ColorName.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
+        child: Icon(
+          Icons.wifi_off_rounded,
+          size: 9,
+          color: AppColors.onColor(danger),
         ),
       ),
     );

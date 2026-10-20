@@ -111,10 +111,10 @@ extension $FollowerModelCopyWith on FollowerModel {
 
 FollowerModel _$FollowerModelFromJson(Map<String, dynamic> json) =>
     FollowerModel(
-      address: json['address'] as String,
+      address: json['address'] as String? ?? '',
       followed_by_me: json['followed_by_me'] as bool,
-      image: json['image'] as String,
-      name: json['name'] as String,
+      image: json['image'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       uuid: json['uuid'] as String,
     );
 

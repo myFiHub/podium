@@ -4,17 +4,22 @@ import 'package:get/get.dart';
 import 'package:podium/app/modules/global/utils/easyStore.dart';
 import 'package:podium/app/modules/global/widgets/Img.dart';
 import 'package:podium/app/modules/global/widgets/loading_widget.dart';
+import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/outpostDetail/widgets/usersList.dart';
 import 'package:podium/gen/assets.gen.dart';
-import 'package:podium/utils/palette.dart';
 import 'package:podium/providers/api/podium/models/follow/follower.dart';
 import 'package:podium/root.dart';
 import 'package:podium/services/toast/toast.dart';
 import 'package:podium/utils/constants.dart';
+import 'package:podium/utils/format_amount.dart';
+import 'package:podium/utils/palette.dart';
 import 'package:podium/utils/truncate.dart';
 import 'package:podium/widgets/ui/app_ui.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../controllers/profile_controller.dart';
+
+const _passCurrency = 'MOV';
 
 /// Shows a sheet with options for managing podium passes
 void showPodiumPassOptionsDialog(
@@ -72,7 +77,9 @@ void showPodiumPassOptionsDialog(
               controller.buyPodiumPass();
             },
             icon: Icons.add_rounded,
-            label: 'Buy Another Pass: ${buyPrice.toString()} MOV',
+            label: buyPrice > 0
+                ? 'Buy Another Pass: ${formatAmount(buyPrice, _passCurrency)}'
+                : 'Buy Another Pass',
           ),
           const SizedBox(height: 10),
           AppSecondaryButton(
@@ -82,7 +89,9 @@ void showPodiumPassOptionsDialog(
             },
             color: AppColors.danger,
             icon: Icons.sell_outlined,
-            label: 'Sell 1 Pass: ${sellPrice.toString()} MOV',
+            label: sellPrice > 0
+                ? 'Sell 1 Pass: ${formatAmount(sellPrice, _passCurrency)}'
+                : 'Sell 1 Pass',
           ),
           const SizedBox(height: 6),
           TextButton(
@@ -116,38 +125,45 @@ class ProfileView extends GetView<ProfileController> {
               child: DefaultTabController(
                 length: 3,
                 initialIndex: 0,
-                child: NestedScrollView(
-                  headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                    const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _ProfileHeader(),
-                            SizedBox(height: 12),
-                            _Statistics(),
-                          ],
+                child: RefreshIndicator(
+                  onRefresh: controller.refreshAll,
+                  // The lists sit inside the tab view and the nested scroll
+                  // view, so their notifications arrive a few levels deep.
+                  notificationPredicate: (notification) =>
+                      notification.metrics.axis == Axis.vertical,
+                  child: NestedScrollView(
+                    headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _ProfileHeader(),
+                              _LiveNowCard(),
+                              SizedBox(height: 12),
+                              _Statistics(),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    SliverOverlapAbsorber(
-                      handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                        context,
+                      SliverOverlapAbsorber(
+                        handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                          context,
+                        ),
+                        sliver: const SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _TabBarDelegate(),
+                        ),
                       ),
-                      sliver: const SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _TabBarDelegate(),
-                      ),
-                    ),
-                  ],
-                  body: const TabBarView(
-                    physics: NeverScrollableScrollPhysics(),
-                    children: [
-                      PassHoldersTab(),
-                      FollowersTab(),
-                      FollowingTab(),
                     ],
+                    body: const TabBarView(
+                      children: [
+                        PassHoldersTab(),
+                        FollowersTab(),
+                        FollowingTab(),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -202,27 +218,17 @@ class _ProfileHeader extends GetWidget<ProfileController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final user = controller.userInfo.value;
-      if (user == null) {
-        return const AppCard(
-          child: SizedBox(
-            height: 150,
-            width: double.infinity,
-            child: Center(
-              child: LoadingWidget(),
-            ),
-          ),
-        );
-      }
+      if (user == null) return const SizedBox.shrink();
 
       String avatar = user.image ?? '';
       if (avatar == defaultAvatar) {
         avatar = avatarPlaceHolder(user.name ?? '');
       }
 
-      final walletAddress = user.aptos_address!;
-      final shortWalletAddress = truncate(walletAddress, length: 18);
-
+      final walletAddress = user.aptos_address ?? '';
       final followedByMe = user.followed_by_me ?? false;
+      final followsMe = controller.followsMe;
+      final hasPassWallet = controller.hasPassWallet;
 
       return AppCard(
         padding: const EdgeInsets.all(16),
@@ -256,54 +262,18 @@ class _ProfileHeader extends GetWidget<ProfileController> {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Material(
-                        color: AppColors.fill,
-                        shape: StadiumBorder(
-                          side: BorderSide(color: AppColors.border),
+                      if (followsMe) ...[
+                        const SizedBox(height: 6),
+                        AppPill(
+                          label: 'Follows you',
+                          icon: Icons.person_rounded,
+                          color: AppColors.primary,
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: () {
-                            Clipboard.setData(
-                                ClipboardData(text: walletAddress));
-                            Toast.info(
-                              message: 'Wallet address copied to clipboard',
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.account_balance_wallet_outlined,
-                                  size: 13,
-                                  color: AppColors.textMuted,
-                                ),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    shortWalletAddress,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppText.caption,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Icon(
-                                  Icons.copy_rounded,
-                                  size: 13,
-                                  color: AppColors.textMuted,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      ],
+                      if (walletAddress.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        _WalletChip(address: walletAddress),
+                      ],
                     ],
                   ),
                 ),
@@ -311,15 +281,18 @@ class _ProfileHeader extends GetWidget<ProfileController> {
             ),
             const SizedBox(height: 16),
             const _SocialCounts(),
+            const _FollowedByLine(),
             const SizedBox(height: 16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  flex: 2,
-                  child: _TicketButton(),
-                ),
-                const SizedBox(width: 10),
+                if (hasPassWallet) ...[
+                  const Expanded(
+                    flex: 2,
+                    child: _TicketButton(),
+                  ),
+                  const SizedBox(width: 10),
+                ],
                 Expanded(
                   flex: 1,
                   child: FollowButton(
@@ -340,17 +313,79 @@ class _ProfileHeader extends GetWidget<ProfileController> {
   }
 }
 
+class _WalletChip extends StatelessWidget {
+  const _WalletChip({required this.address});
+
+  final String address;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.fill,
+      shape: StadiumBorder(
+        side: BorderSide(color: AppColors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          Clipboard.setData(ClipboardData(text: address));
+          Toast.info(message: 'Wallet address copied to clipboard');
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 13,
+                color: AppColors.textMuted,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  truncate(address, length: 18),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.caption,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.copy_rounded,
+                size: 13,
+                color: AppColors.textMuted,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SocialCounts extends GetWidget<ProfileController> {
   const _SocialCounts();
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final holders = controller.podiumPassBuyers.value.length;
-      final followers = controller.followers.value.length;
-      final followings = controller.followings.value.length;
+      final user = controller.userInfo.value;
+      final holders = controller.isGettingPassBuyers.value
+          ? null
+          : controller.podiumPassBuyers.value.length;
+      final followers = controller.isGettingFollowers.value
+          ? user?.followers_count
+          : controller.followers.value.length;
+      final followings = controller.isGettingFollowings.value
+          ? user?.followings_count
+          : controller.followings.value.length;
+      final divider = VerticalDivider(
+        width: 1,
+        thickness: 1,
+        color: AppColors.border,
+      );
       return Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: ColorName.white.withAlpha(8),
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -359,20 +394,20 @@ class _SocialCounts extends GetWidget<ProfileController> {
         child: IntrinsicHeight(
           child: Row(
             children: [
-              Expanded(child: _CountCell(value: holders, label: 'Holders')),
-              VerticalDivider(
-                width: 1,
-                thickness: 1,
-                color: AppColors.border,
-              ),
-              Expanded(child: _CountCell(value: followers, label: 'Followers')),
-              VerticalDivider(
-                width: 1,
-                thickness: 1,
-                color: AppColors.border,
-              ),
               Expanded(
-                child: _CountCell(value: followings, label: 'Following'),
+                child: _CountCell(value: holders, label: 'Holders', tab: 0),
+              ),
+              divider,
+              Expanded(
+                child: _CountCell(value: followers, label: 'Followers', tab: 1),
+              ),
+              divider,
+              Expanded(
+                child: _CountCell(
+                  value: followings,
+                  label: 'Following',
+                  tab: 2,
+                ),
               ),
             ],
           ),
@@ -382,38 +417,196 @@ class _SocialCounts extends GetWidget<ProfileController> {
   }
 }
 
+/// A count that jumps to its tab when tapped; null while it's loading.
 class _CountCell extends StatelessWidget {
-  final int value;
+  final int? value;
   final String label;
-  const _CountCell({required this.value, required this.label});
+  final int tab;
+  const _CountCell({
+    required this.value,
+    required this.label,
+    required this.tab,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value.toString(),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: ColorName.white,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      onTap: () => DefaultTabController.of(context).animateTo(tab),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value?.toString() ?? '–',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: ColorName.white,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.caption,
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppText.caption,
-        ),
-      ],
+      ),
     );
   }
 }
 
+/// "Followed by A, B and 3 others you follow", linking to the Followers tab.
+class _FollowedByLine extends GetWidget<ProfileController> {
+  const _FollowedByLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final mutual = controller.followersIFollow;
+      if (mutual.isEmpty) return const SizedBox.shrink();
+      final names = [for (final f in mutual.take(2)) f.name];
+      final others = mutual.length - names.length;
+      final text = StringBuffer('Followed by ${names.join(', ')}');
+      if (others > 0) text.write(' and $others other${others > 1 ? 's' : ''}');
+      text.write(' you follow');
+      return Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => DefaultTabController.of(context).animateTo(1),
+          child: Row(
+            children: [
+              _AvatarStack(people: mutual.take(3).toList()),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  text.toString(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.caption,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _AvatarStack extends StatelessWidget {
+  const _AvatarStack({required this.people});
+
+  final List<FollowerModel> people;
+
+  static const _size = 22.0;
+  static const _overlap = 14.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _size + _overlap * (people.length - 1),
+      height: _size,
+      child: Stack(
+        children: [
+          for (final (i, p) in people.indexed)
+            Positioned(
+              left: _overlap * i,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surface, width: 1.5),
+                ),
+                child: Img(
+                  src: p.image == defaultAvatar
+                      ? avatarPlaceHolder(p.name)
+                      : p.image,
+                  alt: p.name,
+                  size: _size - 3,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown while the user is hosting a live outpost.
+class _LiveNowCard extends GetWidget<ProfileController> {
+  const _LiveNowCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final outpost = controller.liveOutpost.value;
+      if (outpost == null) return const SizedBox.shrink();
+      final live = AppColors.live;
+      final listening = outpost.online_users_count ?? 0;
+      return AppCard(
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.all(12),
+        borderGradient: LinearGradient(
+          colors: [live.withAlpha(140), AppColors.magenta.withAlpha(60)],
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [live.withAlpha(26), AppColors.surfaceGlass],
+        ),
+        onTap: () => openOutpost(outpost),
+        child: Row(
+          children: [
+            Img(
+              src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
+              alt: outpost.name,
+              ifEmpty: Assets.images.logo.path,
+              size: 52,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(AppRadius.sm),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppPill(
+                    label: listening > 0
+                        ? 'Live now · $listening listening'
+                        : 'Live now',
+                    icon: Icons.podcasts_rounded,
+                    color: live,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    outpost.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.cardTitle.copyWith(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+          ],
+        ),
+      );
+    });
+  }
+}
+
 class _TicketButton extends GetWidget<ProfileController> {
+  const _TicketButton();
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -421,7 +614,6 @@ class _TicketButton extends GetWidget<ProfileController> {
       final isBuyingPodiumPass = controller.isBuyingPodiumPass.value;
       final isSellingPodiumPass = controller.isSellingPodiumPass.value;
       final podiumPassBuyPrice = controller.podiumPassBuyPrice.value;
-      final podiumPassSellPrice = controller.podiumPassSellPrice.value;
       final isGettingPodiumPassPrice = controller.loadingPodiumPassPrice.value;
       final numberOfBoughtTicketsByMe =
           controller.mySharesOfPodiumPassFromThisUser.value;
@@ -461,7 +653,6 @@ class _TicketButton extends GetWidget<ProfileController> {
             : _TicketButtonContent(
                 numberOfPasses: numberOfBoughtTicketsByMe,
                 podiumPassBuyPrice: podiumPassBuyPrice,
-                podiumPassSellPrice: podiumPassSellPrice,
                 isLoading: isGettingPodiumPassPrice,
               ),
       );
@@ -473,13 +664,11 @@ class _TicketButtonContent extends StatelessWidget {
   const _TicketButtonContent({
     required this.numberOfPasses,
     required this.podiumPassBuyPrice,
-    required this.podiumPassSellPrice,
     required this.isLoading,
   });
 
   final int numberOfPasses;
   final double podiumPassBuyPrice;
-  final double podiumPassSellPrice;
   final bool isLoading;
 
   @override
@@ -512,9 +701,10 @@ class _TicketButtonContent extends StatelessWidget {
                           ? "Manage Podium Pass"
                           : "Buy Pass",
                     ),
-                    if (numberOfPasses == 0)
+                    if (numberOfPasses == 0 && podiumPassBuyPrice > 0)
                       TextSpan(
-                        text: " · ${podiumPassBuyPrice.toString()} MOV",
+                        text:
+                            " · ${formatAmount(podiumPassBuyPrice, _passCurrency)}",
                         style: const TextStyle(fontWeight: FontWeight.w800),
                       ),
                   ],
@@ -585,6 +775,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         ),
         child: const TabBar(
           labelPadding: EdgeInsets.zero,
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: WidgetStatePropertyAll(Colors.transparent),
           tabs: [
             Tab(text: 'Pass Holders', height: 36),
             Tab(text: 'Followers', height: 36),
@@ -640,63 +832,19 @@ class _TabLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SliverFillRemaining(
-      hasScrollBody: false,
-      child: Padding(
-        padding: EdgeInsets.only(top: 32),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: LoadingWidget(),
-        ),
+    return SliverPadding(
+      padding: _listPadding,
+      sliver: SliverList.list(
+        children: [
+          for (var i = 0; i < 5; i++) const _PersonSkeleton(),
+        ],
       ),
     );
   }
 }
 
-const _listPadding = EdgeInsets.fromLTRB(16, 4, 16, 24);
-
-class FollowersTab extends GetWidget<ProfileController> {
-  const FollowersTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final loading = controller.isGettingFollowers.value;
-      final followers = controller.followers.value;
-      return _TabScroll(
-        storageKey: 'profile_followers',
-        sliver: loading
-            ? const _TabLoading()
-            : followers.isEmpty
-                ? const _TabMessage(
-                    icon: Icons.people_outline_rounded,
-                    title: 'No followers yet',
-                  )
-                : SliverPadding(
-                    padding: _listPadding,
-                    sliver: SliverList.builder(
-                      itemCount: followers.length,
-                      itemBuilder: (context, index) {
-                        return UserListItem(user: followers[index]);
-                      },
-                    ),
-                  ),
-      );
-    });
-  }
-}
-
-class _PersonRow extends StatelessWidget {
-  final String name;
-  final String avatar;
-  final Widget trailing;
-  final VoidCallback? onTap;
-  const _PersonRow({
-    required this.name,
-    required this.avatar,
-    required this.trailing,
-    this.onTap,
-  });
+class _PersonSkeleton extends StatelessWidget {
+  const _PersonSkeleton();
 
   @override
   Widget build(BuildContext context) {
@@ -704,40 +852,44 @@ class _PersonRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       radius: AppRadius.md,
-      onTap: onTap,
-      child: Row(
-        children: [
-          Img(
-            src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
-            alt: name,
-            size: 42,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppText.cardTitle.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 8),
-          trailing,
-        ],
+      child: Shimmer.fromColors(
+        baseColor: ColorName.white.withAlpha(16),
+        highlightColor: ColorName.white.withAlpha(40),
+        child: const Row(
+          children: [
+            _Bone(width: 42, height: 42, radius: 21),
+            SizedBox(width: 12),
+            _Bone(width: 120, height: 12),
+            Spacer(),
+            _Bone(width: 84, height: 32, radius: 16),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _YouPill extends StatelessWidget {
-  const _YouPill();
+class _Bone extends StatelessWidget {
+  const _Bone({required this.width, required this.height, this.radius = 6});
+
+  final double width;
+  final double height;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
-    return AppPill(label: 'You', color: AppColors.success);
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: ColorName.white,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
   }
 }
+
+const _listPadding = EdgeInsets.fromLTRB(16, 4, 16, 24);
 
 class PassHoldersTab extends GetWidget<ProfileController> {
   const PassHoldersTab({super.key});
@@ -762,23 +914,43 @@ class PassHoldersTab extends GetWidget<ProfileController> {
                       itemCount: passHolders.length,
                       itemBuilder: (context, index) {
                         final holder = passHolders[index];
-                        return _PersonRow(
+                        return _PersonTile(
+                          uuid: holder.uuid,
                           name: holder.name,
                           avatar: holder.image,
-                          trailing: holder.uuid != myId
-                              ? SizedBox(
-                                  height: 32,
-                                  child: FollowButton(
-                                    uuid: holder.uuid,
-                                    followed_by_me: holder.followed_by_me,
-                                    onFollowStatusChanged: () {
-                                      controller.getPassBuyers();
-                                    },
-                                  ),
-                                )
-                              : const _YouPill(),
+                          followedByMe: holder.followed_by_me,
                         );
                       },
+                    ),
+                  ),
+      );
+    });
+  }
+}
+
+class FollowersTab extends GetWidget<ProfileController> {
+  const FollowersTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final loading = controller.isGettingFollowers.value;
+      final followers = controller.followers.value;
+      return _TabScroll(
+        storageKey: 'profile_followers',
+        sliver: loading
+            ? const _TabLoading()
+            : followers.isEmpty
+                ? const _TabMessage(
+                    icon: Icons.people_outline_rounded,
+                    title: 'No followers yet',
+                  )
+                : SliverPadding(
+                    padding: _listPadding,
+                    sliver: SliverList.builder(
+                      itemCount: followers.length,
+                      itemBuilder: (context, index) =>
+                          _PersonTile.follower(followers[index]),
                     ),
                   ),
       );
@@ -807,9 +979,8 @@ class FollowingTab extends GetWidget<ProfileController> {
                     padding: _listPadding,
                     sliver: SliverList.builder(
                       itemCount: followings.length,
-                      itemBuilder: (context, index) {
-                        return UserListItem(user: followings[index]);
-                      },
+                      itemBuilder: (context, index) =>
+                          _PersonTile.follower(followings[index]),
                     ),
                   ),
       );
@@ -817,53 +988,73 @@ class FollowingTab extends GetWidget<ProfileController> {
   }
 }
 
-/// A single user item for followers/following lists
-class UserListItem extends GetView<ProfileController> {
-  const UserListItem({
-    super.key,
-    required this.user,
+/// A person in any of the tabs: opens their profile and has a follow button.
+class _PersonTile extends GetView<ProfileController> {
+  const _PersonTile({
+    required this.uuid,
+    required this.name,
+    required this.avatar,
+    required this.followedByMe,
   });
 
-  final FollowerModel user;
+  _PersonTile.follower(FollowerModel user)
+      : uuid = user.uuid,
+        name = user.name,
+        avatar = user.image,
+        followedByMe = user.followed_by_me;
+
+  final String uuid;
+  final String name;
+  final String avatar;
+  final bool followedByMe;
 
   @override
   Widget build(BuildContext context) {
-    final String name = user.name;
-    final String avatar = user.image;
-    final String uuid = user.uuid;
-    final bool followedByMe = user.followed_by_me;
-
-    return _PersonRow(
-      name: name,
-      avatar: avatar,
-      onTap: () {
-        controller.openUserProfilePage(uuid: uuid);
-      },
-      trailing: uuid != myId
-          ? Obx(
-              () {
-                final lodinguserId = controller.loadingUserID.value;
-                if (lodinguserId == uuid) {
-                  return const SizedBox(
-                    height: 32,
-                    child: LoadingWidget(
-                      size: 16,
-                    ),
-                  );
-                }
-                return SizedBox(
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      radius: AppRadius.md,
+      onTap: () => controller.openUserProfilePage(uuid: uuid),
+      child: Row(
+        children: [
+          Img(
+            src: avatar == defaultAvatar ? avatarPlaceHolder(name) : avatar,
+            alt: name,
+            size: 42,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.cardTitle.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 8),
+          if (uuid == myId)
+            AppPill(label: 'You', color: AppColors.success)
+          else
+            Obx(() {
+              if (controller.loadingUserID.value == uuid) {
+                return const SizedBox(
                   height: 32,
-                  child: FollowButton(
-                    uuid: uuid,
-                    followed_by_me: followedByMe,
-                    onFollowStatusChanged: () {
-                      controller.updateFollowState(user);
-                    },
-                  ),
+                  child: LoadingWidget(size: 16),
                 );
-              },
-            )
-          : const _YouPill(),
+              }
+              return SizedBox(
+                height: 32,
+                child: FollowButton(
+                  uuid: uuid,
+                  followed_by_me: followedByMe,
+                  onFollowStatusChanged: () =>
+                      controller.setFollowedByMe(uuid, !followedByMe),
+                ),
+              );
+            }),
+        ],
+      ),
     );
   }
 }
@@ -875,50 +1066,77 @@ class _Statistics extends GetWidget<ProfileController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final payments = controller.payments.value;
-      final loading = controller.isGettingPayments.value;
-      if (loading) {
-        return const SizedBox();
-      }
       return AppCard(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _ActivityGroup(
+                  title: 'Received',
+                  cheers: payments.numberOfCheersReceived,
+                  boos: payments.numberOfBoosReceived,
+                ),
+              ),
+              VerticalDivider(
+                width: 24,
+                thickness: 1,
+                color: AppColors.border,
+              ),
+              Expanded(
+                child: _ActivityGroup(
+                  title: 'Sent',
+                  cheers: payments.numberOfCheersSent,
+                  boos: payments.numberOfBoosSent,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _ActivityGroup extends StatelessWidget {
+  final String title;
+  final int cheers;
+  final int boos;
+  const _ActivityGroup({
+    required this.title,
+    required this.cheers,
+    required this.boos,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, textAlign: TextAlign.center, style: AppText.label),
+        const SizedBox(height: 10),
+        Row(
           children: [
             Expanded(
               child: _ActivityCell(
                 icon: Icons.celebration_rounded,
                 color: AppColors.accent,
-                value: payments.numberOfCheersReceived,
-                label: 'Cheers received',
+                value: cheers,
+                label: 'Cheers',
               ),
             ),
             Expanded(
               child: _ActivityCell(
                 icon: Icons.thumb_down_alt_rounded,
                 color: AppColors.danger,
-                value: payments.numberOfBoosReceived,
-                label: 'Boos received',
-              ),
-            ),
-            Expanded(
-              child: _ActivityCell(
-                icon: Icons.celebration_outlined,
-                color: AppColors.accent,
-                value: payments.numberOfCheersSent,
-                label: 'Cheers sent',
-              ),
-            ),
-            Expanded(
-              child: _ActivityCell(
-                icon: Icons.thumb_down_alt_outlined,
-                color: AppColors.danger,
-                value: payments.numberOfBoosSent,
-                label: 'Boos sent',
+                value: boos,
+                label: 'Boos',
               ),
             ),
           ],
         ),
-      );
-    });
+      ],
+    );
   }
 }
 
@@ -962,7 +1180,7 @@ class _ActivityCell extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          maxLines: 2,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppText.caption.copyWith(height: 1.2),
         ),

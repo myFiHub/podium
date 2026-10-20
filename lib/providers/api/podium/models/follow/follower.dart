@@ -6,9 +6,12 @@ part 'follower.g.dart';
 @JsonSerializable()
 @CopyWith()
 class FollowerModel {
+  @JsonKey(defaultValue: '')
   final String address;
   final bool followed_by_me;
+  @JsonKey(defaultValue: '')
   final String image;
+  @JsonKey(defaultValue: '')
   final String name;
   final String uuid;
 

@@ -102,7 +102,10 @@ class OutpostCallController extends GetxController {
     tickerListener = globalController.ticker.listen((d) {
       handleTimerTick();
     });
-    canTalkListener = canTalk.listen((_) => _updateStageAndAudience());
+    canTalkListener = canTalk.listen((_) {
+      _updateStageAndAudience();
+      _updateOngoingNotification();
+    });
     membersListener = members.listen((listOfUsers) {
       if (!gotMembersOnce) {
         _updateReactionsMap(listOfUsers);
@@ -110,6 +113,7 @@ class OutpostCallController extends GetxController {
       }
       _syncSpeakingFlags(listOfUsers);
       _updateStageAndAudience();
+      _updateOngoingNotification();
     });
     outpostListener = outpost.listen((_) {
       members.value = [];
@@ -175,6 +179,32 @@ class OutpostCallController extends GetxController {
     if (!sameMemberOrder(audienceMembers.value, audience)) {
       audienceMembers.value = audience;
     }
+  }
+
+  String? _ongoingNotification;
+
+  /// Shows the outpost, its host, headcount and the user's role in the
+  /// Android ongoing call notification.
+  void _updateOngoingNotification() {
+    final current = outpost.value;
+    if (current == null || session == null) return;
+    final hostName = current.creator_user_name;
+    final count = members.value.length;
+    final text = [
+      if (current.creator_user_uuid == myId)
+        "You're hosting"
+      else if (hostName != null && hostName.isNotEmpty)
+        'Hosted by $hostName',
+      if (count > 0) '$count ${count == 1 ? 'person' : 'people'} here',
+      canTalk.value ? 'You can speak' : 'Listening',
+    ].join(' · ');
+    final content = '${current.name}\n$text';
+    if (content == _ongoingNotification) return;
+    _ongoingNotification = content;
+    jitsiMeet.setOngoingNotification(
+      title: current.name.isNotEmpty ? current.name : 'Ongoing outpost',
+      text: text,
+    );
   }
 
   void updateReactionsMapByWsEvent(IncomingMessage incomingMessage) {
@@ -385,6 +415,8 @@ class OutpostCallController extends GetxController {
       }
     }
     jitsiMeet.hangUp();
+    _ongoingNotification = null;
+    jitsiMeet.setOngoingNotification();
     members.value = [];
     searchedValueInMeet.value = '';
     final outpostId = callSession.outpostId;
@@ -536,6 +568,7 @@ class OutpostCallController extends GetxController {
       final listeners = jitsiListeners(outpost: outpostToJoin);
       final callSession = session;
       if (callSession != null) _joinOutpostSocket(callSession);
+      _updateOngoingNotification();
       await jitsiMeet.join(options, listeners);
       if (Get.isRegistered<OngoingOutpostCallController>() &&
           !Get.find<OngoingOutpostCallController>().callPageOpened &&

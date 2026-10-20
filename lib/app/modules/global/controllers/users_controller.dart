@@ -74,6 +74,7 @@ class UsersController extends GetxController {
   }
 
   Future<void> openUserProfile(String userId) async {
+    if (gettingUserInfo_uuid.value.isNotEmpty) return;
     try {
       final isMyUser = userId == myId;
       if (isMyUser) {

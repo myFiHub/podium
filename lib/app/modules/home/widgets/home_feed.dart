@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:podium/app/modules/global/controllers/outposts_controller.dart';
 import 'package:podium/app/modules/global/controllers/global_controller.dart';
+import 'package:podium/app/modules/global/widgets/opening_overlay.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/app/modules/home/controllers/home_controller.dart';
@@ -239,62 +240,65 @@ class _LiveCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final outpost = item.outpost;
     final live = AppColors.live;
-    return AppCard(
-      padding: const EdgeInsets.all(12),
-      borderGradient: LinearGradient(
-        colors: [live.withAlpha(140), AppColors.magenta.withAlpha(60)],
-      ),
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [live.withAlpha(26), AppColors.surfaceGlass],
-      ),
-      onTap: () => openOutpost(outpost),
-      child: Row(
-        children: [
-          _OutpostImage(outpost: outpost, size: 64),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  outpost.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.cardTitle.copyWith(fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    if (item.people.isNotEmpty) ...[
-                      _AvatarStack(
-                        images: [for (final p in item.people) p.image ?? ''],
-                        names: [for (final p in item.people) p.name ?? ''],
+    return OpeningOutpostOverlay(
+      outpostId: outpost.uuid,
+      child: AppCard(
+        padding: const EdgeInsets.all(12),
+        borderGradient: LinearGradient(
+          colors: [live.withAlpha(140), AppColors.magenta.withAlpha(60)],
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [live.withAlpha(26), AppColors.surfaceGlass],
+        ),
+        onTap: () => openOutpost(outpost),
+        child: Row(
+          children: [
+            _OutpostImage(outpost: outpost, size: 64),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    outpost.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.cardTitle.copyWith(fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (item.people.isNotEmpty) ...[
+                        _AvatarStack(
+                          images: [for (final p in item.people) p.image ?? ''],
+                          names: [for (final p in item.people) p.name ?? ''],
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      Expanded(
+                        child: Text(
+                          item.line,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.caption,
+                        ),
                       ),
-                      const SizedBox(width: 6),
                     ],
-                    Expanded(
-                      child: Text(
-                        item.line,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.caption,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                _CountPill(
-                  icon: Icons.headphones_rounded,
-                  label: '${item.online} listening',
-                  color: live,
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 6),
+                  _CountPill(
+                    icon: Icons.headphones_rounded,
+                    label: '${item.online} listening',
+                    color: live,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -648,68 +652,71 @@ class _UpNextCard extends StatelessWidget {
     final outpost = item.outpost;
     final at = DateTime.fromMillisecondsSinceEpoch(outpost.scheduled_for);
     final (reasonLabel, reasonColor) = _reasonStyle(item);
-    return AppCard(
-      padding: const EdgeInsets.all(12),
-      onTap: () => openOutpost(outpost),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              _DateBadge(at: at),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _Ticking(
-                      builder: () => Text(
-                        whenLabel(at),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.caption.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
+    return OpeningOutpostOverlay(
+      outpostId: outpost.uuid,
+      child: AppCard(
+        padding: const EdgeInsets.all(12),
+        onTap: () => openOutpost(outpost),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                _DateBadge(at: at),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Ticking(
+                        builder: () => Text(
+                          whenLabel(at),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.caption.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      outpost.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.cardTitle.copyWith(fontSize: 14),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        outpost.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.cardTitle.copyWith(fontSize: 14),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              if (item.reminderSet)
-                Icon(
-                  Icons.notifications_active_rounded,
-                  size: 16,
-                  color: AppColors.accent,
+                if (item.reminderSet)
+                  Icon(
+                    Icons.notifications_active_rounded,
+                    size: 16,
+                    color: AppColors.accent,
+                  ),
+              ],
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                Flexible(
+                  child: AppPill(label: reasonLabel, color: reasonColor),
                 ),
-            ],
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              Flexible(
-                child: AppPill(label: reasonLabel, color: reasonColor),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'by ${outpost.creator_user_name ?? 'someone'}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: AppText.caption,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'by ${outpost.creator_user_name ?? 'someone'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: AppText.caption,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -808,46 +815,49 @@ class _RecentCard extends StatelessWidget {
     final ago = agoLabel(
       DateTime.fromMillisecondsSinceEpoch(item.lastListenedAt),
     );
-    return AppCard(
-      padding: const EdgeInsets.all(10),
-      borderColor: online > 0 ? AppColors.live.withAlpha(90) : null,
-      onTap: () => openOutpost(outpost),
-      child: Row(
-        children: [
-          _OutpostImage(outpost: outpost, size: 54),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  outpost.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.cardTitle.copyWith(fontSize: 14),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  online > 0
-                      ? 'Live now · $online listening'
-                      : 'Listened $listened · $ago',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.caption.copyWith(
-                    color: online > 0 ? AppColors.live : null,
-                    fontWeight: online > 0 ? FontWeight.w700 : null,
+    return OpeningOutpostOverlay(
+      outpostId: outpost.uuid,
+      child: AppCard(
+        padding: const EdgeInsets.all(10),
+        borderColor: online > 0 ? AppColors.live.withAlpha(90) : null,
+        onTap: () => openOutpost(outpost),
+        child: Row(
+          children: [
+            _OutpostImage(outpost: outpost, size: 54),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    outpost.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.cardTitle.copyWith(fontSize: 14),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 3),
+                  Text(
+                    online > 0
+                        ? 'Live now · $online listening'
+                        : 'Listened $listened · $ago',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.caption.copyWith(
+                      color: online > 0 ? AppColors.live : null,
+                      fontWeight: online > 0 ? FontWeight.w700 : null,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Icon(
-            Icons.play_circle_fill_rounded,
-            size: 26,
-            color: online > 0 ? AppColors.live : AppColors.primary,
-          ),
-        ],
+            Icon(
+              Icons.play_circle_fill_rounded,
+              size: 26,
+              color: online > 0 ? AppColors.live : AppColors.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -881,72 +891,75 @@ class _PersonCard extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.fromLTRB(10, 14, 10, 10),
-      onTap: () => controller.openProfile(user.uuid),
-      child: Column(
-        children: [
-          _Avatar(user: user),
-          const SizedBox(height: 8),
-          Text(
-            user.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppText.cardTitle.copyWith(fontSize: 14),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            _reasonLine(user),
-            maxLines: 2,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            style: AppText.caption.copyWith(fontSize: 11, height: 1.3),
-          ),
-          const Spacer(),
-          Obx(() {
-            final following = controller.followed.contains(user.uuid);
-            final busy = controller.followInProgress.contains(user.uuid);
-            return SizedBox(
-              width: double.infinity,
-              height: 32,
-              child: following
-                  ? OutlinedButton(
-                      onPressed:
-                          busy ? null : () => controller.toggleFollow(user),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        foregroundColor: ColorName.white,
-                        side: BorderSide(color: AppColors.border),
-                        shape: const StadiumBorder(),
-                        textStyle: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+    return OpeningProfileOverlay(
+      userId: user.uuid,
+      child: AppCard(
+        padding: const EdgeInsets.fromLTRB(10, 14, 10, 10),
+        onTap: () => controller.openProfile(user.uuid),
+        child: Column(
+          children: [
+            _Avatar(user: user),
+            const SizedBox(height: 8),
+            Text(
+              user.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.cardTitle.copyWith(fontSize: 14),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _reasonLine(user),
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.caption.copyWith(fontSize: 11, height: 1.3),
+            ),
+            const Spacer(),
+            Obx(() {
+              final following = controller.followed.contains(user.uuid);
+              final busy = controller.followInProgress.contains(user.uuid);
+              return SizedBox(
+                width: double.infinity,
+                height: 32,
+                child: following
+                    ? OutlinedButton(
+                        onPressed:
+                            busy ? null : () => controller.toggleFollow(user),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          foregroundColor: ColorName.white,
+                          side: BorderSide(color: AppColors.border),
+                          shape: const StadiumBorder(),
+                          textStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child: const Text('Following'),
+                      )
+                    : FilledButton(
+                        onPressed:
+                            busy ? null : () => controller.toggleFollow(user),
+                        style: FilledButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.onPrimary,
+                          shape: const StadiumBorder(),
+                          textStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child: Text(
+                          user.reason == SuggestionReason.followsYou
+                              ? 'Follow back'
+                              : 'Follow',
                         ),
                       ),
-                      child: const Text('Following'),
-                    )
-                  : FilledButton(
-                      onPressed:
-                          busy ? null : () => controller.toggleFollow(user),
-                      style: FilledButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.onPrimary,
-                        shape: const StadiumBorder(),
-                        textStyle: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      child: Text(
-                        user.reason == SuggestionReason.followsYou
-                            ? 'Follow back'
-                            : 'Follow',
-                      ),
-                    ),
-            );
-          }),
-        ],
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

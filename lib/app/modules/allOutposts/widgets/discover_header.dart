@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:podium/app/modules/allOutposts/controllers/discover_controller.dart';
 import 'package:podium/app/modules/allOutposts/views/tag_outposts_view.dart';
+import 'package:podium/app/modules/global/widgets/opening_overlay.dart';
 import 'package:podium/app/modules/global/widgets/img.dart';
 import 'package:podium/app/modules/global/widgets/outpostsList.dart';
 import 'package:podium/gen/assets.gen.dart';
@@ -263,58 +264,61 @@ class _RailCard extends StatelessWidget {
     final outpost = item.outpost;
     final online = outpost.online_users_count ?? 0;
     final tone = online > 0 ? AppColors.live : AppColors.primary;
-    return AppCard(
-      padding: const EdgeInsets.all(12),
-      borderColor: tone.withAlpha(70),
-      onTap: () => openOutpost(outpost),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Img(
-                src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
-                alt: outpost.name,
-                ifEmpty: Assets.images.logo.path,
-                size: 44,
-                borderRadius:
-                    const BorderRadius.all(Radius.circular(AppRadius.sm)),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      outpost.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.cardTitle.copyWith(fontSize: 14),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'by ${outpost.creator_user_name ?? ''}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.caption,
-                    ),
-                  ],
+    return OpeningOutpostOverlay(
+      outpostId: outpost.uuid,
+      child: AppCard(
+        padding: const EdgeInsets.all(12),
+        borderColor: tone.withAlpha(70),
+        onTap: () => openOutpost(outpost),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Img(
+                  src: Uri.parse(outpost.image).isAbsolute ? outpost.image : '',
+                  alt: outpost.name,
+                  ifEmpty: Assets.images.logo.path,
+                  size: 44,
+                  borderRadius:
+                      const BorderRadius.all(Radius.circular(AppRadius.sm)),
                 ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              if (online > 0) ...[
-                _LiveCount(count: online),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        outpost.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.cardTitle.copyWith(fontSize: 14),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'by ${outpost.creator_user_name ?? ''}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.caption,
+                      ),
+                    ],
+                  ),
+                ),
               ],
-              Expanded(child: _signalLine()),
-            ],
-          ),
-        ],
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                if (online > 0) ...[
+                  _LiveCount(count: online),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(child: _signalLine()),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -347,8 +351,10 @@ String _trendingText(DiscoveredOutpost item) {
   final listeners = item.recentListeners;
   final reactions = item.recentReactions;
   final parts = [
-    if (listeners > 0) '$listeners ${listeners == 1 ? 'listener' : 'listeners'}',
-    if (reactions > 0) '$reactions ${reactions == 1 ? 'reaction' : 'reactions'}',
+    if (listeners > 0)
+      '$listeners ${listeners == 1 ? 'listener' : 'listeners'}',
+    if (reactions > 0)
+      '$reactions ${reactions == 1 ? 'reaction' : 'reactions'}',
   ];
   return parts.isEmpty ? 'Picking up' : parts.join(' · ');
 }
